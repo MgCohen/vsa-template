@@ -9,8 +9,8 @@ using VSA.Infrastructure;
 namespace Notes.Handlers.Requests;
 
 sealed class DeleteNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEventPublisher events)
-    : RequestHandler<DeleteNoteRequest, DeleteNoteResponse> {
-    public override async Task<Result<DeleteNoteResponse>> HandleAsync(DeleteNoteRequest request, CancellationToken ct) {
+    : RoutedHandler<DeleteNoteRequest, DeleteNoteResponse> {
+    protected override async Task<Result<DeleteNoteResponse>> HandleRequestAsync(DeleteNoteRequest request, CancellationToken ct) {
         if (await notes.GetAsync(new NoteId(request.Id), ct) is not { } note) {
             return NoteErrors.NotFound;
         }

@@ -1,6 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../Domain/VSA.Domain.csproj" />
     <ProjectReference Include="../../Contracts/Requests/VSA.Contracts.Requests.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FastEndpoints" />
   </ItemGroup>
 </Project>

@@ -1,9 +1,11 @@
 using System.Reflection;
+using FastEndpoints;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
 using VSA.Handlers.Events;
-using VSA.Handlers.Requests;
 using VSA.Presenters;
 
 namespace VSA.Host;
@@ -13,16 +15,13 @@ public static class VsaHostExtensions {
     // The host finds the projects of a module from its name: <Name>.Handlers.Requests, and so on.
     public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder, params VSA.Module.Module[] modules) {
         var services = builder.Services;
-        var requests = new RequestCatalog();
-        services.AddSingleton(requests);
-        services.AddSingleton<IBus, InProcessBus>();
+        services.AddHttpClient<IBus, HttpBus>((provider, client) => client.BaseAddress = LoopbackAddress(provider));
         services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
+        services.AddFastEndpoints(options => {
+            options.DisableAutoDiscovery = true;
+            options.Assemblies = [.. modules.Select(module => Load(module, "Handlers.Requests"))];
+        });
         foreach (var module in modules) {
-            foreach (var handler in Concrete(module, "Handlers.Requests")) {
-                var handles = BaseOf(handler, typeof(RequestHandler<,>));
-                services.AddScoped(handles, handler);
-                requests.Add(handles.GetGenericArguments()[0], handles.GetGenericArguments()[1]);
-            }
             foreach (var handler in Concrete(module, "Handlers.Events")) {
                 services.AddScoped(BaseOf(handler, typeof(IntegrationEventHandler<>)), handler);
             }
@@ -34,17 +33,16 @@ public static class VsaHostExtensions {
         return builder;
     }
 
-    // Maps one HTTP endpoint for each request, from its [HttpRoute].
+    // Maps one HTTP endpoint for each request handler.
     public static WebApplication MapVsaRequests(this WebApplication app) {
-        var map = typeof(RequestEndpoints).GetMethod(nameof(RequestEndpoints.MapRequest))!;
-        foreach (var (request, response) in app.Services.GetRequiredService<RequestCatalog>().All) {
-            map.MakeGenericMethod(request, response).Invoke(null, [app]);
-        }
+        app.UseFastEndpoints();
         return app;
     }
 
+    static Assembly Load(VSA.Module.Module module, string layer) => Assembly.Load($"{module.Name}.{layer}");
+
     static IEnumerable<Type> Concrete(VSA.Module.Module module, string layer) =>
-        Assembly.Load($"{module.Name}.{layer}").GetTypes()
+        Load(module, layer).GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)));
 
     static Type BaseOf(Type type, Type openBase) {
@@ -54,5 +52,16 @@ public static class VsaHostExtensions {
             }
         }
         throw new InvalidOperationException($"{type.FullName} must inherit {openBase.Name}.");
+    }
+
+    // The first address of this server, with a wildcard host replaced by localhost.
+    static Uri LoopbackAddress(IServiceProvider provider) {
+        var addresses = provider.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses ?? [];
+        var address = addresses.FirstOrDefault(a => a.StartsWith("http://", StringComparison.Ordinal)) ?? addresses.FirstOrDefault()
+            ?? throw new InvalidOperationException("The server has no address for the bus.");
+        foreach (var wildcard in new[] { "://+", "://*", "://[::]", "://0.0.0.0" }) {
+            address = address.Replace(wildcard, "://localhost", StringComparison.Ordinal);
+        }
+        return new Uri(address);
     }
 }

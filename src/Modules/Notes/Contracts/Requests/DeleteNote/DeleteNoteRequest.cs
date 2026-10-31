@@ -2,5 +2,7 @@ using VSA.Contracts.Requests;
 
 namespace Notes.Contracts.Requests.DeleteNote;
 
-[HttpRoute(Http.Delete, "/api/notes/{id}")]
-public sealed record DeleteNoteRequest(Guid Id) : Request<DeleteNoteResponse>;
+public sealed record DeleteNoteRequest(Guid Id) : Request<DeleteNoteResponse>, IRoutedRequest {
+    public static string Method => Http.Delete;
+    public static string Route => "/api/notes/{id}";
+}
