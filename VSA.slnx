@@ -1,0 +1,76 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/App/" />
+  <Folder Name="/src/App/Host/">
+    <Project Path="src/App/Host/App.Host.csproj" />
+  </Folder>
+  <Folder Name="/src/App/Views/">
+    <Project Path="src/App/Views/App.Views.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/" />
+  <Folder Name="/src/Framework/Analyzers/">
+    <Project Path="src/Framework/Analyzers/VSA.Analyzers.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Contracts/" />
+  <Folder Name="/src/Framework/Contracts/Events/">
+    <Project Path="src/Framework/Contracts/Events/VSA.Contracts.Events.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Contracts/Requests/">
+    <Project Path="src/Framework/Contracts/Requests/VSA.Contracts.Requests.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Domain/">
+    <Project Path="src/Framework/Domain/VSA.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Handlers/" />
+  <Folder Name="/src/Framework/Handlers/Events/">
+    <Project Path="src/Framework/Handlers/Events/VSA.Handlers.Events.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Handlers/Requests/">
+    <Project Path="src/Framework/Handlers/Requests/VSA.Handlers.Requests.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Host/">
+    <Project Path="src/Framework/Host/VSA.Host.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Infrastructure.EfCore/">
+    <Project Path="src/Framework/Infrastructure.EfCore/VSA.Infrastructure.EfCore.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Infrastructure/">
+    <Project Path="src/Framework/Infrastructure/VSA.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Module/">
+    <Project Path="src/Framework/Module/VSA.Module.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Presenters/">
+    <Project Path="src/Framework/Presenters/VSA.Presenters.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/Views/">
+    <Project Path="src/Framework/Views/VSA.Views.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/Notes/Notes.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/" />
+  <Folder Name="/src/Modules/Notes/Contracts/" />
+  <Folder Name="/src/Modules/Notes/Contracts/Events/">
+    <Project Path="src/Modules/Notes/Contracts/Events/Notes.Contracts.Events.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/Contracts/Requests/">
+    <Project Path="src/Modules/Notes/Contracts/Requests/Notes.Contracts.Requests.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/Domain/">
+    <Project Path="src/Modules/Notes/Domain/Notes.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/Handlers/" />
+  <Folder Name="/src/Modules/Notes/Handlers/Events/">
+    <Project Path="src/Modules/Notes/Handlers/Events/Notes.Handlers.Events.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/Handlers/Requests/">
+    <Project Path="src/Modules/Notes/Handlers/Requests/Notes.Handlers.Requests.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/Infrastructure/">
+    <Project Path="src/Modules/Notes/Infrastructure/Notes.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/Presenters/">
+    <Project Path="src/Modules/Notes/Presenters/Notes.Presenters.csproj" />
+  </Folder>
+</Solution>

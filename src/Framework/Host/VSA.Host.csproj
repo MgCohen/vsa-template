@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Module/VSA.Module.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Infrastructure/VSA.Infrastructure.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Infrastructure.EfCore/VSA.Infrastructure.EfCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Contracts/Requests/VSA.Contracts.Requests.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Handlers/Requests/VSA.Handlers.Requests.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Handlers/Events/VSA.Handlers.Events.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../Presenters/VSA.Presenters.csproj" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

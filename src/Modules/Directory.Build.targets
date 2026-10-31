@@ -1,0 +1,72 @@
+<Project>
+  <!--
+    Project references come from the folder of each project, so each module .csproj stays empty.
+    src/Modules/Notes/Handlers/Requests/ gives VsaModule = Notes and VsaLayer = Handlers/Requests.
+    src/Modules/Notes/ (the module root) gives VsaLayer = Module.
+    "Private" references use PrivateAssets="all". The base of each layer is always exposed.
+    These rules follow the layer map. Later, tests/Rules/Layers.cs makes this file.
+  -->
+  <PropertyGroup>
+    <_VsaRelative>$([MSBuild]::MakeRelative($(MSBuildThisFileDirectory), $(MSBuildProjectDirectory)).Replace('\', '/').TrimEnd('/'))</_VsaRelative>
+    <_VsaSlash>$(_VsaRelative.IndexOf('/'))</_VsaSlash>
+    <VsaModule Condition="'$(_VsaSlash)' == '-1'">$(_VsaRelative)</VsaModule>
+    <VsaModule Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring(0, $(_VsaSlash)))</VsaModule>
+    <VsaLayer Condition="'$(_VsaSlash)' == '-1'">Module</VsaLayer>
+    <VsaLayer Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring($([MSBuild]::Add($(_VsaSlash), 1))))</VsaLayer>
+    <VsaModuleDir>$(MSBuildThisFileDirectory)$(VsaModule)/</VsaModuleDir>
+  </PropertyGroup>
+
+  <!-- The module root compiles only its own files, not the files of its layer projects. -->
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module'">
+    <DefaultItemExcludes>$(DefaultItemExcludes);*/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- All module projects: the VSA analyzers and source generators. -->
+  <ItemGroup>
+    <ProjectReference Include="$(VsaFrameworkDir)Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Domain'">
+    <ProjectReference Include="$(VsaFrameworkDir)Domain/VSA.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure'">
+    <ProjectReference Include="$(VsaModuleDir)Domain/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkDir)Infrastructure.EfCore/VSA.Infrastructure.EfCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkDir)Infrastructure/VSA.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Requests'">
+    <ProjectReference Include="$(VsaFrameworkDir)Contracts/Requests/VSA.Contracts.Requests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Events'">
+    <ProjectReference Include="$(VsaFrameworkDir)Contracts/Events/VSA.Contracts.Events.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Requests'">
+    <ProjectReference Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Infrastructure/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaModuleDir)Contracts/Requests/*.csproj;$(VsaModuleDir)Contracts/Events/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkDir)Handlers/Requests/VSA.Handlers.Requests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Events'">
+    <ProjectReference Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Infrastructure/*.csproj" PrivateAssets="all" />
+    <!-- anyModule: the events of all modules -->
+    <ProjectReference Include="$(VsaModulesDir)*/Contracts/Events/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkDir)Handlers/Events/VSA.Handlers.Events.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
+    <ProjectReference Include="$(VsaModuleDir)Contracts/Requests/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkDir)Presenters/VSA.Presenters.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
+    <!-- Exposed, not private: the host loads the handlers and presenters by name at run time,
+         so it must get every module assembly (first-build check Q4). -->
+    <ProjectReference Include="$(VsaModuleDir)*/*.csproj;$(VsaModuleDir)*/*/*.csproj" />
+    <ProjectReference Include="$(VsaFrameworkDir)Infrastructure.EfCore/VSA.Infrastructure.EfCore.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkDir)Module/VSA.Module.csproj" />
+  </ItemGroup>
+</Project>

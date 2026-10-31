@@ -1,0 +1,20 @@
+@inherits PresenterComponent<NotesPresenter>
+
+<form @onsubmit="CreateAsync">
+    <input @bind="title" @bind:event="oninput" placeholder="Title of the note" aria-label="Title" />
+    <button type="submit" disabled="@Presenter.Create.Busy">Add</button>
+</form>
+@if (Presenter.Create.Error is { } error) {
+    <p class="error">@error</p>
+}
+
+@code {
+    string title = "";
+
+    async Task CreateAsync() {
+        await Presenter.CreateAsync(title);
+        if (Presenter.Create.Error is null) {
+            title = "";
+        }
+    }
+}
