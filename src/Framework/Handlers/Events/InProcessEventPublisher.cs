@@ -1,8 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
-using VSA.Handlers.Events;
 
-namespace VSA.Host;
+namespace VSA.Handlers.Events;
 
 // Calls each handler of the event in this process, in the scope of the publisher.
 sealed class InProcessEventPublisher(IServiceProvider services) : IIntegrationEventPublisher {

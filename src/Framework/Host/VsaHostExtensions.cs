@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts.Events;
 using VSA.Handlers.Events;
 using VSA.Presenters;
 
@@ -15,8 +14,8 @@ public static class VsaHostExtensions {
     // The host finds the projects of a module from its name: <Name>.Handlers.Requests, and so on.
     public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder, params VSA.Module.Module[] modules) {
         var services = builder.Services;
-        services.AddHttpClient<IBus, HttpBus>((provider, client) => client.BaseAddress = LoopbackAddress(provider));
-        services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
+        services.AddVsaBus(LoopbackAddress);
+        services.AddVsaEvents();
         services.AddFastEndpoints(options => {
             options.DisableAutoDiscovery = true;
             options.Assemblies = [.. modules.Select(module => Load(module, "Handlers.Requests"))];

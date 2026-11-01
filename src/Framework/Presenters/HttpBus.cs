@@ -2,14 +2,12 @@ using System.Collections.Concurrent;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 using VSA.Contracts.Requests;
-using VSA.Presenters;
 
-namespace VSA.Host;
+namespace VSA.Presenters;
 
 // Sends each request over HTTP to the method and route of its request type.
-// In the host process, the base address is the host itself (loopback).
+// The host gives the base address. In the host process, it is the host itself (loopback).
 sealed class HttpBus(HttpClient http) : IBus {
     static readonly ConcurrentDictionary<Type, (HttpMethod Method, string Route)> routes = new();
 
@@ -51,11 +49,14 @@ sealed class HttpBus(HttpClient http) : IBus {
         return query.Count == 0 ? route : $"{route}?{string.Join('&', query)}";
     }
 
-    static async Task<ProblemDetails?> ProblemOf(HttpResponseMessage response, CancellationToken ct) {
+    static async Task<Problem?> ProblemOf(HttpResponseMessage response, CancellationToken ct) {
         try {
-            return await response.Content.ReadFromJsonAsync<ProblemDetails>(ct);
+            return await response.Content.ReadFromJsonAsync<Problem>(ct);
         } catch (JsonException) {
             return null;
         }
     }
+
+    // The fields of an RFC 9457 problem response that the bus uses.
+    sealed record Problem(string? Title, string? Detail);
 }
