@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 namespace VSA.Module;
 
 public sealed class ModuleBuilder(string name, IServiceCollection services, IConfiguration configuration) {
+    public string Name => name;
     public IServiceCollection Services => services;
     public IConfiguration Configuration => configuration;
 

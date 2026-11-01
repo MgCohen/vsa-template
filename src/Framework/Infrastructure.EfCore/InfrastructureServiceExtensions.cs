@@ -1,12 +1,25 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Domain;
+using VSA.Module;
 
 namespace VSA.Infrastructure.EfCore;
 
 public static class InfrastructureServiceExtensions {
+    // Registers the database of the module. The generator writes the context into <Module>.Infrastructure
+    // as an internal type, so this method finds it there. The module gives only the provider.
+    public static ModuleBuilder AddDatabase(this ModuleBuilder module, Action<DbContextOptionsBuilder> options) {
+        var infrastructure = Assembly.Load($"{module.Name}.Infrastructure");
+        var context = infrastructure.GetTypes().SingleOrDefault(t => !t.IsAbstract && typeof(IModuleDbContext).IsAssignableFrom(t))
+            ?? throw new InvalidOperationException($"{infrastructure.GetName().Name} has no module context. Make sure that VSA.Analyzers runs on it.");
+        typeof(InfrastructureServiceExtensions).GetMethod(nameof(AddModuleDbContext), BindingFlags.NonPublic | BindingFlags.Static)!
+            .MakeGenericMethod(context).Invoke(null, [module.Services, options]);
+        return module;
+    }
+
     // Registers the context of a module and one default EfRepository for each of its aggregates.
-    public static IServiceCollection AddModuleDbContext<TContext>(this IServiceCollection services,
+    static IServiceCollection AddModuleDbContext<TContext>(this IServiceCollection services,
         Action<DbContextOptionsBuilder> options) where TContext : ModuleDbContext, IModuleDbContext {
         services.AddDbContext<TContext>(options);
         foreach (var aggregate in TContext.AggregateTypes) {

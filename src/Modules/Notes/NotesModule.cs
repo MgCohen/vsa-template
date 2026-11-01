@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Notes.Infrastructure;
 using VSA.Infrastructure.EfCore;
 using VSA.Module;
 
@@ -13,5 +12,5 @@ public sealed class NotesModule : Module<NotesSettings> {
     }
 
     public override void Configure(ModuleBuilder module, NotesSettings settings) =>
-        module.Services.AddModuleDbContext<NotesDbContext>(o => o.UseSqlite(settings.ConnectionString));
+        module.AddDatabase(o => o.UseSqlite(settings.ConnectionString));
 }
