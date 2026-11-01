@@ -26,7 +26,7 @@ static class NewAppCommand {
 
         var (code, output) = Dotnet.Run(root, "tool", "restore");
         if (code != 0) {
-            Console.Error.WriteLine($"vsa: 'dotnet tool restore' failed. Run it in {name} before 'dotnet vsa'.{Environment.NewLine}{output}");
+            throw new VsaException($"The app is written, but 'dotnet tool restore' failed. Fix the error, then run it in {name}.{Environment.NewLine}{output}");
         }
         Console.WriteLine($"""
 
