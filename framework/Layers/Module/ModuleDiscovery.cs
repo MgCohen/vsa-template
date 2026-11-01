@@ -3,13 +3,10 @@ using Microsoft.Extensions.DependencyModel;
 
 namespace VSA.Module;
 
-// A module root assembly that the discovery found. Name is the assembly name, the same as Module.Name.
-public sealed record ModuleRoot(string Name, Assembly Assembly);
-
 // v1: run-time discovery from deps.json. A source generator in the host can replace it in v2.
 // The host (AddVsa) and the architecture tests use this type, so the two find the same modules.
 public static class ModuleDiscovery {
-    // Loads each project library of the context and keeps the assemblies with the ModuleMetadata.Module record.
+    // Loads each project library of the context and keeps the module roots (ModuleRoot.IsRoot).
     // The order is by name, so startup is the same each time. The default context is DependencyContext.Default.
     public static IReadOnlyList<ModuleRoot> FindRoots(DependencyContext? context = null) {
         context ??= DependencyContext.Default
@@ -17,8 +14,8 @@ public static class ModuleDiscovery {
         return [.. context.RuntimeLibraries
             .Where(library => library.Type == "project")
             .Select(library => Assembly.Load(new AssemblyName(library.Name)))
-            .Where(assembly => assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Any(a => a.Key == ModuleMetadata.Module))
-            .Select(assembly => new ModuleRoot(assembly.GetName().Name!, assembly))
+            .Where(ModuleRoot.IsRoot)
+            .Select(ModuleRoot.Of)
             .OrderBy(root => root.Name, StringComparer.Ordinal)];
     }
 

@@ -42,13 +42,11 @@ public static class VsaHostExtensions {
         return app;
     }
 
-    // VSA.Sdk records the layer projects of the module root as AssemblyMetadata("VsaLayer", ...).
+    // VSA.Sdk records the layer projects of the module root (ModuleRoot.Layers).
     // A layer that the module does not have gives null. A recorded layer that does not load is an error.
     static Assembly? Load(VSA.Module.Module module, string layer) {
         var name = $"{module.Name}.{layer}";
-        var recorded = module.GetType().Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .Any(a => a.Key == VSA.Module.ModuleMetadata.Layer && a.Value == name);
-        return recorded ? Assembly.Load(name) : null;
+        return VSA.Module.ModuleRoot.Of(module).Layers.Contains(name) ? Assembly.Load(name) : null;
     }
 
     static IEnumerable<Type> Concrete(VSA.Module.Module module, string layer) =>
