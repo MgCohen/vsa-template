@@ -25,6 +25,16 @@ A module project is under a `Modules/` folder. Its references come from VSA.Sdk,
 - **Keep shared code small.** Promote code to a shared location only when two or more slices genuinely need it.
 - **Rules are enforced by tests.** Architecture rules live in `tests/` and must pass.
 
+## Add an architecture rule
+
+The levels, IDs and rules are in `docs/architecture-rules.md`.
+
+1. If one file shows the problem, write an analyzer in `framework/Rules/Analyzers/`. Use the next free `VSA1xxx` ID and add it to `AnalyzerReleases.Unshipped.md`.
+2. Else write a class that implements `IVsaRule` in `framework/Rules/Testing/Rules/`. Use the next free `VSA2xxx` ID and add it to `VsaRules.All`.
+3. Write a message that gives what is wrong, the type names, and the fix.
+4. Add a good fixture and a bad fixture test for the rule.
+5. Add the rule to the table in `docs/architecture-rules.md`.
+
 ## Working agreements
 
 - Follow the conventions of the surrounding code (naming, structure, comment density).

@@ -44,6 +44,9 @@
   <Folder Name="/framework/Rules/Sdk/">
     <Project Path="framework/Rules/Sdk/VSA.Sdk.csproj" />
   </Folder>
+  <Folder Name="/framework/Rules/Testing/">
+    <Project Path="framework/Rules/Testing/VSA.Testing.csproj" />
+  </Folder>
   <Folder Name="/samples/" />
   <Folder Name="/samples/Notes/" />
   <Folder Name="/samples/Notes/App/" />
