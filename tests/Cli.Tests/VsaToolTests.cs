@@ -12,8 +12,12 @@ public sealed class VsaToolTests {
     public async Task ScaffoldedAppBuildsAndRuns() {
         var ct = TestContext.Current.CancellationToken;
         var root = TempFolder.Create();
-        // Its own NuGet cache: each test run packs the same test version with new content.
-        var env = new Dictionary<string, string> { ["NUGET_PACKAGES"] = Path.Combine(root, "nuget") };
+        // Each test run packs the same test version with new content. So the test uses its own NuGet cache, and its own
+        // DOTNET_CLI_HOME: the tool resolver cache in it remembers the path of a local tool for each version.
+        var env = new Dictionary<string, string> {
+            ["NUGET_PACKAGES"] = Path.Combine(root, "nuget"),
+            ["DOTNET_CLI_HOME"] = Path.Combine(root, "home"),
+        };
         var app = Path.Combine(root, "Hello");
         try {
             // The global packages folder of the user is also a feed, so restore does not download each package again.
