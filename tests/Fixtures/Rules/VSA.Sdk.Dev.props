@@ -1,0 +1,4 @@
+<Project>
+  <!-- Takes the place of Sdk="VSA.Sdk", the same as samples/VSA.Sdk.Dev.props. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../samples/VSA.Sdk.Dev.props" />
+</Project>

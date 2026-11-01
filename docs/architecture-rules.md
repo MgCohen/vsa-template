@@ -25,6 +25,16 @@ VSA has three enforcement levels. Each rule is in one level only.
 2. **Plain reflection, not ArchUnitNET.** Consumers get no new dependency. The rules read generic bases (`RoutedHandler<TRequest, TResponse>`), static abstract members (`TRequest.Method`, `TRequest.Route`) and assembly metadata. We control the message text.
 3. **How the test finds the app.** A consumer writes `VsaArchitectureTests<Program>`. VSA.Testing reads all project libraries in the `DependencyContext` of the test run. A module root is an assembly with `AssemblyMetadata("VsaModule", "<name>")`. Its layers come from `AssemblyMetadata("VsaLayer", "<assembly>")`. The host uses the same records at start-up.
 
+## Consumer use
+
+```csharp
+public sealed class ArchitectureTests : VsaArchitectureTests<Program>;
+```
+
+- The test project uses xUnit v3. VSA.Testing references only `xunit.v3.extensibility.core`.
+- The test project references the host and each module project. The host references the modules with `PrivateAssets="all"`, so the modules do not come from the host reference.
+- `The_app_has_modules` fails if no module root is found. Without it, each rule passes with nothing to check.
+
 ## Rule code
 
 A test rule is a class that implements `IVsaRule`. `Check(VsaApp app)` returns one `Violation` for each problem. A rule has no test framework type, so a fixture test can give it any `VsaApp`.
@@ -34,3 +44,14 @@ Each message gives three things:
 - what is wrong,
 - the full names of the types,
 - the fix.
+
+## Tests
+
+| Rule | Test | Good case | Bad cases |
+|---|---|---|---|
+| `VSA1001`, `VSA1002` | `tests/Rules.Tests/AnalyzerTests.cs` | Code in the test | Code in the test |
+| `VSA2001` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `NoHandler`, `TwoHandlers` |
+| `VSA2002` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `SameRoute` |
+| `VSA2003` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `NoModuleClass`, `TwoModuleClasses`, `OpenModuleClass` |
+
+The fixture modules are in `tests/Fixtures/Rules/Modules/`. Each test gives the rule only the modules that it names.

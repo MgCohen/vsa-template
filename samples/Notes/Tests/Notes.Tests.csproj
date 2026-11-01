@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../App/Host/App.Host.csproj" />
+    <!-- The host references the modules with PrivateAssets="all", so the tests reference them too. -->
+    <ProjectReference Include="../Modules/*/*.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Rules/Testing/VSA.Testing.csproj" />
+  </ItemGroup>
+</Project>

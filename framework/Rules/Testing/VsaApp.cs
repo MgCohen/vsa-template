@@ -17,11 +17,12 @@ public sealed record AppModule(string Name, Assembly Root, IReadOnlyList<Assembl
     public IEnumerable<Assembly> Assemblies => [Root, .. Layers];
 
     // VSA.Sdk records each layer project of the module root as AssemblyMetadata("VsaLayer", "<assembly name>").
+    // A module root with no layers gets one record with an empty value.
     public static AppModule FromRoot(Assembly root) {
         var name = root.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == ModuleDiscovery.ModuleKey)?.Value
             ?? root.GetName().Name!;
         var layers = root.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .Where(a => a.Key == "VsaLayer" && a.Value is not null)
+            .Where(a => a.Key == "VsaLayer" && !string.IsNullOrEmpty(a.Value))
             .Select(a => Assembly.Load(a.Value!));
         return new(name, root, [.. layers]);
     }

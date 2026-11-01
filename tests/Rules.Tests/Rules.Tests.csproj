@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests of the architecture rules: the VSA.Testing rules on the fixtures in tests/Fixtures/Rules,
+       and the VSA.Analyzers rules with the Roslyn analyzer test library. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+    <!-- The test library asks for old versions. These are the versions that VSA.Analyzers uses, and a version with no known vulnerability. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../framework/Rules/Testing/VSA.Testing.csproj" />
+    <ProjectReference Include="../../framework/Rules/Analyzers/VSA.Analyzers.csproj" />
+    <!-- The analyzer tests compile code against these assemblies. -->
+    <ProjectReference Include="../../framework/Layers/Handlers/Events/VSA.Handlers.Events.csproj" />
+    <ProjectReference Include="../../framework/Layers/Presenters/VSA.Presenters.csproj" />
+    <!-- Each fixture module root, with its layers. -->
+    <ProjectReference Include="../Fixtures/Rules/Modules/*/*.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,7 @@
+<Project>
+  <!-- The rule fixtures build against the framework source in this repository (VSA.Sdk source mode), like samples/. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..', 'framework'))</VsaFrameworkSourceDir>
+  </PropertyGroup>
+</Project>
