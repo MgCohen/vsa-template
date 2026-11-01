@@ -3,5 +3,7 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'framework'))</VsaFrameworkSourceDir>
+    <!-- The samples do not ship. Without this, dotnet pack of the solution fails with VSA0001 on the module projects. -->
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>
