@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <!-- The views are in App.Views, so the SDK does not find .razor files here. This adds blazor.web.js. -->
+    <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Views/App.Views.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../../Modules/*/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Layers/Host/VSA.Host.csproj" />
+    <!-- Design-time only: lets dotnet ef build the host to read the model. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

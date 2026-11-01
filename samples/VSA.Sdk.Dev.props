@@ -1,0 +1,8 @@
+<Project>
+  <!-- Takes the place of Sdk="VSA.Sdk" inside this repository, so the samples use the SDK files from source.
+       A consumer project is only <Project Sdk="VSA.Sdk" />. -->
+  <PropertyGroup>
+    <VsaSdkDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'framework', 'Rules', 'Sdk', 'Sdk'))</VsaSdkDir>
+  </PropertyGroup>
+  <Import Project="$(VsaSdkDir)Sdk.props" />
+</Project>

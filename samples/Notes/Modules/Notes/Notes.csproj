@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- The layer references come from VSA.Sdk. Only the database provider is here. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

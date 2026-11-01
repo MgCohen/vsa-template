@@ -8,11 +8,15 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 
 ## Layout
 
-| Path     | Purpose                                              |
-|----------|------------------------------------------------------|
-| `src/`   | Application code, organized by feature (vertical slice) |
-| `tests/` | Unit, integration, and architecture tests            |
-| `docs/`  | Architecture decisions, conventions, and guides      |
+| Path                  | Purpose                                                                 |
+|-----------------------|-------------------------------------------------------------------------|
+| `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
+| `framework/Rules/`    | The enforcement: `Sdk/` (VSA.Sdk, the layer references), `Analyzers/` |
+| `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
+| `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
+| `docs/`               | Architecture decisions, conventions, and guides                         |
+
+A module project is under a `Modules/` folder. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
 
 ## Core principles
 

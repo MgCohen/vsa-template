@@ -7,9 +7,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <!-- All VSA packages ship together with one version. -->
   <PropertyGroup>
-    <VsaSrcDir>$(MSBuildThisFileDirectory)src/</VsaSrcDir>
-    <VsaFrameworkDir>$(VsaSrcDir)Framework/</VsaFrameworkDir>
-    <VsaModulesDir>$(VsaSrcDir)Modules/</VsaModulesDir>
+    <Version>0.1.0</Version>
+    <Authors>VSA</Authors>
   </PropertyGroup>
 </Project>

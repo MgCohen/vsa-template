@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Packs Sdk/ as an MSBuild SDK. The package has no DLL. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageType>MSBuildSdk</PackageType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Sdk/**" Pack="true" PackagePath="Sdk" />
+  </ItemGroup>
+  <!-- The SDK adds the VSA.* packages with its own version, so all packages stay at one version. -->
+  <Target Name="_VsaWriteVersion" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <_VsaVersionFile>$(ProjectDir)$(IntermediateOutputPath)VSA.Version.props</_VsaVersionFile>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_VsaVersionFile)" Overwrite="true" WriteOnlyWhenDifferent="true"
+                      Lines="&lt;Project&gt;&lt;PropertyGroup&gt;&lt;VsaVersion Condition=&quot;'%24(VsaVersion)' == ''&quot;&gt;$(Version)&lt;/VsaVersion&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;" />
+    <ItemGroup>
+      <None Include="$(_VsaVersionFile)" Pack="true" PackagePath="Sdk" Visible="false" />
+    </ItemGroup>
+  </Target>
+</Project>

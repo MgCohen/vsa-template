@@ -1,0 +1,13 @@
+<Project>
+  <!-- VSA.Sdk: the .NET SDK plus the VSA layer rules. A module project is one line: <Project Sdk="VSA.Sdk" />. -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="$(MSBuildThisFileDirectory)VSA.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)VSA.Version.props')" />
+
+  <PropertyGroup>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
