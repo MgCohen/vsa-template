@@ -7,5 +7,7 @@
     <ProjectReference Include="$(VsaSrcDir)App/Views/App.Views.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(VsaModulesDir)*/*.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(VsaFrameworkDir)Host/VSA.Host.csproj" />
+    <!-- Design-time only: lets dotnet ef build the host to read the model. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
 </Project>

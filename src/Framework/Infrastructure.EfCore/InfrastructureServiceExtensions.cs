@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Domain;
 using VSA.Module;
@@ -14,9 +15,19 @@ public static class InfrastructureServiceExtensions {
         var context = infrastructure.GetTypes().SingleOrDefault(t => !t.IsAbstract && typeof(IModuleDbContext).IsAssignableFrom(t))
             ?? throw new InvalidOperationException($"{infrastructure.GetName().Name} has no module context. Make sure that VSA.Analyzers runs on it.");
         typeof(InfrastructureServiceExtensions).GetMethod(nameof(AddModuleDbContext), BindingFlags.NonPublic | BindingFlags.Static)!
-            .MakeGenericMethod(context).Invoke(null, [module.Services, options]);
+            .MakeGenericMethod(context).Invoke(null, [module.Services, WithHistoryTable(module.Name, options)]);
         return module;
     }
+
+    // Each module gets its own migrations history table, so modules can share one database.
+    static Action<DbContextOptionsBuilder> WithHistoryTable(string module, Action<DbContextOptionsBuilder> options) => builder => {
+        options(builder);
+        if (builder.Options.Extensions.OfType<RelationalOptionsExtension>().FirstOrDefault() is { } relational) {
+            var changed = relational.WithMigrationsHistoryTableName($"__EFMigrationsHistory_{module}");
+            typeof(IDbContextOptionsBuilderInfrastructure).GetMethod(nameof(IDbContextOptionsBuilderInfrastructure.AddOrUpdateExtension))!
+                .MakeGenericMethod(changed.GetType()).Invoke(builder, [changed]);
+        }
+    };
 
     // Registers the context of a module and one default EfRepository for each of its aggregates.
     static IServiceCollection AddModuleDbContext<TContext>(this IServiceCollection services,
