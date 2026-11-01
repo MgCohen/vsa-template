@@ -28,4 +28,7 @@ public abstract class VsaArchitectureTests<TEntry> {
 
     [Fact]
     public void VSA2003_each_module_root_has_one_Module_class() => VsaRules.Assert(new OneModuleClass(), App);
+
+    [Fact]
+    public void VSA2004_module_projects_follow_the_layer_map() => VsaRules.Assert(new LayerReferences(), App);
 }

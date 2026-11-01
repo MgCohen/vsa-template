@@ -1,5 +1,6 @@
 using VSA.Testing.Architecture;
 using VSA.Testing.Architecture.Rules;
+using VSA.Testing.Core;
 using static Rules.Tests.Fixtures;
 
 namespace Rules.Tests;
@@ -74,6 +75,47 @@ public sealed class OneModuleClassTests {
     public void Module_class_that_is_not_sealed_fails() {
         var message = Fails(rule, App("OpenModuleClass"));
         Assert.Contains("OpenModuleClass.OpenModuleClassModule must be public and sealed", message);
+    }
+}
+
+public sealed class LayerReferencesTests {
+    // The Good fixture is correct, so a bad case uses a smaller layer map that does not permit what Good uses.
+    static LayerReferences With(params Layer[] layers) => new([Layers.Domain, Layers.ContractsRequests, Layers.Module, .. layers]);
+
+    [Fact]
+    public void Good_fixture_passes() => VsaRules.Assert(new LayerReferences(), App("Good"));
+
+    [Fact]
+    public void Use_of_a_module_project_that_the_map_does_not_permit_fails() {
+        var message = Fails(With(new Layer("Handlers.Requests").Reference(Layers.Domain)), App("Good"));
+        Assert.Contains("VSA2004", message);
+        Assert.Contains("Good.Handlers.Requests (Handlers.Requests) uses Good.Contracts.Requests (Contracts.Requests of module Good)", message);
+    }
+
+    [Fact]
+    public void Use_of_a_base_that_the_map_does_not_permit_fails() {
+        var message = Fails(With(new Layer("Handlers.Requests").Reference(Layers.ContractsRequests)), App("Good"));
+        Assert.Contains("Good.Handlers.Requests (Handlers.Requests) uses VSA.Domain, the base of Domain", message);
+    }
+
+    [Fact]
+    public void Project_in_a_layer_that_is_not_in_the_map_fails() {
+        var message = Fails(new LayerReferences([Layers.Module, Layers.HandlersRequests]), App("Good"));
+        Assert.Contains("Good.Contracts.Requests is in layer Contracts.Requests, which is not in the layer map", message);
+    }
+}
+
+public sealed class LayerMapTests {
+    [Fact]
+    public void Each_layer_name_is_unique() =>
+        Assert.Equal(Layers.All.Count, Layers.All.Select(l => l.Name).Distinct().Count());
+
+    // A reference by name, for example "Infrastructure.EfCore", must name a layer of the map.
+    [Fact]
+    public void Each_edge_names_a_layer_of_the_map() {
+        var unknown = Layers.All.SelectMany(l => l.References.Concat(l.Exposed).Select(e => $"{l.Name} -> {e.Target}"))
+            .Where(edge => Layers.Find(edge.Split(" -> ")[1]) is null);
+        Assert.Empty(unknown);
     }
 }
 

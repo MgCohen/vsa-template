@@ -18,12 +18,15 @@ VSA has three enforcement levels. Each rule is in one level only.
 | `VSA2001` | Architecture | Each request has exactly one handler. |
 | `VSA2002` | Architecture | Two requests do not use the same method and route. The compare ignores case, a trailing `/` and the names of route parameters. |
 | `VSA2003` | Architecture | Each module root has exactly one `Module` class, and it is public and sealed. |
+| `VSA2004` | Architecture | Each module project uses only the VSA bases and module projects that the layer map permits. |
 
 ## Decisions
 
 1. **Analyzers or Architecture.** If one file shows the problem, the rule is an analyzer, because the IDE shows it at once. If the rule needs more than one assembly or more than one module, the rule is in `VSA.Testing.Architecture`. VSA2003 is in Architecture: a compilation-end analyzer shows only on a full build.
 2. **Plain reflection, not ArchUnitNET.** Consumers get no new dependency. The rules read generic bases (`RoutedHandler<TRequest, TResponse>`), static abstract members (`TRequest.Method`, `TRequest.Route`) and assembly metadata. We control the message text.
 3. **How the test finds the app.** A consumer writes `VsaArchitectureTests<Program>`. VSA.Testing.Architecture reads all project libraries in the `DependencyContext` of the test run. A module root is an assembly with `AssemblyMetadata("VsaModule", "<name>")`. Its layers come from `AssemblyMetadata("VsaLayer", "<assembly>")`. The host uses the same records at start-up.
+
+4. **One layer map.** The layer map is C# code in `VSA.Testing.Core` (`Layers.cs`). It copies the map in the VSA Layer Map artifact. The architecture rules read it. VSA.Sdk cannot run C# before compile, so `VSA.Layers.targets` has the same map in MSBuild. If you change one, change the other.
 
 ## Consumer use
 
@@ -53,5 +56,6 @@ Each message gives three things:
 | `VSA2001` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `NoHandler`, `TwoHandlers` |
 | `VSA2002` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `SameRoute` |
 | `VSA2003` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `NoModuleClass`, `TwoModuleClasses`, `OpenModuleClass` |
+| `VSA2004` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `Good` with a smaller layer map |
 
 The fixture modules are in `tests/Fixtures/Rules/Modules/`. Each test gives the rule only the modules that it names.

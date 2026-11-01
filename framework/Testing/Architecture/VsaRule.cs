@@ -16,7 +16,7 @@ public sealed record Violation(string RuleId, string Message) {
 }
 
 public static class VsaRules {
-    public static IReadOnlyList<IVsaRule> All { get; } = [new OneHandlerPerRequest(), new UniqueRoutes(), new OneModuleClass()];
+    public static IReadOnlyList<IVsaRule> All { get; } = [new OneHandlerPerRequest(), new UniqueRoutes(), new OneModuleClass(), new LayerReferences()];
 
     // Throws one exception with all violations of the rule, one on each line.
     public static void Assert(IVsaRule rule, VsaApp app) {

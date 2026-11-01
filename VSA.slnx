@@ -44,6 +44,9 @@
   <Folder Name="/framework/Testing/Analyzers/">
     <Project Path="framework/Testing/Analyzers/VSA.Analyzers.csproj" />
   </Folder>
+  <Folder Name="/framework/Testing/Core/">
+    <Project Path="framework/Testing/Core/VSA.Testing.Core.csproj" />
+  </Folder>
   <Folder Name="/framework/Testing/Architecture/">
     <Project Path="framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
   </Folder>
