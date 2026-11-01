@@ -1,0 +1,8 @@
+@page "/"
+@page "/notes"
+@inject NotesPresenter Notes
+
+<PageTitle>Notes</PageTitle>
+<h1>Notes</h1>
+<NoteForm Presenter="Notes" />
+<NoteList Presenter="Notes" />

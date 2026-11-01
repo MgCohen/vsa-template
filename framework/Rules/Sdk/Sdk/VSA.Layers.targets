@@ -1,0 +1,127 @@
+<Project>
+  <!--
+    The layer rules. They follow the layer map.
+    The module and the layer come from the path after the last "/Modules/":
+      Modules/Notes/                    VsaModule = Notes, VsaLayer = Module (the module root)
+      Modules/Notes/Handlers/Requests/  VsaModule = Notes, VsaLayer = Handlers/Requests
+    A project that is not under a Modules folder gets no rules.
+    "Private" references use PrivateAssets="all". The framework base of each layer is exposed.
+
+    Two modes for the framework references:
+      Package mode (consumers): PackageReference to VSA.* with the version of this SDK.
+      Source mode (this repository): ProjectReference into framework/, when VsaFrameworkSourceDir is set.
+  -->
+  <PropertyGroup>
+    <_VsaPath>$(MSBuildProjectDirectory.Replace('\', '/').TrimEnd('/'))/</_VsaPath>
+    <_VsaAt>$(_VsaPath.LastIndexOf('/Modules/'))</_VsaAt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(_VsaAt)' != '-1'">
+    <VsaModulesDir>$(_VsaPath.Substring(0, $([MSBuild]::Add($(_VsaAt), 9))))</VsaModulesDir>
+    <_VsaRelative>$(_VsaPath.Substring($([MSBuild]::Add($(_VsaAt), 9))).TrimEnd('/'))</_VsaRelative>
+    <_VsaSlash>$(_VsaRelative.IndexOf('/'))</_VsaSlash>
+    <VsaModule Condition="'$(_VsaSlash)' == '-1'">$(_VsaRelative)</VsaModule>
+    <VsaModule Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring(0, $(_VsaSlash)))</VsaModule>
+    <VsaLayer Condition="'$(_VsaSlash)' == '-1'">Module</VsaLayer>
+    <VsaLayer Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring($([MSBuild]::Add($(_VsaSlash), 1))))</VsaLayer>
+    <VsaModuleDir>$(VsaModulesDir)$(VsaModule)/</VsaModuleDir>
+  </PropertyGroup>
+
+  <!-- The module root compiles only its own files, not the files of its layer projects. -->
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module'">
+    <DefaultItemExcludes>$(DefaultItemExcludes);*/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- The framework base of each layer. Path is the project folder under framework/ in source mode. -->
+  <ItemGroup Condition="'$(VsaLayer)' != ''">
+    <_VsaFramework Include="VSA.Analyzers" Path="Rules/Analyzers" Private="true" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Domain'">
+    <_VsaFramework Include="VSA.Domain" Path="Layers/Domain" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure'">
+    <_VsaFramework Include="VSA.Infrastructure.EfCore" Path="Layers/Infrastructure/EfCore" Private="true" />
+    <_VsaFramework Include="VSA.Infrastructure" Path="Layers/Infrastructure/Core" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Requests'">
+    <_VsaFramework Include="VSA.Contracts.Requests" Path="Layers/Contracts/Requests" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Events'">
+    <_VsaFramework Include="VSA.Contracts.Events" Path="Layers/Contracts/Events" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Requests'">
+    <_VsaFramework Include="VSA.Handlers.Requests" Path="Layers/Handlers/Requests" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Events'">
+    <_VsaFramework Include="VSA.Handlers.Events" Path="Layers/Handlers/Events" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
+    <_VsaFramework Include="VSA.Presenters" Path="Layers/Presenters" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
+    <_VsaFramework Include="VSA.Infrastructure.EfCore" Path="Layers/Infrastructure/EfCore" Private="true" />
+    <_VsaFramework Include="VSA.Module" Path="Layers/Module" />
+  </ItemGroup>
+
+  <!-- Source mode: project references into framework/. -->
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
+    <ProjectReference Include="@(_VsaFramework->'$(VsaFrameworkSourceDir)%(Path)/%(Identity).csproj')" VsaRule="true" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
+    <ProjectReference Update="$(VsaFrameworkSourceDir)Rules/Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Update="$(VsaFrameworkSourceDir)Layers/Infrastructure/EfCore/VSA.Infrastructure.EfCore.csproj" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Package mode: package references with the version of this SDK.
+       With central package management, a PackageReference cannot set Version, so use VersionOverride. -->
+  <PropertyGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
+    <_VsaV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(VsaVersion)</_VsaV>
+    <_VsaVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(VsaVersion)</_VsaVO>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
+    <PackageReference Include="@(_VsaFramework)" Version="$(_VsaV)" VersionOverride="$(_VsaVO)" VsaRule="true" />
+    <PackageReference Update="VSA.Analyzers;VSA.Infrastructure.EfCore" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The references inside the module. -->
+  <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure'">
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Domain/*.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Requests'">
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Infrastructure/*.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Contracts/Requests/*.csproj;$(VsaModuleDir)Contracts/Events/*.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Events'">
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Infrastructure/*.csproj" PrivateAssets="all" />
+    <!-- anyModule: the events of all modules -->
+    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Contracts/Events/*.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Contracts/Requests/*.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
+    <!-- Exposed, not private: the host loads the handlers and presenters at run time,
+         so it must get every module assembly. -->
+    <_VsaLayerProject Include="$(VsaModuleDir)*/*.csproj;$(VsaModuleDir)*/*/*.csproj" />
+    <ProjectReference VsaRule="true" Include="@(_VsaLayerProject)" />
+  </ItemGroup>
+
+  <!-- The module root records its layer projects, so the host loads only the layers that exist. -->
+  <Target Name="_VsaRecordLayers" BeforeTargets="GetAssemblyAttributes" Condition="'$(VsaLayer)' == 'Module'">
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>VsaLayer</_Parameter1>
+        <_Parameter2>%(_VsaLayerProject.Filename)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+  <!-- A module project gets its references only from these rules. A reference written by hand is an error. -->
+  <Target Name="_VsaCheckReferences" BeforeTargets="CollectPackageReferences;ResolveProjectReferences" Condition="'$(VsaLayer)' != ''">
+    <ItemGroup>
+      <_VsaHandReference Include="@(ProjectReference)" Condition="'%(ProjectReference.VsaRule)' != 'true'" />
+      <_VsaHandReference Include="@(PackageReference)" Condition="'%(PackageReference.VsaRule)' != 'true' and $([System.String]::Copy('%(Identity)').StartsWith('VSA.'))" />
+    </ItemGroup>
+    <Error Condition="'@(_VsaHandReference)' != ''" Code="VSA0001"
+           Text="$(MSBuildProjectName) is in layer $(VsaLayer). Its references come from VSA.Sdk. Remove these references: @(_VsaHandReference)" />
+  </Target>
+</Project>

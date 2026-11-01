@@ -1,0 +1,20 @@
+@inherits PresenterComponent<NotesPresenter>
+
+@if (Presenter.Load.Error is { } error) {
+    <p class="error">@error</p>
+}
+@if (Presenter.Notes.Count == 0 && !Presenter.Load.Busy) {
+    <p>No notes yet.</p>
+}
+<ul>
+    @foreach (var note in Presenter.Notes) {
+        <li>
+            <span>@note.Title</span>
+            <button disabled="@Presenter.Delete.Busy" @onclick="() => Presenter.DeleteAsync(note.Id)">Delete</button>
+        </li>
+    }
+</ul>
+
+@code {
+    protected override Task OnInitializedAsync() => Presenter.LoadAsync();
+}

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Modules/*/Presenters/*.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Layers/Views/VSA.Views.csproj" />
+  </ItemGroup>
+</Project>
