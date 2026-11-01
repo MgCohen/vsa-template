@@ -12,6 +12,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
 | `framework/Rules/`    | The enforcement: `Sdk/` (VSA.Sdk, the layer references), `Analyzers/` |
+| `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
@@ -33,3 +34,16 @@ A module project is under a `Modules/` folder. Its references come from VSA.Sdk,
 - Keep this file current when conventions change.
 
 <!-- TODO: stack, build/test commands, slice anatomy, naming rules — fill in as specs land. -->
+
+## Scaffolding: the vsa tool
+
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
+
+```bash
+dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/
+dotnet vsa add module <Name>                     # all layers, a status request, a presenter and a page
+dotnet vsa add request <Name> -m <Module>        # the request, the response and the handler
+dotnet vsa doctor                                # the tool, VSA.Sdk and the VSA.* packages have one version
+```
+
+The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule` and `SampleAction`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`, a file with `SampleModule` to `add module`, and all other files to `new app`. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli.Tests`. See `docs/scaffolding.md`.

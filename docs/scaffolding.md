@@ -1,0 +1,67 @@
+# Scaffolding: the vsa tool
+
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code. The tool, VSA.Sdk and the VSA.* packages have one version, and `vsa doctor` finds a mismatch.
+
+## Commands
+
+| Command | Writes | Edits |
+|---|---|---|
+| `new app <Name>` | Root files, `App/Host`, `App/Views`, `Modules/` | None |
+| `add module <Name>` | All layers, status request, presenter, page | Solution, with `dotnet sln add` |
+| `add request <Name> -m <Module>` | Request, response, handler | None |
+| `doctor` | None | None |
+
+Rules for all commands:
+
+- A name is a PascalCase C# identifier. `App` and names that start with `VSA` are forbidden.
+- The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
+- `add request` stops if the module does not exist.
+
+## Template format A
+
+```
+framework/Tooling/Cli/Templates/
+├─ AGENTS.md.template                 new app (the tool removes ".template")
+├─ App/Host/, App/Views/              new app
+├─ App/Views/Pages/SampleModulePage.razor          add module
+├─ Modules/SampleModule/**                         add module
+│  ├─ Contracts/Requests/SampleAction/**           add request
+│  └─ Handlers/Requests/SampleActionHandler.cs     add request
+├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
+```
+
+The path of a template file gives its command:
+
+| Path contains | Command | Replaced names |
+|---|---|---|
+| `SampleAction` | `add request` | `SampleAction`, `SampleModule` |
+| `SampleModule` | `add module` | `SampleModule` |
+| Other | `new app` | `SampleApp` |
+
+The tool also replaces the kebab form of each name, for routes: `sample-module` becomes `billing`, and `sample-action` becomes `create-invoice`.
+
+## Source mode and package mode
+
+The templates build in this repository in source mode, as `samples/` does. The tool changes each `.csproj` to package mode:
+
+| Source mode (repository) | Package mode (consumer) |
+|---|---|
+| `<Import ... VSA.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="VSA.Sdk" />` |
+| `<ProjectReference Include="$(VsaFrameworkSourceDir).../VSA.Host.csproj" />` | `<PackageReference Include="VSA.Host" Version="<tool version>" />` |
+
+If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
+
+## One version
+
+`new app` writes the version of the tool to these files. `vsa doctor` reads them and fails if two versions are different.
+
+| File | Item |
+|---|---|
+| The running tool | `VSA.Cli` |
+| `dotnet-tools.json` | `vsa.cli` |
+| `global.json` | `msbuild-sdks` → `VSA.Sdk` |
+| Each `.csproj` and `Directory.*.props` | Each `VSA.*` package reference |
+
+## Empty Domain
+
+A new module has an empty Domain. The DbContext generator still writes `<Module>DbContext` with no aggregates. The starter module does not call `AddDatabase`, so the app does not use this context. When you add the first aggregate, call `module.AddDatabase(...)` in the module root.
