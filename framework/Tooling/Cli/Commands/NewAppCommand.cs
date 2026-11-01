@@ -8,15 +8,15 @@ static class NewAppCommand {
     // The .NET SDK of a new app. VSA.Sdk targets net10.0.
     const string DotnetSdk = "10.0.100";
 
-    // source: an extra package feed for nuget.config, for example a local folder with the VSA packages.
-    public static int Run(string name, string? source) {
+    // sources: extra package feeds for nuget.config, for example a local folder with the VSA packages.
+    public static int Run(string name, IReadOnlyList<string> sources) {
         Names.Check(name, "app");
         var root = Path.GetFullPath(name);
         var version = ToolVersion.Current;
         var files = new List<(string Path, string Content)> {
             ("global.json", GlobalJson(version)),
             ("dotnet-tools.json", ToolsJson(version)),
-            ("nuget.config", NugetConfig(source is null ? null : Path.GetFullPath(source))),
+            ("nuget.config", NugetConfig(sources)),
             ($"{name}.slnx", Solution),
         };
         files.AddRange(Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = name }, version));
@@ -67,8 +67,9 @@ static class NewAppCommand {
 
         """;
 
-    static string NugetConfig(string? source) {
-        var local = source is null ? "" : $"    <add key=\"vsa\" value=\"{SecurityElement.Escape(source)}\" />\n";
+    static string NugetConfig(IReadOnlyList<string> sources) {
+        var local = string.Concat(sources.Select((source, i) =>
+            $"    <add key=\"vsa{(i == 0 ? "" : i + 1)}\" value=\"{SecurityElement.Escape(Path.GetFullPath(source))}\" />\n"));
         return $"""
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>

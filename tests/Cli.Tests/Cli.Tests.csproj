@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Tests.Shared.csproj" />
+    <!-- The scaffolding tests call the tool code in this process. The end-to-end test uses the packed tool. -->
+    <ProjectReference Include="../../framework/Tooling/Cli/VSA.Cli.csproj" />
+  </ItemGroup>
+</Project>
