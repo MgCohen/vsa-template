@@ -1,6 +1,6 @@
 # Scaffolding: the vsa tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code. The tool, VSA.Sdk and the VSA.* packages have one version, and `vsa doctor` finds a mismatch.
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code (`dotnet run solution.cs` makes `VSA.slnx`). The tool, VSA.Sdk and the VSA.* packages have one version, and `vsa doctor` finds a mismatch.
 
 ## Commands
 

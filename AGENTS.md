@@ -19,6 +19,8 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 
 A module project is under a `Modules/` folder. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
 
+Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script adds each `.csproj` in the repository, except `tests/Fixtures/`. After you add, move or remove a project, run the script again. Do not edit `VSA.slnx` by hand.
+
 ## Core principles
 
 - **Organize by feature, not by layer.** Each slice owns its request, handler, validation, and endpoint in one place.
