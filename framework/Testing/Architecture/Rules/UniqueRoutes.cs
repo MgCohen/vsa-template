@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using VSA.Contracts.Requests;
 
-namespace VSA.Testing.Rules;
+namespace VSA.Testing.Architecture.Rules;
 
 // VSA2002: two requests do not use the same method and route, in all modules.
 // The compare ignores case, a trailing "/" and the names of route parameters: "/notes/{id}" is "/notes/{noteId}".

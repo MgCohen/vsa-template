@@ -1,4 +1,4 @@
-namespace VSA.Testing.Rules;
+namespace VSA.Testing.Architecture.Rules;
 
 // VSA2003: each module root has exactly one Module class, and it is public and sealed.
 // The host also fails at start-up for zero or two Module classes. This rule finds it before the app starts.

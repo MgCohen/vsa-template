@@ -6,7 +6,7 @@ VSA has three enforcement levels. Each rule is in one level only.
 |---|---|---|---|
 | `VSA.Sdk` | Before compile | Wrong references between layers and modules | `VSA0xxx` |
 | `VSA.Analyzers` | During compile, in the IDE | Wrong code that one file shows | `VSA1xxx` |
-| `VSA.Testing` | In a test run, after build | Rules over the whole app | `VSA2xxx` |
+| `VSA.Testing.Architecture` | In a test run, after build | Rules over the whole app | `VSA2xxx` |
 
 ## Rules
 
@@ -15,15 +15,15 @@ VSA has three enforcement levels. Each rule is in one level only.
 | `VSA0001` | Sdk | A module project gets its references only from VSA.Sdk. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. |
 | `VSA1002` | Analyzers | Event handlers do not send requests: no request type and no `IBus` in a class that inherits `IntegrationEventHandler<T>`. |
-| `VSA2001` | Testing | Each request has exactly one handler. |
-| `VSA2002` | Testing | Two requests do not use the same method and route. The compare ignores case, a trailing `/` and the names of route parameters. |
-| `VSA2003` | Testing | Each module root has exactly one `Module` class, and it is public and sealed. |
+| `VSA2001` | Architecture | Each request has exactly one handler. |
+| `VSA2002` | Architecture | Two requests do not use the same method and route. The compare ignores case, a trailing `/` and the names of route parameters. |
+| `VSA2003` | Architecture | Each module root has exactly one `Module` class, and it is public and sealed. |
 
 ## Decisions
 
-1. **Analyzers or Testing.** If one file shows the problem, the rule is an analyzer, because the IDE shows it at once. If the rule needs more than one assembly or more than one module, the rule is in `VSA.Testing`. VSA2003 is in Testing: a compilation-end analyzer shows only on a full build.
+1. **Analyzers or Architecture.** If one file shows the problem, the rule is an analyzer, because the IDE shows it at once. If the rule needs more than one assembly or more than one module, the rule is in `VSA.Testing.Architecture`. VSA2003 is in Architecture: a compilation-end analyzer shows only on a full build.
 2. **Plain reflection, not ArchUnitNET.** Consumers get no new dependency. The rules read generic bases (`RoutedHandler<TRequest, TResponse>`), static abstract members (`TRequest.Method`, `TRequest.Route`) and assembly metadata. We control the message text.
-3. **How the test finds the app.** A consumer writes `VsaArchitectureTests<Program>`. VSA.Testing reads all project libraries in the `DependencyContext` of the test run. A module root is an assembly with `AssemblyMetadata("VsaModule", "<name>")`. Its layers come from `AssemblyMetadata("VsaLayer", "<assembly>")`. The host uses the same records at start-up.
+3. **How the test finds the app.** A consumer writes `VsaArchitectureTests<Program>`. VSA.Testing.Architecture reads all project libraries in the `DependencyContext` of the test run. A module root is an assembly with `AssemblyMetadata("VsaModule", "<name>")`. Its layers come from `AssemblyMetadata("VsaLayer", "<assembly>")`. The host uses the same records at start-up.
 
 ## Consumer use
 
@@ -31,7 +31,7 @@ VSA has three enforcement levels. Each rule is in one level only.
 public sealed class ArchitectureTests : VsaArchitectureTests<Program>;
 ```
 
-- The test project uses xUnit v3. VSA.Testing references only `xunit.v3.extensibility.core`.
+- The test project uses xUnit v3. VSA.Testing.Architecture references only `xunit.v3.extensibility.core`.
 - The test project references the host and each module project. The host references the modules with `PrivateAssets="all"`, so the modules do not come from the host reference.
 - `The_app_has_modules` fails if no module root is found. Without it, each rule passes with nothing to check.
 

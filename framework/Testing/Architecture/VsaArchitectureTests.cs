@@ -1,7 +1,7 @@
-using VSA.Testing.Rules;
+using VSA.Testing.Architecture.Rules;
 using Xunit;
 
-namespace VSA.Testing;
+namespace VSA.Testing.Architecture;
 
 // All VSA architecture rules as xUnit v3 tests. A consumer test project needs one class:
 //   public sealed class ArchitectureTests : VsaArchitectureTests<Program>;

@@ -33,7 +33,7 @@
 
   <!-- The framework base of each layer. Path is the project folder under framework/ in source mode. -->
   <ItemGroup Condition="'$(VsaLayer)' != ''">
-    <_VsaFramework Include="VSA.Analyzers" Path="Rules/Analyzers" Private="true" />
+    <_VsaFramework Include="VSA.Analyzers" Path="Testing/Analyzers" Private="true" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Domain'">
     <_VsaFramework Include="VSA.Domain" Path="Layers/Domain" />
@@ -67,7 +67,7 @@
     <ProjectReference Include="@(_VsaFramework->'$(VsaFrameworkSourceDir)%(Path)/%(Identity).csproj')" VsaRule="true" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
-    <ProjectReference Update="$(VsaFrameworkSourceDir)Rules/Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Update="$(VsaFrameworkSourceDir)Testing/Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Update="$(VsaFrameworkSourceDir)Layers/Infrastructure/EfCore/VSA.Infrastructure.EfCore.csproj" PrivateAssets="all" />
   </ItemGroup>
 

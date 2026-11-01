@@ -1,7 +1,7 @@
 using VSA.Contracts.Requests;
 using VSA.Handlers.Requests;
 
-namespace VSA.Testing.Rules;
+namespace VSA.Testing.Architecture.Rules;
 
 // VSA2001: each request has exactly one handler. The handler is the endpoint, so zero handlers means no endpoint,
 // and two handlers means two endpoints for one route.

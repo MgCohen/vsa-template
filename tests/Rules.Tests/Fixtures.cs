@@ -1,6 +1,6 @@
 global using Xunit;
 using System.Reflection;
-using VSA.Testing;
+using VSA.Testing.Architecture;
 
 namespace Rules.Tests;
 

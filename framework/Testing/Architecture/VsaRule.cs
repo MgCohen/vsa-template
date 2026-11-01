@@ -1,7 +1,7 @@
 using System.Reflection;
-using VSA.Testing.Rules;
+using VSA.Testing.Architecture.Rules;
 
-namespace VSA.Testing;
+namespace VSA.Testing.Architecture;
 
 // One architecture rule over the whole app. Check returns one violation for each problem, or none.
 public interface IVsaRule {

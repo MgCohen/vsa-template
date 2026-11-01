@@ -1,7 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyModel;
 
-namespace VSA.Testing;
+namespace VSA.Testing.Architecture;
 
 // Finds the module roots of an app. VSA.Sdk records each module root as AssemblyMetadata("VsaModule", "<name>").
 // The search reads all project libraries in the DependencyContext of the test run, the same as the host at start-up.

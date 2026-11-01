@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace VSA.Testing;
+namespace VSA.Testing.Architecture;
 
 // The assemblies of an app, module by module. The rules read only this, so a test can give any assemblies.
 public sealed record VsaApp(IReadOnlyList<AppModule> Modules) {

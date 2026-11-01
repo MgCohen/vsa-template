@@ -1,5 +1,5 @@
-using VSA.Testing;
-using VSA.Testing.Rules;
+using VSA.Testing.Architecture;
+using VSA.Testing.Architecture.Rules;
 using static Rules.Tests.Fixtures;
 
 namespace Rules.Tests;

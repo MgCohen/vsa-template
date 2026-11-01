@@ -11,7 +11,8 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | Path                  | Purpose                                                                 |
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
-| `framework/Rules/`    | The enforcement: `Sdk/` (VSA.Sdk, the layer references), `Analyzers/`, `Testing/` (VSA.Testing) |
+| `framework/Sdk/`      | VSA.Sdk: the build setup of each module project and the layer references |
+| `framework/Testing/`  | The checks that ship: `Analyzers/` (VSA.Analyzers), `Architecture/` (VSA.Testing.Architecture) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
@@ -27,12 +28,12 @@ A module project is under a `Modules/` folder. Its references come from VSA.Sdk,
 
 ## Add an architecture rule
 
-The levels, IDs and rules are in `docs/architecture-rules.md`. A consumer gets all VSA.Testing rules with one class in an xUnit v3 test project: `public sealed class ArchitectureTests : VsaArchitectureTests<Program>;`. VSA.Testing needs xUnit v3.
+The levels, IDs and rules are in `docs/architecture-rules.md`. A consumer gets all VSA.Testing.Architecture rules with one class in an xUnit v3 test project: `public sealed class ArchitectureTests : VsaArchitectureTests<Program>;`. VSA.Testing.Architecture needs xUnit v3.
 
-1. If one file shows the problem, write an analyzer in `framework/Rules/Analyzers/`. Use the next free `VSA1xxx` ID and add it to `AnalyzerReleases.Unshipped.md`.
-2. Else write a class that implements `IVsaRule` in `framework/Rules/Testing/Rules/`. Use the next free `VSA2xxx` ID, add it to `VsaRules.All`, and add a `[Fact]` to `VsaArchitectureTests`. Do not use test framework types in the rule.
+1. If one file shows the problem, write an analyzer in `framework/Testing/Analyzers/`. Use the next free `VSA1xxx` ID and add it to `AnalyzerReleases.Unshipped.md`.
+2. Else write a class that implements `IVsaRule` in `framework/Testing/Architecture/Rules/`. Use the next free `VSA2xxx` ID, add it to `VsaRules.All`, and add a `[Fact]` to `VsaArchitectureTests`. Do not use test framework types in the rule.
 3. Write a message that gives what is wrong, the type names, and the fix.
-4. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For a VSA.Testing rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`.
+4. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`.
 5. Add the rule to the table in `docs/architecture-rules.md`.
 
 ## Working agreements

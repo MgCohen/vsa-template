@@ -37,15 +37,15 @@
   <Folder Name="/framework/Layers/Views/">
     <Project Path="framework/Layers/Views/VSA.Views.csproj" />
   </Folder>
-  <Folder Name="/framework/Rules/" />
-  <Folder Name="/framework/Rules/Analyzers/">
-    <Project Path="framework/Rules/Analyzers/VSA.Analyzers.csproj" />
+  <Folder Name="/framework/Sdk/">
+    <Project Path="framework/Sdk/VSA.Sdk.csproj" />
   </Folder>
-  <Folder Name="/framework/Rules/Sdk/">
-    <Project Path="framework/Rules/Sdk/VSA.Sdk.csproj" />
+  <Folder Name="/framework/Testing/" />
+  <Folder Name="/framework/Testing/Analyzers/">
+    <Project Path="framework/Testing/Analyzers/VSA.Analyzers.csproj" />
   </Folder>
-  <Folder Name="/framework/Rules/Testing/">
-    <Project Path="framework/Rules/Testing/VSA.Testing.csproj" />
+  <Folder Name="/framework/Testing/Architecture/">
+    <Project Path="framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
   </Folder>
   <Folder Name="/samples/" />
   <Folder Name="/samples/Notes/" />
