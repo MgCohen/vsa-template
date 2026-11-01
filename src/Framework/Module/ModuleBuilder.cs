@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace VSA.Module;
 
@@ -7,11 +8,18 @@ public sealed class ModuleBuilder(string name, IServiceCollection services, ICon
     public IServiceCollection Services => services;
     public IConfiguration Configuration => configuration;
 
-    // Binds the Modules:{Name} section to TSettings, registers it, and returns it.
-    public TSettings Settings<TSettings>() where TSettings : class, new() {
-        var settings = new TSettings();
-        configuration.GetSection($"Modules:{name}").Bind(settings);
+    // Binds Modules:{Name} to TSettings and checks it. If the settings are not valid, start-up stops.
+    // Registers TSettings and IOptions<TSettings>. A reload of IOptions<TSettings> runs the same checks.
+    internal TSettings Settings<TSettings>(Func<TSettings, IEnumerable<string>> validate) where TSettings : class, new() {
+        var section = configuration.GetSection($"Modules:{name}");
+        var settings = section.Get<TSettings>() ?? new TSettings();
+        var errors = SettingsValidator<TSettings>.Errors(settings, validate);
+        if (errors.Count > 0) {
+            throw new InvalidOperationException($"{section.Path} is not valid: {string.Join(" ", errors)}");
+        }
         services.AddSingleton(settings);
+        services.AddOptions<TSettings>().Bind(section);
+        services.AddSingleton<IValidateOptions<TSettings>>(new SettingsValidator<TSettings>(validate));
         return settings;
     }
 
