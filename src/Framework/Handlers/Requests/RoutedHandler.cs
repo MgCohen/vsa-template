@@ -11,7 +11,7 @@ namespace VSA.Handlers.Requests;
 public abstract class RoutedHandler<TRequest, TResponse> : Endpoint<TRequest, TResponse>
     where TRequest : IRequest<TResponse> {
     public sealed override void Configure() {
-        Verbs(TRequest.Method);
+        Verbs(TRequest.Method.Method);
         Routes(TRequest.Route);
         AllowAnonymous();
         // FastEndpoints cannot bind a request with no properties, for example ListNotesRequest.

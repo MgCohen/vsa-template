@@ -11,13 +11,13 @@ namespace VSA.Host;
 // Sends each request over HTTP to the method and route of its request type.
 // In the host process, the base address is the host itself (loopback).
 sealed class HttpBus(HttpClient http) : IBus {
-    static readonly ConcurrentDictionary<Type, (string Method, string Route)> routes = new();
+    static readonly ConcurrentDictionary<Type, (HttpMethod Method, string Route)> routes = new();
 
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) {
         var type = request.GetType();
         var (method, route) = routes.GetOrAdd(type, RouteOf);
-        var bodyless = method is Http.Get or Http.Delete;
-        using var message = new HttpRequestMessage(new HttpMethod(method), Address(route, request, bodyless));
+        var bodyless = method == HttpMethod.Get || method == HttpMethod.Delete;
+        using var message = new HttpRequestMessage(method, Address(route, request, bodyless));
         if (!bodyless) {
             message.Content = JsonContent.Create(request, type);
         }
@@ -31,9 +31,9 @@ sealed class HttpBus(HttpClient http) : IBus {
             problem?.Detail ?? response.ReasonPhrase ?? "The request failed.");
     }
 
-    static (string Method, string Route) RouteOf(Type type) {
-        string Read(string name) => (string)type.GetProperty(name, BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
-        return (Read(nameof(IRoutedRequest.Method)), Read(nameof(IRoutedRequest.Route)));
+    static (HttpMethod Method, string Route) RouteOf(Type type) {
+        T Read<T>(string name) => (T)type.GetProperty(name, BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
+        return (Read<HttpMethod>(nameof(IRoutedRequest.Method)), Read<string>(nameof(IRoutedRequest.Route)));
     }
 
     // Puts properties into the {placeholders} of the route. A request with no body sends the others in the query.
