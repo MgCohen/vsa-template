@@ -27,16 +27,19 @@ framework/Tooling/Cli/Templates/
 ├─ Modules/SampleModule/**                         add module
 │  ├─ Contracts/Requests/SampleAction/**           add request
 │  └─ Handlers/Requests/SampleActionHandler.cs     add request
+├─ Modules/.gitkeep                                new app (keeps the empty Modules/ folder)
 ├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
 ```
 
-The path of a template file gives its command:
+The path of a template file gives its command. The tool uses the first rule that matches:
 
-| Path contains | Command | Replaced names |
-|---|---|---|
-| `SampleAction` | `add request` | `SampleAction`, `SampleModule` |
-| `SampleModule` | `add module` | `SampleModule` |
-| Other | `new app` | `SampleApp` |
+| Rule | Path | Command | Replaced names |
+|---|---|---|---|
+| 1 | Contains `SampleAction` | `add request` | `SampleAction`, `SampleModule` |
+| 2 | Under `Modules/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
+| 3 | Other | `new app` | `SampleApp` |
+
+`ScaffoldingTests.EachTemplateFileHasOneCommand` lists each template file with its command. If you add a template file, add it to this test.
 
 The tool also replaces the kebab form of each name, for routes: `sample-module` becomes `billing`, and `sample-action` becomes `create-invoice`.
 

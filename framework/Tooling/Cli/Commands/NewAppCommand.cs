@@ -3,7 +3,8 @@ using VSA.Cli.Scaffolding;
 
 namespace VSA.Cli.Commands;
 
-// vsa new app <Name>: the root files with the version of this tool, App/Host, App/Views and an empty Modules/ folder.
+// vsa new app <Name>: the root files with the version of this tool, App/Host, App/Views and an empty Modules/ folder
+// (only Modules/.gitkeep, so that git keeps the folder).
 static class NewAppCommand {
     // The .NET SDK of a new app. VSA.Sdk targets net10.0.
     const string DotnetSdk = "10.0.100";
@@ -22,7 +23,6 @@ static class NewAppCommand {
         files.AddRange(Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = name }, version));
         Console.WriteLine($"Making the app {name} (VSA {version}):");
         FileWriter.Write(root, files);
-        Directory.CreateDirectory(Path.Combine(root, "Modules"));
 
         var (code, output) = Dotnet.Run(root, "tool", "restore");
         if (code != 0) {

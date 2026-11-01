@@ -3,10 +3,11 @@ using System.Text.RegularExpressions;
 namespace VSA.Cli.Scaffolding;
 
 // Template format A: the templates are one compilable app with fixed sample names. The tool replaces the names.
-// The name of a template file gives its command:
-//   a path with SampleAction   add request
-//   a path with SampleModule   add module
-//   all other files            new app
+// The path of a template file gives its command, in this order:
+//   1. the path contains SampleAction                                  add request
+//   2. the path is under Modules/SampleModule/, or the file name
+//      contains SampleModule (App/Views/Pages/SampleModulePage.razor)  add module
+//   3. all other files                                                 new app
 // A ".template" suffix keeps a file inactive in this repository, for example AGENTS.md.template. The tool removes it.
 static partial class Templates {
     public const string App = "SampleApp";
@@ -39,10 +40,18 @@ static partial class Templates {
         return files;
     }
 
-    static Kind KindOf(string path) =>
+    // path: relative to Templates/, with "/".
+    public static Kind KindOf(string path) =>
         path.Contains(Request, StringComparison.Ordinal) ? Kind.Request
-        : path.Contains(Module, StringComparison.Ordinal) ? Kind.Module
+        : path.StartsWith($"Modules/{Module}/", StringComparison.Ordinal) || Path.GetFileName(path).Contains(Module, StringComparison.Ordinal) ? Kind.Module
         : Kind.App;
+
+    // The path of each template file, relative to Templates/, before the names are replaced.
+    public static IEnumerable<string> All() =>
+        typeof(Templates).Assembly.GetManifestResourceNames()
+            .Where(r => r.StartsWith(Prefix, StringComparison.Ordinal))
+            .Select(r => r[Prefix.Length..].Replace('\\', '/'))
+            .Order(StringComparer.Ordinal);
 
     // names: sample name to new name. The kebab form of each name, for routes, is replaced too.
     static string Replace(string text, IReadOnlyDictionary<string, string> names) {

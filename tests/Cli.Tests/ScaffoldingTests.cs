@@ -33,6 +33,44 @@ public sealed class ScaffoldingTests {
     [InlineData("SampleModule", "sample-module")]
     public void KebabFormIsForRoutes(string name, string kebab) => Assert.Equal(kebab, Names.Kebab(name));
 
+    // Each template file and its command. A new template file must be added here, so its command shows in the diff.
+    [Fact]
+    public void EachTemplateFileHasOneCommand() {
+        const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request;
+        (string, Templates.Kind)[] expected = [
+            ("AGENTS.md.template", App),
+            ("App/Host/App.Host.csproj", App),
+            ("App/Host/Program.cs", App),
+            ("App/Host/Properties/launchSettings.json", App),
+            ("App/Host/appsettings.json", App),
+            ("App/Views/App.Views.csproj", App),
+            ("App/Views/App.razor", App),
+            ("App/Views/Pages/Home.razor", App),
+            ("App/Views/Pages/SampleModulePage.razor", Module),
+            ("App/Views/Routes.razor", App),
+            ("App/Views/_Imports.razor", App),
+            ("Modules/.gitkeep", App),
+            ("Modules/SampleModule/Contracts/Events/SampleModule.Contracts.Events.csproj", Module),
+            ("Modules/SampleModule/Contracts/Requests/GetStatus/GetStatusRequest.cs", Module),
+            ("Modules/SampleModule/Contracts/Requests/GetStatus/GetStatusResponse.cs", Module),
+            ("Modules/SampleModule/Contracts/Requests/SampleAction/SampleActionRequest.cs", Request),
+            ("Modules/SampleModule/Contracts/Requests/SampleAction/SampleActionResponse.cs", Request),
+            ("Modules/SampleModule/Contracts/Requests/SampleModule.Contracts.Requests.csproj", Module),
+            ("Modules/SampleModule/Domain/SampleModule.Domain.csproj", Module),
+            ("Modules/SampleModule/Handlers/Events/SampleModule.Handlers.Events.csproj", Module),
+            ("Modules/SampleModule/Handlers/Requests/GetStatusHandler.cs", Module),
+            ("Modules/SampleModule/Handlers/Requests/SampleActionHandler.cs", Request),
+            ("Modules/SampleModule/Handlers/Requests/SampleModule.Handlers.Requests.csproj", Module),
+            ("Modules/SampleModule/Infrastructure/SampleModule.Infrastructure.csproj", Module),
+            ("Modules/SampleModule/Presenters/SampleModule.Presenters.csproj", Module),
+            ("Modules/SampleModule/Presenters/SampleModulePresenter.cs", Module),
+            ("Modules/SampleModule/SampleModule.csproj", Module),
+            ("Modules/SampleModule/SampleModuleModule.cs", Module),
+        ];
+
+        Assert.Equal(expected, Templates.All().Select(path => (path, Templates.KindOf(path))));
+    }
+
     [Fact]
     public void NewAppHasTheAppFilesOnly() {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
