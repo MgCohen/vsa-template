@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Module/VSA.Module.csproj" />

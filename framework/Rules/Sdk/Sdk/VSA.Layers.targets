@@ -105,13 +105,14 @@
     <ProjectReference VsaRule="true" Include="@(_VsaLayerProject)" />
   </ItemGroup>
 
-  <!-- The module root records its name, so the host finds it,
-       and its layer projects, so the host loads only the layers that exist. -->
+  <!-- The module root records its assembly name (the same as Module.Name), so the host finds it,
+       and its layer projects, so the host loads only the layers that exist.
+       The keys are a public contract: keep them the same as VSA.Module.ModuleMetadata. -->
   <Target Name="_VsaRecordLayers" BeforeTargets="GetAssemblyAttributes" Condition="'$(VsaLayer)' == 'Module'">
     <ItemGroup>
       <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
         <_Parameter1>VsaModule</_Parameter1>
-        <_Parameter2>$(VsaModule)</_Parameter2>
+        <_Parameter2>$(AssemblyName)</_Parameter2>
       </AssemblyAttribute>
       <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
         <_Parameter1>VsaLayer</_Parameter1>
