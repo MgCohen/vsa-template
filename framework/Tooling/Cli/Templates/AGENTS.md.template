@@ -1,0 +1,32 @@
+# AGENTS.md
+
+Instructions for AI coding agents (and humans) working in SampleApp. SampleApp uses the VSA framework: Vertical Slice Architecture with one folder for each module.
+
+## Layout
+
+| Path             | Purpose                                                              |
+|------------------|----------------------------------------------------------------------|
+| `App/Host/`      | The web host. `Program.cs` calls `builder.AddVsa()`, which finds the modules |
+| `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
+| `Modules/<Name>/`| One module: its root, and one project for each layer                |
+
+A module project is only `<Project Sdk="VSA.Sdk" />`. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`.
+
+## Commands
+
+Use the `vsa` tool to add code. It writes only new files, and it does not write over a file.
+
+```bash
+dotnet tool restore                          # one time, after a new clone
+dotnet vsa add module <Name>                 # all layers, a status request and a page
+dotnet vsa add request <Name> -m <Module>    # a request, its response and its handler
+dotnet vsa doctor                            # the tool, VSA.Sdk and the packages have one version
+```
+
+To update VSA, change the version in `global.json`, `dotnet-tools.json` and the `VSA.*` package references, then run `dotnet vsa doctor`.
+
+## Core principles
+
+- **Organize by feature, not by layer.** Each request has its request, response and handler in one place.
+- **Modules are independent.** A module uses another module only through its contracts.
+- **Keep shared code small.** Share code only when two or more slices need it.

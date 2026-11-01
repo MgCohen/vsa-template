@@ -1,0 +1,4 @@
+<Project>
+  <!-- The templates build against the framework source, as the samples do. The tool does not copy this file. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../../samples/Directory.Build.props" />
+</Project>

@@ -44,6 +44,45 @@
   <Folder Name="/framework/Rules/Sdk/">
     <Project Path="framework/Rules/Sdk/VSA.Sdk.csproj" />
   </Folder>
+  <Folder Name="/framework/Tooling/" />
+  <Folder Name="/framework/Tooling/Cli/">
+    <Project Path="framework/Tooling/Cli/VSA.Cli.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/" />
+  <Folder Name="/framework/Tooling/Cli/Templates/App/" />
+  <Folder Name="/framework/Tooling/Cli/Templates/App/Host/">
+    <Project Path="framework/Tooling/Cli/Templates/App/Host/App.Host.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/App/Views/">
+    <Project Path="framework/Tooling/Cli/Templates/App/Views/App.Views.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/SampleModule.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/" />
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Contracts/" />
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Contracts/Events/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Contracts/Events/SampleModule.Contracts.Events.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Contracts/Requests/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Contracts/Requests/SampleModule.Contracts.Requests.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Domain/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Domain/SampleModule.Domain.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Handlers/" />
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Handlers/Events/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Handlers/Events/SampleModule.Handlers.Events.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Handlers/Requests/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Handlers/Requests/SampleModule.Handlers.Requests.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Infrastructure/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Infrastructure/SampleModule.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/framework/Tooling/Cli/Templates/Modules/SampleModule/Presenters/">
+    <Project Path="framework/Tooling/Cli/Templates/Modules/SampleModule/Presenters/SampleModule.Presenters.csproj" />
+  </Folder>
   <Folder Name="/samples/" />
   <Folder Name="/samples/Notes/" />
   <Folder Name="/samples/Notes/App/" />
