@@ -38,6 +38,18 @@ A new test project goes in `tests/<Name>.Tests/`. Copy the project file of `Fram
 
 `LocalFeed` packs all framework packages one time for each test process, with version `0.0.0-test`. A `Workspace` restores from that feed with its own NuGet cache, in a short temporary folder.
 
+The public surface of `tests/Shared` (namespace `Tests.Shared`). Other test projects use it, so keep these names stable:
+
+| Member | Use |
+|--------|-----|
+| `Repo.Root`, `Repo.Path(params string[])` | The repository root, and a path in it |
+| `LocalFeed.Path`, `LocalFeed.Version`, `LocalFeed.Packages` | The feed folder (packs on first use), `0.0.0-test`, the package ids. It packs each packable project under `framework/` |
+| `Workspace.Create(string copyFrom)` | Copies a folder to `Src` and writes `global.json`, `nuget.config`, `Directory.Build.props` and `Directory.Packages.props` in `Root` |
+| `workspace.Root`, `.Src`, `.Env`, `.Dotnet(params string[])`, `.Start(params string[])`, `.Dispose()` | Run dotnet in `Src` with the workspace NuGet cache. `Dispose` deletes the folder |
+| `Dotnet.Run(workDir, env, params string[])`, `Dotnet.Start(...)` | Run the dotnet CLI without the MSBuild variables of the test host |
+| `DotnetResult(Command, ExitCode, Output)`, `.Succeeded`, `.EnsureSuccess()` | The result of a run |
+| `TempFolder.Create()`, `.Copy(from, to)`, `.Delete(path)` | Short temporary folders |
+
 ## Core principles
 
 - **Organize by feature, not by layer.** Each slice owns its request, handler, validation, and endpoint in one place.
