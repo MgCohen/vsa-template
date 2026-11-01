@@ -80,4 +80,9 @@
   <Folder Name="/samples/Notes/Modules/Notes/Presenters/">
     <Project Path="samples/Notes/Modules/Notes/Presenters/Notes.Presenters.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Consumer.Tests/Consumer.Tests.csproj" />
+    <Project Path="tests/Framework.Tests/Framework.Tests.csproj" />
+    <Project Path="tests/Shared/Tests.Shared.csproj" />
+  </Folder>
 </Solution>

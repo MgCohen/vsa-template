@@ -18,6 +18,26 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 
 A module project is under a `Modules/` folder. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
 
+## Tests
+
+Run all tests with `dotnet test VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use xUnit v3 on Microsoft.Testing.Platform (set in `global.json`).
+
+| Path                     | Put here                                                                  |
+|--------------------------|---------------------------------------------------------------------------|
+| `tests/Framework.Tests/` | Tests of one framework layer. One folder for each area, for example `Settings/`, `Host/` |
+| `tests/Consumer.Tests/`  | Tests that pack the framework and build a copy of a sample as a consumer  |
+| `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
+| `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
+
+There are two kinds of fixture:
+
+- **Referenced fixture:** a module that must build. A test project references it with `ProjectReference`, and it builds in source mode (`tests/Fixtures/Directory.Build.props`).
+- **Built fixture:** a test builds it out of process to check the build result. Write its projects in the consumer form (`<Project Sdk="VSA.Sdk" />`). Use `Workspace.Create(folder)`, then `workspace.Dotnet("build")`.
+
+A new test project goes in `tests/<Name>.Tests/`. Copy the project file of `Framework.Tests` (`OutputType` Exe, `xunit.v3`, `<Using Include="Xunit" />`), and add the project to `VSA.slnx`.
+
+`LocalFeed` packs all framework packages one time for each test process, with version `0.0.0-test`. A `Workspace` restores from that feed with its own NuGet cache, in a short temporary folder.
+
 ## Core principles
 
 - **Organize by feature, not by layer.** Each slice owns its request, handler, validation, and endpoint in one place.
