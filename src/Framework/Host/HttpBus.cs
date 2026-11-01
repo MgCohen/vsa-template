@@ -13,7 +13,7 @@ namespace VSA.Host;
 sealed class HttpBus(HttpClient http) : IBus {
     static readonly ConcurrentDictionary<Type, (string Method, string Route)> routes = new();
 
-    public async Task<TResponse> Send<TResponse>(Request<TResponse> request, CancellationToken ct = default) {
+    public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) {
         var type = request.GetType();
         var (method, route) = routes.GetOrAdd(type, RouteOf);
         var bodyless = method is Http.Get or Http.Delete;

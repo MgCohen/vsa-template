@@ -5,5 +5,5 @@ namespace VSA.Presenters;
 // An interface: in process (default), HTTP (views in a separate app), and a fake in tests.
 // If the request fails, Send throws RequestException.
 public interface IBus {
-    Task<TResponse> Send<TResponse>(Request<TResponse> request, CancellationToken ct = default);
+    Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default);
 }
