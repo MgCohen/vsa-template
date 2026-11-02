@@ -12,7 +12,7 @@ namespace Framework.Tests.Host;
 public sealed class LayerLoadingTests {
     [Test]
     public void HostLoadsOnlyTheRecordedLayers() {
-        // Shelf records its request and presenter layers. It has no Shelf.Handlers.Events, and that is not an error.
+        // Shelf records only its Presenters layer. It has no Shelf.Handlers.Requests or Shelf.Handlers.Events, and that is not an error.
         var builder = WebApplication.CreateBuilder();
 
         builder.AddVsa(new ShelfModule());

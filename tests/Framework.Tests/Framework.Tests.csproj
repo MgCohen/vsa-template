@@ -8,5 +8,6 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Layers/Host/VSA.Host.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Shelf/Shelf.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Twin/Twin.csproj" />
   </ItemGroup>
 </Project>
