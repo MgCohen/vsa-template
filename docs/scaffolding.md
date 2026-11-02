@@ -13,7 +13,9 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests from te
 
 Rules for all commands:
 
-- A name is a PascalCase C# identifier. `App` and names that start with `VSA` are forbidden.
+- A name is a PascalCase C# identifier. Names that start with `VSA` are forbidden. These names are also forbidden, because they break the build: `App`, `Views`, `Pages`, `Home`, `Modules`, `System`, `Microsoft`.
+- A name cannot contain a template name (`SampleApp`, `SampleModule`, `SampleAction`).
+- `add request -m` uses the module name as its folder has it, so `-m billing` gives `Billing`.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` stops if the module does not exist.
 
@@ -61,9 +63,9 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 | File | Item |
 |---|---|
 | The running tool | `VSA.Cli` |
-| `dotnet-tools.json` | `vsa.cli` |
+| `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
 | `global.json` | `msbuild-sdks` → `VSA.Sdk` |
-| Each `.csproj` and `Directory.*.props` | Each `VSA.*` package reference |
+| Each `.csproj` and `Directory.*.props` | Each `VSA.Sdk` pin (`Sdk="VSA.Sdk/1.0.0"`, `<Sdk Name="VSA.Sdk" Version="1.0.0" />`) and each `VSA.*` package reference. A reference with no version uses its `PackageVersion` |
 
 ## Empty Domain
 

@@ -64,14 +64,14 @@ static partial class Templates {
     // The templates build in this repository in source mode, as the samples do. A consumer uses packages:
     //   the VSA.Sdk.Dev.props imports           become Sdk="VSA.Sdk"
     //   a ProjectReference into framework/      becomes a PackageReference with the version of this tool
-    static string ToPackageMode(string content, string version, string path) {
+    internal static string ToPackageMode(string content, string version, string path) {
         if (content.Contains(DevProps, StringComparison.Ordinal)) {
             content = content.Replace(DevProps, "").Replace(DevTargets, "").Replace("<Project>", "<Project Sdk=\"VSA.Sdk\">");
             content = Empty().Replace(content, "<Project Sdk=\"VSA.Sdk\" />");
         }
         content = SourceReference().Replace(content, m => $"<PackageReference Include=\"{m.Groups[1].Value}\" Version=\"{version}\" />");
         if (content.Contains("$(Vsa", StringComparison.Ordinal)) {
-            throw new InvalidOperationException($"The template {path} has a source-mode property that the tool cannot change.");
+            throw new VsaException($"The template {path} has a source-mode property that the tool cannot change. Report this error to the VSA maintainers.");
         }
         return content;
     }

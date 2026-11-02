@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Tests.Shared;
 using VSA.Cli;
 using VSA.Cli.Scaffolding;
@@ -18,7 +19,21 @@ public sealed class ScaffoldingTests {
     [TestCase("")]
     [TestCase("App")]
     [TestCase("VSAThings")]
+    [TestCase("Modules")]
+    [TestCase("Home")]
+    [TestCase("Pages")]
+    [TestCase("Views")]
+    [TestCase("System")]
+    [TestCase("Microsoft")]
+    [TestCase("MySampleModule")]
+    [TestCase("SampleActionLog")]
+    [TestCase("SampleApp")]
     public void InvalidModuleNamesFail(string name) => Assert.Throws<VsaException>(() => Names.Check(name, "module"));
+
+    [Test]
+    public void SourceModePropertyThatStaysIsAToolError() =>
+        Assert.That(() => Templates.ToPackageMode("<Project>\n  <PropertyGroup><X>$(VsaOther)</X></PropertyGroup>\n</Project>\n", Version, "X.csproj"),
+            Throws.TypeOf<VsaException>().With.Message.Contain("X.csproj"));
 
     [Test]
     public void RequestNamesCannotEndWithRequest() =>
@@ -66,6 +81,20 @@ public sealed class ScaffoldingTests {
         ];
 
         Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
+    }
+
+    // The embedded resources exclude build output and local files. They must not drop a template file that git tracks.
+    // Only the two props files at the top are for source mode.
+    [Test]
+    public void EachTrackedTemplateFileIsInTheTool() {
+        var git = Process.Start(new ProcessStartInfo("git", "ls-files") {
+            WorkingDirectory = Repo.Path("framework", "Tooling", "Cli", "Templates"),
+            RedirectStandardOutput = true,
+        })!;
+        var tracked = git.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        git.WaitForExit();
+
+        Assert.That(Templates.All(), Is.EqualTo(tracked.Where(f => f is not ("Directory.Build.props" or "VSA.Sdk.Dev.props")).Order(StringComparer.Ordinal)));
     }
 
     [Test]

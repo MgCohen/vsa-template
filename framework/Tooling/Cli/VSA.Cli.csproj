@@ -13,7 +13,7 @@
     <InternalsVisibleTo Include="Cli.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db*"
+    <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
                       LogicalName="Templates/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

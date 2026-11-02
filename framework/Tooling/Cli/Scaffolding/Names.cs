@@ -4,13 +4,25 @@ using System.Text.RegularExpressions;
 namespace VSA.Cli.Scaffolding;
 
 static partial class Names {
+    // Names that break the build of the app:
+    //   App, Views, Pages, Home   the app folders and namespaces (CS0138 in App/Views/Pages)
+    //   Modules                   VSA.Sdk finds the layer of a project from the last "/Modules/" in its path
+    //   System, Microsoft         a namespace with this name hides the .NET namespaces
+    static readonly string[] Reserved = ["App", "Views", "Pages", "Home", "Modules", "System", "Microsoft"];
+
     // A name must be a PascalCase C# identifier. Some names collide with the framework or the app.
     public static string Check(string name, string kind) {
         if (!PascalCase().IsMatch(name)) {
             throw new VsaException($"The {kind} name '{name}' is not valid. Use a PascalCase C# identifier, for example CreateInvoice.");
         }
-        if (name.StartsWith("VSA", StringComparison.Ordinal) || name == "App") {
-            throw new VsaException($"The {kind} name '{name}' is reserved. Names cannot be App or start with VSA.");
+        if (name.StartsWith("VSA", StringComparison.Ordinal) || Reserved.Contains(name)) {
+            throw new VsaException($"The {kind} name '{name}' is reserved. Names cannot start with VSA or be one of: {string.Join(", ", Reserved)}.");
+        }
+        // The tool replaces the sample names in the templates. A name that contains one is replaced two times.
+        foreach (var sample in new[] { Templates.App, Templates.Module, Templates.Request }) {
+            if (name.Contains(sample, StringComparison.Ordinal)) {
+                throw new VsaException($"The {kind} name '{name}' contains the template name {sample}. Use a different name.");
+            }
         }
         foreach (var suffix in new[] { "Request", "Response", "Handler" }) {
             if (kind == "request" && name.EndsWith(suffix, StringComparison.Ordinal)) {
