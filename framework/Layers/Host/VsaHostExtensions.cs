@@ -10,16 +10,26 @@ using VSA.Presenters;
 namespace VSA.Host;
 
 public static class VsaHostExtensions {
+    // Finds the modules of the app (ModuleDiscovery), then registers them as AddVsa(modules) does.
+    public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder) =>
+        builder.AddVsa([.. VSA.Module.ModuleDiscovery.CreateModules(VSA.Module.ModuleDiscovery.FindRoots())]);
+
     // Registers the defaults, then the handlers and presenters of each module, then calls Configure.
     // The host finds the projects of a module from the layers that its root recorded at build time.
     public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder, params VSA.Module.Module[] modules) {
         var services = builder.Services;
         services.AddVsaBus(LoopbackAddress);
         services.AddVsaEvents();
-        services.AddFastEndpoints(options => {
-            options.DisableAutoDiscovery = true;
-            options.Assemblies = [.. modules.Select(module => Load(module, "Handlers.Requests")).OfType<Assembly>()];
-        });
+        // FastEndpoints needs at least one assembly when auto-discovery is off.
+        // An app with no Handlers.Requests layer does not register FastEndpoints and maps no endpoints.
+        Assembly[] requests = [.. modules.Select(module => Load(module, "Handlers.Requests")).OfType<Assembly>()];
+        if (requests.Length > 0) {
+            services.AddFastEndpoints(options => {
+                options.DisableAutoDiscovery = true;
+                options.Assemblies = requests;
+            });
+            services.AddSingleton<RequestEndpoints>();
+        }
         foreach (var module in modules) {
             foreach (var handler in Concrete(module, "Handlers.Events")) {
                 services.AddScoped(BaseOf(handler, typeof(IntegrationEventHandler<>)), handler);
@@ -32,19 +42,22 @@ public static class VsaHostExtensions {
         return builder;
     }
 
-    // Maps one HTTP endpoint for each request handler.
+    // Maps one HTTP endpoint for each request handler. With no request handlers, it does nothing.
     public static WebApplication MapVsaRequests(this WebApplication app) {
-        app.UseFastEndpoints();
+        if (app.Services.GetService<RequestEndpoints>() is not null) {
+            app.UseFastEndpoints();
+        }
         return app;
     }
 
-    // VSA.Sdk records the layer projects of the module root as AssemblyMetadata("VsaLayer", ...).
+    // Registered only when AddVsa registers FastEndpoints.
+    sealed class RequestEndpoints { }
+
+    // VSA.Sdk records the layer projects of the module root (ModuleRoot.Layers).
     // A layer that the module does not have gives null. A recorded layer that does not load is an error.
     static Assembly? Load(VSA.Module.Module module, string layer) {
         var name = $"{module.Name}.{layer}";
-        var recorded = module.GetType().Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .Any(a => a.Key == "VsaLayer" && a.Value == name);
-        return recorded ? Assembly.Load(name) : null;
+        return VSA.Module.ModuleRoot.Of(module).Layers.Contains(name) ? Assembly.Load(name) : null;
     }
 
     static IEnumerable<Type> Concrete(VSA.Module.Module module, string layer) =>
