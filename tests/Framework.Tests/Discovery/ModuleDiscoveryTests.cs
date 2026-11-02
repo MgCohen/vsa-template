@@ -1,3 +1,4 @@
+using Bare;
 using Shelf;
 using Shelf.Presenters;
 using Twin;
@@ -8,10 +9,24 @@ namespace Framework.Tests.Discovery;
 public sealed class ModuleDiscoveryTests {
     [Test]
     public void RootsAreInOrdinalOrderOfName() {
-        // This test project references two module roots: Shelf and Twin.
+        // This test project references three module roots: Bare, Shelf and Twin.
         var roots = ModuleDiscovery.FindRoots();
 
-        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Shelf", "Twin" }));
+        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Bare", "Shelf", "Twin" }));
+    }
+
+    [Test]
+    public void RootWithNoLayerProjectsHasNoLayers() {
+        var root = ModuleRoot.Of(typeof(BareModule).Assembly);
+
+        Assert.That(root.Layers, Is.Empty);
+    }
+
+    [Test]
+    public void RootRecordsItsLayerProjects() {
+        var root = ModuleRoot.Of(typeof(ShelfModule).Assembly);
+
+        Assert.That(root.Layers, Is.EqualTo(new[] { "Shelf.Presenters" }));
     }
 
     [Test]
