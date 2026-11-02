@@ -4,13 +4,15 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 
 ## Levels
 
-| Level | Package | When | IDs |
+| Group | Level | Package | IDs |
 |---|---|---|---|
-| Build | `VSA.Sdk` | Before compile | `VSA0xxx` |
-| Analyzers | Built-in .NET analyzers + `VSA.Analyzers` | During compile, in the IDE | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
-| Architecture | `VSA.Testing.Architecture` (ArchUnitNET) | In a test run | `VSA2xxx` |
-| Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | In a test run | None |
-| End-to-end | `VSA.Testing.EndToEnd` | In a test run | Not started |
+| Editor and build | Build | `VSA.Sdk` (`framework/Sdk`) | `VSA0xxx` |
+| Editor and build | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` (`framework/Analyzers`) | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
+| Tests | Architecture | `VSA.Testing.Architecture` (ArchUnitNET) | `VSA2xxx` |
+| Tests | Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | None |
+| Tests | End-to-end | `VSA.Testing.EndToEnd` | Not started |
+
+The editor and the build run the first group in each consumer project. The second group runs in a consumer test project.
 
 ## Rules
 
