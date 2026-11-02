@@ -141,7 +141,7 @@ The tool reads nested blocks recursively, to 8 levels. Mentions show as their pl
 
 ## Agent tool (MCP)
 
-`tool.toml` declares two MCP tools, `notion_get` and `notion_query`, for the `agent-tools` plugin (MgCohen/claude-plugins). When the plugin is on, the server finds the manifest in `<project>/tools/` and exposes the tools. Set `NOTION_TOKEN` in the client environment.
+`tool.toml` declares two MCP tools, `notion_get` and `notion_query`, for the `agent-tools` plugin (MgCohen/claude-plugins). When the plugin is on, the server finds the manifest at session start and exposes the tools. Set `NOTION_TOKEN` in the client environment.
 
 `tests/test_tool_manifest.py` builds the argv of each tool from the manifest and parses it with the real CLI parser. If a flag changes in one place only, the test fails.
 
