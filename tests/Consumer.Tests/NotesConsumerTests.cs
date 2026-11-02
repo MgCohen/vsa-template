@@ -9,9 +9,9 @@ namespace Consumer.Tests;
 
 // Builds samples/Notes as a consumer does: from the packed framework packages and VSA.Sdk, not from the source.
 public sealed partial class NotesConsumerTests {
-    [Fact]
-    public async Task NotesBuildsFromThePackagesAndRuns() {
-        var ct = TestContext.Current.CancellationToken;
+    [Test]
+    [CancelAfter(10 * 60 * 1000)]
+    public async Task NotesBuildsFromThePackagesAndRuns(CancellationToken ct) {
         using var workspace = Workspace.Create(Repo.Path("samples", "Notes"));
         UsePackages(workspace.Src);
 
@@ -33,8 +33,8 @@ public sealed partial class NotesConsumerTests {
             Assert.True(created.IsSuccessStatusCode, $"POST /api/notes gave {created.StatusCode}.\n{output}");
 
             var page = await client.GetStringAsync("/", ct);
-            Assert.Contains("<h1>Notes</h1>", page);
-            Assert.Contains(title, page);
+            Assert.That(page, Does.Contain("<h1>Notes</h1>"));
+            Assert.That(page, Does.Contain(title));
         } finally {
             app.Kill(entireProcessTree: true);
             await app.WaitForExitAsync(CancellationToken.None);
@@ -52,8 +52,7 @@ public sealed partial class NotesConsumerTests {
                 text = EmptyProject().Replace(text, "<Project Sdk=\"VSA.Sdk\" />");
             }
             text = FrameworkReference().Replace(text, "<PackageReference Include=\"$1\" />");
-            Assert.DoesNotContain("VsaFrameworkSourceDir", text);
-            Assert.DoesNotContain("VsaSdkDir", text);
+            Assert.That(text, Does.Not.Contain("VsaFrameworkSourceDir").And.Not.Contain("VsaSdkDir"));
             File.WriteAllText(file, text);
         }
     }
@@ -61,7 +60,7 @@ public sealed partial class NotesConsumerTests {
     static async Task WaitUntilStarted(HttpClient client, System.Diagnostics.Process app, StringBuilder output, CancellationToken ct) {
         var until = DateTime.UtcNow.AddMinutes(1);
         while (DateTime.UtcNow < until) {
-            Assert.False(app.HasExited, $"The app stopped with exit code {(app.HasExited ? app.ExitCode : 0)}.\n{output}");
+            Assert.That(app.HasExited, Is.False, $"The app stopped with exit code {(app.HasExited ? app.ExitCode : 0)}.\n{output}");
             try {
                 if ((await client.GetAsync("/api/notes", ct)).StatusCode == HttpStatusCode.OK) {
                     return;

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Module;
@@ -6,30 +7,30 @@ using VSA.Module;
 namespace Framework.Tests.Settings;
 
 public sealed class SettingsTests {
-    [Fact]
+    [Test]
     public void EmptySettingsStopStartupWithOneMessage() {
         var error = Assert.Throws<InvalidOperationException>(() => Configure([]));
 
-        Assert.Equal("Modules:Sample is not valid: The Name field is required.", error.Message);
+        Assert.That(error.Message, Is.EqualTo("Modules:Sample is not valid: The Name field is required."));
     }
 
-    [Fact]
+    [Test]
     public void WrongValuesStopStartupWithAllErrorsInOneMessage() {
         var error = Assert.Throws<InvalidOperationException>(() => Configure(new() {
             ["Modules:Sample:Name"] = "bad",
             ["Modules:Sample:Size"] = "20",
         }));
 
-        Assert.Equal("Modules:Sample is not valid: The field Size must be between 1 and 10. Name must not be bad.", error.Message);
+        Assert.That(error.Message, Is.EqualTo("Modules:Sample is not valid: The field Size must be between 1 and 10. Name must not be bad."));
     }
 
-    [Fact]
+    [Test]
     public void ValidSettingsAreRegisteredAndGivenToConfigure() {
         var module = new SampleModule();
         var services = Configure(new() { ["Modules:Sample:Name"] = "shelf", ["Modules:Sample:Size"] = "3" }, module);
 
-        Assert.Equal("shelf", module.Settings?.Name);
-        Assert.Same(module.Settings, services.BuildServiceProvider().GetRequiredService<SampleSettings>());
+        Assert.That(module.Settings?.Name, Is.EqualTo("shelf"));
+        Assert.That(services.BuildServiceProvider().GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
     }
 
     static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) {

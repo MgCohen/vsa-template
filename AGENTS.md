@@ -20,7 +20,7 @@ A module project is under a `Modules/` folder. Its references come from VSA.Sdk,
 
 ## Tests
 
-Run all tests with `dotnet test VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use xUnit v3 on Microsoft.Testing.Platform (set in `global.json`).
+Run all tests with `dotnet test VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use NUnit on Microsoft.Testing.Platform (set in `global.json`). NUnit also runs in Unity (Unity Test Framework), and xUnit does not.
 
 | Path                     | Put here                                                                  |
 |--------------------------|---------------------------------------------------------------------------|
@@ -34,7 +34,7 @@ There are two kinds of fixture:
 - **Referenced fixture:** a module that must build. A test project references it with `ProjectReference`, and it builds in source mode (`tests/Fixtures/Directory.Build.props`).
 - **Built fixture:** a test builds it out of process to check the build result. Write its projects in the consumer form (`<Project Sdk="VSA.Sdk" />`). Use `Workspace.Create(folder)`, then `workspace.Dotnet("build")`.
 
-A new test project goes in `tests/<Name>.Tests/`. Copy the project file of `Framework.Tests` (`OutputType` Exe, `xunit.v3`, `<Using Include="Xunit" />`), and add the project to `VSA.slnx`.
+A new test project goes in `tests/<Name>.Tests/`, and you add it to `VSA.slnx`. Its project file has only its own references. `tests/Directory.Build.props` gives each project whose name ends with `.Tests` the NUnit settings: `OutputType` Exe, `EnableNUnitRunner`, the NUnit packages and `using NUnit.Framework`.
 
 `LocalFeed` packs all framework packages one time for each test process, with version `0.0.0-test`. A `Workspace` restores from that feed with its own NuGet cache, in a short temporary folder.
 

@@ -10,23 +10,23 @@ using VSA.Host;
 namespace Framework.Tests.Host;
 
 public sealed class LayerLoadingTests {
-    [Fact]
+    [Test]
     public void HostLoadsOnlyTheRecordedLayers() {
         // Shelf records its request and presenter layers. It has no Shelf.Handlers.Events, and that is not an error.
         var builder = WebApplication.CreateBuilder();
 
         builder.AddVsa(new ShelfModule());
 
-        Assert.Contains(builder.Services, s => s.ServiceType == typeof(ShelfPresenter));
+        Assert.That(builder.Services.Any(s => s.ServiceType == typeof(ShelfPresenter)), Is.True);
     }
 
-    [Fact]
+    [Test]
     public void RecordedLayerThatDoesNotLoadIsAnError() {
         var builder = WebApplication.CreateBuilder();
 
         var error = Assert.Throws<FileNotFoundException>(() => builder.AddVsa(new ShelfModule(), new MissingModule()));
 
-        Assert.Contains("Framework.Tests.Presenters", error.Message);
+        Assert.That(error.Message, Does.Contain("Framework.Tests.Presenters"));
     }
 
     sealed class MissingModule : VSA.Module.Module {
