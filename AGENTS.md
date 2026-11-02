@@ -15,6 +15,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
+| `tools/`              | Developer tools that are not part of the template. Does not ship        |
 
 A module project is under a `Modules/` folder. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
 
