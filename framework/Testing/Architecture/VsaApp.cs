@@ -1,13 +1,13 @@
 using System.Reflection;
+using VSA.Module;
 
 namespace VSA.Testing.Architecture;
 
 // The assemblies of an app, module by module. The rules read only this, so a test can give any assemblies.
 public sealed record VsaApp(IReadOnlyList<AppModule> Modules) {
-    // The modules of the app that contains TEntry, from the project libraries of the test run.
-    public static VsaApp Of<TEntry>() => Of(typeof(TEntry).Assembly);
-
-    public static VsaApp Of(Assembly entry) => new([.. ModuleDiscovery.ModuleRoots(entry).Select(AppModule.FromRoot)]);
+    // The modules of the test run. The host (AddVsa) finds the same modules with ModuleDiscovery.
+    // TEntry is a type of the host, so the test project must reference the host.
+    public static VsaApp Of<TEntry>() => new([.. ModuleDiscovery.FindRoots().Select(AppModule.Of)]);
 
     public IEnumerable<Assembly> Assemblies => Modules.SelectMany(m => m.Assemblies);
 }
@@ -16,14 +16,9 @@ public sealed record VsaApp(IReadOnlyList<AppModule> Modules) {
 public sealed record AppModule(string Name, Assembly Root, IReadOnlyList<Assembly> Layers) {
     public IEnumerable<Assembly> Assemblies => [Root, .. Layers];
 
-    // VSA.Sdk records each layer project of the module root as AssemblyMetadata("VsaLayer", "<assembly name>").
-    // A module root with no layers gets one record with an empty value.
-    public static AppModule FromRoot(Assembly root) {
-        var name = root.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == ModuleDiscovery.ModuleKey)?.Value
-            ?? root.GetName().Name!;
-        var layers = root.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .Where(a => a.Key == "VsaLayer" && !string.IsNullOrEmpty(a.Value))
-            .Select(a => Assembly.Load(a.Value!));
-        return new(name, root, [.. layers]);
-    }
+    // A module root with no layer projects has one empty layer record. It is not a layer.
+    public static AppModule Of(ModuleRoot root) =>
+        new(root.Name, root.Assembly, [.. root.Layers.Where(l => l.Length > 0).Select(Assembly.Load)]);
+
+    public static AppModule Of(Assembly root) => Of(ModuleRoot.Of(root));
 }

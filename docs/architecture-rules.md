@@ -38,7 +38,7 @@ framework/
 1. **Libraries, not an own rule system.** The built-in .NET analyzers do the basic rules (`AnalysisLevel = latest-recommended`). Roslyn does the custom rules. ArchUnitNET does the architecture rules. VSA code is only the base classes and the layer map.
 2. **NUnit.** NUnit runs in .NET and in Unity. The Unity Test Framework uses NUnit, and xUnit does not run in Unity.
 3. **One layer map.** `framework/Testing/Core/Layers.cs` copies the VSA Layer Map artifact. `LayerRules` makes one ArchUnitNET rule for each module project from it. VSA.Sdk cannot run C# before compile, so `VSA.Layers.targets` has the same map in MSBuild. If you change one, change the other.
-4. **How the test finds the app.** VSA.Testing.Architecture reads all project libraries in the `DependencyContext` of the test run. A module root has `AssemblyMetadata("VsaModule", "<name>")`, and its layers come from `AssemblyMetadata("VsaLayer", "<assembly>")`. The host uses the same records at start-up.
+4. **How the test finds the app.** VSA.Testing.Architecture uses `ModuleDiscovery.FindRoots()` of VSA.Module. The host uses the same API at start-up, so the tests and the host find the same modules.
 
 ## Analyzers
 

@@ -7,7 +7,7 @@ namespace Rules.Tests;
 
 // The fixture modules in tests/Fixtures/Rules/Modules. Each test gives the rule only the modules it names.
 static class Fixtures {
-    public static VsaApp App(params string[] modules) => new([.. modules.Select(m => AppModule.FromRoot(Assembly.Load(m)))]);
+    public static VsaApp App(params string[] modules) => new([.. modules.Select(m => AppModule.Of(Assembly.Load(m)))]);
 
     public static void Passes(IArchRule rule, VsaApp app) {
         var failed = Failures(rule, app);
