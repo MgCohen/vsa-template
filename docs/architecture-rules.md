@@ -71,7 +71,7 @@ public sealed class ArchitectureTests : VsaArchitectureTests<Program> {
 }
 ```
 
-- The test project references the host and each module project. The host references the modules with `PrivateAssets="all"`, so the modules do not come from the host reference.
+- The test project references the host. The host references each module, so the test run gets every module project.
 - `The_app_has_modules` fails if no module root is found. Without it, each rule passes with nothing to check.
 
 ## Unit

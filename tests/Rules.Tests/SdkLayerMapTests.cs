@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Tests.Shared;
 using VSA.Testing.Core;
 
 namespace Rules.Tests;
@@ -52,7 +53,7 @@ public sealed partial class SdkLayerMapTests {
 
     // Reads the item groups with Condition="'$(VsaLayer)' == '<folder>'" in VSA.Layers.targets.
     static Dictionary<string, SdkLayer> Sdk() {
-        var targets = XDocument.Load(Path.Combine(Repo(), "framework", "Sdk", "Sdk", "VSA.Layers.targets"));
+        var targets = XDocument.Load(Repo.Path("framework", "Sdk", "Sdk", "VSA.Layers.targets"));
         var layers = new Dictionary<string, SdkLayer>();
         foreach (var group in targets.Root!.Elements().Where(e => e.Name.LocalName == "ItemGroup")) {
             if (LayerCondition().Match((string?)group.Attribute("Condition") ?? "") is not { Success: true } condition) {
@@ -82,15 +83,6 @@ public sealed partial class SdkLayerMapTests {
         } else if (AnyModule().Match(include) is { Success: true } any) {
             layer.AnyModule.Add(any.Groups[1].Value.Replace('/', '.'));
         }
-    }
-
-    static string Repo() {
-        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent) {
-            if (File.Exists(Path.Combine(dir.FullName, "VSA.slnx"))) {
-                return dir.FullName;
-            }
-        }
-        throw new InvalidOperationException("VSA.slnx not found above the test output folder.");
     }
 
     [GeneratedRegex(@"^'\$\(VsaLayer\)' == '([^']+)'$")]

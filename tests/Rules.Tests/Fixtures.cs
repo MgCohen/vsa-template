@@ -1,4 +1,3 @@
-global using NUnit.Framework;
 using System.Reflection;
 using ArchUnitNET.Fluent;
 using VSA.Testing.Architecture;

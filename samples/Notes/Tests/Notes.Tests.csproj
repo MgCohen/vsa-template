@@ -11,8 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../App/Host/App.Host.csproj" />
-    <!-- The host references the modules with PrivateAssets="all", so the tests reference them too. -->
-    <ProjectReference Include="../Modules/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Testing/Architecture/VSA.Testing.Architecture.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Testing/Unit/VSA.Testing.Unit.csproj" />
   </ItemGroup>

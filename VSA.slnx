@@ -93,6 +93,9 @@
     <Project Path="samples/Notes/Tests/Notes.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Consumer.Tests/Consumer.Tests.csproj" />
+    <Project Path="tests/Framework.Tests/Framework.Tests.csproj" />
     <Project Path="tests/Rules.Tests/Rules.Tests.csproj" />
+    <Project Path="tests/Shared/Tests.Shared.csproj" />
   </Folder>
 </Solution>
