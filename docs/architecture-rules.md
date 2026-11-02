@@ -19,7 +19,7 @@ framework/
 └─ Testing/
    ├─ Core/                 VSA.Testing.Core: the layer map (Layer, Edge, Layers)
    ├─ Analyzers/            VSA.Analyzers: VsaAnalyzer base and the VSA1xxx rules
-   ├─ Architecture/         VSA.Testing.Architecture: VsaArchitectureTests<TEntry>, VsaRules, LayerRules
+   ├─ Architecture/         VSA.Testing.Architecture: VsaArchitectureTests<TEntry>, helpers VsaRules, LayerRules
    └─ Unit/                 VSA.Testing.Unit: VsaUnitTest, HandlerHost, default fakes
 ```
 
@@ -60,15 +60,32 @@ protected override void Register(AnalysisContext context) =>
 
 ## Architecture
 
-A consumer test project needs one class. It gets each VSA2xxx rule as a test.
+Each rule is one `[Test]` in `VsaArchitectureTests`, with an ArchUnitNET rule. A consumer test project needs one class, and it gets each rule as a test.
 
 ```csharp
+// framework/Testing/Architecture/VsaArchitectureTests.cs: a new VSA rule
+[Test]
+public void VSA2003_handlers_are_internal() =>
+    Classes().That().HaveNameEndingWith("Handler").Should().NotBePublic().Check(Architecture);
+
+// The consumer: all VSA rules, plus its own app rules
 public sealed class ArchitectureTests : VsaArchitectureTests<Program> {
-    // An app rule: an ArchUnitNET rule, checked on Architecture.
     [Test]
-    public void Handlers_are_internal() =>
-        Classes().That().ResideInNamespace("Notes.Handlers.Requests").Should().NotBePublic().Check(Architecture);
+    public void Presenters_are_sealed() =>
+        Classes().That().HaveNameEndingWith("Presenter").Should().BeSealed().Check(Architecture);
 }
+```
+
+| Member | Use |
+|---|---|
+| `App`, `Architecture`, `LayerMap` | Virtual: a fixture test gives other modules or another map |
+| `VsaRules.Load`, `VsaRules.All` | Optional helpers: load an app, join rules |
+| `LayerRules.For` | Optional helper: the ArchUnitNET rules of a layer map |
+
+A fixture test calls the base test on fixture modules, so the rule is written in one place only:
+
+```csharp
+Assert.Throws<AssertionException>(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);
 ```
 
 - The test project references the host. The host references each module, so the test run gets every module project.

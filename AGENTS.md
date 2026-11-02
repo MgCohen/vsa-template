@@ -70,9 +70,9 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write an analyzer that inherits `VsaAnalyzer` in `framework/Testing/Analyzers/`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`. Read options with `Options(...)`.
-3. Else write an ArchUnitNET rule in `VsaRules` (`framework/Testing/Architecture/`). Use the next free `VSA2xxx` ID, and add a `[Test]` to `VsaArchitectureTests`. For a layer rule, change the layer map in `framework/Testing/Core/Layers.cs` and in `VSA.Layers.targets`.
+3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests` (`framework/Testing/Architecture/`). Write the rule only there. Use the next free `VSA2xxx` ID in the test name. `VsaRules` and `LayerRules` have optional helpers. For a layer rule, change the layer map in `framework/Testing/Core/Layers.cs` and in `VSA.Layers.targets`.
 4. Write a message that gives what is wrong, the type names, and the fix.
-5. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`.
+5. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test with `FixtureApp.Of("<module>")`.
 6. Add the rule to the table in `docs/architecture-rules.md`.
 
 ## Working agreements

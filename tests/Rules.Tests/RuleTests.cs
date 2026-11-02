@@ -4,41 +4,53 @@ using static Rules.Tests.Fixtures;
 
 namespace Rules.Tests;
 
+// Each test runs a base test of VsaArchitectureTests on fixture modules. The rule is written only in the base.
 public sealed class LayerMapRuleTests {
     // The Good fixture is correct, so a bad case uses a smaller layer map that does not permit what Good uses.
     static IReadOnlyList<Layer> With(Layer handlers) => [Layers.Domain, Layers.ContractsRequests, Layers.Module, handlers];
 
     [Test]
-    public void Good_fixture_passes() => Passes(VsaRules.LayerMap(App("Good"))!, App("Good"));
+    public void Good_fixture_passes() => FixtureApp.Of("Good").VSA2001_module_projects_follow_the_layer_map();
 
     [Test]
     public void Use_of_a_module_project_that_the_map_does_not_permit_fails() {
-        var message = Fails(VsaRules.LayerMap(App("Good"), With(new Layer("Handlers.Requests").Reference(Layers.Domain)))!, App("Good"));
+        var message = Fails(FixtureApp.Of("Good", With(new Layer("Handlers.Requests").Reference(Layers.Domain))).VSA2001_module_projects_follow_the_layer_map);
         Assert.That(message, Does.Contain("Good.Handlers.Requests"));
         Assert.That(message, Does.Contain("Good.Contracts.Requests"));
     }
 
     [Test]
     public void Use_of_a_base_that_the_map_does_not_permit_fails() {
-        var message = Fails(VsaRules.LayerMap(App("Good"), With(new Layer("Handlers.Requests").Reference(Layers.ContractsRequests)))!, App("Good"));
+        var message = Fails(FixtureApp.Of("Good", With(new Layer("Handlers.Requests").Reference(Layers.ContractsRequests))).VSA2001_module_projects_follow_the_layer_map);
         Assert.That(message, Does.Contain("Good.Handlers.Requests"));
         Assert.That(message, Does.Contain("VSA.Domain"));
     }
 
     [Test]
     public void Project_in_a_layer_that_is_not_in_the_map_fails() {
-        var message = string.Join(Environment.NewLine, LayerRules.Unmapped(App("Good"), [Layers.Module, Layers.HandlersRequests]));
+        var message = Fails(FixtureApp.Of("Good", [Layers.Module, Layers.HandlersRequests]).VSA2001_module_projects_follow_the_layer_map);
         Assert.That(message, Does.Contain("Good.Contracts.Requests is in layer Contracts.Requests, which is not in the layer map"));
     }
 }
 
 public sealed class ModuleClassRuleTests {
     [Test]
-    public void Good_fixture_passes() => Passes(VsaRules.ModuleClasses, App("Good"));
+    public void Good_fixture_passes() => FixtureApp.Of("Good").VSA2002_Module_classes_are_public_and_sealed();
 
     [Test]
     public void Module_class_that_is_not_sealed_fails() =>
-        Assert.That(Fails(VsaRules.ModuleClasses, App("OpenModuleClass")), Does.Contain("OpenModuleClass.OpenModuleClassModule"));
+        Assert.That(Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed), Does.Contain("OpenModuleClass.OpenModuleClassModule"));
+}
+
+public sealed class AppHasModulesTests {
+    [Test]
+    public void App_with_no_modules_fails() =>
+        Assert.That(Fails(new NoModules().The_app_has_modules), Does.Contain("No module root found"));
+
+    [Explicit("The test calls The_app_has_modules.")]
+    sealed class NoModules : VsaArchitectureTests<NoModules> {
+        protected override VsaApp App { get; } = new([]);
+    }
 }
 
 public sealed class LayerMapTests {

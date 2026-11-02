@@ -1,28 +1,31 @@
 using System.Reflection;
-using ArchUnitNET.Fluent;
 using VSA.Testing.Architecture;
+using VSA.Testing.Core;
+using ArchModel = ArchUnitNET.Domain.Architecture;
 
 namespace Rules.Tests;
 
-// The fixture modules in tests/Fixtures/Rules/Modules. Each test gives the rule only the modules it names.
+// The fixture modules in tests/Fixtures/Rules/Modules. Each test gives the rules only the modules it names.
 static class Fixtures {
     public static VsaApp App(params string[] modules) => new([.. modules.Select(m => AppModule.Of(Assembly.Load(m)))]);
 
-    public static void Passes(IArchRule rule, VsaApp app) {
-        var failed = Failures(rule, app);
-        Assert.That(failed, Is.Empty);
-    }
+    // The message of the failed rule. The rule runs in its own context, so the failure does not fail this test.
+    public static string Fails(Action rule) => Assert.Throws<AssertionException>(rule)!.Message;
+}
 
-    // The text of each failed result.
-    public static string Fails(IArchRule rule, VsaApp app) {
-        var failed = Failures(rule, app);
-        Assert.That(failed, Is.Not.Empty, "The rule passed.");
-        return string.Join(Environment.NewLine, failed);
-    }
+// The base tests on fixture modules: a fixture test calls a base test, for example
+//   FixtureApp.Of("Good").VSA2002_Module_classes_are_public_and_sealed();
+// NUnit finds the inherited [Test] methods. Explicit: NUnit does not run them on a fixture app by itself.
+[Explicit("A fixture test calls the base tests.")]
+sealed class FixtureApp : VsaArchitectureTests<FixtureApp> {
+    ArchModel? architecture;
 
-    static List<string> Failures(IArchRule rule, VsaApp app) =>
-        [.. rule.Evaluate(VsaArchitectureTests<Fixture>.Load(app)).Where(r => !r.Passed).Select(r => r.Description)];
+    public string Module { get; init; } = "";
+    public IReadOnlyList<Layer>? Map { get; init; }
 
-    // VsaArchitectureTests needs a type argument to call Load. The fixture tests do not use the entry type.
-    sealed class Fixture;
+    protected override VsaApp App => Fixtures.App(Module);
+    protected override ArchModel Architecture => architecture ??= VsaRules.Load(App);
+    protected override IReadOnlyList<Layer> LayerMap => Map ?? Layers.All;
+
+    public static FixtureApp Of(string module, IReadOnlyList<Layer>? map = null) => new() { Module = module, Map = map };
 }
