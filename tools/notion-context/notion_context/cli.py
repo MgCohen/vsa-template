@@ -10,6 +10,12 @@ from .render import to_json, to_markdown
 
 
 def main(argv=None):
+    p = build_parser()
+    a = p.parse_args(argv)
+    return _run(a)
+
+
+def build_parser():
     p = argparse.ArgumentParser(prog="notion-context", description="Deterministic Notion context for agents.")
     p.add_argument("--config", help="TOML config (default: $NOTION_CONTEXT_CONFIG or ./notion-context.toml)")
     p.add_argument("--stats", action="store_true", help="print the API call count to stderr")
@@ -32,8 +38,10 @@ def main(argv=None):
 
     s = sub.add_parser("schema", help="list the properties of a database")
     s.add_argument("database", help="database alias or id")
+    return p
 
-    a = p.parse_args(argv)
+
+def _run(a):
     try:
         cfg = cfgmod.load(cfgmod.find_path(a.config))
         client = Client()
