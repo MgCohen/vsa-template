@@ -114,7 +114,8 @@
         <_Parameter1>VsaModule</_Parameter1>
         <_Parameter2>$(AssemblyName)</_Parameter2>
       </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <!-- A module with no layer projects gets no layer record, not one empty record. -->
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'@(_VsaLayerProject)' != ''">
         <_Parameter1>VsaLayerAssembly</_Parameter1>
         <_Parameter2>%(_VsaLayerProject.Filename)</_Parameter2>
       </AssemblyAttribute>

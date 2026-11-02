@@ -57,19 +57,26 @@ public sealed partial class NotesConsumerTests {
         }
     }
 
+    // The first start after a cold restore can be slow, so the wait is long. Each request has its own short timeout.
     static async Task WaitUntilStarted(HttpClient client, System.Diagnostics.Process app, StringBuilder output, CancellationToken ct) {
-        var until = DateTime.UtcNow.AddMinutes(1);
+        var until = DateTime.UtcNow.AddMinutes(3);
+        var last = "no response";
         while (DateTime.UtcNow < until) {
             Assert.That(app.HasExited, Is.False, $"The app stopped with exit code {(app.HasExited ? app.ExitCode : 0)}.\n{output}");
+            using var request = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            request.CancelAfter(TimeSpan.FromSeconds(10));
             try {
-                if ((await client.GetAsync("/api/notes", ct)).StatusCode == HttpStatusCode.OK) {
+                using var response = await client.GetAsync("/api/notes", request.Token);
+                if (response.StatusCode == HttpStatusCode.OK) {
                     return;
                 }
-            } catch (HttpRequestException) {
+                last = $"status {(int)response.StatusCode} {response.StatusCode}";
+            } catch (Exception e) when (e is HttpRequestException || (e is OperationCanceledException && !ct.IsCancellationRequested)) {
+                last = $"{e.GetType().Name}: {e.Message}";
             }
             await Task.Delay(500, ct);
         }
-        Assert.Fail($"The app did not start in one minute.\n{output}");
+        Assert.Fail($"The app did not start in three minutes. The last GET /api/notes gave {last}.\n{output}");
     }
 
     static int FreePort() {
