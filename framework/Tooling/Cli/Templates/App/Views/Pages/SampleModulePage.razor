@@ -1,0 +1,14 @@
+@page "/sample-module"
+@using SampleModule.Presenters
+@inject SampleModulePresenter Presenter
+
+<PageTitle>SampleModule</PageTitle>
+<h1>SampleModule</h1>
+@if (Presenter.Load.Error is { } error) {
+    <p class="error">@error</p>
+}
+<p>Status: @Presenter.Status</p>
+
+@code {
+    protected override Task OnInitializedAsync() => Presenter.LoadAsync();
+}

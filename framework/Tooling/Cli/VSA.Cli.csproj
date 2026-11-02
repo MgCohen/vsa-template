@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The vsa tool. It ships as a .NET tool with the same version as VSA.Sdk and the VSA.* packages. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>VSA.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>vsa</ToolCommandName>
+    <PackageId>VSA.Cli</PackageId>
+    <!-- Templates/ is a separate app that builds on its own. The tool holds its files as resources. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Templates/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cli.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
+                      LogicalName="Templates/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
