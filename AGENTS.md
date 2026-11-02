@@ -13,11 +13,14 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project and the layer references |
 | `framework/Testing/`  | The checks that ship: `Core/` (the layer map), `Analyzers/`, `Architecture/` (ArchUnitNET), `Unit/` (NUnit) |
+| `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
 
 A module project is under a `Modules/` folder. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
+
+Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script adds each `.csproj` in the repository, except `tests/Fixtures/`. After you add, move or remove a project, run the script again. Do not edit `VSA.slnx` by hand.
 
 The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>`, else startup fails.
 
@@ -29,6 +32,7 @@ Run all tests with `dotnet test VSA.slnx`. Run one project with `dotnet test --p
 |--------------------------|---------------------------------------------------------------------------|
 | `tests/Framework.Tests/` | Tests of one framework layer. One folder for each area, for example `Settings/`, `Host/` |
 | `tests/Consumer.Tests/`  | Tests that pack the framework and build a copy of a sample as a consumer  |
+| `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
 
@@ -37,7 +41,7 @@ There are two kinds of fixture:
 - **Referenced fixture:** a module that must build. A test project references it with `ProjectReference`, and it builds in source mode (`tests/Fixtures/Directory.Build.props`).
 - **Built fixture:** a test builds it out of process to check the build result. Write its projects in the consumer form (`<Project Sdk="VSA.Sdk" />`). Use `Workspace.Create(folder)`, then `workspace.Dotnet("build")`.
 
-A new test project goes in `tests/<Name>.Tests/`, and you add it to `VSA.slnx`. Its project file has only its own references. `tests/Directory.Build.props` gives each project whose name ends with `.Tests` the NUnit settings: `OutputType` Exe, `EnableNUnitRunner`, the NUnit packages and `using NUnit.Framework`.
+A new test project goes in `tests/<Name>.Tests/`, then run `dotnet run solution.cs` to add it to `VSA.slnx`. Its project file has only its own references. `tests/Directory.Build.props` gives each project whose name ends with `.Tests` the NUnit settings: `OutputType` Exe, `EnableNUnitRunner`, the NUnit packages and `using NUnit.Framework`.
 
 `LocalFeed` packs all framework packages one time for each test process, with version `0.0.0-test`. A `Workspace` restores from that feed with its own NuGet cache, in a short temporary folder.
 
@@ -79,3 +83,16 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 - Keep this file current when conventions change.
 
 <!-- TODO: stack, build/test commands, slice anatomy, naming rules — fill in as specs land. -->
+
+## Scaffolding: the vsa tool
+
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
+
+```bash
+dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/
+dotnet vsa add module <Name>                     # all layers, a status request, a presenter and a page
+dotnet vsa add request <Name> -m <Module>        # the request, the response and the handler
+dotnet vsa doctor                                # the tool, VSA.Sdk and the VSA.* packages have one version
+```
+
+The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule` and `SampleAction`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.

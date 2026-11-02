@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Tests.Shared.csproj" />
+    <!-- The scaffolding tests call the tool code in this process. The end-to-end tests use the packed tool. -->
+    <ProjectReference Include="../../framework/Tooling/Cli/VSA.Cli.csproj" />
+  </ItemGroup>
+</Project>

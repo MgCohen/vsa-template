@@ -1,0 +1,4 @@
+<Project>
+  <!-- The template projects find VSA.Sdk from source through this file. The tool does not copy this file. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../../samples/VSA.Sdk.Dev.props" />
+</Project>
