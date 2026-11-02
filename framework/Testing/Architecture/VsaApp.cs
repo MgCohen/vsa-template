@@ -16,9 +16,7 @@ public sealed record VsaApp(IReadOnlyList<AppModule> Modules) {
 public sealed record AppModule(string Name, Assembly Root, IReadOnlyList<Assembly> Layers) {
     public IEnumerable<Assembly> Assemblies => [Root, .. Layers];
 
-    // A module root with no layer projects has one empty layer record. It is not a layer.
-    public static AppModule Of(ModuleRoot root) =>
-        new(root.Name, root.Assembly, [.. root.Layers.Where(l => l.Length > 0).Select(Assembly.Load)]);
+    public static AppModule Of(ModuleRoot root) => new(root.Name, root.Assembly, [.. root.Layers.Select(Assembly.Load)]);
 
     public static AppModule Of(Assembly root) => Of(ModuleRoot.Of(root));
 }
