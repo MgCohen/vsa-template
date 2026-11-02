@@ -5,7 +5,7 @@ using Shelf.Presenters;
 using VSA.Host;
 
 // This assembly records a layer that does not exist, for MissingModule below.
-[assembly: AssemblyMetadata("VsaLayer", "Framework.Tests.Presenters")]
+[assembly: AssemblyMetadata("VsaLayerAssembly", "Framework.Tests.Presenters")]
 
 namespace Framework.Tests.Host;
 
