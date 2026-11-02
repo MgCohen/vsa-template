@@ -50,6 +50,12 @@ class Client:
                 except Exception:
                     err = {}
                 raise NotionError(e.code, err.get("code", "http_error"), err.get("message", str(e))) from None
+            except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+                if attempt < self.max_retries:
+                    self.sleep(2 ** attempt)
+                    continue
+                reason = getattr(e, "reason", e)
+                raise NotionError(0, "network_error", f"{reason} (after {attempt + 1} tries)") from None
 
     def _paginate(self, method, path, body=None):
         cursor = None

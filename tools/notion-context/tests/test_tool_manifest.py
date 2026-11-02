@@ -7,7 +7,7 @@ import unittest
 from notion_context.cli import build_parser
 
 MANIFEST = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tool.toml")
-PH = re.compile(r"\{([a-z_]+)(\?|\*|\|[^}]*)?\}")
+PH = re.compile(r"\{([a-z][a-z0-9_]*)(\?|\*|\|[^}]*)?\}")  # same as agent-tools argv.PH
 
 
 def sample(spec):

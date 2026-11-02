@@ -69,6 +69,8 @@ class ConfigTests(unittest.TestCase):
     def test_unknown_keys_and_references_fail(self):
         with self.assertRaisesRegex(cfgmod.ConfigError, "unknown keys"):
             cfgmod.parse({"databases": {"a": {"id": "x", "colour": "red"}}})
+        with self.assertRaisesRegex(cfgmod.ConfigError, "'database' is required"):
+            cfgmod.parse({"databases": {}, "documents": {"d": {}}})
         with self.assertRaisesRegex(cfgmod.ConfigError, "unknown database"):
             cfgmod.parse({"databases": {}, "documents": {"d": {"database": "missing"}}})
 
@@ -95,6 +97,9 @@ class PropsTests(unittest.TestCase):
         self.assertEqual(filter_for("S", "status", "!Done"), {"property": "S", "status": {"does_not_equal": "Done"}})
         self.assertEqual(filter_for("D", "checkbox", "no"), {"property": "D", "checkbox": {"equals": False}})
         self.assertEqual(filter_for("K", "unique_id", "ISS-7"), {"property": "K", "unique_id": {"equals": 7}})
+        self.assertEqual(filter_for("K", "unique_id", "!ISS-7"), {"property": "K", "unique_id": {"does_not_equal": 7}})
+        with self.assertRaisesRegex(ValueError, "negate"):
+            filter_for("D", "date", "!2026-01-01")
         with self.assertRaises(ValueError):
             filter_for("F", "formula", "x")
 

@@ -36,6 +36,15 @@ class ClientTests(unittest.TestCase):
             with self.assertRaisesRegex(NotionError, "400 validation_error: bad"):
                 c.request("GET", "/x")
 
+    def test_network_errors_are_retried_then_reported(self):
+        waits = []
+        c = Client(token="t", sleep=waits.append, max_retries=2)
+        errs = [urllib.error.URLError("no route")] * 3
+        with mock.patch("urllib.request.urlopen", side_effect=errs):
+            with self.assertRaisesRegex(NotionError, "network_error: no route"):
+                c.request("GET", "/x")
+        self.assertEqual(waits, [1, 2])
+
     def test_pagination_follows_cursor(self):
         c = Client(token="t")
         pages = [{"results": [1], "has_more": True, "next_cursor": "c2"}, {"results": [2], "has_more": False}]

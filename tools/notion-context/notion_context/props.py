@@ -105,9 +105,11 @@ def filter_for(prop_name, prop_type, raw):
     if prop_type in ("number",):
         return {"property": prop_name, "number": {"does_not_equal" if neg else "equals": float(val)}}
     if prop_type == "unique_id":
-        return {"property": prop_name, "unique_id": {"equals": parse_key(val)[1]}}
+        return {"property": prop_name, "unique_id": {"does_not_equal" if neg else "equals": parse_key(val)[1]}}
     if prop_type in ("title", "rich_text", "url", "email", "phone_number"):
         return {"property": prop_name, prop_type: {"does_not_contain" if neg else "contains": val}}
     if prop_type == "date":
+        if neg:
+            raise ValueError(f"Cannot negate a date filter on {prop_name!r}.")
         return {"property": prop_name, "date": {"equals": val}}
     raise ValueError(f"Cannot filter on {prop_name!r} (type {prop_type}).")

@@ -1,7 +1,10 @@
 """Convert a page's block tree to Markdown (recursive)."""
+import re
+
 from .client import NotionError
 from .props import flatten, rich_text
 
+HEADING = re.compile(r"^#{1,6} ")
 LIST_TYPES = {"bulleted_list_item", "numbered_list_item", "to_do"}
 
 
@@ -15,7 +18,7 @@ class BodyReader:
 
     def markdown(self, page_id, heading_shift=0):
         lines = _tidy(self._blocks(self.client.children(page_id), 0, heading_shift))
-        while lines and (lines[-1] == "" or lines[-1].startswith("#")):
+        while lines and (lines[-1] == "" or HEADING.match(lines[-1])):
             lines.pop()  # a last heading with no content, e.g. above linked views only
         return "\n".join(lines).strip() + "\n" if lines else ""
 

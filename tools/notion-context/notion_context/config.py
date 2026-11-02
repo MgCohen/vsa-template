@@ -93,6 +93,8 @@ def parse(raw, path=""):
     for name, d in raw.get("documents", {}).items():
         where = f"documents.{name}"
         _keys(d, {"database", "fields", "body", "sections"}, where)
+        if "database" not in d:
+            raise ConfigError(f"{where}: 'database' is required.")
         secs = []
         for i, sd in enumerate(d.get("sections", [])):
             w = f"{where}.sections[{i}]"

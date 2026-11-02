@@ -1,5 +1,6 @@
 """Render a document tree as Markdown or JSON."""
 import json
+import re
 
 
 def to_json(node):
@@ -73,7 +74,7 @@ def _headings(md):
     for i, line in enumerate(md.splitlines()):
         if line.startswith("```"):
             in_code = not in_code
-        elif not in_code and line.startswith("#"):
+        elif not in_code and re.match(r"^#{1,6} ", line):
             found.append((i, len(line) - len(line.lstrip("#"))))
     return found
 
