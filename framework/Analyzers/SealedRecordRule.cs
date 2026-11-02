@@ -7,8 +7,7 @@ namespace VSA.Analyzers;
 // VSA1001: requests and responses are sealed records. A record compares by value, and sealed stops a second
 // request type that inherits the first and gets its route. The response is checked when it is in the same project.
 // Option: vsa.VSA1001.check_responses = false checks only the requests.
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class SealedRecordAnalyzer() : VsaAnalyzer(Descriptor) {
+public sealed class SealedRecordRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1001",
         "Requests and responses are sealed records",
@@ -17,13 +16,11 @@ public sealed class SealedRecordAnalyzer() : VsaAnalyzer(Descriptor) {
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    protected override void Register(AnalysisContext context) {
-        context.RegisterCompilationStartAction(start => {
-            if (start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest`1") is not { } request) {
-                return;
-            }
-            start.RegisterSymbolAction(symbol => Check((INamedTypeSymbol)symbol.Symbol, request, symbol), SymbolKind.NamedType);
-        });
+    protected internal override void Register(CompilationStartAnalysisContext start) {
+        if (start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest`1") is not { } request) {
+            return;
+        }
+        start.RegisterSymbolAction(symbol => Check((INamedTypeSymbol)symbol.Symbol, request, symbol), SymbolKind.NamedType);
     }
 
     void Check(INamedTypeSymbol type, INamedTypeSymbol request, SymbolAnalysisContext context) {

@@ -26,14 +26,14 @@ The editor and the build run the first group in each consumer project. The secon
 
 The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk cannot run C# before compile. `SdkLayerMapTests` fails if the two maps are different.
 
-## Analyzers: `VsaAnalyzer`
+## Analyzers: `VsaAnalyzer` and `VsaAnalyzerRule`
 
-The base registers the descriptor, ignores generated code and reads options. A rule option wins over a global option.
+`VsaAnalyzer` is the one analyzer. It finds each `VsaAnalyzerRule` of the assembly, ignores generated code, and does not run a rule with severity `none`. A rule gives one descriptor and registers its actions. A rule option wins over a global option.
 
 ```csharp
-public sealed class SealedRecordAnalyzer() : VsaAnalyzer(Descriptor) {
-    protected override void Register(AnalysisContext context) =>
-        context.RegisterSymbolAction(symbol => {
+public sealed class SealedRecordRule() : VsaAnalyzerRule(Descriptor) {
+    protected internal override void Register(CompilationStartAnalysisContext start) =>
+        start.RegisterSymbolAction(symbol => {
             if (Options(symbol.Options, symbol.Symbol.Locations[0].SourceTree!).Get("check_responses", fallback: true)) { ... }
         }, SymbolKind.NamedType);
 }
@@ -90,7 +90,7 @@ Add or replace services before the first `Handle` call. After it, the services a
 ## Add a rule
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
-2. If one file shows the problem, write an analyzer that inherits `VsaAnalyzer`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
+2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
 3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests`. Use the next free `VSA2xxx` ID in the test name.
 4. Add tests in `tests/Rules.Tests/`. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test:
 

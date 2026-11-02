@@ -5,5 +5,5 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-VSA1001 | VSA | Error | SealedRecordAnalyzer
-VSA1002 | VSA | Error | EventHandlerRequestAnalyzer
+VSA1001 | VSA | Error | SealedRecordRule
+VSA1002 | VSA | Error | EventHandlerRequestRule

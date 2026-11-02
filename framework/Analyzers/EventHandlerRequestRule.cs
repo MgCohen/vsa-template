@@ -8,8 +8,7 @@ namespace VSA.Analyzers;
 
 // VSA1002: event handlers do not send requests. An event handler reacts to a fact. It does not use a request type
 // or IBus. VSA.Sdk gives the Handlers/Events layer no reference to Contracts/Requests, so this rule catches the rest.
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class EventHandlerRequestAnalyzer() : VsaAnalyzer(Descriptor) {
+public sealed class EventHandlerRequestRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1002",
         "Event handlers do not send requests",
@@ -18,25 +17,23 @@ public sealed class EventHandlerRequestAnalyzer() : VsaAnalyzer(Descriptor) {
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    protected override void Register(AnalysisContext context) {
-        context.RegisterCompilationStartAction(start => {
-            var handler = start.Compilation.GetTypeByMetadataName("VSA.Handlers.Events.IntegrationEventHandler`1");
-            var routed = start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRoutedRequest");
-            var bus = start.Compilation.GetTypeByMetadataName("VSA.Presenters.IBus");
-            if (handler is null || (routed is null && bus is null)) {
+    protected internal override void Register(CompilationStartAnalysisContext start) {
+        var handler = start.Compilation.GetTypeByMetadataName("VSA.Handlers.Events.IntegrationEventHandler`1");
+        var routed = start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRoutedRequest");
+        var bus = start.Compilation.GetTypeByMetadataName("VSA.Presenters.IBus");
+        if (handler is null || (routed is null && bus is null)) {
+            return;
+        }
+        var forbidden = new Forbidden(routed, bus);
+        start.RegisterSymbolStartAction(symbolStart => {
+            var type = (INamedTypeSymbol)symbolStart.Symbol;
+            if (!Inherits(type, handler)) {
                 return;
             }
-            var forbidden = new Forbidden(routed, bus);
-            start.RegisterSymbolStartAction(symbolStart => {
-                var type = (INamedTypeSymbol)symbolStart.Symbol;
-                if (!Inherits(type, handler)) {
-                    return;
-                }
-                CheckMembers(type, forbidden, symbolStart);
-                symbolStart.RegisterOperationAction(op => CheckOperation(type, op, forbidden),
-                    OperationKind.ObjectCreation, OperationKind.Invocation, OperationKind.LocalReference);
-            }, SymbolKind.NamedType);
-        });
+            CheckMembers(type, forbidden, symbolStart);
+            symbolStart.RegisterOperationAction(op => CheckOperation(type, op, forbidden),
+                OperationKind.ObjectCreation, OperationKind.Invocation, OperationKind.LocalReference);
+        }, SymbolKind.NamedType);
     }
 
     // Fields, properties and parameters, also the parameters of a primary constructor.

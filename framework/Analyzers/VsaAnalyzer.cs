@@ -1,40 +1,42 @@
+using System;
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace VSA.Analyzers;
 
-// The base of each custom VSA analyzer. A derived analyzer gives one constant descriptor and registers its actions.
-// Severity uses the standard key: dotnet_diagnostic.VSA1001.severity = warning.
-// Options come from .editorconfig or .globalconfig. A rule key wins over a global key:
-//   vsa.VSA1001.check_responses = false    only VSA1001
-//   vsa.check_responses = false            all VSA rules that read the key
-public abstract class VsaAnalyzer(DiagnosticDescriptor rule) : DiagnosticAnalyzer {
-    public DiagnosticDescriptor Rule { get; } = rule;
-    public string Id => Rule.Id;
+// The one analyzer of VSA. It runs each VsaAnalyzerRule of this assembly.
+// Roslyn skips an analyzer only when all of its IDs are off, so this class skips each rule that is off by itself.
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+public sealed class VsaAnalyzer : DiagnosticAnalyzer {
+    // Each non-abstract VsaAnalyzerRule of this assembly, in ID order.
+    public static ImmutableArray<VsaAnalyzerRule> Rules { get; } = [.. typeof(VsaAnalyzer).Assembly.GetTypes()
+        .Where(t => t.IsSubclassOf(typeof(VsaAnalyzerRule)) && !t.IsAbstract)
+        .Select(t => (VsaAnalyzerRule)Activator.CreateInstance(t)!)
+        .OrderBy(r => r.Id, StringComparer.Ordinal)];
 
-    public sealed override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [.. Rules.Select(r => r.Rule)];
 
-    public sealed override void Initialize(AnalysisContext context) {
+    public override void Initialize(AnalysisContext context) {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        Register(context);
+        context.RegisterCompilationStartAction(start => {
+            foreach (var rule in Rules.Where(r => !IsOff(r.Rule, start.Compilation, start.CancellationToken))) {
+                rule.Register(start);
+            }
+        });
     }
 
-    protected abstract void Register(AnalysisContext context);
-
-    // The options of one file: its .editorconfig, the .globalconfig files and the MSBuild properties.
-    protected VsaOptions Options(AnalyzerOptions options, SyntaxTree tree) =>
-        new(Id, options.AnalyzerConfigOptionsProvider.GetOptions(tree));
-
-    protected Diagnostic Create(Location location, params object[] arguments) => Diagnostic.Create(Rule, location, arguments);
-}
-
-public sealed class VsaOptions(string ruleId, AnalyzerConfigOptions options) {
-    string? Get(string key) =>
-        options.TryGetValue($"vsa.{ruleId}.{key}", out var rule) ? rule
-        : options.TryGetValue($"vsa.{key}", out var global) ? global
-        : null;
-
-    public bool Get(string key, bool fallback) => bool.TryParse(Get(key), out var value) ? value : fallback;
+    // A rule is off if its severity is none in each file: from .editorconfig, .globalconfig, a rule set or NoWarn.
+    static bool IsOff(DiagnosticDescriptor rule, Compilation compilation, System.Threading.CancellationToken ct) {
+        var provider = compilation.Options.SyntaxTreeOptionsProvider;
+        // The global config wins over the project options. Roslyn also drops each diagnostic of a rule that is off,
+        // so this check only prevents work, and if it is not sure, the rule runs.
+        var project = provider?.TryGetGlobalDiagnosticValue(rule.Id, ct, out var global) == true ? global
+            : compilation.Options.SpecificDiagnosticOptions.TryGetValue(rule.Id, out var specific) ? specific
+            : rule.IsEnabledByDefault ? ReportDiagnostic.Default : ReportDiagnostic.Suppress;
+        return compilation.SyntaxTrees.All(tree =>
+            (provider?.TryGetDiagnosticValue(tree, rule.Id, ct, out var file) == true ? file : project) == ReportDiagnostic.Suppress);
+    }
 }
