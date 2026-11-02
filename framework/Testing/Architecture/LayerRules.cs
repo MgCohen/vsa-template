@@ -1,7 +1,5 @@
 using System.Reflection;
-using ArchUnitNET.Fluent;
 using VSA.Testing.Core;
-using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace VSA.Testing.Architecture;
 
@@ -11,8 +9,7 @@ public sealed record ModuleProject(Assembly Assembly, AppModule Module, string L
     public string Name => Assembly.GetName().Name!;
 }
 
-// The layer map as ArchUnitNET rules: one rule for each module project.
-// The rule forbids each VSA base and each module project that the map does not permit. Other assemblies are not checked.
+// The data of the layer map rule (VSA2001). The ArchUnitNET rule is in VsaArchitectureTests. Other assemblies are not checked.
 public static class LayerRules {
     public static IReadOnlyList<ModuleProject> Projects(VsaApp app) => [.. app.Modules.SelectMany(module => {
         var root = module.Root.GetName().Name!;
@@ -33,7 +30,9 @@ public static class LayerRules {
             $"{p.Name} is in layer {p.Layer}, which is not in the layer map. Move the project to a layer folder: {string.Join(", ", layers.Select(l => l.Name))}.");
     }
 
-    public static IEnumerable<IArchRule> For(VsaApp app, IReadOnlyList<Layer>? layers = null) {
+    // The assemblies that each module project must not use: each VSA base and each module project that the map does not permit.
+    // A project with no forbidden assembly is not in the list.
+    public static IEnumerable<(ModuleProject Project, IReadOnlyList<Assembly> Forbidden)> Forbidden(VsaApp app, IReadOnlyList<Layer>? layers = null) {
         layers ??= Layers.All;
         var projects = Projects(app);
         var bases = layers.Select(l => (Layer: l, Assembly: Load(l.BaseAssembly))).Where(b => b.Assembly is not null).ToList();
@@ -45,13 +44,9 @@ public static class LayerRules {
                 .. projects.Where(p => p != project && !Permits(layer, p.Layer, own: p.Module == project.Module, module: true)).Select(p => p.Assembly),
                 .. bases.Where(b => !Permits(layer, b.Layer.Name, own: true, module: false)).Select(b => b.Assembly!),
             ];
-            if (forbidden.Count == 0) {
-                continue;
+            if (forbidden.Count > 0) {
+                yield return (project, forbidden);
             }
-            yield return Types().That().ResideInAssembly(project.Assembly)
-                .Should().NotDependOnAny(Types().That().ResideInAssembly(forbidden[0], [.. forbidden.Skip(1)]))
-                .Because($"the layer map does not permit {project.Layer} to use them. Remove the use, or change the layer map")
-                .WithoutRequiringPositiveResults();
         }
     }
 

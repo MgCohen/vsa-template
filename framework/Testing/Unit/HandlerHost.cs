@@ -10,8 +10,9 @@ namespace VSA.Testing.Unit;
 
 // Runs a request handler without HTTP and without a database. It has no test framework type.
 // Default services: an InMemoryRepository for each IRepository<T, TId>, a RecordingEventPublisher, and logging.
-// Add or replace services before the first Handle call. After it, the services do not change.
+// Add or replace services before the first Handle call. After it, the services are read-only.
 public sealed class HandlerHost {
+    readonly ServiceCollection services = new();
     ServiceProvider? provider;
 
     public HandlerHost() {
@@ -21,9 +22,15 @@ public sealed class HandlerHost {
         Services.AddSingleton<IIntegrationEventPublisher>(s => s.GetRequiredService<RecordingEventPublisher>());
     }
 
-    public IServiceCollection Services { get; } = new ServiceCollection();
+    public IServiceCollection Services => services;
 
-    public IServiceProvider Provider => provider ??= Services.BuildServiceProvider();
+    // A change to the services after this point has no effect. MakeReadOnly makes such a change fail.
+    public IServiceProvider Provider => provider ??= Build();
+
+    ServiceProvider Build() {
+        services.MakeReadOnly();
+        return services.BuildServiceProvider();
+    }
 
     public RecordingEventPublisher Events => Provider.GetRequiredService<RecordingEventPublisher>();
 

@@ -34,7 +34,15 @@ public abstract class VsaArchitectureTests<TEntry> {
         if (unmapped.Count > 0) {
             Assert.Fail(string.Join(Environment.NewLine, unmapped));
         }
-        VsaRules.All(LayerRules.For(App, LayerMap))?.Check(Architecture);
+        // One rule for each module project. The scope reports the failures of all projects, not only the first.
+        using var scope = Assert.EnterMultipleScope();
+        foreach (var (project, forbidden) in LayerRules.Forbidden(App, LayerMap)) {
+            Types().That().ResideInAssembly(project.Assembly)
+                .Should().NotDependOnAny(Types().That().ResideInAssembly(forbidden[0], [.. forbidden.Skip(1)]))
+                .Because($"the layer map does not permit {project.Layer} to use them. Remove the use, or change the layer map")
+                .WithoutRequiringPositiveResults()
+                .Check(Architecture);
+        }
     }
 
     // The host creates each Module class at start-up. Public sealed: no other class inherits it.

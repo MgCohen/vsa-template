@@ -10,7 +10,8 @@ static class Fixtures {
     public static VsaApp App(params string[] modules) => new([.. modules.Select(m => AppModule.Of(Assembly.Load(m)))]);
 
     // The message of the failed rule. The rule runs in its own context, so the failure does not fail this test.
-    public static string Fails(Action rule) => Assert.Throws<AssertionException>(rule)!.Message;
+    // A rule with more than one check fails with a MultipleAssertException. Both types are a ResultStateException.
+    public static string Fails(Action rule) => Assert.Catch<ResultStateException>(rule)!.Message;
 }
 
 // The base tests on fixture modules: a fixture test calls a base test, for example

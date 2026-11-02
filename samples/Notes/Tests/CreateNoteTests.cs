@@ -1,6 +1,10 @@
+using Microsoft.Extensions.DependencyInjection;
 using Notes.Contracts.Events;
 using Notes.Contracts.Requests.CreateNote;
 using Notes.Domain;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using VSA.Contracts.Events;
 using VSA.Testing.Unit;
 
 namespace Notes.Tests;
@@ -26,4 +30,18 @@ public sealed class CreateNoteTests : VsaUnitTest {
         Assert.That(result.Error, Is.EqualTo(NoteErrors.TitleRequired));
         Assert.That(Repository<Note, NoteId>().SaveCount, Is.Zero);
     }
+}
+
+// Configure makes the mocks one time for each test. The tests of the class use them through the field.
+public sealed class CreateNotePublisherTests : VsaUnitTest {
+    IIntegrationEventPublisher publisher = null!;
+
+    protected override void Configure(IServiceCollection services) {
+        publisher = Mock<IIntegrationEventPublisher>();
+        publisher.PublishAsync(Arg.Any<NoteCreated>(), Arg.Any<CancellationToken>()).ThrowsAsync(new TimeoutException());
+    }
+
+    [Test]
+    public void Failure_of_the_publisher_stops_the_request() =>
+        Assert.ThrowsAsync<TimeoutException>(() => Handle(new CreateNoteRequest(Guid.NewGuid(), "Title")));
 }

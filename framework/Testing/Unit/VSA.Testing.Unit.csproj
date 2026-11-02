@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The base of the unit tests: send a request to its handler, with default fakes for the framework services. -->
+  <!-- The base of the unit tests: send a request to its handler, with default fakes for the framework services and NSubstitute mocks for other services. -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -9,6 +9,7 @@
     <ProjectReference Include="../../Layers/Contracts/Events/VSA.Contracts.Events.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="NSubstitute" />
     <PackageReference Include="NUnit" />
   </ItemGroup>
 </Project>

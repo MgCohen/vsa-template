@@ -60,7 +60,17 @@ protected override void Register(AnalysisContext context) =>
 
 ## Architecture
 
-Each rule is one `[Test]` in `VsaArchitectureTests`, with an ArchUnitNET rule. A consumer test project needs one class, and it gets each rule as a test.
+Each rule is one `[Test]` in `VsaArchitectureTests`, with an ArchUnitNET rule in the test. A consumer test project needs one class, and it gets each rule as a test. A rule that comes from data, such as the layer map, gets the data from a helper and writes the ArchUnitNET rule in the test:
+
+```csharp
+// VSA2001: one ArchUnitNET rule for each module project. The scope reports all failures.
+using var scope = Assert.EnterMultipleScope();
+foreach (var (project, forbidden) in LayerRules.Forbidden(App, LayerMap)) {
+    Types().That().ResideInAssembly(project.Assembly)
+        .Should().NotDependOnAny(Types().That().ResideInAssembly(forbidden[0], [.. forbidden.Skip(1)]))
+        .Check(Architecture);
+}
+```
 
 ```csharp
 // framework/Testing/Architecture/VsaArchitectureTests.cs: a new VSA rule
@@ -79,13 +89,13 @@ public sealed class ArchitectureTests : VsaArchitectureTests<Program> {
 | Member | Use |
 |---|---|
 | `App`, `Architecture`, `LayerMap` | Virtual: a fixture test gives other modules or another map |
-| `VsaRules.Load`, `VsaRules.All` | Optional helpers: load an app, join rules |
-| `LayerRules.For` | Optional helper: the ArchUnitNET rules of a layer map |
+| `VsaRules.Load` | Optional helper: load an app |
+| `LayerRules.Forbidden` | Data: the forbidden assemblies of each module project |
 
 A fixture test calls the base test on fixture modules, so the rule is written in one place only:
 
 ```csharp
-Assert.Throws<AssertionException>(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);
+Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);
 ```
 
 - The test project references the host. The host references each module, so the test run gets every module project.
@@ -95,24 +105,40 @@ Assert.Throws<AssertionException>(FixtureApp.Of("OpenModuleClass").VSA2002_Modul
 
 A unit test sends a request to its handler. `HandlerHost` finds the handler in the `Handlers.Requests` project of the same module, and creates it with the services of the test.
 
+Before each test, the base creates a new `HandlerHost` and calls `Configure`. A test class makes its fakes and mocks in `Configure`, and its tests use them through fields.
+
 ```csharp
-public sealed class CreateNoteTests : VsaUnitTest {
-    [Test]
-    public async Task Creates_the_note() {
-        var result = await Handle(new CreateNoteRequest(author, "Title"));
-        Assert.That(Repository<Note, NoteId>().Saved, Has.Count.EqualTo(1));
-        Assert.That(Events.OfType<NoteCreated>(), Is.Not.Empty);
+public sealed class CreateNotePublisherTests : VsaUnitTest {
+    IIntegrationEventPublisher publisher = null!;
+
+    protected override void Configure(IServiceCollection services) {
+        publisher = Mock<IIntegrationEventPublisher>();
+        publisher.PublishAsync(Arg.Any<NoteCreated>(), Arg.Any<CancellationToken>()).ThrowsAsync(new TimeoutException());
     }
+
+    [Test]
+    public void Failure_of_the_publisher_stops_the_request() =>
+        Assert.ThrowsAsync<TimeoutException>(() => Handle(new CreateNoteRequest(author, "Title")));
 }
 ```
 
+| Member | Use |
+|---|---|
+| `Configure(services)` | Virtual: add or replace services for each test |
+| `Mock<T>()` | An NSubstitute mock of `T` in the services |
+| `Handle(request)` | Runs the handler of the request |
+| `Repository<T, TId>()`, `Events` | The default fakes |
+
 | Service | Default | Replace |
 |---|---|---|
-| `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Services.AddSingleton<IRepository<T, TId>>(...)` |
-| `IIntegrationEventPublisher` | `RecordingEventPublisher` | `Services.AddSingleton<IIntegrationEventPublisher>(...)` |
-| `ILogger<T>` | Logging with no output | `Services.AddLogging(...)` |
+| `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Mock<IRepository<T, TId>>()` |
+| `IIntegrationEventPublisher` | `RecordingEventPublisher` | `Mock<IIntegrationEventPublisher>()` |
+| `ILogger<T>` | Logging with no output | `services.AddLogging(...)` |
+| Other services | None | `Mock<T>()` or `services.Add...` |
 
-Add or replace services before the first `Handle` call. `HandlerHost` has no NUnit type, so another test framework can use it.
+- Add or replace services before the first `Handle` call. After it, the services are read-only, and a change fails.
+- The mock library is NSubstitute. It has a short syntax, it has no license problem, and it runs in .NET and in the Unity editor.
+- `HandlerHost` has no NUnit type, so another test framework can use it.
 
 ## Tests of the checks
 
@@ -121,6 +147,6 @@ Add or replace services before the first `Handle` call. `HandlerHost` has no NUn
 | `VSA1001`, `VSA1002` | `tests/Rules.Tests/AnalyzerTests.cs` | Code in the test | Code in the test, options |
 | `VSA2001` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `Good` with a smaller layer map |
 | `VSA2002` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `OpenModuleClass` |
-| Unit base | `tests/Rules.Tests/UnitBaseTests.cs` | `Good` | None |
+| Unit base | `tests/Rules.Tests/UnitBaseTests.cs` | `Good`, `Configure`, `Mock<T>()` | A service added after `Handle` |
 
 The fixture modules are in `tests/Fixtures/Rules/Modules/`. The Notes sample uses the checks as a consumer does: `samples/Notes/Tests`.
