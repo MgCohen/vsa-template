@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests of the checks: the architecture rules on the fixtures in tests/Fixtures/Rules, the analyzers with the
+       Roslyn analyzer test library, the unit test base, and the layer map. NUnit comes from tests/Directory.Build.props. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+    <!-- The test library asks for old versions. These are the versions that VSA.Analyzers uses, and a version with no known vulnerability. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Analyzers/VSA.Analyzers.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
+    <!-- The analyzer tests compile code against these assemblies. -->
+    <ProjectReference Include="$(RepoRoot)framework/Layers/Handlers/Events/VSA.Handlers.Events.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Layers/Presenters/VSA.Presenters.csproj" />
+    <!-- Each fixture module root, with its layers. -->
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Rules/Modules/*/*.csproj" />
+  </ItemGroup>
+</Project>

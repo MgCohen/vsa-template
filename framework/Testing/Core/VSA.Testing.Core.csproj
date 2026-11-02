@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The shared base of the VSA checks: the layer map. It has no test framework and no VSA reference. -->
+</Project>
