@@ -35,7 +35,7 @@ public sealed class SealedRecordAnalyzer() : VsaAnalyzer(Descriptor) {
             return;
         }
         Report(type, "a request", context);
-        if (!Options(context.Options, type.Locations[0].SourceTree).Get("check_responses", fallback: true)) {
+        if (!Options(context.Options, type.Locations[0].SourceTree!).Get("check_responses", fallback: true)) {
             return;
         }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)

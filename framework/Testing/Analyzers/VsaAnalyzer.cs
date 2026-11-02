@@ -23,15 +23,15 @@ public abstract class VsaAnalyzer(DiagnosticDescriptor rule) : DiagnosticAnalyze
 
     protected abstract void Register(AnalysisContext context);
 
-    // The options of one file. Without a file, only the global options (.globalconfig and MSBuild properties).
-    protected VsaOptions Options(AnalyzerOptions options, SyntaxTree? tree = null) =>
-        new(Id, tree is null ? options.AnalyzerConfigOptionsProvider.GlobalOptions : options.AnalyzerConfigOptionsProvider.GetOptions(tree));
+    // The options of one file: its .editorconfig, the .globalconfig files and the MSBuild properties.
+    protected VsaOptions Options(AnalyzerOptions options, SyntaxTree tree) =>
+        new(Id, options.AnalyzerConfigOptionsProvider.GetOptions(tree));
 
     protected Diagnostic Create(Location location, params object[] arguments) => Diagnostic.Create(Rule, location, arguments);
 }
 
 public sealed class VsaOptions(string ruleId, AnalyzerConfigOptions options) {
-    public string? Get(string key) =>
+    string? Get(string key) =>
         options.TryGetValue($"vsa.{ruleId}.{key}", out var rule) ? rule
         : options.TryGetValue($"vsa.{key}", out var global) ? global
         : null;

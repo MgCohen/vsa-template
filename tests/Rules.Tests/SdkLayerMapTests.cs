@@ -28,7 +28,7 @@ public sealed partial class SdkLayerMapTests {
                 missing.Add($"{sdk.Name}: not in Layers.cs");
                 continue;
             }
-            var edges = layer.References.Concat(layer.Exposed).ToList();
+            var edges = layer.References;
             missing.AddRange(sdk.Own.Where(t => !edges.Any(e => e.Target == t && e.Edge != Edge.BaseOnly)).Select(t => $"{sdk.Name} -> {t} (own module)"));
             missing.AddRange(sdk.AnyModule.Where(t => !edges.Any(e => e.Target == t && e.AnyModule)).Select(t => $"{sdk.Name} -> {t} (any module)"));
             missing.AddRange(sdk.Bases.Where(t => t != sdk.Name && !edges.Any(e => e.Target == t)).Select(t => $"{sdk.Name} -> VSA.{t} (base)"));

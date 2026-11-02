@@ -1,3 +1,4 @@
+using ArchUnitNET.Loader;
 using ArchUnitNET.NUnit;
 using NUnit.Framework;
 using VSA.Testing.Core;
@@ -7,23 +8,27 @@ using ArchModel = ArchUnitNET.Domain.Architecture;
 namespace VSA.Testing.Architecture;
 
 // The VSA architecture rules as NUnit tests. Each rule is one [Test] here. A consumer test project needs one class:
-//   public sealed class ArchitectureTests : VsaArchitectureTests<Program>;
-// TEntry is a type in the host assembly. The modules come from the project libraries of the test run.
+//   public sealed class ArchitectureTests : VsaArchitectureTests;
+// The modules come from the project libraries of the test run, so the test project must reference the host.
 // To add an app rule, add a [Test] in the derived class and check an ArchUnitNET rule on Architecture.
-public abstract class VsaArchitectureTests<TEntry> {
-    static readonly Lazy<VsaApp> SharedApp = new(VsaApp.Of<TEntry>);
-    static readonly Lazy<ArchModel> SharedArchitecture = new(() => VsaRules.Load(SharedApp.Value));
+public abstract class VsaArchitectureTests {
+    VsaApp? app;
+    ArchModel? architecture;
 
-    // A fixture test overrides these, so the same tests run on other modules or on another layer map.
-    protected virtual VsaApp App => SharedApp.Value;
-    protected virtual ArchModel Architecture => SharedArchitecture.Value;
+    // A fixture test overrides App or LayerMap, so the same tests run on other modules or on another layer map.
+    protected virtual VsaApp App => app ??= VsaApp.Current();
     protected virtual IReadOnlyList<Layer> LayerMap => Layers.All;
+
+    // The module projects and the VSA bases. ArchUnitNET checks only the types that it loads.
+    protected virtual ArchModel Architecture => architecture ??= new ArchLoader()
+        .LoadAssemblies([.. LayerRules.Projects(App).Select(p => p.Assembly), .. LayerRules.Bases(Layers.All)])
+        .Build();
 
     // With no modules, each other rule passes with nothing to check. That is a wrong pass.
     [Test]
     public void The_app_has_modules() {
         if (App.Modules.Count == 0) {
-            Assert.Fail($"No module root found for {typeof(TEntry).Assembly.GetName().Name}. Add a project reference to the host, and build the modules with VSA.Sdk.");
+            Assert.Fail($"No module root found for {GetType().Assembly.GetName().Name}. Add a project reference to the host, and build the modules with VSA.Sdk.");
         }
     }
 

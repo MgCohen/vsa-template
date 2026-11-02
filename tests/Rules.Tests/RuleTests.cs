@@ -48,7 +48,7 @@ public sealed class AppHasModulesTests {
         Assert.That(Fails(new NoModules().The_app_has_modules), Does.Contain("No module root found"));
 
     [Explicit("The test calls The_app_has_modules.")]
-    sealed class NoModules : VsaArchitectureTests<NoModules> {
+    sealed class NoModules : VsaArchitectureTests {
         protected override VsaApp App { get; } = new([]);
     }
 }
@@ -61,7 +61,7 @@ public sealed class LayerMapTests {
     // A reference by name, for example "Infrastructure.EfCore", must name a layer of the map.
     [Test]
     public void Each_edge_names_a_layer_of_the_map() {
-        var unknown = Layers.All.SelectMany(l => l.References.Concat(l.Exposed).Where(e => Layers.Find(e.Target) is null).Select(e => $"{l.Name} -> {e.Target}"));
+        var unknown = Layers.All.SelectMany(l => l.References.Where(e => Layers.Find(e.Target) is null).Select(e => $"{l.Name} -> {e.Target}"));
         Assert.That(unknown, Is.Empty);
     }
 }

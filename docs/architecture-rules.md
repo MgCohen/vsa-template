@@ -1,6 +1,6 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the consumer's modules. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET and NUnit. VSA adds base classes and one layer map.
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one layer map (`framework/Testing/Core/Layers.cs`).
 
 ## Levels
 
@@ -9,19 +9,8 @@ The VSA checks ship with the framework and run on the consumer's modules. Librar
 | Build | `VSA.Sdk` | Before compile | `VSA0xxx` |
 | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` | During compile, in the IDE | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
 | Architecture | `VSA.Testing.Architecture` (ArchUnitNET) | In a test run | `VSA2xxx` |
-| Unit | `VSA.Testing.Unit` (NUnit) | In a test run | None |
+| Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | In a test run | None |
 | End-to-end | `VSA.Testing.EndToEnd` | In a test run | Not started |
-
-```
-framework/
-├─ Layers/                  the code
-├─ Sdk/                     VSA.Sdk: build setup, layer references, analyzer settings (VSA.globalconfig)
-└─ Testing/
-   ├─ Core/                 VSA.Testing.Core: the layer map (Layer, Edge, Layers)
-   ├─ Analyzers/            VSA.Analyzers: VsaAnalyzer base and the VSA1xxx rules
-   ├─ Architecture/         VSA.Testing.Architecture: VsaArchitectureTests<TEntry>, helpers VsaRules, LayerRules
-   └─ Unit/                 VSA.Testing.Unit: VsaUnitTest, HandlerHost, default fakes
-```
 
 ## Rules
 
@@ -33,79 +22,44 @@ framework/
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
-## Decisions
+The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk cannot run C# before compile. `SdkLayerMapTests` fails if the two maps are different.
 
-1. **Libraries, not an own rule system.** The built-in .NET analyzers do the basic rules (`AnalysisLevel = latest-recommended`). Roslyn does the custom rules. ArchUnitNET does the architecture rules. VSA code is only the base classes and the layer map.
-2. **NUnit.** NUnit runs in .NET and in Unity. The Unity Test Framework uses NUnit, and xUnit does not run in Unity.
-3. **One layer map.** `framework/Testing/Core/Layers.cs` copies the VSA Layer Map artifact. `LayerRules` makes one ArchUnitNET rule for each module project from it. VSA.Sdk cannot run C# before compile, so `VSA.Layers.targets` has the same map in MSBuild. If you change one, change the other.
-4. **How the test finds the app.** VSA.Testing.Architecture uses `ModuleDiscovery.FindRoots()` of VSA.Module. The host uses the same API at start-up, so the tests and the host find the same modules.
+## Analyzers: `VsaAnalyzer`
 
-## Analyzers
-
-Each custom analyzer inherits `VsaAnalyzer`. The base registers the descriptor, ignores generated code and reads options.
-
-```ini
-# .editorconfig or .globalconfig of the consumer
-dotnet_diagnostic.VSA1001.severity = warning   # standard severity key
-vsa.check_responses = false                    # global option: all VSA rules that read the key
-vsa.VSA1001.check_responses = true             # rule option: wins over the global option
-```
+The base registers the descriptor, ignores generated code and reads options. A rule option wins over a global option.
 
 ```csharp
-protected override void Register(AnalysisContext context) =>
-    context.RegisterSymbolAction(symbol => {
-        if (Options(symbol.Options, symbol.Symbol.Locations[0].SourceTree).Get("check_responses", fallback: true)) { ... }
-    }, SymbolKind.NamedType);
-```
-
-## Architecture
-
-Each rule is one `[Test]` in `VsaArchitectureTests`, with an ArchUnitNET rule in the test. A consumer test project needs one class, and it gets each rule as a test. A rule that comes from data, such as the layer map, gets the data from a helper and writes the ArchUnitNET rule in the test:
-
-```csharp
-// VSA2001: one ArchUnitNET rule for each module project. The scope reports all failures.
-using var scope = Assert.EnterMultipleScope();
-foreach (var (project, forbidden) in LayerRules.Forbidden(App, LayerMap)) {
-    Types().That().ResideInAssembly(project.Assembly)
-        .Should().NotDependOnAny(Types().That().ResideInAssembly(forbidden[0], [.. forbidden.Skip(1)]))
-        .Check(Architecture);
+public sealed class SealedRecordAnalyzer() : VsaAnalyzer(Descriptor) {
+    protected override void Register(AnalysisContext context) =>
+        context.RegisterSymbolAction(symbol => {
+            if (Options(symbol.Options, symbol.Symbol.Locations[0].SourceTree!).Get("check_responses", fallback: true)) { ... }
+        }, SymbolKind.NamedType);
 }
 ```
 
-```csharp
-// framework/Testing/Architecture/VsaArchitectureTests.cs: a new VSA rule
-[Test]
-public void VSA2003_handlers_are_internal() =>
-    Classes().That().HaveNameEndingWith("Handler").Should().NotBePublic().Check(Architecture);
+```ini
+dotnet_diagnostic.VSA1001.severity = warning   # standard severity key
+vsa.check_responses = false                    # global option
+vsa.VSA1001.check_responses = true             # rule option
+```
 
-// The consumer: all VSA rules, plus its own app rules
-public sealed class ArchitectureTests : VsaArchitectureTests<Program> {
+## Architecture: `VsaArchitectureTests`
+
+Each rule is one `[Test]` with an ArchUnitNET rule. A consumer test project references the host and has one class. It gets each rule as a test, and it can add its own rules.
+
+```csharp
+public sealed class ArchitectureTests : VsaArchitectureTests {
     [Test]
     public void Presenters_are_sealed() =>
         Classes().That().HaveNameEndingWith("Presenter").Should().BeSealed().Check(Architecture);
 }
 ```
 
-| Member | Use |
-|---|---|
-| `App`, `Architecture`, `LayerMap` | Virtual: a fixture test gives other modules or another map |
-| `VsaRules.Load` | Optional helper: load an app |
-| `LayerRules.Forbidden` | Data: the forbidden assemblies of each module project |
+`App`, `LayerMap` and `Architecture` are virtual. A fixture test gives other modules or another layer map. `The_app_has_modules` fails if the test run has no module root, because then each rule passes with nothing to check.
 
-A fixture test calls the base test on fixture modules, so the rule is written in one place only:
+## Unit: `VsaUnitTest`
 
-```csharp
-Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);
-```
-
-- The test project references the host. The host references each module, so the test run gets every module project.
-- `The_app_has_modules` fails if no module root is found. Without it, each rule passes with nothing to check.
-
-## Unit
-
-A unit test sends a request to its handler. `HandlerHost` finds the handler in the `Handlers.Requests` project of the same module, and creates it with the services of the test.
-
-Before each test, the base creates a new `HandlerHost` and calls `Configure`. A test class makes its fakes and mocks in `Configure`, and its tests use them through fields.
+A unit test sends a request to its handler, without HTTP and without a database. Before each test, the base makes new services with the default fakes and calls `Configure`. A test class makes its mocks in `Configure`, and its tests use them through fields.
 
 ```csharp
 public sealed class CreateNotePublisherTests : VsaUnitTest {
@@ -122,31 +76,24 @@ public sealed class CreateNotePublisherTests : VsaUnitTest {
 }
 ```
 
-| Member | Use |
-|---|---|
-| `Configure(services)` | Virtual: add or replace services for each test |
-| `Mock<T>()` | An NSubstitute mock of `T` in the services |
-| `Handle(request)` | Runs the handler of the request |
-| `Repository<T, TId>()`, `Events` | The default fakes |
-
-| Service | Default | Replace |
+| Service | Default | Seed or replace |
 |---|---|---|
-| `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Mock<IRepository<T, TId>>()` |
-| `IIntegrationEventPublisher` | `RecordingEventPublisher` | `Mock<IIntegrationEventPublisher>()` |
+| `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Repository<T, TId>().With(...)` |
+| `IIntegrationEventPublisher` | `RecordingEventPublisher` (`Events`) | `Mock<IIntegrationEventPublisher>()` |
 | `ILogger<T>` | Logging with no output | `services.AddLogging(...)` |
-| Other services | None | `Mock<T>()` or `services.Add...` |
+| Other services | None | `Mock<T>()` |
 
-- Add or replace services before the first `Handle` call. After it, the services are read-only, and a change fails.
-- The mock library is NSubstitute. It has a short syntax, it has no license problem, and it runs in .NET and in the Unity editor.
-- `HandlerHost` has no NUnit type, so another test framework can use it.
+Add or replace services before the first `Handle` call. After it, the services are read-only, and a change fails.
 
-## Tests of the checks
+## Add a rule
 
-| Check | Test | Good case | Bad cases |
-|---|---|---|---|
-| `VSA1001`, `VSA1002` | `tests/Rules.Tests/AnalyzerTests.cs` | Code in the test | Code in the test, options |
-| `VSA2001` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `Good` with a smaller layer map |
-| `VSA2002` | `tests/Rules.Tests/RuleTests.cs` | `Good` | `OpenModuleClass` |
-| Unit base | `tests/Rules.Tests/UnitBaseTests.cs` | `Good`, `Configure`, `Mock<T>()` | A service added after `Handle` |
+1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
+2. If one file shows the problem, write an analyzer that inherits `VsaAnalyzer`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
+3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests`. Use the next free `VSA2xxx` ID in the test name.
+4. Add tests in `tests/Rules.Tests/`. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test:
 
-The fixture modules are in `tests/Fixtures/Rules/Modules/`. The Notes sample uses the checks as a consumer does: `samples/Notes/Tests`.
+   ```csharp
+   Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);
+   ```
+
+5. Add the rule to the table in this file.

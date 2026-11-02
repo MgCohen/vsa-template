@@ -39,7 +39,7 @@ public sealed class UnitBaseConfigureTests : VsaUnitTest {
 
     [Test]
     public void The_services_give_the_mock() {
-        Assert.That(Host.Provider.GetRequiredService<IClock>().Now, Is.EqualTo(42));
+        Assert.That(Provider.GetRequiredService<IClock>().Now, Is.EqualTo(42));
         clock.Now.Returns(7);
     }
 
@@ -49,7 +49,7 @@ public sealed class UnitBaseConfigureTests : VsaUnitTest {
     // A mock replaces a default fake: the last registration wins.
     [Test]
     public void A_mock_replaces_a_default_fake() =>
-        Assert.That(Host.Provider.GetRequiredService<IIntegrationEventPublisher>(), Is.SameAs(publisher));
+        Assert.That(Provider.GetRequiredService<IIntegrationEventPublisher>(), Is.SameAs(publisher));
 }
 
 public interface IClock {

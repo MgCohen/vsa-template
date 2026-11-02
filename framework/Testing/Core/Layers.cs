@@ -10,13 +10,11 @@ public static class Layers {
 
     public static readonly Layer Infrastructure = new Layer("Infrastructure")
         .Reference(Domain)
-        .Reference("Infrastructure.EfCore", Edge.ModuleOnly)
-        .Exposes(Domain, Edge.BaseOnly);
+        .Reference("Infrastructure.EfCore", Edge.ModuleOnly);
 
     // Framework only: no module project has this layer.
     public static readonly Layer InfrastructureEfCore = new Layer("Infrastructure.EfCore")
-        .Reference(Infrastructure)
-        .Exposes(Infrastructure, Edge.BaseOnly);
+        .Reference(Infrastructure);
 
     public static readonly Layer ContractsRequests = new Layer("Contracts.Requests");
 
@@ -26,23 +24,18 @@ public static class Layers {
         .Reference(Domain)
         .Reference(Infrastructure, Edge.ModuleOnly)
         .Reference(ContractsRequests)
-        .Reference(ContractsEvents, Edge.ModuleOnly)
-        .Exposes(Domain, Edge.BaseOnly)
-        .Exposes(ContractsRequests, Edge.BaseOnly);
+        .Reference(ContractsEvents, Edge.ModuleOnly);
 
     public static readonly Layer HandlersEvents = new Layer("Handlers.Events")
         .Reference(Domain, Edge.ModuleOnly)
         .Reference(Infrastructure, Edge.ModuleOnly)
-        .Reference(ContractsEvents, anyModule: true)
-        .Exposes(ContractsEvents, Edge.BaseOnly);
+        .Reference(ContractsEvents, anyModule: true);
 
     public static readonly Layer Presenters = new Layer("Presenters")
-        .Reference(ContractsRequests)
-        .Exposes(ContractsRequests, Edge.BaseOnly);
+        .Reference(ContractsRequests);
 
     public static readonly Layer Views = new Layer("Views")
-        .Reference(Presenters)
-        .Exposes(Presenters, Edge.BaseOnly);
+        .Reference(Presenters);
 
     // The module root: it references every layer project of its own module.
     public static readonly Layer Module = new Layer("Module")

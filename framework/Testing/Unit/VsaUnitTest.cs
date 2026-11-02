@@ -1,12 +1,17 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
+using VSA.Contracts.Events;
 using VSA.Contracts.Requests;
 using VSA.Domain;
+using VSA.Handlers.Requests;
+using VSA.Infrastructure;
 
 namespace VSA.Testing.Unit;
 
-// The NUnit base of a unit test. Before each test, the base creates a new HandlerHost and calls Configure.
+// The NUnit base of a unit test: it runs a request handler without HTTP and without a database.
+// Before each test, the base makes new services with the default fakes and calls Configure.
 // Configure is the one place where a test class makes its fakes and mocks. Keep them in fields for the tests of the class.
 //   public sealed class PublishNoteTests : VsaUnitTest {
 //       IClock clock = null!;
@@ -23,16 +28,32 @@ namespace VSA.Testing.Unit;
 //       }
 //   }
 public abstract class VsaUnitTest {
-    HandlerHost? host;
+    ServiceCollection? services;
+    ServiceProvider? provider;
 
-    protected HandlerHost Host => host ?? throw new InvalidOperationException("The host exists only in a test.");
-    protected IServiceCollection Services => Host.Services;
-    protected RecordingEventPublisher Events => Host.Events;
+    // Add or replace services before the first Handle call. After it, the services are read-only.
+    protected IServiceCollection Services => services ?? throw new InvalidOperationException("The services exist only in a test.");
 
+    // A change to the services after this point has no effect. MakeReadOnly makes such a change fail.
+    protected IServiceProvider Provider => provider ??= Build();
+
+    protected RecordingEventPublisher Events => Provider.GetRequiredService<RecordingEventPublisher>();
+
+    // Default services: an InMemoryRepository for each IRepository<T, TId>, a RecordingEventPublisher, and logging.
     [SetUp]
-    public void CreateHost() {
-        host = new HandlerHost();
-        Configure(Host.Services);
+    public void CreateServices() {
+        services = [];
+        services.AddLogging();
+        services.AddSingleton(typeof(IRepository<,>), typeof(InMemoryRepository<,>));
+        services.AddSingleton<RecordingEventPublisher>();
+        services.AddSingleton<IIntegrationEventPublisher>(s => s.GetRequiredService<RecordingEventPublisher>());
+        Configure(services);
+    }
+
+    [TearDown]
+    public void DisposeServices() {
+        provider?.Dispose();
+        provider = null;
     }
 
     // Add or replace services for each test of the class. The default fakes are already in services.
@@ -45,7 +66,40 @@ public abstract class VsaUnitTest {
         return mock;
     }
 
-    protected InMemoryRepository<T, TId> Repository<T, TId>() where T : AggregateRoot<TId> where TId : notnull => Host.Repository<T, TId>();
+    // The default repository of T. If a test replaces IRepository<T, TId>, use Provider instead.
+    protected InMemoryRepository<T, TId> Repository<T, TId>() where T : AggregateRoot<TId> where TId : notnull =>
+        Provider.GetRequiredService<IRepository<T, TId>>() as InMemoryRepository<T, TId>
+        ?? throw new InvalidOperationException($"IRepository<{typeof(T).Name}, {typeof(TId).Name}> is replaced. Get it from Provider.");
 
-    protected Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request) => Host.Handle(request);
+    // Finds the handler of the request, creates it with the services, and runs it.
+    // The handler is in the Handlers.Requests project of the same module: Notes.Contracts.Requests -> Notes.Handlers.Requests.
+    protected async Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) {
+        var handler = HandlerOf(request.GetType());
+        var instance = ActivatorUtilities.CreateInstance(Provider, handler);
+        var method = handler.GetMethod("HandleRequestAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        return await (Task<Result<TResponse>>)method.Invoke(instance, [request, ct])!;
+    }
+
+    ServiceProvider Build() {
+        var all = services ?? throw new InvalidOperationException("The services exist only in a test.");
+        all.MakeReadOnly();
+        return all.BuildServiceProvider();
+    }
+
+    static Type HandlerOf(Type request) {
+        var name = request.Assembly.GetName().Name!;
+        var handlers = Assembly.Load(name.Replace(".Contracts.Requests", ".Handlers.Requests", StringComparison.Ordinal));
+        var found = handlers.GetTypes().Where(t => !t.IsAbstract && HandledRequest(t) == request).ToList();
+        return found.Count == 1 ? found[0]
+            : throw new InvalidOperationException($"{request.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
+    }
+
+    static Type? HandledRequest(Type type) {
+        for (var b = type.BaseType; b is not null; b = b.BaseType) {
+            if (b.IsGenericType && b.GetGenericTypeDefinition() == typeof(RoutedHandler<,>)) {
+                return b.GetGenericArguments()[0];
+            }
+        }
+        return null;
+    }
 }
