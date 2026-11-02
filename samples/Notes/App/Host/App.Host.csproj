@@ -4,8 +4,10 @@
     <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Views/App.Views.csproj" PrivateAssets="all" />
-    <ProjectReference Include="../../Modules/*/*.csproj" PrivateAssets="all" />
+    <!-- Not private: a test project that references the host must get every module layer,
+         for WebApplicationFactory tests and module discovery. Only test projects reference the host. -->
+    <ProjectReference Include="../Views/App.Views.csproj" />
+    <ProjectReference Include="../../Modules/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Layers/Host/VSA.Host.csproj" />
     <!-- Design-time only: lets dotnet ef build the host to read the model. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />

@@ -1,0 +1,4 @@
+<Project>
+  <!-- The fixture modules use the same VSA.Sdk source as the samples. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../samples/VSA.Sdk.Dev.props" />
+</Project>

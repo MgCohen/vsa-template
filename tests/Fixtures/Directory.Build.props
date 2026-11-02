@@ -1,0 +1,9 @@
+<Project>
+  <!-- Referenced fixtures build against the framework source, as the samples do.
+       This file does not import tests/Directory.Build.props: a fixture is not a test project. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../Directory.Build.props" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'framework'))</VsaFrameworkSourceDir>
+  </PropertyGroup>
+</Project>

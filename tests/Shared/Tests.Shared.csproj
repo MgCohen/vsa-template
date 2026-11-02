@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Helpers for the test projects: run dotnet, pack the framework to a local feed, build a copy as a consumer. -->
+</Project>
