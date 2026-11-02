@@ -8,33 +8,30 @@ namespace Cli.Tests;
 public sealed class ScaffoldingTests {
     const string Version = "9.9.9";
 
-    [Theory]
-    [InlineData("Billing")]
-    [InlineData("OrderHistory2")]
-    public void ValidNamesPass(string name) => Assert.Equal(name, Names.Check(name, "module"));
+    [TestCase("Billing")]
+    [TestCase("OrderHistory2")]
+    public void ValidNamesPass(string name) => Assert.That(Names.Check(name, "module"), Is.EqualTo(name));
 
-    [Theory]
-    [InlineData("billing")]
-    [InlineData("Order-History")]
-    [InlineData("2Orders")]
-    [InlineData("")]
-    [InlineData("App")]
-    [InlineData("VSAThings")]
+    [TestCase("billing")]
+    [TestCase("Order-History")]
+    [TestCase("2Orders")]
+    [TestCase("")]
+    [TestCase("App")]
+    [TestCase("VSAThings")]
     public void InvalidModuleNamesFail(string name) => Assert.Throws<VsaException>(() => Names.Check(name, "module"));
 
-    [Fact]
+    [Test]
     public void RequestNamesCannotEndWithRequest() =>
-        Assert.Contains("CreateInvoice", Assert.Throws<VsaException>(() => Names.Check("CreateInvoiceRequest", "request")).Message);
+        Assert.That(() => Names.Check("CreateInvoiceRequest", "request"), Throws.TypeOf<VsaException>().With.Message.Contain("CreateInvoice"));
 
-    [Theory]
-    [InlineData("Billing", "billing")]
-    [InlineData("CreateInvoice", "create-invoice")]
-    [InlineData("HTTPServer", "http-server")]
-    [InlineData("SampleModule", "sample-module")]
-    public void KebabFormIsForRoutes(string name, string kebab) => Assert.Equal(kebab, Names.Kebab(name));
+    [TestCase("Billing", "billing")]
+    [TestCase("CreateInvoice", "create-invoice")]
+    [TestCase("HTTPServer", "http-server")]
+    [TestCase("SampleModule", "sample-module")]
+    public void KebabFormIsForRoutes(string name, string kebab) => Assert.That(Names.Kebab(name), Is.EqualTo(kebab));
 
     // Each template file and its command. A new template file must be added here, so its command shows in the diff.
-    [Fact]
+    [Test]
     public void EachTemplateFileHasOneCommand() {
         const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request;
         (string, Templates.Kind)[] expected = [
@@ -68,76 +65,76 @@ public sealed class ScaffoldingTests {
             ("Modules/SampleModule/SampleModuleModule.cs", Module),
         ];
 
-        Assert.Equal(expected, Templates.All().Select(path => (path, Templates.KindOf(path))));
+        Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
     }
 
-    [Fact]
+    [Test]
     public void NewAppHasTheAppFilesOnly() {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
         var paths = files.Select(f => f.Path).ToList();
 
-        Assert.Contains("AGENTS.md", paths);
-        Assert.Contains("App/Host/Program.cs", paths);
-        Assert.Contains("App/Views/Pages/Home.razor", paths);
-        Assert.DoesNotContain(paths, p => p.Contains("Sample") || p.StartsWith("Modules/Sample"));
-        Assert.DoesNotContain(files, f => f.Content.Contains("Sample"));
-        Assert.Contains("builder.AddVsa();", files.Single(f => f.Path == "App/Host/Program.cs").Content);
+        Assert.That(paths, Does.Contain("AGENTS.md"));
+        Assert.That(paths, Does.Contain("App/Host/Program.cs"));
+        Assert.That(paths, Does.Contain("App/Views/Pages/Home.razor"));
+        Assert.That(paths, Has.None.Contains("Sample"));
+        Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
+        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("builder.AddVsa();"));
     }
 
-    [Fact]
+    [Test]
     public void AppProjectsUsePackagesWithTheToolVersion() {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
-        Assert.Contains($"<PackageReference Include=\"VSA.Host\" Version=\"{Version}\" />", files.Single(f => f.Path == "App/Host/App.Host.csproj").Content);
-        Assert.Contains($"<PackageReference Include=\"VSA.Views\" Version=\"{Version}\" />", files.Single(f => f.Path == "App/Views/App.Views.csproj").Content);
-        Assert.DoesNotContain(files, f => f.Content.Contains("$(Vsa"));
+        Assert.That(files.Single(f => f.Path == "App/Host/App.Host.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.Host\" Version=\"{Version}\" />"));
+        Assert.That(files.Single(f => f.Path == "App/Views/App.Views.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.Views\" Version=\"{Version}\" />"));
+        Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Vsa"));
     }
 
-    [Fact]
+    [Test]
     public void NewModuleHasAllLayersAndAPage() {
         var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory" }, Version);
         var projects = files.Where(f => f.Path.EndsWith(".csproj")).ToList();
 
-        Assert.Equal(
-            ["Modules/OrderHistory/Contracts/Events/OrderHistory.Contracts.Events.csproj",
-             "Modules/OrderHistory/Contracts/Requests/OrderHistory.Contracts.Requests.csproj",
-             "Modules/OrderHistory/Domain/OrderHistory.Domain.csproj",
-             "Modules/OrderHistory/Handlers/Events/OrderHistory.Handlers.Events.csproj",
-             "Modules/OrderHistory/Handlers/Requests/OrderHistory.Handlers.Requests.csproj",
-             "Modules/OrderHistory/Infrastructure/OrderHistory.Infrastructure.csproj",
-             "Modules/OrderHistory/OrderHistory.csproj",
-             "Modules/OrderHistory/Presenters/OrderHistory.Presenters.csproj"],
-            projects.Select(p => p.Path).Order(StringComparer.Ordinal));
-        Assert.All(projects, p => Assert.Equal("<Project Sdk=\"VSA.Sdk\" />\n", p.Content));
-        Assert.Contains("@page \"/order-history\"", files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content);
-        Assert.DoesNotContain(files, f => f.Path.Contains("SampleAction") || f.Content.Contains("Sample"));
+        Assert.That(
+            projects.Select(p => p.Path).Order(StringComparer.Ordinal),
+            Is.EqualTo(["Modules/OrderHistory/Contracts/Events/OrderHistory.Contracts.Events.csproj",
+                        "Modules/OrderHistory/Contracts/Requests/OrderHistory.Contracts.Requests.csproj",
+                        "Modules/OrderHistory/Domain/OrderHistory.Domain.csproj",
+                        "Modules/OrderHistory/Handlers/Events/OrderHistory.Handlers.Events.csproj",
+                        "Modules/OrderHistory/Handlers/Requests/OrderHistory.Handlers.Requests.csproj",
+                        "Modules/OrderHistory/Infrastructure/OrderHistory.Infrastructure.csproj",
+                        "Modules/OrderHistory/OrderHistory.csproj",
+                        "Modules/OrderHistory/Presenters/OrderHistory.Presenters.csproj"]));
+        Assert.That(projects.Select(p => p.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
+        Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
+        Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
     }
 
-    [Fact]
+    [Test]
     public void NewRequestHasRequestResponseAndHandler() {
         var names = new Dictionary<string, string> { [Templates.Request] = "CreateInvoice", [Templates.Module] = "Billing" };
         var files = Templates.Files(Templates.Kind.Request, names, Version);
 
-        Assert.Equal(
-            ["Modules/Billing/Contracts/Requests/CreateInvoice/CreateInvoiceRequest.cs",
-             "Modules/Billing/Contracts/Requests/CreateInvoice/CreateInvoiceResponse.cs",
-             "Modules/Billing/Handlers/Requests/CreateInvoiceHandler.cs"],
-            files.Select(f => f.Path).Order(StringComparer.Ordinal));
-        Assert.Contains("\"/api/billing/create-invoice\"", files[0].Content + files[1].Content + files[2].Content);
-        Assert.DoesNotContain(files, f => f.Content.Contains("Sample"));
+        Assert.That(
+            files.Select(f => f.Path).Order(StringComparer.Ordinal),
+            Is.EqualTo(["Modules/Billing/Contracts/Requests/CreateInvoice/CreateInvoiceRequest.cs",
+                        "Modules/Billing/Contracts/Requests/CreateInvoice/CreateInvoiceResponse.cs",
+                        "Modules/Billing/Handlers/Requests/CreateInvoiceHandler.cs"]));
+        Assert.That(string.Concat(files.Select(f => f.Content)), Does.Contain("\"/api/billing/create-invoice\""));
+        Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }
 
-    [Fact]
+    [Test]
     public void WriterDoesNotWriteOverAFile() {
         var root = TempFolder.Create();
         try {
             File.WriteAllText(Path.Combine(root, "b.txt"), "mine");
 
-            var error = Assert.Throws<VsaException>(() => FileWriter.Write(root, [("a.txt", "new"), ("b.txt", "new")]));
+            Assert.That(() => FileWriter.Write(root, [("a.txt", "new"), ("b.txt", "new")]),
+                Throws.TypeOf<VsaException>().With.Message.Contain("b.txt"));
 
-            Assert.Contains("b.txt", error.Message);
-            Assert.Equal("mine", File.ReadAllText(Path.Combine(root, "b.txt")));
-            Assert.False(File.Exists(Path.Combine(root, "a.txt")));
+            Assert.That(File.ReadAllText(Path.Combine(root, "b.txt")), Is.EqualTo("mine"));
+            Assert.That(File.Exists(Path.Combine(root, "a.txt")), Is.False);
         } finally {
             TempFolder.Delete(root);
         }
