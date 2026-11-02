@@ -12,7 +12,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project and the layer references |
-| `framework/Testing/`  | The checks that ship: `Core/` (VSA.Testing.Core, the layer map), `Analyzers/` (VSA.Analyzers), `Architecture/` (VSA.Testing.Architecture) |
+| `framework/Testing/`  | The checks that ship: `Core/` (the layer map), `Analyzers/`, `Architecture/` (ArchUnitNET), `Unit/` (NUnit) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
@@ -26,15 +26,16 @@ A module project is under a `Modules/` folder. Its references come from VSA.Sdk,
 - **Keep shared code small.** Promote code to a shared location only when two or more slices genuinely need it.
 - **Rules are enforced by tests.** Architecture rules live in `tests/` and must pass.
 
-## Add an architecture rule
+## Add a check
 
-The levels, IDs and rules are in `docs/architecture-rules.md`. A consumer gets all VSA.Testing.Architecture rules with one class in an xUnit v3 test project: `public sealed class ArchitectureTests : VsaArchitectureTests<Program>;`. VSA.Testing.Architecture needs xUnit v3.
+The levels, rules and base classes are in `docs/architecture-rules.md`. Use a library first: the built-in .NET analyzers, Roslyn, ArchUnitNET or NUnit. Tests use NUnit, so they also run in Unity.
 
-1. If one file shows the problem, write an analyzer in `framework/Testing/Analyzers/`. Use the next free `VSA1xxx` ID and add it to `AnalyzerReleases.Unshipped.md`.
-2. Else write a class that implements `IVsaRule` in `framework/Testing/Architecture/Rules/`. Use the next free `VSA2xxx` ID, add it to `VsaRules.All`, and add a `[Fact]` to `VsaArchitectureTests`. Do not use test framework types in the rule. If the rule is about layers, read the layer map in `framework/Testing/Core/Layers.cs`.
-3. Write a message that gives what is wrong, the type names, and the fix.
-4. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`.
-5. Add the rule to the table in `docs/architecture-rules.md`.
+1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
+2. If one file shows the problem, write an analyzer that inherits `VsaAnalyzer` in `framework/Testing/Analyzers/`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`. Read options with `Options(...)`.
+3. Else write an ArchUnitNET rule in `VsaRules` (`framework/Testing/Architecture/`). Use the next free `VSA2xxx` ID, and add a `[Test]` to `VsaArchitectureTests`. For a layer rule, change the layer map in `framework/Testing/Core/Layers.cs` and in `VSA.Layers.targets`.
+4. Write a message that gives what is wrong, the type names, and the fix.
+5. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`.
+6. Add the rule to the table in `docs/architecture-rules.md`.
 
 ## Working agreements
 

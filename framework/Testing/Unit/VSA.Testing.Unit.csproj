@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The base of the unit tests: send a request to its handler, with default fakes for the framework services. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Layers/Handlers/Requests/VSA.Handlers.Requests.csproj" />
+    <ProjectReference Include="../../Layers/Infrastructure/Core/VSA.Infrastructure.csproj" />
+    <ProjectReference Include="../../Layers/Contracts/Events/VSA.Contracts.Events.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" />
+  </ItemGroup>
+</Project>

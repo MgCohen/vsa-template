@@ -1,34 +1,41 @@
-using VSA.Testing.Architecture.Rules;
-using Xunit;
+using ArchUnitNET.Loader;
+using ArchUnitNET.NUnit;
+using NUnit.Framework;
+using ArchModel = ArchUnitNET.Domain.Architecture;
 
 namespace VSA.Testing.Architecture;
 
-// All VSA architecture rules as xUnit v3 tests. A consumer test project needs one class:
+// The VSA architecture rules as NUnit tests. A consumer test project needs one class:
 //   public sealed class ArchitectureTests : VsaArchitectureTests<Program>;
 // TEntry is a type in the host assembly. The modules come from the project libraries of the test run.
+// To add an app rule, add a [Test] in the derived class and check an ArchUnitNET rule on Architecture.
 public abstract class VsaArchitectureTests<TEntry> {
-    static readonly Lazy<VsaApp> Shared = new(VsaApp.Of<TEntry>);
+    static readonly Lazy<VsaApp> SharedApp = new(VsaApp.Of<TEntry>);
+    static readonly Lazy<ArchModel> SharedArchitecture = new(() => Load(SharedApp.Value));
 
-    protected VsaApp App => Shared.Value;
+    protected static VsaApp App => SharedApp.Value;
+    protected static ArchModel Architecture => SharedArchitecture.Value;
+
+    // The module projects and the VSA bases. ArchUnitNET checks only the types that it loads.
+    public static ArchModel Load(VsaApp app) => new ArchLoader().LoadAssemblies([.. app.Assemblies, .. LayerRules.Bases()]).Build();
 
     // With no modules, each other rule passes with nothing to check. That is a wrong pass.
-    [Fact]
+    [Test]
     public void The_app_has_modules() {
         if (App.Modules.Count == 0) {
-            throw new ArchitectureRuleException(
-                $"No module root found for {typeof(TEntry).Assembly.GetName().Name}. Add a project reference to each module, and build the modules with VSA.Sdk.");
+            Assert.Fail($"No module root found for {typeof(TEntry).Assembly.GetName().Name}. Add a project reference to each module, and build the modules with VSA.Sdk.");
         }
     }
 
-    [Fact]
-    public void VSA2001_each_request_has_one_handler() => VsaRules.Assert(new OneHandlerPerRequest(), App);
+    [Test]
+    public void VSA2001_module_projects_follow_the_layer_map() {
+        var unmapped = LayerRules.Unmapped(App).ToList();
+        if (unmapped.Count > 0) {
+            Assert.Fail(string.Join(Environment.NewLine, unmapped));
+        }
+        VsaRules.LayerMap(App)?.Check(Architecture);
+    }
 
-    [Fact]
-    public void VSA2002_requests_have_unique_routes() => VsaRules.Assert(new UniqueRoutes(), App);
-
-    [Fact]
-    public void VSA2003_each_module_root_has_one_Module_class() => VsaRules.Assert(new OneModuleClass(), App);
-
-    [Fact]
-    public void VSA2004_module_projects_follow_the_layer_map() => VsaRules.Assert(new LayerReferences(), App);
+    [Test]
+    public void VSA2002_Module_classes_are_public_and_sealed() => VsaRules.ModuleClasses.Check(Architecture);
 }

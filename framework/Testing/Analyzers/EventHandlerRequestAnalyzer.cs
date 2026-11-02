@@ -9,8 +9,8 @@ namespace VSA.Analyzers;
 // VSA1002: event handlers do not send requests. An event handler reacts to a fact. It does not use a request type
 // or IBus. VSA.Sdk gives the Handlers/Events layer no reference to Contracts/Requests, so this rule catches the rest.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class EventHandlerRequestAnalyzer : DiagnosticAnalyzer {
-    public static readonly DiagnosticDescriptor Rule = new(
+public sealed class EventHandlerRequestAnalyzer() : VsaAnalyzer(Descriptor) {
+    public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1002",
         "Event handlers do not send requests",
         "Event handler {0} uses {1}. An event handler does not send requests. Move the work to a request handler, or publish an event.",
@@ -18,11 +18,7 @@ public sealed class EventHandlerRequestAnalyzer : DiagnosticAnalyzer {
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
-
-    public override void Initialize(AnalysisContext context) {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
+    protected override void Register(AnalysisContext context) {
         context.RegisterCompilationStartAction(start => {
             var handler = start.Compilation.GetTypeByMetadataName("VSA.Handlers.Events.IntegrationEventHandler`1");
             var routed = start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRoutedRequest");
@@ -44,7 +40,7 @@ public sealed class EventHandlerRequestAnalyzer : DiagnosticAnalyzer {
     }
 
     // Fields, properties and parameters, also the parameters of a primary constructor.
-    static void CheckMembers(INamedTypeSymbol type, Forbidden forbidden, SymbolStartAnalysisContext context) {
+    void CheckMembers(INamedTypeSymbol type, Forbidden forbidden, SymbolStartAnalysisContext context) {
         foreach (var member in type.GetMembers()) {
             var types = member switch {
                 IFieldSymbol f => new[] { (f.Type, f.Locations) },
@@ -54,13 +50,13 @@ public sealed class EventHandlerRequestAnalyzer : DiagnosticAnalyzer {
             };
             foreach (var (memberType, locations) in types) {
                 if (forbidden.Find(memberType) is { } found && locations.FirstOrDefault(l => l.IsInSource) is { } location) {
-                    context.RegisterSymbolEndAction(end => end.ReportDiagnostic(Diagnostic.Create(Rule, location, type.Name, found.Name)));
+                    context.RegisterSymbolEndAction(end => end.ReportDiagnostic(Create(location, type.Name, found.Name)));
                 }
             }
         }
     }
 
-    static void CheckOperation(INamedTypeSymbol type, OperationAnalysisContext context, Forbidden forbidden) {
+    void CheckOperation(INamedTypeSymbol type, OperationAnalysisContext context, Forbidden forbidden) {
         var found = context.Operation switch {
             IObjectCreationOperation create => forbidden.Find(create.Type),
             IInvocationOperation call => forbidden.Find(call.TargetMethod.ContainingType)
@@ -69,7 +65,7 @@ public sealed class EventHandlerRequestAnalyzer : DiagnosticAnalyzer {
             _ => null,
         };
         if (found is not null) {
-            context.ReportDiagnostic(Diagnostic.Create(Rule, context.Operation.Syntax.GetLocation(), type.Name, found.Name));
+            context.ReportDiagnostic(Create(context.Operation.Syntax.GetLocation(), type.Name, found.Name));
         }
     }
 

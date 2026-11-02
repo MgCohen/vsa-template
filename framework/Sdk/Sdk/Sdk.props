@@ -10,4 +10,16 @@
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from VSA.Analyzers. -->
+  <PropertyGroup>
+    <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild Condition="'$(EnforceCodeStyleInBuild)' == ''">true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
+    <!-- CS1591: the documentation file is for the code style rules only. Public members do not need XML comments. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)VSA.globalconfig" />
+  </ItemGroup>
 </Project>

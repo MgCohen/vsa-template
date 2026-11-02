@@ -1,15 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- NUnit on Microsoft.Testing.Platform (global.json). -->
+    <EnableNUnitRunner>true</EnableNUnitRunner>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../App/Host/App.Host.csproj" />
     <!-- The host references the modules with PrivateAssets="all", so the tests reference them too. -->
     <ProjectReference Include="../Modules/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Testing/Architecture/VSA.Testing.Architecture.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Testing/Unit/VSA.Testing.Unit.csproj" />
   </ItemGroup>
 </Project>

@@ -3,10 +3,13 @@
        and the VSA.Analyzers rules with the Roslyn analyzer test library. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- NUnit on Microsoft.Testing.Platform (global.json). -->
+    <EnableNUnitRunner>true</EnableNUnitRunner>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <!-- The test library asks for old versions. These are the versions that VSA.Analyzers uses, and a version with no known vulnerability. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
@@ -15,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="../../framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
     <ProjectReference Include="../../framework/Testing/Analyzers/VSA.Analyzers.csproj" />
+    <ProjectReference Include="../../framework/Testing/Unit/VSA.Testing.Unit.csproj" />
     <!-- The analyzer tests compile code against these assemblies. -->
     <ProjectReference Include="../../framework/Layers/Handlers/Events/VSA.Handlers.Events.csproj" />
     <ProjectReference Include="../../framework/Layers/Presenters/VSA.Presenters.csproj" />

@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -7,9 +6,10 @@ namespace VSA.Analyzers;
 
 // VSA1001: requests and responses are sealed records. A record compares by value, and sealed stops a second
 // request type that inherits the first and gets its route. The response is checked when it is in the same project.
+// Option: vsa.VSA1001.check_responses = false checks only the requests.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class SealedRecordAnalyzer : DiagnosticAnalyzer {
-    public static readonly DiagnosticDescriptor Rule = new(
+public sealed class SealedRecordAnalyzer() : VsaAnalyzer(Descriptor) {
+    public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1001",
         "Requests and responses are sealed records",
         "{0} is {1}. Make it a sealed record.",
@@ -17,11 +17,7 @@ public sealed class SealedRecordAnalyzer : DiagnosticAnalyzer {
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
-
-    public override void Initialize(AnalysisContext context) {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
+    protected override void Register(AnalysisContext context) {
         context.RegisterCompilationStartAction(start => {
             if (start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest`1") is not { } request) {
                 return;
@@ -30,7 +26,7 @@ public sealed class SealedRecordAnalyzer : DiagnosticAnalyzer {
         });
     }
 
-    static void Check(INamedTypeSymbol type, INamedTypeSymbol request, SymbolAnalysisContext context) {
+    void Check(INamedTypeSymbol type, INamedTypeSymbol request, SymbolAnalysisContext context) {
         if (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Struct) {
             return;
         }
@@ -39,16 +35,19 @@ public sealed class SealedRecordAnalyzer : DiagnosticAnalyzer {
             return;
         }
         Report(type, "a request", context);
+        if (!Options(context.Options, type.Locations[0].SourceTree).Get("check_responses", fallback: true)) {
+            return;
+        }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)
             && SymbolEqualityComparer.Default.Equals(response.ContainingAssembly, context.Compilation.Assembly)) {
             Report(response, $"the response of {type.Name}", context);
         }
     }
 
-    static void Report(INamedTypeSymbol type, string role, SymbolAnalysisContext context) {
+    void Report(INamedTypeSymbol type, string role, SymbolAnalysisContext context) {
         if (type.IsRecord && (type.IsSealed || type.IsValueType)) {
             return;
         }
-        context.ReportDiagnostic(Diagnostic.Create(Rule, type.Locations[0], type.Name, role));
+        context.ReportDiagnostic(Create(type.Locations[0], type.Name, role));
     }
 }

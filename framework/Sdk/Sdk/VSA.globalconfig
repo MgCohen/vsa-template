@@ -1,0 +1,8 @@
+# The analyzer settings of every VSA.Sdk project. A consumer can change a rule in its own .editorconfig.
+# The built-in rules come from AnalysisLevel = latest-recommended in Sdk.props.
+# Set a severity with the standard key, for example: dotnet_diagnostic.CA1822.severity = none
+is_global = true
+global_level = -1
+
+# Options of the custom VSA analyzers: vsa.<key> for all rules, vsa.<rule ID>.<key> for one rule.
+vsa.VSA1001.check_responses = true
