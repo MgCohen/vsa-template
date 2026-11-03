@@ -21,8 +21,9 @@ public static class VsaHostExtensions {
         services.AddVsaBus(LoopbackAddress);
         services.AddVsaEvents();
         // FastEndpoints needs at least one assembly when auto-discovery is off.
-        // An app with no Handlers.Requests layer does not register FastEndpoints and maps no endpoints.
-        Assembly[] requests = [.. modules.Select(module => Load(module, "Handlers.Requests")).OfType<Assembly>()];
+        // An app with no Handlers.Requests or Slices layer does not register FastEndpoints and maps no endpoints.
+        // A slice module has its request and event handlers in one Slices project.
+        Assembly[] requests = [.. modules.SelectMany(module => new[] { Load(module, "Handlers.Requests"), Load(module, "Slices") }).OfType<Assembly>()];
         if (requests.Length > 0) {
             services.AddFastEndpoints(options => {
                 options.DisableAutoDiscovery = true;
@@ -31,7 +32,9 @@ public static class VsaHostExtensions {
             services.AddSingleton<RequestEndpoints>();
         }
         foreach (var module in modules) {
-            foreach (var handler in Concrete(module, "Handlers.Events")) {
+            var eventHandlers = Concrete(module, "Handlers.Events")
+                .Concat(Concrete(module, "Slices").Where(t => IsSubclassOfGeneric(t, typeof(IntegrationEventHandler<>))));
+            foreach (var handler in eventHandlers) {
                 services.AddScoped(BaseOf(handler, typeof(IntegrationEventHandler<>)), handler);
             }
             foreach (var presenter in Concrete(module, "Presenters").Where(t => t.IsSubclassOf(typeof(Presenter)))) {
@@ -63,6 +66,15 @@ public static class VsaHostExtensions {
     static IEnumerable<Type> Concrete(VSA.Module.Module module, string layer) =>
         (Load(module, layer)?.GetTypes() ?? [])
             .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)));
+
+    static bool IsSubclassOfGeneric(Type type, Type openBase) {
+        for (var b = type.BaseType; b is not null; b = b.BaseType) {
+            if (b.IsGenericType && b.GetGenericTypeDefinition() == openBase) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     static Type BaseOf(Type type, Type openBase) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {

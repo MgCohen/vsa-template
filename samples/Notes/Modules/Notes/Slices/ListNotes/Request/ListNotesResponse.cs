@@ -1,3 +1,3 @@
-namespace Notes.Contracts.Requests.ListNotes;
+namespace Notes.Slices.ListNotes;
 
 public sealed record ListNotesResponse(IReadOnlyList<NoteDto> Notes);

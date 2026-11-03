@@ -1,12 +1,10 @@
-using Notes.Contracts.Events;
-using Notes.Contracts.Requests.CreateNote;
 using Notes.Domain;
 using VSA.Contracts.Events;
 using VSA.Domain;
 using VSA.Handlers.Requests;
 using VSA.Infrastructure;
 
-namespace Notes.Handlers.Requests;
+namespace Notes.Slices.CreateNote;
 
 sealed class CreateNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEventPublisher events)
     : RoutedHandler<CreateNoteRequest, CreateNoteResponse> {

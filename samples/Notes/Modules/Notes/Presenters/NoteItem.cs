@@ -1,4 +1,4 @@
-using Notes.Contracts.Requests.ListNotes;
+using Notes.Slices.ListNotes;
 
 namespace Notes.Presenters;
 

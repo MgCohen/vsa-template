@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using Notes.Contracts.Events;
+using Notes.Slices.CreateNote;
 using VSA.Handlers.Events;
 
-namespace Notes.Handlers.Events;
+namespace Notes.Slices.LogNoteCreated;
 
 sealed partial class NoteCreatedHandler(ILogger<NoteCreatedHandler> logger) : IntegrationEventHandler<NoteCreated> {
     public override Task HandleAsync(NoteCreated integrationEvent, CancellationToken ct) {

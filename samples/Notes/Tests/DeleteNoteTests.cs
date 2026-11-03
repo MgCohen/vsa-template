@@ -1,6 +1,5 @@
-using Notes.Contracts.Events;
-using Notes.Contracts.Requests.DeleteNote;
 using Notes.Domain;
+using Notes.Slices.DeleteNote;
 using VSA.Testing.Unit;
 
 namespace Notes.Tests;

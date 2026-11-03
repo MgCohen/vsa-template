@@ -1,6 +1,6 @@
 using VSA.Contracts.Requests;
 
-namespace Notes.Contracts.Requests.DeleteNote;
+namespace Notes.Slices.DeleteNote;
 
 public sealed record DeleteNoteRequest(Guid Id) : IRequest<DeleteNoteResponse> {
     public static HttpMethod Method => HttpMethod.Delete;

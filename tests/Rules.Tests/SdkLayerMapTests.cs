@@ -11,7 +11,7 @@ namespace Rules.Tests;
 //   - each edge in Layers.cs to a module layer must be a reference that the Sdk adds.
 public sealed partial class SdkLayerMapTests {
     // The layers that have module projects. Infrastructure.EfCore is framework only. Views and Host are app layers.
-    static readonly string[] ModuleLayers = ["Domain", "Infrastructure", "Contracts.Requests", "Contracts.Events", "Handlers.Requests", "Handlers.Events", "Presenters", "Module"];
+    static readonly string[] ModuleLayers = ["Domain", "Infrastructure", "Contracts.Requests", "Contracts.Events", "Handlers.Requests", "Handlers.Events", "Slices", "Presenters", "Module"];
 
     sealed record SdkLayer(string Name, HashSet<string> Own, HashSet<string> AnyModule, HashSet<string> Bases);
 
@@ -78,6 +78,10 @@ public sealed partial class SdkLayerMapTests {
         } else if (include == "$(VsaModuleDir)*/*.csproj" || include == "$(VsaModuleDir)*/*/*.csproj") {
             // The module root: all layer projects of its own module.
             layer.Own.UnionWith(ModuleLayers.Where(l => l != "Module"));
+        } else if (OwnProjectsFolder().Match(include) is { Success: true } ownProject) {
+            layer.Own.Add(ownProject.Groups[1].Value);
+        } else if (AnyProjectsFolder().Match(include) is { Success: true } anyProject) {
+            layer.AnyModule.Add(anyProject.Groups[1].Value);
         } else if (OwnModule().Match(include) is { Success: true } own) {
             layer.Own.Add(own.Groups[1].Value.Replace('/', '.'));
         } else if (AnyModule().Match(include) is { Success: true } any) {
@@ -87,6 +91,13 @@ public sealed partial class SdkLayerMapTests {
 
     [GeneratedRegex(@"^'\$\(VsaLayer\)' == '([^']+)'$")]
     private static partial Regex LayerCondition();
+
+    // The Projects folder of a slice module: $(VsaModuleDir)Projects*/$(VsaModule).<Layer>.csproj
+    [GeneratedRegex(@"^\$\(VsaModuleDir\)Projects\*/\$\(VsaModule\)\.(.+)\.csproj$")]
+    private static partial Regex OwnProjectsFolder();
+
+    [GeneratedRegex(@"^\$\(VsaModulesDir\)\*/Projects/\*\.(.+)\.csproj$")]
+    private static partial Regex AnyProjectsFolder();
 
     [GeneratedRegex(@"^\$\(VsaModuleDir\)(.+)/\*\.csproj$")]
     private static partial Regex OwnModule();

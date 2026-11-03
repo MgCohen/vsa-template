@@ -1,5 +1,15 @@
 <Project>
   <!-- VSA.Sdk: the .NET SDK plus the VSA layer rules. A module project is one line: <Project Sdk="VSA.Sdk" />. -->
+
+  <!-- Modules/<Module>/Projects/ holds the layer projects of a slice module. Projects in one folder cannot share obj/,
+       so each project gets its own build folders. Unity does not import folders whose names end in "~".
+       These properties must be set before the .NET SDK reads them. -->
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.Replace('\', '/').EndsWith('/Projects')) and $(MSBuildProjectDirectory.Replace('\', '/').Contains('/Modules/'))">
+    <VsaProjectsFolder>true</VsaProjectsFolder>
+    <BaseIntermediateOutputPath>obj~/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin~/$(MSBuildProjectName)/</BaseOutputPath>
+  </PropertyGroup>
+
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="$(MSBuildThisFileDirectory)VSA.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)VSA.Version.props')" />
 

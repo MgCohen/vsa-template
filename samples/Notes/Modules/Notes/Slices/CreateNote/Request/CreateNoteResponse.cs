@@ -1,3 +1,3 @@
-namespace Notes.Contracts.Requests.CreateNote;
+namespace Notes.Slices.CreateNote;
 
 public sealed record CreateNoteResponse(Guid Id);

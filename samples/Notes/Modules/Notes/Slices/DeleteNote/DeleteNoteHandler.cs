@@ -1,12 +1,10 @@
-using Notes.Contracts.Events;
-using Notes.Contracts.Requests.DeleteNote;
 using Notes.Domain;
 using VSA.Contracts.Events;
 using VSA.Domain;
 using VSA.Handlers.Requests;
 using VSA.Infrastructure;
 
-namespace Notes.Handlers.Requests;
+namespace Notes.Slices.DeleteNote;
 
 sealed class DeleteNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEventPublisher events)
     : RoutedHandler<DeleteNoteRequest, DeleteNoteResponse> {

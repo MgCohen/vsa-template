@@ -1,10 +1,9 @@
-using Notes.Contracts.Requests.ListNotes;
 using Notes.Domain;
 using VSA.Domain;
 using VSA.Handlers.Requests;
 using VSA.Infrastructure;
 
-namespace Notes.Handlers.Requests;
+namespace Notes.Slices.ListNotes;
 
 sealed class ListNotesHandler(IRepository<Note, NoteId> notes) : RoutedHandler<ListNotesRequest, ListNotesResponse> {
     protected override async Task<Result<ListNotesResponse>> HandleRequestAsync(ListNotesRequest request, CancellationToken ct) {

@@ -1,6 +1,6 @@
 using VSA.Contracts.Requests;
 
-namespace Notes.Contracts.Requests.ListNotes;
+namespace Notes.Slices.ListNotes;
 
 public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
     public static HttpMethod Method => HttpMethod.Get;
