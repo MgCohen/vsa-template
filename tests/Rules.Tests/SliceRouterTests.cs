@@ -9,12 +9,15 @@ public sealed class SliceRouterTests {
 
     const string Routed = "public static HttpMethod Method => HttpMethod.Post; public static string Route => \"/notes\";";
 
-    static SliceSource File(string path, string text) => new(Path.Combine(Slices, path), text);
+    // The router keys each file by its full path. On Windows, the full path has '\' in place of '/'.
+    static string At(string path) => Path.GetFullPath(Path.Combine(Slices, path));
+
+    static SliceSource File(string path, string text) => new(At(path), text);
 
     static SliceRouting Route(params SliceSource[] files) => SliceRouter.Route(Slices, files);
 
     static string LayerOf(SliceRouting routing, string path) =>
-        routing.Layers.TryGetValue(Path.Combine(Slices, path), out var layer) ? layer : "(none)";
+        routing.Layers.TryGetValue(At(path), out var layer) ? layer : "(none)";
 
     static SliceSource CreateNoteRequest => File("CreateNote/CreateNoteRequest.cs",
         $"public sealed record CreateNoteRequest(string Title) : IRequest<CreateNoteResponse> {{ {Routed} }}");
