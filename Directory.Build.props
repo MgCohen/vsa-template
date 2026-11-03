@@ -11,5 +11,7 @@
   <PropertyGroup>
     <Version>0.1.0</Version>
     <Authors>VSA</Authors>
+    <!-- GitHub Packages links each package to this repository. -->
+    <RepositoryUrl>https://github.com/MgCohen/vsa-template</RepositoryUrl>
   </PropertyGroup>
 </Project>
