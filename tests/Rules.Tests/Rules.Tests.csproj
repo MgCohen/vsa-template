@@ -7,6 +7,13 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
+  <!-- The slice router of VSA.Sdk is the source of an MSBuild inline task. The tests compile its logic without MSBuild. -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);VSA_ROUTER_TESTS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)framework/Sdk/Sdk/VsaSliceRouter.cs" Link="SliceRouter/VsaSliceRouter.cs" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />

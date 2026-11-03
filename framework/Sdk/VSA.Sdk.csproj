@@ -9,6 +9,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="Sdk/**" Pack="true" PackagePath="Sdk" />
+    <!-- VsaSliceRouter.cs is the source of an MSBuild inline task, not code of this project. -->
+    <Compile Remove="Sdk/**" />
   </ItemGroup>
   <!-- The SDK adds the VSA.* packages with its own version, so all packages stay at one version. -->
   <Target Name="_VsaWriteVersion" BeforeTargets="_GetPackageFiles">

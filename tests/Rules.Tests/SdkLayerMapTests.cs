@@ -11,7 +11,7 @@ namespace Rules.Tests;
 //   - each edge in Layers.cs to a module layer must be a reference that the Sdk adds.
 public sealed partial class SdkLayerMapTests {
     // The layers that have module projects. Infrastructure.EfCore is framework only. Views and Host are app layers.
-    static readonly string[] ModuleLayers = ["Domain", "Infrastructure", "Contracts.Requests", "Contracts.Events", "Handlers.Requests", "Handlers.Events", "Slices", "Presenters", "Module"];
+    static readonly string[] ModuleLayers = ["Domain", "Infrastructure", "Contracts.Requests", "Contracts.Events", "Handlers.Requests", "Handlers.Events", "Presenters", "Module"];
 
     sealed record SdkLayer(string Name, HashSet<string> Own, HashSet<string> AnyModule, HashSet<string> Bases);
 

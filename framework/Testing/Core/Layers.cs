@@ -31,16 +31,6 @@ public static class Layers {
         .Reference(Infrastructure, Edge.ModuleOnly)
         .Reference(ContractsEvents, anyModule: true);
 
-    // A slice module puts its request and event handlers in one Slices project, with one folder for each slice.
-    // It has the edges of both handler layers. VSA1002 keeps event handlers away from requests and IBus.
-    public static readonly Layer Slices = new Layer("Slices")
-        .Reference(Domain)
-        .Reference(Infrastructure, Edge.ModuleOnly)
-        .Reference(ContractsRequests)
-        .Reference(ContractsEvents, anyModule: true)
-        .Reference(HandlersRequests, Edge.BaseOnly)
-        .Reference(HandlersEvents, Edge.BaseOnly);
-
     public static readonly Layer Presenters = new Layer("Presenters")
         .Reference(ContractsRequests);
 
@@ -56,7 +46,6 @@ public static class Layers {
         .Reference(ContractsEvents, Edge.ModuleOnly)
         .Reference(HandlersRequests, Edge.ModuleOnly)
         .Reference(HandlersEvents, Edge.ModuleOnly)
-        .Reference(Slices, Edge.ModuleOnly)
         .Reference(Presenters, Edge.ModuleOnly);
 
     public static readonly Layer Host = new Layer("Host")

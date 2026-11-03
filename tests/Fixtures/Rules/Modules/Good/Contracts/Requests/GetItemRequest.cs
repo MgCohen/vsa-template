@@ -7,4 +7,4 @@ public sealed record GetItemRequest(Guid Id) : IRequest<GetItemResponse> {
     public static string Route => "/good/items/{id}";
 }
 
-public sealed record GetItemResponse(Guid Id);
+public sealed record GetItemResponse(Guid Id) : IResponse;

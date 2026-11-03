@@ -20,8 +20,10 @@ The editor and the build run the first group in each consumer project. The secon
 |---|---|---|
 | `VSA0001` | Build | A module project gets its references only from VSA.Sdk. |
 | `VSA0002` | Build | A project in `Modules/<Module>/Projects/` has the name `<Module>.<Layer>`. See `slice-layout.md`. |
+| `VSA0003` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
+| `VSA1003` | Analyzers | A contracts project holds only requests, responses, events and the types that they use. |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 

@@ -73,8 +73,7 @@ public abstract class VsaUnitTest {
 
     // Finds the handler of the request, creates it with the services, and runs it.
     // The handler is in the Handlers.Requests project of the same module: Notes.Contracts.Requests -> Notes.Handlers.Requests.
-    // In a slice module, it is in the Slices project: Notes.Contracts.Requests -> Notes.Slices.
-    protected async Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) {
+    protected async Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) where TResponse : IResponse {
         var handler = HandlerOf(request.GetType());
         var instance = ActivatorUtilities.CreateInstance(Provider, handler);
         var method = handler.GetMethod("HandleRequestAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
@@ -89,20 +88,10 @@ public abstract class VsaUnitTest {
 
     static Type HandlerOf(Type request) {
         var name = request.Assembly.GetName().Name!;
-        var handlers = Load(name.Replace(".Contracts.Requests", ".Handlers.Requests", StringComparison.Ordinal))
-            ?? Load(name.Replace(".Contracts.Requests", ".Slices", StringComparison.Ordinal))
-            ?? throw new InvalidOperationException($"{request.FullName} has no Handlers.Requests or Slices project in its module.");
+        var handlers = Assembly.Load(name.Replace(".Contracts.Requests", ".Handlers.Requests", StringComparison.Ordinal));
         var found = handlers.GetTypes().Where(t => !t.IsAbstract && HandledRequest(t) == request).ToList();
         return found.Count == 1 ? found[0]
             : throw new InvalidOperationException($"{request.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
-    }
-
-    static Assembly? Load(string name) {
-        try {
-            return Assembly.Load(name);
-        } catch (FileNotFoundException) {
-            return null;
-        }
     }
 
     static Type? HandledRequest(Type type) {
