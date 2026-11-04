@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Tests.Shared;
 
 namespace Rules.Tests;
@@ -52,6 +53,18 @@ public sealed class BuildRuleTests {
     static void Fails(DotnetResult result, string code, string text) {
         Assert.That(result.Succeeded, Is.False, $"The build passed. It must fail with {code}.");
         Assert.That(result.Output, Does.Contain($"error {code}").And.Contain(text), result.Output);
+    }
+
+    // The router task runs in the MSBuild of the consumer, also in Visual Studio MSBuild (.NET Framework), which does not
+    // give Roslyn to a task. So the package must hold Roslyn next to the task DLL, and must not hold the MSBuild assemblies.
+    [Test]
+    public void The_SDK_package_holds_the_task_and_Roslyn() {
+        using var package = ZipFile.OpenRead(Path.Combine(LocalFeed.Path, $"VSA.Sdk.{LocalFeed.Version}.nupkg"));
+        var tasks = package.Entries.Select(e => e.FullName).Where(n => n.StartsWith("Sdk/tasks/", StringComparison.Ordinal)).ToList();
+
+        Assert.That(tasks, Is.SupersetOf(new[] {
+            "Sdk/tasks/VSA.Sdk.Tasks.dll", "Sdk/tasks/Microsoft.CodeAnalysis.dll", "Sdk/tasks/Microsoft.CodeAnalysis.CSharp.dll" }));
+        Assert.That(tasks, Has.None.Contains("Microsoft.Build"));
     }
 
     [Test]

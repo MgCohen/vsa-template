@@ -192,6 +192,8 @@
     <Error Condition="'$(_VsaMisplaced)' == 'true'" Code="VSA0002"
            Text="$(MSBuildProjectName) is in $(_VsaRelative)/. A module has its root project in Modules/$(VsaModule)/ and its layer projects in Modules/$(VsaModule)/Projects/, named $(VsaModule).&lt;Layer&gt;, for example $(VsaModule).Domain." />
     <ItemGroup>
+      <!-- The path in the module with "/" on each OS. -->
+      <_VsaUncompiledPath Include="@(_VsaUncompiled)" Path="$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/'))%(Filename)%(Extension)" />
       <_VsaHandReference Include="@(_VsaDeclaredReference)" Condition="'%(_VsaDeclaredReference.Kind)' == 'Project' or $([System.String]::Copy('%(Identity)').StartsWith('VSA.'))" />
     </ItemGroup>
     <Error Condition="'@(_VsaHandReference)' != ''" Code="VSA0001"
@@ -199,6 +201,6 @@
     <Error Condition="'@(_VsaDeclaredCompile)' != ''" Code="VSA0004"
            Text="$(MSBuildProjectName) has Compile items written by hand: @(_VsaDeclaredCompile). VSA.Sdk gives each project its files. Remove them, and put each file in the folder of its layer or in a slice." />
     <Error Condition="'@(_VsaUncompiled)' != ''" Code="VSA0004"
-           Text="No project of module $(VsaModule) compiles these files: @(_VsaUncompiled->'%(RecursiveDir)%(Filename)%(Extension)'). Move each file to Domain/, Infrastructure/, Presenters/ or a slice in Slices/, and make sure that the module has the project of that folder." />
+           Text="No project of module $(VsaModule) compiles these files: @(_VsaUncompiledPath->'%(Path)'). Move each file to Domain/, Infrastructure/, Presenters/ or a slice in Slices/, and make sure that the module has the project of that folder." />
   </Target>
 </Project>
