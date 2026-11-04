@@ -9,8 +9,11 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `App/Host/`      | The web host. `Program.cs` calls `builder.AddVsa()`, which finds the modules |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Modules/<Name>/`| One module: its root, and one project for each layer                |
+| `Shared/<Name>/` | One Shared module: a base of the same layers in each module. It has the layers of a module |
 
 A module project is only `<Project Sdk="VSA.Sdk" />`. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`.
+
+A Shared module is for base types of the app, as the VSA framework is the base of each layer: for example a message base in `Shared/Pipeline/Contracts/Requests/`. Each layer of each module gets the same layer of each Shared module. A Shared module never uses a module. A Shared layer that uses another Shared module names it in `<VsaUses>`, in its project file. Its root has one `Module` class. The host configures the Shared modules first, by name, and it loads them through the modules.
 
 ## Commands
 

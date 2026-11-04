@@ -1,6 +1,7 @@
 using Bare;
 using Shelf;
 using Shelf.Presenters;
+using Toolbox;
 using Twin;
 using VSA.Module;
 
@@ -8,11 +9,17 @@ namespace Framework.Tests.Discovery;
 
 public sealed class ModuleDiscoveryTests {
     [Test]
-    public void RootsAreInOrdinalOrderOfName() {
-        // This test project references three module roots: Bare, Shelf and Twin.
+    public void SharedRootsAreFirstThenRootsAreInOrdinalOrderOfName() {
+        // This test project references three module roots: Bare, Shelf and Twin. Each one gets the Shared root Toolbox.
         var roots = ModuleDiscovery.FindRoots();
 
-        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Bare", "Shelf", "Twin" }));
+        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Toolbox", "Bare", "Shelf", "Twin" }));
+    }
+
+    [Test]
+    public void RootRecordsIfItIsShared() {
+        Assert.That(ModuleRoot.Of(typeof(ToolboxModule).Assembly).IsShared, Is.True);
+        Assert.That(ModuleRoot.Of(typeof(BareModule).Assembly).IsShared, Is.False);
     }
 
     [Test]

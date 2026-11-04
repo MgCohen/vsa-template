@@ -33,6 +33,40 @@ public sealed class LayerMapRuleTests {
     }
 }
 
+// The UsesShared fixture module uses the Shared modules of tests/Fixtures/SharedApp. Pipeline uses RecordIds and Units.
+public sealed class SharedModuleRuleTests {
+    static VsaApp App(bool pipelineIsShared = true, bool recordIdsIsShared = true) => new([
+        Root("UsesShared"),
+        Root("Pipeline") with { IsShared = pipelineIsShared },
+        Root("RecordIds") with { IsShared = recordIdsIsShared },
+        Root("Units"),
+    ]);
+
+    [Test]
+    public void The_Sdk_records_the_Shared_folder() {
+        Assert.That(Root("Pipeline").IsShared, Is.True);
+        Assert.That(Root("UsesShared").IsShared, Is.False);
+    }
+
+    [Test]
+    public void Use_of_the_same_layer_of_a_Shared_module_passes() =>
+        FixtureApp.Of(App()).VSA2001_module_projects_follow_the_layer_map();
+
+    [Test]
+    public void Use_of_the_same_layer_of_a_module_that_is_not_Shared_fails() {
+        var message = Fails(FixtureApp.Of(App(pipelineIsShared: false)).VSA2001_module_projects_follow_the_layer_map);
+        Assert.That(message, Does.Contain("UsesShared.Contracts.Requests"));
+        Assert.That(message, Does.Contain("Pipeline.Contracts.Requests"));
+    }
+
+    [Test]
+    public void Use_of_a_module_by_a_Shared_module_fails() {
+        var message = Fails(FixtureApp.Of(App(recordIdsIsShared: false)).VSA2001_module_projects_follow_the_layer_map);
+        Assert.That(message, Does.Contain("Pipeline.Contracts.Requests"));
+        Assert.That(message, Does.Contain("RecordIds.Contracts.Requests"));
+    }
+}
+
 public sealed class ModuleClassRuleTests {
     [Test]
     public void Good_fixture_passes() => FixtureApp.Of("Good").VSA2002_Module_classes_are_public_and_sealed();
