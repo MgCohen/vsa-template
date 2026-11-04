@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using Notes.Contracts.Events;
-using Notes.Contracts.Requests.CreateNote;
 using Notes.Domain;
+using Notes.Slices.CreateNote;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using VSA.Contracts.Events;

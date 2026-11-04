@@ -1,4 +1,4 @@
-using Good.Contracts.Requests;
+using Good.Slices.GetItem;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using VSA.Contracts.Events;

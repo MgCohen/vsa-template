@@ -51,7 +51,7 @@ public sealed partial class SdkLayerMapTests {
         Assert.That(missing, Is.Empty, "Layers.cs has edges that VSA.Layers.targets does not add.");
     }
 
-    // Reads the item groups with Condition="'$(VsaLayer)' == '<folder>'" in VSA.Layers.targets.
+    // Reads the item groups with Condition="'$(VsaLayer)' == '<layer>'" in VSA.Layers.targets.
     static Dictionary<string, SdkLayer> Sdk() {
         var targets = XDocument.Load(Repo.Path("framework", "Sdk", "Sdk", "VSA.Layers.targets"));
         var layers = new Dictionary<string, SdkLayer>();
@@ -75,22 +75,24 @@ public sealed partial class SdkLayerMapTests {
             if (include.StartsWith("VSA.", StringComparison.Ordinal) && Layers.Find(include[4..]) is not null) {
                 layer.Bases.Add(include[4..]);
             }
-        } else if (include == "$(VsaModuleDir)*/*.csproj" || include == "$(VsaModuleDir)*/*/*.csproj") {
+        } else if (include == "$(VsaModuleDir)Projects/*.csproj") {
             // The module root: all layer projects of its own module.
             layer.Own.UnionWith(ModuleLayers.Where(l => l != "Module"));
         } else if (OwnModule().Match(include) is { Success: true } own) {
-            layer.Own.Add(own.Groups[1].Value.Replace('/', '.'));
+            layer.Own.Add(own.Groups[1].Value);
         } else if (AnyModule().Match(include) is { Success: true } any) {
-            layer.AnyModule.Add(any.Groups[1].Value.Replace('/', '.'));
+            layer.AnyModule.Add(any.Groups[1].Value);
         }
     }
 
     [GeneratedRegex(@"^'\$\(VsaLayer\)' == '([^']+)'$")]
     private static partial Regex LayerCondition();
 
-    [GeneratedRegex(@"^\$\(VsaModuleDir\)(.+)/\*\.csproj$")]
+    // $(VsaModuleDir)Projects/*.<Layer>.csproj: a layer of the own module.
+    [GeneratedRegex(@"^\$\(VsaModuleDir\)Projects/\*\.(.+)\.csproj$")]
     private static partial Regex OwnModule();
 
-    [GeneratedRegex(@"^\$\(VsaModulesDir\)\*/(.+)/\*\.csproj$")]
+    // $(VsaModulesDir)*/Projects/*.<Layer>.csproj: a layer of any module.
+    [GeneratedRegex(@"^\$\(VsaModulesDir\)\*/Projects/\*\.(.+)\.csproj$")]
     private static partial Regex AnyModule();
 }

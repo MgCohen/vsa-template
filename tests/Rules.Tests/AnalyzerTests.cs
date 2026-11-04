@@ -13,11 +13,21 @@ static class Analyzer {
     public static Task Verify(string source, params DiagnosticResult[] expected) => Verify(source, "", expected);
 
     // config: lines of a .globalconfig, for the VSA analyzer options.
-    public static Task Verify(string source, string config, params DiagnosticResult[] expected) {
+    public static Task Verify(string source, string config, params DiagnosticResult[] expected) =>
+        Verify(source, config, null, expected);
+
+    // assembly: the assembly name of the test code, for the rules that depend on the layer, for example Notes.Contracts.Requests.
+    public static Task VerifyIn(string assembly, string source, params DiagnosticResult[] expected) =>
+        Verify(source, "", assembly, expected);
+
+    static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected) {
         var test = new CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
             TestCode = "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
             ReferenceAssemblies = Net10,
         };
+        if (assembly is not null) {
+            test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
+        }
         Type[] layers = [typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
             typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus)];
         foreach (var type in layers) {
@@ -40,46 +50,40 @@ public sealed class SealedRecordRuleTests {
     [Test]
     public Task Sealed_records_pass() => Analyzer.Verify($$"""
         public sealed record GetItems : VSA.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public sealed record Items(int Count);
+        public sealed record Items(int Count) : VSA.Contracts.Requests.IResponse;
         """);
 
     [Test]
     public Task Request_class_fails() => Analyzer.Verify($$"""
         public sealed class {|#0:GetItems|} : VSA.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public sealed record Items(int Count);
+        public sealed record Items(int Count) : VSA.Contracts.Requests.IResponse;
         """, Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "GetItems", "a request"));
 
     [Test]
     public Task Response_record_that_is_not_sealed_fails() => Analyzer.Verify($$"""
         public sealed record GetItems : VSA.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count);
+        public record {|#0:Items|}(int Count) : VSA.Contracts.Requests.IResponse;
         """, Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "Items", "the response of GetItems"));
 
     [Test]
     public Task Rule_option_turns_off_the_response_check() => Analyzer.Verify($$"""
         public sealed record GetItems : VSA.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record Items(int Count);
+        public record Items(int Count) : VSA.Contracts.Requests.IResponse;
         """, "vsa.VSA1001.check_responses = false");
 
     // A global option applies to each VSA rule that reads the key. A rule option wins over it.
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.Verify($$"""
         public sealed record GetItems : VSA.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count);
+        public record {|#0:Items|}(int Count) : VSA.Contracts.Requests.IResponse;
         """, "vsa.check_responses = false\nvsa.VSA1001.check_responses = true", Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "Items", "the response of GetItems"));
 
     // Severity none: VsaAnalyzer does not register the rule, so the rule reports nothing.
     [Test]
     public Task Rule_with_severity_none_reports_nothing() => Analyzer.Verify($$"""
         public sealed class GetItems : VSA.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record Items(int Count);
+        public record Items(int Count) : VSA.Contracts.Requests.IResponse;
         """, "dotnet_diagnostic.VSA1001.severity = none");
-
-    // A response from another assembly is not checked here: its own project checks it.
-    [Test]
-    public Task Response_from_another_assembly_is_not_checked() => Analyzer.Verify($$"""
-        public sealed record GetName : VSA.Contracts.Requests.IRequest<string> { {{Route}} }
-        """);
 }
 
 public sealed class EventHandlerRequestRuleTests {
@@ -89,7 +93,7 @@ public sealed class EventHandlerRequestRuleTests {
             public static HttpMethod Method => HttpMethod.Post;
             public static string Route => "/ping";
         }
-        public sealed record Pong;
+        public sealed record Pong : VSA.Contracts.Requests.IResponse;
 
         """;
 
@@ -126,10 +130,48 @@ public sealed class EventHandlerRequestRuleTests {
         """);
 }
 
+public sealed class ContractTypeRuleTests {
+    const string Route = "public static HttpMethod Method => HttpMethod.Get; public static string Route => \"/notes\";";
+
+    [Test]
+    public Task Request_response_and_DTO_pass() => Analyzer.VerifyIn("Notes.Contracts.Requests", $$"""
+        public sealed record ListNotes : VSA.Contracts.Requests.IRequest<Notes> { {{Route}} }
+        public sealed record Notes(System.Collections.Generic.IReadOnlyList<NoteDto> Items) : VSA.Contracts.Requests.IResponse;
+        public sealed record NoteDto(Guid Id, Author By);
+        public sealed record Author(string Name);
+        """);
+
+    [Test]
+    public Task Event_and_its_DTO_pass() => Analyzer.VerifyIn("Notes.Contracts.Events", """
+        public sealed record NoteCreated(Guid Id, NoteDto Note) : VSA.Contracts.Events.IntegrationEvent;
+        public sealed record NoteDto(string Title);
+        """);
+
+    [Test]
+    public Task Public_helper_in_a_contracts_project_fails() => Analyzer.VerifyIn("Notes.Contracts.Requests", $$"""
+        public sealed record ListNotes : VSA.Contracts.Requests.IRequest<Notes> { {{Route}} }
+        public sealed record Notes(int Count) : VSA.Contracts.Requests.IResponse;
+        public static class {|#0:TitleRules|} { public static bool IsValid(string title) => title.Length > 0; }
+        """, Analyzer.Diagnostic(ContractTypeRule.Descriptor, 0, "TitleRules", "Notes.Contracts.Requests"));
+
+    [Test]
+    public Task Internal_helper_in_a_contracts_project_passes() => Analyzer.VerifyIn("Notes.Contracts.Requests", $$"""
+        public sealed record ListNotes : VSA.Contracts.Requests.IRequest<Notes> { {{Route}} }
+        public sealed record Notes(int Count) : VSA.Contracts.Requests.IResponse;
+        static class TitleRules { public static bool IsValid(string title) => title.Length > 0; }
+        """);
+
+    // The rule is only for the contracts projects. A handlers project can have public types.
+    [Test]
+    public Task Public_helper_in_another_project_passes() => Analyzer.VerifyIn("Notes.Handlers.Requests", """
+        public static class TitleRules { public static bool IsValid(string title) => title.Length > 0; }
+        """);
+}
+
 public sealed class VsaAnalyzerTests {
     [Test]
     public void The_analyzer_has_each_rule_of_the_assembly() =>
-        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "VSA1001", "VSA1002" }));
+        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "VSA1001", "VSA1002", "VSA1003" }));
 
     [Test]
     public void Each_rule_has_a_unique_ID() =>

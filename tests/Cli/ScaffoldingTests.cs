@@ -63,22 +63,22 @@ public sealed class ScaffoldingTests {
             ("App/Views/Routes.razor", App),
             ("App/Views/_Imports.razor", App),
             ("Modules/.gitkeep", App),
-            ("Modules/SampleModule/Contracts/Events/SampleModule.Contracts.Events.csproj", Module),
-            ("Modules/SampleModule/Contracts/Requests/GetStatus/GetStatusRequest.cs", Module),
-            ("Modules/SampleModule/Contracts/Requests/GetStatus/GetStatusResponse.cs", Module),
-            ("Modules/SampleModule/Contracts/Requests/SampleAction/SampleActionRequest.cs", Request),
-            ("Modules/SampleModule/Contracts/Requests/SampleAction/SampleActionResponse.cs", Request),
-            ("Modules/SampleModule/Contracts/Requests/SampleModule.Contracts.Requests.csproj", Module),
-            ("Modules/SampleModule/Domain/SampleModule.Domain.csproj", Module),
-            ("Modules/SampleModule/Handlers/Events/SampleModule.Handlers.Events.csproj", Module),
-            ("Modules/SampleModule/Handlers/Requests/GetStatusHandler.cs", Module),
-            ("Modules/SampleModule/Handlers/Requests/SampleActionHandler.cs", Request),
-            ("Modules/SampleModule/Handlers/Requests/SampleModule.Handlers.Requests.csproj", Module),
-            ("Modules/SampleModule/Infrastructure/SampleModule.Infrastructure.csproj", Module),
-            ("Modules/SampleModule/Presenters/SampleModule.Presenters.csproj", Module),
             ("Modules/SampleModule/Presenters/SampleModulePresenter.cs", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Contracts.Events.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Contracts.Requests.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Domain.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Handlers.Events.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Handlers.Requests.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Infrastructure.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Presenters.csproj", Module),
             ("Modules/SampleModule/SampleModule.csproj", Module),
             ("Modules/SampleModule/SampleModuleModule.cs", Module),
+            ("Modules/SampleModule/Slices/GetStatus/GetStatusHandler.cs", Module),
+            ("Modules/SampleModule/Slices/GetStatus/GetStatusRequest.cs", Module),
+            ("Modules/SampleModule/Slices/GetStatus/GetStatusResponse.cs", Module),
+            ("Modules/SampleModule/Slices/SampleAction/SampleActionHandler.cs", Request),
+            ("Modules/SampleModule/Slices/SampleAction/SampleActionRequest.cs", Request),
+            ("Modules/SampleModule/Slices/SampleAction/SampleActionResponse.cs", Request),
             ("Tests/App.Tests.csproj", App),
             ("Tests/ArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
@@ -150,7 +150,7 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "Billing" }, Version);
         var test = files.Single(f => f.Path == "Tests/BillingStatusTests.cs").Content;
 
-        Assert.That(test, Does.Contain("using Billing.Contracts.Requests.GetStatus;"));
+        Assert.That(test, Does.Contain("using Billing.Slices.GetStatus;"));
         Assert.That(test, Does.Contain("new GetStatusResponse(\"Billing\", \"Ready\")"));
     }
 
@@ -170,14 +170,14 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             projects.Select(p => p.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Modules/OrderHistory/Contracts/Events/OrderHistory.Contracts.Events.csproj",
-                        "Modules/OrderHistory/Contracts/Requests/OrderHistory.Contracts.Requests.csproj",
-                        "Modules/OrderHistory/Domain/OrderHistory.Domain.csproj",
-                        "Modules/OrderHistory/Handlers/Events/OrderHistory.Handlers.Events.csproj",
-                        "Modules/OrderHistory/Handlers/Requests/OrderHistory.Handlers.Requests.csproj",
-                        "Modules/OrderHistory/Infrastructure/OrderHistory.Infrastructure.csproj",
-                        "Modules/OrderHistory/OrderHistory.csproj",
-                        "Modules/OrderHistory/Presenters/OrderHistory.Presenters.csproj"]));
+            Is.EqualTo(["Modules/OrderHistory/OrderHistory.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Contracts.Events.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Contracts.Requests.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Domain.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Handlers.Events.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Handlers.Requests.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Infrastructure.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Presenters.csproj"]));
         Assert.That(projects.Select(p => p.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
         Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
@@ -190,9 +190,9 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Modules/Billing/Contracts/Requests/CreateInvoice/CreateInvoiceRequest.cs",
-                        "Modules/Billing/Contracts/Requests/CreateInvoice/CreateInvoiceResponse.cs",
-                        "Modules/Billing/Handlers/Requests/CreateInvoiceHandler.cs"]));
+            Is.EqualTo(["Modules/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs",
+                        "Modules/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
+                        "Modules/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
         Assert.That(string.Concat(files.Select(f => f.Content)), Does.Contain("\"/api/billing/create-invoice\""));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }

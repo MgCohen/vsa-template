@@ -9,7 +9,8 @@ namespace VSA.Handlers.Requests;
 // One handler for each request. The handler is also the FastEndpoints endpoint of the request.
 // The method and the route come from the request type, so a handler does not configure them.
 public abstract class RoutedHandler<TRequest, TResponse> : Endpoint<TRequest, TResponse>
-    where TRequest : IRequest<TResponse> {
+    where TRequest : IRequest<TResponse>
+    where TResponse : IResponse {
     public sealed override void Configure() {
         Verbs(TRequest.Method.Method);
         Routes(TRequest.Route);

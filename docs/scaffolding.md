@@ -28,8 +28,9 @@ framework/Tooling/Cli/Templates/
 ├─ App/Host/, App/Views/              new app
 ├─ App/Views/Pages/SampleModulePage.razor          add module
 ├─ Modules/SampleModule/**                         add module
-│  ├─ Contracts/Requests/SampleAction/**           add request
-│  └─ Handlers/Requests/SampleActionHandler.cs     add request
+│  ├─ Projects/SampleModule.<Layer>.csproj         add module (all seven layer projects)
+│  ├─ Slices/GetStatus/**                          add module (the status request)
+│  └─ Slices/SampleAction/**                       add request
 ├─ Modules/.gitkeep                                new app (keeps the empty Modules/ folder)
 ├─ Tests/App.Tests.csproj, Tests/ArchitectureTests.cs   new app
 ├─ Tests/SampleModuleStatusTests.cs                add module

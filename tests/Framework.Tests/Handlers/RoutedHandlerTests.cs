@@ -60,7 +60,7 @@ public sealed class RoutedHandlerTests {
         public static string Route => "/answer";
     }
 
-    public sealed record AnswerResponse(string Text);
+    public sealed record AnswerResponse(string Text) : IResponse;
 
     public sealed class AnswerHandler : RoutedHandler<AnswerRequest, AnswerResponse> {
         protected override Task<Result<AnswerResponse>> HandleRequestAsync(AnswerRequest request, CancellationToken ct) =>

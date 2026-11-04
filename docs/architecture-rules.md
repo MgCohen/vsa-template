@@ -21,8 +21,12 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA0001` | Build | A module project or a Shared module project gets its references only from VSA.Sdk. |
 | `VSA0002` | Build | `VsaUses` is only in a Shared layer, and it names other Shared modules that have that layer. |
 | `VSA0003` | Build | A project in a `Modules` or `Shared` folder is in a root folder of the app root. |
+| `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
+| `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
+| `VSA0006` | Build | No `Compile` item written by hand, and no `.cs` file that no project compiles. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
+| `VSA1003` | Analyzers | A contracts project holds only requests, responses, events and the types that they use. |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
@@ -30,9 +34,9 @@ The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk
 
 ## Root folders and Shared modules
 
-VSA.Sdk finds the layer of a project from its folder in the app: `<root>/<RootFolder>/<Name>/<Layer>/`. The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Shared`. A project in another folder gets no rules.
+VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Shared`. A project in another folder gets no rules.
 
-A Shared module has the layers of a module. It is for the base types of the app, as `framework/Layers` is the base of each layer:
+A Shared module has the layers and the slice layout of a module. It is for the base types of the app, as `framework/Layers` is the base of each layer:
 
 | From | Gets from VSA.Sdk |
 |---|---|
@@ -113,7 +117,7 @@ Add or replace services before the first `Handle` call. After it, the services a
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
 3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests`. Use the next free `VSA2xxx` ID in the test name.
-4. Add tests in `tests/Rules.Tests/`. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test:
+4. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test:
 
    ```csharp
    Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);

@@ -1,6 +1,6 @@
-using Notes.Contracts.Requests.CreateNote;
-using Notes.Contracts.Requests.DeleteNote;
-using Notes.Contracts.Requests.ListNotes;
+using Notes.Slices.CreateNote;
+using Notes.Slices.DeleteNote;
+using Notes.Slices.ListNotes;
 using VSA.Presenters;
 
 namespace Notes.Presenters;

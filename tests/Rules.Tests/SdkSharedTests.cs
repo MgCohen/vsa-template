@@ -4,6 +4,7 @@ using Tests.Shared;
 namespace Rules.Tests;
 
 // The Shared module references of VSA.Sdk, on the projects of tests/Fixtures/SharedApp.
+// A Shared module has the layout of a module: its layer projects are in Projects/.
 // Each test runs MSBuild on one project: it reads the references, or it runs one check target.
 public sealed class SdkSharedTests {
     static string App(params string[] parts) => Repo.Path(["tests", "Fixtures", "SharedApp", .. parts]);
@@ -29,10 +30,10 @@ public sealed class SdkSharedTests {
 
     [Test]
     public void A_module_layer_gets_the_same_layer_of_each_Shared_module() =>
-        Assert.That(References(Project("Modules/UsesShared/Contracts/Requests", "UsesShared.Contracts.Requests")), Is.EquivalentTo(new[] {
-            "Shared/Pipeline/Contracts/Requests/Pipeline.Contracts.Requests.csproj",
-            "Shared/RecordIds/Contracts/Requests/RecordIds.Contracts.Requests.csproj",
-            "Shared/Units/Contracts/Requests/Units.Contracts.Requests.csproj",
+        Assert.That(References(Project("Modules/UsesShared/Projects", "UsesShared.Contracts.Requests")), Is.EquivalentTo(new[] {
+            "Shared/Pipeline/Projects/Pipeline.Contracts.Requests.csproj",
+            "Shared/RecordIds/Projects/RecordIds.Contracts.Requests.csproj",
+            "Shared/Units/Projects/Units.Contracts.Requests.csproj",
         }));
 
     [Test]
@@ -45,22 +46,22 @@ public sealed class SdkSharedTests {
 
     [Test]
     public void A_module_event_handler_gets_the_events_of_each_Shared_module() =>
-        Assert.That(References(Project("Modules/UsesShared/Handlers/Events", "UsesShared.Handlers.Events")),
-            Does.Contain("Shared/Pipeline/Contracts/Events/Pipeline.Contracts.Events.csproj"));
+        Assert.That(References(Project("Modules/UsesShared/Projects", "UsesShared.Handlers.Events")),
+            Does.Contain("Shared/Pipeline/Projects/Pipeline.Contracts.Events.csproj"));
 
     // The fixture writes VsaUses with spaces and a new line.
     [Test]
     public void A_Shared_layer_gets_the_same_layer_of_the_Shared_modules_in_VsaUses() =>
-        Assert.That(References(Project("Shared/Pipeline/Contracts/Requests", "Pipeline.Contracts.Requests")), Is.EquivalentTo(new[] {
-            "Shared/RecordIds/Contracts/Requests/RecordIds.Contracts.Requests.csproj",
-            "Shared/Units/Contracts/Requests/Units.Contracts.Requests.csproj",
+        Assert.That(References(Project("Shared/Pipeline/Projects", "Pipeline.Contracts.Requests")), Is.EquivalentTo(new[] {
+            "Shared/RecordIds/Projects/RecordIds.Contracts.Requests.csproj",
+            "Shared/Units/Projects/Units.Contracts.Requests.csproj",
         }));
 
     [Test]
     public void A_Shared_layer_with_no_VsaUses_gets_only_its_own_module() {
-        var references = References(Project("Shared/Pipeline/Handlers/Requests", "Pipeline.Handlers.Requests"));
+        var references = References(Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Requests"));
         Assert.That(references, Has.All.StartWith("Shared/Pipeline/"));
-        Assert.That(references, Does.Contain("Shared/Pipeline/Contracts/Requests/Pipeline.Contracts.Requests.csproj"));
+        Assert.That(references, Does.Contain("Shared/Pipeline/Projects/Pipeline.Contracts.Requests.csproj"));
     }
 
     [Test]
@@ -72,17 +73,17 @@ public sealed class SdkSharedTests {
     [TestCase("../../Modules/UsesShared", Description = "a path, not a name")]
     [TestCase("*", Description = "a glob, not a name")]
     public void A_bad_name_in_VsaUses_fails(string name) =>
-        Assert.That(Fails(Project("Shared/Pipeline/Contracts/Requests", "Pipeline.Contracts.Requests"), "_VsaCheckUses", $"-p:VsaUses={name}"),
+        Assert.That(Fails(Project("Shared/Pipeline/Projects", "Pipeline.Contracts.Requests"), "_VsaCheckUses", $"-p:VsaUses={name}"),
             Does.Contain("VSA0002").And.Contain("are not other Shared modules with the layer Contracts/Requests"));
 
     [Test]
     public void A_Shared_module_with_no_such_layer_in_VsaUses_fails() =>
-        Assert.That(Fails(Project("Shared/Pipeline/Handlers/Requests", "Pipeline.Handlers.Requests"), "_VsaCheckUses", "-p:VsaUses=RecordIds"),
+        Assert.That(Fails(Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Requests"), "_VsaCheckUses", "-p:VsaUses=RecordIds"),
             Does.Contain("VSA0002").And.Contain(": RecordIds."));
 
     [Test]
     public void VsaUses_in_a_module_fails() =>
-        Assert.That(Fails(Project("Modules/UsesShared/Contracts/Requests", "UsesShared.Contracts.Requests"), "_VsaCheckUses", "-p:VsaUses=Pipeline"),
+        Assert.That(Fails(Project("Modules/UsesShared/Projects", "UsesShared.Contracts.Requests"), "_VsaCheckUses", "-p:VsaUses=Pipeline"),
             Does.Contain("VSA0002").And.Contain("is not in a Shared module"));
 
     // The app root of another app: the project is in a Modules folder, but not in the Modules folder of that root.

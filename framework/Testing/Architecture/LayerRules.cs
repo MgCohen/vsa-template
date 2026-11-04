@@ -29,7 +29,7 @@ static class LayerRules {
     // One message for each module project in a layer that the map does not have.
     public static IEnumerable<string> Unmapped(VsaApp app, IReadOnlyList<Layer> layers) =>
         Projects(app).Where(p => layers.All(l => l.Name != p.Layer)).Select(p =>
-            $"{p.Name} is in layer {p.Layer}, which is not in the layer map. Move the project to a layer folder: {string.Join(", ", layers.Select(l => l.Name))}.");
+            $"{p.Name} is in layer {p.Layer}, which is not in the layer map. Rename the project to <module>.<layer>, with one of these layers: {string.Join(", ", layers.Select(l => l.Name))}.");
 
     // The assemblies that each module project must not use: each VSA base and each module project that the map does not permit.
     // A project with no forbidden assembly is not in the list.

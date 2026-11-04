@@ -11,7 +11,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | Path                  | Purpose                                                                 |
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
-| `framework/Sdk/`      | VSA.Sdk: the build setup of each module project and the layer references |
+| `framework/Sdk/`      | VSA.Sdk: the build setup of each module project, the layer references and the slice router (`Tasks/`) |
 | `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build   |
 | `framework/Testing/`  | The test bases that ship: `Core/` (the layer map), `Architecture/` (ArchUnitNET), `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
@@ -19,7 +19,11 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
 
-A module project is under the `Modules/` folder of an app, and a Shared module project is under its `Shared/` folder. The app root is the folder of `global.json`. In this repository, `samples/`, `tests/Fixtures/` and the templates set the app root (`VsaAppRoot`) for each app, because the repository has one `global.json`. A Shared module has the layers of a module, and it is the base of the same layers in each module, as the framework is. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
+A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. Both have the same layout. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project. See `docs/slice-layout.md`.
+
+The app root is the folder of `global.json`. In this repository, `samples/`, `tests/Fixtures/` and the templates set the app root (`VsaAppRoot`) for each app, because the repository has one `global.json`. A Shared module is the base of the same layers in each module, as the framework is. See `docs/architecture-rules.md`.
+
+Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0006`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
 
 Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script adds each `.csproj` in the repository, except `tests/Fixtures/`. After you add, move or remove a project, run the script again. Do not edit `VSA.slnx` by hand.
 
@@ -27,7 +31,7 @@ The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To 
 
 ## Tests
 
-Run all tests with `dotnet test VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use NUnit on Microsoft.Testing.Platform (set in `global.json`). NUnit also runs in Unity (Unity Test Framework), and xUnit does not.
+Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use NUnit on Microsoft.Testing.Platform (set in `global.json`). NUnit also runs in Unity (Unity Test Framework), and xUnit does not.
 
 | Path                     | Put here                                                                  |
 |--------------------------|---------------------------------------------------------------------------|
@@ -60,8 +64,8 @@ The public surface of `tests/Shared` (namespace `Tests.Shared`). Other test proj
 
 ## Core principles
 
-- **Organize by feature, not by layer.** Each slice owns its request, handler, validation, and endpoint in one place.
-- **Slices are independent.** A slice does not reach into another slice's internals; share only through explicit, minimal shared code.
+- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events, handler and helpers. A slice has one kind of handler: a request handler or an event handler.
+- **Slices are independent.** A slice uses only its own types and `Slices/Shared/`. An event is in the slice that publishes it.
 - **Keep shared code small.** Promote code to a shared location only when two or more slices genuinely need it.
 - **Rules are enforced by tests.** Architecture rules live in `tests/` and must pass.
 
@@ -73,7 +77,7 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule` in `framework/Analyzers/`. The one `VsaAnalyzer` finds and runs it. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`. Read options with `Options(...)`.
 3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests` (`framework/Testing/Architecture/`). Write the rule only there. Use the next free `VSA2xxx` ID in the test name. For a layer rule, change the layer map in `framework/Testing/Core/Layers.cs` and in `VSA.Layers.targets`.
 4. Write a message that gives what is wrong, the type names, and the fix.
-5. Add tests in `tests/Rules.Tests/`. For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test with `FixtureApp.Of("<module>")`.
+5. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs` (built fixture `tests/Fixtures/Built/Shop`). For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test with `FixtureApp.Of("<module>")`.
 6. Add the rule to the table in `docs/architecture-rules.md`.
 
 ## Working agreements

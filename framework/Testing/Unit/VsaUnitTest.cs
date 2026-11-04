@@ -73,7 +73,7 @@ public abstract class VsaUnitTest {
 
     // Finds the handler of the request, creates it with the services, and runs it.
     // The handler is in the Handlers.Requests project of the same module: Notes.Contracts.Requests -> Notes.Handlers.Requests.
-    protected async Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) {
+    protected async Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) where TResponse : IResponse {
         var handler = HandlerOf(request.GetType());
         var instance = ActivatorUtilities.CreateInstance(Provider, handler);
         var method = handler.GetMethod("HandleRequestAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
