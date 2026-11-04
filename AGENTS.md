@@ -85,6 +85,12 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 <!-- TODO: stack, build/test commands, slice anatomy, naming rules — fill in as specs land. -->
 
+## Release and consumers
+
+A tag `v<version>` publishes all packages to GitHub Packages (`.github/workflows/publish.yml`). Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass.
+
+Five layers also target `netstandard2.1`, for Unity: Domain, Contracts.Events, Handlers.Events, Infrastructure and Module (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
+
 ## Scaffolding: the vsa tool
 
 The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
