@@ -10,6 +10,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Modules/<Name>/`| One module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/` |
 | `Shared/<Name>/` | One Shared module: a base of the same layers in each module. It has the layout of a module |
+| `Tests/`         | The VSA architecture tests, and one unit test file for each module  |
 
 A module project is only `<Project Sdk="VSA.Sdk" />`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project: requests and responses go to `Contracts.Requests`, events to `Contracts.Events`, and the other files to the handlers project of the slice. Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0006`.
 
@@ -24,7 +25,12 @@ dotnet tool restore                          # one time, after a new clone
 dotnet vsa add module <Name>                 # all layers, a status request and a page
 dotnet vsa add request <Name> -m <Module>    # a request, its response and its handler
 dotnet vsa doctor                            # the tool, VSA.Sdk and the packages have one version
+dotnet test SampleApp.slnx                   # the architecture tests and the unit tests
 ```
+
+The architecture tests fail until the app has a module: with no module, each rule has nothing to check.
+
+The VSA packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 
 To update VSA, change the version in `global.json`, `dotnet-tools.json` and the `VSA.*` package references, then run `dotnet vsa doctor`.
 

@@ -3,7 +3,7 @@ using VSA.Cli.Scaffolding;
 
 namespace VSA.Cli.Commands;
 
-// vsa new app <Name>: the root files with the version of this tool, App/Host, App/Views and an empty Modules/ folder
+// vsa new app <Name>: the root files with the version of this tool, App/Host, App/Views, Tests and an empty Modules/ folder
 // (only Modules/.gitkeep, so that git keeps the folder).
 static class NewAppCommand {
     // The .NET SDK of a new app. VSA.Sdk targets net10.0.
@@ -45,6 +45,9 @@ static class NewAppCommand {
           },
           "msbuild-sdks": {
             "VSA.Sdk": "{{version}}"
+          },
+          "test": {
+            "runner": "Microsoft.Testing.Platform"
           }
         }
 
@@ -111,6 +114,9 @@ static class NewAppCommand {
           <Folder Name="/App/">
             <Project Path="App/Host/App.Host.csproj" />
             <Project Path="App/Views/App.Views.csproj" />
+          </Folder>
+          <Folder Name="/Tests/">
+            <Project Path="Tests/App.Tests.csproj" />
           </Folder>
         </Solution>
 
