@@ -1,4 +1,4 @@
-using SampleModule.Contracts.Requests.GetStatus;
+using SampleModule.Slices.GetStatus;
 using VSA.Presenters;
 
 namespace SampleModule.Presenters;

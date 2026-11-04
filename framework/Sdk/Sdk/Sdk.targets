@@ -1,4 +1,13 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)VSA.Layers.targets" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- The lists for _VsaCheck (VSA.Layers.targets). They are made here, after the project file, Directory.Build.targets
+       and the .NET SDK, so they see each item that a file declares. They are made at evaluation, so they do not contain
+       the items that targets add later, for example the transitive project references of the .NET SDK. -->
+  <ItemGroup Condition="'$(VsaModule)' != ''">
+    <_VsaDeclaredReference Include="@(ProjectReference->WithoutMetadataValue('VsaRule', 'true'))" Kind="Project" />
+    <_VsaDeclaredReference Include="@(PackageReference->WithoutMetadataValue('VsaRule', 'true'))" Kind="Package" />
+    <_VsaDeclaredCompile Include="@(Compile->WithoutMetadataValue('VsaRule', 'true'))" />
+  </ItemGroup>
 </Project>

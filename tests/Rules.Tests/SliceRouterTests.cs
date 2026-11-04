@@ -1,8 +1,8 @@
-using VSA.Sdk;
+using VSA.Sdk.Tasks;
 
 namespace Rules.Tests;
 
-// The slice router of VSA.Sdk (framework/Sdk/Sdk/VsaSliceRouter.cs). It reads the files of Slices/ and selects
+// The slice router of VSA.Sdk (framework/Sdk/Tasks/SliceRouter.cs). It reads the files of Slices/ and selects
 // the project of each file by its types. The files are in memory: the router reads only the paths and the text.
 public sealed class SliceRouterTests {
     static readonly string Slices = Path.Combine(Path.GetTempPath(), "vsa-router", "Slices");

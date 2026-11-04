@@ -1,15 +1,30 @@
 <Project>
   <!--
-    The layer rules. They follow the layer map.
-    The module and the layer come from the path after the last "/Modules/":
-      Modules/Notes/                    VsaModule = Notes, VsaLayer = Module (the module root)
-      Modules/Notes/Handlers/Requests/  VsaModule = Notes, VsaLayer = Handlers/Requests
+    The layer rules of a slice module. They follow the layer map (framework/Testing/Core/Layers.cs).
+
+      Modules/Notes/Notes.csproj                              the module root: the *.cs files of Modules/Notes/
+      Modules/Notes/Projects/Notes.Domain.csproj              Domain/**
+      Modules/Notes/Projects/Notes.Infrastructure.csproj      Infrastructure/**
+      Modules/Notes/Projects/Notes.Presenters.csproj          Presenters/**
+      Modules/Notes/Projects/Notes.Contracts.Requests.csproj  the slice files with requests, responses and their DTOs
+      Modules/Notes/Projects/Notes.Contracts.Events.csproj    the slice files with events and their DTOs
+      Modules/Notes/Projects/Notes.Handlers.Requests.csproj   the other files of the slices with a request handler
+      Modules/Notes/Projects/Notes.Handlers.Events.csproj     the other files of the slices with an event handler
+
+    The module comes from the folder after the last "/Modules/". The layer of a project in Projects/ comes from its name.
+    The VsaRouteSliceFiles task (framework/Sdk/Tasks) selects the project of each file in Slices/ by its types.
     A project that is not under a Modules folder gets no rules.
     "Private" references use PrivateAssets="all". The framework base of each layer is exposed.
 
     Two modes for the framework references:
       Package mode (consumers): PackageReference to VSA.* with the version of this SDK.
       Source mode (this repository): ProjectReference into framework/, when VsaFrameworkSourceDir is set.
+
+    Checks, all in _VsaCheck, on lists made at evaluation, so the order of the requested targets does not change them:
+      VSA0001  a reference written by hand
+      VSA0002  a project in the wrong folder, or a project in Projects/ with a name that is not <Module>.<Layer>
+      VSA0004  a Compile item written by hand, or a .cs file that no project compiles
+    VSA0003 (routing errors) comes from the VsaRouteSliceFiles task.
   -->
   <PropertyGroup>
     <_VsaPath>$(MSBuildProjectDirectory.Replace('\', '/').TrimEnd('/'))/</_VsaPath>
@@ -21,55 +36,51 @@
     <_VsaSlash>$(_VsaRelative.IndexOf('/'))</_VsaSlash>
     <VsaModule Condition="'$(_VsaSlash)' == '-1'">$(_VsaRelative)</VsaModule>
     <VsaModule Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring(0, $(_VsaSlash)))</VsaModule>
-    <VsaLayer Condition="'$(_VsaSlash)' == '-1'">Module</VsaLayer>
-    <VsaLayer Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring($([MSBuild]::Add($(_VsaSlash), 1))))</VsaLayer>
+    <_VsaFolder Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring($([MSBuild]::Add($(_VsaSlash), 1))))</_VsaFolder>
     <VsaModuleDir>$(VsaModulesDir)$(VsaModule)/</VsaModuleDir>
+    <VsaLayer Condition="'$(_VsaSlash)' == '-1'">Module</VsaLayer>
+    <VsaLayer Condition="'$(_VsaFolder)' == 'Projects' and $(MSBuildProjectName.StartsWith('$(VsaModule).'))">$(MSBuildProjectName.Substring($([MSBuild]::Add($(VsaModule.Length), 1))).Replace('.', '/'))</VsaLayer>
+    <!-- A module project in another folder, or with a wrong name: VSA0002. It gets no layer rules. -->
+    <_VsaMisplaced Condition="'$(VsaLayer)' == ''">true</_VsaMisplaced>
+    <_VsaRouted Condition="'$(VsaLayer)' == 'Contracts/Requests' or '$(VsaLayer)' == 'Contracts/Events' or '$(VsaLayer)' == 'Handlers/Requests' or '$(VsaLayer)' == 'Handlers/Events'">true</_VsaRouted>
+    <!-- Each module project takes only the files that VSA.Sdk gives it. -->
+    <EnableDefaultCompileItems Condition="'$(VsaLayer)' != ''">false</EnableDefaultCompileItems>
   </PropertyGroup>
 
-  <!--
-    Slice modules keep their layer projects in one folder, Modules/<Module>/Projects/ (Sdk.props sets VsaProjectsFolder).
-    The layer comes from the project name, not the folder: Projects/Notes.Contracts.Requests.csproj is Contracts/Requests.
-    Domain, Infrastructure and Presenters take the files of their folder. The other layers take the files of Slices/
-    by type: the VsaRouteSliceFiles task (VsaSliceRouter.cs) reads each file and selects its project.
-  -->
-  <PropertyGroup Condition="'$(VsaProjectsFolder)' == 'true' and '$(VsaLayer)' == 'Projects'">
-    <_VsaProjectLayer Condition="$(MSBuildProjectName.StartsWith('$(VsaModule).'))">$(MSBuildProjectName.Substring($([MSBuild]::Add($(VsaModule.Length), 1))).Replace('.', '/'))</_VsaProjectLayer>
-    <VsaLayer>$(_VsaProjectLayer)</VsaLayer>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(VsaProjectsFolder)' == 'true' and ('$(VsaLayer)' == 'Domain' or '$(VsaLayer)' == 'Infrastructure' or '$(VsaLayer)' == 'Presenters')">
-    <Compile Include="$(VsaModuleDir)$(VsaLayer)/**/*.cs" Link="$(VsaLayer)/%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-  <!-- The module root shows the slice files in the IDE. It does not compile them. -->
-  <ItemGroup Condition="'$(VsaLayer)' == 'Module' and Exists('$(VsaModuleDir)Projects/')">
+  <!-- The files of each project. VsaRule="true" marks them, so a Compile item written by hand stands out (VSA0004). -->
+  <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
+    <Compile Include="$(VsaModuleDir)*.cs" VsaRule="true" />
+    <!-- The IDE shows the slice files under the module root, and dotnet watch sees them. The root does not compile them. -->
     <None Include="$(VsaModuleDir)Slices/**/*.cs" Link="Slices/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Watch Include="$(VsaModuleDir)Slices/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Domain' or '$(VsaLayer)' == 'Infrastructure' or '$(VsaLayer)' == 'Presenters'">
+    <Compile Include="$(VsaModuleDir)$(VsaLayer)/**/*.cs" VsaRule="true" Link="$(VsaLayer)/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <UsingTask TaskName="VsaRouteSliceFiles" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
-    <Task>
-      <Code Type="Class" Language="cs" Source="$(MSBuildThisFileDirectory)VsaSliceRouter.cs" />
-    </Task>
-  </UsingTask>
-  <!-- Runs before BeforeCompile, so the files are in @(Compile) for the build, the design-time build of the IDE,
-       and the input cache of CoreCompile. Each routed project reports the routing errors (VSA0003). -->
-  <Target Name="_VsaRouteSlices" BeforeTargets="BeforeCompile"
-          Condition="'$(VsaProjectsFolder)' == 'true' and ('$(VsaLayer)' == 'Contracts/Requests' or '$(VsaLayer)' == 'Contracts/Events' or '$(VsaLayer)' == 'Handlers/Requests' or '$(VsaLayer)' == 'Handlers/Events')">
+  <!-- The router task. Package mode: the DLL is in tasks/ next to this file.
+       Source mode: framework/Sdk/Tasks builds the DLL, and MSBuild runs it in its own process (TaskHostFactory),
+       so a rebuild of the task never finds the DLL locked by a running MSBuild node. -->
+  <PropertyGroup>
+    <_VsaTasksAssembly Condition="'$(VsaFrameworkSourceDir)' == ''">$(MSBuildThisFileDirectory)tasks/VSA.Sdk.Tasks.dll</_VsaTasksAssembly>
+    <_VsaTasksAssembly Condition="'$(VsaFrameworkSourceDir)' != ''">$(VsaFrameworkSourceDir)Sdk/Tasks/bin/$(Configuration)/netstandard2.0/VSA.Sdk.Tasks.dll</_VsaTasksAssembly>
+  </PropertyGroup>
+  <UsingTask TaskName="VsaRouteSliceFiles" AssemblyFile="$(_VsaTasksAssembly)" Condition="'$(VsaFrameworkSourceDir)' == ''" />
+  <UsingTask TaskName="VsaRouteSliceFiles" AssemblyFile="$(_VsaTasksAssembly)" TaskFactory="TaskHostFactory" Condition="'$(VsaFrameworkSourceDir)' != ''" />
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != '' and '$(_VsaRouted)' == 'true'">
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Sdk/Tasks/VSA.Sdk.Tasks.csproj" VsaRule="true" ReferenceOutputAssembly="false" Private="false"
+                      SetTargetFramework="TargetFramework=netstandard2.0" SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+  <!-- BeforeCompile is the extension point of CompileDependsOn. The files are then in @(Compile) for the build,
+       the design-time build of the IDE, the analyzer config and the input cache of CoreCompile. -->
+  <Target Name="_VsaRouteSlices" BeforeTargets="BeforeCompile" Condition="'$(_VsaRouted)' == 'true'">
     <ItemGroup>
       <_VsaSliceSource Include="$(VsaModuleDir)Slices/**/*.cs" />
     </ItemGroup>
-    <VsaRouteSliceFiles SlicesDir="$(VsaModuleDir)Slices/" Files="@(_VsaSliceSource)" Layer="$(VsaLayer)" ReportErrors="true">
+    <VsaRouteSliceFiles SlicesDir="$(VsaModuleDir)Slices/" Files="@(_VsaSliceSource)" Layer="$(VsaLayer)">
       <Output TaskParameter="LayerFiles" ItemName="Compile" />
     </VsaRouteSliceFiles>
   </Target>
-  <Target Name="_VsaCheckProjectName" BeforeTargets="CollectPackageReferences;ResolveProjectReferences;CoreCompile"
-          Condition="'$(VsaProjectsFolder)' == 'true' and '$(_VsaProjectLayer)' == ''">
-    <Error Code="VSA0002" Text="$(MSBuildProjectName) is in $(VsaModuleDir)Projects/. Name it $(VsaModule).&lt;Layer&gt;, for example $(VsaModule).Domain." />
-  </Target>
-
-  <!-- The module root compiles only its own files, not the files of its layer projects. -->
-  <PropertyGroup Condition="'$(VsaLayer)' == 'Module'">
-    <DefaultItemExcludes>$(DefaultItemExcludes);*/**</DefaultItemExcludes>
-  </PropertyGroup>
 
   <!-- The framework base of each layer. Path is the project folder under framework/ in source mode. -->
   <ItemGroup Condition="'$(VsaLayer)' != ''">
@@ -122,30 +133,27 @@
     <PackageReference Update="VSA.Analyzers;VSA.Infrastructure.EfCore" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The references inside the module. Each reference has two forms: the layer folder, and the Projects folder of a slice module.
-       Only one form finds a project, so a module can use either layout. -->
+  <!-- The references inside the module. The wildcard finds only the layers that the module has:
+       Projects/*.Domain.csproj is Projects/<Module>.Domain.csproj, because VSA0002 checks each name. -->
   <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure'">
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Projects*/$(VsaModule).Domain.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Requests'">
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Infrastructure/*.csproj" PrivateAssets="all" />
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects*/$(VsaModule).Domain.csproj;$(VsaModuleDir)Projects*/$(VsaModule).Infrastructure.csproj" PrivateAssets="all" />
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Contracts/Requests/*.csproj;$(VsaModuleDir)Contracts/Events/*.csproj" PrivateAssets="all" />
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects*/$(VsaModule).Contracts.Requests.csproj;$(VsaModuleDir)Projects*/$(VsaModule).Contracts.Events.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Events'">
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Domain/*.csproj;$(VsaModuleDir)Infrastructure/*.csproj" PrivateAssets="all" />
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects*/$(VsaModule).Domain.csproj;$(VsaModuleDir)Projects*/$(VsaModule).Infrastructure.csproj" PrivateAssets="all" />
-    <!-- anyModule: the events of all modules, in both layouts -->
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Contracts/Events/*.csproj;$(VsaModulesDir)*/Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
+    <!-- anyModule: the events of all modules -->
+    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Contracts/Requests/*.csproj;$(VsaModuleDir)Projects*/$(VsaModule).Contracts.Requests.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
     <!-- Exposed, not private: the host loads the handlers and presenters at run time,
          so it must get every module assembly. -->
-    <_VsaLayerProject Include="$(VsaModuleDir)*/*.csproj;$(VsaModuleDir)*/*/*.csproj" />
+    <_VsaLayerProject Include="$(VsaModuleDir)Projects/*.csproj" />
     <ProjectReference VsaRule="true" Include="@(_VsaLayerProject)" />
   </ItemGroup>
 
@@ -166,13 +174,31 @@
     </ItemGroup>
   </Target>
 
-  <!-- A module project gets its references only from these rules. A reference written by hand is an error. -->
-  <Target Name="_VsaCheckReferences" BeforeTargets="CollectPackageReferences;ResolveProjectReferences" Condition="'$(VsaLayer)' != ''">
+  <!-- The module root finds each .cs file that no project compiles (VSA0004). A layer folder counts only if its project exists. -->
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module'">
+    <_VsaCompiled>$(VsaModuleDir)*.cs;$(VsaModuleDir)Projects/**;$(VsaModuleDir)obj/**;$(VsaModuleDir)bin/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Domain.csproj')">$(_VsaCompiled);$(VsaModuleDir)Domain/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Infrastructure.csproj')">$(_VsaCompiled);$(VsaModuleDir)Infrastructure/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Presenters.csproj')">$(_VsaCompiled);$(VsaModuleDir)Presenters/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Events.csproj')">$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
+    <_VsaUncompiled Include="$(VsaModuleDir)**/*.cs" Exclude="$(_VsaCompiled)" />
+  </ItemGroup>
+
+  <!-- All VSA build checks. The lists come from evaluation (here and in Sdk.targets), so they do not depend on the targets
+       that ran before. CollectPackageReferences runs in restore; ResolveProjectReferences runs in each build and design-time build. -->
+  <Target Name="_VsaCheck" BeforeTargets="CollectPackageReferences;ResolveProjectReferences" Condition="'$(VsaModule)' != ''">
+    <Error Condition="'$(_VsaMisplaced)' == 'true'" Code="VSA0002"
+           Text="$(MSBuildProjectName) is in $(_VsaRelative)/. A module has its root project in Modules/$(VsaModule)/ and its layer projects in Modules/$(VsaModule)/Projects/, named $(VsaModule).&lt;Layer&gt;, for example $(VsaModule).Domain." />
     <ItemGroup>
-      <_VsaHandReference Include="@(ProjectReference)" Condition="'%(ProjectReference.VsaRule)' != 'true'" />
-      <_VsaHandReference Include="@(PackageReference)" Condition="'%(PackageReference.VsaRule)' != 'true' and $([System.String]::Copy('%(Identity)').StartsWith('VSA.'))" />
+      <_VsaHandReference Include="@(_VsaDeclaredReference)" Condition="'%(_VsaDeclaredReference.Kind)' == 'Project' or $([System.String]::Copy('%(Identity)').StartsWith('VSA.'))" />
     </ItemGroup>
     <Error Condition="'@(_VsaHandReference)' != ''" Code="VSA0001"
            Text="$(MSBuildProjectName) is in layer $(VsaLayer). Its references come from VSA.Sdk. Remove these references: @(_VsaHandReference)" />
+    <Error Condition="'@(_VsaDeclaredCompile)' != ''" Code="VSA0004"
+           Text="$(MSBuildProjectName) has Compile items written by hand: @(_VsaDeclaredCompile). VSA.Sdk gives each project its files. Remove them, and put each file in the folder of its layer or in a slice." />
+    <Error Condition="'@(_VsaUncompiled)' != ''" Code="VSA0004"
+           Text="No project of module $(VsaModule) compiles these files: @(_VsaUncompiled->'%(RecursiveDir)%(Filename)%(Extension)'). Move each file to Domain/, Infrastructure/, Presenters/ or a slice in Slices/, and make sure that the module has the project of that folder." />
   </Target>
 </Project>
