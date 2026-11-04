@@ -8,9 +8,9 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 |------------------|----------------------------------------------------------------------|
 | `App/Host/`      | The web host. `Program.cs` calls `builder.AddVsa()`, which finds the modules |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
-| `Modules/<Name>/`| One module: its root, and one project for each layer                |
+| `Modules/<Name>/`| One module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/` |
 
-A module project is only `<Project Sdk="VSA.Sdk" />`. Its references come from VSA.Sdk, from the folder of the project. Do not add references to a module project by hand: the build fails with `VSA0001`.
+A module project is only `<Project Sdk="VSA.Sdk" />`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project: requests and responses go to `Contracts.Requests`, events to `Contracts.Events`, and the other files to the handlers project of the slice. Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0004`.
 
 ## Commands
 
@@ -27,6 +27,6 @@ To update VSA, change the version in `global.json`, `dotnet-tools.json` and the 
 
 ## Core principles
 
-- **Organize by feature, not by layer.** Each request has its request, response and handler in one place.
+- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events and handler. A slice has one kind of handler.
 - **Modules are independent.** A module uses another module only through its contracts.
 - **Keep shared code small.** Share code only when two or more slices need it.
