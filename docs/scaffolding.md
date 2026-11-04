@@ -6,8 +6,8 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests from te
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | Root files, `App/Host`, `App/Views`, `Modules/` | None |
-| `add module <Name>` | All layers, status request, presenter, page | Solution, with `dotnet sln add` |
+| `new app <Name>` | Root files, `App/Host`, `App/Views`, `Tests/`, `Modules/` | None |
+| `add module <Name>` | All layers, status request, presenter, page, unit test | Solution, with `dotnet sln add` |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `doctor` | None | None |
 
@@ -31,6 +31,8 @@ framework/Tooling/Cli/Templates/
 │  ├─ Contracts/Requests/SampleAction/**           add request
 │  └─ Handlers/Requests/SampleActionHandler.cs     add request
 ├─ Modules/.gitkeep                                new app (keeps the empty Modules/ folder)
+├─ Tests/App.Tests.csproj, Tests/ArchitectureTests.cs   new app
+├─ Tests/SampleModuleStatusTests.cs                add module
 ├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
 ```
 
@@ -56,6 +58,12 @@ The templates build in this repository in source mode, as `samples/` does. The t
 | `<ProjectReference Include="$(VsaFrameworkSourceDir).../VSA.Host.csproj" />` | `<PackageReference Include="VSA.Host" Version="<tool version>" />` |
 
 If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
+
+## Tests of a new app
+
+`Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
+
+The architecture tests fail until the app has a module (`The_app_has_modules`).
 
 ## One version
 

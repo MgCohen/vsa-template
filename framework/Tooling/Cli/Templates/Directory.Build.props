@@ -5,5 +5,7 @@
     <IsPackable>false</IsPackable>
     <!-- The templates are one app. The tool writes a global.json in the root of a new app, so a new app does not set this. -->
     <VsaAppRoot>$(MSBuildThisFileDirectory)</VsaAppRoot>
+    <!-- A new app has no central package versions, so the templates set each version (Tests/App.Tests.csproj). -->
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
   </PropertyGroup>
 </Project>

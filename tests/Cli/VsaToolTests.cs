@@ -44,6 +44,8 @@ public sealed class VsaToolTests {
         Directory.Delete(Path.Combine(app, "Shared"), recursive: true);
 
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        Assert.That(Dotnet.Run(app, env, "test", "--solution", "Hello.slnx", "-c", "Release", "--no-build").EnsureSuccess().Output,
+            Does.Contain("succeeded: 4"));
         await RunAndCall(app, ct, async (client, output) => {
             Assert.That(await client.GetStringAsync("/api/billing/status", ct), Does.Contain("\"status\":\"Ready\""));
             var created = await client.PostAsync("/api/billing/create-invoice", null, ct);
