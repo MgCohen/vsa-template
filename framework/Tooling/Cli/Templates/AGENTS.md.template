@@ -9,8 +9,11 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `App/Host/`      | The web host. `Program.cs` calls `builder.AddVsa()`, which finds the modules |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Modules/<Name>/`| One module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/` |
+| `Shared/<Name>/` | One Shared module: a base of the same layers in each module. It has the layout of a module |
 
-A module project is only `<Project Sdk="VSA.Sdk" />`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project: requests and responses go to `Contracts.Requests`, events to `Contracts.Events`, and the other files to the handlers project of the slice. Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0004`.
+A module project is only `<Project Sdk="VSA.Sdk" />`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project: requests and responses go to `Contracts.Requests`, events to `Contracts.Events`, and the other files to the handlers project of the slice. Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0006`.
+
+A Shared module is for base types of the app, as the VSA framework is the base of each layer: for example a message base in `Shared/Pipeline/Slices/Message/`. A Shared module has the same slice layout as a module. Each layer of each module gets the same layer of each Shared module. A Shared module never uses a module. A Shared layer that uses another Shared module names it in `<VsaUses>`, in its project file. Its root has one `Module` class. The host configures the Shared modules first, by name, and it loads them through the modules.
 
 ## Commands
 

@@ -40,7 +40,7 @@ static class LayerRules {
                 continue;
             }
             List<Assembly> forbidden = [
-                .. projects.Where(p => p != project && !Permits(layer, p.Layer, own: p.Module == project.Module, module: true)).Select(p => p.Assembly),
+                .. projects.Where(p => p != project && !Permits(layer, project, p)).Select(p => p.Assembly),
                 .. layers.Where(l => !Permits(layer, l.Name, own: true, module: false)).Select(Base).OfType<Assembly>(),
             ];
             if (forbidden.Count > 0) {
@@ -48,6 +48,13 @@ static class LayerRules {
             }
         }
     }
+
+    // A Shared module is a base, as the framework is: each project may use what the map permits of a base.
+    // A Shared module uses no project of a module that is not Shared.
+    static bool Permits(Layer layer, ModuleProject source, ModuleProject target) =>
+        target.Module == source.Module ? Permits(layer, target.Layer, own: true, module: true)
+        : target.Module.IsShared ? Permits(layer, target.Layer, own: true, module: false)
+        : !source.Module.IsShared && Permits(layer, target.Layer, own: false, module: true);
 
     // A module project always uses its own base. Each edge permits the base of its target.
     // A module target needs an edge that is not BaseOnly, and the same module unless the edge is AnyModule.

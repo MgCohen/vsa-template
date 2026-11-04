@@ -9,6 +9,7 @@ namespace VSA.Analyzers;
 // each public type is a request, a response, an event, or a type that one of them uses (a DTO).
 // In a slice module, VSA.Sdk selects the project of each file by its types (VsaSliceRouter.cs).
 // This rule checks the result, so a helper type that is in the same file as a contract cannot become public API.
+// A Shared module (VsaRootFolder = Shared) is not checked: its public types are bases for the modules.
 public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1003",
@@ -22,6 +23,10 @@ public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
         var assembly = start.Compilation.AssemblyName ?? "";
         if (!assembly.EndsWith(".Contracts.Requests", System.StringComparison.Ordinal)
             && !assembly.EndsWith(".Contracts.Events", System.StringComparison.Ordinal)) {
+            return;
+        }
+        if (start.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.VsaRootFolder", out var root)
+            && root == "Shared") {
             return;
         }
         var markers = new[] {

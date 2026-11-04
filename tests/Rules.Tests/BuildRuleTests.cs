@@ -3,7 +3,7 @@ using Tests.Shared;
 
 namespace Rules.Tests;
 
-// The build rules of VSA.Sdk, in a real build from the packed packages: VSA0001 to VSA0004 run in MSBuild, before the compile.
+// The build rules of VSA.Sdk, in a real build from the packed packages: VSA0001 and VSA0004 to VSA0006 run in MSBuild, before the compile.
 // The built fixture tests/Fixtures/Built/Shop is one module with one slice. Each test adds one problem, builds, and removes it.
 [NonParallelizable]
 public sealed class BuildRuleTests {
@@ -91,34 +91,34 @@ public sealed class BuildRuleTests {
         "VSA0001", "Remove these references: Shop.Contracts.Requests.csproj");
 
     [Test]
-    public void VSA0002_a_project_name_that_is_not_module_and_layer() => Fails(
+    public void VSA0004_a_project_name_that_is_not_module_and_layer() => Fails(
         BuildWith(("Projects/Prices.csproj", "<Project Sdk=\"VSA.Sdk\" />\n")),
-        "VSA0002", "Prices is in Shop/Projects/");
+        "VSA0004", "Prices is in Shop/Projects/");
 
     [Test]
-    public void VSA0003_a_slice_with_no_handler() => Fails(
+    public void VSA0005_a_slice_with_no_handler() => Fails(
         BuildWith(("Slices/Discounts/DiscountRules.cs", "namespace Shop.Slices.Discounts;\n\nstatic class DiscountRules { }\n")),
-        "VSA0003", "Slice Discounts has no handler");
+        "VSA0005", "Slice Discounts has no handler");
 
     [Test]
-    public void VSA0003_a_contract_that_uses_a_handler() => Fails(
+    public void VSA0005_a_contract_that_uses_a_handler() => Fails(
         BuildWith(("Slices/GetPrice/GetPriceAudit.cs",
             "namespace Shop.Slices.GetPrice;\n\npublic sealed record GetPriceAudit(GetPriceHandler Handler) : VSA.Contracts.Requests.IResponse;\n")),
-        "VSA0003", "GetPriceAudit is a contract type, but it uses the handler GetPriceHandler");
+        "VSA0005", "GetPriceAudit is a contract type, but it uses the handler GetPriceHandler");
 
     [Test]
-    public void VSA0004_a_compile_item_written_by_hand() => Fails(
+    public void VSA0006_a_compile_item_written_by_hand() => Fails(
         BuildWithProject("Projects/Shop.Contracts.Requests.csproj", """
             <Project Sdk="VSA.Sdk">
               <ItemGroup><Compile Include="../ShopModule.cs" /></ItemGroup>
             </Project>
             """),
-        "VSA0004", "has Compile items written by hand");
+        "VSA0006", "has Compile items written by hand");
 
     [Test]
-    public void VSA0004_a_file_that_no_project_compiles() => Fails(
+    public void VSA0006_a_file_that_no_project_compiles() => Fails(
         BuildWith(("Misc/Stray.cs", "namespace Shop.Misc;\n\npublic sealed class Stray { }\n")),
-        "VSA0004", "Misc/Stray.cs");
+        "VSA0006", "Misc/Stray.cs");
 
     [Test]
     public void VSA1003_a_public_helper_in_a_contract_file() => Fails(

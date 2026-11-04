@@ -6,4 +6,10 @@
     <IsPackable>false</IsPackable>
     <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'framework'))</VsaFrameworkSourceDir>
   </PropertyGroup>
+  <!-- This repository has one global.json and more than one app. Each folder here is one app, so it is the app root of its projects.
+       A consumer app has its own global.json, so it does not set VsaAppRoot. -->
+  <PropertyGroup>
+    <_VsaDevApp>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)', '$(MSBuildProjectDirectory)').Replace('\', '/'))/</_VsaDevApp>
+    <VsaAppRoot>$(MSBuildThisFileDirectory)$(_VsaDevApp.Substring(0, $(_VsaDevApp.IndexOf('/'))))/</VsaAppRoot>
+  </PropertyGroup>
 </Project>

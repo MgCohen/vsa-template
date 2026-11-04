@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Tests.Shared;
 using VSA.Cli;
+using VSA.Cli.Commands;
 using VSA.Cli.Scaffolding;
 
 namespace Cli.Tests;
@@ -108,6 +109,23 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
         Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("builder.AddVsa();"));
+    }
+
+    [Test]
+    public void NewAppGetsTheVsaPackagesFromGitHubByDefault() {
+        var config = NewAppCommand.NugetConfig([]);
+
+        Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{NewAppCommand.GitHubFeed}\" />"));
+        Assert.That(config, Does.Contain("<add key=\"ClearTextPassword\" value=\"%GITHUB_TOKEN%\" />"));
+    }
+
+    [Test]
+    public void ASourceReplacesTheGitHubFeed() {
+        var config = NewAppCommand.NugetConfig(["feed"]);
+
+        Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{Path.GetFullPath("feed")}\" />"));
+        Assert.That(config, Does.Not.Contain(NewAppCommand.GitHubFeed));
+        Assert.That(config, Does.Not.Contain("packageSourceCredentials"));
     }
 
     [Test]

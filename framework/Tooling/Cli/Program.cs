@@ -24,7 +24,7 @@ static int Write(string text) {
 partial class Program {
     const string Usage = """
         Usage:
-          vsa new app <Name> [--source <feed>]   Makes a new app in the folder <Name>. Each --source adds a package feed.
+          vsa new app <Name> [--source <feed>]   Makes a new app in the folder <Name>. Each --source replaces the GitHub feed of the VSA packages.
           vsa add module <Name>                  Adds a module with all layers and a starter page.
           vsa add request <Name> -m <Module>     Adds a request, its response and its handler.
           vsa doctor                             Makes sure that the tool, VSA.Sdk and the packages have one version.

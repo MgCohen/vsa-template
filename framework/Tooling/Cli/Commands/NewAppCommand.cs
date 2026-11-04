@@ -9,7 +9,7 @@ static class NewAppCommand {
     // The .NET SDK of a new app. VSA.Sdk targets net10.0.
     const string DotnetSdk = "10.0.100";
 
-    // sources: extra package feeds for nuget.config, for example a local folder with the VSA packages.
+    // sources: the package feeds of the VSA packages for nuget.config, for example a local folder. Default: the GitHub feed.
     public static int Run(string name, IReadOnlyList<string> sources) {
         Names.Check(name, "app");
         var root = Path.GetFullPath(name);
@@ -67,7 +67,31 @@ static class NewAppCommand {
 
         """;
 
-    static string NugetConfig(IReadOnlyList<string> sources) {
+    // The feed of the published VSA packages. GitHub Packages needs a token also for public packages:
+    // the GITHUB_TOKEN of a workflow, or `gh auth token` with the read:packages scope on a dev machine.
+    internal const string GitHubFeed = "https://nuget.pkg.github.com/MgCohen/index.json";
+
+    // With no sources, the VSA packages come from GitHubFeed. Each source replaces it, for example a local folder.
+    internal static string NugetConfig(IReadOnlyList<string> sources) {
+        if (sources.Count == 0) {
+            return $"""
+                <?xml version="1.0" encoding="utf-8"?>
+                <configuration>
+                  <packageSources>
+                    <clear />
+                    <add key="vsa" value="{GitHubFeed}" />
+                    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+                  </packageSources>
+                  <packageSourceCredentials>
+                    <vsa>
+                      <add key="Username" value="vsa" />
+                      <add key="ClearTextPassword" value="%GITHUB_TOKEN%" />
+                    </vsa>
+                  </packageSourceCredentials>
+                </configuration>
+
+                """;
+        }
         var local = string.Concat(sources.Select((source, i) =>
             $"    <add key=\"vsa{(i == 0 ? "" : i + 1)}\" value=\"{SecurityElement.Escape(Path.GetFullPath(source))}\" />\n"));
         return $"""

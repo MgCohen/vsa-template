@@ -3,5 +3,7 @@
   <Import Project="$(MSBuildThisFileDirectory)../../../../samples/Directory.Build.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- The templates are one app. The tool writes a global.json in the root of a new app, so a new app does not set this. -->
+    <VsaAppRoot>$(MSBuildThisFileDirectory)</VsaAppRoot>
   </PropertyGroup>
 </Project>

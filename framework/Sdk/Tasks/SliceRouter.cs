@@ -14,7 +14,7 @@ public sealed class SliceSource(string path, string text) {
     public string Text { get; } = text;
 }
 
-// One routing error. MSBuild reports it as VSA0003 at the file.
+// One routing error. MSBuild reports it as VSA0005 at the file.
 public sealed class SliceError(string file, string message) {
     public string File { get; } = file;
     public string Message { get; } = message;
@@ -34,6 +34,9 @@ public sealed class SliceRouting {
 //   other files of a slice                 Handlers/Requests (RoutedHandler) or Handlers/Events (IntegrationEventHandler)
 // The router runs before the compile, so it has no semantic model. It reads the Roslyn syntax tree and matches types by
 // their simple names: first in the same slice, then in Slices/Shared/. The compiler and VSA1003 check the result.
+// A type can inherit a marker through other types, for example DealDamage : Message : IRequest<X>. The router follows
+// the base names through the slice files and the known files (the slice files of the Shared modules), to any depth.
+// In a Shared module, a type in Slices/Shared/ that no contract uses goes to Contracts/Requests: it is a base for modules.
 public static class SliceRouter {
     public const string ContractsRequests = "Contracts/Requests";
     public const string ContractsEvents = "Contracts/Events";
@@ -45,15 +48,19 @@ public static class SliceRouter {
 
     enum Kind { Other, Request, Response, Event, RequestHandler, EventHandler }
 
-    sealed class Declaration(string name, Kind kind, HashSet<string> uses) {
+    sealed class Declaration(string name, List<string> bases, HashSet<string> uses) {
         public string Name { get; } = name;
-        public Kind Kind { get; } = kind;
+        public List<string> Bases { get; } = bases;
+        public Kind Kind { get; set; }
         public HashSet<string> Uses { get; } = uses;
         public string File { get; set; } = "";
         public string Slice { get; set; } = "";
     }
 
-    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources) {
+    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources) => Route(slicesDir, sources, [], isShared: false);
+
+    // known: files that are not routed, but whose types can be bases (the slice files of the Shared modules).
+    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources, IEnumerable<SliceSource> known, bool isShared) {
         var routing = new SliceRouting();
         var root = Path.GetFullPath(slicesDir);
         var declarations = new List<Declaration>();
@@ -73,6 +80,11 @@ public static class SliceRouter {
                 declaration.Slice = slice;
                 declarations.Add(declaration);
             }
+        }
+        var bases = declarations.Concat(known.SelectMany(k => Scan(k.Text))).GroupBy(d => d.Name)
+            .ToDictionary(g => g.Key, g => g.SelectMany(d => d.Bases).Distinct().ToList(), StringComparer.Ordinal);
+        foreach (var d in declarations) {
+            d.Kind = KindOf(d.Bases, bases);
         }
         var byFile = declarations.GroupBy(d => d.File).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
         var byName = declarations.GroupBy(d => d.Name).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
@@ -114,6 +126,12 @@ public static class SliceRouter {
         foreach (var slice in sliceOf.GroupBy(p => p.Value, p => p.Key)) {
             var open = slice.Where(f => !routing.Layers.ContainsKey(f)).OrderBy(f => f, StringComparer.Ordinal).ToList();
             if (open.Count == 0) {
+                continue;
+            }
+            if (slice.Key == Shared && isShared) {
+                foreach (var f in open) {
+                    routing.Layers[f] = ContractsRequests;
+                }
                 continue;
             }
             if (slice.Key == Shared) {
@@ -193,17 +211,35 @@ public static class SliceRouter {
             var uses = new HashSet<string>(type.DescendantNodes().OfType<SimpleNameSyntax>()
                 .Where(n => SyntaxFacts.IsInTypeOnlyContext(n))
                 .Select(n => n.Identifier.ValueText), StringComparer.Ordinal);
-            yield return new Declaration(type.Identifier.ValueText, KindOf(bases), uses);
+            yield return new Declaration(type.Identifier.ValueText, bases, uses);
         }
     }
 
-    static Kind KindOf(List<string> bases) =>
-        bases.Contains("RoutedHandler") ? Kind.RequestHandler
-        : bases.Contains("IntegrationEventHandler") ? Kind.EventHandler
-        : bases.Contains("IRequest") ? Kind.Request
-        : bases.Contains("IResponse") ? Kind.Response
-        : bases.Contains("IntegrationEvent") ? Kind.Event
-        : Kind.Other;
+    // The kind of a type from its base names. A base that is not a marker counts with its own bases, to any depth.
+    // seen stops a loop, for example A : B and B : A.
+    static Kind KindOf(List<string> names, Dictionary<string, List<string>> bases) {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var all = new List<string>();
+        var queue = new Queue<string>(names);
+        while (queue.Count > 0) {
+            var name = queue.Dequeue();
+            if (!seen.Add(name)) {
+                continue;
+            }
+            all.Add(name);
+            if (bases.TryGetValue(name, out var next)) {
+                foreach (var b in next) {
+                    queue.Enqueue(b);
+                }
+            }
+        }
+        return all.Contains("RoutedHandler") ? Kind.RequestHandler
+            : all.Contains("IntegrationEventHandler") ? Kind.EventHandler
+            : all.Contains("IRequest") ? Kind.Request
+            : all.Contains("IResponse") ? Kind.Response
+            : all.Contains("IntegrationEvent") ? Kind.Event
+            : Kind.Other;
+    }
 
     // VSA.Contracts.Requests.IRequest<X> gives IRequest.
     static string? SimpleName(TypeSyntax type) => type switch {

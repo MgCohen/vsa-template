@@ -80,6 +80,60 @@ public sealed class SliceRouterTests {
         Assert.That(LayerOf(routing, "CreateNote/Notes.cs"), Is.EqualTo("Handlers/Requests"));
     }
 
+    // A Shared module gives base types. The router reads the Shared slice files as known files and follows the base names.
+    static SliceSource Known(string path, string text) => new(Path.GetFullPath(Path.Combine(Slices, "..", "..", "Pipeline", "Slices", path)), text);
+
+    static readonly SliceSource[] PipelineBases = [
+        Known("Messages/Message.cs", "public abstract record Message; public sealed record MessageId(long Value) : IResponse;"),
+        Known("Messages/MessageHandler.cs", "public abstract class MessageHandler<T> : RoutedHandler<T, MessageId> { }"),
+        Known("Messages/MessageEvent.cs", "public abstract record MessageEvent : IntegrationEvent;"),
+    ];
+
+    [Test]
+    public void A_type_gets_its_kind_through_a_Shared_base() {
+        var routing = SliceRouter.Route(Slices, [
+            File("DealDamage/DealDamage.cs", $"public sealed record DealDamage(int Amount) : Message, IRequest<MessageId> {{ {Routed} }}"),
+            File("DealDamage/DealDamageHandler.cs", "sealed class DealDamageHandler : MessageHandler<DealDamage> { }"),
+            File("DealDamage/DamageDealt.cs", "public sealed record DamageDealt : MessageEvent;"),
+        ], PipelineBases, isShared: false);
+
+        Assert.That(routing.Errors, Is.Empty);
+        using var scope = Assert.EnterMultipleScope();
+        Assert.That(LayerOf(routing, "DealDamage/DealDamage.cs"), Is.EqualTo("Contracts/Requests"));
+        Assert.That(LayerOf(routing, "DealDamage/DealDamageHandler.cs"), Is.EqualTo("Handlers/Requests"));
+        Assert.That(LayerOf(routing, "DealDamage/DamageDealt.cs"), Is.EqualTo("Contracts/Events"));
+        Assert.That(routing.Layers.Keys, Has.None.Contains("Pipeline"), "The router does not route the known files.");
+    }
+
+    // Two levels: BigDamageHandler : DamageHandler (own slice) : MessageHandler (Shared) : RoutedHandler.
+    [Test]
+    public void The_router_follows_the_bases_to_any_depth() {
+        var routing = SliceRouter.Route(Slices, [
+            File("Damage/DamageHandler.cs", "abstract class DamageHandler : MessageHandler<Hit> { } sealed class BigDamageHandler : DamageHandler { }"),
+        ], PipelineBases, isShared: false);
+
+        Assert.That(routing.Errors, Is.Empty);
+        Assert.That(LayerOf(routing, "Damage/DamageHandler.cs"), Is.EqualTo("Handlers/Requests"));
+    }
+
+    [Test]
+    public void A_loop_in_the_bases_does_not_stop_the_router() {
+        var routing = Route(CreateNoteRequest, CreateNoteResponse, CreateNoteHandler,
+            File("CreateNote/Loop.cs", "class A : B { } class B : A { }"));
+
+        Assert.That(routing.Errors, Is.Empty);
+        Assert.That(LayerOf(routing, "CreateNote/Loop.cs"), Is.EqualTo("Handlers/Requests"));
+    }
+
+    // In a Shared module, Slices/Shared/ holds bases for the modules: a type that no contract uses goes to Contracts/Requests.
+    [Test]
+    public void In_a_Shared_module_an_unused_type_in_Shared_is_a_contracts_base() {
+        var routing = SliceRouter.Route(Slices, [File("Shared/Id.cs", "public abstract record Id(long Value);")], [], isShared: true);
+
+        Assert.That(routing.Errors, Is.Empty);
+        Assert.That(LayerOf(routing, "Shared/Id.cs"), Is.EqualTo("Contracts/Requests"));
+    }
+
     static IEnumerable<TestCaseData> Errors() {
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse,
             File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RoutedHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Log : IntegrationEventHandler<X> { }") },

@@ -37,6 +37,12 @@ public sealed class VsaToolTests {
         Assert.That(again.Succeeded, Is.False);
         Assert.That(again.Output, Does.Contain("does not write over a file"));
 
+        Directory.CreateDirectory(Path.Combine(app, "Shared", "Pipeline"));
+        var shared = Dotnet.Run(app, env, "vsa", "add", "module", "Pipeline");
+        Assert.That(shared.Succeeded, Is.False);
+        Assert.That(shared.Output, Does.Contain("The Shared module Pipeline exists"));
+        Directory.Delete(Path.Combine(app, "Shared"), recursive: true);
+
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         await RunAndCall(app, ct, async (client, output) => {
             Assert.That(await client.GetStringAsync("/api/billing/status", ct), Does.Contain("\"status\":\"Ready\""));
