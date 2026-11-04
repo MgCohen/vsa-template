@@ -79,6 +79,9 @@ public sealed class ScaffoldingTests {
             ("Modules/SampleModule/Presenters/SampleModulePresenter.cs", Module),
             ("Modules/SampleModule/SampleModule.csproj", Module),
             ("Modules/SampleModule/SampleModuleModule.cs", Module),
+            ("Tests/App.Tests.csproj", App),
+            ("Tests/ArchitectureTests.cs", App),
+            ("Tests/SampleModuleStatusTests.cs", Module),
         ];
 
         Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
@@ -126,6 +129,29 @@ public sealed class ScaffoldingTests {
         Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{Path.GetFullPath("feed")}\" />"));
         Assert.That(config, Does.Not.Contain(NewAppCommand.GitHubFeed));
         Assert.That(config, Does.Not.Contain("packageSourceCredentials"));
+    }
+
+    // A new app has no central package versions, so the test template sets each version. Keep them the same as this repository.
+    [Test]
+    public void TheTestTemplateUsesThePackageVersionsOfTheRepository() {
+        var versions = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Packages.props")).Descendants("PackageVersion")
+            .Where(e => e.Parent!.Attribute("Condition") is null)
+            .ToDictionary(e => (string)e.Attribute("Include")!, e => (string)e.Attribute("Version")!);
+        var project = System.Xml.Linq.XDocument.Load(Repo.Path("framework", "Tooling", "Cli", "Templates", "Tests", "App.Tests.csproj"));
+
+        foreach (var reference in project.Descendants("PackageReference")) {
+            var id = (string)reference.Attribute("Include")!;
+            Assert.That((string?)reference.Attribute("Version"), Is.EqualTo(versions[id]), id);
+        }
+    }
+
+    [Test]
+    public void NewModuleHasAUnitTest() {
+        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "Billing" }, Version);
+        var test = files.Single(f => f.Path == "Tests/BillingStatusTests.cs").Content;
+
+        Assert.That(test, Does.Contain("using Billing.Contracts.Requests.GetStatus;"));
+        Assert.That(test, Does.Contain("new GetStatusResponse(\"Billing\", \"Ready\")"));
     }
 
     [Test]
