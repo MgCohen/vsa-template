@@ -14,7 +14,7 @@ public sealed class Workspace : IDisposable {
 
     public string Root { get; }
 
-    // The copy of the folder. The consumer files are in Root, one level above.
+    // The copy of the folder, the app root, with global.json. The other consumer files are in Root, one level above.
     public string Src => Path.Combine(Root, "src");
 
     public IReadOnlyDictionary<string, string> Env { get; }
@@ -35,7 +35,8 @@ public sealed class Workspace : IDisposable {
     void WriteConsumerFiles() {
         var globalJson = JsonNode.Parse(File.ReadAllText(Repo.Path("global.json")))!;
         globalJson["msbuild-sdks"] = new JsonObject { ["VSA.Sdk"] = LocalFeed.Version };
-        File.WriteAllText(Path.Combine(Root, "global.json"), globalJson.ToJsonString());
+        // In Src, the app root, as in an app that the vsa tool makes: VSA.Sdk finds the app root from global.json.
+        File.WriteAllText(Path.Combine(Src, "global.json"), globalJson.ToJsonString());
 
         // The global packages folder of the user is also a feed, so restore does not download each package again.
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")

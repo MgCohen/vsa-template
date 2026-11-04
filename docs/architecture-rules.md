@@ -18,13 +18,34 @@ The editor and the build run the first group in each consumer project. The secon
 
 | ID | Level | Rule |
 |---|---|---|
-| `VSA0001` | Build | A module project gets its references only from VSA.Sdk. |
+| `VSA0001` | Build | A module project or a Shared module project gets its references only from VSA.Sdk. |
+| `VSA0002` | Build | `VsaUses` is only in a Shared layer, and it names other Shared modules that have that layer. |
+| `VSA0003` | Build | A project in a `Modules` or `Shared` folder is in a root folder of the app root. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
-| `VSA2001` | Architecture | Module projects use only what the layer map permits. |
+| `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
 The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk cannot run C# before compile. `SdkLayerMapTests` fails if the two maps are different.
+
+## Root folders and Shared modules
+
+VSA.Sdk finds the layer of a project from its folder in the app: `<root>/<RootFolder>/<Name>/<Layer>/`. The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Shared`. A project in another folder gets no rules.
+
+A Shared module has the layers of a module. It is for the base types of the app, as `framework/Layers` is the base of each layer:
+
+| From | Gets from VSA.Sdk |
+|---|---|
+| A module layer | The same layer of each Shared module. A module root gets each Shared root |
+| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each Shared module |
+| A Shared layer | The same layer of each Shared module in `<VsaUses>` (names, with `;`). `VSA0002` checks the names |
+| A Shared module | No project of a module |
+
+A Shared module uses another Shared module only if it names it. Two Shared modules that name each other are a cycle, and MSBuild stops the build. A project in a `Modules` or `Shared` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
+
+`VSA2001` checks a Shared module as a base: a module project may use what the map permits of a base, and a Shared project uses no module. The module root records its root folder (`VsaRootFolder`), and `ModuleRoot.IsShared` reads it.
+
+The host configures the Shared modules first, then the other modules. In each group the order is by name, not by `VsaUses`. The host gets the Shared roots through the module roots, so an app with no module does not load its Shared modules.
 
 ## Analyzers: `VsaAnalyzer` and `VsaAnalyzerRule`
 

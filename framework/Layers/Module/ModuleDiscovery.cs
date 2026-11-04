@@ -7,7 +7,8 @@ namespace VSA.Module;
 // The host (AddVsa) and the architecture tests use this type, so the two find the same modules.
 public static class ModuleDiscovery {
     // Loads each project library of the context and keeps the module roots (ModuleRoot.IsRoot).
-    // The order is by name, so startup is the same each time. The default context is DependencyContext.Default.
+    // The Shared modules are first, because the other modules use them. Then the order is by name, so startup is
+    // the same each time. The default context is DependencyContext.Default.
     public static IReadOnlyList<ModuleRoot> FindRoots(DependencyContext? context = null) {
         context ??= DependencyContext.Default
             ?? throw new InvalidOperationException("The app has no deps.json, so the modules cannot be found. Give the modules by hand.");
@@ -16,7 +17,8 @@ public static class ModuleDiscovery {
             .Select(library => Assembly.Load(new AssemblyName(library.Name)))
             .Where(ModuleRoot.IsRoot)
             .Select(ModuleRoot.Of)
-            .OrderBy(root => root.Name, StringComparer.Ordinal)];
+            .OrderBy(root => !root.IsShared)
+            .ThenBy(root => root.Name, StringComparer.Ordinal)];
     }
 
     // Creates the one concrete Module class of each root, in the order of the roots.
