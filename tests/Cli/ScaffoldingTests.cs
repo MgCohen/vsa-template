@@ -129,6 +129,11 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
+    public void NewAppIgnoresTheBuildFoldersOfTheLayerProjects() {
+        Assert.That(NewAppCommand.GitIgnore.Split('\n', StringSplitOptions.TrimEntries), Does.Contain("bin~/").And.Contain("obj~/"));
+    }
+
+    [Test]
     public void NewAppGetsTheVsaPackagesFromGitHubByDefault() {
         var config = NewAppCommand.NugetConfig([]);
 

@@ -21,6 +21,7 @@ Rules for all commands:
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
 - `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
+- `new app` writes a `.gitignore` for the build folders, also `bin~/` and `obj~/` of the layer projects in `Modules/<Module>/Projects/`.
 
 ## Template format A
 
