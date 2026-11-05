@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts.Events;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Presenters;
@@ -24,8 +23,7 @@ public static class VsaHostExtensions {
         services.AddVsaEvents();
         services.AddVsaCommands();
         // The live presenters get each event after its handlers (IPresenterEvent).
-        services.AddSingleton<LivePresenters>();
-        services.AddSingleton<IIntegrationEventObserver>(provider => provider.GetRequiredService<LivePresenters>());
+        services.AddVsaLivePresenters();
         // FastEndpoints needs at least one assembly when auto-discovery is off.
         // An app with no Handlers.Requests layer does not register FastEndpoints and maps no endpoints.
         Assembly[] requests = [.. modules.Select(module => Load(module, "Handlers.Requests")).OfType<Assembly>()];
@@ -59,7 +57,7 @@ public static class VsaHostExtensions {
                 services.AddScoped(service, handler);
             }
             foreach (var presenter in Concrete(module, "Presenters").Where(t => t.IsSubclassOf(typeof(Presenter)))) {
-                services.AddScoped(presenter);
+                services.AddVsaPresenter(presenter);
             }
             module.Configure(new VSA.Module.ModuleBuilder(module.Name, services, builder.Configuration));
         }
