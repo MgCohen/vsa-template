@@ -120,6 +120,25 @@
     </VsaRouteSliceFiles>
   </Target>
 
+  <!-- EF Core writes the files in Infrastructure/Migrations/, so they are generated code: the style rules do not check them.
+       EF does not mark each file as generated, so a global config in obj/ marks each one (generated_code = true). -->
+  <Target Name="_VsaGeneratedMigrations" BeforeTargets="CoreCompile" DependsOnTargets="_VsaMigrationConfig" Condition="'$(VsaLayer)' == 'Infrastructure'">
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_VsaMigrationConfig)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_VsaMigrationConfig" Condition="'$(VsaLayer)' == 'Infrastructure'">
+    <PropertyGroup>
+      <_VsaMigrationConfig>$(IntermediateOutputPath)VSA.Migrations.globalconfig</_VsaMigrationConfig>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VsaMigration Include="@(Compile->'%(FullPath)')" Condition="$([System.String]::Copy('%(Compile.FullPath)').Replace('\', '/').Contains('/Infrastructure/Migrations/'))" />
+      <_VsaMigrationLine Include="is_global = true" />
+      <_VsaMigrationLine Include="@(_VsaMigration->'[%(FullPath)]%0Agenerated_code = true'->Replace('\', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_VsaMigrationConfig)" Lines="@(_VsaMigrationLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
   <!-- The analyzers read the root folder: VSA1003 does not check a Shared module. -->
   <ItemGroup Condition="'$(VsaLayer)' != ''">
     <CompilerVisibleProperty Include="VsaRootFolder" />

@@ -19,6 +19,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- The formatting rules are warnings while the team examines them (VSA.globalconfig). -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IDE0055;IDE0011;IDE0161;IDE2000;IDE0007;IDE0040;VSA1008;VSA1009;VSA1010;VSA1011;VSA1012</WarningsNotAsErrors>
   </PropertyGroup>
 
   <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from VSA.Analyzers. -->

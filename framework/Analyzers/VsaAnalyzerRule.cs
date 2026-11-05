@@ -26,16 +26,3 @@ public abstract class VsaAnalyzerRule(DiagnosticDescriptor rule) {
 
     protected Diagnostic Create(Location location, params object[] arguments) => Diagnostic.Create(Rule, location, arguments);
 }
-
-public sealed class VsaOptions(string ruleId, AnalyzerConfigOptions options) {
-    string? Get(string key) =>
-        options.TryGetValue($"vsa.{ruleId}.{key}", out var rule) ? rule
-        : options.TryGetValue($"vsa.{key}", out var global) ? global
-        : null;
-
-    public bool Get(string key, bool fallback) => bool.TryParse(Get(key), out var value) ? value : fallback;
-
-    // A list value: the items have a comma or a semicolon between them. An empty or missing key gives no items.
-    public IReadOnlyList<string> GetList(string key) =>
-        (Get(key) ?? "").Split(',', ';').Select(item => item.Trim()).Where(item => item.Length > 0).ToArray();
-}
