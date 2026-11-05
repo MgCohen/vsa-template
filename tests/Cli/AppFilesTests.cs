@@ -4,7 +4,7 @@ using VSA.Cli.Commands;
 
 namespace Cli.Tests;
 
-// The commands that read the files of an app: doctor and the module lookup of add request. Each test writes a small app.
+// The commands that read the files of an app: doctor, the module lookup of add request, and the projects of add command. Each test writes a small app.
 public sealed class AppFilesTests {
     static readonly string V = ToolVersion.Current;
     string root = "";
@@ -55,6 +55,21 @@ public sealed class AppFilesTests {
 
         Assert.That(AddRequestCommand.Module(root, "billing"), Is.EqualTo("Billing"));
         Assert.That(() => AddRequestCommand.Module(root, "Shipping"), Throws.TypeOf<VsaException>().With.Message.Contain("does not exist"));
+    }
+
+    [Test]
+    public void AddCommandWritesTheCommandProjectsOnlyIfTheModuleHasNone() {
+        Write("Modules/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
+
+        var first = AddCommandCommand.Files(root, "ChangeLimit", "Billing").Select(f => f.Path).ToList();
+        Write("Modules/Billing/Projects/Billing.Contracts.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Modules/Billing/Projects/Billing.Handlers.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
+        var second = AddCommandCommand.Files(root, "CloseLimit", "Billing").Select(f => f.Path).ToList();
+
+        Assert.That(first, Does.Contain("Modules/Billing/Projects/Billing.Contracts.Commands.csproj"));
+        Assert.That(first, Does.Contain("Modules/Billing/Projects/Billing.Handlers.Commands.csproj"));
+        Assert.That(second, Has.None.EndsWith(".csproj"));
+        Assert.That(second, Has.Count.EqualTo(3));
     }
 
     void Write(string path, string content) {
