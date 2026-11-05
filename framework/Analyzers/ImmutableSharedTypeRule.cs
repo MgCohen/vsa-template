@@ -5,7 +5,7 @@ namespace VSA.Analyzers;
 
 // VSA1004: the types of a <Module>.Domain.Shared project are immutable. Other modules read these values,
 // so a value does not change after it is made. A property has no set accessor (init is permitted).
-// A field is readonly or const. This rule is a trial (decision D-37).
+// A field is readonly or const. A type has no field event. This rule is a trial (decision D-37).
 public sealed class ImmutableSharedTypeRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1004",
@@ -19,7 +19,7 @@ public sealed class ImmutableSharedTypeRule() : VsaAnalyzerRule(Descriptor) {
         if (!DomainShared.Is(start.Compilation, start.Options)) {
             return;
         }
-        start.RegisterSymbolAction(Check, SymbolKind.Property, SymbolKind.Field);
+        start.RegisterSymbolAction(Check, SymbolKind.Property, SymbolKind.Field, SymbolKind.Event);
     }
 
     void Check(SymbolAnalysisContext context) {
@@ -28,7 +28,12 @@ public sealed class ImmutableSharedTypeRule() : VsaAnalyzerRule(Descriptor) {
             return;
         }
         var (problem, fix) = member switch {
+            // A positional record struct that is not readonly gives each parameter a set accessor.
+            IPropertySymbol { SetMethod: { IsInitOnly: false }, ContainingType: { IsRecord: true, IsValueType: true, IsReadOnly: false } } property
+                when property.Locations[0].SourceTree?.GetRoot().FindNode(property.Locations[0].SourceSpan) is Microsoft.CodeAnalysis.CSharp.Syntax.ParameterSyntax =>
+                ("a property of a record struct that is not readonly", "Make it a readonly record struct"),
             IPropertySymbol { SetMethod: { IsInitOnly: false } } => ("a property with a set accessor", "Use init in place of set"),
+            IEventSymbol { AddMethod.IsImplicitlyDeclared: true } => ("a field event", "Remove the event: a Domain.Shared type holds only data"),
             IFieldSymbol { IsReadOnly: false, IsConst: false } => ("a field that is not readonly", "Make the field readonly"),
             _ => (null, null),
         };

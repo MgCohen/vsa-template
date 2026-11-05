@@ -36,6 +36,16 @@ public sealed class ImmutableSharedTypeRuleTests {
         public sealed class CardId { public static int {|#0:Count|}; }
         """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "CardId", "Count", "a field that is not readonly", "Make the field readonly"));
 
+    [Test]
+    public Task Record_struct_that_is_not_readonly_fails() => Analyzer.VerifyIn(Shared.Assembly, """
+        public record struct Slot(int {|#0:Index|});
+        """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Slot", "Index", "a property of a record struct that is not readonly", "Make it a readonly record struct"));
+
+    [Test]
+    public Task Field_event_fails() => Analyzer.VerifyIn(Shared.Assembly, """
+        public sealed class Card { public event Action? {|#0:Changed|}; }
+        """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Card", "Changed", "a field event", "Remove the event: a Domain.Shared type holds only data"));
+
     // A type outside a Domain.Shared project is not checked.
     [Test]
     public Task Type_in_another_project_passes() => Analyzer.VerifyIn("Cards.Domain", """

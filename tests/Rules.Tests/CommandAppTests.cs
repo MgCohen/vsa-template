@@ -88,6 +88,12 @@ public sealed class SdkCommandTests {
         Assert.That(Fails(Root("Cards"), "_VsaCheckModuleUses", $"-p:VsaModuleUses={name}"),
             Does.Contain("VSA0007").And.Contain("are not other modules with a Domain.Shared project"));
 
+    // The root gets the list from MSBuild, and the layer projects read the text of the file. A value from elsewhere is an error.
+    [Test]
+    public void A_VsaModuleUses_value_that_is_not_the_text_of_the_root_fails() =>
+        Assert.That(Fails(Root("Cards"), "_VsaCheckModuleUses", "-p:VsaModuleUses=Resources%3BResources"),
+            Does.Contain("VSA0007").And.Contain("but its file has the text 'Resources'"));
+
     // A global property is also set in each layer project, as if the layer project set it.
     [Test]
     public void VsaModuleUses_in_a_layer_project_fails() =>

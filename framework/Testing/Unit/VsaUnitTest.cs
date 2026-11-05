@@ -86,16 +86,10 @@ public abstract class VsaUnitTest {
     // The handler is in the Handlers.Commands project of the same module: Cards.Contracts.Commands -> Cards.Handlers.Commands.
     // A handler that sends other commands gets ICommandSender from the services: add a mock of it in Configure.
     protected Task<TResult> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
+        ArgumentNullException.ThrowIfNull(command);
         var service = typeof(CommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
-        var name = command.GetType().Assembly.GetName().Name!;
-        var handlers = Assembly.Load(name.Replace(".Contracts.Commands", ".Handlers.Commands", StringComparison.Ordinal));
-        var found = handlers.GetTypes().Where(t => !t.IsAbstract && service.IsAssignableFrom(t)).ToList();
-        if (found.Count != 1) {
-            throw new InvalidOperationException($"{command.GetType().FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
-        }
-        var instance = ActivatorUtilities.CreateInstance(Provider, found[0]);
-        var method = service.GetMethod("HandleAsync")!;
-        return (Task<TResult>)method.Invoke(instance, [command, ct])!;
+        var instance = ActivatorUtilities.CreateInstance(Provider, CommandHandlerOf(command.GetType(), service));
+        return (Task<TResult>)service.GetMethod("HandleAsync")!.Invoke(instance, [command, ct])!;
     }
 
     ServiceProvider Build() {
@@ -110,6 +104,14 @@ public abstract class VsaUnitTest {
         var found = handlers.GetTypes().Where(t => !t.IsAbstract && HandledRequest(t) == request).ToList();
         return found.Count == 1 ? found[0]
             : throw new InvalidOperationException($"{request.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
+    }
+
+    static Type CommandHandlerOf(Type command, Type service) {
+        var name = command.Assembly.GetName().Name!;
+        var handlers = Assembly.Load(name.Replace(".Contracts.Commands", ".Handlers.Commands", StringComparison.Ordinal));
+        var found = handlers.GetTypes().Where(t => !t.IsAbstract && service.IsAssignableFrom(t)).ToList();
+        return found.Count == 1 ? found[0]
+            : throw new InvalidOperationException($"{command.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
     }
 
     static Type? HandledRequest(Type type) {

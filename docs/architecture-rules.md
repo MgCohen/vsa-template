@@ -30,7 +30,7 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
 | `VSA1004` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
 | `VSA1005` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
-| `VSA1006` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (default: ``System.IEquatable`1``, ``System.IComparable`1``). Trial (D-37). |
+| `VSA1006` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (default: empty, because an interface such as `IComparable<T>` needs a method that `VSA1005` does not permit). Trial (D-37). |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 

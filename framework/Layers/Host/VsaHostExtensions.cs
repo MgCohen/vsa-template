@@ -38,8 +38,12 @@ public static class VsaHostExtensions {
             foreach (var handler in Concrete(module, "Handlers.Events")) {
                 services.AddScoped(BaseOf(handler, typeof(IntegrationEventHandler<>)), handler);
             }
-            foreach (var handler in Concrete(module, "Handlers.Commands").Where(t => HasBase(t, typeof(VSA.Handlers.Commands.CommandHandler<,>)))) {
-                var service = BaseOf(handler, typeof(VSA.Handlers.Commands.CommandHandler<,>));
+            foreach (var handler in Concrete(module, "Handlers.Commands")) {
+                // A slice can have helper classes: only a CommandHandler is registered.
+                // The full name: FastEndpoints also has a CommandHandler type.
+                if (FindBase(handler, typeof(VSA.Handlers.Commands.CommandHandler<,>)) is not { } service) {
+                    continue;
+                }
                 if (commandHandlers.TryGetValue(service, out var other)) {
                     throw new InvalidOperationException(
                         $"Command {service.GetGenericArguments()[0].FullName} has two handlers: {other.FullName} and {handler.FullName}. A command has one handler.");
@@ -77,23 +81,17 @@ public static class VsaHostExtensions {
         (Load(module, layer)?.GetTypes() ?? [])
             .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)));
 
-    static bool HasBase(Type type, Type openBase) {
-        for (var b = type.BaseType; b is not null; b = b.BaseType) {
-            if (b.IsGenericType && b.GetGenericTypeDefinition() == openBase) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static Type BaseOf(Type type, Type openBase) {
+    static Type? FindBase(Type type, Type openBase) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {
             if (b.IsGenericType && b.GetGenericTypeDefinition() == openBase) {
                 return b;
             }
         }
-        throw new InvalidOperationException($"{type.FullName} must inherit {openBase.Name}.");
+        return null;
     }
+
+    static Type BaseOf(Type type, Type openBase) =>
+        FindBase(type, openBase) ?? throw new InvalidOperationException($"{type.FullName} must inherit {openBase.Name}.");
 
     // The first address of this server, with a wildcard host replaced by localhost.
     static Uri LoopbackAddress(IServiceProvider provider) {
