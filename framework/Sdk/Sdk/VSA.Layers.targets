@@ -98,13 +98,13 @@
        so a rebuild of the task never finds the DLL locked by a running MSBuild node. -->
   <PropertyGroup>
     <_VsaTasksAssembly Condition="'$(VsaFrameworkSourceDir)' == ''">$(MSBuildThisFileDirectory)tasks/VSA.Sdk.Tasks.dll</_VsaTasksAssembly>
-    <_VsaTasksAssembly Condition="'$(VsaFrameworkSourceDir)' != ''">$(VsaFrameworkSourceDir)Sdk/Tasks/bin/$(Configuration)/netstandard2.0/VSA.Sdk.Tasks.dll</_VsaTasksAssembly>
+    <_VsaTasksAssembly Condition="'$(VsaFrameworkSourceDir)' != ''">$(VsaFrameworkSourceDir)Sdk/Tasks/bin/any/netstandard2.0/VSA.Sdk.Tasks.dll</_VsaTasksAssembly>
   </PropertyGroup>
   <UsingTask TaskName="VsaRouteSliceFiles" AssemblyFile="$(_VsaTasksAssembly)" Condition="'$(VsaFrameworkSourceDir)' == ''" />
   <UsingTask TaskName="VsaRouteSliceFiles" AssemblyFile="$(_VsaTasksAssembly)" TaskFactory="TaskHostFactory" Condition="'$(VsaFrameworkSourceDir)' != ''" />
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != '' and '$(_VsaRouted)' == 'true'">
     <ProjectReference Include="$(VsaFrameworkSourceDir)Sdk/Tasks/VSA.Sdk.Tasks.csproj" VsaRule="true" ReferenceOutputAssembly="false" Private="false"
-                      SetTargetFramework="TargetFramework=netstandard2.0" SkipGetTargetFrameworkProperties="true" />
+                      UndefineProperties="TargetFramework" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
   <!-- BeforeCompile is the extension point of CompileDependsOn. The files are then in @(Compile) for the build,
        the design-time build of the IDE, the analyzer config and the input cache of CoreCompile. -->

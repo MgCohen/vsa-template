@@ -1,0 +1,25 @@
+# Runs the same build and tests as Publish on each pull request and on main, so a release does not find a broken build.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Test
+        run: |
+          dotnet run solution.cs
+          dotnet test VSA.slnx -c Release

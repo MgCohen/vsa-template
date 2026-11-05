@@ -7,6 +7,10 @@
     <!-- MSBuild loads a task with its dependencies from the folder of the task DLL. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- One output folder for all configurations. In a solution build, MSBuild builds the projects that are not in the
+         solution (the test fixtures) as Debug, and this project as the solution configuration. The source-mode path
+         in VSA.Layers.targets must not depend on the configuration of the project that loads the task. -->
+    <OutputPath>bin/any/</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <!-- MSBuild gives these assemblies at run time, so they are not copied. -->
