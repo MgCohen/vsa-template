@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -12,6 +13,8 @@ namespace VSA.Analyzers;
 // The rule compares the original definition, so IEquatable<Money> matches System.IEquatable`1.
 // Option: vsa.VSA1007.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
 public sealed class SharedTypeBaseRule() : VsaAnalyzerRule(Descriptor) {
+    public const string AllowedBasesKey = "allowed_bases";
+
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1007",
         "Domain.Shared types have only permitted bases",
@@ -19,6 +22,8 @@ public sealed class SharedTypeBaseRule() : VsaAnalyzerRule(Descriptor) {
         "VSA",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public override IReadOnlyList<VsaOption> RequiredOptions { get; } = [VsaOption.List(AllowedBasesKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (!DomainShared.Is(start.Compilation, start.Options)) {
@@ -33,7 +38,9 @@ public sealed class SharedTypeBaseRule() : VsaAnalyzerRule(Descriptor) {
             || context.SemanticModel.GetDeclaredSymbol(declaration, context.CancellationToken) is not { } type) {
             return;
         }
-        var allowed = Options(context.Options, context.Node.SyntaxTree).GetList("allowed_bases");
+        if (Options(context.Options, context.Node.SyntaxTree).List(AllowedBasesKey) is not { } allowed) {
+            return;
+        }
         foreach (var baseSyntax in ((BaseListSyntax)context.Node).Types) {
             if (context.SemanticModel.GetTypeInfo(baseSyntax.Type, context.CancellationToken).Type is not INamedTypeSymbol baseType
                 || baseType.TypeKind == TypeKind.Error || IsPermitted(baseType, context.Compilation)) {

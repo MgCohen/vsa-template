@@ -14,24 +14,21 @@
   <Import Project="$(MSBuildThisFileDirectory)VSA.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)VSA.Version.props')" />
 
   <PropertyGroup>
+    <UsingVsaSdk>true</UsingVsaSdk>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- The formatting rules are warnings while the team examines them (VSA.globalconfig). -->
-    <WarningsNotAsErrors>$(WarningsNotAsErrors);IDE0055;IDE0011;IDE0161;IDE2000;IDE0007;IDE0040;VSA1008;VSA1009;VSA1010;VSA1011;VSA1012</WarningsNotAsErrors>
   </PropertyGroup>
 
   <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from VSA.Analyzers. -->
   <PropertyGroup>
     <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
-    <EnforceCodeStyleInBuild Condition="'$(EnforceCodeStyleInBuild)' == ''">true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
     <!-- CS1591: the documentation file is for the code style rules only. Public members do not need XML comments. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
-  <ItemGroup>
-    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)VSA.globalconfig" />
-  </ItemGroup>
+  <!-- In the VSA repository, the root Directory.Build.props imports the rules first. -->
+  <Import Project="$(MSBuildThisFileDirectory)VSA.Rules.props" Condition="'$(_VsaRulesImported)' != 'true'" />
 </Project>

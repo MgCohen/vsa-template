@@ -5,10 +5,10 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace VSA.Analyzers;
 
-// VSA1009: a method has at most 40 lines, from its first line to its last line. Comments and blank lines count.
+// VSA1009: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
 // The rule checks methods, constructors, finalizers, operators, accessors and local functions.
-// Option: vsa.VSA1009.max = 40.
-public sealed class MethodLengthRule() : LimitRule(Descriptor, 40) {
+// Option: vsa.VSA1009.max, in VSA.Rules.globalconfig.
+public sealed class MethodLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1009",
         "A method has at most the maximum number of lines",
@@ -26,7 +26,9 @@ public sealed class MethodLengthRule() : LimitRule(Descriptor, 40) {
 
     void Check(SyntaxNodeAnalysisContext context) {
         var node = context.Node;
-        var max = Max(context.Options, node.SyntaxTree);
+        if (Max(context.Options, node.SyntaxTree) is not { } max) {
+            return;
+        }
         var span = node.GetLocation().GetLineSpan();
         var lines = span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
         if (lines <= max) {

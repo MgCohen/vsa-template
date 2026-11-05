@@ -1,0 +1,14 @@
+<Project>
+  <!-- The setup of the editor rules and the VSA rules. Sdk.props imports it for each VSA.Sdk project.
+       The root Directory.Build.props of the VSA repository imports it for the framework and its tests, so they follow the same rules. -->
+  <PropertyGroup>
+    <_VsaRulesImported>true</_VsaRulesImported>
+    <EnforceCodeStyleInBuild Condition="'$(EnforceCodeStyleInBuild)' == ''">true</EnforceCodeStyleInBuild>
+    <!-- The formatting rules are warnings while the team examines them. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IDE0055;IDE0011;IDE0161;IDE2000;IDE0007;IDE0040;VSA1008;VSA1009;VSA1010;VSA1011;VSA1012</WarningsNotAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- VSA.globalconfig: the built-in .NET rules. VSA.Rules.globalconfig: the values of the VSA rules. -->
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)VSA.globalconfig;$(MSBuildThisFileDirectory)VSA.Rules.globalconfig" />
+  </ItemGroup>
+</Project>

@@ -1,15 +1,9 @@
-# The analyzer settings of every VSA.Sdk project. A consumer can change a rule in its own .editorconfig.
+# The built-in .NET rules of every VSA.Sdk project: the editor and code style rules. A consumer can change a rule in its own .editorconfig.
+# The values of the VSA rules (VSA1xxx) are in VSA.Rules.globalconfig.
 # The built-in rules come from AnalysisLevel = latest-recommended in Sdk.props.
 # Set a severity with the standard key, for example: dotnet_diagnostic.CA1822.severity = none
 is_global = true
 global_level = -1
-
-# Options of the custom VSA analyzers: vsa.<key> for all rules, vsa.<rule ID>.<key> for one rule.
-vsa.VSA1001.check_responses = true
-# The bases that a Domain.Shared type can use, apart from the Domain.Shared projects. Write a comma between the items.
-# The default is empty: an interface such as IComparable<T> needs a method, and VSA1006 does not permit methods.
-# An app adds its own bases, for example: vsa.VSA1007.allowed_bases = Card.TypeKeys.TypeKey, Card.Entities.IComponent
-vsa.VSA1007.allowed_bases =
 
 # CA1716 does not check namespaces: the published domain of a module is <Module>.Domain.Shared, and "Shared" is a VB keyword.
 dotnet_code_quality.CA1716.analyzed_symbol_kinds = NamedType, Method, Property, Event, Parameter
@@ -38,15 +32,3 @@ dotnet_diagnostic.IDE0007.severity = warning
 # No access modifier that is the default, for example no private on a member of a class.
 dotnet_style_require_accessibility_modifiers = omit_if_default
 dotnet_diagnostic.IDE0040.severity = warning
-
-# Formatting: the VSA rules (VSA1008 to VSA1012). These are the defaults of the rules. Change a value here or in .editorconfig.
-# The maximum characters in a line, lines in a method and lines in a file.
-vsa.VSA1008.max = 120
-vsa.VSA1009.max = 40
-vsa.VSA1010.max = 300
-# One top-level type in a file. true: types with the same name can share a file, for example Module and Module<TSettings>.
-vsa.VSA1011.allow_same_name = true
-# The order of the members in a type: by kind, then by access, then static before instance (static_first = true).
-vsa.VSA1012.kind_order = constant, field, constructor, finalizer, property, event, method, nested_type
-vsa.VSA1012.access_order = public, internal, protected_internal, protected, private_protected, private
-vsa.VSA1012.static_first = true

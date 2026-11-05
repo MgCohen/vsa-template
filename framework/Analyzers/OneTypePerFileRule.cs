@@ -8,7 +8,7 @@ namespace VSA.Analyzers;
 
 // VSA1011: a file has one top-level type. Nested types are not top-level types.
 // The diagnostic marks each top-level type after the first.
-// Option: vsa.VSA1011.allow_same_name = true. Then types with the name of the first type can share its file,
+// Option: vsa.VSA1011.allow_same_name (in VSA.Rules.globalconfig). If true, types with the name of the first type can share its file,
 // for example Module and Module<TSettings>, which have a different number of type parameters.
 public sealed class OneTypePerFileRule() : VsaAnalyzerRule(Descriptor) {
     public const string AllowSameNameKey = "allow_same_name";
@@ -21,7 +21,9 @@ public sealed class OneTypePerFileRule() : VsaAnalyzerRule(Descriptor) {
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    public static bool DefaultAllowSameName => true;
+    public override bool IsModuleRule => false;
+
+    public override IReadOnlyList<VsaOption> RequiredOptions { get; } = [VsaOption.Bool(AllowSameNameKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(Check);
@@ -31,7 +33,9 @@ public sealed class OneTypePerFileRule() : VsaAnalyzerRule(Descriptor) {
         if (types.Count < 2) {
             return;
         }
-        var allowSameName = Options(context.Options, context.Tree).Get(AllowSameNameKey, DefaultAllowSameName);
+        if (Options(context.Options, context.Tree).Bool(AllowSameNameKey) is not { } allowSameName) {
+            return;
+        }
         var first = Identifier(types[0]).Text;
         foreach (var type in types.Skip(1).Where(t => !allowSameName || Identifier(t).Text != first)) {
             var identifier = Identifier(type);

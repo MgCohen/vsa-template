@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace VSA.Analyzers;
 
-// VSA1008: a line has at most 120 characters. The diagnostic marks the characters after the limit.
-// Option: vsa.VSA1008.max = 120.
-public sealed class LineLengthRule() : LimitRule(Descriptor, 120) {
+// VSA1008: a line has at most max characters. The diagnostic marks the characters after the limit.
+// Option: vsa.VSA1008.max, in VSA.Rules.globalconfig.
+public sealed class LineLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1008",
         "A line has at most the maximum number of characters",
@@ -19,7 +19,9 @@ public sealed class LineLengthRule() : LimitRule(Descriptor, 120) {
         start.RegisterSyntaxTreeAction(Check);
 
     void Check(SyntaxTreeAnalysisContext context) {
-        var max = Max(context.Options, context.Tree);
+        if (Max(context.Options, context.Tree) is not { } max) {
+            return;
+        }
         foreach (var line in context.Tree.GetText(context.CancellationToken).Lines) {
             if (line.Span.Length <= max) {
                 continue;

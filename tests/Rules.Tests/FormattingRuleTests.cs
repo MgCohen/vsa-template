@@ -17,10 +17,14 @@ public sealed class LineLengthRuleTests {
         class Abc { int valu{|#0:e; }|}
         """, "vsa.VSA1008.max = 20", Analyzer.Diagnostic(Rule, 0, 24, 20));
 
+    // The limit of VSA.Rules.globalconfig applies when the test gives no limit.
     [Test]
-    public Task Default_limit_is_120() => Analyzer.VerifyFormatting(Rule, $$"""
-        class A { string S = "{{new string('x', 120 - 26)}}"; }
-        """, "");
+    public Task Limit_comes_from_the_rules_config() {
+        var max = int.Parse(RulesConfig.Value("vsa.VSA1008.max"));
+        var comment = "// " + new string('x', max - 3);
+        var source = string.Join("\n", "class A { }", comment, comment + "{|#0:x|}");
+        return Analyzer.VerifyFormatting(Rule, source, "", Analyzer.Diagnostic(Rule, 0, max + 1, max));
+    }
 }
 
 public sealed class MethodLengthRuleTests {
@@ -53,10 +57,10 @@ public sealed class MethodLengthRuleTests {
         }
         """, "vsa.VSA1009.max = 2", Analyzer.Diagnostic(Rule, 0, "Constructor A", 3, 2));
 
-    // A global option applies to each rule that reads the key, so vsa.max also sets this limit.
+    // A global key applies to each rule that reads it, if no rule key is set. VSA.Rules.globalconfig sets the rule keys.
     [Test]
     public Task Global_max_option_applies() =>
-        Analyzer.VerifyFormatting(Rule, Method, "vsa.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
+        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, Method, "vsa.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
 }
 
 public sealed class FileLengthRuleTests {
@@ -122,8 +126,8 @@ public sealed class MemberOrderRuleTests {
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Diagnostic(string name, string group, string previous,
         string order = "static before instance") =>
-        Analyzer.Diagnostic(Rule, 0, name, group, previous, string.Join(", ", MemberOrderRule.DefaultKindOrder),
-            string.Join(", ", MemberOrderRule.DefaultAccessOrder), order);
+        Analyzer.Diagnostic(Rule, 0, name, group, previous, RulesConfig.Value("vsa.VSA1012.kind_order"),
+            RulesConfig.Value("vsa.VSA1012.access_order"), order);
 
     [Test]
     public Task Members_in_order_pass() => Analyzer.VerifyFormatting(Rule, """
@@ -194,23 +198,44 @@ public sealed class MemberOrderRuleTests {
         Diagnostic("N", "private method", "private static method", "instance before static"));
 }
 
-// VSA.globalconfig shows each option of the formatting rules. Its values are the defaults in the code of the rules.
-public sealed class FormattingDefaultsTests {
+// VSA1000: each option of a rule has a valid value, else the rule does not run.
+public sealed class RuleOptionTests {
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
+
+    const string LongLine = "class Abc { int value; }";
+
+    static Microsoft.CodeAnalysis.Testing.DiagnosticResult Option(string rule, string key, string kind, string value) =>
+        new Microsoft.CodeAnalysis.Testing.DiagnosticResult(VsaAnalyzer.OptionDescriptor).WithArguments(rule, key, kind, value);
+
     [Test]
-    public void Global_config_has_the_defaults_of_the_rules() {
-        var config = File.ReadAllLines(Repo.Path("framework", "Sdk", "Sdk", "VSA.globalconfig"))
-            .Where(line => line.StartsWith("vsa.", StringComparison.Ordinal))
-            .Select(line => line.Split('=', 2))
-            .ToDictionary(pair => pair[0].Trim(), pair => pair[1].Trim());
-        var defaults = new Dictionary<string, string> {
-            ["vsa.VSA1008.max"] = $"{new LineLengthRule().DefaultMax}",
-            ["vsa.VSA1009.max"] = $"{new MethodLengthRule().DefaultMax}",
-            ["vsa.VSA1010.max"] = $"{new FileLengthRule().DefaultMax}",
-            ["vsa.VSA1011.allow_same_name"] = $"{OneTypePerFileRule.DefaultAllowSameName}".ToLowerInvariant(),
-            ["vsa.VSA1012.kind_order"] = string.Join(", ", MemberOrderRule.DefaultKindOrder),
-            ["vsa.VSA1012.access_order"] = string.Join(", ", MemberOrderRule.DefaultAccessOrder),
-            ["vsa.VSA1012.static_first"] = $"{MemberOrderRule.DefaultStaticFirst}".ToLowerInvariant(),
-        };
-        Assert.That(config, Is.SupersetOf(defaults));
+    public Task Missing_option_fails_and_the_rule_does_not_run() =>
+        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, LongLine, "",
+            Option("VSA1008", "max", "a whole number more than 0", "missing"));
+
+    [Test]
+    public Task Option_that_is_not_valid_fails() =>
+        Analyzer.VerifyFormatting(Rule, LongLine, "vsa.VSA1008.max = many",
+            Option("VSA1008", "max", "a whole number more than 0", "many"));
+
+    [Test]
+    public Task Option_from_the_test_config_is_enough() =>
+        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "vsa.VSA1008.max = 20",
+            Analyzer.Diagnostic(Rule, 0, 24, 20));
+
+    // Each option of each rule is in VSA.Rules.globalconfig, with a valid value.
+    [Test]
+    public void Rules_config_has_each_option() {
+        var missing = VsaAnalyzer.Rules.SelectMany(rule => rule.RequiredOptions
+            .Where(option => !option.IsValid(TryValue($"vsa.{rule.Id}.{option.Key}")))
+            .Select(option => $"vsa.{rule.Id}.{option.Key}"));
+        Assert.That(missing, Is.Empty, RulesConfig.Path);
+    }
+
+    static string? TryValue(string key) {
+        try {
+            return RulesConfig.Value(key);
+        } catch (InvalidOperationException) {
+            return null;
+        }
     }
 }

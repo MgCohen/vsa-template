@@ -2,7 +2,7 @@ using Tests.Shared;
 
 namespace Rules.Tests;
 
-// The formatting rules in a real build from the packed VSA.Sdk: VSA.globalconfig turns them on, and they are warnings.
+// The formatting rules in a real build from the packed VSA.Sdk: VSA.Rules.props turns them on, and they are warnings.
 // The built fixture tests/Fixtures/Built/Formatting has one file in Infrastructure/ for each rule,
 // and a file in Infrastructure/Migrations/ that breaks the rules, but is generated code.
 [NonParallelizable]

@@ -9,10 +9,10 @@ namespace VSA.Analyzers;
 
 // VSA1012: the members of a type are in order: first by kind, then by access, then static before instance.
 // The diagnostic marks each member that comes after a member of a later group. An explicit interface implementation is public.
-// Options (a kind or an access that a list does not name comes after the named ones):
-//   vsa.VSA1012.kind_order   = constant, field, constructor, finalizer, property, event, method, nested_type
-//   vsa.VSA1012.access_order = public, internal, protected_internal, protected, private_protected, private
-//   vsa.VSA1012.static_first = true
+// Options, in VSA.Rules.globalconfig. A kind or an access that a list does not name comes after the named ones.
+//   vsa.VSA1012.kind_order     constant, field, constructor, finalizer, property, event, method, nested_type
+//   vsa.VSA1012.access_order   public, internal, protected_internal, protected, private_protected, private
+//   vsa.VSA1012.static_first   true: static before instance
 public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
     public const string KindOrderKey = "kind_order";
     public const string AccessOrderKey = "access_order";
@@ -26,13 +26,10 @@ public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    public static IReadOnlyList<string> DefaultKindOrder { get; } =
-        ["constant", "field", "constructor", "finalizer", "property", "event", "method", "nested_type"];
+    public override bool IsModuleRule => false;
 
-    public static IReadOnlyList<string> DefaultAccessOrder { get; } =
-        ["public", "internal", "protected_internal", "protected", "private_protected", "private"];
-
-    public static bool DefaultStaticFirst => true;
+    public override IReadOnlyList<VsaOption> RequiredOptions { get; } =
+        [VsaOption.List(KindOrderKey), VsaOption.List(AccessOrderKey), VsaOption.Bool(StaticFirstKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxNodeAction(Check,
@@ -41,7 +38,9 @@ public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
 
     void Check(SyntaxNodeAnalysisContext context) {
         var type = (TypeDeclarationSyntax)context.Node;
-        var order = Order.Read(Options(context.Options, type.SyntaxTree));
+        if (Order.Read(Options(context.Options, type.SyntaxTree)) is not { } order) {
+            return;
+        }
         var inInterface = type is InterfaceDeclarationSyntax;
         Group? latest = null;
         foreach (var member in type.Members) {
@@ -132,10 +131,12 @@ public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
         public IReadOnlyList<string> Accesses { get; } = accesses;
         public bool StaticFirst { get; } = staticFirst;
 
-        public static Order Read(VsaOptions options) => new(
-            List(options, KindOrderKey, DefaultKindOrder),
-            List(options, AccessOrderKey, DefaultAccessOrder),
-            options.Get(StaticFirstKey, DefaultStaticFirst));
+        // Null if a value of this file is not valid.
+        public static Order? Read(VsaOptions options) =>
+            options.List(KindOrderKey) is { } kinds && options.List(AccessOrderKey) is { } accesses
+            && options.Bool(StaticFirstKey) is { } staticFirst
+                ? new Order(kinds, accesses, staticFirst)
+                : null;
 
         public int Compare(Group a, Group b) {
             var kind = Index(Kinds, a.Kind).CompareTo(Index(Kinds, b.Kind));
@@ -147,11 +148,6 @@ public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
                 return access;
             }
             return StaticFirst ? b.IsStatic.CompareTo(a.IsStatic) : a.IsStatic.CompareTo(b.IsStatic);
-        }
-
-        static IReadOnlyList<string> List(VsaOptions options, string key, IReadOnlyList<string> fallback) {
-            var items = options.GetList(key);
-            return items.Count > 0 ? items : fallback;
         }
 
         // A name that the list does not have comes after all names of the list.

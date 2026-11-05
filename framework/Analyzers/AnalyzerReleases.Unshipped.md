@@ -5,6 +5,7 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
+VSA1000 | VSA | Error | VsaAnalyzer, option missing or not valid
 VSA1001 | VSA | Error | SealedRecordRule
 VSA1002 | VSA | Error | EventHandlerRequestRule
 VSA1003 | VSA | Error | ContractTypeRule
