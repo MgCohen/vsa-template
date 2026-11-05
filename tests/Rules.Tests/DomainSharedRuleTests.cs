@@ -2,7 +2,7 @@ using VSA.Analyzers;
 
 namespace Rules.Tests;
 
-// The rules of a Domain.Shared project: VSA1004, VSA1005 and VSA1006. The test code is in Cards.Domain.Shared,
+// The rules of a Domain.Shared project: VSA1005, VSA1006 and VSA1007. The test code is in Cards.Domain.Shared,
 // so all three rules check each type.
 static class Shared {
     public const string Assembly = "Cards.Domain.Shared";
@@ -154,13 +154,13 @@ public sealed class SharedTypeBaseRuleTests {
             public bool Equals(int other) => Value == other;
             public int CompareTo(Rank? other) => 0;
         }
-        """, "vsa.VSA1006.allowed_bases = System.IEquatable`1, System.IComparable`1\ndotnet_diagnostic.VSA1005.severity = none");
+        """, "vsa.VSA1007.allowed_bases = System.IEquatable`1, System.IComparable`1\ndotnet_diagnostic.VSA1006.severity = none");
 
     [Test]
     public Task Other_base_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
         public sealed record Rank(int Value) : {|#1:IEquatable<int>|} { public bool Equals(int other) => Value == other; }
-        """, "vsa.VSA1006.allowed_bases = System.IComparable`1\ndotnet_diagnostic.VSA1005.severity = none",
+        """, "vsa.VSA1007.allowed_bases = System.IComparable`1\ndotnet_diagnostic.VSA1006.severity = none",
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"),
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 1, "Rank", "System.IEquatable<int>", "System.IEquatable`1"));
 
@@ -168,7 +168,7 @@ public sealed class SharedTypeBaseRuleTests {
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
-        """, "vsa.allowed_bases = System.Collections.Generic.List`1\nvsa.VSA1006.allowed_bases = System.IEquatable`1",
+        """, "vsa.allowed_bases = System.Collections.Generic.List`1\nvsa.VSA1007.allowed_bases = System.IEquatable`1",
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"));
 
     [Test]
@@ -185,15 +185,15 @@ public sealed class VsaOptionsTests {
     }
 
     static VsaOptions Of(params (string Key, string Value)[] values) =>
-        new("VSA1006", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
+        new("VSA1007", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>
-        Assert.That(Of(("vsa.VSA1006.allowed_bases", " A`1, B ;C;; ")).GetList("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
+        Assert.That(Of(("vsa.VSA1007.allowed_bases", " A`1, B ;C;; ")).GetList("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
 
     [Test]
     public void Rule_key_wins_over_the_global_key() =>
-        Assert.That(Of(("vsa.allowed_bases", "A"), ("vsa.VSA1006.allowed_bases", "B")).GetList("allowed_bases"), Is.EqualTo(new[] { "B" }));
+        Assert.That(Of(("vsa.allowed_bases", "A"), ("vsa.VSA1007.allowed_bases", "B")).GetList("allowed_bases"), Is.EqualTo(new[] { "B" }));
 
     [Test]
     public void Missing_key_gives_no_items() =>

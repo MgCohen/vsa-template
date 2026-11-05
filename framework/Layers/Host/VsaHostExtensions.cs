@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Contracts.Events;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Presenters;
@@ -22,6 +23,9 @@ public static class VsaHostExtensions {
         services.AddVsaBus(LoopbackAddress);
         services.AddVsaEvents();
         services.AddVsaCommands();
+        // The live presenters get each event after its handlers (IPresenterEvent).
+        services.AddSingleton<LivePresenters>();
+        services.AddSingleton<IIntegrationEventObserver>(provider => provider.GetRequiredService<LivePresenters>());
         // FastEndpoints needs at least one assembly when auto-discovery is off.
         // An app with no Handlers.Requests layer does not register FastEndpoints and maps no endpoints.
         Assembly[] requests = [.. modules.Select(module => Load(module, "Handlers.Requests")).OfType<Assembly>()];
@@ -35,13 +39,16 @@ public static class VsaHostExtensions {
         // A command has one handler in the app. A second handler of the same command stops start-up.
         var commandHandlers = new Dictionary<Type, Type>();
         foreach (var module in modules) {
+            // Only the event handlers: a Handlers.Events project also has the helper types of its slices.
             foreach (var handler in Concrete(module, "Handlers.Events")) {
-                services.AddScoped(BaseOf(handler, typeof(IntegrationEventHandler<>)), handler);
+                if (BaseOf(handler, typeof(IntegrationEventHandler<>)) is { } handled) {
+                    services.AddScoped(handled, handler);
+                }
             }
             foreach (var handler in Concrete(module, "Handlers.Commands")) {
                 // A slice can have helper classes: only a CommandHandler is registered.
                 // The full name: FastEndpoints also has a CommandHandler type.
-                if (FindBase(handler, typeof(VSA.Handlers.Commands.CommandHandler<,>)) is not { } service) {
+                if (BaseOf(handler, typeof(VSA.Handlers.Commands.CommandHandler<,>)) is not { } service) {
                     continue;
                 }
                 if (commandHandlers.TryGetValue(service, out var other)) {
@@ -81,7 +88,8 @@ public static class VsaHostExtensions {
         (Load(module, layer)?.GetTypes() ?? [])
             .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)));
 
-    static Type? FindBase(Type type, Type openBase) {
+    // The closed base of type that is openBase, or null.
+    static Type? BaseOf(Type type, Type openBase) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {
             if (b.IsGenericType && b.GetGenericTypeDefinition() == openBase) {
                 return b;
@@ -89,9 +97,6 @@ public static class VsaHostExtensions {
         }
         return null;
     }
-
-    static Type BaseOf(Type type, Type openBase) =>
-        FindBase(type, openBase) ?? throw new InvalidOperationException($"{type.FullName} must inherit {openBase.Name}.");
 
     // The first address of this server, with a wildcard host replaced by localhost.
     static Uri LoopbackAddress(IServiceProvider provider) {

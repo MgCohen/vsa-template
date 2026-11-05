@@ -56,7 +56,9 @@ public static class Layers {
         .Reference(ContractsEvents, Edge.ModuleOnly)
         .Reference(ContractsCommands, anyModule: true);
 
-    // A presenter hears the events of its own module only, and reads the published domain of the listed modules.
+    // A presenter sees the events of its own module only (IPresenterEvent). A view that shows more than one module
+    // shows the presenter of each module. A presenter reads the published domain of the listed modules.
+    // VSA1004 stops a presenter from publishing events.
     public static readonly Layer Presenters = new Layer("Presenters")
         .Reference(DomainShared, Edge.ModuleOnly, listed: true)
         .Reference(ContractsRequests)

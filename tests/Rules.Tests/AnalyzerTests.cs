@@ -142,6 +142,41 @@ public sealed class EventHandlerRequestRuleTests {
         """);
 }
 
+public sealed class PresenterPublishRuleTests {
+    const string Types = """
+        sealed record Done : VSA.Contracts.Events.IntegrationEvent;
+
+        """;
+
+    [Test]
+    public Task Presenter_that_shows_an_event_passes() => Analyzer.Verify(Types + """
+        sealed class DonePresenter(VSA.Presenters.IBus bus) : VSA.Presenters.Presenter(bus), VSA.Presenters.IPresenterEvent<Done> {
+            public Task OnEventAsync(Done integrationEvent, CancellationToken ct) => Task.CompletedTask;
+        }
+        """);
+
+    [Test]
+    public Task Presenter_with_a_publisher_fails() => Analyzer.Verify(Types + """
+        sealed class DonePresenter(VSA.Presenters.IBus bus, VSA.Contracts.Events.IIntegrationEventPublisher {|#0:events|}) : VSA.Presenters.Presenter(bus) {
+            public Task Finish() => {|#1:events.PublishAsync(new Done(), CancellationToken.None)|};
+        }
+        """, Analyzer.Diagnostic(PresenterPublishRule.Descriptor, 0, "DonePresenter", "IIntegrationEventPublisher"),
+            Analyzer.Diagnostic(PresenterPublishRule.Descriptor, 1, "DonePresenter", "IIntegrationEventPublisher"));
+
+    [Test]
+    public Task Presenter_with_the_live_presenters_fails() => Analyzer.Verify(Types + """
+        sealed class DonePresenter(VSA.Presenters.IBus bus, VSA.Presenters.LivePresenters {|#0:views|}) : VSA.Presenters.Presenter(bus);
+        """, Analyzer.Diagnostic(PresenterPublishRule.Descriptor, 0, "DonePresenter", "LivePresenters"));
+
+    // The rule is only for presenters. Request handlers publish events.
+    [Test]
+    public Task Other_class_that_publishes_passes() => Analyzer.Verify(Types + """
+        sealed class Finisher(VSA.Contracts.Events.IIntegrationEventPublisher events) {
+            public Task Finish() => events.PublishAsync(new Done(), CancellationToken.None);
+        }
+        """);
+}
+
 public sealed class ContractTypeRuleTests {
     const string Route = "public static HttpMethod Method => HttpMethod.Get; public static string Route => \"/notes\";";
 
@@ -202,7 +237,7 @@ public sealed class ContractTypeRuleTests {
 public sealed class VsaAnalyzerTests {
     [Test]
     public void The_analyzer_has_each_rule_of_the_assembly() =>
-        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "VSA1001", "VSA1002", "VSA1003", "VSA1004", "VSA1005", "VSA1006" }));
+        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "VSA1001", "VSA1002", "VSA1003", "VSA1004", "VSA1005", "VSA1006", "VSA1007" }));
 
     [Test]
     public void Each_rule_has_a_unique_ID() =>

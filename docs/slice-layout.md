@@ -101,7 +101,7 @@ The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tas
 | `VSA0006` | Hand-written `Compile` item, or uncompiled file | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0007` | `VsaModuleUses` out of a module root, or a bad name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA1003` | Contracts projects hold only contract types and their DTOs | Compile, also while you type | Editor and build |
-| `VSA1004`–`VSA1006` | `Domain.Shared` types hold only immutable data | Compile, also while you type | Editor and build |
+| `VSA1005`–`VSA1007` | `Domain.Shared` types hold only immutable data | Compile, also while you type | Editor and build |
 | `CS` errors | Forbidden uses between projects, from the layer map | Compile | Editor and build |
 | `VSA2001` | Module projects follow the layer map | Test run | Test results |
 
@@ -136,7 +136,7 @@ public sealed record Cost(ResourceKey Resource, int Amount);
 ```
 
 - Put keys, ids and data records here. Put the rules in `Domain/`, for example `Resources/Domain/Wallet.cs`.
-- A type holds only immutable data: `VSA1004`, `VSA1005` and `VSA1006` check it (see `architecture-rules.md`).
+- A type holds only immutable data: `VSA1005`, `VSA1006` and `VSA1007` check it (see `architecture-rules.md`).
 - If `Domain/Shared/` has files and the module has no `Domain.Shared` project, the build fails with `VSA0006`.
 
 Which layer references which domain project:

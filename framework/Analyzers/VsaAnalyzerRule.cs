@@ -11,7 +11,7 @@ namespace VSA.Analyzers;
 // Options come from .editorconfig or .globalconfig. A rule key wins over a global key:
 //   vsa.VSA1001.check_responses = false    only VSA1001
 //   vsa.check_responses = false            all VSA rules that read the key
-//   vsa.VSA1006.allowed_bases = A, B       a list, with a comma or a semicolon between the items
+//   vsa.VSA1007.allowed_bases = A, B       a list, with a comma or a semicolon between the items
 // In an .editorconfig or .globalconfig line, a semicolon starts a comment. Write a comma there.
 public abstract class VsaAnalyzerRule(DiagnosticDescriptor rule) {
     public DiagnosticDescriptor Rule { get; } = rule;

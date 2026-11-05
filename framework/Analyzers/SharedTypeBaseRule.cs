@@ -6,16 +6,16 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace VSA.Analyzers;
 
-// VSA1006: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
+// VSA1007: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
 // and each interface in the base list of a type. A permitted base is in a .Domain.Shared assembly (this project or
 // another one), or its metadata name is in the option allowed_bases, for example System.IEquatable`1.
 // The rule compares the original definition, so IEquatable<Money> matches System.IEquatable`1.
-// Option: vsa.VSA1006.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
+// Option: vsa.VSA1007.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
 public sealed class SharedTypeBaseRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1006",
+        "VSA1007",
         "Domain.Shared types have only permitted bases",
-        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to vsa.VSA1006.allowed_bases.",
+        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to vsa.VSA1007.allowed_bases.",
         "VSA",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);

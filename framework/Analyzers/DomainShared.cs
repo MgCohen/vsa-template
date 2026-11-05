@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace VSA.Analyzers;
 
-// The test of the Domain.Shared rules (VSA1004, VSA1005, VSA1006). A <Module>.Domain.Shared project is the published
+// The test of the Domain.Shared rules (VSA1005, VSA1006, VSA1007). A <Module>.Domain.Shared project is the published
 // domain of a module: the keys, ids and components that other modules read.
 // VSA.Sdk gives the layer in the MSBuild property VsaLayer. If the property is not there, the assembly name decides.
 static class DomainShared {

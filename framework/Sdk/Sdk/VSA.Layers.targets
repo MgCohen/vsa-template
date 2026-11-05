@@ -220,6 +220,8 @@
     <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaModulesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaSharedDir)*/Projects/*.Domain.Shared.csproj;$(VsaSharedDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
     <!-- A Shared module uses no module: its handlers get its own published domain and commands only. -->
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj;$(VsaModuleDir)Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Shared'" />
+    <!-- A Shared module: its own events. Exposed, so the Handlers.Events of a Shared module in VsaUses gives its events too. -->
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Events.csproj" Condition="'$(VsaRootFolder)' == 'Shared'" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Commands'">
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
@@ -230,6 +232,8 @@
   </ItemGroup>
   <!-- A presenter hears the events of its own module only (D-21). -->
   <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
+    <!-- The events that a presenter shows (IPresenterEvent): the events of its own module only.
+         A view that shows more than one module shows the presenter of each module. -->
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj;$(VsaModuleDir)Projects/*.Domain.Shared.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">

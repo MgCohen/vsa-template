@@ -28,9 +28,10 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
 | `VSA1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
-| `VSA1004` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
-| `VSA1005` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
-| `VSA1006` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (default: empty, because an interface such as `IComparable<T>` needs a method that `VSA1005` does not permit). Trial (D-37). |
+| `VSA1004` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
+| `VSA1005` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
+| `VSA1006` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
+| `VSA1007` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (default: empty, because an interface such as `IComparable<T>` needs a method that `VSA1006` does not permit). Trial (D-37). |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
@@ -45,11 +46,12 @@ A Shared module has the layers and the slice layout of a module. It is for the b
 | From | Gets from VSA.Sdk |
 |---|---|
 | A module layer | The same layer of each Shared module. A module root gets each Shared root |
-| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and Shared module |
+| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each Shared module |
+| A Shared event handler | Also the events of its own Shared module. The `Handlers/Events` of a Shared module in `<VsaUses>` gives the events of that Shared module |
 | A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and Shared module |
 | A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and Shared module |
 | A module `Domain.Shared` or `Presenters` | Also the `Domain.Shared` of each module in `<VsaModuleUses>`. `VSA0007` checks the names |
-| A module presenter (`Presenters`) | Also the events (`Contracts/Events`) of its own module |
+| A presenter (`Presenters`) | The events of its own module only. A view that shows more than one module shows the presenter of each module |
 | A Shared layer | The same layer of each Shared module in `<VsaUses>` (names, with `;`). `VSA0002` checks the names |
 | A Shared module | No project of a module |
 

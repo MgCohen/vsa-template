@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Operations;
 
 namespace VSA.Analyzers;
 
-// VSA1005: the types of a <Module>.Domain.Shared project hold only data. The logic stays in the module that owns it.
+// VSA1006: the types of a <Module>.Domain.Shared project hold only data. The logic stays in the module that owns it.
 // A type has no ordinary method, no operator or conversion written by hand, and no constructor with a body.
 // A primary constructor, and a constructor with only a base(...) or this(...) initializer, are permitted.
 // A property or indexer body calls no method: "=> A + B" is permitted, "=> Compute()" is not.
@@ -15,7 +15,7 @@ namespace VSA.Analyzers;
 // The compiler makes the members of a record, so this rule does not check them. This rule is a trial (decision D-37).
 public sealed class DataOnlySharedTypeRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1005",
+        "VSA1006",
         "Domain.Shared types hold only data",
         "{0}.{1} is {2}. A type in a Domain.Shared project holds only data. Move the logic to the module that owns it.",
         "VSA",
