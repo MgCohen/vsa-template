@@ -1,0 +1,11 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- Cost (Domain/Shared) holds a ResourceKey, and the presenter shows it: Cards uses the published domain of Resources. -->
+  <!-- The layer projects read the list as text. They ignore a comment: <VsaModuleUses>Battle</VsaModuleUses> -->
+  <PropertyGroup>
+    <VsaModuleUses>
+      Resources ;
+    </VsaModuleUses>
+  </PropertyGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

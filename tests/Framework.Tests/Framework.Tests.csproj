@@ -11,5 +11,8 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Shelf/Shelf.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Twin/Twin.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Signals/Signals.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Echo/Echo.csproj" />
+    <!-- Three modules that send commands to each other (CommandTests). -->
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/*/*.csproj" />
   </ItemGroup>
 </Project>

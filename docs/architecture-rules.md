@@ -24,10 +24,14 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
 | `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
 | `VSA0006` | Build | No `Compile` item written by hand, and no `.cs` file that no project compiles. |
+| `VSA0007` | Build | `VsaModuleUses` is only in a module root, and it names other modules that have a `Domain.Shared` project. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
-| `VSA1003` | Analyzers | A contracts project holds only requests, responses, events and the types that they use. |
+| `VSA1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
 | `VSA1004` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
+| `VSA1005` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
+| `VSA1006` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
+| `VSA1007` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (default: empty, because an interface such as `IComparable<T>` needs a method that `VSA1006` does not permit). Trial (D-37). |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
@@ -44,6 +48,9 @@ A Shared module has the layers and the slice layout of a module. It is for the b
 | A module layer | The same layer of each Shared module. A module root gets each Shared root |
 | A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each Shared module |
 | A Shared event handler | Also the events of its own Shared module. The `Handlers/Events` of a Shared module in `<VsaUses>` gives the events of that Shared module |
+| A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and Shared module |
+| A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and Shared module |
+| A module `Domain.Shared` or `Presenters` | Also the `Domain.Shared` of each module in `<VsaModuleUses>`. `VSA0007` checks the names |
 | A presenter (`Presenters`) | The events of its own module only. A view that shows more than one module shows the presenter of each module |
 | A Shared layer | The same layer of each Shared module in `<VsaUses>` (names, with `;`). `VSA0002` checks the names |
 | A Shared module | No project of a module |
@@ -51,6 +58,8 @@ A Shared module has the layers and the slice layout of a module. It is for the b
 A Shared module uses another Shared module only if it names it. Two Shared modules that name each other are a cycle, and MSBuild stops the build. A project in a `Modules` or `Shared` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
 
 `VSA2001` checks a Shared module as a base: a module project may use what the map permits of a base, and a Shared project uses no module. The module root records its root folder (`VsaRootFolder`), and `ModuleRoot.IsShared` reads it.
+
+`VSA2001` permits a `listed` edge of the layer map only to a module in `<VsaModuleUses>`. The module root records each name (metadata `VsaModuleUse`), and `ModuleRoot.Uses` reads them. A presenter can compile against the `Domain.Shared` of each module through its own contracts, because the contracts reference each `Domain.Shared` project. So `VSA2001` is the check for the listed edge, not the compiler.
 
 The host configures the Shared modules first, then the other modules. In each group the order is by name, not by `VsaUses`. The host gets the Shared roots through the module roots, so an app with no module does not load its Shared modules.
 
@@ -89,7 +98,7 @@ public sealed class ArchitectureTests : VsaArchitectureTests {
 
 ## Unit: `VsaUnitTest`
 
-A unit test sends a request to its handler, without HTTP and without a database. Before each test, the base makes new services with the default fakes and calls `Configure`. A test class makes its mocks in `Configure`, and its tests use them through fields.
+A unit test sends a request to its handler with `Handle`, or a command to its handler with `Send`, without HTTP and without a database. Before each test, the base makes new services with the default fakes and calls `Configure`. A test class makes its mocks in `Configure`, and its tests use them through fields.
 
 ```csharp
 public sealed class CreateNotePublisherTests : VsaUnitTest {
@@ -111,9 +120,12 @@ public sealed class CreateNotePublisherTests : VsaUnitTest {
 | `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Repository<T, TId>().With(...)` |
 | `IIntegrationEventPublisher` | `RecordingEventPublisher` (`Events`) | `Mock<IIntegrationEventPublisher>()` |
 | `ILogger<T>` | Logging with no output | `services.AddLogging(...)` |
+| `ICommandSender` | None | `Mock<ICommandSender>()` |
 | Other services | None | `Mock<T>()` |
 
-Add or replace services before the first `Handle` call. After it, the services are read-only, and a change fails.
+`Send` finds the one handler in the `Handlers.Commands` project of the module of the command. If the handler sends other commands, add `Mock<ICommandSender>()` in `Configure`.
+
+Add or replace services before the first `Handle` or `Send` call. After it, the services are read-only, and a change fails.
 
 ## Add a rule
 

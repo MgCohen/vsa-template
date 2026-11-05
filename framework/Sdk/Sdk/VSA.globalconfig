@@ -6,3 +6,10 @@ global_level = -1
 
 # Options of the custom VSA analyzers: vsa.<key> for all rules, vsa.<rule ID>.<key> for one rule.
 vsa.VSA1001.check_responses = true
+# The bases that a Domain.Shared type can use, apart from the Domain.Shared projects. Write a comma between the items.
+# The default is empty: an interface such as IComparable<T> needs a method, and VSA1006 does not permit methods.
+# An app adds its own bases, for example: vsa.VSA1007.allowed_bases = Card.TypeKeys.TypeKey, Card.Entities.IComponent
+vsa.VSA1007.allowed_bases =
+
+# CA1716 does not check namespaces: the published domain of a module is <Module>.Domain.Shared, and "Shared" is a VB keyword.
+dotnet_code_quality.CA1716.analyzed_symbol_kinds = NamedType, Method, Property, Event, Parameter

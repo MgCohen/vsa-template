@@ -110,6 +110,22 @@ public sealed class LivePresentersTests {
         Assert.That(presenter.Total, Is.EqualTo(1));
     }
 
+    // Two events at the same time: the presenter handles one, then the other.
+    [Test]
+    public async Task TheEventsOfOnePresenterRunOneAtATime() {
+        var presenter = new SlowPresenter();
+        using var _ = live.Add(presenter);
+
+        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
+        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
+        Assert.That(presenter.Running, Is.EqualTo(1));
+        presenter.Release();
+        presenter.Release();
+        await presenter.Done.Task;
+
+        Assert.That(presenter.MostAtOnce, Is.EqualTo(1));
+    }
+
     sealed record Counted(int By) : IntegrationEvent;
 
     sealed record Other : IntegrationEvent;
@@ -120,6 +136,27 @@ public sealed class LivePresentersTests {
         public Task OnEventAsync(Counted integrationEvent, CancellationToken ct) {
             Total += integrationEvent.By;
             return Task.CompletedTask;
+        }
+    }
+
+    sealed class SlowPresenter() : Presenter(null!), IPresenterEvent<Counted> {
+        readonly SemaphoreSlim gate = new(0);
+        int handled;
+
+        public int Running { get; private set; }
+        public int MostAtOnce { get; private set; }
+        public TaskCompletionSource Done { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public void Release() => gate.Release();
+
+        public async Task OnEventAsync(Counted integrationEvent, CancellationToken ct) {
+            Running++;
+            MostAtOnce = Math.Max(MostAtOnce, Running);
+            await gate.WaitAsync(ct);
+            Running--;
+            if (++handled == 2) {
+                Done.SetResult();
+            }
         }
     }
 

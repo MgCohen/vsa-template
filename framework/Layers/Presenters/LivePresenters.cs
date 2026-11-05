@@ -3,16 +3,19 @@ using VSA.Contracts.Events;
 
 namespace VSA.Presenters;
 
-// The presenters that views show now, for the whole app. A view adds its presenter, and disposes the result when it goes away.
-// After each publish, each live presenter that implements IPresenterEvent<TEvent> gets the event one time,
-// also if two views show it. The call runs on the dispatcher of the first view, then the presenter raises Changed.
+// The presenters that exist now, for the whole app. AddVsaPresenter adds each presenter when the services make it,
+// and the scope removes it when it ends. A view is not needed.
+// After each publish, each live presenter that implements IPresenterEvent<TEvent> gets the event one time.
+// The events of one presenter run one at a time, on the dispatcher of its scope if the app gives one
+// (a LivePresenters.Dispatch service), then the presenter raises Changed.
 // The publisher does not wait for the views, and the token of the publisher does not go to the presenters:
 // the handlers are done when the observer runs. An error in one presenter goes to the log.
 public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegrationEventObserver {
     readonly object gate = new();
     readonly Dictionary<Presenter, List<Dispatch>> live = [];
 
-    // Runs work on the thread of a view. A view with no dispatcher runs it on the thread of the publisher.
+    // Runs work on a thread that the app selects, for example the main thread in Unity. With no dispatcher,
+    // the work runs on the thread of the publisher.
     public delegate Task Dispatch(Func<Task> work);
 
     public IDisposable Add(Presenter presenter, Dispatch? dispatch = null) {
@@ -42,7 +45,12 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegratio
         where TEvent : IntegrationEvent {
         try {
             await dispatch(async () => {
-                await target.OnEventAsync(integrationEvent, CancellationToken.None);
+                await presenter.Serial.WaitAsync();
+                try {
+                    await target.OnEventAsync(integrationEvent, CancellationToken.None);
+                } finally {
+                    presenter.Serial.Release();
+                }
                 presenter.RaiseChanged();
             });
         } catch (Exception e) {

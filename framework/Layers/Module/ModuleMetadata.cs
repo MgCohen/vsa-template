@@ -14,4 +14,8 @@ static class ModuleMetadata {
 
     // Value: the assembly name of one layer project of the module, for example "Notes.Handlers.Requests".
     public const string LayerAssembly = "VsaLayerAssembly";
+
+    // Value: the name of one module in the VsaModuleUses list of the module root, for example "Resources".
+    // The Domain.Shared and Presenters projects of the module use the Domain.Shared project of each listed module.
+    public const string ModuleUse = "VsaModuleUse";
 }

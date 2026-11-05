@@ -120,6 +120,13 @@ public sealed class BuildRuleTests {
         BuildWith(("Misc/Stray.cs", "namespace Shop.Misc;\n\npublic sealed class Stray { }\n")),
         "VSA0006", "Misc/Stray.cs");
 
+    // Shop has no Domain and no Domain.Shared project. The message gives the path in the module, one time.
+    [Test]
+    public void VSA0006_a_published_domain_file_with_no_Domain_Shared_project() {
+        var result = BuildWith(("Domain/Shared/PriceKey.cs", "namespace Shop.Domain.Shared;\n\npublic sealed record PriceKey(string Name);\n"));
+        Fails(result, "VSA0006", "compiles these files: Domain/Shared/PriceKey.cs.");
+    }
+
     [Test]
     public void VSA1003_a_public_helper_in_a_contract_file() => Fails(
         BuildWith(("Slices/GetPrice/PriceRules.cs",

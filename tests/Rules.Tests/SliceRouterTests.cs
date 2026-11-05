@@ -134,6 +134,41 @@ public sealed class SliceRouterTests {
         Assert.That(LayerOf(routing, "Shared/Id.cs"), Is.EqualTo("Contracts/Requests"));
     }
 
+    // A command and the result that it names go to Contracts/Commands. The other files of the slice go to Handlers/Commands.
+    [Test]
+    public void A_command_slice_goes_to_the_command_projects() {
+        var routing = Route(
+            File("PayCost/PayCost.cs", "public sealed record PayCost(Guid Payer, int Amount) : ICommand<PayCostResult>;"),
+            File("PayCost/PayCostResult.cs", "public sealed record PayCostResult(bool Paid);"),
+            File("PayCost/PayCostHandler.cs", "sealed class PayCostHandler : CommandHandler<PayCost, PayCostResult> { }"),
+            File("PayCost/CostRules.cs", "static class CostRules { }"));
+
+        Assert.That(routing.Errors, Is.Empty);
+        using var scope = Assert.EnterMultipleScope();
+        Assert.That(LayerOf(routing, "PayCost/PayCost.cs"), Is.EqualTo("Contracts/Commands"));
+        Assert.That(LayerOf(routing, "PayCost/PayCostResult.cs"), Is.EqualTo("Contracts/Commands"));
+        Assert.That(LayerOf(routing, "PayCost/PayCostHandler.cs"), Is.EqualTo("Handlers/Commands"));
+        Assert.That(LayerOf(routing, "PayCost/CostRules.cs"), Is.EqualTo("Handlers/Commands"));
+    }
+
+    // A command can inherit the marker through a base of a Shared module, for example PayCost : Effect<T> : ICommand<T>.
+    [Test]
+    public void A_command_with_a_Shared_base_goes_to_Contracts_Commands() {
+        var routing = SliceRouter.Route(Slices, [
+            File("PayCost/PayCost.cs", "public sealed record PayCost(int Amount) : Effect<PayCostResult>;"),
+            File("PayCost/PayCostResult.cs", "public sealed record PayCostResult(bool Paid);"),
+            File("PayCost/PayCostHandler.cs", "sealed class PayCostHandler : EffectHandler<PayCost, PayCostResult> { }"),
+        ], [
+            new SliceSource(Path.Combine(Path.GetTempPath(), "vsa-router", "Effects", "Slices", "Shared", "Effect.cs"),
+                "public abstract record Effect<T> : ICommand<T>; public abstract class EffectHandler<TC, TR> : CommandHandler<TC, TR> { }"),
+        ], isShared: false);
+
+        Assert.That(routing.Errors, Is.Empty);
+        using var scope = Assert.EnterMultipleScope();
+        Assert.That(LayerOf(routing, "PayCost/PayCost.cs"), Is.EqualTo("Contracts/Commands"));
+        Assert.That(LayerOf(routing, "PayCost/PayCostHandler.cs"), Is.EqualTo("Handlers/Commands"));
+    }
+
     static IEnumerable<TestCaseData> Errors() {
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse,
             File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RoutedHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Log : IntegrationEventHandler<X> { }") },
@@ -159,6 +194,14 @@ public sealed class SliceRouterTests {
             "Move NoteDto to Slices/Shared/").SetName("A DTO from another slice");
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse, CreateNoteHandler, File("Shared/TitleRules.cs", "static class TitleRules { }") },
             "Slices/Shared/ holds only contracts").SetName("A helper in Shared");
+        yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse,
+            File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RoutedHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Pay : CommandHandler<A, B> { }") },
+            "has a request handler and a command handler").SetName("A slice with a request handler and a command handler");
+        yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteHandler,
+            File("CreateNote/CreateNoteResponse.cs", "public sealed record CreateNoteResponse(NoteDto Note) : IResponse;"),
+            File("CreateNote/SaveNote.cs", "public sealed record SaveNote(NoteDto Note) : ICommand<bool>;"),
+            File("CreateNote/NoteDto.cs", "public sealed record NoteDto(string Title);") },
+            "A type can be in one contracts project only").SetName("A DTO that a response and a command use");
         yield return new TestCaseData(new[] { File("Loose.cs", "static class Loose { }") },
             "Move it into a slice folder").SetName("A file directly in Slices");
     }

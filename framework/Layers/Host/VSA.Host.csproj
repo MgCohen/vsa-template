@@ -8,8 +8,10 @@
     <ProjectReference Include="../Infrastructure/EfCore/VSA.Infrastructure.EfCore.csproj" />
     <ProjectReference Include="../Contracts/Requests/VSA.Contracts.Requests.csproj" />
     <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" />
+    <ProjectReference Include="../Contracts/Commands/VSA.Contracts.Commands.csproj" />
     <ProjectReference Include="../Handlers/Requests/VSA.Handlers.Requests.csproj" />
     <ProjectReference Include="../Handlers/Events/VSA.Handlers.Events.csproj" />
+    <ProjectReference Include="../Handlers/Commands/VSA.Handlers.Commands.csproj" />
     <ProjectReference Include="../Presenters/VSA.Presenters.csproj" />
   </ItemGroup>
 </Project>

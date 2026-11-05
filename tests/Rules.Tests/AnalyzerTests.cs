@@ -20,7 +20,18 @@ static class Analyzer {
     public static Task VerifyIn(string assembly, string source, params DiagnosticResult[] expected) =>
         Verify(source, "", assembly, expected);
 
-    static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected) {
+    public static Task VerifyIn(string assembly, string source, string config, params DiagnosticResult[] expected) =>
+        Verify(source, config, assembly, expected);
+
+    // reference: a second project that the test code references. Its assembly name is its project name.
+    public static Task VerifyIn(string assembly, string source, (string Assembly, string Source) reference, params DiagnosticResult[] expected) =>
+        Verify(source, "", assembly, expected, test => {
+            test.TestState.AdditionalProjects[reference.Assembly].Sources.Add(reference.Source);
+            test.TestState.AdditionalProjectReferences.Add(reference.Assembly);
+        });
+
+    static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected,
+        Action<CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier>>? configure = null) {
         var test = new CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
             TestCode = "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
             ReferenceAssemblies = Net10,
@@ -28,7 +39,7 @@ static class Analyzer {
         if (assembly is not null) {
             test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
         }
-        Type[] layers = [typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
+        Type[] layers = [typeof(VSA.Contracts.IMessage), typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
             typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus)];
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
@@ -36,6 +47,7 @@ static class Analyzer {
         if (config.Length > 0) {
             test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", "is_global = true\n" + config));
         }
+        configure?.Invoke(test);
         test.ExpectedDiagnostics.AddRange(expected);
         return test.RunAsync(TestContext.CurrentContext.CancellationToken);
     }
@@ -196,6 +208,25 @@ public sealed class ContractTypeRuleTests {
         static class TitleRules { public static bool IsValid(string title) => title.Length > 0; }
         """);
 
+    // The test code declares the command marker, because the layer assembly is not referenced here.
+    const string Command = """
+        namespace VSA.Contracts.Commands { interface ICommand<TResult> { } }
+
+        """;
+
+    [Test]
+    public Task Command_and_its_result_pass() => Analyzer.VerifyIn("Notes.Contracts.Commands", Command + """
+        public sealed record AddNote(string Title) : VSA.Contracts.Commands.ICommand<NoteAdded>;
+        public sealed record NoteAdded(Guid Id);
+        """);
+
+    [Test]
+    public Task Public_helper_in_a_commands_project_fails() => Analyzer.VerifyIn("Notes.Contracts.Commands", Command + """
+        public sealed record AddNote(string Title) : VSA.Contracts.Commands.ICommand<NoteAdded>;
+        public sealed record NoteAdded(Guid Id);
+        public static class {|#0:TitleRules|} { public static bool IsValid(string title) => title.Length > 0; }
+        """, Analyzer.Diagnostic(ContractTypeRule.Descriptor, 0, "TitleRules", "Notes.Contracts.Commands"));
+
     // The rule is only for the contracts projects. A handlers project can have public types.
     [Test]
     public Task Public_helper_in_another_project_passes() => Analyzer.VerifyIn("Notes.Handlers.Requests", """
@@ -206,7 +237,7 @@ public sealed class ContractTypeRuleTests {
 public sealed class VsaAnalyzerTests {
     [Test]
     public void The_analyzer_has_each_rule_of_the_assembly() =>
-        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "VSA1001", "VSA1002", "VSA1003", "VSA1004" }));
+        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "VSA1001", "VSA1002", "VSA1003", "VSA1004", "VSA1005", "VSA1006", "VSA1007" }));
 
     [Test]
     public void Each_rule_has_a_unique_ID() =>

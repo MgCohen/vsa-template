@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -9,6 +11,8 @@ namespace VSA.Analyzers;
 // Options come from .editorconfig or .globalconfig. A rule key wins over a global key:
 //   vsa.VSA1001.check_responses = false    only VSA1001
 //   vsa.check_responses = false            all VSA rules that read the key
+//   vsa.VSA1007.allowed_bases = A, B       a list, with a comma or a semicolon between the items
+// In an .editorconfig or .globalconfig line, a semicolon starts a comment. Write a comma there.
 public abstract class VsaAnalyzerRule(DiagnosticDescriptor rule) {
     public DiagnosticDescriptor Rule { get; } = rule;
     public string Id => Rule.Id;
@@ -30,4 +34,8 @@ public sealed class VsaOptions(string ruleId, AnalyzerConfigOptions options) {
         : null;
 
     public bool Get(string key, bool fallback) => bool.TryParse(Get(key), out var value) ? value : fallback;
+
+    // A list value: the items have a comma or a semicolon between them. An empty or missing key gives no items.
+    public IReadOnlyList<string> GetList(string key) =>
+        (Get(key) ?? "").Split(',', ';').Select(item => item.Trim()).Where(item => item.Length > 0).ToArray();
 }

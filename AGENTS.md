@@ -19,7 +19,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
 
-A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. Both have the same layout. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project. See `docs/slice-layout.md`.
+A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. Both have the same layout. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/`, `Presenters/` and `Slices/<Feature>/`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project. See `docs/slice-layout.md`.
 
 The app root is the folder of `global.json`. In this repository, `samples/`, `tests/Fixtures/` and the templates set the app root (`VsaAppRoot`) for each app, because the repository has one `global.json`. A Shared module is the base of the same layers in each module, as the framework is. See `docs/architecture-rules.md`.
 
@@ -29,7 +29,7 @@ Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script add
 
 The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>`, else startup fails.
 
-A presenter shows the events of its own module: it implements `IPresenterEvent<TEvent>`, and a view that shows it gets each event. A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
+A presenter shows the events of its own module: it implements `IPresenterEvent<TEvent>`, and it gets each event, also when no view shows it. A view only renders: it inherits `PresenterWatcher` (one or more presenters) or `PresenterComponent<T>` (one presenter). A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
 
 ## Tests
 
@@ -66,8 +66,9 @@ The public surface of `tests/Shared` (namespace `Tests.Shared`). Other test proj
 
 ## Core principles
 
-- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events, handler and helpers. A slice has one kind of handler: a request handler or an event handler.
+- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events, handler and helpers. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - **Slices are independent.** A slice uses only its own types and `Slices/Shared/`. An event is in the slice that publishes it.
+- **Modules talk with commands and events.** A command goes to one handler of another module. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`. See `docs/slice-layout.md`.
 - **Keep shared code small.** Promote code to a shared location only when two or more slices genuinely need it.
 - **Rules are enforced by tests.** Architecture rules live in `tests/` and must pass.
 
@@ -95,7 +96,7 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 A tag `v<version>` publishes all packages to GitHub Packages (`.github/workflows/publish.yml`). Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass.
 
-Five layers also target `netstandard2.1`, for Unity: Domain, Contracts.Events, Handlers.Events, Infrastructure and Module (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
+Eight framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Infrastructure and VSA.Module (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
 
 ## Scaffolding: the vsa tool
 
@@ -105,7 +106,8 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It wri
 dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/
 dotnet vsa add module <Name>                     # all layers, a status request, a presenter and a page
 dotnet vsa add request <Name> -m <Module>        # the request, the response and the handler
+dotnet vsa add command <Name> -m <Module>        # the command, the result and the handler; the command projects if they are missing
 dotnet vsa doctor                                # the tool, VSA.Sdk and the VSA.* packages have one version
 ```
 
-The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule` and `SampleAction`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.
+The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction` and `SampleChange`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path, and the two projects `SampleModule.Contracts.Commands` and `SampleModule.Handlers.Commands`, belong to `add command`. Any other file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.

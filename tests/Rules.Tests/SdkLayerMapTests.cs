@@ -11,9 +11,11 @@ namespace Rules.Tests;
 //   - each edge in Layers.cs to a module layer must be a reference that the Sdk adds.
 public sealed partial class SdkLayerMapTests {
     // The layers that have module projects. Infrastructure.EfCore is framework only. Views and Host are app layers.
-    static readonly string[] ModuleLayers = ["Domain", "Infrastructure", "Contracts.Requests", "Contracts.Events", "Handlers.Requests", "Handlers.Events", "Presenters", "Module"];
+    static readonly string[] ModuleLayers = [
+        "Domain.Shared", "Domain", "Infrastructure", "Contracts.Requests", "Contracts.Events", "Contracts.Commands",
+        "Handlers.Requests", "Handlers.Events", "Handlers.Commands", "Presenters", "Module"];
 
-    sealed record SdkLayer(string Name, HashSet<string> Own, HashSet<string> AnyModule, HashSet<string> Bases);
+    sealed record SdkLayer(string Name, HashSet<string> Own, HashSet<string> AnyModule, HashSet<string> Listed, HashSet<string> Bases);
 
     [Test]
     public void Each_module_layer_of_the_map_is_in_the_Sdk() =>
@@ -31,6 +33,7 @@ public sealed partial class SdkLayerMapTests {
             var edges = layer.References;
             missing.AddRange(sdk.Own.Where(t => !edges.Any(e => e.Target == t && e.Edge != Edge.BaseOnly)).Select(t => $"{sdk.Name} -> {t} (own module)"));
             missing.AddRange(sdk.AnyModule.Where(t => !edges.Any(e => e.Target == t && e.AnyModule)).Select(t => $"{sdk.Name} -> {t} (any module)"));
+            missing.AddRange(sdk.Listed.Where(t => !edges.Any(e => e.Target == t && e.Listed)).Select(t => $"{sdk.Name} -> {t} (listed modules)"));
             missing.AddRange(sdk.Bases.Where(t => t != sdk.Name && !edges.Any(e => e.Target == t)).Select(t => $"{sdk.Name} -> VSA.{t} (base)"));
         }
         Assert.That(missing, Is.Empty, "VSA.Layers.targets adds references that Layers.cs does not permit.");
@@ -43,8 +46,12 @@ public sealed partial class SdkLayerMapTests {
         foreach (var layer in Layers.All.Where(l => sdk.ContainsKey(l.Name))) {
             foreach (var edge in layer.References.Where(e => e.Edge != Edge.BaseOnly && ModuleLayers.Contains(e.Target))) {
                 var found = edge.AnyModule ? sdk[layer.Name].AnyModule : sdk[layer.Name].Own;
-                if (!found.Contains(edge.Target)) {
+                // An edge to the layer itself is for the listed modules only: a project does not use itself.
+                if (edge.Target != layer.Name && !found.Contains(edge.Target)) {
                     missing.Add($"{layer.Name} -> {edge.Target}{(edge.AnyModule ? " (any module)" : "")}");
+                }
+                if (edge.Listed && !sdk[layer.Name].Listed.Contains(edge.Target)) {
+                    missing.Add($"{layer.Name} -> {edge.Target} (listed modules)");
                 }
             }
         }
@@ -60,7 +67,7 @@ public sealed partial class SdkLayerMapTests {
                 continue;
             }
             var name = condition.Groups[1].Value.Replace('/', '.');
-            var layer = layers.TryGetValue(name, out var found) ? found : layers[name] = new(name, [], [], []);
+            var layer = layers.TryGetValue(name, out var found) ? found : layers[name] = new(name, [], [], [], []);
             foreach (var item in group.Elements()) {
                 foreach (var include in ((string?)item.Attribute("Include") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries)) {
                     Read(item.Name.LocalName, include, layer);
@@ -78,6 +85,9 @@ public sealed partial class SdkLayerMapTests {
         } else if (include == "$(VsaModuleDir)Projects/*.csproj") {
             // The module root: all layer projects of its own module.
             layer.Own.UnionWith(ModuleLayers.Where(l => l != "Module"));
+        } else if (include == "$(_VsaListedShared)") {
+            // The Domain.Shared projects of the modules in VsaModuleUses.
+            layer.Listed.Add("Domain.Shared");
         } else if (OwnModule().Match(include) is { Success: true } own) {
             layer.Own.Add(own.Groups[1].Value);
         } else if (AnyModule().Match(include) is { Success: true } any) {

@@ -29,6 +29,7 @@ public sealed class ScaffoldingTests {
     [TestCase("MySampleModule")]
     [TestCase("SampleActionLog")]
     [TestCase("SampleApp")]
+    [TestCase("SampleChangeLog")]
     public void InvalidModuleNamesFail(string name) => Assert.Throws<VsaException>(() => Names.Check(name, "module"));
 
     [Test]
@@ -40,6 +41,12 @@ public sealed class ScaffoldingTests {
     public void RequestNamesCannotEndWithRequest() =>
         Assert.That(() => Names.Check("CreateInvoiceRequest", "request"), Throws.TypeOf<VsaException>().With.Message.Contain("CreateInvoice"));
 
+    [TestCase("ChangeLimitCommand")]
+    [TestCase("ChangeLimitResult")]
+    [TestCase("ChangeLimitHandler")]
+    public void CommandNamesCannotEndWithASuffix(string name) =>
+        Assert.That(() => Names.Check(name, "command"), Throws.TypeOf<VsaException>().With.Message.Contain("ChangeLimit"));
+
     [TestCase("Billing", "billing")]
     [TestCase("CreateInvoice", "create-invoice")]
     [TestCase("HTTPServer", "http-server")]
@@ -49,7 +56,7 @@ public sealed class ScaffoldingTests {
     // Each template file and its command. A new template file must be added here, so its command shows in the diff.
     [Test]
     public void EachTemplateFileHasOneCommand() {
-        const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request;
+        const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command;
         (string, Templates.Kind)[] expected = [
             ("AGENTS.md.template", App),
             ("App/Host/App.Host.csproj", App),
@@ -63,10 +70,14 @@ public sealed class ScaffoldingTests {
             ("App/Views/Routes.razor", App),
             ("App/Views/_Imports.razor", App),
             ("Modules/.gitkeep", App),
+            ("Modules/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
             ("Modules/SampleModule/Presenters/SampleModulePresenter.cs", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Contracts.Commands.csproj", Command),
             ("Modules/SampleModule/Projects/SampleModule.Contracts.Events.csproj", Module),
             ("Modules/SampleModule/Projects/SampleModule.Contracts.Requests.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Domain.Shared.csproj", Module),
             ("Modules/SampleModule/Projects/SampleModule.Domain.csproj", Module),
+            ("Modules/SampleModule/Projects/SampleModule.Handlers.Commands.csproj", Command),
             ("Modules/SampleModule/Projects/SampleModule.Handlers.Events.csproj", Module),
             ("Modules/SampleModule/Projects/SampleModule.Handlers.Requests.csproj", Module),
             ("Modules/SampleModule/Projects/SampleModule.Infrastructure.csproj", Module),
@@ -79,6 +90,9 @@ public sealed class ScaffoldingTests {
             ("Modules/SampleModule/Slices/SampleAction/SampleActionHandler.cs", Request),
             ("Modules/SampleModule/Slices/SampleAction/SampleActionRequest.cs", Request),
             ("Modules/SampleModule/Slices/SampleAction/SampleActionResponse.cs", Request),
+            ("Modules/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
+            ("Modules/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
+            ("Modules/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
             ("Tests/App.Tests.csproj", App),
             ("Tests/ArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
@@ -173,6 +187,7 @@ public sealed class ScaffoldingTests {
             Is.EqualTo(["Modules/OrderHistory/OrderHistory.csproj",
                         "Modules/OrderHistory/Projects/OrderHistory.Contracts.Events.csproj",
                         "Modules/OrderHistory/Projects/OrderHistory.Contracts.Requests.csproj",
+                        "Modules/OrderHistory/Projects/OrderHistory.Domain.Shared.csproj",
                         "Modules/OrderHistory/Projects/OrderHistory.Domain.csproj",
                         "Modules/OrderHistory/Projects/OrderHistory.Handlers.Events.csproj",
                         "Modules/OrderHistory/Projects/OrderHistory.Handlers.Requests.csproj",
@@ -180,6 +195,7 @@ public sealed class ScaffoldingTests {
                         "Modules/OrderHistory/Projects/OrderHistory.Presenters.csproj"]));
         Assert.That(projects.Select(p => p.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
         Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
+        Assert.That(files.Single(f => f.Path == "Modules/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace OrderHistory.Domain.Shared;"));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
     }
 
@@ -194,6 +210,23 @@ public sealed class ScaffoldingTests {
                         "Modules/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
                         "Modules/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
         Assert.That(string.Concat(files.Select(f => f.Content)), Does.Contain("\"/api/billing/create-invoice\""));
+        Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
+    }
+
+    [Test]
+    public void NewCommandHasCommandResultHandlerAndTheCommandProjects() {
+        var names = new Dictionary<string, string> { [Templates.Command] = "ChangeLimit", [Templates.Module] = "Billing" };
+        var files = Templates.Files(Templates.Kind.Command, names, Version);
+
+        Assert.That(
+            files.Select(f => f.Path).Order(StringComparer.Ordinal),
+            Is.EqualTo(["Modules/Billing/Projects/Billing.Contracts.Commands.csproj",
+                        "Modules/Billing/Projects/Billing.Handlers.Commands.csproj",
+                        "Modules/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
+                        "Modules/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
+                        "Modules/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
+        Assert.That(files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
+        Assert.That(files.Single(f => f.Path.EndsWith("ChangeLimitCommand.cs")).Content, Does.Contain("ChangeLimitCommand : ICommand<ChangeLimitResult>"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }
 
