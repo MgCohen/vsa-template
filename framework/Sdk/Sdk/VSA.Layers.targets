@@ -181,9 +181,13 @@
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
     <!-- anyModule: the events of all modules, and of all Shared modules -->
     <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Contracts.Events.csproj;$(VsaSharedDir)*/Projects/*.Contracts.Events.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <!-- A Shared module: its own events. Exposed, so the Handlers.Events of a Shared module in VsaUses gives its events too. -->
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Events.csproj" Condition="'$(VsaRootFolder)' == 'Shared'" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj" PrivateAssets="all" />
+    <!-- The events that a presenter shows (IPresenterEvent): the events of its own module only.
+         A view that shows more than one module shows the presenter of each module. -->
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
     <!-- Exposed, not private: the host loads the handlers and presenters at run time,
