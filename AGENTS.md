@@ -103,7 +103,7 @@ Eight framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VS
 The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
 
 ```bash
-dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/
+dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, .gitignore, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/
 dotnet vsa add module <Name>                     # all layers, a status request, a presenter and a page
 dotnet vsa add request <Name> -m <Module>        # the request, the response and the handler
 dotnet vsa add command <Name> -m <Module>        # the command, the result and the handler; the command projects if they are missing

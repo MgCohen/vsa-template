@@ -18,6 +18,7 @@ static class NewAppCommand {
             ("global.json", GlobalJson(version)),
             ("dotnet-tools.json", ToolsJson(version)),
             ("nuget.config", NugetConfig(sources)),
+            (".gitignore", GitIgnore),
             ($"{name}.slnx", Solution),
         };
         files.AddRange(Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = name }, version));
@@ -67,6 +68,18 @@ static class NewAppCommand {
             }
           }
         }
+
+        """;
+
+    // The build folders. The layer projects in Modules/<Module>/Projects/ build to bin~/ and obj~/ (VSA.Sdk).
+    internal const string GitIgnore = """
+        bin/
+        obj/
+        bin~/
+        obj~/
+        TestResults/
+        *.user
+        .vs/
 
         """;
 
