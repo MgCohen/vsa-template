@@ -10,6 +10,12 @@ static partial class Names {
     //   System, Microsoft         a namespace with this name hides the .NET namespaces
     static readonly string[] Reserved = ["App", "Views", "Pages", "Home", "Modules", "System", "Microsoft"];
 
+    // The tool adds these suffixes to the name of a request or a command.
+    static readonly Dictionary<string, string[]> Suffixes = new() {
+        ["request"] = ["Request", "Response", "Handler"],
+        ["command"] = ["Command", "Result", "Handler"],
+    };
+
     // A name must be a PascalCase C# identifier. Some names collide with the framework or the app.
     public static string Check(string name, string kind) {
         if (!PascalCase().IsMatch(name)) {
@@ -19,14 +25,14 @@ static partial class Names {
             throw new VsaException($"The {kind} name '{name}' is reserved. Names cannot start with VSA or be one of: {string.Join(", ", Reserved)}.");
         }
         // The tool replaces the sample names in the templates. A name that contains one is replaced two times.
-        foreach (var sample in new[] { Templates.App, Templates.Module, Templates.Request }) {
+        foreach (var sample in new[] { Templates.App, Templates.Module, Templates.Request, Templates.Command }) {
             if (name.Contains(sample, StringComparison.Ordinal)) {
                 throw new VsaException($"The {kind} name '{name}' contains the template name {sample}. Use a different name.");
             }
         }
-        foreach (var suffix in new[] { "Request", "Response", "Handler" }) {
-            if (kind == "request" && name.EndsWith(suffix, StringComparison.Ordinal)) {
-                throw new VsaException($"The request name '{name}' ends with {suffix}. Give the name without the suffix, for example {name[..^suffix.Length]}.");
+        foreach (var suffix in Suffixes.GetValueOrDefault(kind, [])) {
+            if (name.EndsWith(suffix, StringComparison.Ordinal)) {
+                throw new VsaException($"The {kind} name '{name}' ends with {suffix}. Give the name without the suffix, for example {name[..^suffix.Length]}.");
             }
         }
         return name;

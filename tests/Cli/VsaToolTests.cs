@@ -6,7 +6,7 @@ using Tests.Shared;
 
 namespace Cli.Tests;
 
-// Uses the packed tool as a consumer does: new app, add module, add request, doctor. Then builds and runs the app.
+// Uses the packed tool as a consumer does: new app, add module, add request, add command, doctor. Then builds and runs the app.
 public sealed class VsaToolTests {
     string root = "";
     Dictionary<string, string> env = [];
@@ -31,11 +31,23 @@ public sealed class VsaToolTests {
         var app = NewApp();
         Dotnet.Run(app, env, "vsa", "add", "module", "Billing").EnsureSuccess();
         Dotnet.Run(app, env, "vsa", "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
+        // The first command writes the command projects and adds them to the solution. The second command uses them.
+        Dotnet.Run(app, env, "vsa", "add", "command", "ChangeLimit", "-m", "Billing").EnsureSuccess();
+        Dotnet.Run(app, env, "vsa", "add", "command", "CloseInvoice", "-m", "Billing").EnsureSuccess();
+        Assert.That(File.ReadAllText(Path.Combine(app, "Hello.slnx")), Does.Contain("Billing.Handlers.Commands.csproj"));
         Assert.That(Dotnet.Run(app, env, "vsa", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use VSA {LocalFeed.Version}."));
 
         var again = Dotnet.Run(app, env, "vsa", "add", "request", "CreateInvoice", "-m", "Billing");
         Assert.That(again.Succeeded, Is.False);
         Assert.That(again.Output, Does.Contain("does not write over a file"));
+
+        var command = Dotnet.Run(app, env, "vsa", "add", "command", "ChangeLimit", "-m", "Billing");
+        Assert.That(command.Succeeded, Is.False);
+        Assert.That(command.Output, Does.Contain("does not write over a file"));
+
+        var unknown = Dotnet.Run(app, env, "vsa", "add", "command", "ChangeLimit", "-m", "Shipping");
+        Assert.That(unknown.Succeeded, Is.False);
+        Assert.That(unknown.Output, Does.Contain("The module Shipping does not exist"));
 
         Directory.CreateDirectory(Path.Combine(app, "Shared", "Pipeline"));
         var shared = Dotnet.Run(app, env, "vsa", "add", "module", "Pipeline");
