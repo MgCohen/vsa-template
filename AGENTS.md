@@ -19,7 +19,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
 
-A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. Both have the same layout. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project. See `docs/slice-layout.md`.
+A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. Both have the same layout. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/`, `Presenters/` and `Slices/<Feature>/`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project. See `docs/slice-layout.md`.
 
 The app root is the folder of `global.json`. In this repository, `samples/`, `tests/Fixtures/` and the templates set the app root (`VsaAppRoot`) for each app, because the repository has one `global.json`. A Shared module is the base of the same layers in each module, as the framework is. See `docs/architecture-rules.md`.
 
@@ -64,8 +64,9 @@ The public surface of `tests/Shared` (namespace `Tests.Shared`). Other test proj
 
 ## Core principles
 
-- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events, handler and helpers. A slice has one kind of handler: a request handler or an event handler.
+- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events, handler and helpers. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - **Slices are independent.** A slice uses only its own types and `Slices/Shared/`. An event is in the slice that publishes it.
+- **Modules talk with commands and events.** A command goes to one handler of another module. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`. See `docs/slice-layout.md`.
 - **Keep shared code small.** Promote code to a shared location only when two or more slices genuinely need it.
 - **Rules are enforced by tests.** Architecture rules live in `tests/` and must pass.
 
@@ -93,7 +94,7 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 A tag `v<version>` publishes all packages to GitHub Packages (`.github/workflows/publish.yml`). Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass.
 
-Five layers also target `netstandard2.1`, for Unity: Domain, Contracts.Events, Handlers.Events, Infrastructure and Module (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
+Eight framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Infrastructure and VSA.Module (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
 
 ## Scaffolding: the vsa tool
 
