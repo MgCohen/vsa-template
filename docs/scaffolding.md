@@ -88,4 +88,4 @@ The architecture tests fail until the app has a module (`The_app_has_modules`).
 
 ## Empty Domain
 
-A new module has an empty Domain. The DbContext generator still writes `<Module>DbContext` with no aggregates. The starter module does not call `AddDatabase`, so the app does not use this context. When you add the first aggregate, call `module.AddDatabase(...)` in the module root.
+A new module has an empty Domain. When you add the first aggregate, write an `IRepository<T, TId>` for it in `Infrastructure/`, and register it in the module root.

@@ -16,12 +16,7 @@ public static class Layers {
 
     public static readonly Layer Infrastructure = new Layer("Infrastructure")
         .Reference(Domain)
-        .Reference(DomainShared, Edge.ModuleOnly)
-        .Reference("Infrastructure.EfCore", Edge.ModuleOnly);
-
-    // Framework only: no module project has this layer.
-    public static readonly Layer InfrastructureEfCore = new Layer("Infrastructure.EfCore")
-        .Reference(Infrastructure);
+        .Reference(DomainShared, Edge.ModuleOnly);
 
     // The contracts use the published domain of each module: a message carries its keys and ids.
     public static readonly Layer ContractsRequests = new Layer("Contracts.Requests")
@@ -72,7 +67,6 @@ public static class Layers {
         .Reference(DomainShared, Edge.ModuleOnly)
         .Reference(Domain, Edge.ModuleOnly)
         .Reference(Infrastructure, Edge.ModuleOnly)
-        .Reference(InfrastructureEfCore, Edge.ModuleOnly)
         .Reference(ContractsRequests, Edge.ModuleOnly)
         .Reference(ContractsEvents, Edge.ModuleOnly)
         .Reference(ContractsCommands, Edge.ModuleOnly)
@@ -84,7 +78,6 @@ public static class Layers {
     public static readonly Layer Host = new Layer("Host")
         .Reference(Module)
         .Reference(Infrastructure, Edge.BaseOnly)
-        .Reference(InfrastructureEfCore, Edge.BaseOnly)
         .Reference(ContractsRequests, Edge.BaseOnly)
         .Reference(ContractsEvents, Edge.BaseOnly)
         .Reference(ContractsCommands, Edge.BaseOnly)

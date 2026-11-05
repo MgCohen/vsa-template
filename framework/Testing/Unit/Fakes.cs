@@ -1,11 +1,10 @@
-using System.Linq.Expressions;
 using VSA.Contracts.Events;
 using VSA.Domain;
 using VSA.Infrastructure;
 
 namespace VSA.Testing.Unit;
 
-// The default repository in unit tests. Add and Remove take effect on SaveChangesAsync, as with EF Core.
+// The default repository in unit tests. Add and Remove take effect on SaveChangesAsync.
 public sealed class InMemoryRepository<T, TId> : IRepository<T, TId> where T : AggregateRoot<TId> where TId : notnull {
     readonly Dictionary<TId, T> saved = [];
     readonly List<(T Aggregate, bool Add)> pending = [];
@@ -23,8 +22,8 @@ public sealed class InMemoryRepository<T, TId> : IRepository<T, TId> where T : A
 
     public Task<T?> GetAsync(TId id, CancellationToken ct) => Task.FromResult(saved.GetValueOrDefault(id));
 
-    public Task<List<T>> ListAsync(Expression<Func<T, bool>> where, CancellationToken ct) =>
-        Task.FromResult(saved.Values.Where(where.Compile()).ToList());
+    public Task<List<T>> ListAsync(Func<T, bool> where, CancellationToken ct) =>
+        Task.FromResult(saved.Values.Where(where).ToList());
 
     public void Add(T aggregate) => pending.Add((aggregate, true));
 
