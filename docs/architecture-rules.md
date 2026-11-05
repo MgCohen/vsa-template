@@ -42,8 +42,9 @@ A Shared module has the layers and the slice layout of a module. It is for the b
 | From | Gets from VSA.Sdk |
 |---|---|
 | A module layer | The same layer of each Shared module. A module root gets each Shared root |
-| A module event handler (`Handlers/Events`) or presenter (`Presenters`) | Also the events (`Contracts/Events`) of each module and each Shared module |
-| A Shared event handler or presenter | Also the events of its own Shared module. The `Handlers/Events` of a Shared module in `<VsaUses>` gives the events of that Shared module |
+| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each Shared module |
+| A Shared event handler | Also the events of its own Shared module. The `Handlers/Events` of a Shared module in `<VsaUses>` gives the events of that Shared module |
+| A presenter (`Presenters`) | The events of its own module only. A view that shows more than one module shows the presenter of each module |
 | A Shared layer | The same layer of each Shared module in `<VsaUses>` (names, with `;`). `VSA0002` checks the names |
 | A Shared module | No project of a module |
 

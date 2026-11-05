@@ -1,6 +1,6 @@
 # Presenter events
 
-A view shows one presenter. The presenter changes its state after a request, and also after an event of a module. A presenter event is an integration event that a presenter shows.
+Each module that a view shows has its own presenter. A view that shows more than one module shows the presenter of each module. A presenter changes its state after a request, and also after an event of a module. A presenter event is an integration event that a presenter shows.
 
 ## Flow
 
@@ -33,7 +33,7 @@ PresenterComponent ──Changed──▶ StateHasChanged
 - The observer runs after the handlers, in the scope of the publisher. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
 - A presenter that sends a request can get the event of that request before the response. Make `OnEventAsync` safe for a change that the presenter has already applied, for example replace by ID.
 - A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`VSA1004`). To change state, it sends a request with `IBus`, and the request handler publishes the event.
-- The layer map gives `Presenters` the `Contracts.Events` of each module, as it does for `Handlers.Events`.
+- A presenter shows the events of its own module only. The layer map gives `Presenters` the `Contracts.Events` of its own module.
 
 ## Example
 
