@@ -8,3 +8,4 @@ Rule ID | Category | Severity | Notes
 VSA1001 | VSA | Error | SealedRecordRule
 VSA1002 | VSA | Error | EventHandlerRequestRule
 VSA1003 | VSA | Error | ContractTypeRule
+VSA1004 | VSA | Error | PresenterPublishRule

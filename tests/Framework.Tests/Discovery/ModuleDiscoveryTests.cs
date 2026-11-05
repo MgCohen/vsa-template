@@ -10,10 +10,10 @@ namespace Framework.Tests.Discovery;
 public sealed class ModuleDiscoveryTests {
     [Test]
     public void SharedRootsAreFirstThenRootsAreInOrdinalOrderOfName() {
-        // This test project references three module roots: Bare, Shelf and Twin. Each one gets the Shared root Toolbox.
+        // This test project references four module roots: Bare, Shelf, Signals and Twin. Each one gets the Shared root Toolbox.
         var roots = ModuleDiscovery.FindRoots();
 
-        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Toolbox", "Bare", "Shelf", "Twin" }));
+        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Toolbox", "Bare", "Shelf", "Signals", "Twin" }));
     }
 
     [Test]

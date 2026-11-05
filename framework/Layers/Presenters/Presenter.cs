@@ -5,6 +5,9 @@ public abstract class Presenter(IBus bus) {
 
     protected IBus Bus => bus;
 
+    // LivePresenters calls it after a presenter event.
+    internal void RaiseChanged() => Changed?.Invoke();
+
     // Sets Busy and Error on op, catches RequestException, raises Changed.
     protected async Task Run(OpState op, Func<Task> body) {
         op.Busy = true;

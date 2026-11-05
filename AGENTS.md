@@ -29,6 +29,8 @@ Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script add
 
 The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>`, else startup fails.
 
+A presenter shows the events of the modules: it implements `IPresenterEvent<TEvent>`, and a view that shows it gets each event. A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
+
 ## Tests
 
 Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use NUnit on Microsoft.Testing.Platform (set in `global.json`). NUnit also runs in Unity (Unity Test Framework), and xUnit does not.

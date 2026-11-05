@@ -31,8 +31,10 @@ public static class Layers {
         .Reference(Infrastructure, Edge.ModuleOnly)
         .Reference(ContractsEvents, anyModule: true);
 
+    // A presenter sees the events of all modules (IPresenterEvent). VSA1004 stops it from publishing them.
     public static readonly Layer Presenters = new Layer("Presenters")
-        .Reference(ContractsRequests);
+        .Reference(ContractsRequests)
+        .Reference(ContractsEvents, anyModule: true);
 
     public static readonly Layer Views = new Layer("Views")
         .Reference(Presenters);
