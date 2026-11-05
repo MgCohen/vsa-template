@@ -6,3 +6,6 @@ global_level = -1
 
 # Options of the custom VSA analyzers: vsa.<key> for all rules, vsa.<rule ID>.<key> for one rule.
 vsa.VSA1001.check_responses = true
+
+# CA1716 does not check namespaces: the published domain of a module is <Module>.Domain.Shared, and "Shared" is a VB keyword.
+dotnet_code_quality.CA1716.analyzed_symbol_kinds = NamedType, Method, Property, Event, Parameter

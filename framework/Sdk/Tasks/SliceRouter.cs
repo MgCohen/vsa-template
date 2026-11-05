@@ -22,7 +22,8 @@ public sealed class SliceError(string file, string message) {
 }
 
 public sealed class SliceRouting {
-    // The full path of each slice file -> its layer: Contracts/Requests, Contracts/Events, Handlers/Requests or Handlers/Events.
+    // The full path of each slice file -> its layer: Contracts/Requests, Contracts/Events, Contracts/Commands,
+    // Handlers/Requests, Handlers/Events or Handlers/Commands.
     public Dictionary<string, string> Layers { get; } = new(StringComparer.Ordinal);
     public List<SliceError> Errors { get; } = [];
 }
@@ -30,8 +31,10 @@ public sealed class SliceRouting {
 // Selects the project of each file in Slices/ by the types in the file:
 //   IRequest<T>, IResponse                 Contracts/Requests
 //   IntegrationEvent                       Contracts/Events
-//   a type that a contract type uses       the contracts project of that contract type (a DTO)
-//   other files of a slice                 Handlers/Requests (RoutedHandler) or Handlers/Events (IntegrationEventHandler)
+//   ICommand<T>                            Contracts/Commands
+//   a type that a contract type uses       the contracts project of that contract type (a DTO, a command result)
+//   other files of a slice                 Handlers/Requests (RoutedHandler), Handlers/Events (IntegrationEventHandler)
+//                                          or Handlers/Commands (CommandHandler)
 // The router runs before the compile, so it has no semantic model. It reads the Roslyn syntax tree and matches types by
 // their simple names: first in the same slice, then in Slices/Shared/. The compiler and VSA1003 check the result.
 // A type can inherit a marker through other types, for example DealDamage : Message : IRequest<X>. The router follows
@@ -42,11 +45,13 @@ public static class SliceRouter {
     public const string ContractsEvents = "Contracts/Events";
     public const string HandlersRequests = "Handlers/Requests";
     public const string HandlersEvents = "Handlers/Events";
+    public const string ContractsCommands = "Contracts/Commands";
+    public const string HandlersCommands = "Handlers/Commands";
     public const string Shared = "Shared";
 
     static readonly CSharpParseOptions Parse = new(LanguageVersion.Preview);
 
-    enum Kind { Other, Request, Response, Event, RequestHandler, EventHandler }
+    enum Kind { Other, Request, Response, Event, Command, RequestHandler, EventHandler, CommandHandler }
 
     sealed class Declaration(string name, List<string> bases, HashSet<string> uses) {
         public string Name { get; } = name;
@@ -112,7 +117,11 @@ public static class SliceRouter {
                         routing.Errors.Add(new(d.File, $"{d.Name} is a contract type, but it uses the handler {used.Name}. A contract does not use a handler."));
                     } else if (routing.Layers.TryGetValue(used.File, out var current)) {
                         if (current != layer) {
-                            var user = layer == ContractsRequests ? "a request or a response" : "an event";
+                            var user = layer switch {
+                                ContractsRequests => "a request or a response",
+                                ContractsCommands => "a command",
+                                _ => "an event",
+                            };
                             routing.Errors.Add(new(used.File, $"{used.Name} is used by {user} ({d.Name}) and by a type in {current}. A type can be in one contracts project only. Make two types."));
                         }
                     } else if (Assign(routing, byFile, used.File, layer, used.Name)) {
@@ -136,17 +145,22 @@ public static class SliceRouter {
             }
             if (slice.Key == Shared) {
                 routing.Errors.AddRange(open.Select(f => new SliceError(f,
-                    $"Slices/Shared/ holds only contracts: requests, responses, events and the types that they use. {Path.GetFileName(f)} is none of them. Move it into the slice that uses it.")));
+                    $"Slices/Shared/ holds only contracts: requests, responses, events, commands and the types that they use. {Path.GetFileName(f)} is none of them. Move it into the slice that uses it.")));
                 continue;
             }
             var kinds = open.Where(byFile.ContainsKey).SelectMany(f => byFile[f]).Select(d => d.Kind).Where(IsHandler).Distinct().ToList();
-            if (kinds.Count == 2) {
-                routing.Errors.Add(new(open[0], $"Slice {slice.Key} has a request handler and an event handler. A slice has one kind of handler. Move one of them to its own slice."));
+            if (kinds.Count > 1) {
+                routing.Errors.Add(new(open[0],
+                    $"Slice {slice.Key} has {string.Join(" and ", kinds.OrderBy(k => k).Select(HandlerName))}. A slice has one kind of handler. Move one of them to its own slice."));
             } else if (kinds.Count == 0) {
                 routing.Errors.AddRange(open.Select(f => new SliceError(f,
-                    $"Slice {slice.Key} has no handler, so {Path.GetFileName(f)} has no project. Add a RoutedHandler or an IntegrationEventHandler to the slice, or move the file.")));
+                    $"Slice {slice.Key} has no handler, so {Path.GetFileName(f)} has no project. Add a RoutedHandler, an IntegrationEventHandler or a CommandHandler to the slice, or move the file.")));
             } else {
-                var handlers = kinds[0] == Kind.RequestHandler ? HandlersRequests : HandlersEvents;
+                var handlers = kinds[0] switch {
+                    Kind.RequestHandler => HandlersRequests,
+                    Kind.CommandHandler => HandlersCommands,
+                    _ => HandlersEvents,
+                };
                 foreach (var f in open) {
                     routing.Layers[f] = handlers;
                 }
@@ -191,10 +205,17 @@ public static class SliceRouter {
     static string? ContractLayer(Kind kind) => kind switch {
         Kind.Request or Kind.Response => ContractsRequests,
         Kind.Event => ContractsEvents,
+        Kind.Command => ContractsCommands,
         _ => null,
     };
 
-    static bool IsHandler(Kind kind) => kind is Kind.RequestHandler or Kind.EventHandler;
+    static bool IsHandler(Kind kind) => kind is Kind.RequestHandler or Kind.EventHandler or Kind.CommandHandler;
+
+    static string HandlerName(Kind kind) => kind switch {
+        Kind.RequestHandler => "a request handler",
+        Kind.CommandHandler => "a command handler",
+        _ => "an event handler",
+    };
 
     public static string Relative(string root, string path) {
         var r = root.Replace('\\', '/').TrimEnd('/') + "/";
@@ -235,7 +256,9 @@ public static class SliceRouter {
         }
         return all.Contains("RoutedHandler") ? Kind.RequestHandler
             : all.Contains("IntegrationEventHandler") ? Kind.EventHandler
+            : all.Contains("CommandHandler") ? Kind.CommandHandler
             : all.Contains("IRequest") ? Kind.Request
+            : all.Contains("ICommand") ? Kind.Command
             : all.Contains("IResponse") ? Kind.Response
             : all.Contains("IntegrationEvent") ? Kind.Event
             : Kind.Other;

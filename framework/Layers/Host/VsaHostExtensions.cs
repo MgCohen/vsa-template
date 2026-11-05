@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Presenters;
 
@@ -20,6 +21,7 @@ public static class VsaHostExtensions {
         var services = builder.Services;
         services.AddVsaBus(LoopbackAddress);
         services.AddVsaEvents();
+        services.AddVsaCommands();
         // FastEndpoints needs at least one assembly when auto-discovery is off.
         // An app with no Handlers.Requests layer does not register FastEndpoints and maps no endpoints.
         Assembly[] requests = [.. modules.Select(module => Load(module, "Handlers.Requests")).OfType<Assembly>()];
@@ -30,9 +32,20 @@ public static class VsaHostExtensions {
             });
             services.AddSingleton<RequestEndpoints>();
         }
+        // A command has one handler in the app. A second handler of the same command stops start-up.
+        var commandHandlers = new Dictionary<Type, Type>();
         foreach (var module in modules) {
             foreach (var handler in Concrete(module, "Handlers.Events")) {
                 services.AddScoped(BaseOf(handler, typeof(IntegrationEventHandler<>)), handler);
+            }
+            foreach (var handler in Concrete(module, "Handlers.Commands").Where(t => HasBase(t, typeof(VSA.Handlers.Commands.CommandHandler<,>)))) {
+                var service = BaseOf(handler, typeof(VSA.Handlers.Commands.CommandHandler<,>));
+                if (commandHandlers.TryGetValue(service, out var other)) {
+                    throw new InvalidOperationException(
+                        $"Command {service.GetGenericArguments()[0].FullName} has two handlers: {other.FullName} and {handler.FullName}. A command has one handler.");
+                }
+                commandHandlers[service] = handler;
+                services.AddScoped(service, handler);
             }
             foreach (var presenter in Concrete(module, "Presenters").Where(t => t.IsSubclassOf(typeof(Presenter)))) {
                 services.AddScoped(presenter);
@@ -63,6 +76,15 @@ public static class VsaHostExtensions {
     static IEnumerable<Type> Concrete(VSA.Module.Module module, string layer) =>
         (Load(module, layer)?.GetTypes() ?? [])
             .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute)));
+
+    static bool HasBase(Type type, Type openBase) {
+        for (var b = type.BaseType; b is not null; b = b.BaseType) {
+            if (b.IsGenericType && b.GetGenericTypeDefinition() == openBase) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     static Type BaseOf(Type type, Type openBase) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {
