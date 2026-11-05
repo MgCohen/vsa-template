@@ -114,7 +114,13 @@ vsa.VSA1012.access_order = public, internal, protected_internal, protected, priv
 vsa.VSA1012.static_first = true
 ```
 
-A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list. `FormattingDefaultsTests` makes sure that `VSA.globalconfig` has the defaults of the rules.
+A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list.
+
+| Test | Checks |
+|---|---|
+| `FormattingRuleTests` | Each VSA rule and its options, on small sources |
+| `FormattingBuildTests` | The VSA.Sdk setup, on the built fixture `tests/Fixtures/Built/Formatting`: each rule gives a warning, the build passes, and the migrations give no warning |
+| `FormattingDefaultsTests` | `VSA.globalconfig` has the defaults of the rules |
 
 EF Core writes the files in `Infrastructure/Migrations/`. VSA.Sdk marks them as generated code (`VSA.Migrations.globalconfig` in `obj/`), so no rule checks them.
 
