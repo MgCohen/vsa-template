@@ -9,7 +9,5 @@
     <ProjectReference Include="../Views/App.Views.csproj" />
     <ProjectReference Include="../../Modules/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Layers/Host/VSA.Host.csproj" />
-    <!-- Design-time only: lets dotnet ef build the host to read the model. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
 </Project>

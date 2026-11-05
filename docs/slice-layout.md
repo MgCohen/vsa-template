@@ -228,10 +228,8 @@ Projects in one folder cannot share `obj/`, so each project in `Projects/` write
 | Solution Explorer | The module root shows `Slices/` as `None` items |
 | Design-time build | Each routed project gets its slice files |
 | `dotnet watch` | The module root gives slice files as `Watch` items |
-| `dotnet ef migrations add` | Add `--output-dir ../Infrastructure/Migrations` |
 
 ## Open questions
 
 - Events that more than one slice publishes: put them in `Slices/Shared/`? The router supports it, because the type selects the project.
-- Should VSA.Sdk set the migrations folder of `dotnet ef`?
 - L-04: which direction can commands go between modules? No check stops two modules that send commands to each other.

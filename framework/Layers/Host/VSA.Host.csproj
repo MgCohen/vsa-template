@@ -5,7 +5,6 @@
   <ItemGroup>
     <ProjectReference Include="../Module/VSA.Module.csproj" />
     <ProjectReference Include="../Infrastructure/Core/VSA.Infrastructure.csproj" />
-    <ProjectReference Include="../Infrastructure/EfCore/VSA.Infrastructure.EfCore.csproj" />
     <ProjectReference Include="../Contracts/Requests/VSA.Contracts.Requests.csproj" />
     <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" />
     <ProjectReference Include="../Contracts/Commands/VSA.Contracts.Commands.csproj" />

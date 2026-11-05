@@ -1,16 +1,14 @@
-using Microsoft.EntityFrameworkCore;
-using VSA.Infrastructure.EfCore;
+using Microsoft.Extensions.DependencyInjection;
+using Notes.Domain;
+using Notes.Infrastructure;
+using VSA.Infrastructure;
 using VSA.Module;
 
 namespace Notes;
 
-public sealed class NotesModule : Module<NotesSettings> {
-    protected override IEnumerable<string> Validate(NotesSettings settings) {
-        if (!settings.ConnectionString.Contains("Data Source=", StringComparison.OrdinalIgnoreCase)) {
-            yield return "ConnectionString must be a SQLite connection string with Data Source.";
-        }
+public sealed class NotesModule : Module {
+    public override void Configure(ModuleBuilder module) {
+        module.Services.AddSingleton<NoteStore>();
+        module.Services.AddScoped<IRepository<Note, NoteId>, NoteRepository>();
     }
-
-    public override void Configure(ModuleBuilder module, NotesSettings settings) =>
-        module.AddDatabase(o => o.UseSqlite(settings.ConnectionString));
 }

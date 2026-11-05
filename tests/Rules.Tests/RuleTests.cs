@@ -93,7 +93,7 @@ public sealed class LayerMapTests {
     public void Each_layer_name_is_unique() =>
         Assert.That(Layers.All.Select(l => l.Name), Is.Unique);
 
-    // A reference by name, for example "Infrastructure.EfCore", must name a layer of the map.
+    // A reference by name, for example "Domain.Shared", must name a layer of the map.
     [Test]
     public void Each_edge_names_a_layer_of_the_map() {
         var unknown = Layers.All.SelectMany(l => l.References.Where(e => Layers.Find(e.Target) is null).Select(e => $"{l.Name} -> {e.Target}"));

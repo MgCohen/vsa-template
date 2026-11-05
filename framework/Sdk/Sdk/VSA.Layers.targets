@@ -134,7 +134,6 @@
     <_VsaFramework Include="VSA.Domain" Path="Layers/Domain" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure'">
-    <_VsaFramework Include="VSA.Infrastructure.EfCore" Path="Layers/Infrastructure/EfCore" Private="true" />
     <_VsaFramework Include="VSA.Infrastructure" Path="Layers/Infrastructure/Core" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Requests'">
@@ -159,7 +158,6 @@
     <_VsaFramework Include="VSA.Presenters" Path="Layers/Presenters" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
-    <_VsaFramework Include="VSA.Infrastructure.EfCore" Path="Layers/Infrastructure/EfCore" Private="true" />
     <_VsaFramework Include="VSA.Module" Path="Layers/Module" />
   </ItemGroup>
 
@@ -169,7 +167,6 @@
   </ItemGroup>
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
     <ProjectReference Update="$(VsaFrameworkSourceDir)Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <ProjectReference Update="$(VsaFrameworkSourceDir)Layers/Infrastructure/EfCore/VSA.Infrastructure.EfCore.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- Package mode: package references with the version of this SDK.
@@ -180,7 +177,7 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
     <PackageReference Include="@(_VsaFramework)" Version="$(_VsaV)" VersionOverride="$(_VsaVO)" VsaRule="true" />
-    <PackageReference Update="VSA.Analyzers;VSA.Infrastructure.EfCore" PrivateAssets="all" />
+    <PackageReference Update="VSA.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- The references inside the module. The wildcard finds only the layers that the module has:
