@@ -2,15 +2,17 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
+using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Contracts.Requests;
 using VSA.Domain;
+using VSA.Handlers.Commands;
 using VSA.Handlers.Requests;
 using VSA.Infrastructure;
 
 namespace VSA.Testing.Unit;
 
-// The NUnit base of a unit test: it runs a request handler without HTTP and without a database.
+// The NUnit base of a unit test: it runs a request handler or a command handler without HTTP and without a database.
 // Before each test, the base makes new services with the default fakes and calls Configure.
 // Configure is the one place where a test class makes its fakes and mocks. Keep them in fields for the tests of the class.
 //   public sealed class PublishNoteTests : VsaUnitTest {
@@ -78,6 +80,22 @@ public abstract class VsaUnitTest {
         var instance = ActivatorUtilities.CreateInstance(Provider, handler);
         var method = handler.GetMethod("HandleRequestAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
         return await (Task<Result<TResponse>>)method.Invoke(instance, [request, ct])!;
+    }
+
+    // Finds the handler of the command, creates it with the services, and runs it.
+    // The handler is in the Handlers.Commands project of the same module: Cards.Contracts.Commands -> Cards.Handlers.Commands.
+    // A handler that sends other commands gets ICommandSender from the services: add a mock of it in Configure.
+    protected Task<TResult> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
+        var service = typeof(CommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
+        var name = command.GetType().Assembly.GetName().Name!;
+        var handlers = Assembly.Load(name.Replace(".Contracts.Commands", ".Handlers.Commands", StringComparison.Ordinal));
+        var found = handlers.GetTypes().Where(t => !t.IsAbstract && service.IsAssignableFrom(t)).ToList();
+        if (found.Count != 1) {
+            throw new InvalidOperationException($"{command.GetType().FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
+        }
+        var instance = ActivatorUtilities.CreateInstance(Provider, found[0]);
+        var method = service.GetMethod("HandleAsync")!;
+        return (Task<TResult>)method.Invoke(instance, [command, ct])!;
     }
 
     ServiceProvider Build() {
