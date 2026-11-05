@@ -115,6 +115,7 @@
   <!-- The analyzers read the root folder: VSA1003 does not check a Shared module. -->
   <ItemGroup Condition="'$(VsaLayer)' != ''">
     <CompilerVisibleProperty Include="VsaRootFolder" />
+    <CompilerVisibleProperty Include="VsaLayer" />
   </ItemGroup>
 
   <!-- The framework base of each layer. Path is the project folder under framework/ in source mode. -->

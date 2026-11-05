@@ -6,3 +6,5 @@ global_level = -1
 
 # Options of the custom VSA analyzers: vsa.<key> for all rules, vsa.<rule ID>.<key> for one rule.
 vsa.VSA1001.check_responses = true
+# The bases that a Domain.Shared type can use, apart from the Domain.Shared projects. Write a comma between the items.
+vsa.VSA1006.allowed_bases = System.IEquatable`1, System.IComparable`1

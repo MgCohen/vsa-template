@@ -5,8 +5,9 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace VSA.Analyzers;
 
-// VSA1003: a contracts project holds only contracts. In <Module>.Contracts.Requests and <Module>.Contracts.Events,
-// each public type is a request, a response, an event, or a type that one of them uses (a DTO).
+// VSA1003: a contracts project holds only contracts. In <Module>.Contracts.Requests, <Module>.Contracts.Commands and
+// <Module>.Contracts.Events, each public type is a request, a response, a command, an event, or a type that one of
+// them uses (a DTO). A command result has no marker. It passes because its command uses it.
 // In a slice module, VSA.Sdk selects the project of each file by its types (VsaSliceRouter.cs).
 // This rule checks the result, so a helper type that is in the same file as a contract cannot become public API.
 // A Shared module (VsaRootFolder = Shared) is not checked: its public types are bases for the modules.
@@ -14,7 +15,7 @@ public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1003",
         "Contracts projects hold only contract types",
-        "{0} is in {1}, but no request, response or event uses it. Move it to its own file in the slice, or use it in a contract.",
+        "{0} is in {1}, but no request, response, command or event uses it. Move it to its own file in the slice, or use it in a contract.",
         "VSA",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -22,6 +23,7 @@ public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
     protected internal override void Register(CompilationStartAnalysisContext start) {
         var assembly = start.Compilation.AssemblyName ?? "";
         if (!assembly.EndsWith(".Contracts.Requests", System.StringComparison.Ordinal)
+            && !assembly.EndsWith(".Contracts.Commands", System.StringComparison.Ordinal)
             && !assembly.EndsWith(".Contracts.Events", System.StringComparison.Ordinal)) {
             return;
         }
@@ -32,6 +34,7 @@ public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
         var markers = new[] {
             start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest`1"),
             start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IResponse"),
+            start.Compilation.GetTypeByMetadataName("VSA.Contracts.Commands.ICommand`1"),
             start.Compilation.GetTypeByMetadataName("VSA.Contracts.Events.IntegrationEvent"),
         }.OfType<INamedTypeSymbol>().ToArray();
         if (markers.Length == 0) {
