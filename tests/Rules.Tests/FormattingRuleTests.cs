@@ -201,6 +201,8 @@ public sealed class MemberOrderRuleTests {
 public sealed class CommentRuleTests {
     static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = CommentRule.Descriptor;
 
+    static Microsoft.CodeAnalysis.Testing.DiagnosticResult Comment(int location) => Analyzer.Diagnostic(Rule, location);
+
     [Test]
     public Task Directives_are_not_comments() => Analyzer.VerifyFormatting(Rule, """
         #pragma warning disable CS0169
@@ -215,23 +217,61 @@ public sealed class CommentRuleTests {
     public Task Line_comment_fails() => Analyzer.VerifyFormatting(Rule, """
         {|#0:// text|}
         class A { }
-        """, "", Analyzer.Diagnostic(Rule, 0, "a line comment"));
+        """, "", Comment(0));
+
+    [Test]
+    public Task Each_line_comment_fails() => Analyzer.VerifyFormatting(Rule, """
+        {|#0:// one|}
+        {|#1:// two|}
+        class A { }
+        """, "", Comment(0), Comment(1));
 
     [Test]
     public Task Comment_at_the_end_of_a_line_fails() => Analyzer.VerifyFormatting(Rule, """
         class A { } {|#0:// text|}
-        """, "", Analyzer.Diagnostic(Rule, 0, "a line comment"));
+        """, "", Comment(0));
 
     [Test]
     public Task Block_comment_fails() => Analyzer.VerifyFormatting(Rule, """
         class A { {|#0:/* text */|} }
-        """, "", Analyzer.Diagnostic(Rule, 0, "a block comment"));
+        """, "", Comment(0));
 
     [Test]
-    public Task Xml_comment_fails() => Analyzer.VerifyFormatting(Rule, """
-        {|#0:/// <summary>Text.</summary>
-        |}class A { }
-        """, "", Analyzer.Diagnostic(Rule, 0, "an XML comment"));
+    public Task Xml_comment_fails_and_stops_at_the_end_of_the_line() => Analyzer.VerifyFormatting(Rule, """
+        {|#0:/// <summary>Text.</summary>|}
+        class A { }
+        """, "", Comment(0));
+
+    [Test]
+    public Task Block_xml_comment_fails() => Analyzer.VerifyFormatting(Rule, """
+        {|#0:/** <summary>Text.</summary> */|}
+        class A { }
+        """, "", Comment(0));
+
+    [Test]
+    public Task Comment_after_a_directive_fails() => Analyzer.VerifyFormatting(Rule, """
+        #pragma warning disable CS0169 {|#0:// reason|}
+        #if DEBUG {|#1:// why|}
+        class A { int a; }
+        #endif {|#2:// end|}
+        """, "", Comment(0), Comment(1), Comment(2));
+
+    [Test]
+    public Task Comment_text_in_strings_passes() => Analyzer.VerifyFormatting(Rule, """"
+        class A {
+            string a = "// text";
+            string b = @"/* text */";
+            string c = """// text""";
+        }
+        """", "");
+
+    [Test]
+    public Task Inactive_code_is_not_checked() => Analyzer.VerifyFormatting(Rule, """
+        #if NOT_DEFINED
+        class B { } // text
+        #endif
+        class A { }
+        """, "");
 }
 
 // VSA1000: each option of a rule has a valid value, else the rule does not run.

@@ -40,6 +40,7 @@ public sealed class FormattingBuildTests {
     [TestCase("CA1849", "QualityRules.cs")]
     [TestCase("CA1052", "QualityRules.cs")]
     [TestCase("CA1012", "QualityRules.cs")]
+    [TestCase("CA1812", "QualityRules.cs")]
     [TestCase("IDE0065", "StyleRules.cs")]
     [TestCase("IDE0036", "StyleRules.cs")]
     [TestCase("IDE0054", "StyleRules.cs")]
@@ -58,9 +59,22 @@ public sealed class FormattingBuildTests {
     public void Rule_gives_a_warning(string rule, string file) =>
         Assert.That(Lines($"warning {rule}").Where(line => line.Contains(file, StringComparison.Ordinal)), Is.Not.Empty, build.Output);
 
-    [Test]
-    public void Reflection_base_suppresses_unused_members() =>
-        Assert.That(Lines(": warning IDE005").Where(line => line.Contains("ReflectionBase.cs", StringComparison.Ordinal)), Is.Empty);
+    [TestCase("IDE0051")]
+    [TestCase("IDE0052")]
+    [TestCase("IDE0060")]
+    [TestCase("CS0649")]
+    [TestCase("CS0169")]
+    [TestCase("CA1822")]
+    [TestCase("CA1812")]
+    public void Reflection_base_suppresses_the_rule(string rule) =>
+        Assert.That(Lines($" {rule}:").Where(line => line.Contains("ReflectionBase.cs", StringComparison.Ordinal)), Is.Empty, build.Output);
+
+    [TestCase("IDE0051")]
+    [TestCase("IDE0052")]
+    [TestCase("IDE0060")]
+    [TestCase("CA1812")]
+    public void Type_without_reflection_base_gives_the_warning(string rule) =>
+        Assert.That(Lines($"warning {rule}").Where(line => line.Contains("ReflectionControl.cs", StringComparison.Ordinal)), Is.Not.Empty, build.Output);
 
     [Test]
     public void Rules_give_no_errors() => Assert.That(Lines(": error "), Is.Empty);
