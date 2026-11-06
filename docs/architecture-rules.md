@@ -133,6 +133,7 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `CA1052`, `CA1012` | A class with only static members is `static`. An abstract class has no public constructor | `dotnet_code_quality.<ID>.api_surface` |
 | `CA2000` | Dispose each `IDisposable` object | |
 | `CA1849` | No blocking call, such as `.Result`, in an `async` method | |
+| `CA1812` | An internal or private class that no code creates | A type with a reflection base is not reported. Handlers and the types that dependency injection creates give false warnings until issue #41 is closed |
 | `VSA1008` | Characters in a line | `vsa.VSA1008.max` |
 | `VSA1009` | Lines in a method | `vsa.VSA1009.max` |
 | `VSA1010` | Lines in a file | `vsa.VSA1010.max` |

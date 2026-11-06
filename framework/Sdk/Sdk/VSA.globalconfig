@@ -150,6 +150,8 @@ dotnet_code_quality.CA1012.api_surface = all
 # Dispose each IDisposable object (CA2000). No blocking call, such as .Result, in an async method (CA1849).
 dotnet_diagnostic.CA2000.severity = warning
 dotnet_diagnostic.CA1849.severity = warning
+# An internal or private class that no code creates (CA1812). A type with a reflection base is not reported (VSA9007).
+dotnet_diagnostic.CA1812.severity = warning
 
 # Off by decision: the projects use TypeNameHandling other than None (CA2326 to CA2330). BinaryFormatter is not used (CA2300, CA2301).
 dotnet_diagnostic.CA2326.severity = none
