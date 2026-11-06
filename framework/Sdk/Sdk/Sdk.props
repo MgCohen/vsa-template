@@ -25,9 +25,6 @@
   <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from VSA.Analyzers. -->
   <PropertyGroup>
     <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
-    <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
-    <!-- CS1591: the documentation file is for the code style rules only. Public members do not need XML comments. -->
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
   <!-- In the VSA repository, the root Directory.Build.props imports the rules first. -->
   <Import Project="$(MSBuildThisFileDirectory)VSA.Rules.props" Condition="'$(_VsaRulesImported)' != 'true'" />

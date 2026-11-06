@@ -5,16 +5,18 @@
 is_global = true
 global_level = -1
 
-# CA1716 does not check namespaces: the published domain of a module is <Module>.Domain.Shared, and "Shared" is a VB keyword.
-dotnet_code_quality.CA1716.analyzed_symbol_kinds = NamedType, Method, Property, Event, Parameter
+# Off by decision. CA1716: the code is C# only, so a VB keyword such as "to" or "Get" is a correct name.
+# CA1863: CompositeFormat does not exist in netstandard2.1, so the Unity projects cannot use it.
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1863.severity = none
 
 # Formatting: the built-in rules. IDE0055 checks the format options below and the default format options.
-# A brace is on the line of its statement, and else, catch and finally are on the line of the closing brace.
+# Each brace is on its own line (Allman), and else, catch and finally are on a new line.
 dotnet_diagnostic.IDE0055.severity = warning
-csharp_new_line_before_open_brace = none
-csharp_new_line_before_else = false
-csharp_new_line_before_catch = false
-csharp_new_line_before_finally = false
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
 # Each if, else, for, foreach, while, using and lock has braces.
 csharp_prefer_braces = true
 dotnet_diagnostic.IDE0011.severity = warning
@@ -24,11 +26,136 @@ dotnet_diagnostic.IDE0161.severity = warning
 # No two blank lines in a row.
 dotnet_style_allow_multiple_blank_lines_experimental = false
 dotnet_diagnostic.IDE2000.severity = warning
-# var for each local.
-csharp_style_var_for_built_in_types = true
+# var only where the line shows the type, for example var x = new Foo(). A built-in type is explicit: int x = 5.
+# IDE0008 asks for the explicit type. IDE0007 is off, so an explicit type is also correct where the type is apparent.
+csharp_style_var_for_built_in_types = false
 csharp_style_var_when_type_is_apparent = true
-csharp_style_var_elsewhere = true
-dotnet_diagnostic.IDE0007.severity = warning
-# No access modifier that is the default, for example no private on a member of a class.
-dotnet_style_require_accessibility_modifiers = omit_if_default
+csharp_style_var_elsewhere = false
+dotnet_diagnostic.IDE0007.severity = none
+dotnet_diagnostic.IDE0008.severity = warning
+# Each member of a class or struct, and each type, has an access modifier. In an interface, a modifier is optional.
+dotnet_style_require_accessibility_modifiers = for_non_interface_members
 dotnet_diagnostic.IDE0040.severity = warning
+# One statement on each line: no A(); B(); on one line. A one-line block such as { get; set; } is correct.
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+# No blank line between two closing braces.
+csharp_style_allow_blank_lines_between_consecutive_braces_experimental = false
+dotnet_diagnostic.IDE2002.severity = warning
+
+# Language style.
+# using directives are outside the namespace.
+csharp_using_directive_placement = outside_namespace
+dotnet_diagnostic.IDE0065.severity = warning
+# Modifiers are in the default order, for example public static readonly.
+dotnet_diagnostic.IDE0036.severity = warning
+# The keyword of a built-in type: int and string.IsNullOrEmpty, not Int32 and String.IsNullOrEmpty.
+# IDE0049 runs only in the editor: the build does not report it.
+dotnet_style_predefined_type_for_locals_parameters_members = true
+dotnet_style_predefined_type_for_member_access = true
+dotnet_diagnostic.IDE0049.severity = warning
+# Compound assignment: count += 1, not count = count + 1.
+dotnet_style_prefer_compound_assignment = true
+dotnet_diagnostic.IDE0054.severity = warning
+# A delegate or event call is Changed?.Invoke(...), not a null check and a call.
+csharp_style_conditional_delegate_call = true
+dotnet_diagnostic.IDE1005.severity = warning
+# x is not T, not !(x is T).
+csharp_style_prefer_not_pattern = true
+dotnet_diagnostic.IDE0083.severity = warning
+
+# Bodies: a block for methods, constructors and local functions. => for the other members when the body fits on one line.
+csharp_style_expression_bodied_methods = false
+dotnet_diagnostic.IDE0022.severity = warning
+csharp_style_expression_bodied_constructors = false
+dotnet_diagnostic.IDE0021.severity = warning
+csharp_style_expression_bodied_local_functions = false
+dotnet_diagnostic.IDE0061.severity = warning
+csharp_style_expression_bodied_operators = when_on_single_line
+dotnet_diagnostic.IDE0023.severity = warning
+dotnet_diagnostic.IDE0024.severity = warning
+csharp_style_expression_bodied_properties = when_on_single_line
+dotnet_diagnostic.IDE0025.severity = warning
+csharp_style_expression_bodied_indexers = when_on_single_line
+dotnet_diagnostic.IDE0026.severity = warning
+csharp_style_expression_bodied_accessors = when_on_single_line
+dotnet_diagnostic.IDE0027.severity = warning
+# IDE0053 runs only in the editor: the build does not report it.
+csharp_style_expression_bodied_lambdas = when_on_single_line
+dotnet_diagnostic.IDE0053.severity = warning
+
+# Names (IDE1006). Interfaces: I + PascalCase. Type parameters: T + PascalCase.
+# Types, methods, properties, events and constants: PascalCase. Private fields, parameters and locals: camelCase.
+dotnet_diagnostic.IDE1006.severity = warning
+dotnet_naming_style.pascal.capitalization = pascal_case
+dotnet_naming_style.camel.capitalization = camel_case
+dotnet_naming_style.i_pascal.capitalization = pascal_case
+dotnet_naming_style.i_pascal.required_prefix = I
+dotnet_naming_style.t_pascal.capitalization = pascal_case
+dotnet_naming_style.t_pascal.required_prefix = T
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+dotnet_naming_symbols.constants.applicable_kinds = field, local
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_symbols.types_and_members.applicable_kinds = class, struct, enum, delegate, method, property, event, local_function
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.locals_and_parameters.applicable_kinds = parameter, local
+
+# The first rule that matches a symbol applies, so the constants rule is before the private fields rule.
+dotnet_naming_rule.interfaces.symbols = interfaces
+dotnet_naming_rule.interfaces.style = i_pascal
+dotnet_naming_rule.interfaces.severity = warning
+dotnet_naming_rule.type_parameters.symbols = type_parameters
+dotnet_naming_rule.type_parameters.style = t_pascal
+dotnet_naming_rule.type_parameters.severity = warning
+dotnet_naming_rule.constants.symbols = constants
+dotnet_naming_rule.constants.style = pascal
+dotnet_naming_rule.constants.severity = warning
+dotnet_naming_rule.types_and_members.symbols = types_and_members
+dotnet_naming_rule.types_and_members.style = pascal
+dotnet_naming_rule.types_and_members.severity = warning
+dotnet_naming_rule.private_fields.symbols = private_fields
+dotnet_naming_rule.private_fields.style = camel
+dotnet_naming_rule.private_fields.severity = warning
+dotnet_naming_rule.locals_and_parameters.symbols = locals_and_parameters
+dotnet_naming_rule.locals_and_parameters.style = camel
+dotnet_naming_rule.locals_and_parameters.severity = warning
+
+# Code with no use or no effect.
+# A private member that no code uses (IDE0051), or that code writes and never reads (IDE0052).
+dotnet_diagnostic.IDE0051.severity = warning
+dotnet_diagnostic.IDE0052.severity = warning
+# A value that no code reads. The fix is a discard: _ = Save(order);
+csharp_style_unused_value_assignment_preference = discard_variable
+dotnet_diagnostic.IDE0059.severity = warning
+# A parameter that no code uses, in all methods. An override or an interface implementation is not checked.
+dotnet_code_quality_unused_parameters = all
+dotnet_diagnostic.IDE0060.severity = warning
+# A using directive that the file does not need. The build reports it only with GenerateDocumentationFile (VSA.Rules.props).
+dotnet_diagnostic.IDE0005.severity = warning
+# A cast to the type that the value already has.
+dotnet_diagnostic.IDE0004.severity = warning
+# A suppression that hides no warning. IDE0079 runs only in the editor: the build does not report it.
+dotnet_diagnostic.IDE0079.severity = warning
+
+# Class declarations, for all types, not only public types.
+# A class with only static members is static (CA1052). An abstract class has no public constructor (CA1012).
+dotnet_diagnostic.CA1052.severity = warning
+dotnet_code_quality.CA1052.api_surface = all
+dotnet_diagnostic.CA1012.severity = warning
+dotnet_code_quality.CA1012.api_surface = all
+
+# Dispose each IDisposable object (CA2000). No blocking call, such as .Result, in an async method (CA1849).
+dotnet_diagnostic.CA2000.severity = warning
+dotnet_diagnostic.CA1849.severity = warning
+
+# Off by decision: the projects use TypeNameHandling other than None (CA2326 to CA2330). BinaryFormatter is not used (CA2300, CA2301).
+dotnet_diagnostic.CA2326.severity = none
+dotnet_diagnostic.CA2327.severity = none
+dotnet_diagnostic.CA2328.severity = none
+dotnet_diagnostic.CA2329.severity = none
+dotnet_diagnostic.CA2330.severity = none
+dotnet_diagnostic.CA2300.severity = none
+dotnet_diagnostic.CA2301.severity = none

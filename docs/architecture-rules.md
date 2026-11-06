@@ -38,6 +38,7 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1010` | Analyzers | A file has at most `max` lines. Formatting, warning. |
 | `VSA1011` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
 | `VSA1012` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
+| `VSA1013` | Analyzers | The code has no comments: no `//`, no `/* */` and no `///`. A directive, for example `#region`, is not a comment. Formatting, warning. |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
@@ -106,17 +107,38 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 
 | Rule | Checks | Option |
 |---|---|---|
-| `IDE0055` | Brace on the line of its statement | `csharp_new_line_before_open_brace` |
+| `IDE0055` | Each brace on its own line (Allman) | `csharp_new_line_before_open_brace` |
 | `IDE0011` | Braces on each `if`, `for`, `while` | `csharp_prefer_braces` |
 | `IDE0161` | File-scoped namespace | `csharp_style_namespace_declarations` |
 | `IDE2000` | No two blank lines in a row | `dotnet_style_allow_multiple_blank_lines_experimental` |
-| `IDE0007` | `var` for each local | `csharp_style_var_*` |
-| `IDE0040` | No default access modifier | `dotnet_style_require_accessibility_modifiers` |
+| `IDE0008` | Explicit type, except where the line shows the type | `csharp_style_var_*` |
+| `IDE0040` | Access modifier on each member, except in an interface | `dotnet_style_require_accessibility_modifiers` |
+| `IDE0055` | One statement on each line | `csharp_preserve_single_line_statements` |
+| `IDE2002` | No blank line between two closing braces | `csharp_style_allow_blank_lines_between_consecutive_braces_experimental` |
+| `IDE0065` | `using` outside the namespace | `csharp_using_directive_placement` |
+| `IDE0036` | Modifiers in the default order | `csharp_preferred_modifier_order` |
+| `IDE0049` | `int`, not `Int32` (editor only) | `dotnet_style_predefined_type_*` |
+| `IDE0054` | `x += 1`, not `x = x + 1` | `dotnet_style_prefer_compound_assignment` |
+| `IDE1005` | `Changed?.Invoke(...)` | `csharp_style_conditional_delegate_call` |
+| `IDE0083` | `is not`, not `!(x is T)` | `csharp_style_prefer_not_pattern` |
+| `IDE0021`, `IDE0022`, `IDE0061` | Block body for constructors, methods and local functions | `csharp_style_expression_bodied_*` |
+| `IDE0023`–`IDE0027`, `IDE0053` | `=>` for operators, properties, indexers, accessors and lambdas when it fits on one line (`IDE0053` editor only) | `csharp_style_expression_bodied_*` |
+| `IDE1006` | Names: `I` + PascalCase interfaces, `T` + PascalCase type parameters, PascalCase types, members and constants, camelCase private fields, parameters and locals | `dotnet_naming_*` |
+| `IDE0051`, `IDE0052` | No private member that no code uses, or that code writes and never reads | |
+| `IDE0059` | No value that no code reads. Fix: `_ = Save(order);` | `csharp_style_unused_value_assignment_preference` |
+| `IDE0060` | No parameter that no code uses | `dotnet_code_quality_unused_parameters` |
+| `IDE0005` | No `using` that the file does not need | `GenerateDocumentationFile` in `VSA.Rules.props` |
+| `IDE0004` | No cast to the type that the value already has | |
+| `IDE0079` | No suppression that hides no warning (editor only) | |
+| `CA1052`, `CA1012` | A class with only static members is `static`. An abstract class has no public constructor | `dotnet_code_quality.<ID>.api_surface` |
+| `CA2000` | Dispose each `IDisposable` object | |
+| `CA1849` | No blocking call, such as `.Result`, in an `async` method | |
 | `VSA1008` | Characters in a line | `vsa.VSA1008.max` |
 | `VSA1009` | Lines in a method | `vsa.VSA1009.max` |
 | `VSA1010` | Lines in a file | `vsa.VSA1010.max` |
 | `VSA1011` | One top-level type in a file | `vsa.VSA1011.allow_same_name` |
 | `VSA1012` | Member order | `vsa.VSA1012.kind_order`, `access_order`, `static_first` |
+| `VSA1013` | No comments | |
 
 A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list.
 
@@ -129,6 +151,29 @@ A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `ki
 The analyzer tests read the real `VSA.Rules.globalconfig`. A test config overrides a value, because the rules file has `global_level = -1`.
 
 EF Core writes the files in `Infrastructure/Migrations/`. VSA.Sdk marks them as generated code (`VSA.Migrations.globalconfig` in `obj/`), so no rule checks them.
+
+## Reflection bases: `ReflectionBaseSuppressor`
+
+Reflection can call a private member that no code calls, for example a method that a base class finds by its name. IDE0051 and IDE0052 then give false warnings.
+
+Put `[ReflectionBase]` (package `VSA.Analyzers.Markers`, namespace `VSA.Analyzers.Markers`) on the base class or the interface. `ReflectionBaseSuppressor`, a Roslyn `DiagnosticSuppressor` in VSA.Analyzers, then hides IDE0051 and IDE0052 on each type that derives from it or implements it.
+
+```csharp
+[ReflectionBase]
+public abstract class Screen { }
+
+public sealed class MainMenu : Screen
+{
+    private void OnShow() { }   // no IDE0051
+}
+```
+
+| Suppression | Hides |
+|---|---|
+| `VSA9001` | `IDE0051` |
+| `VSA9002` | `IDE0052` |
+
+Each layer references `VSA.Analyzers.Markers`. It is a separate package because VSA.Analyzers is private (`PrivateAssets="all"`): a DLL in it does not reach the host at runtime.
 
 ## Architecture: `VsaArchitectureTests`
 

@@ -148,6 +148,7 @@
   <!-- The framework base of each layer. Path is the project folder under framework/ in source mode. -->
   <ItemGroup Condition="'$(VsaLayer)' != ''">
     <_VsaFramework Include="VSA.Analyzers" Path="Analyzers" Private="true" />
+    <_VsaFramework Include="VSA.Analyzers.Markers" Path="Analyzers/Markers" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Domain'">
     <_VsaFramework Include="VSA.Domain" Path="Layers/Domain" />

@@ -12,7 +12,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project, the layer references and the slice router (`Tasks/`) |
-| `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build   |
+| `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build. `Markers/` (VSA.Analyzers.Markers): the attributes that the rules read, for example `[ReflectionBase]` |
 | `framework/Testing/`  | The test bases that ship: `Core/` (the layer map), `Architecture/` (ArchUnitNET), `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
@@ -85,7 +85,8 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 ## Working agreements
 
-- Follow the conventions of the surrounding code (naming, structure, comment density).
+- Follow the conventions of the surrounding code (naming, structure).
+- Do not write comments in C# code (`VSA1013`). Put the information in a name: a type, a member, a variable or a test.
 - Add or update tests with every behavior change.
 - Document notable architecture decisions in `docs/`.
 - Keep this file current when conventions change.

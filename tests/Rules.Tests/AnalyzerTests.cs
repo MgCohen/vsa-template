@@ -9,7 +9,7 @@ namespace Rules.Tests;
 // except the formatting rules. A VerifyFormatting test runs only its one rule.
 static class Analyzer {
     static readonly DiagnosticDescriptor[] Formatting = [LineLengthRule.Descriptor, MethodLengthRule.Descriptor,
-        FileLengthRule.Descriptor, OneTypePerFileRule.Descriptor, MemberOrderRule.Descriptor];
+        FileLengthRule.Descriptor, OneTypePerFileRule.Descriptor, MemberOrderRule.Descriptor, CommentRule.Descriptor];
 
     static readonly ReferenceAssemblies Net10 =
         new("net10.0", new PackageIdentity("Microsoft.NETCore.App.Ref", "10.0.0"), Path.Combine("ref", "net10.0"));

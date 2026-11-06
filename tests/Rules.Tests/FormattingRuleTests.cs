@@ -198,6 +198,42 @@ public sealed class MemberOrderRuleTests {
         Diagnostic("N", "private method", "private static method", "instance before static"));
 }
 
+public sealed class CommentRuleTests {
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = CommentRule.Descriptor;
+
+    [Test]
+    public Task Directives_are_not_comments() => Analyzer.VerifyFormatting(Rule, """
+        #pragma warning disable CS0169
+        class A {
+            #region Fields
+            int a;
+            #endregion
+        }
+        """, "");
+
+    [Test]
+    public Task Line_comment_fails() => Analyzer.VerifyFormatting(Rule, """
+        {|#0:// text|}
+        class A { }
+        """, "", Analyzer.Diagnostic(Rule, 0, "a line comment"));
+
+    [Test]
+    public Task Comment_at_the_end_of_a_line_fails() => Analyzer.VerifyFormatting(Rule, """
+        class A { } {|#0:// text|}
+        """, "", Analyzer.Diagnostic(Rule, 0, "a line comment"));
+
+    [Test]
+    public Task Block_comment_fails() => Analyzer.VerifyFormatting(Rule, """
+        class A { {|#0:/* text */|} }
+        """, "", Analyzer.Diagnostic(Rule, 0, "a block comment"));
+
+    [Test]
+    public Task Xml_comment_fails() => Analyzer.VerifyFormatting(Rule, """
+        {|#0:/// <summary>Text.</summary>
+        |}class A { }
+        """, "", Analyzer.Diagnostic(Rule, 0, "an XML comment"));
+}
+
 // VSA1000: each option of a rule has a valid value, else the rule does not run.
 public sealed class RuleOptionTests {
     static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;

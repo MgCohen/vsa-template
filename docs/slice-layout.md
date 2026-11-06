@@ -173,7 +173,7 @@ The layer projects cannot see a property of the root project, so VSA.Sdk reads t
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
 | `Domain/Shared/` | The published domain of one module | Other modules (table above) | `<VsaModuleUses>` in the module root |
 
-The namespace of the published domain is `<Module>.Domain.Shared`. `Shared` is a VB keyword, so `VSA.globalconfig` sets CA1716 to not check namespaces.
+The namespace of the published domain is `<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
 
 ## Commands
 

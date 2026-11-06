@@ -18,3 +18,4 @@ VSA1009 | VSA | Warning | MethodLengthRule
 VSA1010 | VSA | Warning | FileLengthRule
 VSA1011 | VSA | Warning | OneTypePerFileRule
 VSA1012 | VSA | Warning | MemberOrderRule
+VSA1013 | VSA | Warning | CommentRule
