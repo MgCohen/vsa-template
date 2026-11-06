@@ -6,6 +6,9 @@
     <EnforceCodeStyleInBuild Condition="'$(EnforceCodeStyleInBuild)' == ''">true</EnforceCodeStyleInBuild>
     <!-- IDE0005 reports an unused using in the build only when the compiler reads the XML comments. -->
     <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
+    <!-- The compiler writes the file to obj/. VSA1013 permits no XML comments, so the file is not copied to bin/, publish or the package. -->
+    <CopyDocumentationFileToOutputDirectory Condition="'$(CopyDocumentationFileToOutputDirectory)' == ''">false</CopyDocumentationFileToOutputDirectory>
+    <PublishDocumentationFile Condition="'$(PublishDocumentationFile)' == ''">false</PublishDocumentationFile>
     <!-- CS1591: the documentation file is for the code style rules only. Public members do not need XML comments. -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <!-- The formatting rules are warnings while the team examines them. -->
@@ -15,4 +18,11 @@
     <!-- VSA.globalconfig: the built-in .NET rules. VSA.Rules.globalconfig: the values of the VSA rules. -->
     <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)VSA.globalconfig;$(MSBuildThisFileDirectory)VSA.Rules.globalconfig" />
   </ItemGroup>
+  <!-- The pack takes the documentation file from bin/. The file is not there, so the pack does not take it. -->
+  <Target Name="_VsaKeepDocumentationFileInObj" AfterTargets="DocumentationProjectOutputGroup"
+          Condition="'$(CopyDocumentationFileToOutputDirectory)' == 'false'">
+    <ItemGroup>
+      <DocumentationProjectOutputGroupOutput Remove="@(DocumentationProjectOutputGroupOutput)" />
+    </ItemGroup>
+  </Target>
 </Project>
