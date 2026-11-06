@@ -5,8 +5,12 @@ using VSA.Analyzers;
 
 namespace Rules.Tests;
 
-// The test code compiles against .NET 10 and the VSA layer assemblies. Each test runs the one VsaAnalyzer, so all rules run.
+// The test code compiles against .NET 10 and the VSA layer assemblies. Each test runs the one VsaAnalyzer, so all rules run,
+// except the formatting rules. A VerifyFormatting test runs only its one rule.
 static class Analyzer {
+    static readonly DiagnosticDescriptor[] Formatting = [LineLengthRule.Descriptor, MethodLengthRule.Descriptor,
+        FileLengthRule.Descriptor, OneTypePerFileRule.Descriptor, MemberOrderRule.Descriptor, CommentRule.Descriptor];
+
     static readonly ReferenceAssemblies Net10 =
         new("net10.0", new PackageIdentity("Microsoft.NETCore.App.Ref", "10.0.0"), Path.Combine("ref", "net10.0"));
 
@@ -30,10 +34,21 @@ static class Analyzer {
             test.TestState.AdditionalProjectReferences.Add(reference.Assembly);
         });
 
+    // rule: the one formatting rule that the test checks. The test code gets no usings.
+    public static Task VerifyFormatting(DiagnosticDescriptor rule, string source, string config, params DiagnosticResult[] expected) =>
+        Verify(source, config, null, expected, formatting: rule);
+
+    // The same, but without VSA.Rules.globalconfig: config gives all options of the rule, or a test of VSA1000 leaves one out.
+    public static Task VerifyFormattingWithoutRulesConfig(DiagnosticDescriptor rule, string source, string config,
+        params DiagnosticResult[] expected) =>
+        Verify(source, config, null, expected, formatting: rule, rulesConfig: false);
+
     static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected,
-        Action<CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier>>? configure = null) {
+        Action<CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier>>? configure = null, DiagnosticDescriptor? formatting = null,
+        bool rulesConfig = true) {
         var test = new CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
-            TestCode = "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
+            TestCode = formatting is not null ? source
+                : "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
             ReferenceAssemblies = Net10,
         };
         if (assembly is not null) {
@@ -44,10 +59,25 @@ static class Analyzer {
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }
-        if (config.Length > 0) {
-            test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", "is_global = true\n" + config));
+        // A formatting test turns off each other VSA rule. Another test turns off the formatting rules.
+        var others = formatting is null ? Formatting : VsaAnalyzer.Rules.Select(r => r.Rule).Where(r => r.Id != formatting.Id);
+        var off = others.Select(r => $"dotnet_diagnostic.{r.Id}.severity = none\n");
+        var globalConfig = "is_global = true\n" + string.Concat(off) + config;
+        // The test config has the default global_level, so it wins over VSA.Rules.globalconfig (global_level = -1).
+        test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", globalConfig));
+        if (rulesConfig) {
+            test.TestState.AnalyzerConfigFiles.Add(("/VSA.Rules.globalconfig", RulesConfig.Text));
+        }
+        if (formatting is not null) {
+            // The library also checks the code with added lines (#pragma, a generated header). A line or file rule sees those lines.
+            test.TestBehaviors |= TestBehaviors.SkipSuppressionCheck | TestBehaviors.SkipGeneratedCodeCheck;
         }
         configure?.Invoke(test);
+        // A referenced project gets the same config, so the formatting rules are off there too.
+        foreach (var project in test.TestState.AdditionalProjects.Values) {
+            project.AnalyzerConfigFiles.Add(($"/{project.Name}/.globalconfig", globalConfig));
+            project.AnalyzerConfigFiles.Add(($"/{project.Name}/VSA.Rules.globalconfig", RulesConfig.Text));
+        }
         test.ExpectedDiagnostics.AddRange(expected);
         return test.RunAsync(TestContext.CurrentContext.CancellationToken);
     }

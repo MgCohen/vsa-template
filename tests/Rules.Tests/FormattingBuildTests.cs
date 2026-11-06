@@ -1,0 +1,89 @@
+using Tests.Shared;
+
+namespace Rules.Tests;
+
+// The formatting rules in a real build from the packed VSA.Sdk: VSA.Rules.props turns them on, and they are warnings.
+// The built fixture tests/Fixtures/Built/Formatting has one file in Infrastructure/ for each rule,
+// and a file in Infrastructure/Migrations/ that breaks the rules, but is generated code.
+[NonParallelizable]
+public sealed class FormattingBuildTests {
+    DotnetResult build = null!;
+
+    [OneTimeSetUp]
+    public void Build() {
+        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
+        build = workspace.Dotnet("build", "Modules/Styled/Styled.csproj", "-nodeReuse:false");
+    }
+
+    // TreatWarningsAsErrors is true in VSA.Sdk, but the formatting rules are in WarningsNotAsErrors.
+    [Test]
+    public void Build_passes() => Assert.That(build.Succeeded, Is.True, build.Output);
+
+    [TestCase("VSA1008", "LongLine.cs")]
+    [TestCase("VSA1009", "LongMethod.cs")]
+    [TestCase("VSA1010", "LongFile.cs")]
+    [TestCase("VSA1011", "TwoTypes.cs")]
+    [TestCase("VSA1012", "MemberOrder.cs")]
+    [TestCase("IDE0161", "BuiltInRules.cs")]
+    [TestCase("IDE0055", "BuiltInRules.cs")]
+    [TestCase("IDE0040", "BuiltInRules.cs")]
+    [TestCase("IDE2000", "BuiltInRules.cs")]
+    [TestCase("IDE0008", "BuiltInRules.cs")]
+    [TestCase("IDE0011", "BuiltInRules.cs")]
+    [TestCase("IDE0005", "QualityRules.cs")]
+    [TestCase("IDE0051", "QualityRules.cs")]
+    [TestCase("IDE0052", "QualityRules.cs")]
+    [TestCase("IDE0059", "QualityRules.cs")]
+    [TestCase("IDE0060", "QualityRules.cs")]
+    [TestCase("IDE0004", "QualityRules.cs")]
+    [TestCase("CA2000", "QualityRules.cs")]
+    [TestCase("CA1849", "QualityRules.cs")]
+    [TestCase("CA1052", "QualityRules.cs")]
+    [TestCase("CA1012", "QualityRules.cs")]
+    [TestCase("CA1812", "QualityRules.cs")]
+    [TestCase("IDE0065", "StyleRules.cs")]
+    [TestCase("IDE0036", "StyleRules.cs")]
+    [TestCase("IDE0054", "StyleRules.cs")]
+    [TestCase("IDE1005", "StyleRules.cs")]
+    [TestCase("IDE0083", "StyleRules.cs")]
+    [TestCase("IDE2002", "StyleRules.cs")]
+    [TestCase("IDE1006", "StyleRules.cs")]
+    [TestCase("IDE0021", "StyleRules.cs")]
+    [TestCase("IDE0022", "StyleRules.cs")]
+    [TestCase("IDE0023", "StyleRules.cs")]
+    [TestCase("IDE0024", "StyleRules.cs")]
+    [TestCase("IDE0025", "StyleRules.cs")]
+    [TestCase("IDE0026", "StyleRules.cs")]
+    [TestCase("IDE0027", "StyleRules.cs")]
+    [TestCase("IDE0061", "StyleRules.cs")]
+    public void Rule_gives_a_warning(string rule, string file) =>
+        Assert.That(Lines($"warning {rule}").Where(line => line.Contains(file, StringComparison.Ordinal)), Is.Not.Empty, build.Output);
+
+    [TestCase("IDE0051")]
+    [TestCase("IDE0052")]
+    [TestCase("IDE0060")]
+    [TestCase("CS0649")]
+    [TestCase("CS0169")]
+    [TestCase("CA1822")]
+    [TestCase("CA1812")]
+    public void Reflection_base_suppresses_the_rule(string rule) =>
+        Assert.That(Lines($" {rule}:").Where(line => line.Contains("ReflectionBase.cs", StringComparison.Ordinal)), Is.Empty, build.Output);
+
+    [TestCase("IDE0051")]
+    [TestCase("IDE0052")]
+    [TestCase("IDE0060")]
+    [TestCase("CA1812")]
+    public void Type_without_reflection_base_gives_the_warning(string rule) =>
+        Assert.That(Lines($"warning {rule}").Where(line => line.Contains("ReflectionControl.cs", StringComparison.Ordinal)), Is.Not.Empty, build.Output);
+
+    [Test]
+    public void Rules_give_no_errors() => Assert.That(Lines(": error "), Is.Empty);
+
+    // VSA.Sdk marks the files in Infrastructure/Migrations/ as generated code, so no rule checks them.
+    [Test]
+    public void Migrations_give_no_warnings() =>
+        Assert.That(Lines(": warning ").Where(line => line.Contains("Migrations", StringComparison.Ordinal)), Is.Empty);
+
+    IEnumerable<string> Lines(string text) =>
+        build.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));
+}

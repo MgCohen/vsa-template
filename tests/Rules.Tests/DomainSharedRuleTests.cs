@@ -189,13 +189,13 @@ public sealed class VsaOptionsTests {
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>
-        Assert.That(Of(("vsa.VSA1007.allowed_bases", " A`1, B ;C;; ")).GetList("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
+        Assert.That(Of(("vsa.VSA1007.allowed_bases", " A`1, B ;C;; ")).List("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
 
     [Test]
     public void Rule_key_wins_over_the_global_key() =>
-        Assert.That(Of(("vsa.allowed_bases", "A"), ("vsa.VSA1007.allowed_bases", "B")).GetList("allowed_bases"), Is.EqualTo(new[] { "B" }));
+        Assert.That(Of(("vsa.allowed_bases", "A"), ("vsa.VSA1007.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
 
     [Test]
-    public void Missing_key_gives_no_items() =>
-        Assert.That(Of().GetList("allowed_bases"), Is.Empty);
+    public void Missing_key_gives_null() =>
+        Assert.That(Of().List("allowed_bases"), Is.Null);
 }

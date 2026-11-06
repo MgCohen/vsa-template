@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -10,22 +11,56 @@ namespace VSA.Analyzers;
 // Roslyn skips an analyzer only when all of its IDs are off, so this class skips each rule that is off by itself.
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class VsaAnalyzer : DiagnosticAnalyzer {
+    // VSA1000: an option of a rule is missing or not valid. Each value is in VSA.Rules.globalconfig, and no rule has a default.
+    public static readonly DiagnosticDescriptor OptionDescriptor = new(
+        "VSA1000",
+        "A VSA rule option is missing or not valid",
+        "Rule {0} needs the option vsa.{0}.{1}, {2}. The value is '{3}'. Set it in VSA.Rules.globalconfig or .editorconfig. "
+            + "{0} does not run until the option is valid.",
+        "VSA",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
     // Each non-abstract VsaAnalyzerRule of this assembly, in ID order.
     public static ImmutableArray<VsaAnalyzerRule> Rules { get; } = [.. typeof(VsaAnalyzer).Assembly.GetTypes()
         .Where(t => t.IsSubclassOf(typeof(VsaAnalyzerRule)) && !t.IsAbstract)
         .Select(t => (VsaAnalyzerRule)Activator.CreateInstance(t)!)
         .OrderBy(r => r.Id, StringComparer.Ordinal)];
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [.. Rules.Select(r => r.Rule)];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
+        [OptionDescriptor, .. Rules.Select(r => r.Rule)];
 
     public override void Initialize(AnalysisContext context) {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(start => {
-            foreach (var rule in Rules.Where(r => !IsOff(r.Rule, start.Compilation, start.CancellationToken))) {
-                rule.Register(start);
+            var global = start.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
+            var frameworkCode = global.TryGetValue("build_property.VsaFrameworkCode", out var value)
+                && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+            var missing = new List<Diagnostic>();
+            var running = Rules.Where(r => !(frameworkCode && r.IsModuleRule) && !IsOff(r.Rule, start.Compilation, start.CancellationToken));
+            foreach (var rule in running) {
+                var invalid = Invalid(rule, global).ToList();
+                if (invalid.Count == 0) {
+                    rule.Register(start);
+                }
+                missing.AddRange(invalid);
+            }
+            if (missing.Count > 0) {
+                start.RegisterCompilationEndAction(end => missing.ForEach(end.ReportDiagnostic));
             }
         });
+    }
+
+    // One VSA1000 diagnostic for each option of the rule that the global config does not give, or gives with a bad value.
+    static IEnumerable<Diagnostic> Invalid(VsaAnalyzerRule rule, AnalyzerConfigOptions global) {
+        var options = new VsaOptions(rule.Id, global);
+        return rule.RequiredOptions
+            .Select(option => (Option: option, Value: options.Value(option.Key)))
+            .Where(pair => !pair.Option.IsValid(pair.Value))
+            .Select(pair => Diagnostic.Create(OptionDescriptor, Location.None,
+                rule.Id, pair.Option.Key, pair.Option.Kind, pair.Value ?? "missing"));
     }
 
     // A rule is off if its severity is none in each file: from .editorconfig, .globalconfig, a rule set or NoWarn.

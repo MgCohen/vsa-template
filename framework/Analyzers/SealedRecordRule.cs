@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -6,8 +7,10 @@ namespace VSA.Analyzers;
 
 // VSA1001: requests and responses are sealed records. A record compares by value, and sealed stops a second
 // request type that inherits the first and gets its route. The response is checked when it is in the same project.
-// Option: vsa.VSA1001.check_responses = false checks only the requests.
+// Option: vsa.VSA1001.check_responses (in VSA.Rules.globalconfig). If false, the rule checks only the requests.
 public sealed class SealedRecordRule() : VsaAnalyzerRule(Descriptor) {
+    public const string CheckResponsesKey = "check_responses";
+
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1001",
         "Requests and responses are sealed records",
@@ -15,6 +18,8 @@ public sealed class SealedRecordRule() : VsaAnalyzerRule(Descriptor) {
         "VSA",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public override IReadOnlyList<VsaOption> RequiredOptions { get; } = [VsaOption.Bool(CheckResponsesKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest`1") is not { } request) {
@@ -32,7 +37,7 @@ public sealed class SealedRecordRule() : VsaAnalyzerRule(Descriptor) {
             return;
         }
         Report(type, "a request", context);
-        if (!Options(context.Options, type.Locations[0].SourceTree!).Get("check_responses", fallback: true)) {
+        if (Options(context.Options, type.Locations[0].SourceTree!).Bool(CheckResponsesKey) != true) {
             return;
         }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)
