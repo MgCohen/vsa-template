@@ -15,28 +15,32 @@ public sealed class ReflectionBaseSuppressor : DiagnosticSuppressor {
 
     public static readonly SuppressionDescriptor UnusedMember = new("VSA9001", "IDE0051", Justification);
     public static readonly SuppressionDescriptor UnreadMember = new("VSA9002", "IDE0052", Justification);
+    public static readonly SuppressionDescriptor FieldNeverAssigned = new("VSA9003", "CS0649", Justification);
+    public static readonly SuppressionDescriptor FieldNeverUsed = new("VSA9004", "CS0169", Justification);
+    public static readonly SuppressionDescriptor UnusedParameter = new("VSA9005", "IDE0060", Justification);
+    public static readonly SuppressionDescriptor MemberCanBeStatic = new("VSA9006", "CA1822", Justification);
+    public static readonly SuppressionDescriptor TypeNeverCreated = new("VSA9007", "CA1812", Justification);
 
-    public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = [UnusedMember, UnreadMember];
+    static readonly ImmutableDictionary<string, SuppressionDescriptor> ById =
+        new[] { UnusedMember, UnreadMember, FieldNeverAssigned, FieldNeverUsed, UnusedParameter, MemberCanBeStatic, TypeNeverCreated }
+            .ToImmutableDictionary(descriptor => descriptor.SuppressedDiagnosticId);
+
+    public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = [.. ById.Values];
 
     public override void ReportSuppressions(SuppressionAnalysisContext context) {
         foreach (var diagnostic in context.ReportedDiagnostics) {
-            if (Descriptor(diagnostic.Id) is not { } descriptor || diagnostic.Location.SourceTree is not { } tree) {
+            if (!ById.TryGetValue(diagnostic.Id, out var descriptor) || diagnostic.Location.SourceTree is not { } tree) {
                 continue;
             }
             var model = context.GetSemanticModel(tree);
-            if (HasReflectionBase(Member(model, diagnostic, context.CancellationToken)?.ContainingType)) {
+            var symbol = Symbol(model, diagnostic, context.CancellationToken);
+            if (HasReflectionBase(symbol as INamedTypeSymbol) || HasReflectionBase(symbol?.ContainingType)) {
                 context.ReportSuppression(Suppression.Create(descriptor, diagnostic));
             }
         }
     }
 
-    static SuppressionDescriptor? Descriptor(string id) => id switch {
-        "IDE0051" => UnusedMember,
-        "IDE0052" => UnreadMember,
-        _ => null,
-    };
-
-    static ISymbol? Member(SemanticModel model, Diagnostic diagnostic, CancellationToken cancellation) {
+    static ISymbol? Symbol(SemanticModel model, Diagnostic diagnostic, CancellationToken cancellation) {
         var node = model.SyntaxTree.GetRoot(cancellation).FindNode(diagnostic.Location.SourceSpan);
         return node.AncestorsAndSelf()
             .Select(ancestor => model.GetDeclaredSymbol(ancestor, cancellation))
@@ -44,14 +48,17 @@ public sealed class ReflectionBaseSuppressor : DiagnosticSuppressor {
     }
 
     static bool HasReflectionBase(INamedTypeSymbol? type) {
+        if (type is null) {
+            return false;
+        }
         for (var current = type; current is not null; current = current.BaseType) {
-            if (IsMarked(current) || current.Interfaces.Any(IsMarked)) {
+            if (IsMarked(current)) {
                 return true;
             }
         }
-        return type is not null && type.AllInterfaces.Any(IsMarked);
+        return type.AllInterfaces.Any(IsMarked);
     }
 
     static bool IsMarked(INamedTypeSymbol type) =>
-        type.GetAttributes().Any(attribute => attribute.AttributeClass?.Name == AttributeName);
+        type.OriginalDefinition.GetAttributes().Any(attribute => attribute.AttributeClass?.Name == AttributeName);
 }

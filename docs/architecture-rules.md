@@ -38,7 +38,7 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1010` | Analyzers | A file has at most `max` lines. Formatting, warning. |
 | `VSA1011` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
 | `VSA1012` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
-| `VSA1013` | Analyzers | The code has no comments: no `//`, no `/* */` and no `///`. A directive, for example `#region`, is not a comment. Formatting, warning. |
+| `VSA1013` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
 | `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
@@ -154,9 +154,13 @@ EF Core writes the files in `Infrastructure/Migrations/`. VSA.Sdk marks them as 
 
 ## Reflection bases: `ReflectionBaseSuppressor`
 
-Reflection can call a private member that no code calls, for example a method that a base class finds by its name. IDE0051 and IDE0052 then give false warnings.
+Reflection can call a private member that no code calls, for example a method that a base class finds by its name. It can also set a field that no code writes. The rules for unused code then give false warnings.
 
-Put `[ReflectionBase]` (package `VSA.Analyzers.Markers`, namespace `VSA.Analyzers.Markers`) on the base class or the interface. `ReflectionBaseSuppressor`, a Roslyn `DiagnosticSuppressor` in VSA.Analyzers, then hides IDE0051 and IDE0052 on each type that derives from it or implements it.
+Put `[ReflectionBase]` (package `VSA.Analyzers.Markers`, namespace `VSA.Analyzers.Markers`) on the base class or the interface. `ReflectionBaseSuppressor`, a Roslyn `DiagnosticSuppressor` in VSA.Analyzers, then hides the rules in the table below on each type that derives from it or implements it. The base can be indirect or generic, and an interface can inherit the marked interface. A nested type that derives from the base is also covered.
+
+The suppression applies to all private members of the type. A private member that is really not used also gets no warning.
+
+The suppressor finds the attribute by its name, `ReflectionBaseAttribute`. A project that cannot reference the package, or a third-party base, can declare its own attribute with that name.
 
 ```csharp
 [ReflectionBase]
@@ -170,8 +174,15 @@ public sealed class MainMenu : Screen
 
 | Suppression | Hides |
 |---|---|
-| `VSA9001` | `IDE0051` |
-| `VSA9002` | `IDE0052` |
+| `VSA9001` | `IDE0051`: a private member that no code uses |
+| `VSA9002` | `IDE0052`: a private member that no code reads |
+| `VSA9003` | `CS0649`: a field that no code writes |
+| `VSA9004` | `CS0169`: a field that no code uses |
+| `VSA9005` | `IDE0060`: a parameter that no code uses |
+| `VSA9006` | `CA1822`: a member that can be static. Reflection that uses `BindingFlags.Instance` cannot find a static member |
+| `VSA9007` | `CA1812`: an internal class that no code creates. `Activator` creates it |
+
+A suppressor can hide a warning that `TreatWarningsAsErrors` makes an error, for example CS0649.
 
 Each layer references `VSA.Analyzers.Markers`. It is a separate package because VSA.Analyzers is private (`PrivateAssets="all"`): a DLL in it does not reach the host at runtime.
 
