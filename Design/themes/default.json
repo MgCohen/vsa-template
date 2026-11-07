@@ -1,0 +1,74 @@
+{
+  "name": "default",
+  "source": {
+    "artifact": "https://claude.ai/artifact/TcLRUSCig731AfYVSG14uh",
+    "collection": "themes",
+    "document": "tmw5ga7z1",
+    "savedName": "choice",
+    "savedAt": "2026-11-06T20:52:06.493Z"
+  },
+  "palette": {
+    "light": {
+      "canvas": "#eceae6",
+      "canvasTx": "#45423d",
+      "surface": "#fbfbfa",
+      "text": "#1b1a18",
+      "muted": "#5f5b55",
+      "sunken": "#e4e2de",
+      "sunkenTx": "#1b1a18",
+      "accent": "#ff6a1a",
+      "onAccent": "#1b1a18",
+      "shadow": "#3c3228",
+      "done": "#23733a",
+      "pending": "#8a5a0b",
+      "failed": "#b3261e",
+      "new": "#1f5fbf"
+    },
+    "dark": {
+      "canvas": "#18181a",
+      "canvasTx": "#cfccc6",
+      "surface": "#26262a",
+      "text": "#f4f3f1",
+      "muted": "#a8a49d",
+      "sunken": "#151517",
+      "sunkenTx": "#f4f3f1",
+      "accent": "#ff6a1a",
+      "onAccent": "#111111",
+      "shadow": "#000000",
+      "done": "#7fd18f",
+      "pending": "#f0a640",
+      "failed": "#f59a9a",
+      "new": "#8ab4ff"
+    }
+  },
+  "type": {
+    "display": "doto",
+    "body": "inter",
+    "mono": "jetbrains"
+  },
+  "effects": {
+    "depth": 45,
+    "bevel": 70,
+    "carve": 60,
+    "glow": 25,
+    "glass": 0,
+    "radius": 22
+  },
+  "layout": "bento",
+  "components": {
+    "header": "bar",
+    "nav": "well",
+    "field": "carved",
+    "seg": "carved",
+    "bar": "carved",
+    "meter": "dots",
+    "pill": "soft",
+    "ring": "arc",
+    "ringColor": "accent",
+    "toggle": "channel",
+    "inboxView": "list",
+    "list": "cards",
+    "timeline": "rings",
+    "chart": "dots"
+  }
+}

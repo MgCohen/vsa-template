@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VSA Design System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="../tokens/fonts.css">
+<link rel="stylesheet" href="../tokens/global.css">
+<link rel="stylesheet" href="../tokens/alias.css">
+<link rel="stylesheet" href="../tokens/component.css">
+<link rel="stylesheet" href="../reference/default.css">
+<script type="module" src="../components/vsa-button.js"></script>
+<script type="module" src="../components/vsa-toggle.js"></script>
+<script type="module" src="../components/vsa-field.js"></script>
+<style>
+/* Layout: one column of cards. The page uses only alias tokens, so it shows the tokens in use. */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { background: var(--vsa-color-canvas); }
+body { margin: 0; min-height: 100vh; background: var(--vsa-gradient-canvas); color: var(--vsa-color-text); font: var(--vsa-font-size-body)/var(--vsa-line-height-body) var(--vsa-font-body); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+h1 { margin: 0; font: var(--vsa-font-weight-display) 40px/1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
+.lede { margin: 6px 0 0; color: var(--vsa-color-canvas-text); max-width: 64ch; font-size: var(--vsa-font-size-lead); }
+h2 { margin: 0; font-size: var(--vsa-font-size-title); font-weight: var(--vsa-font-weight-strong); }
+h3 { margin: 8px 0 0; font-size: var(--vsa-font-size-caption); font-weight: var(--vsa-font-weight-strong); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-muted); }
+.card { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); border-radius: var(--vsa-radius-card); box-shadow: var(--vsa-shadow-raise); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.note { margin: 0; color: var(--vsa-color-muted); font-size: var(--vsa-font-size-label); max-width: 80ch; }
+code, .mono { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-small); }
+.seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--vsa-radius-control); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
+.seg button { font: inherit; font-weight: var(--vsa-font-weight-medium); border: 0; border-radius: calc(var(--vsa-radius-control) - 3px); padding: 6px 14px; background: none; color: var(--vsa-color-sunken-muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); box-shadow: var(--vsa-shadow-raise-sm); }
+button:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: var(--vsa-focus-offset); }
+.sum { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: var(--vsa-font-size-label); font-weight: var(--vsa-font-weight-strong); padding: 3px 10px; border-radius: var(--vsa-radius-pill); color: var(--st); background: color-mix(in srgb, var(--st) 14%, transparent); border: 1px solid color-mix(in srgb, var(--st) 40%, transparent); }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--st); }
+.ok { --st: var(--vsa-color-state-done); }
+.bad { --st: var(--vsa-color-state-failed); }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--vsa-font-size-label); }
+th { text-align: left; font-size: var(--vsa-font-size-caption); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-muted); font-weight: var(--vsa-font-weight-strong); padding: 6px 8px; border-bottom: 1px solid var(--vsa-color-line); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--vsa-color-line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.v { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-text-secondary); word-break: break-word; }
+.globals { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.gsw { display: grid; gap: 4px; font-size: var(--vsa-font-size-small); }
+.gsw i { display: block; height: 44px; border-radius: var(--vsa-radius-control); border: 1px solid var(--vsa-color-line); }
+.gsw .mono { color: var(--vsa-color-muted); }
+.stage { padding: 14px; background: var(--vsa-gradient-canvas); border-radius: var(--vsa-radius-control); border: 1px solid var(--vsa-color-line); display: grid; gap: 10px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; }
+.tile { height: 76px; border-radius: var(--vsa-radius-card); display: grid; place-items: end start; padding: 8px 10px; font-family: var(--vsa-font-mono); font-size: 10.5px; color: var(--vsa-color-text); background: var(--vsa-color-surface); }
+.tile.sunk { background: var(--vsa-color-sunken); color: var(--vsa-color-sunken-text); }
+.type-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--vsa-color-line); }
+.type-row:last-child { border-bottom: 0; }
+.type-row .mono { color: var(--vsa-color-muted); }
+.space-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; align-items: center; }
+.space-row i { display: block; height: 12px; background: var(--vsa-color-accent); border-radius: 3px; }
+.radii { display: flex; flex-wrap: wrap; gap: 16px; }
+.radii div { width: 120px; height: 72px; background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); display: grid; place-items: center; font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-sunken-text); }
+.demo { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); border-radius: var(--vsa-radius-card); box-shadow: var(--vsa-shadow-raise); padding: 14px; display: grid; gap: 12px; }
+.atom-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.atom-row .tag { font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); }
+.log { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); min-height: 1.4em; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.sum .pill { font: inherit; font-size: var(--vsa-font-size-label); font-weight: var(--vsa-font-weight-strong); cursor: pointer; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--vsa-color-line); overflow-x: auto; overflow-y: hidden; }
+.tabs button { font: inherit; font-size: var(--vsa-font-size-lead); font-weight: var(--vsa-font-weight-medium); border: 0; background: none; color: var(--vsa-color-canvas-text); padding: 10px 14px; cursor: pointer; border-bottom: 3px solid transparent; }
+.tabs button[aria-selected="true"] { color: var(--vsa-color-text); font-weight: var(--vsa-font-weight-strong); border-bottom-color: var(--vsa-color-accent); }
+.panel { display: grid; gap: 18px; }
+.panel[hidden] { display: none; }
+table.themed td[data-theme] { background: var(--vsa-color-canvas); color: var(--vsa-color-canvas-text); width: 36%; }
+.swatch { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.swatch i { width: 40px; height: 24px; flex: none; border-radius: 6px; border: 1px solid var(--vsa-color-line); }
+.swatch span { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); word-break: break-word; }
+#probe-host { position: absolute; left: -9999px; top: 0; }
+@media (max-width: 640px) { .type-row, .space-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } h1 { font-size: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .seg button { transition: background var(--vsa-motion-fast), color var(--vsa-motion-fast); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>VSA Design System</h1>
+      <p class="lede">Atoms and tokens of the default theme. Screens use only these parts.</p>
+    </div>
+    <div class="tools">
+    <div class="sum" id="check-sum"></div>
+    <div class="seg" role="group" aria-label="Theme">
+      <button type="button" data-set="system" aria-pressed="true">System</button>
+      <button type="button" data-set="light" aria-pressed="false">Light</button>
+      <button type="button" data-set="dark" aria-pressed="false">Dark</button>
+    </div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Gallery">
+    <button type="button" role="tab" id="tab-atoms" aria-controls="panel-atoms" data-tab="atoms">Atoms</button>
+    <button type="button" role="tab" id="tab-tokens" aria-controls="panel-tokens" data-tab="tokens">Tokens</button>
+    <button type="button" role="tab" id="tab-check" aria-controls="panel-check" data-tab="check">Check</button>
+  </nav>
+
+  <div class="panel" role="tabpanel" id="panel-atoms" aria-labelledby="tab-atoms">
+    <section class="card" aria-labelledby="h-atoms">
+      <h2 id="h-atoms">Atoms</h2>
+      <p class="note">Each atom is a web component in <code>components/</code>. It reads only its component tokens from <code>tokens/component.css</code>. Use the mouse or the keyboard: Tab moves the focus, Space changes a toggle. The log shows the last event.</p>
+      <div class="stage" id="atoms"></div>
+    </section>
+  </div>
+
+  <div class="panel" role="tabpanel" id="panel-tokens" aria-labelledby="tab-tokens" hidden>
+    <section class="card" aria-labelledby="h-component">
+      <h2 id="h-component">Component tokens</h2>
+      <p class="note">The values in <code>tokens/component.css</code>. Each value refers to an alias token. Change one line to change that part in each atom.</p>
+      <div class="scroll"><table id="component-tokens"><thead><tr><th>Token</th><th>Value</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-alias">
+      <h2 id="h-alias">Alias colors</h2>
+      <p class="note">Each alias color in light and dark, with the global token that it uses.</p>
+      <div class="scroll"><table class="themed" id="alias-colors"><thead><tr><th>Token</th><th>Light</th><th>Dark</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-grad">
+      <h2 id="h-grad">Gradients</h2>
+      <div class="stage" id="gradients"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-shadow">
+      <h2 id="h-shadow">Shadows</h2>
+      <div class="stage" id="shadows"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-global">
+      <h2 id="h-global">Global colors</h2>
+      <p class="note">Name rule: <code>&lt;family&gt;-&lt;n&gt;</code>, n = 1000 − 10 × L* (CIELAB lightness), rounded to the nearest 5. A higher number is a darker color.</p>
+      <div id="globals"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-type">
+      <h2 id="h-type">Type</h2>
+      <div id="type"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-space">
+      <h2 id="h-space">Spacing and radius</h2>
+      <div id="space" style="display:grid;gap:8px"></div>
+      <div class="radii" id="radii"></div>
+    </section>
+  </div>
+
+  <div class="panel" role="tabpanel" id="panel-check" aria-labelledby="tab-check" hidden>
+    <section class="card" aria-labelledby="h-check">
+      <h2 id="h-check">Check against the reference</h2>
+      <p class="note">The check compares alpha at 8 bits, the precision that the screen draws. The browser applies each alias or component token and the matching value of <code>reference/default.css</code> or of the Runner Studio CSS to two test elements, then compares the calculated values. Light and dark use the <code>data-theme</code> attribute. If the system theme is dark, the check also tests the <code>prefers-color-scheme</code> block.</p>
+      <div class="scroll"><table id="check-table"><thead><tr><th>Token</th><th>Reference</th><th>Mode</th><th>Result</th><th>Values</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </div>
+</div>
+<div id="probe-host" aria-hidden="true"></div>
+
+<script>
+const MAP = [
+  ['--vsa-gradient-canvas', '--canvas-bg', 'bg'],
+  ['--vsa-color-canvas', '--canvas-solid', 'color'],
+  ['--vsa-color-canvas-text', '--canvas-tx', 'color'],
+  ['--vsa-gradient-surface', '--surf-bg', 'bg'],
+  ['--vsa-color-surface', '--surface-solid', 'color'],
+  ['--vsa-effect-blur', '--blur', 'filter'],
+  ['--vsa-color-text', '--text', 'color'],
+  ['--vsa-color-text-secondary', '--tx2', 'color'],
+  ['--vsa-color-muted', '--muted', 'color'],
+  ['--vsa-color-line', '--line-c', 'color'],
+  ['--vsa-color-sunken', '--sunken', 'color'],
+  ['--vsa-color-sunken-text', '--sunken-tx', 'color'],
+  ['--vsa-color-sunken-muted', '--sunken-muted', 'color'],
+  ['--vsa-border-sunken', '--sunken-bd', 'outline'],
+  ['--vsa-color-accent', '--accent', 'color'],
+  ['--vsa-color-on-accent', '--on-accent', 'color'],
+  ['--vsa-color-accent-glow', '--accent-glow', 'color'],
+  ['--vsa-effect-glow-strength', '--glow-k', 'number'],
+  ['--vsa-shadow-glow', '--sh-glow', 'shadow'],
+  ['--vsa-shadow-fill', '--sh-fill', 'shadow'],
+  ['--vsa-shadow-raise', '--sh-raise', 'shadow'],
+  ['--vsa-shadow-raise-sm', '--sh-raise-sm', 'shadow'],
+  ['--vsa-shadow-dial', '--sh-dial', 'shadow'],
+  ['--vsa-shadow-hole', '--sh-hole', 'shadow'],
+  ['--vsa-gradient-hole', '--hole-bg', 'bg'],
+  ['--vsa-shadow-carve', '--sh-carve', 'shadow'],
+  ['--vsa-gradient-knob', '--knob', 'bg'],
+  ['--vsa-color-head-tint', '--head-tint', 'color'],
+  ['--vsa-color-track', '--track', 'color'],
+  ['--vsa-color-dim', '--dim', 'color'],
+  ['--vsa-color-state-done', '--done', 'color'],
+  ['--vsa-color-state-pending', '--pending', 'color'],
+  ['--vsa-color-state-failed', '--failed', 'color'],
+  ['--vsa-color-state-new', '--new', 'color'],
+  ['--vsa-radius-card', '--r', 'radius'],
+  ['--vsa-radius-control', '--r-sm', 'radius'],
+  ['--vsa-font-display', '--f-display', 'font'],
+  ['--vsa-font-body', '--f-body', 'font'],
+  ['--vsa-font-mono', '--f-mono', 'font'],
+  ['--vsa-font-weight-display', '--w-display', 'weight'],
+  ['--vsa-letter-spacing-display', '--ls-display', 'spacing'],
+  ['--vsa-button-background', '--surf-bg', 'bg'],
+  ['--vsa-button-text', '--text', 'color'],
+  ['--vsa-button-shadow', '--sh-raise', 'shadow'],
+  ['--vsa-button-radius', '--r-sm', 'radius'],
+  ['--vsa-button-primary-background', '--accent', 'color'],
+  ['--vsa-button-primary-text', '--on-accent', 'color'],
+  ['--vsa-button-primary-shadow', 'var(--sh-raise), var(--sh-glow)', 'shadow'],
+  ['--vsa-toggle-track', '--sunken', 'color'],
+  ['--vsa-toggle-track-shadow', '--sh-carve', 'shadow'],
+  ['--vsa-toggle-track-border', '--sunken-bd', 'outline'],
+  ['--vsa-toggle-track-on', '--accent', 'color'],
+  ['--vsa-toggle-track-on-shadow', 'inset 2px 2px 4px rgba(0,0,0,.3), var(--sh-glow)', 'shadow'],
+  ['--vsa-toggle-knob', '--knob', 'bg'],
+  ['--vsa-toggle-knob-shadow', '0 2px 4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25)', 'shadow'],
+  ['--vsa-toggle-disabled-opacity', '.45', 'number'],
+  ['--vsa-field-background', '--sunken', 'color'],
+  ['--vsa-field-shadow', '--sh-carve', 'shadow'],
+  ['--vsa-field-border', '--sunken-bd', 'outline'],
+  ['--vsa-field-radius', '--r-sm', 'radius'],
+  ['--vsa-field-text', '--sunken-tx', 'color'],
+  ['--vsa-field-placeholder', '--sunken-muted', 'color'],
+];
+const PROP = { color: ['background-color'], bg: ['background-color', 'background-image'], shadow: ['box-shadow'], radius: ['border-top-left-radius'], font: ['font-family'], weight: ['font-weight'], spacing: ['letter-spacing'], filter: ['backdrop-filter'], outline: ['outline-style'], number: ['--n'] };
+const SET = { color: 'background-color', radius: 'border-radius', font: 'font-family', weight: 'font-weight', spacing: 'letter-spacing', filter: 'backdrop-filter', outline: 'outline', shadow: 'box-shadow', bg: 'background', number: '--n' };
+
+const host = document.getElementById('probe-host');
+const root = document.documentElement;
+
+const alpha8 = a => a === undefined ? 1 : Math.round(Math.round(parseFloat(a) * 255) / 255 * 1000) / 1000;
+function toRgba(m, a, b, c, alpha) {
+  const ch = v => Math.round(parseFloat(v) * 255);
+  return `rgba(${ch(a)},${ch(b)},${ch(c)},${alpha8(alpha)})`;
+}
+function norm(s, kind) {
+  let v = String(s).trim()
+    .replace(/color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.e-]+))?\)/g, toRgba)
+    .replace(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+))?\s*\)/g, (m, r, g, b, a) => `rgba(${r},${g},${b},${alpha8(a)})`)
+    .replace(/\s+/g, ' ');
+  if (kind === 'shadow') v = v.split(/,(?![^(]*\))/).map(x => x.trim()).filter(x => !/^rgba\(\d+,\d+,\d+,0\) 0px 0px 0px( 0px)?$/.test(x)).join(', ');
+  if (kind === 'number') v = String(parseFloat(v));
+  return v;
+}
+const isVar = s => s.startsWith('--');
+const expr = s => isVar(s) ? `var(${s})` : s;
+function measure(scope, name, kind) {
+  const el = document.createElement('div');
+  el.style.setProperty(kind === 'number' ? '--n' : SET[kind], expr(name));
+  if (kind === 'outline') el.style.outlineWidth = '1px';
+  scope.appendChild(el);
+  const cs = getComputedStyle(el);
+  const out = PROP[kind].map(p => norm(cs.getPropertyValue(p), kind)).join(' | ');
+  el.remove();
+  return out;
+}
+function runMode(mode, label) {
+  const prevTheme = root.getAttribute('data-theme'), prevMode = root.getAttribute('data-mode');
+  if (mode === 'system') { root.removeAttribute('data-theme'); }
+  else { root.setAttribute('data-theme', mode); }
+  const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  if (dark) root.setAttribute('data-mode', 'dark'); else root.removeAttribute('data-mode');
+  const rows = MAP.map(([n, o, k]) => {
+    const defined = readVar(n) !== '' && (!isVar(o) || readVar(o) !== '');
+    const a = defined ? measure(host, n, k) : 'token not defined: are the CSS files loaded?', e = measure(host, o, k);
+    return { n, o, k, mode: label, ok: defined && a === e, a, e };
+  });
+  prevTheme === null ? root.removeAttribute('data-theme') : root.setAttribute('data-theme', prevTheme);
+  prevMode === null ? root.removeAttribute('data-mode') : root.setAttribute('data-mode', prevMode);
+  return rows;
+}
+function runCheck() {
+  let rows = [...runMode('light', 'light'), ...runMode('dark', 'dark')];
+  if (matchMedia('(prefers-color-scheme: dark)').matches) rows = rows.concat(runMode('system', 'dark (system)'));
+  const groups = {};
+  rows.forEach(r => { (groups[r.mode] = groups[r.mode] || { ok: 0, all: 0 }); groups[r.mode].all++; if (r.ok) groups[r.mode].ok++; });
+  document.getElementById('check-sum').innerHTML = Object.entries(groups).map(([m, g]) => `<button type="button" class="pill ${g.ok === g.all ? 'ok' : 'bad'}" title="Open the check">${m}: ${g.ok} of ${g.all} pass</button>`).join('');
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const sorted = rows.slice().sort((a, b) => a.ok - b.ok);
+  document.querySelector('#check-table tbody').innerHTML = sorted.map(r => `<tr><td class="mono">${r.n}</td><td class="mono">${r.o}</td><td>${r.mode}</td><td><span class="pill ${r.ok ? 'ok' : 'bad'}">${r.ok ? 'Pass' : 'Fail'}</span></td><td class="v">${r.ok ? esc(r.a) : 'got ' + esc(r.a) + '<br>want ' + esc(r.e)}</td></tr>`).join('');
+  window.vsaCheck = { groups, failures: rows.filter(r => !r.ok) };
+}
+
+const GLOBAL_COLORS = [
+  ['gray', [0, 5, 950, 1000]],
+  ['warm', [15, 40, 55, 75, 100, 180, 185, 295, 325, 610, 620, 700, 720, 785, 905]],
+  ['cool', [670, 745, 795, 845, 900, 915, 930]],
+  ['strong', [['orange', 370], ['green', 225], ['green', 575], ['amber', 265], ['amber', 575], ['red', 270], ['red', 605], ['blue', 270], ['blue', 585]]],
+];
+function globalName(fam, n) { return Array.isArray(n) ? `--vsa-${n[0]}-${n[1]}` : `--vsa-${fam}-${n}`; }
+function readVar(name, scope = root) { return getComputedStyle(scope).getPropertyValue(name).trim(); }
+const HEX_TO_GLOBAL = {};
+function renderGlobals() {
+  document.getElementById('globals').innerHTML = GLOBAL_COLORS.map(([fam, list]) => `<h3>${fam === 'strong' ? 'Hue families' : fam}</h3><div class="globals">${list.map(n => {
+    const name = globalName(fam, n), hex = readVar(name);
+    HEX_TO_GLOBAL[hex.toLowerCase()] = name;
+    return `<div class="gsw"><i style="background:var(${name})"></i><span class="mono">${name}</span><span class="mono">${hex}</span></div>`;
+  }).join('')}</div>`).join('');
+}
+function source(value) {
+  return value.replace(/#[0-9a-f]{6}/gi, h => HEX_TO_GLOBAL[h.toLowerCase()] || h).replace(/\s+/g, ' ');
+}
+const ALIAS_COLORS = ['canvas', 'canvas-text', 'surface', 'text', 'text-secondary', 'muted', 'line', 'sunken', 'sunken-text', 'sunken-muted', 'accent', 'on-accent', 'accent-glow', 'head-tint', 'track', 'dim', 'state-done', 'state-pending', 'state-failed', 'state-new'].map(n => `--vsa-color-${n}`);
+const GRADIENTS = ['canvas', 'surface', 'hole', 'knob'].map(n => `--vsa-gradient-${n}`);
+const SHADOWS = ['raise', 'raise-sm', 'carve', 'dial', 'hole', 'fill', 'glow'].map(n => `--vsa-shadow-${n}`);
+function stage(id, html) {
+  document.getElementById(id).innerHTML = html;
+}
+function renderAlias() {
+  const probes = Object.fromEntries(['light', 'dark'].map(m => { const el = document.createElement('div'); el.dataset.theme = m; host.appendChild(el); return [m, el]; }));
+  const cell = (n, m) => `<td data-theme="${m}"><div class="swatch"><i style="background:var(${n})"></i><span>${source(readVar(n, probes[m]))}</span></div></td>`;
+  document.querySelector('#alias-colors tbody').innerHTML = ALIAS_COLORS.map(n => `<tr><td class="mono">${n}</td>${cell(n, 'light')}${cell(n, 'dark')}</tr>`).join('');
+  stage('gradients', `<div class="tiles">${GRADIENTS.map(n => `<div class="tile" style="background:var(${n});border:1px solid var(--vsa-color-line)">${n.replace('--vsa-', '')}</div>`).join('')}</div>`);
+  stage('shadows', `<div class="tiles">${SHADOWS.map(n => `<div class="tile ${['carve', 'dial', 'fill'].some(k => n.endsWith('-' + k)) ? 'sunk' : ''}" style="box-shadow:var(${n})">${n.replace('--vsa-', '')}</div>`).join('')}</div>`);
+}
+const SEARCH_ICON = '<svg slot="start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+const PLAY_ICON = '<svg slot="start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>';
+function renderAtoms() {
+  stage('atoms', `<div class="demo">
+    <h3>Button</h3>
+    <div class="atom-row"><vsa-button>Cancel</vsa-button><vsa-button variant="primary">Save</vsa-button><vsa-button variant="primary">${PLAY_ICON}Start</vsa-button><vsa-button disabled>Disabled</vsa-button></div>
+    <h3>Toggle</h3>
+    <div class="atom-row"><vsa-toggle checked aria-label="Listener"></vsa-toggle><vsa-toggle aria-label="Pin"></vsa-toggle><vsa-toggle size="small" checked aria-label="Handler on"></vsa-toggle><vsa-toggle size="small" aria-label="Handler off"></vsa-toggle><vsa-toggle disabled aria-label="Start with Windows"></vsa-toggle><span class="tag">on · off · small · disabled</span></div>
+    <h3>Field</h3>
+    <vsa-field placeholder="Search sources and handlers" aria-label="Search">${SEARCH_ICON}</vsa-field>
+    <vsa-field value="LogEverything" aria-label="Handler name"></vsa-field>
+    <vsa-field placeholder="Disabled" disabled aria-label="Disabled field"></vsa-field>
+    <div class="log" aria-live="polite">No event yet</div>
+  </div>`);
+  document.getElementById('atoms').addEventListener('change', e => {
+    const t = e.target, log = t.closest('.demo').querySelector('.log');
+    log.textContent = `change · <${t.localName}> ${t.localName === 'vsa-toggle' ? 'checked=' + t.checked : 'value="' + t.value + '"'}`;
+  });
+  document.getElementById('atoms').addEventListener('click', e => {
+    const t = e.target.closest('vsa-button');
+    if (t && !t.disabled) t.closest('.demo').querySelector('.log').textContent = `click · <vsa-button> "${t.textContent.trim()}"`;
+  });
+}
+function renderComponentTokens() {
+  const rows = [];
+  for (const sheet of document.styleSheets) {
+    let rules;
+    try { rules = sheet.cssRules; } catch (e) { continue; }
+    for (const rule of rules) {
+      const sel = rule.selectorText || '';
+      if (!rule.style || !sel.includes(':root') || !sel.includes('[data-theme]')) continue;
+      for (const prop of rule.style) if (prop.startsWith('--vsa-')) rows.push([prop, rule.style.getPropertyValue(prop).trim()]);
+    }
+  }
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  document.querySelector('#component-tokens tbody').innerHTML = rows.map(([n, v]) => `<tr><td class="mono">${n}</td><td class="v">${esc(v)}</td></tr>`).join('');
+}
+const TABS = ['atoms', 'tokens', 'check'];
+function showTab(name, focus) {
+  if (!TABS.includes(name)) name = 'atoms';
+  document.querySelectorAll('[role="tab"]').forEach(t => {
+    const on = t.dataset.tab === name;
+    t.setAttribute('aria-selected', String(on));
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    if (on && focus) t.focus();
+  });
+  try { localStorage.setItem('vsa-gallery-tab', name); } catch (e) {}
+}
+const tabList = document.querySelector('.tabs');
+tabList.addEventListener('click', e => { const t = e.target.closest('[role="tab"]'); if (t) showTab(t.dataset.tab); });
+tabList.addEventListener('keydown', e => {
+  const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+  if (!step) return;
+  const i = TABS.indexOf(document.querySelector('[role="tab"][aria-selected="true"]').dataset.tab);
+  showTab(TABS[(i + step + TABS.length) % TABS.length], true);
+});
+document.getElementById('check-sum').addEventListener('click', () => showTab('check'));
+function renderType() {
+  const roles = [['--vsa-font-display', 'Runner 133', 'display'], ['--vsa-font-body', 'Search sources and handlers', 'body'], ['--vsa-font-mono', 'page.properties_updated · 21:24', 'mono']];
+  const sizes = ['hero', 'metric', 'title', 'lead', 'body', 'label', 'small', 'caption'];
+  document.getElementById('type').innerHTML =
+    roles.map(([v, t, r]) => `<div class="type-row"><span class="mono">${v}</span><span style="font-family:var(${v});font-size:22px;${r === 'display' ? 'font-weight:var(--vsa-font-weight-display);letter-spacing:var(--vsa-letter-spacing-display)' : ''}">${t}</span></div>`).join('') +
+    sizes.map(s => `<div class="type-row"><span class="mono">--vsa-font-size-${s} · ${readVar('--vsa-font-size-' + s)}</span><span style="font-size:var(--vsa-font-size-${s})">Connected · mock</span></div>`).join('');
+}
+function renderSpace() {
+  document.getElementById('space').innerHTML = ['xxs', 'xs', 'sm', 'md', 'lg', 'xl', 'xxl'].map(s => `<div class="space-row"><span class="mono">--vsa-space-${s} · ${readVar('--vsa-space-' + s)}</span><i style="width:calc(var(--vsa-space-${s}) * 6)"></i></div>`).join('');
+  document.getElementById('radii').innerHTML = ['card', 'control', 'pill'].map(r => `<div style="border-radius:var(--vsa-radius-${r})">radius-${r}</div>`).join('');
+}
+
+function setTheme(t) {
+  if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.set === t)));
+  try { localStorage.setItem('vsa-gallery-theme', t); } catch (e) {}
+  runCheck();
+}
+document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTheme(b.dataset.set); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', runCheck);
+
+renderGlobals();
+renderAlias();
+renderAtoms();
+renderComponentTokens();
+renderType();
+renderSpace();
+let savedTab = 'atoms';
+try { savedTab = localStorage.getItem('vsa-gallery-tab') || 'atoms'; } catch (e) {}
+showTab(savedTab);
+let saved = 'system';
+try { saved = localStorage.getItem('vsa-gallery-theme') || 'system'; } catch (e) {}
+setTheme(saved);
+</script>
+</body>
+</html>

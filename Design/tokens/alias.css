@@ -1,0 +1,220 @@
+/*
+  VSA Design System: alias tokens.
+  Each token gives a meaning to a global token. Components read only alias tokens and their own component tokens.
+  Every color comes from global.css. A transparent color is color-mix() of a global color with transparent.
+  Theme: light is the default. Dark applies with prefers-color-scheme: dark, or with data-theme="dark" on any element.
+  data-theme="light" keeps light on that element, also when the OS is dark.
+  The two dark blocks must stay equal: the gallery check compares them.
+*/
+:root {
+  --vsa-radius-card: var(--vsa-size-22);
+  --vsa-radius-control: var(--vsa-size-12);
+  --vsa-radius-pill: var(--vsa-size-999);
+
+  --vsa-font-display: var(--vsa-family-doto);
+  --vsa-font-body: var(--vsa-family-inter);
+  --vsa-font-mono: var(--vsa-family-jetbrains-mono);
+  --vsa-font-weight-display: var(--vsa-weight-800);
+  --vsa-font-weight-regular: var(--vsa-weight-400);
+  --vsa-font-weight-medium: var(--vsa-weight-500);
+  --vsa-font-weight-strong: var(--vsa-weight-600);
+  --vsa-letter-spacing-display: .02em;
+  --vsa-letter-spacing-caps: .07em;
+
+  --vsa-font-size-caption: var(--vsa-size-11);
+  --vsa-font-size-small: var(--vsa-size-11-5);
+  --vsa-font-size-label: var(--vsa-size-12);
+  --vsa-font-size-body: var(--vsa-size-13);
+  --vsa-font-size-lead: var(--vsa-size-15);
+  --vsa-font-size-title: var(--vsa-size-17);
+  --vsa-font-size-metric: var(--vsa-size-20);
+  --vsa-font-size-hero: var(--vsa-size-30);
+  --vsa-line-height-tight: 1;
+  --vsa-line-height-snug: 1.1;
+  --vsa-line-height-body: 1.35;
+
+  --vsa-space-xxs: var(--vsa-size-2);
+  --vsa-space-xs: var(--vsa-size-4);
+  --vsa-space-sm: var(--vsa-size-6);
+  --vsa-space-md: var(--vsa-size-8);
+  --vsa-space-lg: var(--vsa-size-10);
+  --vsa-space-xl: var(--vsa-size-12);
+  --vsa-space-xxl: var(--vsa-size-14);
+
+  --vsa-icon-size: var(--vsa-size-16);
+  --vsa-icon-stroke: 1.8;
+  --vsa-motion-fast: var(--vsa-duration-150);
+  --vsa-focus-width: var(--vsa-size-2);
+  --vsa-focus-offset: var(--vsa-size-2);
+
+  --vsa-opacity-disabled: .45;
+  --vsa-shadow-press: inset 2px 2px 4px color-mix(in srgb, var(--vsa-gray-1000) 30%, transparent);
+  --vsa-shadow-knob:
+    0 2px 4px color-mix(in srgb, var(--vsa-gray-1000) 35%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 25%, transparent);
+
+  --vsa-effect-glow-strength: 0.25;
+  --vsa-effect-blur: none;
+  --vsa-border-sunken: none;
+
+  --vsa-shadow-glow: 0 0 4px color-mix(in srgb, var(--vsa-orange-370) 15%, transparent);
+  --vsa-shadow-fill:
+    inset 2.2px 2.2px 3.8px color-mix(in srgb, var(--vsa-gray-1000) 30%, transparent),
+    inset -1px -1px 1px color-mix(in srgb, var(--vsa-gray-0) 18%, transparent);
+}
+
+:root, [data-theme="light"] {
+  --vsa-color-canvas: var(--vsa-warm-75);
+  --vsa-color-canvas-text: var(--vsa-warm-720);
+  --vsa-color-surface: var(--vsa-warm-15);
+  --vsa-color-text: var(--vsa-warm-905);
+  --vsa-color-text-secondary: var(--vsa-warm-700);
+  --vsa-color-muted: var(--vsa-warm-610);
+  --vsa-color-line: color-mix(in srgb, var(--vsa-warm-905) 9%, transparent);
+  --vsa-color-sunken: var(--vsa-warm-100);
+  --vsa-color-sunken-text: var(--vsa-warm-905);
+  --vsa-color-sunken-muted: var(--vsa-warm-620);
+  --vsa-color-accent: var(--vsa-orange-370);
+  --vsa-color-on-accent: var(--vsa-warm-905);
+  --vsa-color-accent-glow: color-mix(in srgb, var(--vsa-orange-370) 18.8%, transparent);
+  --vsa-color-head-tint: color-mix(in srgb, var(--vsa-warm-905) 5%, transparent);
+  --vsa-color-track: color-mix(in srgb, var(--vsa-warm-905) 20%, transparent);
+  --vsa-color-dim: color-mix(in srgb, var(--vsa-warm-905) 10%, transparent);
+  --vsa-color-state-done: var(--vsa-green-575);
+  --vsa-color-state-pending: var(--vsa-amber-575);
+  --vsa-color-state-failed: var(--vsa-red-605);
+  --vsa-color-state-new: var(--vsa-blue-585);
+
+  --vsa-gradient-canvas: linear-gradient(180deg, var(--vsa-warm-55), var(--vsa-warm-75));
+  --vsa-gradient-surface: var(--vsa-warm-15);
+  --vsa-gradient-hole: radial-gradient(circle at 35% 30%, var(--vsa-gray-5), var(--vsa-warm-15) 70%);
+  --vsa-gradient-knob: var(--vsa-gray-0);
+
+  --vsa-shadow-raise:
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 63%, transparent),
+    inset 0 -3px 7px color-mix(in srgb, var(--vsa-warm-785) 4.9%, transparent),
+    -6px -6px 14px color-mix(in srgb, var(--vsa-gray-0) 36%, transparent),
+    0 2px 3px color-mix(in srgb, var(--vsa-warm-785) 5.4%, transparent),
+    0 11px 21px -8px color-mix(in srgb, var(--vsa-warm-785) 23.4%, transparent);
+  --vsa-shadow-raise-sm:
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 63%, transparent),
+    0 2px 6px color-mix(in srgb, var(--vsa-warm-785) 11.3%, transparent);
+  --vsa-shadow-dial:
+    inset 5.4px 5.4px 11px color-mix(in srgb, var(--vsa-warm-785) 21%, transparent),
+    inset -3px -3px 8px color-mix(in srgb, var(--vsa-gray-0) 57%, transparent),
+    0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 36%, transparent);
+  --vsa-shadow-hole:
+    0 7px 14px color-mix(in srgb, var(--vsa-warm-785) 11.3%, transparent),
+    0 2px 3px color-mix(in srgb, var(--vsa-warm-785) 6.8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 63%, transparent),
+    inset 0 -3px 6px color-mix(in srgb, var(--vsa-warm-785) 4.2%, transparent);
+  --vsa-shadow-carve:
+    inset 3.8px 3.8px 8px color-mix(in srgb, var(--vsa-warm-785) 18%, transparent),
+    inset -2px -2px 4px color-mix(in srgb, var(--vsa-gray-0) 57%, transparent);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --vsa-color-canvas: var(--vsa-cool-915);
+    --vsa-color-canvas-text: var(--vsa-warm-180);
+    --vsa-color-surface: var(--vsa-cool-845);
+    --vsa-color-text: var(--vsa-warm-40);
+    --vsa-color-text-secondary: var(--vsa-warm-185);
+    --vsa-color-muted: var(--vsa-warm-325);
+    --vsa-color-line: color-mix(in srgb, var(--vsa-warm-40) 9%, transparent);
+    --vsa-color-sunken: var(--vsa-cool-930);
+    --vsa-color-sunken-text: var(--vsa-warm-40);
+    --vsa-color-sunken-muted: var(--vsa-warm-295);
+    --vsa-color-accent: var(--vsa-orange-370);
+    --vsa-color-on-accent: var(--vsa-gray-950);
+    --vsa-color-accent-glow: color-mix(in srgb, var(--vsa-orange-370) 18.8%, transparent);
+    --vsa-color-head-tint: color-mix(in srgb, var(--vsa-warm-40) 7%, transparent);
+    --vsa-color-track: color-mix(in srgb, var(--vsa-warm-40) 20%, transparent);
+    --vsa-color-dim: color-mix(in srgb, var(--vsa-warm-40) 10%, transparent);
+    --vsa-color-state-done: var(--vsa-green-225);
+    --vsa-color-state-pending: var(--vsa-amber-265);
+    --vsa-color-state-failed: var(--vsa-red-270);
+    --vsa-color-state-new: var(--vsa-blue-270);
+
+    --vsa-gradient-canvas: var(--vsa-cool-915);
+    --vsa-gradient-surface: linear-gradient(180deg, var(--vsa-cool-795), var(--vsa-cool-900));
+    --vsa-gradient-hole: radial-gradient(circle at 35% 30%, var(--vsa-cool-745), var(--vsa-cool-845) 70%);
+    --vsa-gradient-knob: radial-gradient(circle at 35% 30%, var(--vsa-cool-670), var(--vsa-cool-845) 75%);
+
+    --vsa-shadow-raise:
+      inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 7%, transparent),
+      inset 0 -3px 7px color-mix(in srgb, var(--vsa-gray-1000) 35%, transparent),
+      0 2px 3px color-mix(in srgb, var(--vsa-gray-1000) 18%, transparent),
+      0 11px 21px -8px color-mix(in srgb, var(--vsa-gray-1000) 41%, transparent);
+    --vsa-shadow-raise-sm:
+      inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 7%, transparent),
+      0 2px 6px color-mix(in srgb, var(--vsa-gray-1000) 27%, transparent);
+    --vsa-shadow-dial:
+      inset 5.4px 5.4px 11px color-mix(in srgb, var(--vsa-gray-1000) 57%, transparent),
+      inset -3px -3px 8px color-mix(in srgb, var(--vsa-gray-0) 6.6%, transparent),
+      0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 4.8%, transparent);
+    --vsa-shadow-hole:
+      0 7px 14px color-mix(in srgb, var(--vsa-gray-1000) 38.3%, transparent),
+      0 2px 3px color-mix(in srgb, var(--vsa-gray-1000) 27%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 9.8%, transparent),
+      inset 0 -3px 6px color-mix(in srgb, var(--vsa-gray-1000) 31.5%, transparent);
+    --vsa-shadow-carve:
+      inset 3.8px 3.8px 8px color-mix(in srgb, var(--vsa-gray-1000) 54%, transparent),
+      inset -2px -2px 4px color-mix(in srgb, var(--vsa-gray-0) 4.8%, transparent);
+
+    color-scheme: dark;
+  }
+}
+
+[data-theme="dark"] {
+  --vsa-color-canvas: var(--vsa-cool-915);
+  --vsa-color-canvas-text: var(--vsa-warm-180);
+  --vsa-color-surface: var(--vsa-cool-845);
+  --vsa-color-text: var(--vsa-warm-40);
+  --vsa-color-text-secondary: var(--vsa-warm-185);
+  --vsa-color-muted: var(--vsa-warm-325);
+  --vsa-color-line: color-mix(in srgb, var(--vsa-warm-40) 9%, transparent);
+  --vsa-color-sunken: var(--vsa-cool-930);
+  --vsa-color-sunken-text: var(--vsa-warm-40);
+  --vsa-color-sunken-muted: var(--vsa-warm-295);
+  --vsa-color-accent: var(--vsa-orange-370);
+  --vsa-color-on-accent: var(--vsa-gray-950);
+  --vsa-color-accent-glow: color-mix(in srgb, var(--vsa-orange-370) 18.8%, transparent);
+  --vsa-color-head-tint: color-mix(in srgb, var(--vsa-warm-40) 7%, transparent);
+  --vsa-color-track: color-mix(in srgb, var(--vsa-warm-40) 20%, transparent);
+  --vsa-color-dim: color-mix(in srgb, var(--vsa-warm-40) 10%, transparent);
+  --vsa-color-state-done: var(--vsa-green-225);
+  --vsa-color-state-pending: var(--vsa-amber-265);
+  --vsa-color-state-failed: var(--vsa-red-270);
+  --vsa-color-state-new: var(--vsa-blue-270);
+
+  --vsa-gradient-canvas: var(--vsa-cool-915);
+  --vsa-gradient-surface: linear-gradient(180deg, var(--vsa-cool-795), var(--vsa-cool-900));
+  --vsa-gradient-hole: radial-gradient(circle at 35% 30%, var(--vsa-cool-745), var(--vsa-cool-845) 70%);
+  --vsa-gradient-knob: radial-gradient(circle at 35% 30%, var(--vsa-cool-670), var(--vsa-cool-845) 75%);
+
+  --vsa-shadow-raise:
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 7%, transparent),
+    inset 0 -3px 7px color-mix(in srgb, var(--vsa-gray-1000) 35%, transparent),
+    0 2px 3px color-mix(in srgb, var(--vsa-gray-1000) 18%, transparent),
+    0 11px 21px -8px color-mix(in srgb, var(--vsa-gray-1000) 41%, transparent);
+  --vsa-shadow-raise-sm:
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 7%, transparent),
+    0 2px 6px color-mix(in srgb, var(--vsa-gray-1000) 27%, transparent);
+  --vsa-shadow-dial:
+    inset 5.4px 5.4px 11px color-mix(in srgb, var(--vsa-gray-1000) 57%, transparent),
+    inset -3px -3px 8px color-mix(in srgb, var(--vsa-gray-0) 6.6%, transparent),
+    0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 4.8%, transparent);
+  --vsa-shadow-hole:
+    0 7px 14px color-mix(in srgb, var(--vsa-gray-1000) 38.3%, transparent),
+    0 2px 3px color-mix(in srgb, var(--vsa-gray-1000) 27%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--vsa-gray-0) 9.8%, transparent),
+    inset 0 -3px 6px color-mix(in srgb, var(--vsa-gray-1000) 31.5%, transparent);
+  --vsa-shadow-carve:
+    inset 3.8px 3.8px 8px color-mix(in srgb, var(--vsa-gray-1000) 54%, transparent),
+    inset -2px -2px 4px color-mix(in srgb, var(--vsa-gray-0) 4.8%, transparent);
+
+  color-scheme: dark;
+}

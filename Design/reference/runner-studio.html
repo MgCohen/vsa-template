@@ -1,0 +1,933 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Runner Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@600;800&family=Inter:wght@400;500;600;700&family=Manrope:wght@500;700;800&family=DM+Sans:wght@400;500;700&family=Sora:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Mono:wght@400;700&display=swap">
+<style>
+/* Studio page. Theme tokens for the widget are set on each .w element by JS. */
+:root {
+  --bg: #eef0f3; --panel: #ffffff; --fg: #171a21; --fg2: #4b5263; --line: #d9dde4; --ok: #1d7a3a; --no: #b3261e;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #121417; --panel: #1b1e23; --fg: #eceef2; --fg2: #a3aab8; --line: #2c313a; --ok: #7fd18f; --no: #f59a9a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #121417; --panel: #1b1e23; --fg: #eceef2; --fg2: #a3aab8; --line: #2c313a; --ok: #7fd18f; --no: #f59a9a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 Inter, system-ui, "Segoe UI", sans-serif; }
+main { padding: 20px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+h1 { font-size: 18px; margin: 0 0 4px; }
+.lede { margin: 0 0 16px; color: var(--fg2); max-width: 70ch; }
+
+.st-top { display: grid; grid-template-columns: auto minmax(260px, 380px); gap: 20px; align-items: start; justify-content: start; }
+.st-hero { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.st-ctls { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow-y: auto; scrollbar-width: thin; }
+.st-all { margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.frames { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
+figure { margin: 0; flex: none; }
+figcaption { font-size: 12px; color: var(--fg2); margin-top: 6px; }
+.zoom { zoom: var(--z, .5); }
+@media (max-width: 760px) {
+  .st-top { grid-template-columns: minmax(0, 1fr); }
+  .st-ctls { height: auto !important; }
+  .st-hero { justify-content: center; }
+  .st-all { margin-top: 24px; }
+}
+
+/* Controls */
+details.sec { border-bottom: 1px solid var(--line); }
+details.sec:last-child { border-bottom: 0; }
+details.sec > summary { cursor: pointer; padding: 11px 14px; font-weight: 600; font-size: 13px; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::before { content: "▸"; color: var(--fg2); font-size: 11px; transition: transform .15s; }
+details.sec[open] > summary::before { transform: rotate(90deg); }
+details.sec > summary .hint { margin-left: auto; font-weight: 400; color: var(--fg2); font-size: 12px; }
+.sec-b { padding: 0 14px 14px; display: grid; gap: 10px; }
+.f { display: grid; gap: 4px; min-width: 0; }
+.f > span { font-size: 12px; color: var(--fg2); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+select, input[type="text"], button, textarea { font: inherit; font-size: 13px; color: var(--fg); }
+select, input[type="text"] { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 7px 9px; min-width: 0; }
+button { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 7px 11px; cursor: pointer; }
+button:hover { border-color: var(--fg2); }
+button.on { background: var(--fg); color: var(--panel); border-color: var(--fg); }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.seg-c { display: flex; gap: 6px; }
+.seg-c button { flex: 1; padding: 5px 8px; }
+.sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.swr { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); min-width: 0; cursor: pointer; }
+.swr input[type="color"] { width: 26px; height: 26px; border: 0; padding: 0; background: none; cursor: pointer; flex: none; }
+.swr input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.swr input[type="color"]::-webkit-color-swatch { border: 1px solid var(--line); border-radius: 6px; }
+.swr .nm { font-size: 12px; line-height: 1.2; min-width: 0; }
+.swr code { display: block; font: 11px "JetBrains Mono", monospace; color: var(--fg2); }
+.rng { display: grid; grid-template-columns: 70px 1fr 34px; align-items: center; gap: 8px; font-size: 12px; color: var(--fg2); }
+.rng input { width: 100%; accent-color: var(--fg); }
+.rng output { text-align: right; font: 12px "JetBrains Mono", monospace; color: var(--fg); }
+.note { font-size: 12px; color: var(--fg2); margin: 0; }
+.ck { font-size: 12px; display: grid; gap: 3px; }
+.ck div { display: flex; gap: 8px; }
+.ck b { font-weight: 600; min-width: 46px; }
+.ck .ok { color: var(--ok); } .ck .no { color: var(--no); }
+.saved { display: grid; gap: 6px; }
+.saved .it { display: flex; gap: 6px; align-items: center; }
+.saved .it button:first-child { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+textarea { width: 100%; height: 160px; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 8px; font: 11px/1.4 "JetBrains Mono", monospace; resize: vertical; }
+
+/* ============ Widget: every rule reads theme tokens only ============ */
+.w { width: 420px; height: 672px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 10px;
+  background: var(--canvas-bg); color: var(--text); font-family: var(--f-body); font-size: 13px; line-height: 1.35; border-radius: calc(var(--r) + 8px);
+  box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 20px 40px -20px rgba(0,0,0,.4); }
+.w * { box-sizing: border-box; }
+.w svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.w-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+
+/* Surfaces */
+.crd { background: var(--surf-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--sh-raise); border-radius: var(--r); color: var(--text); flex: none; position: relative; min-width: 0; }
+.well { background: var(--sunken); box-shadow: var(--sh-carve); outline: var(--sunken-bd); outline-offset: -1px; color: var(--sunken-tx); border-radius: var(--r-sm); }
+.pad { padding: 12px 14px; }
+.gt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--canvas-tx); margin: 2px 6px -4px; flex: none; }
+.row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-width: 0; }
+.row.sep { border-top: 1px solid var(--line-c); }
+.grow { flex: 1; min-width: 0; }
+.ell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nm { font-weight: 600; }
+.sub { font-size: 11.5px; color: var(--muted); }
+.t2 { color: var(--tx2); }
+.mono { font-family: var(--f-mono); font-size: 11.5px; }
+.disp { font-family: var(--f-display); font-weight: var(--w-display); letter-spacing: var(--ls-display); }
+.big { font-size: 30px; line-height: 1; }
+.md { font-size: 20px; line-height: 1.1; }
+
+/* Header and nav */
+.w-hd { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.w-hd .title { font-size: 17px; line-height: 1.1; }
+.ib { width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--muted); }
+.ib.on { background: var(--accent); color: var(--on-accent); box-shadow: var(--sh-glow); }
+.w-nav { display: flex; gap: 6px; padding: 6px; }
+.ni { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 4px; border-radius: var(--r-sm); color: var(--muted); font-weight: 500; }
+.ni.act { background: var(--accent); color: var(--on-accent); box-shadow: var(--sh-glow); font-weight: 600; }
+
+/* Fields, buttons, segmented control */
+.fld { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; flex: none; color: var(--sunken-muted); }
+.srow .fld { flex: 1; }
+.srow { display: flex; gap: 8px; flex: none; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: var(--r-sm); background: var(--surf-bg); box-shadow: var(--sh-raise); color: var(--text); font-weight: 500; flex: none; }
+.btn.pri { background: var(--accent); color: var(--on-accent); box-shadow: var(--sh-raise), var(--sh-glow); }
+.seg { display: flex; padding: 4px; gap: 4px; flex: none; }
+.seg span { flex: 1; text-align: center; padding: 6px 4px; border-radius: calc(var(--r-sm) - 3px); color: var(--sunken-muted); font-size: 12px; white-space: nowrap; }
+.seg span.on { background: var(--accent); color: var(--on-accent); font-weight: 600; box-shadow: var(--sh-glow); }
+
+/* Toggle: three variants, chosen by a class on .w */
+.tg { position: relative; width: 40px; height: 24px; border-radius: 12px; flex: none; }
+.tg i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; transition: left .15s; }
+.tg.on i { left: 19px; }
+.tg.sm { width: 32px; height: 19px; } .tg.sm i { width: 13px; height: 13px; } .tg.sm.on i { left: 16px; }
+.tg.dis { opacity: .45; }
+.tg.tv-channel { background: var(--sunken); box-shadow: var(--sh-carve); outline: var(--sunken-bd); outline-offset: -1px; }
+.tg.tv-channel.on { background: var(--accent); box-shadow: inset 2px 2px 4px rgba(0,0,0,.3), var(--sh-glow); }
+.tg.tv-channel i { background: var(--knob); box-shadow: 0 2px 4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25); }
+.tg.tv-pill { background: var(--track); }
+.tg.tv-pill.on { background: var(--accent); box-shadow: var(--sh-glow); }
+.tg.tv-pill i { background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.tg.tv-square { border-radius: 6px; background: var(--sunken); box-shadow: var(--sh-carve); outline: var(--sunken-bd); outline-offset: -1px; }
+.tg.tv-square i { border-radius: 4px; background: var(--muted); }
+.tg.tv-square.on i { background: var(--accent); box-shadow: var(--sh-glow); }
+
+/* Variants of title bar, nav, field, segmented control, bar and pill */
+.ibs { display: flex; gap: 2px; padding: 3px; }
+.ibs .ib { width: 28px; height: 28px; color: var(--sunken-muted); }
+.w-hd.hd-float { padding: 2px 4px; }
+.hd-float .title, .hd-float .sub { color: var(--canvas-tx); }
+.hd-float .ib { background: var(--surf-bg); box-shadow: var(--sh-raise-sm); border-radius: 50%; color: var(--text); }
+.hd-float .ib.on { background: var(--accent); color: var(--on-accent); }
+.nav-well .ni { color: var(--sunken-muted); }
+.nav-well .ni.act { background: var(--surf-bg); color: var(--text); box-shadow: var(--sh-raise-sm); }
+.nav-well .ni.act svg { color: var(--accent); }
+.nav-line .ni { position: relative; }
+.nav-line .ni.act { background: none; box-shadow: none; color: var(--text); }
+.nav-line .ni.act::after { content: ""; position: absolute; left: 24%; right: 24%; bottom: 1px; height: 3px; border-radius: 2px; background: var(--accent); box-shadow: var(--sh-glow); }
+.fld.fv-raised { background: var(--surf-bg); box-shadow: var(--sh-raise); color: var(--muted); border-radius: var(--r-sm); }
+.fld.fv-line { border-bottom: 2px solid var(--track); color: var(--canvas-tx); padding: 0 4px; }
+.seg.seg-chips { padding: 0; gap: 6px; }
+.seg-chips span { background: var(--surf-bg); box-shadow: var(--sh-raise-sm); color: var(--text); border-radius: 999px; }
+.seg-chips span.on { background: var(--accent); color: var(--on-accent); }
+.pb.pb-thin { height: 4px; background: var(--dim); border-radius: 2px; }
+.pbk { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 8px; }
+.pbk i { border-radius: 2px; background: var(--dim); }
+.pbk.pbk-dots { grid-template-columns: repeat(16, 1fr); height: auto; gap: 4px; }
+.pbk.pbk-dots i { border-radius: 50%; aspect-ratio: 1; }
+.pbk i.lit { background: var(--bc, var(--accent)); box-shadow: 0 0 calc(var(--glow-k) * 6px) var(--bc, var(--accent-glow)); }
+.pill.pv-outline { background: transparent; border-color: var(--st); }
+.pill { width: 78px; justify-content: center; box-sizing: border-box; flex: none; }
+.pill.pv-dot { background: none; border: 0; padding: 0; justify-content: flex-start; }
+
+/* Ring: three variants */
+.ring { position: relative; flex: none; display: grid; place-items: center; }
+.ring .rc { position: relative; z-index: 3; text-align: center; display: grid; place-items: center; }
+.dial { border-radius: 50%; background: var(--sunken); box-shadow: var(--sh-carve); outline: var(--sunken-bd); outline-offset: -1px; }
+.dial::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: var(--dsh, var(--sh-carve)); pointer-events: none; z-index: 1; }
+.dial .fill { position: absolute; inset: var(--fi, 0px); border-radius: 50%; background: var(--g); -webkit-mask: radial-gradient(circle, transparent calc(50% - var(--th) - 3px), #000 calc(50% - var(--th) - 2.5px)); mask: radial-gradient(circle, transparent calc(50% - var(--th) - 3px), #000 calc(50% - var(--th) - 2.5px)); filter: drop-shadow(0 0 calc(var(--glow-k) * 8px) var(--accent-glow)); }
+.dial .hole { position: absolute; inset: calc(var(--th) + var(--hg, 0px)); border-radius: 50%; background: var(--hole-bg); box-shadow: var(--hsh, var(--sh-raise-sm)); z-index: 2; }
+.dots i { position: absolute; left: 50%; top: 50%; border-radius: 50%; }
+.dots i.lit { box-shadow: 0 0 calc(var(--glow-k) * 7px) currentColor; }
+.thin svg { position: absolute; inset: 0; width: 100% !important; height: 100% !important; transform: rotate(-90deg); }
+.ri { color: var(--tx2); display: grid; place-items: center; }
+.ico { width: 34px; height: 34px; display: grid; place-items: center; flex: none; border-radius: var(--r-sm); }
+
+/* Bar, pill, legend */
+.pb { height: 8px; border-radius: 4px; position: relative; overflow: hidden; }
+.pb > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--bc, var(--accent)); box-shadow: 0 0 calc(var(--glow-k) * 8px) var(--bc, var(--accent-glow)); }
+.src-card > .row:first-child { background: var(--head-tint); border-radius: var(--r) var(--r) 0 0; }
+.well.pb > i { box-shadow: var(--sh-fill), 0 0 calc(var(--glow-k) * 8px) var(--bc, var(--accent-glow)); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; color: var(--st); background: color-mix(in srgb, var(--st) 14%, transparent); border: 1px solid color-mix(in srgb, var(--st) 40%, transparent); white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--st); }
+.lg { display: grid; gap: 7px; }
+.lgr { display: flex; align-items: center; gap: 8px; }
+.lgd { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: 0 0 calc(var(--glow-k) * 6px) currentColor; }
+.lgr b { font-family: var(--f-display); font-weight: var(--w-display); font-size: 15px; }
+
+/* Layout helpers */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: none; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: none; }
+.span2 { grid-column: span 2; }
+.tile { padding: 12px; display: grid; gap: 6px; align-content: start; }
+.tile .top { display: flex; justify-content: space-between; align-items: center; }
+.met { padding: 10px 12px; }
+.met .v { margin-top: 2px; }
+.chart { display: grid; gap: 4px; }
+.chart.dotc { grid-template-columns: repeat(24, 1fr); }
+.chart.dotc i { aspect-ratio: 1; border-radius: 50%; background: var(--dim); }
+.chart.dotc i.lit { background: var(--accent); box-shadow: 0 0 calc(var(--glow-k) * 5px) var(--accent-glow); }
+.chart.barc { grid-auto-flow: column; align-items: end; height: 58px; grid-auto-columns: 1fr; gap: 3px; }
+.chart.barc i { border-radius: 3px 3px 1px 1px; background: var(--accent); box-shadow: 0 0 calc(var(--glow-k) * 6px) var(--accent-glow); }
+pre.mono { margin: 0; padding: 12px; white-space: pre-wrap; word-break: break-all; color: var(--sunken-tx); }
+.back { display: flex; align-items: center; gap: 4px; color: var(--canvas-tx); font-weight: 600; padding: 2px 4px; flex: none; }
+.ev .l1 { display: flex; gap: 8px; align-items: baseline; }
+.ev .l3 { display: flex; gap: 8px; align-items: center; margin-top: 4px; min-width: 0; }
+.ev .l3 .ell { min-width: 0; flex: 1; }
+.tl { position: relative; display: grid; gap: 8px; padding-left: 22px; flex: none; }
+.tl::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 3px; border-radius: 2px; background: var(--sunken); box-shadow: var(--sh-carve); }
+.tl > div { min-width: 0; }
+.tl.tl-rings { padding-left: 40px; }
+.tl.tl-rings::before { left: 14px; }
+.tl .tnode { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); line-height: 0; border-radius: 50%; background: var(--canvas-solid); box-shadow: 0 0 0 3px var(--canvas-solid); }
+.tl .node { position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; border-radius: 50%; background: var(--st); box-shadow: 0 0 0 3px var(--canvas-solid), 0 0 calc(var(--glow-k) * 8px) var(--st); }
+.kv { display: flex; align-items: center; gap: 10px; padding: 9px 12px; }
+.kv + .kv { border-top: 1px solid var(--line-c); }
+.kv .k { flex: 1; color: var(--tx2); }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; margin: 0 0 16px; }
+.tabs button { padding: 8px 16px; border-radius: 999px; font-weight: 600; }
+
+/* Design system catalog: page colors for the frame; theme tokens only inside .stage */
+.ds-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+.ds-bar .f { width: 220px; }
+.ds { display: grid; gap: 14px; color: var(--fg); }
+.ds-sec { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.ds-h { font-size: 22px; font-weight: 700; line-height: 1.15; }
+.ds-h2 { font-size: 15px; font-weight: 700; margin-top: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--fg); }
+.ds-p { font-size: 13px; color: var(--fg2); max-width: 80ch; }
+.ds-s { font-size: 12px; color: var(--fg2); }
+.ds-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.ds-scroll { overflow-x: auto; }
+.ds-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ds-tbl th { text-align: left; font-weight: 600; color: var(--fg2); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ds-tbl td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ds-tbl tr:last-child td { border-bottom: 0; }
+.sw2 { display: inline-block; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); vertical-align: middle; }
+.tok { font: 11px "JetBrains Mono", monospace; padding: 1px 6px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); color: var(--fg); white-space: nowrap; display: inline-block; }
+.tok.ref { background: transparent; border-style: dashed; }
+.val { font: 10.5px "JetBrains Mono", monospace; color: var(--fg2); word-break: break-word; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.fxbar { display: block; height: 6px; border-radius: 3px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+.fxbar i { display: block; height: 100%; background: var(--fg); }
+/* Stage: a piece of the widget canvas with the theme tokens */
+.stage { background: var(--canvas-bg); color: var(--canvas-tx); font-family: var(--f-body); font-size: 13px; line-height: 1.35; border-radius: 14px; padding: 18px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; border: 1px solid var(--line); }
+.stage.sm { padding: 8px; border-radius: 10px; display: inline-flex; }
+.stage.surf { background: var(--surface-solid); color: var(--text); }
+.stage svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.prev { width: 72px; height: 42px; border-radius: var(--r-sm); display: grid; place-items: center; font-size: 11px; }
+.cmp { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; padding: 18px 0; border-top: 1px solid var(--line); }
+.ds-h2 + div > .cmp:first-child { border-top: 0; }
+.cmp .info { display: grid; gap: 6px; align-content: start; }
+.cmp .cn { font-weight: 700; font-size: 14px; }
+.gal { display: flex; gap: 16px; overflow-x: auto; padding: 4px 4px 8px; align-items: flex-start; scrollbar-width: thin; }
+.pick { flex: none; display: grid; gap: 6px; justify-items: start; border-radius: 16px; }
+.pick[role="button"] { cursor: pointer; }
+.pick .stage { outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .12s; }
+.pick[role="button"]:hover .stage { outline-color: var(--line); }
+.pick.sel .stage { outline-color: var(--fg); }
+.pick .lbl { font-size: 12px; color: var(--fg2); }
+.pick.sel .lbl { color: var(--fg); font-weight: 600; }
+.mx td.c, .mx th.c { text-align: center; }
+.mx .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--fg); }
+.mx .no { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { color: var(--fg); text-decoration: none; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+.seg-c.wrap { flex-wrap: wrap; }
+.seg-c.wrap button { flex: 1 1 auto; }
+@media (max-width: 760px) { .cmp { grid-template-columns: minmax(0, 1fr); } .ds-sec { padding: 14px; } }
+</style>
+
+<main>
+  <h1>Runner Studio</h1>
+  <p class="lede">One token system. A theme is a palette, three fonts, depth settings and component variants. Every screen and component reads only these tokens. Change one token and all screens change.</p>
+  <div class="tabs" role="tablist"><button type="button" role="tab" data-tab="studio">Studio</button><button type="button" role="tab" data-tab="ds">Design system</button></div>
+  <div id="app"></div>
+</main>
+
+<script>
+/* ================= Icons and mock data ================= */
+const I = {
+  chevR: '<path d="M9 6l6 6l-6 6"/>', chevD: '<path d="M6 9l6 6l6 -6"/>', chevL: '<path d="M15 6l-6 6l6 6"/>',
+  search: '<circle cx="10" cy="10" r="7"/><path d="M21 21l-6 -6"/>',
+  filter: '<path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z"/>',
+  pin: '<path d="M15 4.5l-4 4l-4 1.5l-1.5 1.5l7 7l1.5 -1.5l1.5 -4l4 -4"/><path d="M9 15l-4.5 4.5"/><path d="M14.5 4l5.5 5.5"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1l2.1-2.1M17 7l2.1-2.1"/>',
+  x: '<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',
+  home: '<path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/>',
+  inbox: '<path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M4 13h3l3 3h4l3 -3h3"/>',
+  traffic: '<path d="M7 10h14l-4 -4"/><path d="M17 14h-14l4 4"/>',
+  notion: '<path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-11a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1"/><path d="M9 4v16"/><path d="M13 8h2"/><path d="M13 12h2"/>',
+  github: '<path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"/>',
+  linear: '<path d="M4 5h6v14h-6z"/><path d="M14 5h6v6h-6z"/><path d="M14 15h6"/><path d="M14 19h6"/>',
+  slack: '<path d="M12 12v-6a2 2 0 0 1 4 0v6m0 -2a2 2 0 1 1 2 2h-6"/><path d="M12 12h6a2 2 0 0 1 0 4h-6m2 0a2 2 0 1 1 -2 2v-6"/><path d="M12 12v6a2 2 0 0 1 -4 0v-6m0 2a2 2 0 1 1 -2 -2h6"/><path d="M12 12h-6a2 2 0 0 1 0 -4h6m-2 0a2 2 0 1 1 2 -2v6"/>',
+  bulk: '<path d="M12 4l-8 4l8 4l8 -4l-8 -4"/><path d="M4 12l8 4l8 -4"/><path d="M4 16l8 4l8 -4"/>',
+  mock: '<path d="M9 3h6"/><path d="M10 9h4"/><path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6"/>',
+};
+const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const EVENTS = [
+  { id: 9102213, src: 'notion', type: 'page.properties_updated', st: 'done', h: 'LogEverything, QuestionAnswered, TaskTodoStarted', t: '21:24' },
+  { id: 9102212, src: 'mock', type: 'task', st: 'pending', h: 'LogEverything', t: '21:23' },
+  { id: 9102211, src: 'mock', type: 'task', st: 'failed', h: 'LogEverything', t: '21:23' },
+  { id: 9102210, src: 'bulk', type: 'push', st: 'new', h: 'no handler', t: '21:23' },
+  { id: 9102209, src: 'bulk', type: 'push', st: 'done', h: 'no handler', t: '21:23' },
+  { id: 9102208, src: 'bulk', type: 'push', st: 'done', h: 'no handler', t: '21:23' },
+];
+const HANDLERS = ['LogEverything', 'QuestionAnswered', 'TaskTodoStarted'];
+const EMPTY = [['github', 1], ['linear', 0], ['slack', 0], ['bulk', 128], ['mock', 2]];
+const RES = [['LogEverything', '0.0 s', 6], ['QuestionAnswered', '0.0 s', 6], ['TaskTodoStarted', '1.0 s', 100]];
+const ST_P = { done: 1, failed: 1, pending: .5, new: .15 };
+const SEGS = () => [[.92, C.ringColor === 'state' ? 'var(--done)' : 'var(--accent)'], [.04, 'var(--pending)'], [.04, 'var(--failed)']];
+const ACT = [3, 5, 2, 6, 4, 6, 5, 3, 6, 4, 2, 5, 6, 3, 4, 6, 5, 2, 4, 6, 3, 5, 6, 6];
+const plural = (n, w) => `${n.toLocaleString('en-US')} ${w}${n === 1 ? '' : 's'}`;
+const srcIcon = s => I[s] ? s : 'bulk';
+
+/* ================= Token presets ================= */
+// Palette: 14 color tokens for each mode.
+const PAL_KEYS = [
+  ['canvas', 'Canvas', 'Widget background'], ['canvasTx', 'Canvas text', 'Section titles on the canvas'],
+  ['surface', 'Surface', 'Cards, header, nav'], ['text', 'Text', 'Text on surfaces'], ['muted', 'Muted', 'Small text on surfaces'],
+  ['sunken', 'Sunken', 'Holes: fields, tracks, wells'], ['sunkenTx', 'Sunken text', 'Text in holes'],
+  ['accent', 'Accent', 'Fills: toggles, rings, active tab'], ['onAccent', 'On accent', 'Text on the accent'],
+  ['shadow', 'Shadow', 'Color of all shadows'],
+  ['done', 'Done', 'State'], ['pending', 'Pending', 'State'], ['failed', 'Failed', 'State'], ['new', 'New', 'State'],
+];
+const ST_L = { done: '#23733a', pending: '#8a5a0b', failed: '#b3261e', new: '#1f5fbf' };
+const ST_D = { done: '#7fd18f', pending: '#f0a640', failed: '#f59a9a', new: '#8ab4ff' };
+const dotP = (acc, light, canvasL = '#d8d8d3') => ({
+  canvas: light ? canvasL : '#0d0d0d', canvasTx: light ? '#2a2a27' : '#c9c9c9', surface: light ? '#151515' : '#1a1a1a', text: '#f4f4f4', muted: '#a3a3a3',
+  sunken: '#070707', sunkenTx: '#ededed', accent: acc, onAccent: '#111111', shadow: '#000000',
+  done: acc === '#c8f56a' ? '#c8f56a' : '#7fd18f', pending: '#ffc861', failed: '#ff6b6b', new: '#8ab4ff' });
+const porcL = (acc, on, x = {}) => ({ canvas: '#eceae6', canvasTx: '#45423d', surface: '#fbfbfa', text: '#1b1a18', muted: '#5f5b55',
+  sunken: '#e4e2de', sunkenTx: '#1b1a18', accent: acc, onAccent: on, shadow: '#3c3228', ...ST_L, ...x });
+const porcD = (acc, on, x = {}) => ({ canvas: '#18181a', canvasTx: '#cfccc6', surface: '#26262a', text: '#f4f3f1', muted: '#a8a49d',
+  sunken: '#151517', sunkenTx: '#f4f3f1', accent: acc, onAccent: on, shadow: '#000000', ...ST_D, ...x });
+const PALS = {
+  dotLime: { name: 'Dot · Lime', light: dotP('#c8f56a', true), dark: dotP('#c8f56a', false) },
+  dotOrange: { name: 'Dot · Orange', light: dotP('#ff7a1a', true, '#ece9e2'), dark: dotP('#ff7a1a', false) },
+  porcOrange: { name: 'Porcelain · Orange', light: porcL('#ff6a1a', '#1b1a18'), dark: porcD('#ff6a1a', '#111111') },
+  porcLime: { name: 'Porcelain · Lime', light: porcL('#c8f56a', '#111111'), dark: porcD('#c8f56a', '#111111') },
+  porcInk: { name: 'Porcelain · Ink & lime', light: porcL('#c8f56a', '#111111', { sunken: '#1f1e1c', sunkenTx: '#f4f3f1' }), dark: porcD('#c8f56a', '#111111', { sunken: '#0c0c0d' }) },
+  porcInkO: { name: 'Porcelain · Ink & orange', light: porcL('#ff6a1a', '#111111', { sunken: '#1f1e1c', sunkenTx: '#f4f3f1' }), dark: porcD('#ff6a1a', '#111111', { sunken: '#0c0c0d' }) },
+  cobalt: { name: 'Graphite · Cobalt',
+    light: { canvas: '#e6eaf1', canvasTx: '#3a4252', surface: '#ffffff', text: '#10151f', muted: '#566070', sunken: '#e1e6ee', sunkenTx: '#10151f', accent: '#2f5bff', onAccent: '#ffffff', shadow: '#1a2a4a', ...ST_L },
+    dark: { canvas: '#0e1117', canvasTx: '#b6bfcf', surface: '#181c25', text: '#eef1f6', muted: '#9aa4b5', sunken: '#0a0d12', sunkenTx: '#eef1f6', accent: '#6b8aff', onAccent: '#0b0f1f', shadow: '#000000', ...ST_D } },
+  sage: { name: 'Sage clay',
+    light: { canvas: '#e3e9e2', canvasTx: '#3b4a40', surface: '#e3e9e2', text: '#142019', muted: '#4b5a51', sunken: '#dae1d9', sunkenTx: '#142019', accent: '#4f8a68', onAccent: '#ffffff', shadow: '#2b3d31', ...ST_L },
+    dark: { canvas: '#1a201c', canvasTx: '#b3c2b8', surface: '#1a201c', text: '#e9efea', muted: '#a0afa5', sunken: '#121614', sunkenTx: '#e9efea', accent: '#8fd0aa', onAccent: '#0b1410', shadow: '#000000', ...ST_D } },
+};
+
+// Type: three font tokens.
+const FONTS = {
+  system: { name: 'System UI', css: 'system-ui, "Segoe UI", sans-serif', w: 700 },
+  inter: { name: 'Inter', css: 'Inter, system-ui, sans-serif', w: 700 },
+  manrope: { name: 'Manrope', css: 'Manrope, system-ui, sans-serif', w: 800 },
+  dmsans: { name: 'DM Sans', css: '"DM Sans", system-ui, sans-serif', w: 700 },
+  sora: { name: 'Sora', css: 'Sora, system-ui, sans-serif', w: 700 },
+  grotesk: { name: 'Space Grotesk', css: '"Space Grotesk", system-ui, sans-serif', w: 700 },
+  doto: { name: 'Doto (dot matrix)', css: 'Doto, "Cascadia Mono", monospace', w: 800 },
+  jetbrains: { name: 'JetBrains Mono', css: '"JetBrains Mono", "Cascadia Mono", monospace', w: 700 },
+  plex: { name: 'IBM Plex Mono', css: '"IBM Plex Mono", "Cascadia Mono", monospace', w: 500 },
+  spacemono: { name: 'Space Mono', css: '"Space Mono", "Cascadia Mono", monospace', w: 700 },
+};
+const TYPES = {
+  dot: { name: 'Dot matrix', display: 'doto', body: 'inter', mono: 'jetbrains' },
+  clean: { name: 'Clean', display: 'manrope', body: 'inter', mono: 'jetbrains' },
+  technical: { name: 'Technical', display: 'grotesk', body: 'grotesk', mono: 'spacemono' },
+  soft: { name: 'Soft', display: 'sora', body: 'dmsans', mono: 'plex' },
+  system: { name: 'System', display: 'system', body: 'system', mono: 'jetbrains' },
+};
+
+// Depth and effects: numbers that make all shadows, glows and radii.
+const FX_KEYS = [['depth', 'Depth', 0, 100], ['bevel', 'Bevel', 0, 100], ['carve', 'Carve', 0, 100], ['glow', 'Glow', 0, 100], ['glass', 'Glass', 0, 100], ['radius', 'Radius', 0, 30]];
+const FXS = {
+  deep: { name: 'Deep (raised + carved)', depth: 80, bevel: 35, carve: 90, glow: 55, glass: 0, radius: 18 },
+  porcelain: { name: 'Porcelain', depth: 45, bevel: 70, carve: 60, glow: 25, glass: 0, radius: 22 },
+  soft: { name: 'Soft (neumorphism)', depth: 35, bevel: 100, carve: 70, glow: 0, glass: 0, radius: 20 },
+  glass: { name: 'Liquid glass', depth: 40, bevel: 55, carve: 25, glow: 20, glass: 70, radius: 24 },
+  flat: { name: 'Flat', depth: 10, bevel: 0, carve: 0, glow: 0, glass: 0, radius: 14 },
+};
+
+// Components: one variant for each component.
+const COMP_KEYS = [
+  ['header', 'Title bar', [['bar', 'Card bar'], ['split', 'Split'], ['float', 'Floating']]],
+  ['nav', 'Nav', [['pill', 'Accent pill'], ['well', 'Carved track'], ['line', 'Underline']]],
+  ['field', 'Field', [['carved', 'Carved'], ['raised', 'Raised'], ['line', 'Underline']]],
+  ['seg', 'Segmented control', [['carved', 'Carved track'], ['chips', 'Chips']]],
+  ['bar', 'Bar', [['carved', 'Carved'], ['thin', 'Thin']]],
+  ['meter', 'Segment meter', [['blocks', 'Blocks'], ['dots', 'Dots']]],
+  ['pill', 'Pill', [['soft', 'Soft'], ['outline', 'Outline'], ['dot', 'Dot only']]],
+  ['ring', 'Ring', [['arc', 'Carved arc'], ['dots', 'Dot ring'], ['thin', 'Thin line']]],
+  ['toggle', 'Toggle', [['channel', 'Carved channel'], ['pill', 'Flat pill'], ['square', 'Square']]],
+  ['inboxView', 'Inbox list', [['list', 'Event items'], ['timeline', 'Timeline']]],
+  ['list', 'Event item', [['cards', 'One card each'], ['rows', 'Rows in one card']]],
+  ['timeline', 'Timeline', [['nodes', 'Dot nodes'], ['rings', 'Ring nodes']]],
+  ['chart', 'Activity chart', [['dots', 'Dot matrix'], ['bars', 'Bars']]],
+  ['ringColor', 'Ring color', [['accent', 'Accent'], ['state', 'State colors']]],
+];
+const LAYOUTS = [['hero', 'Hero ring'], ['bento', 'Bento grid'], ['list', 'Classic list']];
+const PAGES = [['home', 'Home'], ['inbox', 'Inbox'], ['detail', 'Event detail'], ['settings', 'Settings']];
+
+// Themes: one preset for each layer.
+const COMP_DEFAULT = { meter: 'blocks', inboxView: 'list', timeline: 'nodes', ringColor: 'accent', header: 'bar', nav: 'pill', field: 'carved', seg: 'carved', bar: 'carved', pill: 'soft' };
+const THEMES = {
+  dotDepth: { name: 'Dot matrix · Depth', pal: 'dotLime', type: 'dot', fx: 'deep', comp: { ring: 'dots', toggle: 'channel', list: 'cards', chart: 'dots', meter: 'dots' }, layout: 'bento' },
+  porcO: { name: 'Porcelain · Orange', pal: 'porcOrange', type: 'clean', fx: 'porcelain', comp: { ring: 'arc', toggle: 'channel', list: 'cards', chart: 'bars' }, layout: 'hero' },
+  porcDots: { name: 'Porcelain · Dot rings', pal: 'porcOrange', type: 'dot', fx: 'porcelain', comp: { ring: 'dots', toggle: 'channel', list: 'cards', chart: 'dots' }, layout: 'bento' },
+  porcInk: { name: 'Porcelain · Ink & lime', pal: 'porcInk', type: 'clean', fx: 'porcelain', comp: { ring: 'arc', toggle: 'channel', list: 'rows', chart: 'bars' }, layout: 'hero' },
+  glass: { name: 'Liquid glass · Cobalt', pal: 'cobalt', type: 'soft', fx: 'glass', comp: { ring: 'thin', toggle: 'pill', list: 'cards', inboxView: 'timeline', chart: 'bars', field: 'raised', seg: 'chips', nav: 'line', pill: 'outline' }, layout: 'hero' },
+  neu: { name: 'Soft clay · Sage', pal: 'sage', type: 'soft', fx: 'soft', comp: { ring: 'arc', toggle: 'pill', list: 'rows', chart: 'bars' }, layout: 'list' },
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+function fromTheme(id) {
+  const t = THEMES[id], f = FXS[t.fx], ty = TYPES[t.type];
+  return { themeId: id, palId: t.pal, typeId: t.type, fxId: t.fx, layout: t.layout,
+    pal: clone({ light: PALS[t.pal].light, dark: PALS[t.pal].dark }),
+    type: { display: ty.display, body: ty.body, mono: ty.mono },
+    fx: Object.fromEntries(FX_KEYS.map(([k]) => [k, f[k]])), comp: { ...COMP_DEFAULT, ...t.comp } };
+}
+
+/* ================= Color math ================= */
+const rgb = h => { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+const rgba = (h, a) => `rgba(${rgb(h).join(',')},${Math.max(0, Math.min(1, a)).toFixed(3)})`;
+const lum = h => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; const [r, g, b] = rgb(h); return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+const mix = (a, b, p) => { const x = rgb(a), y = rgb(b); return '#' + x.map((v, i) => Math.round(v * p + y[i] * (1 - p)).toString(16).padStart(2, '0')).join(''); };
+
+/* ================= Tokens -> CSS variables ================= */
+// All derived values (shadows, glows, glass) come from the palette and the effect numbers.
+function tokens(th, mode) {
+  const p = th.pal[mode], fx = th.fx, d = fx.depth / 100, b = fx.bevel / 100, c = fx.carve / 100, g = fx.glow / 100, gl = fx.glass / 100;
+  const sh = p.shadow, sL = lum(p.surface) > .4, kL = lum(p.sunken) > .4, cL = lum(p.canvas) > .4;
+  const surfA = 1 - .55 * gl;
+  const surfEff = mix(p.surface, p.canvas, surfA);
+  const none = '0 0 0 transparent';
+  const raise = [
+    `inset 0 1px 0 ${rgba('#ffffff', (sL ? .9 : .1) * b)}`,
+    `inset 0 -3px 7px ${rgba(sh, (sL ? .07 : .5) * b)}`,
+    cL ? `-6px -6px 14px ${rgba('#ffffff', Math.max(0, b - .5) * 1.8)}` : none,
+    `0 2px 3px ${rgba(sh, (sL ? .12 : .4) * d)}`,
+    `0 ${Math.round(6 + 10 * d)}px ${Math.round(14 + 16 * d)}px -8px ${rgba(sh, (cL ? .4 : .7) * d * 1.3)}`,
+    gl > 0 ? `inset 0 0 0 1px ${rgba('#ffffff', .4 * gl)}` : none,
+  ].join(', ');
+  const hl = (sL ? .9 : .14) * Math.max(b, .4);
+  const k2 = 3 + 4 * c;
+  const dial = c < .05 ? 'none' : `inset ${k2}px ${k2}px ${Math.round(6 + 8 * c)}px ${rgba(sh, (kL ? .35 : .95) * c)}, inset -3px -3px 8px ${rgba('#ffffff', (kL ? .95 : .11) * c)}, 0 1px 0 ${rgba('#ffffff', (kL ? .6 : .08) * c)}`;
+  const hole = `0 ${Math.round(4 + 6 * d)}px ${Math.round(10 + 8 * d)}px ${rgba(sh, (sL ? .25 : .85) * Math.max(d, .3))}, 0 2px 3px ${rgba(sh, (sL ? .15 : .6) * Math.max(d, .3))}, inset 0 1px 0 ${rgba('#ffffff', hl)}, inset 0 -3px 6px ${rgba(sh, (sL ? .06 : .45) * b)}`;
+  const raiseSm = `inset 0 1px 0 ${rgba('#ffffff', (sL ? .9 : .1) * b)}, 0 2px 6px ${rgba(sh, (sL ? .25 : .6) * Math.max(d, .3))}`;
+  const k = 2 + 3 * c;
+  const carve = c < .05 ? 'none' : `inset ${k}px ${k}px ${Math.round(4 + 6 * c)}px ${rgba(sh, (kL ? .3 : .9) * c)}, inset -2px -2px 4px ${rgba('#ffffff', (kL ? .95 : .08) * c)}`;
+  const canvasBg = gl > 0
+    ? `radial-gradient(60% 42% at 12% 8%, ${rgba(p.accent, .5 * gl)}, transparent 70%), radial-gradient(55% 40% at 92% 55%, ${rgba(p.new, .45 * gl)}, transparent 70%), radial-gradient(50% 35% at 30% 95%, ${rgba(p.pending, .3 * gl)}, transparent 70%), ${p.canvas}`
+    : cL && b > .3 ? `linear-gradient(180deg, ${mix('#ffffff', p.canvas, .25)}, ${p.canvas})` : p.canvas;
+  const surfBg = gl > 0 ? rgba(p.surface, surfA) : sL || b < .3 ? p.surface : `linear-gradient(180deg, ${mix('#ffffff', p.surface, .05)}, ${mix('#000000', p.surface, .3)})`;
+  const f = FONTS[th.type.display];
+  return {
+    '--canvas-bg': canvasBg, '--canvas-solid': p.canvas, '--canvas-tx': p.canvasTx,
+    '--surf-bg': surfBg, '--surface-solid': surfEff, '--blur': gl > 0 ? `blur(${Math.round(20 * gl)}px) saturate(1.4)` : 'none',
+    '--text': p.text, '--tx2': mix(p.text, surfEff, .8), '--muted': p.muted, '--line-c': rgba(p.text, .09),
+    '--sunken': p.sunken, '--sunken-tx': p.sunkenTx, '--sunken-muted': mix(p.sunkenTx, p.sunken, .68),
+    '--sunken-bd': c < .15 ? `1px solid ${rgba(p.text, .14)}` : 'none',
+    '--accent': p.accent, '--on-accent': p.onAccent, '--accent-glow': rgba(p.accent, .75 * g), '--glow-k': g.toFixed(2),
+    '--sh-glow': g > 0 ? `0 0 ${Math.round(16 * g)}px ${rgba(p.accent, .6 * g)}` : none,
+    '--sh-fill': c < .05 ? 'none' : `inset ${(1 + 2 * c).toFixed(1)}px ${(1 + 2 * c).toFixed(1)}px ${(2 + 3 * c).toFixed(1)}px rgba(0,0,0,${(.5 * c).toFixed(2)}), inset -1px -1px 1px rgba(255,255,255,${(.3 * c).toFixed(2)})`,
+    '--sh-raise': raise, '--sh-raise-sm': raiseSm, '--sh-dial': dial, '--sh-hole': hole,
+    '--hole-bg': `radial-gradient(circle at 35% 30%, ${mix('#ffffff', surfEff, sL ? .6 : .1)}, ${surfEff} 70%)`, '--sh-carve': carve,
+    '--knob': sL ? '#ffffff' : `radial-gradient(circle at 35% 30%, ${mix('#ffffff', p.surface, .18)}, ${p.surface} 75%)`,
+    '--head-tint': rgba(p.text, sL ? .05 : .07), '--track': rgba(p.text, .2), '--dim': rgba(p.text, .1),
+    '--done': p.done, '--pending': p.pending, '--failed': p.failed, '--new': p.new,
+    '--r': fx.radius + 'px', '--r-sm': Math.max(4, Math.round(fx.radius * .55)) + 'px',
+    '--f-display': FONTS[th.type.display].css, '--f-body': FONTS[th.type.body].css, '--f-mono': FONTS[th.type.mono].css,
+    '--w-display': f.w, '--ls-display': th.type.display === 'doto' ? '.02em' : '-.01em',
+    _surfEff: surfEff,
+  };
+}
+const styleOf = t => Object.entries(t).filter(([k]) => k.startsWith('--')).map(([k, v]) => `${k}:${String(v).replace(/"/g, "'")}`).join(';');
+
+/* ================= Components (design system) ================= */
+// Each component reads tokens only. Variants come from C (the component settings of the theme).
+let C = {};
+const Toggle = (on, o = {}) => `<span class="tg tv-${o.v || C.toggle} ${on ? 'on' : ''} ${o.sm ? 'sm' : ''} ${o.dis ? 'dis' : ''}"><i></i></span>`;
+const Card = (html, cls = '') => `<div class="crd ${cls}">${html}</div>`;
+const Well = (html, cls = '') => `<div class="well ${cls}">${html}</div>`;
+const Field = (text, v = C.field) => `<div class="${v === 'raised' || v === 'line' ? 'fld fv-' + v : 'well fld'}">${ic('search')}${text}</div>`;
+const Button = (label, icon, pri) => `<span class="btn ${pri ? 'pri' : ''}">${icon ? ic(icon) : ''}${label}</span>`;
+const Seg = (items, on, v = C.seg) => { const h = items.map((x, i) => `<span class="${i === on ? 'on' : ''}">${x}</span>`).join(''); return v === 'chips' ? `<div class="seg seg-chips">${h}</div>` : Well(h, 'seg'); };
+const Pill = st => `<span class="pill pv-${C.pill || 'soft'}" style="--st:var(--${st})">${st}</span>`;
+const Bar = (p, color, v = C.bar) => {
+  const bc = color ? `;--bc:${color}` : '';
+  const bar = `<i style="width:${Math.round(p * 100)}%${bc}"></i>`;
+  return v === 'thin' ? `<div class="pb pb-thin">${bar}</div>` : Well(bar, 'pb');
+};
+// Segment meter: a value as lit segments. Blocks or dots.
+const Meter = (p, color, v = C.meter) => {
+  const n = v === 'dots' ? 16 : 12, lit = Math.max(p > 0 ? 1 : 0, Math.round(p * n));
+  return `<div class="pbk pbk-${v}" style="${color ? `--bc:${color}` : ''}">${Array.from({ length: n }, (_, i) => `<i class="${i < lit ? 'lit' : ''}"></i>`).join('')}</div>`;
+};
+const Disp = (txt, cls = 'big') => `<span class="disp ${cls}">${txt}</span>`;
+const Icon = n => Well(ic(n), 'ico');
+function Ring(segs, size, th, center = '', variant = C.ring) {
+  const rc = `<span class="rc">${center}</span>`;
+  if (variant === 'dots') {
+    const n = Math.max(10, Math.round(size / 4.2)), dd = Math.max(3, Math.round(size / 13)), cols = [];
+    for (const [p, c] of segs) for (let j = 0; j < Math.round(p * n); j++) cols.push(c);
+    let h = '';
+    for (let i = 0; i < n; i++) h += `<i class="${cols[i] ? 'lit' : ''}" style="width:${dd}px;height:${dd}px;margin:${-dd / 2}px;transform:rotate(${(i * 360 / n).toFixed(1)}deg) translateY(${-(size / 2 - dd / 2 - 1)}px);background:${cols[i] || 'var(--dim)'};color:${cols[i] || 'transparent'}"></i>`;
+    return `<span class="ring dots" style="width:${size}px;height:${size}px">${h}${rc}</span>`;
+  }
+  if (variant === 'thin') {
+    const r = size / 2 - th / 2, L = 2 * Math.PI * r, sw = Math.max(2, th * .45); let off = 0, arcs = '';
+    for (const [p, c] of segs) { arcs += `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" stroke="${c}" stroke-width="${sw}" stroke-dasharray="${(p * L).toFixed(1)} ${L.toFixed(1)}" stroke-dashoffset="${(-off * L).toFixed(1)}" style="filter:drop-shadow(0 0 calc(var(--glow-k) * 5px) ${c})"/>`; off += p; }
+    return `<span class="ring thin" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" stroke="var(--dim)" stroke-width="${sw}"/>${arcs}</svg>${rc}</span>`;
+  }
+  let a = 0; const parts = [];
+  for (const [p, c] of segs) { parts.push(`${c} ${a.toFixed(1)}deg ${(a + p * 360).toFixed(1)}deg`); a += p * 360; }
+  parts.push(`transparent ${a.toFixed(1)}deg`);
+  const big = size > 60;
+  return `<span class="ring dial" style="width:${size}px;height:${size}px;--th:${th}px;${big ? '--hg:6px;--fi:3px;--dsh:var(--sh-dial);--hsh:var(--sh-hole);' : '--hg:1px;'}--g:conic-gradient(${parts.join(', ')})"><span class="fill"></span><span class="hole"></span>${rc}</span>`;
+}
+const SrcRing = (n, p, st = 'done', size = 36) => Ring(p ? [[p, `var(--${st})`]] : [], size, Math.round(size / 7), `<span class="ri">${ic(n)}</span>`);
+const Legend = () => `<div class="lg">${[['Done', '131', C.ringColor === 'state' ? 'done' : 'accent'], ['Pending', '1', 'pending'], ['Failed', '1', 'failed']].map(([k, v, s]) => `<div class="lgr"><span class="lgd" style="background:var(--${s});color:var(--${s})"></span><span class="grow t2">${k}</span><b>${v}</b></div>`).join('')}</div>`;
+function Chart(variant = C.chart) {
+  if (variant === 'bars') return `<div class="chart barc">${ACT.map(v => `<i style="height:${Math.round(v / 6 * 100)}%"></i>`).join('')}</div>`;
+  let h = ''; for (let r = 5; r >= 0; r--) for (let c = 0; c < 24; c++) h += `<i class="${ACT[c] > r ? 'lit' : ''}"></i>`;
+  return `<div class="chart dotc">${h}</div>`;
+}
+const Metric = (label, value) => Card(`<div class="sub">${label}</div><div class="v">${Disp(value, 'md')}</div>`, 'met');
+const hdTitle = '<div class="grow"><div class="title disp">Runner</div><div class="sub">Connected · mock</div></div>';
+const hdIcons = page => `<span class="ib">${ic('pin')}</span><span class="ib ${page === 'settings' ? 'on' : ''}">${ic('gear')}</span><span class="ib">${ic('x')}</span>`;
+const Header = (page, v = C.header) => v === 'split' ? Card(`${hdTitle}${Toggle(true)}${Well(hdIcons(page), 'ibs')}`, 'w-hd hd-split')
+  : v === 'float' ? `<div class="w-hd hd-float">${Toggle(true)}${hdTitle}${hdIcons(page)}</div>`
+  : Card(`${Toggle(true)}${hdTitle}${hdIcons(page)}`, 'w-hd');
+const Nav = (page, v = C.nav) => { const h = [['home', 'Home'], ['inbox', 'Inbox'], ['traffic', 'Traffic']].map(([k, l]) =>
+  `<span class="ni ${(page === 'home' ? 'home' : page === 'settings' ? '' : 'inbox') === k ? 'act' : ''}">${ic(k)}${l}</span>`).join('');
+  return v === 'well' ? Well(h, 'w-nav nav-well') : Card(h, `w-nav nav-${v || 'pill'}`); };
+// List row: a label, a short second line and a control. Handlers and settings both use it.
+const ListRow = (label, desc, ctl, first, ell) => `<div class="row lrow ${first ? '' : 'sep'}"><div class="grow"><div class="${ell ? 'ell' : ''}">${label}</div>${desc ? `<div class="sub ${ell ? 'ell' : ''}">${desc}</div>` : ''}</div>${ctl}</div>`;
+const HandlerRow = h => ListRow(h, 'Last: <span class="mono">page.properties_updated</span> · 21:24', Toggle(true, { sm: true }), false, true);
+const SourceCard = (icon = 'well') => Card(`<div class="row">${icon === 'ring' ? SrcRing('notion', 1) : Icon('notion')}<div class="grow"><div class="nm">notion</div><div class="sub">3 handlers · 2 events</div></div>${Toggle(true)}</div>${HANDLERS.map(HandlerRow).join('')}`, 'src-card');
+const SourceTile = ([n, e]) => Card(`<div class="top">${SrcRing(n, 0, 'done', 34)}${Toggle(true, { sm: true })}</div><div class="nm">${n}</div><div class="sub">${plural(e, 'event')}</div>`, 'tile src-tile');
+const evMark = e => Ring([[ST_P[e.st], `var(--${e.st})`]], 40, 6, `<span class="ri">${ic(srcIcon(e.src))}</span>`);
+const evBody = e => `<div class="grow ev"><div class="l1"><b class="grow ell">#${e.id} ${e.src}</b><span class="mono sub">${e.t}</span></div>
+  <div class="mono t2 ell">${e.type}</div><div class="l3">${Pill(e.st)}<span class="sub ell">${e.h}</span></div></div>`;
+// Timeline: events on a carved line. A different component from the event item.
+function Timeline(list, v = C.timeline) {
+  const node = e => v === 'rings' ? `<span class="tnode">${Ring([[ST_P[e.st], `var(--${e.st})`]], 30, 5, `<span class="ri" style="transform:scale(.8)">${ic(srcIcon(e.src))}</span>`)}</span>` : '<span class="node"></span>';
+  return `<div class="tl tl-${v}">${list.map(e => `<div style="position:relative;--st:var(--${e.st})">${node(e)}${Card(`<div class="row">${evBody(e)}</div>`)}</div>`).join('')}</div>`;
+}
+const InboxList = list => C.inboxView === 'timeline' ? Timeline(list) : EventList(list);
+function EventList(list, variant = C.list) {
+  if (variant === 'rows') return Card(list.map((e, i) => `<div class="row evi ${i ? 'sep' : ''}">${evMark(e)}${evBody(e)}</div>`).join(''));
+  return list.map(e => Card(`<div class="row evi">${evMark(e)}${evBody(e)}</div>`)).join('');
+}
+const Payload = () => Well(`<pre class="mono">{
+  "type": "page.properties_updated",
+  "entity": { "id": "1c9e7a…", "type": "page" },
+  "data": { "updated_properties": ["Status"] }
+}</pre>`, 'pay');
+const Back = l => `<div class="back">${ic('chevL')}${l}</div>`;
+const SetRow = (label, desc, ctl, first) => ListRow(label, desc, ctl, first);
+
+/* ================= Pages: compositions of components ================= */
+const PAGE_FN = {
+  home(L) {
+    if (L === 'list') return Field('Search sources and handlers') + SourceCard() + `<div class="gt">No handlers yet</div>`
+      + Card(EMPTY.map(([n, e], i) => `<div class="row ${i ? 'sep' : ''}">${SrcRing(n, 0, 'done', 30)}<div class="grow">${n}</div><span class="sub">${plural(e, 'event')}</span>${Toggle(true, { sm: true })}</div>`).join(''));
+    if (L === 'bento') return Field('Search sources and handlers') + `<div class="grid2">
+      ${Card(`<div class="row" style="gap:16px;padding:14px">${Ring(SEGS(), 112, 13, `${Disp('133', 'md')}<span class="sub">events</span>`)}<div class="grow">${Legend()}</div></div>`, 'span2')}
+      ${Card(`<div class="pad"><div class="row" style="padding:0 0 8px"><span class="sub grow">Activity · last 6 hours</span><span class="mono sub">21:24</span></div>${Chart()}</div>`, 'span2')}
+      <div class="span2">${SourceCard('ring')}</div>${EMPTY.slice(0, 4).map(SourceTile).join('')}</div>`;
+    return Card(`<div class="row" style="gap:16px;padding:14px">${Ring(SEGS(), 124, 15, `${Disp('133')}<span class="sub">events today</span>`)}
+      <div class="grow" style="display:grid;gap:10px">${Legend()}${Meter(.72)}<div class="sub">Listener on · 4 h 12 m</div></div></div>`)
+      + SourceCard() + `<div class="gt">No handlers yet</div><div class="grid3">${EMPTY.slice(0, 3).map(SourceTile).join('')}</div>`;
+  },
+  inbox(L) {
+    const top = `<div class="srow">${Field('Search events')}${Button('Filter', 'filter')}</div>` + Seg(['All 133', 'Done 131', 'Pending 1', 'Failed 1'], 0);
+    if (L === 'bento') return top + `<div class="grid2">${EVENTS.map(e => Card(`<div class="top">${evMark(e)}<span class="mono sub">${e.t}</span></div>
+      <div><b>#${e.id}</b></div><div class="t2">${e.src} · <span style="color:var(--${e.st})">${e.st}</span></div><div class="mono sub" style="word-break:break-all">${e.type}</div>`, 'tile ev-tile')).join('')}</div>`;
+    return top + (L === 'list' ? EventList(EVENTS, 'rows') : InboxList(EVENTS.slice(0, 5)));
+  },
+  detail(L) {
+    const head = Card(`<div class="row" style="gap:14px;padding:14px">${Ring([[1, 'var(--accent)']], 96, 12, `${Disp('3/3', 'md')}<span class="sub">handlers</span>`)}
+      <div class="grow"><div>${Disp('#9102213', 'md')}</div><div class="t2">notion</div><div class="mono sub">page.properties_updated</div><div style="margin-top:6px">${Pill('done')}</div></div></div>`);
+    const times = Card(RES.map(([h, t, p], i) => `<div class="pad" style="display:grid;gap:6px;${i ? 'border-top:1px solid var(--line-c)' : ''}"><div style="display:flex"><span class="grow">${h}</span><span class="mono sub">${t}</span></div>${Bar(p / 100)}</div>`).join(''));
+    if (L === 'list') return Back('Inbox') + Card(`<div class="row"><div class="grow"><div>${Disp('#9102213 notion', 'md')}</div><div class="mono sub">page.properties_updated</div></div>${Pill('done')}</div>`)
+      + `<div class="gt">Details</div>` + Card([['Received', '21:24:04'], ['Attempts', '1'], ['Acked', '21:24:05']].map(([k, v]) => `<div class="kv"><span class="k">${k}</span><span class="mono">${v}</span></div>`).join(''))
+      + `<div class="gt">Handlers</div>` + Card(RES.map(([h, t]) => `<div class="kv"><span class="k">${h}</span>${Pill('done')}<span class="mono sub">${t}</span></div>`).join('')) + `<div class="gt">Payload</div>` + Payload();
+    if (L === 'bento') return Back('Inbox') + `<div class="grid2"><div class="span2">${head}</div>${Metric('Received', '21:24:04')}${Metric('Acked', '21:24:05')}<div class="span2">${times}</div><div class="span2">${Payload()}</div></div>`;
+    return Back('Inbox') + head + `<div class="grid3">${[['Received', '21:24:04'], ['Attempts', '1'], ['Acked', '21:24:05']].map(([k, v]) => Well(`<div class="sub" style="color:var(--sunken-muted)">${k}</div>${Disp(v, 'md')}`, 'met')).join('')}</div>`
+      + `<div class="gt">Handler time</div>` + times + `<div class="gt">Payload</div>` + Payload();
+  },
+  settings() {
+    return Back('Back') + `<div class="gt">App</div>` + Card(SetRow('Mock mode', 'Fake inbox, Notion and Claude, with separate data. A change restarts the app.', Toggle(true), true))
+      + `<div class="gt">At start</div>` + Card(SetRow('Listener on at start', 'Off: start paused', Toggle(true), true) + SetRow('Open the widget at start', '', Toggle(true))
+        + SetRow('Pin by default', 'Stays on top and does not hide', Toggle(false)) + SetRow('Start with Windows', 'Needs the PC owner\'s OK first', Toggle(false, { dis: true })))
+      + `<div class="gt">Traffic</div>` + Card(SetRow('Capture bodies', 'Memory only, secrets removed', Toggle(false), true) + SetRow('Entries to keep', '', Seg(['200', '500', '1000'], 1)));
+  },
+};
+
+function widget(th, mode, page) {
+  const t = tokens(th, mode);
+  C = th.comp;
+  const cls = `w t-${C.toggle}`;
+  return `<div class="${cls}" style="${styleOf(t)}">${Header(page)}<div class="w-body">${PAGE_FN[page](th.layout)}</div>${Nav(page)}</div>`;
+}
+
+/* ================= Design system catalog ================= */
+// Tokens that the JS makes from the palette and the effect numbers.
+const DERIVED = [
+  ['--canvas-bg', 'Widget background', 'canvas + glass blobs (accent, new, pending)', '<span class="prev" style="background:var(--canvas-bg);border:1px solid var(--line-c)"></span>'],
+  ['--surf-bg', 'Card fill', 'surface + bevel gradient, or surface with alpha (glass)', '<span class="prev" style="background:var(--surf-bg);color:var(--text)">Aa</span>'],
+  ['--sh-raise', 'Raised shadow', 'shadow · depth · bevel · glass', '<span class="prev crd"></span>'],
+  ['--sh-raise-sm', 'Small raised shadow', 'shadow · depth · bevel', '<span class="prev" style="background:var(--surface-solid);box-shadow:var(--sh-raise-sm);border-radius:50%;width:42px"></span>'],
+  ['--sh-carve', 'Carved shadow', 'shadow · carve · sunken lightness', '<span class="prev well"></span>'],
+  ['--sh-dial', 'Deep carve (big ring)', 'shadow · carve · sunken lightness', '<span class="prev" style="background:var(--sunken);box-shadow:var(--sh-dial);border-radius:50%;width:42px"></span>'],
+  ['--sh-hole', 'Ring center lift', 'shadow · depth · bevel', '<span class="prev" style="background:var(--hole-bg);box-shadow:var(--sh-hole);border-radius:50%;width:42px"></span>'],
+  ['--sh-fill', 'Carved fill (bars)', 'carve', '<span class="prev well" style="display:block;padding:15px 8px"><span style="display:block;height:12px;border-radius:6px;background:var(--accent);box-shadow:var(--sh-fill)"></span></span>'],
+  ['--sh-glow', 'Accent glow', 'accent · glow', '<span class="prev" style="background:var(--accent);box-shadow:var(--sh-glow);color:var(--on-accent)">Aa</span>'],
+  ['--blur', 'Glass blur', 'glass', '<span class="prev crd" style="color:var(--text)">Aa</span>'],
+  ['--tx2', 'Second text', 'text 80% + surface', '<span class="prev crd" style="color:var(--tx2)">Aa</span>'],
+  ['--sunken-muted', 'Muted text in holes', 'sunkenTx 68% + sunken', '<span class="prev well" style="color:var(--sunken-muted)">Aa</span>'],
+  ['--line-c', 'Divider line', 'text 9%', '<span class="prev crd" style="display:block;padding-top:20px"><span style="display:block;border-top:1px solid var(--line-c)"></span></span>'],
+  ['--head-tint', 'Card header tint', 'text 5% (light) or 7% (dark) over the surface', '<span class="prev crd" style="display:block;overflow:hidden"><span style="display:block;height:16px;background:var(--head-tint)"></span></span>'],
+  ['--track', 'Off track (flat pill)', 'text 20%', '<span class="prev crd" style="display:grid;place-items:center"><span style="width:44px;height:14px;border-radius:7px;background:var(--track)"></span></span>'],
+  ['--dim', 'Unlit dots', 'text 10%', '<span class="prev crd" style="display:grid;place-items:center"><span style="width:44px;height:14px;border-radius:7px;background:var(--dim)"></span></span>'],
+  ['--knob', 'Toggle knob', 'surface (raised dot)', '<span class="prev crd"><span style="width:22px;height:22px;border-radius:50%;background:var(--knob);box-shadow:0 2px 4px rgba(0,0,0,.35)"></span></span>'],
+  ['--r', 'Radius', 'radius', '<span class="prev" style="border-radius:var(--r);border:2px solid var(--accent)"></span>'],
+  ['--r-sm', 'Small radius', 'radius × 0.55', '<span class="prev" style="border-radius:var(--r-sm);border:2px solid var(--accent)"></span>'],
+];
+const TYPE_SCALE = [
+  ['.big', 'Hero number', 'display', '30px', () => Disp('133')],
+  ['.md', 'Title, metric', 'display', '20px', () => Disp('21:24:04', 'md')],
+  ['.title', 'Widget title', 'display', '17px', () => '<span class="disp" style="font-size:17px">Runner</span>'],
+  ['body', 'All other text', 'body', '13px', () => 'Listener on at start'],
+  ['.nm', 'Name', 'body · 600', '13px', () => '<span class="nm">notion</span>'],
+  ['.sub', 'Small text', 'body', '11.5px', () => '<span class="sub">3 handlers · 2 events</span>'],
+  ['.gt', 'Section title (on canvas)', 'body · 600 · caps', '11px', () => '<span class="gt" style="margin:0">At start</span>', true],
+  ['.mono', 'Ids, types, times', 'mono', '11.5px', () => '<span class="mono">page.properties_updated</span>'],
+];
+const FX_INFO = { depth: 'Drop shadow under raised surfaces', bevel: 'Edge light and shade on raised surfaces; soft outer light on light canvases', carve: 'Inner shadow of holes: fields, tracks, wells, dial channels', glow: 'Light around accent fills, lit dots and bars', glass: 'See-through surfaces, blur and color blobs on the canvas', radius: 'Corner radius of cards; small radius = 55%' };
+
+// Run fn with one component variant changed.
+const withC = (k, v, fn) => { const old = C; C = { ...C, [k]: v }; try { return fn(); } finally { C = old; } };
+const inCard = (html, w) => Card(`<div class="pad" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center${w ? `;width:${w}px` : ''}">${html}</div>`);
+
+// Each component: what it is, the tokens it reads, a demo, and a pattern that finds it in a page.
+// v: the component setting whose variants show side by side.
+const COMPS = [
+  { g: 'Base', n: 'Card', d: 'Raised surface. Most components sit on a card.', t: ['--surf-bg', '--sh-raise', '--r', '--blur', '--text'], re: /class="crd /,
+    demo: () => Card('<div class="pad">Card</div>') },
+  { g: 'Base', n: 'Well', d: 'Carved hole in a surface. Holds fields, tracks, metrics and the payload.', t: ['--sunken', '--sh-carve', '--sunken-bd', '--sunken-tx', '--r-sm'], re: /class="well /,
+    demo: () => Well('<div class="pad">Well</div>') },
+  { g: 'Base', n: 'Section title', d: 'Small caps title on the canvas, above a group of cards.', t: ['--canvas-tx'], re: /class="gt"/,
+    demo: () => '<div class="gt" style="margin:0">At start</div>' },
+  { g: 'Base', n: 'Display text', d: 'Big numbers and titles. The only place the display font shows.', t: ['--f-display', '--w-display', '--ls-display'], re: /class="disp /,
+    demo: () => inCard(Disp('133') + Disp('#9102213', 'md')) },
+  { g: 'Base', n: 'Icon well', d: 'Source icon in a small carved hole.', t: ['--sunken', '--sh-carve', '--r-sm'], re: /well ico/,
+    demo: () => inCard(['notion', 'github', 'slack', 'bulk'].map(Icon).join('')) },
+  { g: 'Navigation', n: 'Title bar', d: 'Listener toggle, title, pin, settings, close.', t: ['--surf-bg', '--sh-raise', '--accent', '--muted', '--canvas-tx'], re: /w-hd/, v: 'header',
+    demo: () => `<div style="width:310px">${Header('settings')}</div>` },
+  { g: 'Navigation', n: 'Nav', d: 'Bottom tabs. The active tab uses the accent.', t: ['--surf-bg', '--accent', '--on-accent', '--muted'], re: /w-nav/, v: 'nav',
+    demo: () => `<div style="width:310px">${Nav('home')}</div>` },
+  { g: 'Navigation', n: 'Back link', d: 'Return to the previous page.', t: ['--canvas-tx'], re: /class="back"/,
+    demo: () => Back('Inbox') },
+  { g: 'Base', n: 'Toggle', d: 'On/off switch. A base part of most components: the listener (big), sources, handlers and settings (small).', t: ['--sunken', '--sh-carve', '--accent', '--sh-glow', '--knob', '--track'], re: /class="tg /, v: 'toggle',
+    demo: () => inCard(`${Toggle(true)}${Toggle(false)}${Toggle(true, { sm: true })}${Toggle(false, { sm: true })}${Toggle(false, { dis: true })}`) },
+  { g: 'Controls', n: 'Field', d: 'Search input.', t: ['--sunken', '--sh-carve', '--sunken-muted'], re: /fld/, v: 'field',
+    demo: () => `<div style="width:240px">${Field('Search events')}</div>` },
+  { g: 'Controls', n: 'Button', d: 'Raised button; the primary one uses the accent.', t: ['--surf-bg', '--sh-raise', '--accent', '--on-accent', '--sh-glow'], re: /class="btn/,
+    demo: () => Button('Filter', 'filter') + Button('Save', '', true) },
+  { g: 'Controls', n: 'Segmented control', d: 'One choice from a few.', t: ['--sunken', '--sh-carve', '--accent', '--on-accent', '--sunken-muted'], re: /class="(well )?seg/, v: 'seg',
+    demo: () => `<div style="width:280px">${Seg(['All 133', 'Done 131', 'Failed 1'], 0)}</div>` },
+  { g: 'Data', n: 'Ring', d: 'Progress or share as a ring, with content in the center.', t: ['--sunken', '--sh-carve', '--surface-solid', '--accent', '--dim', '--glow-k'], re: /class="ring /, v: 'ring',
+    demo: () => inCard(Ring(SEGS(), 88, 11, Disp('133', 'md')) + `<div style="display:grid;gap:8px">${Ring([[.5, 'var(--pending)']], 40, 6, `<span class="ri">${ic('mock')}</span>`)}${Ring([], 34, 5, `<span class="ri">${ic('github')}</span>`)}</div>`) },
+  { g: 'Data', n: 'Ring color', d: 'Color of the Done share in the big ring and the legend.', t: ['--accent', '--done'], re: /class="lg"/, v: 'ringColor',
+    demo: () => inCard(Ring(SEGS(), 72, 9, Disp('133', 'md')) + `<div style="width:120px">${Legend()}</div>`) },
+  { g: 'Data', n: 'Bar', d: 'Progress.', t: ['--sunken', '--sh-carve', '--accent', '--accent-glow', '--dim'], re: /class="(well pb|pb pb-thin)"/, v: 'bar',
+    demo: () => inCard(`<div style="width:200px;display:grid;gap:10px">${Bar(.72)}${Bar(.08)}${Bar(.3, 'var(--failed)')}</div>`) },
+  { g: 'Data', n: 'Segment meter', d: 'A value as lit segments, for a level or a share at a glance. Bars are for exact times and progress.', t: ['--accent', '--accent-glow', '--dim', '--glow-k'], re: /pbk/, v: 'meter',
+    demo: () => inCard(`<div style="width:200px;display:grid;gap:10px">${Meter(.72)}${Meter(.08)}${Meter(.3, 'var(--failed)')}</div>`) },
+  { g: 'Data', n: 'Pill', d: 'Event state. Color = state token.', t: ['--done', '--pending', '--failed', '--new'], re: /class="pill /, v: 'pill',
+    demo: () => inCard(['done', 'pending', 'failed', 'new'].map(Pill).join(''), 170) },
+  { g: 'Data', n: 'Activity chart', d: 'Events in the last hours.', t: ['--accent', '--accent-glow', '--dim'], re: /class="chart /, v: 'chart',
+    demo: () => inCard(`<div style="width:220px">${Chart()}</div>`) },
+  { g: 'Data', n: 'Metric', d: 'One label and one big value.', t: ['--muted', '--f-display'], re: /met"/,
+    demo: () => Metric('Received', '21:24:04') + Well(`<div class="sub" style="color:var(--sunken-muted)">Acked</div>${Disp('21:24:05', 'md')}`, 'met') },
+  { g: 'Data', n: 'Key-value row', d: 'Label on the left, value on the right.', t: ['--tx2', '--line-c'], re: /class="kv"/,
+    demo: () => `<div style="width:260px">${Card('<div class="kv"><span class="k">Received</span><span class="mono">21:24:04</span></div><div class="kv"><span class="k">Attempts</span><span class="mono">1</span></div>')}</div>` },
+  { g: 'Data', n: 'Payload', d: 'Event JSON in a carved well.', t: ['--sunken', '--sunken-tx', '--f-mono'], re: /well pay/,
+    demo: () => `<div style="width:360px">${Payload()}</div>` },
+  { g: 'Patterns', n: 'Event item', d: 'One event: marker ring, id, type, state and handlers.', t: ['Ring', 'Pill', '--f-mono'], re: /row evi/, v: 'list',
+    demo: () => `<div style="width:300px;display:grid;gap:8px">${EventList(EVENTS.slice(0, 2))}</div>` },
+  { g: 'Patterns', n: 'Timeline', d: 'Events on a carved line, newest first. The Inbox uses it when View > Inbox list is Timeline.', t: ['--sunken', '--sh-carve', 'Card', '--done', '--pending', '--failed'], re: /class="tl /, v: 'timeline',
+    demo: () => `<div style="width:320px">${Timeline(EVENTS.slice(0, 3))}</div>` },
+  { g: 'Patterns', n: 'Event tile', d: 'One event as a grid tile (bento layout).', t: ['Card', 'Ring', '--f-mono'], re: /ev-tile/,
+    demo: () => `<div style="width:180px">${Card(`<div class="top">${evMark(EVENTS[1])}<span class="mono sub">21:23</span></div><div><b>#9102212</b></div><div class="t2">mock · <span style="color:var(--pending)">pending</span></div><div class="mono sub">task</div>`, 'tile ev-tile')}</div>` },
+  { g: 'Patterns', n: 'Source card', d: 'A source with its handlers (list rows). The source row has a header tint.', t: ['--head-tint', 'Card', 'Icon well or Ring', 'Toggle', 'List row'], re: /src-card/,
+    demo: () => `<div style="width:360px">${SourceCard()}</div>` },
+  { g: 'Patterns', n: 'List row', d: 'A label, a short second line and a control. Handler rows and setting rows are the same component.', t: ['--line-c', '--muted', 'Toggle or Segmented control'], re: /lrow/,
+    demo: () => `<div style="width:360px">${Card(HandlerRow('LogEverything').replace(' sep"', '"') + SetRow('Pin by default', 'Stays on top and does not hide', Toggle(false)) + SetRow('Entries to keep', '', Seg(['200', '500', '1000'], 1)))}</div>` },
+  { g: 'Patterns', n: 'Source tile', d: 'A source with no handlers, as a small tile.', t: ['Card', 'Ring', 'Toggle'], re: /src-tile/,
+    demo: () => `<div style="width:130px">${SourceTile(['github', 1])}</div>` },
+];
+
+function usage() {
+  const cols = [];
+  for (const [p, pl] of [['home', 'Home'], ['inbox', 'Inbox'], ['detail', 'Detail']]) for (const [l, ll] of LAYOUTS) cols.push([pl, ll.split(' ')[0], Header(p) + PAGE_FN[p](l) + Nav(p)]);
+  cols.push(['Settings', 'All', Header('settings') + PAGE_FN.settings() + Nav('settings')]);
+  return cols;
+}
+
+function dsPage() {
+  const th = state.th, mode = state.dsMode || 'light', t = tokens(th, mode);
+  C = th.comp;
+  const sec = (id, title, intro, body) => `<section class="ds-sec"><div id="ds-${id}" class="ds-h">${title}</div>${intro ? `<div class="ds-p">${intro}</div>` : ''}${body}</section>`;
+  const tok = x => `<span class="tok">${x}</span>`;
+  const cssVar = { canvas: '--canvas-solid', canvasTx: '--canvas-tx', surface: '--surface-solid', text: '--text', muted: '--muted', sunken: '--sunken', sunkenTx: '--sunken-tx', accent: '--accent', onAccent: '--on-accent', shadow: '(shadows only)', done: '--done', pending: '--pending', failed: '--failed', new: '--new' };
+  const cols = usage();
+  const cnt = c => cols.filter(x => c.re.test(x[2])).length;
+
+  const colors = `<div class="ds-scroll"><table class="ds-tbl"><thead><tr><th>Token</th><th>CSS</th><th>Light</th><th>Dark</th><th>Use</th></tr></thead><tbody>
+    ${PAL_KEYS.map(([k, l, d]) => `<tr><td><b>${l}</b></td><td>${tok(cssVar[k])}</td>
+      ${['light', 'dark'].map(m => `<td style="white-space:nowrap"><span class="sw2" style="background:${th.pal[m][k]}"></span> <span class="val">${th.pal[m][k]}</span></td>`).join('')}<td class="ds-s">${d}</td></tr>`).join('')}</tbody></table></div>`;
+  const derived = `<div class="ds-scroll"><table class="ds-tbl"><thead><tr><th>Preview</th><th>Token</th><th>Made from</th><th>Value (${mode})</th></tr></thead><tbody>
+    ${DERIVED.map(([k, l, from, prev]) => `<tr><td><span class="stage sm">${prev}</span></td><td><b>${l}</b><br>${tok(k)}</td><td class="ds-s">${from}</td><td class="val">${String(t[k]).replace(/</g, '&lt;')}</td></tr>`).join('')}</tbody></table></div>`;
+  const fonts = `<div class="ds-cols">${['display', 'body', 'mono'].map(r => {
+    const fo = FONTS[th.type[r]], css = fo.css.replace(/"/g, "'");
+    return `<div class="stage surf" style="display:grid;gap:6px"><div class="sub">${r} · <span class="mono">--f-${r}</span></div>
+      <div style="font-family:${css};font-size:26px;font-weight:${r === 'display' ? fo.w : 500}">${fo.name.split(' (')[0]}</div>
+      <div style="font-family:${css}">0123456789 · Aa Bb Cc · 21:24:04</div></div>`;
+  }).join('')}</div>`;
+  const scale = `<div class="ds-scroll"><table class="ds-tbl"><thead><tr><th>Style</th><th>Use</th><th>Font</th><th>Size</th><th>Sample</th></tr></thead><tbody>
+    ${TYPE_SCALE.map(([c, u, fnt, sz, fn, onCanvas]) => `<tr><td>${tok(c)}</td><td>${u}</td><td class="ds-s">${fnt}</td><td class="val">${sz}</td><td><span class="stage sm ${onCanvas ? '' : 'surf'}">${fn()}</span></td></tr>`).join('')}</tbody></table></div>`;
+  const fx = `<div class="ds-scroll"><table class="ds-tbl"><thead><tr><th>Setting</th><th>Value</th><th style="width:30%"></th><th>Drives</th></tr></thead><tbody>
+    ${FX_KEYS.map(([k, l, a, b]) => `<tr><td><b>${l}</b></td><td class="val">${th.fx[k]}</td><td><span class="fxbar"><i style="width:${Math.round((th.fx[k] - a) / (b - a) * 100)}%"></i></span></td><td class="ds-s">${FX_INFO[k]}</td></tr>`).join('')}</tbody></table></div>`;
+  const groups = [...new Set(COMPS.map(c => c.g))];
+  const comps = groups.map(g => `<div class="ds-h2">${g}</div><div>${COMPS.filter(c => c.g === g).map(c => {
+    const opts = c.v ? COMP_KEYS.find(x => x[0] === c.v)[2] : null;
+    const gal = opts
+      ? opts.map(([v, l]) => { const on = th.comp[c.v] === v; return `<div class="pick ${on ? 'sel' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-act="compv" data-k="${c.v}" data-v="${v}"><div class="stage">${withC(c.v, v, c.demo)}</div><span class="lbl">${l}${on ? ' · in use' : ''}</span></div>`; }).join('')
+      : `<div class="pick fixed"><div class="stage">${c.demo()}</div></div>`;
+    return `<div class="cmp"><div class="info"><div class="cn">${c.n}</div><div class="ds-s">${c.d}</div>
+      <div class="chips">${c.t.map(x => x.startsWith('--') ? tok(x) : `<span class="tok ref">${x}</span>`).join('')}</div>
+      <div class="ds-s">Used in ${cnt(c)} of ${cols.length} screens${opts ? ` · ${opts.length} variants, click one to use it` : ''}</div></div><div class="gal">${gal}</div></div>`;
+  }).join('')}</div>`).join('');
+  const matrix = `<div class="ds-scroll"><table class="ds-tbl mx"><thead><tr><th>Component</th>${cols.map(([pg, l]) => `<th class="c">${pg}<br><span style="text-transform:none;font-weight:400">${l}</span></th>`).join('')}</tr></thead><tbody>
+    ${COMPS.map(c => `<tr><td>${c.n}</td>${cols.map(x => `<td class="c">${c.re.test(x[2]) ? '<span class="dot"></span>' : '<span class="no"></span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  const name = th.themeId === 'custom' ? 'Custom theme' : THEMES[th.themeId].name;
+  const toc = [['colors', 'Color tokens'], ['derived', 'Made tokens'], ['type', 'Type'], ['fx', 'Depth and effects'], ['comps', 'Components'], ['matrix', 'Where used']];
+
+  return `<div class="ds-bar">${sel('Theme', 'theme', ent(THEMES), th.themeId, true)}${sel('Mode', 'dsmode', [['light', 'Light'], ['dark', 'Dark']], mode)}
+      <p class="note" style="flex:1;min-width:220px">The catalog uses the current Studio theme, with your edits. A click on a variant selects it for all screens.</p></div>
+    <div class="ds" style="${styleOf(t)}">
+      <section class="ds-sec"><div class="ds-h" style="font-size:28px">${name}</div><div class="ds-p">Everything that makes the Runner widget: ${PAL_KEYS.length} color tokens, ${DERIVED.length} made tokens, 3 fonts, ${FX_KEYS.length} effect settings and ${COMPS.length} components. Each component shows on a stage with the widget canvas (${mode}).</div>
+        <div class="toc">${toc.map(([id, l]) => `<a href="#ds-${id}">${l}</a>`).join('')}</div></section>
+      ${sec('colors', 'Color tokens', 'You set these 14 colors in the palette. All other colors come from them.', colors)}
+      ${sec('derived', 'Made tokens', 'The page makes these from the palette and the effect settings. Components read them. You do not set them directly.', derived)}
+      ${sec('type', 'Type', 'Three font tokens. Every text style uses one of them.', fonts + scale)}
+      ${sec('fx', 'Depth and effects', 'Six numbers make all shadows, glows, glass and corners.', fx)}
+      ${sec('comps', 'Components', 'Each component reads only tokens. Variants show side by side. The outlined one is in use.', comps)}
+      ${sec('matrix', 'Where used', 'Which components make each screen, for each page and layout.', matrix)}
+    </div>`;
+}
+
+/* ================= Contrast checks ================= */
+function checks(th, mode) {
+  const p = th.pal[mode], s = tokens(th, mode)._surfEff;
+  return [
+    ['Text on surface', p.text, s, 4.5], ['Muted on surface', p.muted, s, 4.5], ['Canvas text', p.canvasTx, p.canvas, 4.5],
+    ['Sunken text', p.sunkenTx, p.sunken, 4.5], ['On accent', p.onAccent, p.accent, 4.5],
+    ['Accent on surface (UI)', p.accent, s, 3],
+    ...['done', 'pending', 'failed', 'new'].map(k => [`${k[0].toUpperCase() + k.slice(1)} on surface`, p[k], s, 4.5]),
+  ].map(([n, a, b, min]) => [n, ratio(a, b), min]);
+}
+
+/* ================= Studio state ================= */
+const KEY = 'runner-studio-2';
+let state;
+try { state = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { state = null; }
+if (state && !PAGES.some(x => x[0] === state.page)) state.page = 'home';
+if (state && state.th && state.th.comp) { state.th.comp = { ...COMP_DEFAULT, ...state.th.comp }; if (state.th.comp.bar === 'blocks') { state.th.comp.bar = 'carved'; state.th.comp.meter = 'blocks'; } if (state.th.comp.list === 'timeline') { state.th.comp.list = 'cards'; state.th.comp.inboxView = 'timeline'; } }
+if (!state || !state.th || !state.th.pal || !state.th.pal.light) state = { page: 'home', mode: 'light', edit: 'light', open: { view: true, theme: true }, th: fromTheme('dotDepth') };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const opt = (list, cur, custom) => (custom ? `<option value="custom"${cur === 'custom' ? ' selected' : ''}>Custom</option>` : '') + list.map(([v, l]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${l}</option>`).join('');
+const sel = (label, act, list, cur, custom) => `<label class="f"><span>${label}</span><select data-act="${act}">${opt(list, cur, custom)}</select></label>`;
+const ent = o => Object.entries(o).map(([k, v]) => [k, v.name]);
+
+let SAVED = {}, db = null;
+function controls() {
+  const th = state.th, s = state, ed = s.edit;
+  const sec = (id, title, hint, body) => `<details class="sec" data-sec="${id}"${s.open[id] ? ' open' : ''}><summary>${title}<span class="hint">${hint}</span></summary><div class="sec-b">${body}</div></details>`;
+  return sec('view', 'View', `${PAGES.find(x => x[0] === s.page)[1].split(' (')[0]} · ${s.mode}`, `
+      ${sel('Page', 'page', PAGES, s.page)}
+      <div class="two">${sel('Mode', 'mode', [['light', 'Light'], ['dark', 'Dark'], ['both', 'Both']], s.mode)}${sel('Layout', 'layout', LAYOUTS, th.layout)}</div>
+      ${sel('Inbox list', 'comp:inboxView', COMP_KEYS.find(x => x[0] === 'inboxView')[2], th.comp.inboxView)}`)
+    + sec('theme', 'Theme preset', th.themeId === 'custom' ? 'Custom' : THEMES[th.themeId].name, `
+      ${sel('Start from', 'theme', ent(THEMES), th.themeId, true)}
+      <p class="note">A theme sets all the layers below. A change to one layer makes the theme "Custom".</p>`)
+    + sec('pal', 'Palette', th.palId === 'custom' ? 'Custom' : PALS[th.palId].name, `
+      ${sel('Palette preset', 'pal', ent(PALS), th.palId, true)}
+      <div class="f"><span>Edit colors for</span><div class="seg-c">${['light', 'dark'].map(m => `<button type="button" data-act="edit" data-v="${m}" class="${ed === m ? 'on' : ''}">${m === 'light' ? 'Light' : 'Dark'}</button>`).join('')}</div></div>
+      <div class="sw-grid">${PAL_KEYS.map(([k, l, d]) => `<label class="swr" title="${d}"><input type="color" data-tok="${k}" value="${th.pal[ed][k]}"><span class="nm">${l}<code>${th.pal[ed][k]}</code></span></label>`).join('')}</div>`)
+    + sec('type', 'Type', th.typeId === 'custom' ? 'Custom' : TYPES[th.typeId].name, `
+      ${sel('Type preset', 'typeP', ent(TYPES), th.typeId, true)}
+      ${sel('Display: titles and big numbers', 'font:display', ent(FONTS), th.type.display)}
+      ${sel('Body: all other text', 'font:body', ent(FONTS), th.type.body)}
+      ${sel('Mono: ids, types, times, payload', 'font:mono', ent(FONTS), th.type.mono)}`)
+    + sec('fx', 'Depth and effects', th.fxId === 'custom' ? 'Custom' : FXS[th.fxId].name, `
+      ${sel('Effects preset', 'fxP', ent(FXS), th.fxId, true)}
+      ${FX_KEYS.map(([k, l, a, b]) => `<label class="rng"><span>${l}</span><input type="range" min="${a}" max="${b}" value="${th.fx[k]}" data-fx="${k}"><output>${th.fx[k]}</output></label>`).join('')}
+      <p class="note">Depth: drop shadow. Bevel: edge light. Carve: holes. Glow: light on the accent. Glass: see-through surfaces.</p>`)
+    + sec('comp', 'Components', (COMP_KEYS.length - 1) + ' parts', `
+      ${COMP_KEYS.filter(([k]) => k !== 'inboxView').map(([k, l, o]) => `<div class="f"><span>${l}</span><div class="seg-c wrap">${o.map(([v, n]) => `<button type="button" data-act="compv" data-k="${k}" data-v="${v}" class="${th.comp[k] === v ? 'on' : ''}">${n}</button>`).join('')}</div></div>`).join('')}
+      <p class="note">The Design system tab shows each variant.</p>`)
+    + sec('contrast', 'Contrast', '', `<div id="ck" class="ck"></div>`)
+    + sec('saved', 'Saved themes', db ? Object.keys(SAVED).length + '' : '', db ? `
+      <div class="seg-c"><input type="text" id="sv-name" placeholder="Name" maxlength="40"><button type="button" data-act="save">Save</button></div>
+      <div class="saved" id="sv-list"></div>` : `<p class="note">Saving needs the claude.ai viewer.</p>`)
+    + sec('export', 'Export tokens', 'CSS', `<button type="button" data-act="copy">Copy CSS variables</button><textarea id="ex" readonly></textarea>`);
+}
+function savedList() {
+  const el = document.getElementById('sv-list'); if (!el) return;
+  const items = Object.entries(SAVED).sort((a, b) => (b[1].at || '').localeCompare(a[1].at || ''));
+  el.innerHTML = items.length ? items.map(([id, v]) => `<div class="it"><button type="button" data-load="${id}">${v.name.replace(/</g, '&lt;')}</button><button type="button" data-del="${id}" aria-label="Delete">✕</button></div>`).join('') : '<p class="note">No saved themes yet.</p>';
+}
+function exportCss() {
+  const out = ['light', 'dark'].map(m => { const t = tokens(state.th, m); return `${m === 'light' ? ':root' : ':root[data-mode="dark"]'} {\n${Object.entries(t).filter(([k]) => k.startsWith('--')).map(([k, v]) => `  ${k}: ${v};`).join('\n')}\n}`; });
+  return `/* ${state.th.themeId === 'custom' ? 'Custom theme' : THEMES[state.th.themeId].name} · layout ${state.th.layout} · ${COMP_KEYS.map(([k]) => k + ' ' + state.th.comp[k]).join(', ')} */\n` + out.join('\n\n');
+}
+
+/* ================= Render ================= */
+const modes = () => state.mode === 'both' ? ['light', 'dark'] : [state.mode];
+function heroZ() {
+  const wide = innerWidth > 760, avail = (wide ? innerWidth - 32 - 400 - 20 : innerWidth - 32);
+  const n = modes().length, h = Math.max(.5, Math.min(1, (innerHeight - 140) / 680));
+  return Math.max(.35, Math.min(h, (avail - 16 * (n - 1)) / (420 * n))).toFixed(3);
+}
+function previews() {
+  const th = state.th, ms = modes();
+  const fig = (m, p, z) => `<figure><div class="zoom" style="--z:${z}">${widget(th, m, p)}</div><figcaption>${PAGES.find(x => x[0] === p)[1]}${ms.length > 1 ? ' · ' + m : ''}</figcaption></figure>`;
+  document.getElementById('hero').innerHTML = ms.map(m => fig(m, state.page, heroZ())).join('');
+  const sz = Math.max(.32, Math.min(.5, (document.getElementById('app').clientWidth - 60) / (4 * 420))).toFixed(3);
+  document.getElementById('all').innerHTML = ms.map(m => `<div class="frames">${['home', 'inbox', 'detail', 'settings'].map(p => fig(m, p, sz)).join('')}</div>`).join('');
+  const ck = document.getElementById('ck');
+  if (ck) ck.innerHTML = ms.map(m => checks(th, m).map(([n, r, min]) => `<div><b class="${r >= min ? 'ok' : 'no'}">${r.toFixed(1)}:1</b><span>${ms.length > 1 ? m + ' · ' : ''}${n}${r >= min ? '' : ` (needs ${min}:1)`}</span></div>`).join('')).join('');
+  const ex = document.getElementById('ex'); if (ex) ex.value = exportCss();
+  fitCtls();
+  save();
+}
+function fitCtls() {
+  const hero = document.getElementById('hero'), c = document.getElementById('ctls');
+  c.style.height = innerWidth > 760 ? Math.max(420, hero.offsetHeight - 24) + 'px' : '';
+}
+function render() {
+  document.querySelectorAll('[data-tab]').forEach(b => { const on = (state.tab || 'studio') === b.dataset.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  if (state.tab === 'ds') { document.getElementById('app').innerHTML = dsPage(); save(); return; }
+  document.getElementById('app').innerHTML = `<div class="st-top"><div class="st-hero" id="hero"></div><div class="st-ctls" id="ctls">${controls()}</div></div><div class="st-all" id="all"></div>`;
+  savedList();
+  previews();
+}
+let raf = 0;
+const soon = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(previews); };
+
+/* ================= Events ================= */
+const app = document.getElementById('app');
+app.addEventListener('toggle', e => { const d = e.target.closest && e.target.closest('details.sec'); if (d) { state.open[d.dataset.sec] = d.open; save(); } }, true);
+app.addEventListener('change', e => {
+  const a = e.target.dataset.act; if (!a) return;
+  const v = e.target.value, th = state.th;
+  if (a === 'dsmode') state.dsMode = v;
+  else if (a === 'page' || a === 'mode') { state[a] = v; if (a === 'mode' && v !== 'both') state.edit = v; }
+  else if (a === 'layout') { th.layout = v; th.themeId = 'custom'; }
+  else if (a === 'theme') { if (v !== 'custom') state.th = fromTheme(v); }
+  else if (a === 'pal') { if (v !== 'custom') { th.pal = clone({ light: PALS[v].light, dark: PALS[v].dark }); th.palId = v; th.themeId = 'custom'; } }
+  else if (a === 'typeP') { if (v !== 'custom') { const t = TYPES[v]; th.type = { display: t.display, body: t.body, mono: t.mono }; th.typeId = v; th.themeId = 'custom'; } }
+  else if (a === 'fxP') { if (v !== 'custom') { th.fx = Object.fromEntries(FX_KEYS.map(([k]) => [k, FXS[v][k]])); th.fxId = v; th.themeId = 'custom'; } }
+  else if (a.startsWith('font:')) { th.type[a.slice(5)] = v; th.typeId = 'custom'; th.themeId = 'custom'; }
+  else if (a.startsWith('comp:')) { th.comp[a.slice(5)] = v; th.themeId = 'custom'; }
+  render();
+});
+function markCustom(act) {
+  for (const s of [act, 'theme']) { const el = app.querySelector(`select[data-act="${s}"]`); if (el) el.value = 'custom'; }
+}
+app.addEventListener('input', e => {
+  const t = e.target, th = state.th;
+  if (t.dataset.tok) {
+    th.pal[state.edit][t.dataset.tok] = t.value; t.nextElementSibling.querySelector('code').textContent = t.value;
+    if (th.palId !== 'custom') { th.palId = 'custom'; th.themeId = 'custom'; markCustom('pal'); }
+    soon();
+  } else if (t.dataset.fx) {
+    th.fx[t.dataset.fx] = +t.value; t.nextElementSibling.textContent = t.value;
+    if (th.fxId !== 'custom') { th.fxId = 'custom'; th.themeId = 'custom'; markCustom('fxP'); }
+    soon();
+  }
+});
+app.addEventListener('click', e => {
+  const pk = e.target.closest('[data-act="compv"]');
+  if (pk) { state.th.comp[pk.dataset.k] = pk.dataset.v; state.th.themeId = 'custom'; const y = scrollY; render(); scrollTo(0, y); return; }
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.act === 'edit') { state.edit = b.dataset.v; render(); }
+  else if (b.dataset.act === 'copy') {
+    const ex = document.getElementById('ex'); ex.select();
+    const done = () => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy CSS variables'; }, 1500); };
+    try { navigator.clipboard.writeText(ex.value).then(done, () => { document.execCommand('copy'); done(); }); } catch (x) { document.execCommand('copy'); done(); }
+  } else if (b.dataset.act === 'save' && db) {
+    const inp = document.getElementById('sv-name'), name = (inp.value || '').trim() || (state.th.themeId === 'custom' ? 'Custom' : THEMES[state.th.themeId].name);
+    const id = 't' + Date.now().toString(36), doc = { name, at: new Date().toISOString(), th: clone(state.th) };
+    SAVED[id] = doc; inp.value = ''; savedList();
+    db.collection('themes').doc(id).set(doc).catch(() => { delete SAVED[id]; savedList(); });
+  } else if (b.dataset.load && SAVED[b.dataset.load]) { state.th = { ...clone(SAVED[b.dataset.load].th), themeId: 'custom' }; render(); }
+  else if (b.dataset.del && db) { const id = b.dataset.del, old = SAVED[id]; delete SAVED[id]; savedList(); db.collection('themes').doc(id).delete().catch(() => { SAVED[id] = old; savedList(); }); }
+});
+app.addEventListener('keydown', e => { const pk = e.target.closest && e.target.closest('.pick[role="button"]'); if (pk && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pk.click(); } });
+let rz = 0;
+addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.tab !== 'ds') previews(); }, 120); });
+document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { state.tab = b.dataset.tab; render(); } });
+render();
+(async () => {
+  try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch (e) { db = null; }
+  if (!db) return;
+  render();
+  db.collection('themes').onSnapshot(snap => {
+    SAVED = {};
+    snap.docs.forEach(d => { const x = d.data() || {}; if (x.th && x.th.pal && typeof x.name === 'string') SAVED[d.id] = x; });
+    savedList();
+    const h = document.querySelector('details[data-sec="saved"] .hint'); if (h) h.textContent = Object.keys(SAVED).length;
+  }, () => {});
+})();
+</script>
+
+</body></html>

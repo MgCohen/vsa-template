@@ -18,6 +18,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
+| `Design/`             | VSA Design System: tokens, components and gallery. See `Design/AGENTS.md` |
 
 A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. Both have the same layout. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/`, `Presenters/` and `Slices/<Feature>/`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project. See `docs/slice-layout.md`.
 

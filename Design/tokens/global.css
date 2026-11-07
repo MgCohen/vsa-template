@@ -1,0 +1,78 @@
+/*
+  VSA Design System: global tokens.
+  Raw values with no meaning. Components never read these tokens: they read alias.css.
+  Color names: <family>-<n>, n = 1000 - 10 x L* (CIELAB lightness), rounded to the nearest 5.
+  Family: warm (red > blue), cool (blue > red), gray (red = blue), or the hue name for strong colors.
+*/
+:root {
+  --vsa-gray-0: #ffffff;
+  --vsa-gray-5: #fdfdfd;
+  --vsa-gray-950: #111111;
+  --vsa-gray-1000: #000000;
+
+  --vsa-warm-15: #fbfbfa;
+  --vsa-warm-40: #f4f3f1;
+  --vsa-warm-55: #f1efec;
+  --vsa-warm-75: #eceae6;
+  --vsa-warm-100: #e4e2de;
+  --vsa-warm-180: #cfccc6;
+  --vsa-warm-185: #cbcac9;
+  --vsa-warm-295: #adacab;
+  --vsa-warm-325: #a8a49d;
+  --vsa-warm-610: #5f5b55;
+  --vsa-warm-620: #5b5a57;
+  --vsa-warm-700: #484745;
+  --vsa-warm-720: #45423d;
+  --vsa-warm-785: #3c3228;
+  --vsa-warm-905: #1b1a18;
+
+  --vsa-cool-670: #4d4d50;
+  --vsa-cool-745: #3c3c3f;
+  --vsa-cool-795: #313135;
+  --vsa-cool-845: #26262a;
+  --vsa-cool-900: #1b1b1d;
+  --vsa-cool-915: #18181a;
+  --vsa-cool-930: #151517;
+
+  --vsa-orange-370: #ff6a1a;
+  --vsa-green-225: #7fd18f;
+  --vsa-green-575: #23733a;
+  --vsa-amber-265: #f0a640;
+  --vsa-amber-575: #8a5a0b;
+  --vsa-red-270: #f59a9a;
+  --vsa-red-605: #b3261e;
+  --vsa-blue-270: #8ab4ff;
+  --vsa-blue-585: #1f5fbf;
+
+  --vsa-size-0: 0px;
+  --vsa-size-2: 2px;
+  --vsa-size-3: 3px;
+  --vsa-size-4: 4px;
+  --vsa-size-6: 6px;
+  --vsa-size-8: 8px;
+  --vsa-size-10: 10px;
+  --vsa-size-11: 11px;
+  --vsa-size-11-5: 11.5px;
+  --vsa-size-12: 12px;
+  --vsa-size-13: 13px;
+  --vsa-size-14: 14px;
+  --vsa-size-15: 15px;
+  --vsa-size-16: 16px;
+  --vsa-size-17: 17px;
+  --vsa-size-20: 20px;
+  --vsa-size-22: 22px;
+  --vsa-size-30: 30px;
+  --vsa-size-999: 999px;
+
+  --vsa-family-doto: Doto, "Cascadia Mono", monospace;
+  --vsa-family-inter: Inter, system-ui, sans-serif;
+  --vsa-family-jetbrains-mono: "JetBrains Mono", "Cascadia Mono", monospace;
+
+  --vsa-weight-400: 400;
+  --vsa-weight-500: 500;
+  --vsa-weight-600: 600;
+  --vsa-weight-700: 700;
+  --vsa-weight-800: 800;
+
+  --vsa-duration-150: 150ms;
+}

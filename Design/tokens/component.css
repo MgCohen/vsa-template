@@ -1,0 +1,41 @@
+/*
+  VSA Design System: component tokens.
+  Each token gives one part of one component its value. The value refers to alias tokens only.
+  The selector includes [data-theme], so the tokens get the dark or light alias values inside each themed area.
+  Name rule: --vsa-<component>-<part>-<state>. See docs/decisions/0003-component-tokens.md.
+*/
+:root, [data-theme] {
+  --vsa-button-background: var(--vsa-gradient-surface);
+  --vsa-button-text: var(--vsa-color-text);
+  --vsa-button-shadow: var(--vsa-shadow-raise);
+  --vsa-button-radius: var(--vsa-radius-control);
+  --vsa-button-font-weight: var(--vsa-font-weight-medium);
+  --vsa-button-primary-background: var(--vsa-color-accent);
+  --vsa-button-primary-text: var(--vsa-color-on-accent);
+  --vsa-button-primary-shadow: var(--vsa-shadow-raise), var(--vsa-shadow-glow);
+  --vsa-button-pressed-shadow: var(--vsa-shadow-press);
+  --vsa-button-primary-pressed-shadow: var(--vsa-shadow-press), var(--vsa-shadow-glow);
+  --vsa-button-motion: var(--vsa-motion-fast);
+  --vsa-button-focus-ring: var(--vsa-color-accent);
+  --vsa-button-disabled-opacity: var(--vsa-opacity-disabled);
+
+  --vsa-toggle-track: var(--vsa-color-sunken);
+  --vsa-toggle-track-shadow: var(--vsa-shadow-carve);
+  --vsa-toggle-track-border: var(--vsa-border-sunken);
+  --vsa-toggle-track-on: var(--vsa-color-accent);
+  --vsa-toggle-track-on-shadow: var(--vsa-shadow-press), var(--vsa-shadow-glow);
+  --vsa-toggle-knob: var(--vsa-gradient-knob);
+  --vsa-toggle-knob-shadow: var(--vsa-shadow-knob);
+  --vsa-toggle-motion: var(--vsa-motion-fast);
+  --vsa-toggle-focus-ring: var(--vsa-color-accent);
+  --vsa-toggle-disabled-opacity: var(--vsa-opacity-disabled);
+
+  --vsa-field-background: var(--vsa-color-sunken);
+  --vsa-field-shadow: var(--vsa-shadow-carve);
+  --vsa-field-border: var(--vsa-border-sunken);
+  --vsa-field-radius: var(--vsa-radius-control);
+  --vsa-field-text: var(--vsa-color-sunken-text);
+  --vsa-field-placeholder: var(--vsa-color-sunken-muted);
+  --vsa-field-focus-ring: var(--vsa-color-accent);
+  --vsa-field-disabled-opacity: var(--vsa-opacity-disabled);
+}
