@@ -1,8 +1,7 @@
 using VSA.Contracts.Commands;
-using VSA.Handlers.Commands;
 using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Handlers.Commands;
 
 sealed class InProcessCommandSender(IVsaResolver resolver) : ICommandSender {
     public Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken ct) {

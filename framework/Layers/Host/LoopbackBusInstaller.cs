@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
+using VSA.Module;
 using VSA.Presenters;
 
 namespace VSA.Host;

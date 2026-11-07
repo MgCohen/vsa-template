@@ -1,8 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Module;
 
 public abstract class LayerInstaller(string layer) : IVsaInstaller {
     public virtual void Install(VsaContext context) {

@@ -1,10 +1,9 @@
 using System.Reflection;
 using FastEndpoints;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
 using VSA.Module;
 
-namespace VSA.Host;
+namespace VSA.Handlers.Requests;
 
 public sealed class RequestEndpointInstaller(IServiceCollection services) : IVsaInstaller {
     public void Install(VsaContext context) {
@@ -18,6 +17,6 @@ public sealed class RequestEndpointInstaller(IServiceCollection services) : IVsa
             options.DisableAutoDiscovery = true;
             options.Assemblies = requestHandlers;
         });
-        services.AddSingleton<RequestEndpoints>();
+        services.AddSingleton(this);
     }
 }

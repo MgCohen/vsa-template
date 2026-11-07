@@ -214,7 +214,7 @@ sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher 
 
 - Each handler project (`Handlers.*`) gets the `Contracts.Commands` project of each module, so each handler can send each command.
 - A command has exactly one handler. If two handlers handle one command, `CommandHandlerInstaller` stops start-up. If a command has no handler, `SendAsync` fails.
-- `CoreInstaller` registers `ICommandSender`. `CommandHandlerInstaller` registers each handler of a `Handlers.Commands` project (`docs/composition.md`).
+- `CommandHandlerInstaller` (`VSA.Handlers.Commands`) registers `ICommandSender` and each handler of a `Handlers.Commands` project (`docs/composition.md`).
 - A unit test sends a command to its handler with `VsaUnitTest.Send` (see `architecture-rules.md`).
 
 VSA has no direction check for commands. See L-04 in "Open questions".

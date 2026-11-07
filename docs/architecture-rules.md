@@ -189,15 +189,24 @@ Each layer references `VSA.Analyzers.Markers`. It is a separate package because 
 
 ## Architecture: `VsaArchitectureTests`
 
-Each rule is one `[Test]` with an ArchUnitNET rule. A consumer test project references the host and has one class. It gets each rule as a test, and it can add its own rules.
+Each rule is one `[Test]` with an ArchUnitNET rule. A consumer test project references the host and `VSA.Testing.Architecture`, and it gets each rule as a test with no code. NUnit runs tests only from the test assembly, so the package adds one class to the project at build time:
 
 ```csharp
-public sealed class ArchitectureTests : VsaArchitectureTests {
+namespace <RootNamespace>;
+public partial class ArchitectureTests : VSA.Testing.Architecture.VsaArchitectureTests;
+```
+
+The build writes it to `obj/.../VsaArchitectureTests.g.cs` (`framework/Testing/Architecture/build/`). To add an app rule, write the other part of the class in the root namespace of the test project:
+
+```csharp
+public partial class ArchitectureTests {
     [Test]
     public void Presenters_are_sealed() =>
         Classes().That().HaveNameEndingWith("Presenter").Should().BeSealed().Check(Architecture);
 }
 ```
+
+To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>` in the test project. `Rules.Tests` does this, because it gives its own apps (`FixtureApp`). In this repository, `Directory.Build.targets` imports the same target for each project with a `ProjectReference` to `VSA.Testing.Architecture`.
 
 `App`, `LayerMap` and `Architecture` are virtual. A fixture test gives other modules or another layer map. `The_app_has_modules` fails if the test run has no module root, because then each rule passes with nothing to check.
 

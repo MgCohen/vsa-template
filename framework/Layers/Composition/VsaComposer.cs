@@ -1,5 +1,10 @@
 using Microsoft.Extensions.Configuration;
+using VSA.Handlers.Commands;
+using VSA.Handlers.Events;
 using VSA.Module;
+#if NET
+using VSA.Presenters;
+#endif
 
 namespace VSA.Composition;
 
@@ -16,7 +21,6 @@ public sealed class VsaComposer {
     public List<IVsaInstaller> Installers { get; } = DefaultInstallers();
 
     public static List<IVsaInstaller> DefaultInstallers() => [
-        new CoreInstaller(),
         new EventHandlerInstaller(),
         new CommandHandlerInstaller(),
 #if NET

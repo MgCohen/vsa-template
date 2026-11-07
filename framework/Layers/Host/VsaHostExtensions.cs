@@ -1,6 +1,7 @@
 using FastEndpoints;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Handlers.Requests;
 
 namespace VSA.Host;
 
@@ -16,7 +17,7 @@ public static class VsaHostExtensions {
     }
 
     public static WebApplication MapVsaRequests(this WebApplication app) {
-        if (app.Services.GetService<RequestEndpoints>() is not null) {
+        if (app.Services.GetService<RequestEndpointInstaller>() is not null) {
             app.UseFastEndpoints();
         }
         return app;

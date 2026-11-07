@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using VSA.Composition;
+using VSA.Handlers.Requests;
+using VSA.Module;
 
 namespace VSA.Host;
 

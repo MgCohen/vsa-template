@@ -1,8 +1,7 @@
 using VSA.Contracts.Events;
-using VSA.Handlers.Events;
 using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Handlers.Events;
 
 sealed class InProcessEventPublisher(IVsaResolver resolver) : IIntegrationEventPublisher {
     public async Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {

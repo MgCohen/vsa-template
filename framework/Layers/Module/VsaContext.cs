@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
-using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Module;
 
 public sealed class VsaContext(IVsaServices services, IConfiguration configuration, IReadOnlyList<VSA.Module.Module> modules) {
     public IVsaServices Services => services;

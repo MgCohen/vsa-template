@@ -1,0 +1,22 @@
+<Project>
+  <!-- Adds the class that runs the VSA architecture rules on the modules of the test run: NUnit runs tests only from
+       the test assembly. The class is partial, so a test project adds its own rules in partial class ArchitectureTests.
+       To stop it, set VsaArchitectureTests to false. In source mode, a ProjectReference selects the project. -->
+  <Target Name="VsaAddArchitectureTests" BeforeTargets="BeforeCompile" Condition="'$(VsaArchitectureTests)' != 'false'">
+    <ItemGroup>
+      <_VsaArchitectureReference Include="@(ProjectReference)" Condition="'%(Filename)' == 'VSA.Testing.Architecture'" />
+    </ItemGroup>
+    <PropertyGroup>
+      <VsaUsesArchitectureTests Condition="'@(_VsaArchitectureReference)' != ''">true</VsaUsesArchitectureTests>
+      <_VsaArchitectureTestsFile>$(IntermediateOutputPath)VsaArchitectureTests.g.cs</_VsaArchitectureTestsFile>
+    </PropertyGroup>
+    <WriteLinesToFile Condition="'$(VsaUsesArchitectureTests)' == 'true'"
+                      File="$(_VsaArchitectureTestsFile)"
+                      Lines="namespace $(RootNamespace)%3B;public partial class ArchitectureTests : VSA.Testing.Architecture.VsaArchitectureTests%3B"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup Condition="'$(VsaUsesArchitectureTests)' == 'true'">
+      <Compile Include="$(_VsaArchitectureTestsFile)" />
+      <FileWrites Include="$(_VsaArchitectureTestsFile)" />
+    </ItemGroup>
+  </Target>
+</Project>

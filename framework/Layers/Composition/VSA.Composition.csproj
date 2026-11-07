@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../Module/VSA.Module.csproj" />
-    <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" />
-    <ProjectReference Include="../Contracts/Commands/VSA.Contracts.Commands.csproj" />
     <ProjectReference Include="../Handlers/Events/VSA.Handlers.Events.csproj" />
     <ProjectReference Include="../Handlers/Commands/VSA.Handlers.Commands.csproj" />
   </ItemGroup>

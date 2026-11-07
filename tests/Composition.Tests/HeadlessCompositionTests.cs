@@ -15,6 +15,9 @@ using VSA.Composition;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Contracts.Requests;
+using VSA.Handlers.Commands;
+using VSA.Handlers.Events;
+using VSA.Module;
 using VSA.Presenters;
 
 namespace Composition.Tests;
@@ -120,8 +123,9 @@ public sealed class HeadlessCompositionTests {
     [Test]
     public async Task The_installers_also_run_by_hand_without_the_composer() {
         var services = Services();
-        var context = new VsaContext(new MicrosoftServices(services), EmptyConfiguration(), [new CardsModule(), new ResourcesModule()]);
-        IVsaInstaller[] installers = [new CoreInstaller(), new CommandHandlerInstaller(), new ModuleInstaller()];
+        var context = new VsaContext(
+            new MicrosoftServices(services), EmptyConfiguration(), [new CardsModule(), new ResourcesModule()]);
+        IVsaInstaller[] installers = [new EventHandlerInstaller(), new CommandHandlerInstaller(), new ModuleInstaller()];
         foreach (var installer in installers) {
             installer.Install(context);
         }

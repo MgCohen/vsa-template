@@ -12,4 +12,6 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)framework/Analyzers/VSA.Analyzers.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
+  <!-- Source mode: a test project with a ProjectReference to VSA.Testing.Architecture gets the generated ArchitectureTests class. -->
+  <Import Project="$(MSBuildThisFileDirectory)framework/Testing/Architecture/build/VsaArchitectureTests.targets" />
 </Project>

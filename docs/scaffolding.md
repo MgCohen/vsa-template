@@ -38,7 +38,7 @@ framework/Tooling/Cli/Templates/
 │  ├─ Slices/SampleAction/**                       add request
 │  └─ Slices/SampleChange/**                       add command
 ├─ Modules/.gitkeep                                new app (keeps the empty Modules/ folder)
-├─ Tests/App.Tests.csproj, Tests/ArchitectureTests.cs   new app
+├─ Tests/App.Tests.csproj                         new app (the architecture tests come from the package)
 ├─ Tests/SampleModuleStatusTests.cs                add module
 ├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
 ```

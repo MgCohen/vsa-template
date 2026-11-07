@@ -1,6 +1,5 @@
-using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Module;
 
 public sealed class ModuleInstaller : IVsaInstaller {
     public void Install(VsaContext context) {

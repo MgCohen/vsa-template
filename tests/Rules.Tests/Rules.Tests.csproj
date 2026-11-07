@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- The rule tests give their own apps to VsaArchitectureTests (FixtureApp). -->
+    <VsaArchitectureTests>false</VsaArchitectureTests>
+  </PropertyGroup>
   <!-- Tests of the checks: the architecture rules on the fixtures in tests/Fixtures/Rules, the analyzers with the
        Roslyn analyzer test library, the unit test base, and the layer map. NUnit comes from tests/Directory.Build.props. -->
   <ItemGroup>

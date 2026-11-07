@@ -1,9 +1,7 @@
-#if NET
 using VSA.Contracts.Events;
 using VSA.Module;
-using VSA.Presenters;
 
-namespace VSA.Composition;
+namespace VSA.Presenters;
 
 public sealed class PresenterInstaller() : LayerInstaller("Presenters") {
     public override void Install(VsaContext context) {
@@ -29,4 +27,3 @@ public sealed class PresenterInstaller() : LayerInstaller("Presenters") {
         return presenter;
     }
 }
-#endif

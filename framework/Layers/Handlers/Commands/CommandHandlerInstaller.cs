@@ -1,13 +1,14 @@
-using VSA.Handlers.Commands;
+using VSA.Contracts.Commands;
 using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Handlers.Commands;
 
 public sealed class CommandHandlerInstaller() : LayerInstaller("Handlers.Commands") {
     readonly Dictionary<Type, Type> handlerOfCommand = [];
 
     public override void Install(VsaContext context) {
         handlerOfCommand.Clear();
+        context.Services.AddScoped<ICommandSender, InProcessCommandSender>();
         base.Install(context);
     }
 
