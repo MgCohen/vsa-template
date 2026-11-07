@@ -9,316 +9,399 @@
 <link rel="stylesheet" href="../tokens/global.css">
 <link rel="stylesheet" href="../tokens/alias.css">
 <link rel="stylesheet" href="../tokens/component.css">
-<link rel="stylesheet" href="../reference/default.css">
 <script type="module" src="../components/vsa-button.js"></script>
 <script type="module" src="../components/vsa-toggle.js"></script>
 <script type="module" src="../components/vsa-field.js"></script>
 <style>
-/* Layout: one column of cards. The page uses only alias tokens, so it shows the tokens in use. */
+/* The gallery page uses only alias tokens, so it shows the tokens in use. */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { background: var(--vsa-color-canvas); }
 body { margin: 0; min-height: 100vh; background: var(--vsa-gradient-canvas); color: var(--vsa-color-text); font: var(--vsa-font-size-body)/var(--vsa-line-height-body) var(--vsa-font-body); }
-.wrap { max-width: 1100px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
-header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+.shell { max-width: 1200px; margin: 0 auto; padding-block: 24px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px 28px; align-items: start; }
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
 h1 { margin: 0; font: var(--vsa-font-weight-display) 40px/1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
 .lede { margin: 6px 0 0; color: var(--vsa-color-canvas-text); max-width: 64ch; font-size: var(--vsa-font-size-lead); }
 h2 { margin: 0; font-size: var(--vsa-font-size-title); font-weight: var(--vsa-font-weight-strong); }
 h3 { margin: 8px 0 0; font-size: var(--vsa-font-size-caption); font-weight: var(--vsa-font-weight-strong); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-muted); }
+.menu { position: sticky; top: 16px; display: grid; gap: 2px; }
+.menu .group { margin: 14px 10px 4px; font-size: var(--vsa-font-size-caption); font-weight: var(--vsa-font-weight-strong); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-canvas-text); }
+.menu .group:first-child { margin-top: 0; }
+.menu a { display: block; padding: 7px 10px; border-radius: var(--vsa-radius-control); color: var(--vsa-color-canvas-text); text-decoration: none; font-weight: var(--vsa-font-weight-medium); white-space: nowrap; }
+.menu a:hover { color: var(--vsa-color-text); }
+.menu a[aria-current="page"] { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); box-shadow: var(--vsa-shadow-raise-sm); }
+.menu a[aria-current="page"]::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; background: var(--vsa-color-accent); box-shadow: var(--vsa-shadow-glow); vertical-align: middle; }
+a:focus-visible, button:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: var(--vsa-focus-offset); }
+main { min-width: 0; }
+.page { display: grid; gap: 18px; }
+.page[hidden] { display: none; }
 .card { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); border-radius: var(--vsa-radius-card); box-shadow: var(--vsa-shadow-raise); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
 .note { margin: 0; color: var(--vsa-color-muted); font-size: var(--vsa-font-size-label); max-width: 80ch; }
 code, .mono { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-small); }
 .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--vsa-radius-control); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
 .seg button { font: inherit; font-weight: var(--vsa-font-weight-medium); border: 0; border-radius: calc(var(--vsa-radius-control) - 3px); padding: 6px 14px; background: none; color: var(--vsa-color-sunken-muted); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); box-shadow: var(--vsa-shadow-raise-sm); }
-button:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: var(--vsa-focus-offset); }
-.sum { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { display: inline-flex; align-items: center; gap: 6px; font-size: var(--vsa-font-size-label); font-weight: var(--vsa-font-weight-strong); padding: 3px 10px; border-radius: var(--vsa-radius-pill); color: var(--st); background: color-mix(in srgb, var(--st) 14%, transparent); border: 1px solid color-mix(in srgb, var(--st) 40%, transparent); }
-.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--st); }
-.ok { --st: var(--vsa-color-state-done); }
-.bad { --st: var(--vsa-color-state-failed); }
+.levels { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--vsa-font-size-label); }
+.levels span { padding: 4px 10px; border-radius: var(--vsa-radius-pill); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); color: var(--vsa-color-sunken-muted); }
+.levels span.on { background: var(--vsa-color-accent); color: var(--vsa-color-on-accent); box-shadow: var(--vsa-shadow-glow); font-weight: var(--vsa-font-weight-strong); }
+.levels i { color: var(--vsa-color-muted); font-style: normal; }
 .scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: var(--vsa-font-size-label); }
 th { text-align: left; font-size: var(--vsa-font-size-caption); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-muted); font-weight: var(--vsa-font-weight-strong); padding: 6px 8px; border-bottom: 1px solid var(--vsa-color-line); white-space: nowrap; }
-td { padding: 7px 8px; border-bottom: 1px solid var(--vsa-color-line); vertical-align: middle; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--vsa-color-line); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
+td.name { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-small); white-space: nowrap; width: 1%; }
 td.v { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-text-secondary); word-break: break-word; }
-.globals { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.gsw { display: grid; gap: 4px; font-size: var(--vsa-font-size-small); }
-.gsw i { display: block; height: 44px; border-radius: var(--vsa-radius-control); border: 1px solid var(--vsa-color-line); }
-.gsw .mono { color: var(--vsa-color-muted); }
+td[data-theme] { background: var(--vsa-color-canvas); color: var(--vsa-color-canvas-text); min-width: 150px; }
+td .val { display: flex; gap: 8px; align-items: flex-start; }
+.sw { width: 28px; height: 18px; flex: none; border-radius: 5px; border: 1px solid var(--vsa-color-line); }
+tr.flash td { animation: flash 1.4s ease-out; }
+@keyframes flash { from { box-shadow: inset 0 0 0 100vmax var(--vsa-color-accent-glow); } }
+.tok { display: inline-block; font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); line-height: 1.5; padding: 0 6px; border-radius: var(--vsa-radius-pill); color: var(--vsa-color-text-secondary); text-decoration: none; white-space: nowrap; }
+a.tok:hover { color: var(--vsa-color-text); box-shadow: inset 0 0 0 1px currentColor; }
+.tok-global { background: var(--vsa-color-head-tint); }
+.tok-alias { background: color-mix(in srgb, var(--vsa-color-accent) 20%, transparent); }
+.tok-component { background: color-mix(in srgb, var(--vsa-color-state-new) 22%, transparent); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: var(--vsa-font-size-label); color: var(--vsa-color-muted); }
+.used { display: flex; flex-wrap: wrap; gap: 4px; }
+details.card { display: block; }
+details.card > summary { list-style: none; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::before { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--vsa-color-muted); border-bottom: 2px solid var(--vsa-color-muted); transform: rotate(45deg); margin: 0 4px 4px 2px; }
+details.card:not([open]) > summary::before { transform: rotate(-45deg); margin-bottom: 0; }
+details.card > summary:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: var(--vsa-focus-offset); border-radius: var(--vsa-radius-control); }
+.fold-body { display: grid; gap: 12px; margin-top: 12px; min-width: 0; }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); }
+.chain a { color: var(--vsa-color-text-secondary); }
 .stage { padding: 14px; background: var(--vsa-gradient-canvas); border-radius: var(--vsa-radius-control); border: 1px solid var(--vsa-color-line); display: grid; gap: 10px; min-width: 0; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; }
-.tile { height: 76px; border-radius: var(--vsa-radius-card); display: grid; place-items: end start; padding: 8px 10px; font-family: var(--vsa-font-mono); font-size: 10.5px; color: var(--vsa-color-text); background: var(--vsa-color-surface); }
-.tile.sunk { background: var(--vsa-color-sunken); color: var(--vsa-color-sunken-text); }
-.type-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--vsa-color-line); }
-.type-row:last-child { border-bottom: 0; }
-.type-row .mono { color: var(--vsa-color-muted); }
-.space-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; align-items: center; }
-.space-row i { display: block; height: 12px; background: var(--vsa-color-accent); border-radius: 3px; }
-.radii { display: flex; flex-wrap: wrap; gap: 16px; }
-.radii div { width: 120px; height: 72px; background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); display: grid; place-items: center; font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-sunken-text); }
 .demo { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); border-radius: var(--vsa-radius-card); box-shadow: var(--vsa-shadow-raise); padding: 14px; display: grid; gap: 12px; }
 .atom-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .atom-row .tag { font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); }
 .log { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); min-height: 1.4em; }
-.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.sum .pill { font: inherit; font-size: var(--vsa-font-size-label); font-weight: var(--vsa-font-weight-strong); cursor: pointer; }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--vsa-color-line); overflow-x: auto; overflow-y: hidden; }
-.tabs button { font: inherit; font-size: var(--vsa-font-size-lead); font-weight: var(--vsa-font-weight-medium); border: 0; background: none; color: var(--vsa-color-canvas-text); padding: 10px 14px; cursor: pointer; border-bottom: 3px solid transparent; }
-.tabs button[aria-selected="true"] { color: var(--vsa-color-text); font-weight: var(--vsa-font-weight-strong); border-bottom-color: var(--vsa-color-accent); }
-.panel { display: grid; gap: 18px; }
-.panel[hidden] { display: none; }
-table.themed td[data-theme] { background: var(--vsa-color-canvas); color: var(--vsa-color-canvas-text); width: 36%; }
-.swatch { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.swatch i { width: 40px; height: 24px; flex: none; border-radius: 6px; border: 1px solid var(--vsa-color-line); }
-.swatch span { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); word-break: break-word; }
-#probe-host { position: absolute; left: -9999px; top: 0; }
-@media (max-width: 640px) { .type-row, .space-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } h1 { font-size: 30px; } }
-@media (prefers-reduced-motion: no-preference) { .seg button { transition: background var(--vsa-motion-fast), color var(--vsa-motion-fast); } }
+.specs { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.spec { display: grid; grid-template-rows: 88px auto; border: 1px solid var(--vsa-color-line); border-radius: var(--vsa-radius-control); overflow: hidden; min-width: 0; background: var(--vsa-color-surface); }
+.spec-preview { display: grid; place-items: center; padding: 12px; background: var(--vsa-gradient-canvas); border-bottom: 1px solid var(--vsa-color-line); overflow: hidden; min-width: 0; }
+.spec-info { display: grid; align-content: start; gap: 4px; padding: 10px 12px 12px; min-width: 0; }
+.spec-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-text-secondary); }
+.spec-name .tok { font-size: var(--vsa-font-size-small); font-weight: var(--vsa-font-weight-strong); color: var(--vsa-color-text); }
+.arrow { color: var(--vsa-color-muted); }
+.val { overflow-wrap: anywhere; }
+.spec-more { flex-basis: 100%; }
+.spec-more summary { cursor: pointer; width: max-content; color: var(--vsa-color-muted); }
+.spec-more summary:hover { color: var(--vsa-color-text); }
+.spec-value { display: grid; gap: 2px; margin-top: 6px; font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-text-secondary); }
+.spec-value span { overflow-wrap: anywhere; }
+td.pv { width: 160px; vertical-align: middle; }
+tr.spec-row td { vertical-align: middle; }
+.pv-cell { display: flex; align-items: center; min-height: 32px; max-width: 160px; overflow: hidden; color: var(--vsa-color-text); }
+.pv-cell .pv-sample { color: var(--vsa-color-text); }
+.pv-cell .pv-text { font-size: var(--vsa-font-size-label); color: var(--vsa-color-text); }
+.pv-cell .track { width: 140px; }
+.pv-chip { display: block; width: 44px; height: 24px; border-radius: 6px; background: var(--vsa-color-surface); border: 1px solid var(--vsa-color-line); }
+.pv-chip.accent { background: var(--vsa-color-accent); border: 0; }
+.pv-chip.sunk { background: var(--vsa-color-sunken); }
+.pv-fill { width: 100%; height: 100%; border-radius: var(--vsa-radius-control); border: 1px solid var(--vsa-color-line); }
+.pv-tile { width: 96px; height: 52px; border-radius: var(--vsa-radius-control); background: var(--vsa-color-surface); }
+.pv-tile.sunk { background: var(--vsa-color-sunken); }
+.pv-tile.accent { background: var(--vsa-color-accent); }
+.pv-tile.radius { background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
+.pv-sample { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--vsa-color-canvas-text); }
+.pv-text { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-title); color: var(--vsa-color-canvas-text); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar { display: block; height: 12px; max-width: 100%; background: var(--vsa-color-accent); border-radius: 3px; justify-self: start; }
+.track { position: relative; width: 100%; height: 32px; border-radius: var(--vsa-radius-pill); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
+.track i { position: absolute; top: 5px; left: 5px; width: 22px; height: 22px; border-radius: 50%; background: var(--vsa-color-accent); box-shadow: var(--vsa-shadow-glow); }
+.track.on i { left: calc(100% - 27px); }
+@media (prefers-reduced-motion: no-preference) {
+  .seg button { transition: background var(--vsa-motion-fast), color var(--vsa-motion-fast); }
+  .track i { transition: left var(--d, 0ms); }
+}
+@media (max-width: 760px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .menu { position: static; display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+  .menu .group { display: none; }
+  table { min-width: 560px; }
+  h1 { font-size: 30px; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="shell">
   <header>
     <div>
       <h1>VSA Design System</h1>
-      <p class="lede">Atoms and tokens of the default theme. Screens use only these parts.</p>
+      <p class="lede">Foundations, atoms and tokens of the default theme. Screens use only these parts.</p>
     </div>
-    <div class="tools">
-    <div class="sum" id="check-sum"></div>
     <div class="seg" role="group" aria-label="Theme">
       <button type="button" data-set="system" aria-pressed="true">System</button>
       <button type="button" data-set="light" aria-pressed="false">Light</button>
       <button type="button" data-set="dark" aria-pressed="false">Dark</button>
     </div>
-    </div>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Gallery">
-    <button type="button" role="tab" id="tab-atoms" aria-controls="panel-atoms" data-tab="atoms">Atoms</button>
-    <button type="button" role="tab" id="tab-tokens" aria-controls="panel-tokens" data-tab="tokens">Tokens</button>
-    <button type="button" role="tab" id="tab-check" aria-controls="panel-check" data-tab="check">Check</button>
+  <nav class="menu" aria-label="Gallery">
+    <a href="#overview" data-page="overview">Overview</a>
+    <div class="group">Foundations</div>
+    <a href="#color" data-page="color">Color</a>
+    <a href="#typography" data-page="typography">Typography</a>
+    <a href="#spacing" data-page="spacing">Spacing and radius</a>
+    <a href="#elevation" data-page="elevation">Elevation</a>
+    <a href="#motion" data-page="motion">Motion</a>
+    <div class="group">Tokens</div>
+    <a href="#tokens-global" data-page="tokens-global">Global</a>
+    <a href="#tokens-alias" data-page="tokens-alias">Alias</a>
+    <a href="#tokens-component" data-page="tokens-component">Component</a>
   </nav>
 
-  <div class="panel" role="tabpanel" id="panel-atoms" aria-labelledby="tab-atoms">
-    <section class="card" aria-labelledby="h-atoms">
-      <h2 id="h-atoms">Atoms</h2>
-      <p class="note">Each atom is a web component in <code>components/</code>. It reads only its component tokens from <code>tokens/component.css</code>. Use the mouse or the keyboard: Tab moves the focus, Space changes a toggle. The log shows the last event.</p>
-      <div class="stage" id="atoms"></div>
-    </section>
-  </div>
-
-  <div class="panel" role="tabpanel" id="panel-tokens" aria-labelledby="tab-tokens" hidden>
-    <section class="card" aria-labelledby="h-component">
-      <h2 id="h-component">Component tokens</h2>
-      <p class="note">The values in <code>tokens/component.css</code>. Each value refers to an alias token. Change one line to change that part in each atom.</p>
-      <div class="scroll"><table id="component-tokens"><thead><tr><th>Token</th><th>Value</th></tr></thead><tbody></tbody></table></div>
+  <main>
+    <section class="page" id="page-overview">
+      <div class="card">
+        <h2>Overview</h2>
+        <p class="note">All atoms on one page. Each atom is a web component in <code>components/</code>. Use the mouse or the keyboard: Tab moves the focus, Space changes a toggle. The log shows the last event.</p>
+        <div class="stage" id="atoms"></div>
+      </div>
     </section>
 
-    <section class="card" aria-labelledby="h-alias">
-      <h2 id="h-alias">Alias colors</h2>
-      <p class="note">Each alias color in light and dark, with the global token that it uses.</p>
-      <div class="scroll"><table class="themed" id="alias-colors"><thead><tr><th>Token</th><th>Light</th><th>Dark</th></tr></thead><tbody></tbody></table></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-grad">
-      <h2 id="h-grad">Gradients</h2>
-      <div class="stage" id="gradients"></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-shadow">
-      <h2 id="h-shadow">Shadows</h2>
-      <div class="stage" id="shadows"></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-global">
-      <h2 id="h-global">Global colors</h2>
-      <p class="note">Name rule: <code>&lt;family&gt;-&lt;n&gt;</code>, n = 1000 − 10 × L* (CIELAB lightness), rounded to the nearest 5. A higher number is a darker color.</p>
-      <div id="globals"></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-type">
-      <h2 id="h-type">Type</h2>
-      <div id="type"></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-space">
-      <h2 id="h-space">Spacing and radius</h2>
-      <div id="space" style="display:grid;gap:8px"></div>
-      <div class="radii" id="radii"></div>
-    </section>
-  </div>
-
-  <div class="panel" role="tabpanel" id="panel-check" aria-labelledby="tab-check" hidden>
-    <section class="card" aria-labelledby="h-check">
-      <h2 id="h-check">Check against the reference</h2>
-      <p class="note">The check compares alpha at 8 bits, the precision that the screen draws. The browser applies each alias or component token and the matching value of <code>reference/default.css</code> or of the Runner Studio CSS to two test elements, then compares the calculated values. Light and dark use the <code>data-theme</code> attribute. If the system theme is dark, the check also tests the <code>prefers-color-scheme</code> block.</p>
-      <div class="scroll"><table id="check-table"><thead><tr><th>Token</th><th>Reference</th><th>Mode</th><th>Result</th><th>Values</th></tr></thead><tbody></tbody></table></div>
-    </section>
-  </div>
+    <section class="page" id="page-color" hidden></section>
+    <section class="page" id="page-typography" hidden></section>
+    <section class="page" id="page-spacing" hidden></section>
+    <section class="page" id="page-elevation" hidden></section>
+    <section class="page" id="page-motion" hidden></section>
+    <section class="page" id="page-tokens-global" hidden></section>
+    <section class="page" id="page-tokens-alias" hidden></section>
+    <section class="page" id="page-tokens-component" hidden></section>
+  </main>
 </div>
-<div id="probe-host" aria-hidden="true"></div>
 
 <script>
-const MAP = [
-  ['--vsa-gradient-canvas', '--canvas-bg', 'bg'],
-  ['--vsa-color-canvas', '--canvas-solid', 'color'],
-  ['--vsa-color-canvas-text', '--canvas-tx', 'color'],
-  ['--vsa-gradient-surface', '--surf-bg', 'bg'],
-  ['--vsa-color-surface', '--surface-solid', 'color'],
-  ['--vsa-effect-blur', '--blur', 'filter'],
-  ['--vsa-color-text', '--text', 'color'],
-  ['--vsa-color-text-secondary', '--tx2', 'color'],
-  ['--vsa-color-muted', '--muted', 'color'],
-  ['--vsa-color-line', '--line-c', 'color'],
-  ['--vsa-color-sunken', '--sunken', 'color'],
-  ['--vsa-color-sunken-text', '--sunken-tx', 'color'],
-  ['--vsa-color-sunken-muted', '--sunken-muted', 'color'],
-  ['--vsa-border-sunken', '--sunken-bd', 'outline'],
-  ['--vsa-color-accent', '--accent', 'color'],
-  ['--vsa-color-on-accent', '--on-accent', 'color'],
-  ['--vsa-color-accent-glow', '--accent-glow', 'color'],
-  ['--vsa-effect-glow-strength', '--glow-k', 'number'],
-  ['--vsa-shadow-glow', '--sh-glow', 'shadow'],
-  ['--vsa-shadow-fill', '--sh-fill', 'shadow'],
-  ['--vsa-shadow-raise', '--sh-raise', 'shadow'],
-  ['--vsa-shadow-raise-sm', '--sh-raise-sm', 'shadow'],
-  ['--vsa-shadow-dial', '--sh-dial', 'shadow'],
-  ['--vsa-shadow-hole', '--sh-hole', 'shadow'],
-  ['--vsa-gradient-hole', '--hole-bg', 'bg'],
-  ['--vsa-shadow-carve', '--sh-carve', 'shadow'],
-  ['--vsa-gradient-knob', '--knob', 'bg'],
-  ['--vsa-color-head-tint', '--head-tint', 'color'],
-  ['--vsa-color-track', '--track', 'color'],
-  ['--vsa-color-dim', '--dim', 'color'],
-  ['--vsa-color-state-done', '--done', 'color'],
-  ['--vsa-color-state-pending', '--pending', 'color'],
-  ['--vsa-color-state-failed', '--failed', 'color'],
-  ['--vsa-color-state-new', '--new', 'color'],
-  ['--vsa-radius-card', '--r', 'radius'],
-  ['--vsa-radius-control', '--r-sm', 'radius'],
-  ['--vsa-font-display', '--f-display', 'font'],
-  ['--vsa-font-body', '--f-body', 'font'],
-  ['--vsa-font-mono', '--f-mono', 'font'],
-  ['--vsa-font-weight-display', '--w-display', 'weight'],
-  ['--vsa-letter-spacing-display', '--ls-display', 'spacing'],
-  ['--vsa-button-background', '--surf-bg', 'bg'],
-  ['--vsa-button-text', '--text', 'color'],
-  ['--vsa-button-shadow', '--sh-raise', 'shadow'],
-  ['--vsa-button-radius', '--r-sm', 'radius'],
-  ['--vsa-button-primary-background', '--accent', 'color'],
-  ['--vsa-button-primary-text', '--on-accent', 'color'],
-  ['--vsa-button-primary-shadow', 'var(--sh-raise), var(--sh-glow)', 'shadow'],
-  ['--vsa-toggle-track', '--sunken', 'color'],
-  ['--vsa-toggle-track-shadow', '--sh-carve', 'shadow'],
-  ['--vsa-toggle-track-border', '--sunken-bd', 'outline'],
-  ['--vsa-toggle-track-on', '--accent', 'color'],
-  ['--vsa-toggle-track-on-shadow', 'inset 2px 2px 4px rgba(0,0,0,.3), var(--sh-glow)', 'shadow'],
-  ['--vsa-toggle-knob', '--knob', 'bg'],
-  ['--vsa-toggle-knob-shadow', '0 2px 4px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25)', 'shadow'],
-  ['--vsa-toggle-disabled-opacity', '.45', 'number'],
-  ['--vsa-field-background', '--sunken', 'color'],
-  ['--vsa-field-shadow', '--sh-carve', 'shadow'],
-  ['--vsa-field-border', '--sunken-bd', 'outline'],
-  ['--vsa-field-radius', '--r-sm', 'radius'],
-  ['--vsa-field-text', '--sunken-tx', 'color'],
-  ['--vsa-field-placeholder', '--sunken-muted', 'color'],
-];
-const PROP = { color: ['background-color'], bg: ['background-color', 'background-image'], shadow: ['box-shadow'], radius: ['border-top-left-radius'], font: ['font-family'], weight: ['font-weight'], spacing: ['letter-spacing'], filter: ['backdrop-filter'], outline: ['outline-style'], number: ['--n'] };
-const SET = { color: 'background-color', radius: 'border-radius', font: 'font-family', weight: 'font-weight', spacing: 'letter-spacing', filter: 'backdrop-filter', outline: 'outline', shadow: 'box-shadow', bg: 'background', number: '--n' };
-
-const host = document.getElementById('probe-host');
 const root = document.documentElement;
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const short = n => n.replace('--vsa-', '');
+const readVar = (name, scope = root) => getComputedStyle(scope).getPropertyValue(name).trim();
 
-const alpha8 = a => a === undefined ? 1 : Math.round(Math.round(parseFloat(a) * 255) / 255 * 1000) / 1000;
-function toRgba(m, a, b, c, alpha) {
-  const ch = v => Math.round(parseFloat(v) * 255);
-  return `rgba(${ch(a)},${ch(b)},${ch(c)},${alpha8(alpha)})`;
+const LEVEL = { global: 'tokens-global', alias: 'tokens-alias', component: 'tokens-component' };
+const T = { global: new Map(), shared: new Map(), light: new Map(), dark: new Map(), component: new Map() };
+
+function readTokens() {
+  for (const sheet of document.styleSheets) {
+    const node = sheet.ownerNode;
+    const file = (node.dataset && node.dataset.file) || (node.getAttribute('href') || '').split('/').pop();
+    let rules;
+    try { rules = sheet.cssRules; } catch (e) { continue; }
+    for (const rule of rules) {
+      if (!rule.style) continue;
+      const sel = rule.selectorText;
+      let target = null;
+      if (file === 'global.css') target = T.global;
+      if (file === 'component.css') target = T.component;
+      if (file === 'alias.css') target = sel === ':root' ? T.shared : sel.includes('[data-theme="light"]') ? T.light : sel === '[data-theme="dark"]' ? T.dark : null;
+      if (!target) continue;
+      for (const prop of rule.style) if (prop.startsWith('--vsa-')) target.set(prop, rule.style.getPropertyValue(prop).trim().replace(/\s+/g, ' '));
+    }
+  }
 }
-function norm(s, kind) {
-  let v = String(s).trim()
-    .replace(/color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.e-]+))?\)/g, toRgba)
-    .replace(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+))?\s*\)/g, (m, r, g, b, a) => `rgba(${r},${g},${b},${alpha8(a)})`)
-    .replace(/\s+/g, ' ');
-  if (kind === 'shadow') v = v.split(/,(?![^(]*\))/).map(x => x.trim()).filter(x => !/^rgba\(\d+,\d+,\d+,0\) 0px 0px 0px( 0px)?$/.test(x)).join(', ');
-  if (kind === 'number') v = String(parseFloat(v));
-  return v;
+
+const levelOf = n => T.component.has(n) ? 'component' : T.global.has(n) ? 'global' : 'alias';
+const aliasNames = () => [...new Set([...T.shared.keys(), ...T.light.keys()])];
+const theme = () => root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+function raw(n, t = theme()) {
+  if (T.component.has(n)) return T.component.get(n);
+  if (T.global.has(n)) return T.global.get(n);
+  if (T.shared.has(n)) return T.shared.get(n);
+  return (t === 'dark' ? T.dark : T.light).get(n) || '';
 }
-const isVar = s => s.startsWith('--');
-const expr = s => isVar(s) ? `var(${s})` : s;
-function measure(scope, name, kind) {
-  const el = document.createElement('div');
-  el.style.setProperty(kind === 'number' ? '--n' : SET[kind], expr(name));
-  if (kind === 'outline') el.style.outlineWidth = '1px';
-  scope.appendChild(el);
-  const cs = getComputedStyle(el);
-  const out = PROP[kind].map(p => norm(cs.getPropertyValue(p), kind)).join(' | ');
-  el.remove();
+const refs = v => [...v.matchAll(/var\((--vsa-[\w-]+)\)/g)].map(m => m[1]);
+
+const usedBy = new Map();
+function indexUse() {
+  const add = (n, v) => refs(v).forEach(r => { if (!usedBy.has(r)) usedBy.set(r, new Set()); usedBy.get(r).add(n); });
+  for (const map of [T.shared, T.light, T.dark, T.component]) for (const [n, v] of map) add(n, v);
+}
+
+const tokLink = (n, label = n) => `<a class="tok tok-${levelOf(n)}" href="#${LEVEL[levelOf(n)]}" data-token="${n}">${esc(label)}</a>`;
+const tokName = n => `<span class="tok tok-${levelOf(n)}">${short(n)}</span>`;
+const legend = `<div class="legend">Token color by level: <span class="tok tok-global">global</span><span class="tok tok-alias">alias</span><span class="tok tok-component">component</span></div>`;
+const mixShort = v => v.replace(/color-mix\(in srgb, (var\(--vsa-[\w-]+\)) ([\d.]+%), transparent\)/g, '$1 · $2');
+const linkValue = v => esc(mixShort(v)).replace(/var\((--vsa-[\w-]+)\)/g, (m, n) => tokLink(n, short(n)));
+function chain(n, withName = true) {
+  const steps = withName ? [tokLink(n, short(n))] : [];
+  let v = raw(n);
+  let m;
+  while ((m = /^var\((--vsa-[\w-]+)\)$/.exec(v))) { steps.push(tokLink(m[1], short(m[1]))); v = raw(m[1]); }
+  steps.push(`<span>${linkValue(v)}</span>`);
+  return `<span class="chain">${steps.join('<span>→</span>')}</span>`;
+}
+const usedCell = n => `<div class="used">${[...(usedBy.get(n) || [])].map(u => tokLink(u, short(u))).join('')}</div>`;
+const levels = on => `<div class="levels">${['Global', 'Alias', 'Component', 'Atom'].map(l => `<span class="${l === on ? 'on' : ''}">${l}</span>`).join('<i>→</i>')}</div>${legend}`;
+
+function card(title, note, body) {
+  return `<details class="card" open><summary><h2>${title}</h2></summary><div class="fold-body">${note ? `<p class="note">${note}</p>` : ''}${body}</div></details>`;
+}
+function pageHead(title, note, body) {
+  return `<div class="card"><h2>${title}</h2><p class="note">${note}</p>${body}</div>`;
+}
+function layers(v) {
+  const out = [];
+  let depth = 0, cur = '';
+  for (const ch of v) {
+    if (ch === '(') depth++;
+    if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) { out.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  out.push(cur.trim());
   return out;
 }
-function runMode(mode, label) {
-  const prevTheme = root.getAttribute('data-theme'), prevMode = root.getAttribute('data-mode');
-  if (mode === 'system') { root.removeAttribute('data-theme'); }
-  else { root.setAttribute('data-theme', mode); }
-  const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-  if (dark) root.setAttribute('data-mode', 'dark'); else root.removeAttribute('data-mode');
-  const rows = MAP.map(([n, o, k]) => {
-    const defined = readVar(n) !== '' && (!isVar(o) || readVar(o) !== '');
-    const a = defined ? measure(host, n, k) : 'token not defined: are the CSS files loaded?', e = measure(host, o, k);
-    return { n, o, k, mode: label, ok: defined && a === e, a, e };
-  });
-  prevTheme === null ? root.removeAttribute('data-theme') : root.setAttribute('data-theme', prevTheme);
-  prevMode === null ? root.removeAttribute('data-mode') : root.setAttribute('data-mode', prevMode);
-  return rows;
+function resolve(n) {
+  const hops = [];
+  let v = raw(n), m;
+  while ((m = /^var\((--vsa-[\w-]+)\)$/.exec(v))) { hops.push(m[1]); v = raw(m[1]); }
+  return { hops, value: v };
 }
-function runCheck() {
-  let rows = [...runMode('light', 'light'), ...runMode('dark', 'dark')];
-  if (matchMedia('(prefers-color-scheme: dark)').matches) rows = rows.concat(runMode('system', 'dark (system)'));
-  const groups = {};
-  rows.forEach(r => { (groups[r.mode] = groups[r.mode] || { ok: 0, all: 0 }); groups[r.mode].all++; if (r.ok) groups[r.mode].ok++; });
-  document.getElementById('check-sum').innerHTML = Object.entries(groups).map(([m, g]) => `<button type="button" class="pill ${g.ok === g.all ? 'ok' : 'bad'}" title="Open the check">${m}: ${g.ok} of ${g.all} pass</button>`).join('');
-  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const sorted = rows.slice().sort((a, b) => a.ok - b.ok);
-  document.querySelector('#check-table tbody').innerHTML = sorted.map(r => `<tr><td class="mono">${r.n}</td><td class="mono">${r.o}</td><td>${r.mode}</td><td><span class="pill ${r.ok ? 'ok' : 'bad'}">${r.ok ? 'Pass' : 'Fail'}</span></td><td class="v">${r.ok ? esc(r.a) : 'got ' + esc(r.a) + '<br>want ' + esc(r.e)}</td></tr>`).join('');
-  window.vsaCheck = { groups, failures: rows.filter(r => !r.ok) };
+const arrow = '<span class="arrow">→</span>';
+const hopLinks = hops => hops.map(h => tokLink(h, short(h))).join(arrow);
+function valueView(n, value) {
+  const parts = layers(value);
+  if (parts.length > 1 && /^--vsa-shadow-/.test(n))
+    return `<details class="spec-more"><summary>${parts.length} layers</summary><div class="spec-value">${parts.map(l => `<span>${linkValue(l)}</span>`).join('')}</div></details>`;
+  return `<span class="val">${linkValue(value)}</span>`;
+}
+function spec(n, preview) {
+  const { hops, value } = resolve(n);
+  const path = hops.length ? arrow + hopLinks(hops) : '';
+  return `<div class="spec"><div class="spec-preview">${preview}</div><div class="spec-info"><div class="spec-line"><span class="spec-name">${tokLink(n, short(n))}</span>${path}${/^--vsa-shadow-/.test(n) && layers(value).length > 1 ? '' : arrow}${valueView(n, value)}</div></div></div>`;
+}
+const specs = items => `<div class="specs">${items.join('')}</div>`;
+function specRow(n, preview, lead = '') {
+  const { hops, value } = resolve(n);
+  return `<tr class="spec-row">${lead}<td class="pv"><div class="pv-cell">${preview}</div></td><td class="name">${tokLink(n, short(n))}</td><td><span class="chain">${hops.length ? hopLinks(hops) : '—'}</span></td><td class="v">${valueView(n, value)}</td></tr>`;
+}
+const specRows = (rows, lead = []) => tokenTable([...lead, 'Preview', 'Token', 'Path', 'Value'], rows);
+const pvText = n => `<span class="pv-text">${esc(mixShort(layers(resolve(n).value)[0]))}</span>`;
+const pvSample = (text, style) => `<span class="pv-sample" style="${style}">${text}</span>`;
+const pvTile = (style, cls = '') => `<i class="pv-tile ${cls}" style="${style}"></i>`;
+const colorName = n => `--vsa-color-${n}`;
+const swatch = n => spec(n, `<i class="pv-fill" style="background:var(${n})"></i>`);
+const COLOR_GROUPS = [
+  ['Canvas and surface', ['canvas', 'canvas-text', 'surface', 'text', 'text-secondary', 'muted', 'line']],
+  ['Sunken', ['sunken', 'sunken-text', 'sunken-muted']],
+  ['Accent', ['accent', 'on-accent', 'accent-glow']],
+  ['Data', ['head-tint', 'track', 'dim']],
+  ['State', ['state-done', 'state-pending', 'state-failed', 'state-new']],
+];
+function renderColor() {
+  document.getElementById('page-color').innerHTML =
+    card('Color', 'The alias colors in the current theme. Use the theme switch to see the other theme. Each color shows its path to the global token.',
+      COLOR_GROUPS.map(([g, list]) => `<h3>${g}</h3>${specs(list.map(c => swatch(colorName(c))))}`).join('')) +
+    card('Gradients', 'Fills for the canvas, the surfaces, the ring center and the toggle knob.',
+      specs(['canvas', 'surface', 'hole', 'knob'].map(g => swatch(`--vsa-gradient-${g}`))));
 }
 
-const GLOBAL_COLORS = [
-  ['gray', [0, 5, 950, 1000]],
-  ['warm', [15, 40, 55, 75, 100, 180, 185, 295, 325, 610, 620, 700, 720, 785, 905]],
-  ['cool', [670, 745, 795, 845, 900, 915, 930]],
-  ['strong', [['orange', 370], ['green', 225], ['green', 575], ['amber', 265], ['amber', 575], ['red', 270], ['red', 605], ['blue', 270], ['blue', 585]]],
-];
-function globalName(fam, n) { return Array.isArray(n) ? `--vsa-${n[0]}-${n[1]}` : `--vsa-${fam}-${n}`; }
-function readVar(name, scope = root) { return getComputedStyle(scope).getPropertyValue(name).trim(); }
-const HEX_TO_GLOBAL = {};
-function renderGlobals() {
-  document.getElementById('globals').innerHTML = GLOBAL_COLORS.map(([fam, list]) => `<h3>${fam === 'strong' ? 'Hue families' : fam}</h3><div class="globals">${list.map(n => {
-    const name = globalName(fam, n), hex = readVar(name);
-    HEX_TO_GLOBAL[hex.toLowerCase()] = name;
-    return `<div class="gsw"><i style="background:var(${name})"></i><span class="mono">${name}</span><span class="mono">${hex}</span></div>`;
-  }).join('')}</div>`).join('');
+function renderTypography() {
+  const fam = [['--vsa-font-display', 'Runner 133', 'font-weight:var(--vsa-font-weight-display);letter-spacing:var(--vsa-letter-spacing-display)'], ['--vsa-font-body', 'Search sources', ''], ['--vsa-font-mono', 'page.updated', '']];
+  const sizes = ['hero', 'metric', 'title', 'lead', 'body', 'label', 'small', 'caption'];
+  const weights = ['regular', 'medium', 'strong', 'display'];
+  document.getElementById('page-typography').innerHTML =
+    card('Families', 'Display is only for big numbers and titles. Body is for all other text. Mono is for ids, types and times.',
+      specs(fam.map(([n, t, s]) => spec(n, pvSample(t, `font-family:var(${n});font-size:24px;${s}`))))) +
+    card('Sizes', '', specRows(sizes.map(s => specRow(`--vsa-font-size-${s}`, pvSample('Aa 133', `font-size:var(--vsa-font-size-${s});line-height:1`))))) +
+    card('Weights', '', specRows(weights.map(w => specRow(`--vsa-font-weight-${w}`, pvSample('Listener', `font-size:17px;font-weight:var(--vsa-font-weight-${w})`))))) +
+    card('Line height and letter spacing', '', specRows([
+      ...['tight', 'snug', 'body'].map(l => specRow(`--vsa-line-height-${l}`, pvSample('Two lines<br>in one block', `white-space:normal;line-height:var(--vsa-line-height-${l})`))),
+      specRow('--vsa-letter-spacing-display', pvSample('Runner 133', 'font-family:var(--vsa-font-display);font-size:20px;letter-spacing:var(--vsa-letter-spacing-display)')),
+      specRow('--vsa-letter-spacing-caps', pvSample('AT START', 'font-size:var(--vsa-font-size-caption);letter-spacing:var(--vsa-letter-spacing-caps)')),
+    ]));
 }
-function source(value) {
-  return value.replace(/#[0-9a-f]{6}/gi, h => HEX_TO_GLOBAL[h.toLowerCase()] || h).replace(/\s+/g, ' ');
+
+function renderSpacing() {
+  const space = ['xxs', 'xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
+  const focus = 'outline:var(--vsa-focus-width) solid var(--vsa-color-accent);outline-offset:var(--vsa-focus-offset)';
+  document.getElementById('page-spacing').innerHTML =
+    card('Spacing', 'Gaps and padding. The bar is four times the value.',
+      specRows(space.map(s => specRow(`--vsa-space-${s}`, `<i class="bar" style="width:calc(var(--vsa-space-${s}) * 4)"></i>`)))) +
+    card('Radius', '', specs(['card', 'control', 'pill'].map(r => spec(`--vsa-radius-${r}`, pvTile(`border-radius:var(--vsa-radius-${r})`, 'radius'))))) +
+    card('Icon and focus', '', specRows([
+      specRow('--vsa-icon-size', `<svg style="width:var(--vsa-icon-size);height:var(--vsa-icon-size)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`),
+      specRow('--vsa-icon-stroke', `<svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="var(--vsa-icon-stroke)" stroke-linecap="round" aria-hidden="true"><path d="M4 12h16"/></svg>`),
+      specRow('--vsa-focus-width', `<i class="pv-chip" style="${focus}"></i>`),
+      specRow('--vsa-focus-offset', `<i class="pv-chip" style="${focus}"></i>`),
+    ]));
 }
-const ALIAS_COLORS = ['canvas', 'canvas-text', 'surface', 'text', 'text-secondary', 'muted', 'line', 'sunken', 'sunken-text', 'sunken-muted', 'accent', 'on-accent', 'accent-glow', 'head-tint', 'track', 'dim', 'state-done', 'state-pending', 'state-failed', 'state-new'].map(n => `--vsa-color-${n}`);
-const GRADIENTS = ['canvas', 'surface', 'hole', 'knob'].map(n => `--vsa-gradient-${n}`);
-const SHADOWS = ['raise', 'raise-sm', 'carve', 'dial', 'hole', 'fill', 'glow'].map(n => `--vsa-shadow-${n}`);
-function stage(id, html) {
-  document.getElementById(id).innerHTML = html;
+
+function renderElevation() {
+  const shadow = (n, cls = '') => spec(n, pvTile(`box-shadow:var(${n})`, cls));
+  document.getElementById('page-elevation').innerHTML =
+    card('Raised', 'Surfaces that stand above the canvas: cards, buttons, the ring center.',
+      specs(['raise', 'raise-sm', 'hole'].map(s => shadow(`--vsa-shadow-${s}`)))) +
+    card('Carved', 'Holes in a surface: fields, tracks, wells, the dial, the fill of a bar, a pressed button.',
+      specs(['carve', 'dial', 'fill', 'press'].map(s => shadow(`--vsa-shadow-${s}`, 'sunk')))) +
+    card('Glow and knob', '', specs([shadow('--vsa-shadow-glow', 'accent'), shadow('--vsa-shadow-knob')])) +
+    card('Effects', '', specRows([
+      specRow('--vsa-effect-glow-strength', `<i class="pv-chip accent" style="box-shadow:var(--vsa-shadow-glow)"></i>`),
+      specRow('--vsa-effect-blur', pvText('--vsa-effect-blur')),
+      specRow('--vsa-border-sunken', `<i class="pv-chip sunk" style="border:var(--vsa-border-sunken)"></i>`),
+      specRow('--vsa-opacity-disabled', `<i class="pv-chip accent" style="opacity:var(--vsa-opacity-disabled)"></i>`),
+    ]));
 }
+
+function renderMotion() {
+  const motion = aliasNames().filter(n => n.startsWith('--vsa-motion-'));
+  const users = motion.flatMap(n => [...(usedBy.get(n) || [])]);
+  const atom = n => `<td class="name"><code>&lt;vsa-${short(n).split('-')[0]}&gt;</code></td>`;
+  document.getElementById('page-motion').innerHTML =
+    card('Timing', 'One duration controls all motion today. Change <code>--vsa-motion-fast</code> to change each atom that uses it. Press Play to move each knob with its duration.',
+      specRows(users.map(n => specRow(n, `<div class="track" style="--d:var(${n})"><i></i></div>`, atom(n))), ['Atom']) + `<div><vsa-button id="play">Play</vsa-button></div>`) +
+    card('Rules', '', `<ul class="note">
+      <li>Atoms add a transition only if <code>prefers-reduced-motion</code> is <code>no-preference</code>.</li>
+      <li>Atoms use the CSS default easing. There is no easing token yet.</li>
+      <li>Open question: on a phone the pressed state of the button shows late. The browser waits before <code>:active</code>, and the transition adds its duration.</li>
+    </ul>`);
+  document.getElementById('play').addEventListener('click', () => document.querySelectorAll('#page-motion .track').forEach(t => t.classList.toggle('on')));
+}
+
+function tokenTable(cols, rows) {
+  return `<div class="scroll"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+}
+const isColor = n => /^--vsa-(color|gradient|gray|warm|cool|orange|green|amber|red|blue)-/.test(n);
+const valueCell = (n, v, t) => `<td class="v"${t ? ` data-theme="${t}"` : ''}><div class="val">${isColor(n) ? `<i class="sw" style="background:var(${n})"></i>` : ''}<span>${linkValue(v)}</span></div></td>`;
+const GLOBAL_GROUPS = [['Colors', /^--vsa-(gray|warm|cool|orange|green|amber|red|blue)-/], ['Sizes', /^--vsa-size-/], ['Font families', /^--vsa-family-/], ['Font weights', /^--vsa-weight-/], ['Durations', /^--vsa-duration-/]];
+function renderGlobal() {
+  const names = [...T.global.keys()];
+  document.getElementById('page-tokens-global').innerHTML =
+    pageHead('Global tokens', 'Raw values with no meaning, in <code>tokens/global.css</code>. Only alias tokens read them. Color name rule: <code>&lt;family&gt;-&lt;n&gt;</code>, n = 1000 − 10 × L*, rounded to the nearest 5. "Used by" shows the alias tokens that read each value.', levels('Global')) +
+    GLOBAL_GROUPS.map(([g, re]) => card(g, '', tokenTable(['Token', 'Value', 'Used by'],
+      names.filter(n => re.test(n)).map(n => `<tr id="tok-${n}"><td class="name">${tokName(n)}</td>${valueCell(n, raw(n))}<td>${usedCell(n)}</td></tr>`)))).join('');
+}
+const ALIAS_GROUPS = [['Color', /^--vsa-color-/], ['Gradient', /^--vsa-gradient-/], ['Shadow', /^--vsa-shadow-/], ['Type', /^--vsa-(font|letter|line)-/], ['Space and size', /^--vsa-(space|radius|icon|focus)-/], ['Motion', /^--vsa-motion-/], ['Effect', /^--vsa-(effect|border|opacity)-/]];
 function renderAlias() {
-  const probes = Object.fromEntries(['light', 'dark'].map(m => { const el = document.createElement('div'); el.dataset.theme = m; host.appendChild(el); return [m, el]; }));
-  const cell = (n, m) => `<td data-theme="${m}"><div class="swatch"><i style="background:var(${n})"></i><span>${source(readVar(n, probes[m]))}</span></div></td>`;
-  document.querySelector('#alias-colors tbody').innerHTML = ALIAS_COLORS.map(n => `<tr><td class="mono">${n}</td>${cell(n, 'light')}${cell(n, 'dark')}</tr>`).join('');
-  stage('gradients', `<div class="tiles">${GRADIENTS.map(n => `<div class="tile" style="background:var(${n});border:1px solid var(--vsa-color-line)">${n.replace('--vsa-', '')}</div>`).join('')}</div>`);
-  stage('shadows', `<div class="tiles">${SHADOWS.map(n => `<div class="tile ${['carve', 'dial', 'fill'].some(k => n.endsWith('-' + k)) ? 'sunk' : ''}" style="box-shadow:var(${n})">${n.replace('--vsa-', '')}</div>`).join('')}</div>`);
+  const names = aliasNames();
+  const rowOf = n => {
+    const l = T.shared.get(n) ?? T.light.get(n), d = T.shared.has(n) ? null : T.dark.get(n);
+    const cells = d === null || d === l
+      ? `<td class="v" colspan="2"><div class="val">${isColor(n) ? `<i class="sw" style="background:var(${n})"></i>` : ''}<span>${linkValue(l)}</span></div></td>`
+      : valueCell(n, l, 'light') + valueCell(n, d, 'dark');
+    return `<tr id="tok-${n}"><td class="name">${tokName(n)}</td>${cells}<td>${usedCell(n)}</td></tr>`;
+  };
+  document.getElementById('page-tokens-alias').innerHTML =
+    pageHead('Alias tokens', 'Tokens with a meaning, in <code>tokens/alias.css</code>. Each value reads global tokens. A token with one value is the same in light and dark. "Used by" shows the component tokens that read it.', levels('Alias')) +
+    ALIAS_GROUPS.map(([g, re]) => card(g, '', tokenTable(['Token', 'Light', 'Dark', 'Used by'], names.filter(n => re.test(n)).map(rowOf)))).join('');
 }
+function renderComponentTokens() {
+  const byComponent = new Map();
+  for (const n of T.component.keys()) {
+    const c = n.replace('--vsa-', '').split('-')[0];
+    if (!byComponent.has(c)) byComponent.set(c, []);
+    byComponent.get(c).push(n);
+  }
+  document.getElementById('page-tokens-component').innerHTML =
+    pageHead('Component tokens', 'One part of one atom, in <code>tokens/component.css</code>. Each value reads alias tokens. The path follows the current theme. Change one line to change that part in each place that uses the atom.', levels('Component')) +
+    [...byComponent].map(([c, list]) => card(`&lt;vsa-${c}&gt;`, '', tokenTable(['Token', 'Value', 'Path to the global value'],
+      list.map(n => `<tr id="tok-${n}"><td class="name">${tokName(n)}</td><td class="v">${linkValue(raw(n))}</td><td>${chain(n, false)}</td></tr>`)))).join('');
+}
+
 const SEARCH_ICON = '<svg slot="start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 const PLAY_ICON = '<svg slot="start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>';
 function renderAtoms() {
-  stage('atoms', `<div class="demo">
+  const atoms = document.getElementById('atoms');
+  atoms.innerHTML = `<div class="demo">
     <h3>Button</h3>
     <div class="atom-row"><vsa-button>Cancel</vsa-button><vsa-button variant="primary">Save</vsa-button><vsa-button variant="primary">${PLAY_ICON}Start</vsa-button><vsa-button disabled>Disabled</vsa-button></div>
     <h3>Toggle</h3>
@@ -328,84 +411,73 @@ function renderAtoms() {
     <vsa-field value="LogEverything" aria-label="Handler name"></vsa-field>
     <vsa-field placeholder="Disabled" disabled aria-label="Disabled field"></vsa-field>
     <div class="log" aria-live="polite">No event yet</div>
-  </div>`);
-  document.getElementById('atoms').addEventListener('change', e => {
-    const t = e.target, log = t.closest('.demo').querySelector('.log');
+  </div>`;
+  const log = atoms.querySelector('.log');
+  atoms.addEventListener('change', e => {
+    const t = e.target;
     log.textContent = `change · <${t.localName}> ${t.localName === 'vsa-toggle' ? 'checked=' + t.checked : 'value="' + t.value + '"'}`;
   });
-  document.getElementById('atoms').addEventListener('click', e => {
+  atoms.addEventListener('click', e => {
     const t = e.target.closest('vsa-button');
-    if (t && !t.disabled) t.closest('.demo').querySelector('.log').textContent = `click · <vsa-button> "${t.textContent.trim()}"`;
+    if (t && !t.disabled) log.textContent = `click · <vsa-button> "${t.textContent.trim()}"`;
   });
-}
-function renderComponentTokens() {
-  const rows = [];
-  for (const sheet of document.styleSheets) {
-    let rules;
-    try { rules = sheet.cssRules; } catch (e) { continue; }
-    for (const rule of rules) {
-      const sel = rule.selectorText || '';
-      if (!rule.style || !sel.includes(':root') || !sel.includes('[data-theme]')) continue;
-      for (const prop of rule.style) if (prop.startsWith('--vsa-')) rows.push([prop, rule.style.getPropertyValue(prop).trim()]);
-    }
-  }
-  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  document.querySelector('#component-tokens tbody').innerHTML = rows.map(([n, v]) => `<tr><td class="mono">${n}</td><td class="v">${esc(v)}</td></tr>`).join('');
-}
-const TABS = ['atoms', 'tokens', 'check'];
-function showTab(name, focus) {
-  if (!TABS.includes(name)) name = 'atoms';
-  document.querySelectorAll('[role="tab"]').forEach(t => {
-    const on = t.dataset.tab === name;
-    t.setAttribute('aria-selected', String(on));
-    t.tabIndex = on ? 0 : -1;
-    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
-    if (on && focus) t.focus();
-  });
-  try { localStorage.setItem('vsa-gallery-tab', name); } catch (e) {}
-}
-const tabList = document.querySelector('.tabs');
-tabList.addEventListener('click', e => { const t = e.target.closest('[role="tab"]'); if (t) showTab(t.dataset.tab); });
-tabList.addEventListener('keydown', e => {
-  const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-  if (!step) return;
-  const i = TABS.indexOf(document.querySelector('[role="tab"][aria-selected="true"]').dataset.tab);
-  showTab(TABS[(i + step + TABS.length) % TABS.length], true);
-});
-document.getElementById('check-sum').addEventListener('click', () => showTab('check'));
-function renderType() {
-  const roles = [['--vsa-font-display', 'Runner 133', 'display'], ['--vsa-font-body', 'Search sources and handlers', 'body'], ['--vsa-font-mono', 'page.properties_updated · 21:24', 'mono']];
-  const sizes = ['hero', 'metric', 'title', 'lead', 'body', 'label', 'small', 'caption'];
-  document.getElementById('type').innerHTML =
-    roles.map(([v, t, r]) => `<div class="type-row"><span class="mono">${v}</span><span style="font-family:var(${v});font-size:22px;${r === 'display' ? 'font-weight:var(--vsa-font-weight-display);letter-spacing:var(--vsa-letter-spacing-display)' : ''}">${t}</span></div>`).join('') +
-    sizes.map(s => `<div class="type-row"><span class="mono">--vsa-font-size-${s} · ${readVar('--vsa-font-size-' + s)}</span><span style="font-size:var(--vsa-font-size-${s})">Connected · mock</span></div>`).join('');
-}
-function renderSpace() {
-  document.getElementById('space').innerHTML = ['xxs', 'xs', 'sm', 'md', 'lg', 'xl', 'xxl'].map(s => `<div class="space-row"><span class="mono">--vsa-space-${s} · ${readVar('--vsa-space-' + s)}</span><i style="width:calc(var(--vsa-space-${s}) * 6)"></i></div>`).join('');
-  document.getElementById('radii').innerHTML = ['card', 'control', 'pill'].map(r => `<div style="border-radius:var(--vsa-radius-${r})">radius-${r}</div>`).join('');
 }
 
+const PAGES = [...document.querySelectorAll('.menu a')].map(a => a.dataset.page);
+function show(page, token) {
+  if (!PAGES.includes(page)) page = 'overview';
+  document.querySelectorAll('.page').forEach(p => { p.hidden = p.id !== 'page-' + page; });
+  document.querySelectorAll('.menu a').forEach(a => {
+    if (a.dataset.page !== page) { a.removeAttribute('aria-current'); return; }
+    a.setAttribute('aria-current', 'page');
+    a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  try { localStorage.setItem('vsa-gallery-page', page); } catch (e) {}
+  const row = token && document.getElementById('tok-' + token);
+  const fold = row && row.closest('details');
+  if (fold) fold.open = true;
+  if (row) { row.scrollIntoView({ block: 'center' }); row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); }
+  else window.scrollTo(0, 0);
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  e.preventDefault();
+  const page = a.dataset.page || a.getAttribute('href').slice(1);
+  try { history.replaceState(null, '', '#' + page); } catch (err) {}
+  show(page, a.dataset.token);
+});
+
+addEventListener('hashchange', () => show(location.hash.slice(1)));
+
+function renderThemed() {
+  renderColor();
+  renderTypography();
+  renderSpacing();
+  renderElevation();
+  renderMotion();
+  renderComponentTokens();
+}
 function setTheme(t) {
   if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.set === t)));
   try { localStorage.setItem('vsa-gallery-theme', t); } catch (e) {}
-  runCheck();
+  renderThemed();
 }
 document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTheme(b.dataset.set); });
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', runCheck);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderThemed);
 
-renderGlobals();
-renderAlias();
+readTokens();
+indexUse();
 renderAtoms();
-renderComponentTokens();
-renderType();
-renderSpace();
-let savedTab = 'atoms';
-try { savedTab = localStorage.getItem('vsa-gallery-tab') || 'atoms'; } catch (e) {}
-showTab(savedTab);
-let saved = 'system';
-try { saved = localStorage.getItem('vsa-gallery-theme') || 'system'; } catch (e) {}
-setTheme(saved);
+renderGlobal();
+renderAlias();
+let savedTheme = 'system';
+try { savedTheme = localStorage.getItem('vsa-gallery-theme') || 'system'; } catch (e) {}
+setTheme(savedTheme);
+let start = location.hash.slice(1);
+if (!start) { try { start = localStorage.getItem('vsa-gallery-page') || 'overview'; } catch (e) { start = 'overview'; } }
+show(start);
 </script>
 </body>
 </html>

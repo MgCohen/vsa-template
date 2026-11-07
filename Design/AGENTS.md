@@ -23,13 +23,13 @@ Instructions for agents that work in `Design/`. The root `AGENTS.md` also applie
 - Put each atom in one file, `components/vsa-<name>.js`: a custom element with shadow DOM, plain JavaScript, no build.
 - An atom reads only its own component tokens, and the alias tokens for font, focus and icon size. A size that only the atom uses goes on `:host` as a custom property.
 - Each atom has one style: the style of the default theme.
-- Add each new atom to the Atoms section of the gallery, in all its states.
+- Add each new atom to the Overview page of the gallery, in all its states.
 - If no standard covers a topic, ask the user. Record the answer as a decision in `docs/decisions/`.
 
-## Check
+## Look at a change
 
 1. Serve `Design/` with a static web server.
 2. Open `/gallery/index.html`.
-3. Make sure that the check shows each mode as "62 of 62 pass". If the system theme is dark, the "dark (system)" mode must also pass.
+3. Make sure that the changed atoms and tokens show correctly in light and in dark. Use the theme switch.
 
-If you add an alias or component token that has a value in `reference/default.css` or in the Runner Studio CSS, add it to `MAP` in `gallery/index.html`. The second value of an entry is a reference variable, or a literal CSS value from `reference/runner-studio.html`.
+The Tokens pages read the token files, so a new token shows there automatically. A Foundations page lists its tokens by name: if you add an alias token, add it to the correct Foundations page. Show each token with one of two gallery parts. If the look of the token is the information (color, gradient, shadow, radius, font family), use the `spec()` card: a large preview, then the name, the path and the value on one line. If the number is the information (spacing, size, weight, line height, motion, effects), use `specRow()` in a `specRows()` table: Preview, Token, Path, Value. Do not make a different layout for one page. Show each token name as a pill with the color of its level (`tokLink` or `tokName`). Make each section with `card()`, so that it can fold. Make the header of a page with `pageHead()`: it does not fold.

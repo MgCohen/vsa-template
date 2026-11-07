@@ -25,5 +25,5 @@
 
 ## Rules that follow
 
-- The alias tokens must give the same values as `reference/default.css`, in light and in dark. The gallery checks this.
+- The first alias tokens came from `reference/default.css`. Now the tokens are the source, and the reference is only a record of the choice.
 - The depth numbers are not tokens. The exported shadows are the tokens. Runner Studio used the numbers only to find the style.

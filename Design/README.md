@@ -29,9 +29,9 @@ flowchart LR
 |---|---|
 | `tokens/` | The tokens. CSS is the source. See `tokens/README.md` |
 | `components/` | The atoms: one web component in each file, with shadow DOM and no build |
-| `gallery/index.html` | The gallery: the atoms and the tokens in light and dark, and the check against the reference |
+| `gallery/index.html` | The gallery: Overview, Foundations and Tokens pages, with a theme switch |
 | `themes/default.json` | The settings of the default theme, as saved in Runner Studio |
-| `reference/default.css` | The CSS that Runner Studio exported for the default theme. The tokens must give the same values |
+| `reference/default.css` | The CSS that Runner Studio exported for the default theme. A record of the choice: the tokens are the source |
 | `reference/runner-studio.html` | The Runner Studio source: the reference for the token values and the component shapes |
 | `docs/decisions/` | Design decisions: `0001` default theme, `0002` component standards, `0003` component tokens |
 
@@ -57,6 +57,12 @@ flowchart LR
 ## Open the gallery
 
 The gallery reads the token files with relative paths. A browser that opens the file directly can block these files. Serve the `Design/` folder with any static web server, then open `/gallery/index.html`.
+
+| Menu group | Pages | Content |
+|---|---|---|
+| Overview | Overview | All atoms on one page, with an event log |
+| Foundations | Color, Typography, Spacing and radius, Elevation, Motion | The alias tokens in use, each with its path to the global value |
+| Tokens | Global, Alias, Component | One page for each level. The gallery reads the rows from the CSS files. "Used by" shows the tokens of the next level that read each token |
 
 ## Phases
 

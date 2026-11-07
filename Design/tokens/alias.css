@@ -4,7 +4,7 @@
   Every color comes from global.css. A transparent color is color-mix() of a global color with transparent.
   Theme: light is the default. Dark applies with prefers-color-scheme: dark, or with data-theme="dark" on any element.
   data-theme="light" keeps light on that element, also when the OS is dark.
-  The two dark blocks must stay equal: the gallery check compares them.
+  The two dark blocks must stay equal.
 */
 :root {
   --vsa-radius-card: var(--vsa-size-22);

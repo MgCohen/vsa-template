@@ -35,4 +35,4 @@ Examples: `#fbfbfa` has L* 98.6, so its name is `--vsa-warm-15`. `#26262a` has L
 
 1. If the value is new, add a global token with the name rule.
 2. Add the alias token in `alias.css`. If its value changes with the theme, write it in the light block and in the two dark blocks.
-3. Open the gallery and make sure that the check passes.
+3. Open the gallery. Make sure that the token shows correctly in light and in dark.
