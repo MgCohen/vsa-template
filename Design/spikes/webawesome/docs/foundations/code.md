@@ -15,7 +15,7 @@ Keep sample lines short, about 60 characters, so that the scaled text stays easy
 
 ## Colors
 
-The colors come from highlight.js. The file `theme/code.css` sets a VSA alias token for each kind of code part.
+The colors come from highlight.js. The file `theme/code.css` sets a project token for each kind of code part.
 
 | Code part | Token | Example |
 |---|---|---|

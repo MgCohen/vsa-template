@@ -64,9 +64,9 @@ One example of each component with the VSA look, grouped by category. To see all
 </wa-progress-ring>
 <wa-spinner></wa-spinner>
 <vsa-dial value="72" label="Tests that pass"></vsa-dial>
-<vsa-dial size="small" value="60" label="Sync"></vsa-dial>
+<vsa-dial size="s" value="60" label="Sync"></vsa-dial>
 <wa-tooltip for="tip-target">Runs on each push</wa-tooltip>
-<wa-button id="tip-target" size="small">
+<wa-button id="tip-target" size="s">
   Hover for a tooltip
 </wa-button>
 ```
@@ -102,7 +102,7 @@ One example of each component with the VSA look, grouped by category. To see all
   <div slot="header">Runner Home</div>
   A card is a raised panel.
   <div slot="footer">
-    <wa-button size="small" variant="brand">Run</wa-button>
+    <wa-button size="s" variant="brand">Run</wa-button>
   </div>
 </wa-card>
 <wa-details summary="Build settings"

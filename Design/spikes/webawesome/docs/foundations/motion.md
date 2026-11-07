@@ -1,6 +1,6 @@
 # Motion
 
-All components read the Web Awesome transition tokens. The VSA theme sets all three durations to the VSA fast motion, 150 ms.
+All components read the Web Awesome transition tokens. The theme layer sets `--wa-transition-fast` to 150 ms, the VSA fast motion. The normal and slow durations keep the Web Awesome values.
 
 ```tokens ^--wa-transition-
 ```

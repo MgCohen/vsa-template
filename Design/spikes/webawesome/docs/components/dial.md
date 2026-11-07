@@ -41,13 +41,13 @@ Set `variant` for a state color. The default is the accent color.
 
 ### Sizes
 
-The small dial is 36 px, with a shallow carve. Use it in lists and table rows. For another size, set `--size` and `--track-width`.
+The small dial, `size="s"`, is 36 px, with a shallow carve. Use it in lists and table rows. For another size, set `--size` and `--track-width`, as on `wa-progress-ring`.
 
 ```html preview
-<vsa-dial size="small" value="60" label="Sync">
+<vsa-dial size="s" value="60" label="Sync">
   <wa-icon name="rotate" label="Sync"></wa-icon>
 </vsa-dial>
-<vsa-dial size="small" value="100" variant="success"
+<vsa-dial size="s" value="100" variant="success"
   label="Build"></vsa-dial>
 <vsa-dial value="72" label="Tests"
   style="--size: 180px; --track-width: 16px"></vsa-dial>
@@ -69,16 +69,16 @@ Set `value` from code. The dial shows the new value at once.
 </script>
 ```
 
-## VSA tokens and looks
+## Tokens and looks
 
-The dial is a VSA component: `components/vsa-dial.js`. It reads only its own tokens, which `theme/vsa.css` sets. See [Component tokens](#/tokens/component).
+The dial is a VSA component: `components/vsa-dial.js`. Web Awesome has no dial, so the project owns it. It follows the Web Awesome rules for an own component: its own prefix, the `--wa-*` tokens, and the custom property names of `wa-progress-ring`.
 
 | Item | Value |
 |---|---|
-| Channel | `--vsa-dial-track`, `--vsa-dial-track-shadow` (deep carve), `--vsa-dial-track-shadow-small` |
-| Indicator | `--vsa-dial-indicator`, the three state colors, `--vsa-dial-glow`, `--vsa-dial-glow-blur` |
-| Center | `--vsa-dial-hole`, `--vsa-dial-hole-shadow`, `--vsa-dial-hole-shadow-small` |
-| Text | `--vsa-dial-text`, `--vsa-font-body` |
+| Channel | `--track-color` (default `--wa-color-surface-lowered`), and the deep carve `--vsa-shadow-dial`. The small dial uses `--vsa-shadow-carve` |
+| Indicator | `--indicator-color` (default `--wa-color-brand-fill-loud`). `variant` sets it to `--wa-color-success-fill-loud`, `--wa-color-warning-fill-loud` or `--wa-color-danger-fill-loud`. The glow is the same color |
+| Center | `--vsa-gradient-hole` and `--vsa-shadow-hole`. The small dial uses `--vsa-shadow-raise-sm` |
+| Text | `--wa-font-family-body`, `--wa-color-text-normal` |
 
 ## Open question
 

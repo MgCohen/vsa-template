@@ -1,18 +1,21 @@
 /*
-  VSA code block. A code block is always dark, as in an IDE, in the light and the dark theme.
-  Part 1: alias tokens for code. Each value refers to a global token.
+  VSA code block. A code block is always dark, as in an IDE, in the light and the dark scheme.
+  Part 1: project tokens for code. Web Awesome has no code colors, so these are new ideas, not new names.
   Part 2: the look of pre.vsa-code, and the colors of the highlight.js classes.
 */
 
-:root, [data-theme] {
-  --vsa-color-code-surface: var(--vsa-cool-930);
-  --vsa-color-code-text: var(--vsa-warm-40);
-  --vsa-color-code-muted: var(--vsa-warm-295);
-  --vsa-color-code-tag: var(--vsa-blue-270);
-  --vsa-color-code-attribute: var(--vsa-amber-265);
-  --vsa-color-code-string: var(--vsa-green-225);
-  --vsa-color-code-keyword: var(--vsa-orange-370);
-  --vsa-color-code-number: var(--vsa-red-270);
+:where(:root),
+.wa-light,
+.wa-dark,
+.wa-invert {
+  --vsa-color-code-surface: #151517;
+  --vsa-color-code-text: #f4f3f1;
+  --vsa-color-code-muted: #adacab;
+  --vsa-color-code-tag: #8ab4ff;
+  --vsa-color-code-attribute: #f0a640;
+  --vsa-color-code-string: #7fd18f;
+  --vsa-color-code-keyword: var(--wa-color-brand-fill-loud);
+  --vsa-color-code-number: #f59a9a;
   --vsa-font-size-code: 13px;
   --vsa-font-size-code-min: 8px;
 }
@@ -24,8 +27,8 @@ pre.vsa-code {
   background: var(--vsa-color-code-surface);
   color: var(--vsa-color-code-text);
   box-shadow: var(--vsa-shadow-carve);
-  border-radius: var(--vsa-radius-control);
-  font: var(--vsa-font-size-code)/1.55 var(--vsa-font-mono);
+  border-radius: var(--wa-border-radius-m);
+  font: var(--vsa-font-size-code)/1.55 var(--wa-font-family-code);
   tab-size: 2;
 }
 pre.vsa-code code { display: inline-block; font: inherit; background: none; padding: 0; color: inherit; white-space: pre; }

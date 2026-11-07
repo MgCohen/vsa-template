@@ -1,6 +1,6 @@
 # Elevation
 
-The VSA look has two shapes. Tokens give the shadow values. The theme file applies them to Web Awesome components with `::part()`, because Web Awesome has no token for these places. A VSA component reads them from its own tokens.
+The VSA look has two shapes. Tokens give the shadow values. The theme file applies them to Web Awesome components with `::part()`, because Web Awesome has no token for these places. A VSA component, for example the dial, reads them directly.
 
 | Look | Shadow | Components |
 |---|---|---|

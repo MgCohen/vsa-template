@@ -1,6 +1,6 @@
 # Color
 
-Components read the Web Awesome color tokens. Each of these tokens gets its value from a VSA alias color.
+Components read the Web Awesome color tokens. The theme layer, `theme/vsa.css`, sets each value for light and for dark.
 
 ## Surfaces and text
 
@@ -30,7 +30,9 @@ The brand color is the VSA accent. Use it for one main action on each screen.
 ```tokens ^--wa-color-(success|warning|danger)-(fill|on)-loud
 ```
 
-## VSA alias colors
+## Project colors
 
-```tokens ^--vsa-color-
+Web Awesome has no token for the page canvas, the accent glow and the surface gradients. These are project tokens: new ideas, not new names for Web Awesome tokens.
+
+```tokens ^--vsa-(color|gradient)-
 ```

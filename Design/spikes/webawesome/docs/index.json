@@ -31,16 +31,12 @@
   ],
   "tokens": [
     {
-      "name": "global",
-      "title": "Global"
+      "name": "theme",
+      "title": "Theme layer"
     },
     {
-      "name": "alias",
-      "title": "Alias"
-    },
-    {
-      "name": "component",
-      "title": "Component"
+      "name": "project",
+      "title": "Project tokens"
     }
   ],
   "components": [

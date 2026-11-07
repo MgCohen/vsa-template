@@ -12,28 +12,110 @@
           "customElement": true,
           "summary": "A dial is a ring that shows progress, in a deep carved channel with a raised center.",
           "members": [
-            { "kind": "field", "name": "value", "attribute": "value", "type": { "text": "number" }, "default": "0", "description": "The current value, from 0 to max." },
-            { "kind": "field", "name": "max", "attribute": "max", "type": { "text": "number" }, "default": "100", "description": "The value of a full ring." },
-            { "kind": "field", "name": "label", "attribute": "label", "type": { "text": "string" }, "default": "''", "description": "The accessible name. Screen readers read it with the value." },
-            { "kind": "field", "name": "variant", "attribute": "variant", "type": { "text": "'brand' | 'success' | 'warning' | 'danger'" }, "default": "'brand'", "description": "The color of the indicator." },
-            { "kind": "field", "name": "size", "attribute": "size", "type": { "text": "'medium' | 'small'" }, "default": "'medium'", "description": "The size and the depth. The small dial is 36 px, with a shallow carve, for lists and table rows." }
+            {
+              "kind": "field",
+              "name": "value",
+              "attribute": "value",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "The current value, from 0 to max."
+            },
+            {
+              "kind": "field",
+              "name": "max",
+              "attribute": "max",
+              "type": {
+                "text": "number"
+              },
+              "default": "100",
+              "description": "The value of a full ring."
+            },
+            {
+              "kind": "field",
+              "name": "label",
+              "attribute": "label",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "description": "The accessible name. Screen readers read it with the value."
+            },
+            {
+              "kind": "field",
+              "name": "variant",
+              "attribute": "variant",
+              "type": {
+                "text": "'brand' | 'success' | 'warning' | 'danger'"
+              },
+              "default": "'brand'",
+              "description": "The color of the indicator."
+            },
+            {
+              "kind": "field",
+              "name": "size",
+              "attribute": "size",
+              "type": {
+                "text": "'m' | 's'"
+              },
+              "default": "'m'",
+              "description": "The size and the depth. The small dial (s) is 36 px, with a shallow carve, for lists and table rows. The names are the Web Awesome sizes."
+            }
           ],
           "slots": [
-            { "name": "", "description": "The center content, for example a number or an icon. If it is empty, the medium dial shows the percent." }
+            {
+              "name": "",
+              "description": "The center content, for example a number or an icon. If it is empty, the medium dial shows the percent."
+            }
           ],
           "cssParts": [
-            { "name": "indicator", "description": "The colored ring that shows the value." },
-            { "name": "hole", "description": "The raised center." },
-            { "name": "label", "description": "The container of the center content." }
+            {
+              "name": "indicator",
+              "description": "The colored ring that shows the value."
+            },
+            {
+              "name": "hole",
+              "description": "The raised center."
+            },
+            {
+              "name": "label",
+              "description": "The container of the center content."
+            }
           ],
           "cssProperties": [
-            { "name": "--size", "default": "120px", "description": "The diameter of the dial." },
-            { "name": "--track-width", "default": "12px", "description": "The width of the colored ring." }
+            {
+              "name": "--size",
+              "default": "120px",
+              "description": "The diameter of the dial."
+            },
+            {
+              "name": "--track-width",
+              "default": "12px",
+              "description": "The width of the colored ring."
+            },
+            {
+              "name": "--track-color",
+              "default": "var(--wa-color-surface-lowered)",
+              "description": "The color of the carved channel."
+            },
+            {
+              "name": "--indicator-color",
+              "default": "var(--wa-color-brand-fill-loud)",
+              "description": "The color of the ring that shows the value. variant sets it to a status color."
+            }
           ]
         }
       ],
       "exports": [
-        { "kind": "custom-element-definition", "name": "vsa-dial", "declaration": { "name": "VsaDial", "module": "components/vsa-dial.js" } }
+        {
+          "kind": "custom-element-definition",
+          "name": "vsa-dial",
+          "declaration": {
+            "name": "VsaDial",
+            "module": "components/vsa-dial.js"
+          }
+        }
       ]
     }
   ]

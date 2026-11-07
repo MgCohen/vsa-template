@@ -43,9 +43,9 @@ A switch with no text must have an `aria-label`.
 ### Sizes
 
 ```html preview
-<wa-switch size="small">Small</wa-switch>
-<wa-switch size="medium">Medium</wa-switch>
-<wa-switch size="large">Large</wa-switch>
+<wa-switch size="s">Small</wa-switch>
+<wa-switch size="m">Medium</wa-switch>
+<wa-switch size="l">Large</wa-switch>
 ```
 
 ### Disabled
@@ -73,7 +73,7 @@ The switch sends `input` and then `change` when the user changes it. Read the st
 
 | Item | Value |
 |---|---|
-| Size | `--width`, `--height`, `--thumb-size` on `wa-switch`: 40, 24 and 18 px at the medium size, in `em` |
-| Track off | `--vsa-color-sunken`, `--vsa-shadow-carve` on `::part(control)` |
-| Track on | `--vsa-color-accent`, `--vsa-shadow-press`, `--vsa-shadow-glow` on `:state(checked)::part(control)` |
+| Size | `--width`, `--height`, `--thumb-size` on `wa-switch`: 40, 24 and 18 px at size `m`, in `em` |
+| Track off | `--wa-color-surface-lowered`, `--vsa-shadow-carve` on `::part(control)` |
+| Track on | `--wa-color-brand-fill-loud`, `--vsa-shadow-press`, `--vsa-shadow-glow` on `:state(checked)::part(control)` |
 | Knob | `--vsa-gradient-knob`, `--vsa-shadow-knob` on `::part(thumb)` |
