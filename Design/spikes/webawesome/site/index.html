@@ -48,6 +48,16 @@
   .lvl-component { --lvl: var(--vsa-color-accent); }
   .lvl-web { --lvl: var(--vsa-color-muted); }
   .lvl-tag { color: var(--lvl); background: color-mix(in srgb, var(--lvl) 14%, transparent); }
+  .lvl-planned { --lvl: var(--vsa-color-track); }
+  .topo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 24px; }
+  .topo .node { display: grid; gap: 3px; min-width: 132px; padding: 12px 14px; border-radius: var(--vsa-radius-control); text-decoration: none; color: var(--vsa-color-text); background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); border-top: 3px solid var(--lvl); }
+  .topo a.node:hover { box-shadow: var(--vsa-shadow-raise); }
+  .topo .node span { font-size: var(--vsa-font-size-label); color: var(--vsa-color-muted); }
+  .topo .node code { justify-self: start; }
+  .topo .node-stack { display: grid; gap: 8px; }
+  .topo .arrow { color: var(--vsa-color-muted); font-size: 18px; }
+  .topo .lvl-planned { border-top-style: dashed; opacity: .75; }
+  @media (max-width: 760px) { .topo { flex-direction: column; align-items: stretch; } .topo .arrow { transform: rotate(90deg); align-self: center; } }
   .chain .lvl { border-bottom: 2px solid color-mix(in srgb, var(--lvl) 55%, transparent); }
 
   main { padding: 64px 40px 80px; max-width: 1040px; width: 100%; }
@@ -130,7 +140,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 
 async function loadText(path) {
   if (window.VSA_FILES && path in window.VSA_FILES) return window.VSA_FILES[path];
-  const r = await fetch(DOCS_ROOT + path);
+  const r = await fetch(DOCS_ROOT + path, { cache: 'no-cache' });
   if (!r.ok) throw new Error(path + ': ' + r.status);
   return r.text();
 }
@@ -265,7 +275,7 @@ async function buildNav() {
   const byCategory = ix.categoryOrder.map(cat => [cat, names.filter(n => (ix.categories[n] || 'Helpers') === cat).sort()]);
   const section = (id, title, body, note = '') => `<details class="section" data-section="${id}"${folded.has(id) ? '' : ' open'}><summary>${esc(title)}${note}</summary>${body}</details>`;
   document.querySelector('nav.side .lists').innerHTML = `
-    <ul>${link('#/', 'Overview')}</ul>
+    <ul>${link('#/', 'Overview')}${link('#/gallery', 'Gallery')}</ul>
     ${section('foundations', 'Foundations', `<ul>${ix.foundations.map(f => link('#/foundations/' + f.name, f.title)).join('')}</ul>`)}
     ${section('tokens', 'Tokens', `<ul>${ix.tokens.map(t => link('#/tokens/' + t.name, t.title)).join('')}</ul>`)}
     ${section('components', 'Components', byCategory.map(([cat, list]) => `<div class="sub-group">${esc(cat)}</div><ul>${list.map(n => link('#/components/' + n, ix.components.find(c => c.name === n)?.title || titleOf(n), documented.has(n) ? '' : 'api-only')).join('')}</ul>`).join(''), ' <span class="legend">dim = API only</span>')}`;
@@ -347,6 +357,7 @@ async function route() {
   try {
     if (section === 'foundations' && name) page = await markdownPage('foundations/' + name + '.md');
     else if (section === 'tokens' && name) page = await markdownPage('tokens/' + name + '.md');
+    else if (section === 'gallery') page = await markdownPage('gallery.md');
     else if (section === 'components' && name) page = await componentPage(name);
     else page = await markdownPage('overview.md');
   } catch (e) {

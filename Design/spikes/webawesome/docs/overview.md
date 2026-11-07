@@ -2,35 +2,43 @@
 
 The VSA Design System gives VSA apps one look. It uses the Web Awesome 3.14.0 components and the VSA tokens and looks.
 
-## Levels
+## How the parts connect
 
-| Level | Example | Where |
+Each level reads only the level to its left. A change on the left changes everything to its right.
+
+<div class="topo">
+  <a class="node lvl-global" href="#/tokens/global"><b>Global tokens</b><span>Raw values</span><code>tokens/global.css</code></a>
+  <span class="arrow">→</span>
+  <a class="node lvl-alias" href="#/tokens/alias"><b>Alias tokens</b><span>Meaning, light and dark</span><code>tokens/alias.css</code></a>
+  <span class="arrow">→</span>
+  <div class="node-stack">
+    <a class="node lvl-component" href="#/tokens/component"><b>Component tokens</b><span>--wa-* values</span><code>theme/vsa.css</code></a>
+    <a class="node lvl-component" href="#/foundations/elevation"><b>Looks</b><span>Raised, carved, knob</span><code>::part()</code></a>
+  </div>
+  <span class="arrow">→</span>
+  <a class="node lvl-web" href="#/gallery"><b>Components</b><span>Web Awesome, 73</span><code>&lt;wa-*&gt;</code></a>
+  <span class="arrow">→</span>
+  <div class="node lvl-planned"><b>Molecules, pages</b><span>Planned</span><code>slots</code></div>
+</div>
+
+| Link | What it adds |
+|---|---|
+| Global → Alias | A meaning. `--vsa-orange-370` becomes `--vsa-color-accent` |
+| Alias → Component tokens | A place in a component. `--vsa-color-accent` becomes `--wa-color-brand-fill-loud` |
+| Alias → Looks | A shape that tokens cannot give, with `::part()`. `--vsa-shadow-carve` goes on the switch track |
+| Components → Molecules | Composition. A molecule puts components into the slots of other components |
+
+## Map
+
+| Section | Pages | Use it to |
 |---|---|---|
-| Global token | `--vsa-orange-370: #ff6a1a` | `tokens/global.css` |
-| Alias token | `--vsa-color-accent: var(--vsa-orange-370)` | `tokens/alias.css` |
-| Component token | `--wa-color-brand-fill-loud: var(--vsa-color-accent)` | `theme/vsa.css`, part 1 |
-| Look | The raised and carved shadows, with `::part()` | `theme/vsa.css`, part 2 |
-| Component | `<wa-switch>`, `<wa-input>` | Web Awesome, prebuilt files |
+| [Gallery](#/gallery) | One example of each component | See the look of the whole system |
+| Foundations | [Color](#/foundations/color), [Typography](#/foundations/typography), [Spacing](#/foundations/spacing), [Radius](#/foundations/radius), [Elevation](#/foundations/elevation), [Motion](#/foundations/motion) | Select a token for a purpose |
+| Tokens | [Global](#/tokens/global), [Alias](#/tokens/alias), [Component](#/tokens/component) | See all tokens of one level and the path to each value |
+| Components | One page for each component, for example [Switch](#/components/switch) | Use a component: variants, slots, events, API |
 
-A change to a global or alias token changes each component that uses it.
+## Important pages
 
-## Pages
-
-- **Foundations:** the tokens, with their light and dark values and the path to the source value.
-- **Components:** the components that have a VSA usage page, with examples of each variant.
-- **All components:** each Web Awesome component. The API tables come from the Web Awesome `custom-elements.json`.
-
-## All looks on one page
-
-```html preview
-<wa-button>Default</wa-button>
-<wa-button variant="brand">Primary</wa-button>
-<wa-button disabled>Disabled</wa-button>
-<wa-switch checked>Sync</wa-switch>
-<wa-checkbox checked>Run tests</wa-checkbox>
-<wa-input placeholder="Runner name" style="width: 220px"></wa-input>
-<wa-slider min="1" max="16" value="6" style="width: 200px" aria-label="Parallel jobs"></wa-slider>
-<wa-progress-bar value="62" style="width: 200px" aria-label="Build"></wa-progress-bar>
-<wa-badge variant="success">Done</wa-badge>
-<wa-badge variant="danger">Failed</wa-badge>
-```
+- [Switch](#/components/switch): the sample usage page. Each new usage page uses the same sections.
+- [Elevation](#/foundations/elevation): the raised and carved looks, and where `::part()` applies them.
+- [Component tokens](#/tokens/component): the Web Awesome defaults that the VSA theme does not set yet. Each one is an open decision.
