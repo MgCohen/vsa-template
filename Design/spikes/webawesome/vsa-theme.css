@@ -1,0 +1,210 @@
+/*
+  Spike: the VSA style on Web Awesome 3.14.0 components.
+  Load order: tokens/fonts.css, tokens/global.css, tokens/alias.css, Web Awesome themes/default.css, this file.
+  Part 1 gives each --wa-* token a VSA alias value. The selector includes [data-theme], so a themed area gets its own values.
+  Part 2 adds the raised and carved looks with ::part(). Tokens cannot give these looks.
+  This file is not in a cascade layer, so it wins over all Web Awesome layers.
+*/
+
+/* Part 1: tokens */
+:root, [data-theme] {
+  --wa-color-surface-raised: var(--vsa-color-surface);
+  --wa-color-surface-default: var(--vsa-color-surface);
+  --wa-color-surface-lowered: var(--vsa-color-sunken);
+  --wa-color-surface-border: var(--vsa-color-line);
+
+  --wa-color-text-normal: var(--vsa-color-text);
+  --wa-color-text-quiet: var(--vsa-color-muted);
+  --wa-color-text-link: var(--vsa-color-accent);
+  --wa-color-focus: var(--vsa-color-accent);
+
+  --wa-color-brand-fill-quiet: color-mix(in srgb, var(--vsa-color-accent) 10%, transparent);
+  --wa-color-brand-fill-normal: color-mix(in srgb, var(--vsa-color-accent) 22%, transparent);
+  --wa-color-brand-fill-loud: var(--vsa-color-accent);
+  --wa-color-brand-border-quiet: color-mix(in srgb, var(--vsa-color-accent) 25%, transparent);
+  --wa-color-brand-border-normal: color-mix(in srgb, var(--vsa-color-accent) 45%, transparent);
+  --wa-color-brand-border-loud: var(--vsa-color-accent);
+  --wa-color-brand-on-quiet: color-mix(in srgb, var(--vsa-color-accent) 70%, var(--vsa-color-text));
+  --wa-color-brand-on-normal: color-mix(in srgb, var(--vsa-color-accent) 60%, var(--vsa-color-text));
+  --wa-color-brand-on-loud: var(--vsa-color-on-accent);
+
+  --wa-color-neutral-fill-quiet: var(--vsa-color-head-tint);
+  --wa-color-neutral-fill-normal: var(--vsa-color-dim);
+  --wa-color-neutral-fill-loud: var(--vsa-color-surface);
+  --wa-color-neutral-border-quiet: var(--vsa-color-line);
+  --wa-color-neutral-border-normal: var(--vsa-color-track);
+  --wa-color-neutral-border-loud: var(--vsa-color-track);
+  --wa-color-neutral-on-quiet: var(--vsa-color-text-secondary);
+  --wa-color-neutral-on-normal: var(--vsa-color-text);
+  --wa-color-neutral-on-loud: var(--vsa-color-text);
+
+  --wa-color-success-fill-quiet: color-mix(in srgb, var(--vsa-color-state-done) 12%, transparent);
+  --wa-color-success-fill-normal: color-mix(in srgb, var(--vsa-color-state-done) 24%, transparent);
+  --wa-color-success-fill-loud: var(--vsa-color-state-done);
+  --wa-color-success-border-quiet: color-mix(in srgb, var(--vsa-color-state-done) 30%, transparent);
+  --wa-color-success-border-normal: color-mix(in srgb, var(--vsa-color-state-done) 50%, transparent);
+  --wa-color-success-border-loud: var(--vsa-color-state-done);
+  --wa-color-success-on-quiet: var(--vsa-color-state-done);
+  --wa-color-success-on-normal: var(--vsa-color-state-done);
+  --wa-color-success-on-loud: var(--vsa-color-surface);
+
+  --wa-color-warning-fill-quiet: color-mix(in srgb, var(--vsa-color-state-pending) 12%, transparent);
+  --wa-color-warning-fill-normal: color-mix(in srgb, var(--vsa-color-state-pending) 24%, transparent);
+  --wa-color-warning-fill-loud: var(--vsa-color-state-pending);
+  --wa-color-warning-border-quiet: color-mix(in srgb, var(--vsa-color-state-pending) 30%, transparent);
+  --wa-color-warning-border-normal: color-mix(in srgb, var(--vsa-color-state-pending) 50%, transparent);
+  --wa-color-warning-border-loud: var(--vsa-color-state-pending);
+  --wa-color-warning-on-quiet: var(--vsa-color-state-pending);
+  --wa-color-warning-on-normal: var(--vsa-color-state-pending);
+  --wa-color-warning-on-loud: var(--vsa-color-surface);
+
+  --wa-color-danger-fill-quiet: color-mix(in srgb, var(--vsa-color-state-failed) 12%, transparent);
+  --wa-color-danger-fill-normal: color-mix(in srgb, var(--vsa-color-state-failed) 24%, transparent);
+  --wa-color-danger-fill-loud: var(--vsa-color-state-failed);
+  --wa-color-danger-border-quiet: color-mix(in srgb, var(--vsa-color-state-failed) 30%, transparent);
+  --wa-color-danger-border-normal: color-mix(in srgb, var(--vsa-color-state-failed) 50%, transparent);
+  --wa-color-danger-border-loud: var(--vsa-color-state-failed);
+  --wa-color-danger-on-quiet: var(--vsa-color-state-failed);
+  --wa-color-danger-on-normal: var(--vsa-color-state-failed);
+  --wa-color-danger-on-loud: var(--vsa-color-surface);
+
+  --wa-font-family-body: var(--vsa-font-body);
+  --wa-font-family-heading: var(--vsa-font-display);
+  --wa-font-family-code: var(--vsa-font-mono);
+  --wa-font-weight-body: var(--vsa-font-weight-regular);
+  --wa-font-weight-action: var(--vsa-font-weight-medium);
+  --wa-font-weight-semibold: var(--vsa-font-weight-strong);
+  --wa-font-size-2xs: var(--vsa-font-size-caption);
+  --wa-font-size-xs: var(--vsa-font-size-label);
+  --wa-font-size-s: var(--vsa-font-size-body);
+  --wa-font-size-m: var(--vsa-font-size-body);
+  --wa-font-size-l: var(--vsa-font-size-lead);
+  --wa-font-size-xl: var(--vsa-font-size-title);
+  --wa-font-size-2xl: var(--vsa-font-size-metric);
+  --wa-font-size-3xl: var(--vsa-font-size-hero);
+  --wa-line-height-condensed: var(--vsa-line-height-snug);
+  --wa-line-height-normal: var(--vsa-line-height-body);
+
+  --wa-border-radius-s: var(--vsa-space-sm);
+  --wa-border-radius-m: var(--vsa-radius-control);
+  --wa-border-radius-l: var(--vsa-radius-card);
+  --wa-border-radius-pill: var(--vsa-radius-pill);
+
+  --wa-focus-ring-width: var(--vsa-focus-width);
+  --wa-focus-ring-offset: var(--vsa-focus-offset);
+
+  --wa-transition-fast: var(--vsa-motion-fast);
+  --wa-transition-normal: var(--vsa-motion-fast);
+  --wa-transition-slow: var(--vsa-motion-fast);
+  --wa-transition-easing: ease-out;
+
+  --wa-shadow-s: var(--vsa-shadow-raise-sm);
+  --wa-shadow-m: var(--vsa-shadow-raise);
+  --wa-shadow-l: var(--vsa-shadow-hole);
+
+  --wa-form-control-background-color: var(--vsa-color-sunken);
+  --wa-form-control-border-color: transparent;
+  --wa-form-control-border-radius: var(--vsa-radius-control);
+  --wa-form-control-activated-color: var(--vsa-color-accent);
+  --wa-form-control-value-color: var(--vsa-color-sunken-text);
+  --wa-form-control-placeholder-color: var(--vsa-color-sunken-muted);
+  --wa-form-control-label-color: var(--vsa-color-text-secondary);
+  --wa-form-control-hint-color: var(--vsa-color-muted);
+  --wa-form-control-padding-block: 11px;
+  --wa-form-control-padding-inline: 14px;
+
+  --wa-panel-border-width: 0px;
+  --wa-panel-border-radius: var(--vsa-radius-card);
+
+  --wa-button-transform-active: translateY(1px);
+}
+
+/* Part 2: looks. Raised = a surface over the canvas. Carved = a channel cut into the surface. */
+
+/* Raised: buttons */
+wa-button:not([appearance="plain"], [appearance="outlined"])::part(base) {
+  background: var(--vsa-gradient-surface);
+  color: var(--vsa-color-text);
+  box-shadow: var(--vsa-shadow-raise);
+  border-color: transparent;
+}
+wa-button[variant="brand"]:not([appearance="plain"], [appearance="outlined"])::part(base) {
+  background: var(--vsa-color-accent);
+  color: var(--vsa-color-on-accent);
+  box-shadow: var(--vsa-shadow-raise), var(--vsa-shadow-glow);
+}
+wa-button:not(:state(disabled), [appearance="plain"]):active::part(base) {
+  box-shadow: var(--vsa-shadow-press);
+}
+wa-button[variant="brand"]:not(:state(disabled), [appearance="plain"]):active::part(base) {
+  box-shadow: var(--vsa-shadow-press), var(--vsa-shadow-glow);
+}
+
+/* Raised: panels */
+wa-card {
+  background: var(--vsa-gradient-surface);
+  box-shadow: var(--vsa-shadow-raise);
+}
+
+/* Carved: text fields */
+wa-input::part(base),
+wa-textarea::part(base),
+wa-select::part(combobox) {
+  box-shadow: var(--vsa-shadow-carve);
+  outline: var(--vsa-border-sunken);
+}
+
+/* Carved: switch track, raised knob */
+wa-switch {
+  --width: 40px;
+  --height: 24px;
+  --thumb-size: 18px;
+}
+wa-switch::part(control) {
+  background: var(--vsa-color-sunken);
+  box-shadow: var(--vsa-shadow-carve);
+  border-color: transparent;
+}
+wa-switch:state(checked)::part(control) {
+  background: var(--vsa-color-accent);
+  box-shadow: var(--vsa-shadow-press), var(--vsa-shadow-glow);
+}
+wa-switch::part(thumb) {
+  background: var(--vsa-gradient-knob);
+  box-shadow: var(--vsa-shadow-knob);
+}
+
+/* Carved: checkbox and radio */
+wa-checkbox::part(control),
+wa-radio::part(control) {
+  background: var(--vsa-color-sunken);
+  box-shadow: var(--vsa-shadow-carve);
+  border-color: transparent;
+}
+wa-checkbox:state(checked)::part(control),
+wa-checkbox:state(indeterminate)::part(control) {
+  background: var(--vsa-color-accent);
+  color: var(--vsa-color-on-accent);
+  box-shadow: var(--vsa-shadow-press), var(--vsa-shadow-glow);
+}
+wa-radio:state(checked)::part(control) {
+  color: var(--vsa-color-accent);
+}
+
+/* Carved: tracks */
+wa-slider::part(track),
+wa-progress-bar::part(base) {
+  background: var(--vsa-color-sunken);
+  box-shadow: var(--vsa-shadow-carve);
+}
+wa-slider::part(indicator),
+wa-progress-bar::part(indicator) {
+  background: var(--vsa-color-accent);
+  box-shadow: var(--vsa-shadow-glow);
+}
+wa-slider::part(thumb) {
+  background: var(--vsa-gradient-knob);
+  box-shadow: var(--vsa-shadow-knob);
+  border: none;
+}
+
