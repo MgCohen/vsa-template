@@ -94,7 +94,6 @@ public sealed class ScaffoldingTests {
             ("Modules/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
             ("Modules/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
             ("Tests/App.Tests.csproj", App),
-            ("Tests/ArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
         ];
 

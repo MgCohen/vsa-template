@@ -12,4 +12,7 @@
     <PackageReference Include="TngTech.ArchUnitNET.NUnit" />
     <PackageReference Include="NUnit" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="build/*.targets" Pack="true" PackagePath="build/" />
+  </ItemGroup>
 </Project>

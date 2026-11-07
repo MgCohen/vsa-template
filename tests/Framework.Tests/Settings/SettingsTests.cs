@@ -36,7 +36,7 @@ public sealed class SettingsTests {
     static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
-        (module ?? new SampleModule()).Configure(new ModuleBuilder("Sample", services, configuration));
+        (module ?? new SampleModule()).Configure(new ModuleBuilder("Sample", new MicrosoftServices(services), configuration));
         return services;
     }
 

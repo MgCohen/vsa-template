@@ -1,15 +1,14 @@
-using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
+using VSA.Module;
 
 namespace VSA.Handlers.Events;
 
-// Calls each handler of the event in this process, in the scope of the publisher. Then it gives the event to each observer.
-sealed class InProcessEventPublisher(IServiceProvider services) : IIntegrationEventPublisher {
+sealed class InProcessEventPublisher(IVsaResolver resolver) : IIntegrationEventPublisher {
     public async Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
-        foreach (var handler in services.GetServices<IntegrationEventHandler<TEvent>>()) {
+        foreach (var handler in resolver.ResolveAll<IntegrationEventHandler<TEvent>>()) {
             await handler.HandleAsync(integrationEvent, ct);
         }
-        foreach (var observer in services.GetServices<IIntegrationEventObserver>()) {
+        foreach (var observer in resolver.ResolveAll<IIntegrationEventObserver>()) {
             await observer.OnPublishedAsync(integrationEvent, ct);
         }
     }

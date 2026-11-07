@@ -64,6 +64,7 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 | Handlers, events | `VSA.Handlers.Events` | Yes |
 | Infrastructure | `VSA.Infrastructure` | Yes |
 | Module | `VSA.Module` | Yes |
+| Composition | `VSA.Composition` | Yes, without presenters |
 | Contracts, requests | `VSA.Contracts.Requests` | No: `static abstract` members |
 | Handlers, requests; Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
@@ -74,7 +75,7 @@ The root `Directory.Build.props` lists the Unity layers (`VsaUnityLayer`). They 
 - Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Layers/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- Unity has no `deps.json`, so `ModuleDiscovery` cannot find the modules. The Unity app gives the modules by hand.
+- Unity has no `deps.json`, so `ModuleDiscovery` cannot find the modules. The Unity app gives the modules to `new VsaComposer(services, configuration, modules)` (`docs/composition.md`).
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Open questions
