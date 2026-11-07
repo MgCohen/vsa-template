@@ -12,6 +12,8 @@
 <script type="module" src="../components/vsa-button.js"></script>
 <script type="module" src="../components/vsa-toggle.js"></script>
 <script type="module" src="../components/vsa-field.js"></script>
+<script type="module" src="../components/vsa-search-bar.js"></script>
+<script type="module" src="../components/vsa-settings-panel.js"></script>
 <style>
 /* The gallery page uses only alias tokens, so it shows the tokens in use. */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -76,6 +78,9 @@ details.card > summary:focus-visible { outline: var(--vsa-focus-width) solid var
 .demo { background: var(--vsa-gradient-surface); color: var(--vsa-color-text); border-radius: var(--vsa-radius-card); box-shadow: var(--vsa-shadow-raise); padding: 14px; display: grid; gap: 12px; }
 .atom-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .atom-row .tag { font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); }
+td.cell { vertical-align: middle; background: var(--vsa-gradient-canvas); min-width: 180px; }
+td.cell.wide { width: 100%; }
+pre.code { margin: 0; padding: 12px 14px; overflow-x: auto; border-radius: var(--vsa-radius-control); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); color: var(--vsa-color-sunken-text); font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-small); }
 .log { font-family: var(--vsa-font-mono); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); min-height: 1.4em; }
 .specs { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
 .spec { display: grid; grid-template-rows: 88px auto; border: 1px solid var(--vsa-color-line); border-radius: var(--vsa-radius-control); overflow: hidden; min-width: 0; background: var(--vsa-color-surface); }
@@ -145,6 +150,10 @@ tr.spec-row td { vertical-align: middle; }
     <a href="#spacing" data-page="spacing">Spacing and radius</a>
     <a href="#elevation" data-page="elevation">Elevation</a>
     <a href="#motion" data-page="motion">Motion</a>
+    <div class="group">Components</div>
+    <a href="#comp-button" data-page="comp-button">Button</a>
+    <a href="#comp-search-bar" data-page="comp-search-bar">Search bar</a>
+    <a href="#comp-settings-panel" data-page="comp-settings-panel">Settings panel</a>
     <div class="group">Tokens</div>
     <a href="#tokens-global" data-page="tokens-global">Global</a>
     <a href="#tokens-alias" data-page="tokens-alias">Alias</a>
@@ -168,6 +177,9 @@ tr.spec-row td { vertical-align: middle; }
     <section class="page" id="page-tokens-global" hidden></section>
     <section class="page" id="page-tokens-alias" hidden></section>
     <section class="page" id="page-tokens-component" hidden></section>
+    <section class="page" id="page-comp-button" hidden></section>
+    <section class="page" id="page-comp-search-bar" hidden></section>
+    <section class="page" id="page-comp-settings-panel" hidden></section>
   </main>
 </div>
 
@@ -345,7 +357,7 @@ function renderElevation() {
 function renderMotion() {
   const motion = aliasNames().filter(n => n.startsWith('--vsa-motion-'));
   const users = motion.flatMap(n => [...(usedBy.get(n) || [])]);
-  const atom = n => `<td class="name"><code>&lt;vsa-${short(n).split('-')[0]}&gt;</code></td>`;
+  const atom = n => `<td class="name">${tagLink(componentOf(n))}</td>`;
   document.getElementById('page-motion').innerHTML =
     card('Timing', 'One duration controls all motion today. Change <code>--vsa-motion-fast</code> to change each atom that uses it. Press Play to move each knob with its duration.',
       specRows(users.map(n => specRow(n, `<div class="track" style="--d:var(${n})"><i></i></div>`, atom(n))), ['Atom']) + `<div><vsa-button id="play">Play</vsa-button></div>`) +
@@ -384,10 +396,84 @@ function renderAlias() {
     pageHead('Alias tokens', 'Tokens with a meaning, in <code>tokens/alias.css</code>. Each value reads global tokens. A token with one value is the same in light and dark. "Used by" shows the component tokens that read it.', levels('Alias')) +
     ALIAS_GROUPS.map(([g, re]) => card(g, '', tokenTable(['Token', 'Light', 'Dark', 'Used by'], names.filter(n => re.test(n)).map(rowOf)))).join('');
 }
+const COMPONENTS = [
+  {
+    tag: 'button', level: 'Atom',
+    summary: 'A raised button with the API of the HTML <code>&lt;button&gt;</code>. Use <code>primary</code> for the one main action of an area.',
+    make: (attrs, label = 'Save') => `<vsa-button ${attrs}>${label}</vsa-button>`,
+    variants: [['default', ''], ['primary', 'variant="primary"'], ['small', 'size="small"'], ['primary small', 'variant="primary" size="small"']],
+    states: [['Rest', ''], ['Disabled', 'disabled']],
+    api: [['variant', 'default · primary', 'default', 'Variant'], ['size', 'default · small', 'default', 'Variant'], ['disabled', 'on · off', 'off', 'State'], ['type', 'button · submit · reset', 'button', 'Form'], ['name, value', 'text', '—', 'Form']],
+    slots: [['(default)', 'The text'], ['start', 'An icon before the text']],
+    events: [['click', 'The user presses the button. A disabled button sends no event']],
+    parts: [],
+    usage: '<vsa-button variant="primary" size="small">Save</vsa-button>',
+  },
+  {
+    tag: 'search-bar', level: 'Molecule',
+    summary: 'A field and a button that do one job: search. It holds no data and does not search by itself. The page reads <code>value</code> on the <code>search</code> event.',
+    make: attrs => `<vsa-search-bar ${attrs} placeholder="Search sources and handlers"></vsa-search-bar>`,
+    variants: [['default', '']],
+    states: [['Rest', ''], ['Disabled', 'disabled']],
+    api: [['placeholder', 'text', '—', 'Content'], ['value', 'text', '—', 'State'], ['label', 'text', 'Search', 'Content'], ['button', 'text', 'Search', 'Content'], ['disabled', 'on · off', 'off', 'State']],
+    slots: [],
+    events: [['input', 'The text changes'], ['search', 'The user presses Enter or the button']],
+    parts: [['field', 'field'], ['button', 'button']],
+    usage: '<vsa-search-bar placeholder="Search sources" button="Find"></vsa-search-bar>',
+  },
+  {
+    tag: 'settings-panel', level: 'Organism',
+    summary: 'A section of a screen: a heading, a Reset button, a search bar that filters the rows, and one row for each toggle. The toggles stay in the page, so a form can read them.',
+    demo: () => `<vsa-settings-panel heading="Listener">
+      <vsa-toggle name="start" checked aria-label="Listen at start" data-description="Start the listener when Windows starts"></vsa-toggle>
+      <vsa-toggle name="log" aria-label="Log everything" data-description="Write each event to the log file"></vsa-toggle>
+      <vsa-toggle name="pin" checked aria-label="Pin the window" data-description="Keep Runner above the other windows"></vsa-toggle>
+      <vsa-toggle name="sound" aria-label="Play a sound" data-description="Play a short sound for each failed event"></vsa-toggle>
+    </vsa-settings-panel>`,
+    api: [['heading', 'text', '—', 'Content']],
+    slots: [['(default)', 'The <code>&lt;vsa-toggle&gt;</code> elements. Each <code>aria-label</code> is the row text, and <code>data-description</code> is the second line']],
+    events: [['change', 'From a toggle, when the user changes it or presses Reset'], ['input', 'From the search bar, when the filter changes']],
+    parts: [['heading', 'text'], ['reset', 'button'], ['search', 'search-bar'], ['rows', 'toggle']],
+    usage: '<vsa-settings-panel heading="Listener">\n  <vsa-toggle name="log" aria-label="Log everything"\n    data-description="Write each event to the log file"></vsa-toggle>\n</vsa-settings-panel>',
+  },
+];
+const TAGS = ['settings-panel', 'search-bar', 'button', 'toggle', 'field'];
+const componentOf = n => TAGS.find(t => n.startsWith(`--vsa-${t}-`)) || short(n).split('-')[0];
+const kinds = on => `<div class="levels">${['Atom', 'Molecule', 'Organism'].map(l => `<span class="${l === on ? 'on' : ''}">${l}</span>`).join('<i>→</i>')}</div>`;
+const tagLink = t => COMPONENTS.some(c => c.tag === t) ? `<a class="tok tok-component" href="#comp-${t}" data-page="comp-${t}">&lt;vsa-${t}&gt;</a>` : `<code>&lt;vsa-${t}&gt;</code>`;
+const simpleTable = (cols, rows) => tokenTable(cols, rows.map(r => `<tr>${r.map((c, i) => `<td${i === 0 ? ' class="name"' : ''}>${c}</td>`).join('')}</tr>`));
+function renderComponentPage(c) {
+  const tokens = [...T.component.keys()].filter(n => componentOf(n) === c.tag);
+  const matrix = c.variants && c.variants.length > 1
+    ? card('Variants and states', 'Each row is one variant. Each column is one state. Focus and pressed show when you use the component.',
+        tokenTable(['Variant', 'Attributes', ...c.states.map(s => s[0])], c.variants.map(([v, attrs]) =>
+          `<tr><td class="name">${v}</td><td class="v">${attrs ? `<code>${esc(attrs)}</code>` : '—'}</td>${c.states.map(([, s]) => `<td class="cell">${c.make([attrs, s].filter(Boolean).join(' '))}</td>`).join('')}</tr>`)))
+    : c.variants
+    ? card('States', 'This component has one variant. Each row is one state. Focus and pressed show when you use the component.',
+        tokenTable(['State', 'Attributes', 'Look'], c.states.map(([state, attrs]) =>
+          `<tr><td class="name">${state}</td><td class="v">${attrs ? `<code>${esc(attrs)}</code>` : '—'}</td><td class="cell wide">${c.make(attrs)}</td></tr>`)))
+    : card('Demo', 'Use it: type in the filter, change a toggle, press Reset. The log shows the last event.', `<div class="stage comp-demo">${c.demo()}<div class="log" aria-live="polite">No event yet</div></div>`);
+  document.getElementById(`page-comp-${c.tag}`).innerHTML =
+    pageHead(`&lt;vsa-${c.tag}&gt;`, c.summary, kinds(c.level) + `<p class="note">File: <code>components/vsa-${c.tag}.js</code></p>`) +
+    matrix +
+    (c.parts.length ? card('Made of', 'The parts inside the shadow DOM. A change to a part changes this component.', simpleTable(['Part', 'Component'], c.parts.map(([p, t]) => [p, t === 'text' ? 'Plain text' : tagLink(t)]))) : '') +
+    card('API', '"Variant" changes the look. "State" comes from the user or the data. "Content" is text that you give.', simpleTable(['Attribute', 'Values', 'Default', 'Kind'], c.api)) +
+    card('Slots and events', '', (c.slots.length ? simpleTable(['Slot', 'Content'], c.slots) : '') + simpleTable(['Event', 'When'], c.events)) +
+    card('Tokens', tokens.length ? 'The component tokens of this component, with the path in the current theme.' : 'This component has no tokens of its own. Its parts use their tokens.',
+      tokens.length ? tokenTable(['Token', 'Value', 'Path to the global value'], tokens.map(n => `<tr><td class="name">${tokLink(n, short(n))}</td><td class="v">${linkValue(raw(n))}</td><td>${chain(n, false)}</td></tr>`)) : '') +
+    card('Usage', '', `<pre class="code"><code>${esc(c.usage)}</code></pre>`);
+  const demo = document.querySelector(`#page-comp-${c.tag} .comp-demo`);
+  if (!demo) return;
+  const log = demo.querySelector('.log');
+  demo.addEventListener('change', e => { if (e.target.localName === 'vsa-toggle') log.textContent = `change · <vsa-toggle name="${e.target.name}"> checked=${e.target.checked}`; });
+  demo.addEventListener('search', e => { log.textContent = `search · value="${e.target.value}"`; });
+}
+const renderComponents = () => COMPONENTS.forEach(renderComponentPage);
+
 function renderComponentTokens() {
   const byComponent = new Map();
   for (const n of T.component.keys()) {
-    const c = n.replace('--vsa-', '').split('-')[0];
+    const c = componentOf(n);
     if (!byComponent.has(c)) byComponent.set(c, []);
     byComponent.get(c).push(n);
   }
@@ -403,7 +489,7 @@ function renderAtoms() {
   const atoms = document.getElementById('atoms');
   atoms.innerHTML = `<div class="demo">
     <h3>Button</h3>
-    <div class="atom-row"><vsa-button>Cancel</vsa-button><vsa-button variant="primary">Save</vsa-button><vsa-button variant="primary">${PLAY_ICON}Start</vsa-button><vsa-button disabled>Disabled</vsa-button></div>
+    <div class="atom-row"><vsa-button>Cancel</vsa-button><vsa-button variant="primary">Save</vsa-button><vsa-button variant="primary">${PLAY_ICON}Start</vsa-button><vsa-button disabled>Disabled</vsa-button><vsa-button size="small">Small</vsa-button><vsa-button variant="primary" size="small">Small primary</vsa-button></div>
     <h3>Toggle</h3>
     <div class="atom-row"><vsa-toggle checked aria-label="Listener"></vsa-toggle><vsa-toggle aria-label="Pin"></vsa-toggle><vsa-toggle size="small" checked aria-label="Handler on"></vsa-toggle><vsa-toggle size="small" aria-label="Handler off"></vsa-toggle><vsa-toggle disabled aria-label="Start with Windows"></vsa-toggle><span class="tag">on · off · small · disabled</span></div>
     <h3>Field</h3>
@@ -457,6 +543,7 @@ function renderThemed() {
   renderElevation();
   renderMotion();
   renderComponentTokens();
+  renderComponents();
 }
 function setTheme(t) {
   if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);

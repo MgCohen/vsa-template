@@ -20,7 +20,8 @@ flowchart LR
 | Alias token | `--vsa-color-accent: var(--vsa-orange-370)` | `tokens/alias.css` |
 | Component token | `--vsa-toggle-track-on: var(--vsa-color-accent)` | `tokens/component.css` |
 | Atom | `<vsa-button>`, `<vsa-toggle>`, `<vsa-field>` | `components/` |
-| Molecule, organism | ListRow, SourceCard, Header | `components/` (Phase 3) |
+| Molecule | `<vsa-search-bar>` | `components/` |
+| Organism | `<vsa-settings-panel>` | `components/` |
 | Page | Runner Home | Phase 3 |
 
 ## Folder map
@@ -33,7 +34,7 @@ flowchart LR
 | `themes/default.json` | The settings of the default theme, as saved in Runner Studio |
 | `reference/default.css` | The CSS that Runner Studio exported for the default theme. A record of the choice: the tokens are the source |
 | `reference/runner-studio.html` | The Runner Studio source: the reference for the token values and the component shapes |
-| `docs/decisions/` | Design decisions: `0001` default theme, `0002` component standards, `0003` component tokens |
+| `docs/decisions/` | Design decisions: `0001` default theme, `0002` component standards, `0003` component tokens, `0004` variants and levels |
 
 ## Use the tokens and the atoms
 
@@ -62,6 +63,7 @@ The gallery reads the token files with relative paths. A browser that opens the 
 |---|---|---|
 | Overview | Overview | All atoms on one page, with an event log |
 | Foundations | Color, Typography, Spacing and radius, Elevation, Motion | The alias tokens in use, each with its path to the global value |
+| Components | Button, Search bar, Settings panel | One page for each component: level, variants and states, parts, API, events, tokens and usage |
 | Tokens | Global, Alias, Component | One page for each level. The gallery reads the rows from the CSS files. "Used by" shows the tokens of the next level that read each token |
 
 ## Phases
@@ -70,8 +72,8 @@ The gallery reads the token files with relative paths. A browser that opens the 
 |---|---|---|
 | 0 | Lock the default theme | Done |
 | 1 | Tokens: global, alias, light and dark | Done |
-| 2 | Atoms as web components with shadow DOM, with component tokens | In progress: button, toggle, field done |
-| 3 | Molecules, organisms, and Runner Home built from the parts | Planned |
+| 2 | Atoms as web components with shadow DOM, with component tokens | In progress: button, toggle, field done. The button has the variants `primary` and `small` |
+| 3 | Molecules, organisms, and Runner Home built from the parts | Started: one molecule and one organism, as examples |
 | 4 | Declarative UI: a screen from JSON | Planned. The JSON shape is not decided |
 
 ## Open questions

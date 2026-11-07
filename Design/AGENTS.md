@@ -24,6 +24,8 @@ Instructions for agents that work in `Design/`. The root `AGENTS.md` also applie
 - An atom reads only its own component tokens, and the alias tokens for font, focus and icon size. A size that only the atom uses goes on `:host` as a custom property.
 - Each atom has one style: the style of the default theme.
 - Add each new atom to the Overview page of the gallery, in all its states.
+- Add each new component to `COMPONENTS` in the gallery and to its menu. The gallery makes the component page from that entry.
+- Follow `docs/decisions/0004-variants-and-levels.md` for variants and levels. An atom never holds another `<vsa-*>` part. A molecule or an organism does not import its parts.
 - If no standard covers a topic, ask the user. Record the answer as a decision in `docs/decisions/`.
 
 ## Look at a change

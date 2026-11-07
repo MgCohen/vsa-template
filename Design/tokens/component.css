@@ -38,4 +38,14 @@
   --vsa-field-placeholder: var(--vsa-color-sunken-muted);
   --vsa-field-focus-ring: var(--vsa-color-accent);
   --vsa-field-disabled-opacity: var(--vsa-opacity-disabled);
+
+  --vsa-search-bar-gap: var(--vsa-space-md);
+
+  --vsa-settings-panel-background: var(--vsa-gradient-surface);
+  --vsa-settings-panel-shadow: var(--vsa-shadow-raise);
+  --vsa-settings-panel-radius: var(--vsa-radius-card);
+  --vsa-settings-panel-text: var(--vsa-color-text);
+  --vsa-settings-panel-muted: var(--vsa-color-muted);
+  --vsa-settings-panel-divider: var(--vsa-color-line);
+  --vsa-settings-panel-gap: var(--vsa-space-xl);
 }

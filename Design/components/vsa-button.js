@@ -1,14 +1,18 @@
 // <vsa-button>: a raised button. API of the HTML <button>: type, disabled, name, value. Event: click.
-// variant="primary" uses the accent. Slot "start" holds an icon. Reads only --vsa-button-* tokens.
+// variant="primary" uses the accent. size="small" gives the small size. Slot "start" holds an icon. Reads only --vsa-button-* tokens.
 const styles = `
-:host { display: inline-flex; vertical-align: middle; -webkit-tap-highlight-color: transparent; }
+:host {
+  --height: 38px; --padding: 14px; --gap: 6px; --font-size: var(--vsa-font-size-body);
+  display: inline-flex; vertical-align: middle; -webkit-tap-highlight-color: transparent;
+}
+:host([size="small"]) { --height: 30px; --padding: 10px; --gap: 4px; --font-size: var(--vsa-font-size-label); }
 :host([hidden]) { display: none; }
 button {
   all: unset; box-sizing: border-box; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px;
+  display: inline-flex; align-items: center; gap: var(--gap); height: var(--height); padding: 0 var(--padding);
   border-radius: var(--vsa-button-radius);
   background: var(--vsa-button-background); color: var(--vsa-button-text); box-shadow: var(--vsa-button-shadow);
-  font-family: var(--vsa-font-body); font-size: var(--vsa-font-size-body); font-weight: var(--vsa-button-font-weight); line-height: 1;
+  font-family: var(--vsa-font-body); font-size: var(--font-size); font-weight: var(--vsa-button-font-weight); line-height: 1;
 }
 :host([variant="primary"]) button {
   background: var(--vsa-button-primary-background); color: var(--vsa-button-primary-text); box-shadow: var(--vsa-button-primary-shadow);
@@ -42,6 +46,8 @@ class VsaButton extends HTMLElement {
   set type(value) { this.setAttribute('type', value); }
   get variant() { return this.getAttribute('variant') || 'default'; }
   set variant(value) { this.setAttribute('variant', value); }
+  get size() { return this.getAttribute('size') || 'default'; }
+  set size(value) { this.setAttribute('size', value); }
   get form() { return this.#internals.form; }
 
   attributeChangedCallback() {
