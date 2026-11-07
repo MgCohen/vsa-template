@@ -21,7 +21,8 @@
   nav.side { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px 40px; border-right: 1px solid var(--vsa-color-line); }
   .brand { display: block; text-decoration: none; margin: 0 6px 16px; font: var(--vsa-font-weight-display) 22px/1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
   .brand small { display: block; margin-top: 6px; font: 500 var(--vsa-font-size-caption)/1.2 var(--vsa-font-body); letter-spacing: 0; color: var(--vsa-color-muted); }
-  .seg { display: inline-flex; gap: 2px; padding: 3px; margin: 0 6px 16px; border-radius: var(--vsa-radius-pill); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--vsa-radius-pill); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
+  .theme-corner { position: fixed; top: 16px; right: 20px; z-index: 10; }
   .seg button { all: unset; cursor: pointer; padding: 5px 10px; border-radius: var(--vsa-radius-pill); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-sunken-muted); }
   .seg button[aria-pressed="true"] { background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); color: var(--vsa-color-text); }
   .seg button:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); }
@@ -49,7 +50,7 @@
   .lvl-tag { color: var(--lvl); background: color-mix(in srgb, var(--lvl) 14%, transparent); }
   .chain .lvl { border-bottom: 2px solid color-mix(in srgb, var(--lvl) 55%, transparent); }
 
-  main { padding: 32px 40px 80px; max-width: 1040px; width: 100%; }
+  main { padding: 64px 40px 80px; max-width: 1040px; width: 100%; }
   .page h1 { margin: 0 0 6px; font: var(--vsa-font-weight-display) var(--vsa-font-size-hero)/1.1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
   .page .lead { margin: 0 0 24px; font-size: var(--vsa-font-size-lead); color: var(--vsa-color-text-secondary); max-width: 70ch; }
   .page h2 { margin: 36px 0 12px; font: 600 var(--vsa-font-size-title)/1.2 var(--vsa-font-body); }
@@ -70,6 +71,11 @@
   th { text-align: left; font-weight: 600; color: var(--vsa-color-muted); padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); }
   td { padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); vertical-align: top; }
   td code { white-space: nowrap; }
+  table.api td.name { width: 60%; }
+  table.api .attr { display: inline-block; margin-left: 8px; font: 11px/1.3 var(--vsa-font-mono); color: var(--vsa-color-muted); }
+  table.api .desc { margin-top: 4px; color: var(--vsa-color-text-secondary); }
+  table.api td.type { width: 28%; }
+  table.api td.type code { display: inline-block; margin: 0 4px 4px 0; }
   .table-wrap { overflow-x: auto; }
   .sw { display: inline-block; width: 28px; height: 20px; border-radius: 6px; vertical-align: middle; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--vsa-color-line); }
   .demo-shadow { width: 64px; height: 36px; border-radius: 10px; background: var(--vsa-gradient-surface); }
@@ -89,22 +95,23 @@
     nav.side .lists { display: none; }
     nav.side.open .lists { display: block; }
     .menu-toggle { display: inline-flex; margin: 0 0 0 6px; }
-    .top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    .top .seg { margin-bottom: 0; }
+    .top { display: flex; align-items: center; gap: 8px; padding-right: 190px; }
+    .top .brand { margin-bottom: 0; }
+    .theme-corner { position: absolute; top: 18px; right: 16px; }
     main { padding: 20px 16px 60px; }
   }
 </style>
 </head>
 <body>
+<div class="seg theme-corner" role="group" aria-label="Theme">
+  <button type="button" data-theme-choice="system">System</button>
+  <button type="button" data-theme-choice="light">Light</button>
+  <button type="button" data-theme-choice="dark">Dark</button>
+</div>
 <div class="shell">
   <nav class="side" aria-label="Design system">
     <div class="top">
       <a class="brand" href="#/">VSA Design System<small>on Web Awesome 3.14.0</small></a>
-      <div class="seg" role="group" aria-label="Theme">
-        <button type="button" data-theme-choice="system">System</button>
-        <button type="button" data-theme-choice="light">Light</button>
-        <button type="button" data-theme-choice="dark">Dark</button>
-      </div>
       <wa-button class="menu-toggle" size="small" appearance="outlined">Menu</wa-button>
     </div>
     <wa-input class="filter" size="small" placeholder="Search pages" aria-label="Search pages" with-clear></wa-input>
@@ -299,11 +306,15 @@ function markCurrent() {
   });
 }
 
+function typeChips(text) {
+  if (!text) return '';
+  return text.split(/\s*\|\s*/).map(t => `<code>${esc(t)}</code>`).join('');
+}
 function apiTables(d) {
-  const table = (title, cols, rows) => rows.length ? `<h3>${title}</h3><div class="table-wrap"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '';
+  const table = (title, cols, rows) => rows.length ? `<h3>${title}</h3><div class="table-wrap"><table class="api"><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '';
   const attrs = (d.members || []).filter(m => m.kind === 'field' && m.privacy !== 'private' && m.privacy !== 'protected' && !m.static && (m.attribute || m.description));
   return `<h2>API</h2>`
-    + table('Attributes and properties', ['Name', 'Attribute', 'Type', 'Default', 'Description'], attrs.map(m => `<tr><td><code>${esc(m.name)}</code></td><td>${m.attribute ? `<code>${esc(m.attribute)}</code>` : ''}</td><td><code>${esc(m.type?.text)}</code></td><td>${m.default ? `<code>${esc(m.default)}</code>` : ''}</td><td>${esc(m.description)}</td></tr>`))
+    + table('Attributes and properties', ['Name and description', 'Type', 'Default'], attrs.map(m => `<tr><td class="name"><code>${esc(m.name)}</code>${m.attribute && m.attribute !== m.name ? `<span class="attr">attribute: ${esc(m.attribute)}</span>` : m.attribute ? '' : '<span class="attr">property only</span>'}<div class="desc">${esc(m.description)}</div></td><td class="type">${typeChips(m.type?.text)}</td><td>${m.default ? `<code>${esc(m.default)}</code>` : ''}</td></tr>`))
     + table('Slots', ['Name', 'Description'], (d.slots || []).map(s => `<tr><td><code>${esc(s.name || '(default)')}</code></td><td>${esc(s.description)}</td></tr>`))
     + table('Events', ['Name', 'Description'], (d.events || []).filter(e => e.name).map(e => `<tr><td><code>${esc(e.name)}</code></td><td>${esc(e.description)}</td></tr>`))
     + table('Methods', ['Name', 'Description'], (d.members || []).filter(m => m.kind === 'method' && !m.privacy && m.description).map(m => `<tr><td><code>${esc(m.name)}()</code></td><td>${esc(m.description)}</td></tr>`))
