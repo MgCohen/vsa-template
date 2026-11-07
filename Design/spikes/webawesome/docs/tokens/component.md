@@ -18,6 +18,13 @@ Two more places hold component values:
 ```tokens ^--wa- @vsa.css
 ```
 
+## Tokens of the VSA components
+
+A VSA component, for example [Dial](#/components/dial), reads its own tokens, `--vsa-<component>-*`. `theme/vsa.css` sets them, also with alias values.
+
+```tokens ^--vsa-dial- @vsa.css
+```
+
 ## Web Awesome defaults that the VSA theme does not set yet
 
 These tokens keep their Web Awesome value. Each one is a decision: keep it, or give it a VSA alias value.

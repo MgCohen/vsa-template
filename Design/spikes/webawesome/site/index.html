@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="../theme/vsa.css">
 <link rel="stylesheet" href="../theme/code.css">
 <script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/webawesome.loader.js"></script>
+<script type="module" src="../components/vsa-dial.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@11.2.0/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
@@ -147,6 +148,7 @@
 </div>
 <script>
 const MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/custom-elements.json';
+const VSA_MANIFEST_URL = '../components/custom-elements.json';
 const DOCS_ROOT = '../docs/';
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -158,10 +160,11 @@ async function loadText(path) {
 }
 let manifestPromise;
 function manifest() {
-  manifestPromise ??= (window.WA_MANIFEST ? Promise.resolve(window.WA_MANIFEST) : fetch(MANIFEST_URL).then(r => r.json()))
-    .then(m => {
-      const list = m.modules.flatMap(x => x.declarations || []).filter(d => d.tagName);
-      return new Map(list.sort((a, b) => a.tagName.localeCompare(b.tagName)).map(d => [d.tagName.replace(/^wa-/, ''), d]));
+  const load = (bundled, url) => bundled ? Promise.resolve(bundled) : fetch(url, { cache: 'no-cache' }).then(r => r.json());
+  manifestPromise ??= Promise.all([load(window.WA_MANIFEST, MANIFEST_URL), load(window.VSA_MANIFEST, VSA_MANIFEST_URL)])
+    .then(manifests => {
+      const list = manifests.flatMap(m => m.modules.flatMap(x => x.declarations || [])).filter(d => d.tagName);
+      return new Map(list.sort((a, b) => a.tagName.localeCompare(b.tagName)).map(d => [d.tagName.replace(/^(wa|vsa)-/, ''), d]));
     });
   return manifestPromise;
 }
@@ -376,7 +379,7 @@ async function componentPage(name) {
   const title = doc?.title || titleOf(name);
   page.innerHTML = `<h1>${esc(title)}</h1>
     <p class="lead">${esc(d?.summary || doc?.summary || '')}</p>
-    <div class="meta">${d ? `<code>&lt;wa-${esc(name)}&gt;</code><wa-badge variant="neutral" appearance="filled">${esc(d.status || '')}</wa-badge><a href="${esc(d.documentation)}" target="_blank" rel="noopener">Web Awesome docs</a>` : ''}
+    <div class="meta">${d ? `<code>&lt;${esc(d.tagName)}&gt;</code>${d.tagName.startsWith('vsa-') ? '<wa-badge variant="brand" appearance="filled">VSA component</wa-badge>' : `<wa-badge variant="neutral" appearance="filled">${esc(d.status || '')}</wa-badge>`}${d.documentation ? `<a href="${esc(d.documentation)}" target="_blank" rel="noopener">Web Awesome docs</a>` : ''}` : ''}
     ${doc ? '<wa-badge variant="brand">VSA usage page</wa-badge>' : '<wa-badge variant="warning" appearance="filled">No VSA usage page yet</wa-badge>'}</div>`;
   if (doc) page.append(renderMarkdown(await loadText('components/' + name + '.md')));
   if (d) page.insertAdjacentHTML('beforeend', apiTables(d));

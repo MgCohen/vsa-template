@@ -45,6 +45,10 @@
   ],
   "components": [
     {
+      "name": "dial",
+      "title": "Dial"
+    },
+    {
       "name": "switch",
       "title": "Switch"
     }
@@ -132,6 +136,7 @@
     "tooltip": "Feedback",
     "tree": "Navigation",
     "tree-item": "Navigation",
-    "zoomable-frame": "Media"
+    "zoomable-frame": "Media",
+    "dial": "Feedback"
   }
 }

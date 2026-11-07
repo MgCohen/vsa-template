@@ -9,6 +9,8 @@ The spike does not change our own atoms in `components/`.
 | Path | Content |
 |---|---|
 | `theme/vsa.css` | Part 1: each `--wa-*` token gets a VSA alias value. Part 2: the raised and carved looks, with `::part()` |
+| `components/vsa-<name>.js` | A VSA component: a custom element with shadow DOM, plain JavaScript, no build. Now: `vsa-dial` |
+| `components/custom-elements.json` | The API of the VSA components, in the Custom Elements Manifest format. The site makes the API tables from it |
 | `theme/code.css` | The code block: alias tokens for code colors, and the dark IDE look of `pre.vsa-code` |
 | `site/index.html` | The docs site: side menu, foundations, one page for each component, light and dark |
 | `docs/index.json` | The menu: the foundations pages and the components that have a usage page |
@@ -30,9 +32,10 @@ The spike does not change our own atoms in `components/`.
 2. Web Awesome `styles/themes/default.css` from jsDelivr: their default tokens, in cascade layers.
 3. `theme/vsa.css`: not in a layer, so it wins over all Web Awesome layers.
 4. `theme/code.css`: the code block.
-5. Web Awesome `webawesome.loader.js` from jsDelivr: it loads each component when the page uses it.
-6. `marked` 11.2.0 from jsDelivr: it changes Markdown to HTML.
-7. `highlight.js` 11.9.0 from cdnjs: it gives the code colors.
+5. `components/vsa-dial.js`: it defines `<vsa-dial>`.
+6. Web Awesome `webawesome.loader.js` from jsDelivr: it loads each component when the page uses it.
+7. `marked` 11.2.0 from jsDelivr: it changes Markdown to HTML.
+8. `highlight.js` 11.9.0 from cdnjs: it gives the code colors.
 
 The spike takes only the prebuilt Web Awesome files. It does not use the Web Awesome source, build, docs or tests.
 
@@ -42,13 +45,25 @@ The spike takes only the prebuilt Web Awesome files. It does not use the Web Awe
 2. Start with "When to use it". Then write "Look", "Variants" and "VSA tokens and looks".
 3. Add the component to `components` in `docs/index.json`.
 
+## Add a VSA component
+
+Do this only for a component that Web Awesome does not have. [Dial](site/index.html#/components/dial) is the sample.
+
+1. Write `components/vsa-<name>.js`: a custom element with shadow DOM. Use the API names of the HTML element or the Web Awesome component that is nearest.
+2. Read only `--vsa-<name>-*` tokens, and the alias tokens for font and focus.
+3. Set each `--vsa-<name>-*` token in Part 1 of `theme/vsa.css`, with an alias value.
+4. Add the API to `components/custom-elements.json`.
+5. Load the file in `site/index.html`, and add the component to the gallery.
+6. Write its usage page, as for a Web Awesome component.
+
 ## Open questions
 
 - Keep the CDN, or keep a copy of the prebuilt files in `Design/vendor/`. A Blazor app with no internet access needs a copy.
 - Two-way binding in Blazor needs a thin Razor wrapper for each form control. The spike does not test Blazor.
 - The VSA theme does not set the Web Awesome space scale. Decide if it uses the VSA spacing.
 - The badge default color is the brand color. Decide if the VSA default is neutral.
-- The dial and the dots have no Web Awesome component. Write them as VSA components with the same rules.
+- The dots have no Web Awesome component. Write them as a VSA component, as the dial.
+- The Runner reference shows a ring with more than one color: done, pending and failed. Decide if it is a `segments` API of the dial or a separate component.
 
 ## Run it
 

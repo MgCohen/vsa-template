@@ -1,7 +1,7 @@
 /*
   Spike: the VSA style on Web Awesome 3.14.0 components.
   Load order: tokens/fonts.css, tokens/global.css, tokens/alias.css, Web Awesome themes/default.css, this file.
-  Part 1 gives each --wa-* token a VSA alias value. The selector includes [data-theme], so a themed area gets its own values.
+  Part 1 gives each --wa-* token a VSA alias value, and sets the --vsa-<component>-* tokens of the VSA components. The selector includes [data-theme], so a themed area gets its own values.
   Part 2 adds the raised and carved looks with ::part(). Tokens cannot give these looks.
   This file is not in a cascade layer, so it wins over all Web Awesome layers.
 */
@@ -117,6 +117,21 @@
   --wa-panel-border-radius: var(--vsa-radius-card);
 
   --wa-button-transform-active: translateY(1px);
+
+  --vsa-dial-track: var(--vsa-color-sunken);
+  --vsa-dial-track-border: var(--vsa-border-sunken);
+  --vsa-dial-track-shadow: var(--vsa-shadow-dial);
+  --vsa-dial-track-shadow-small: var(--vsa-shadow-carve);
+  --vsa-dial-indicator: var(--vsa-color-accent);
+  --vsa-dial-indicator-success: var(--vsa-color-state-done);
+  --vsa-dial-indicator-warning: var(--vsa-color-state-pending);
+  --vsa-dial-indicator-danger: var(--vsa-color-state-failed);
+  --vsa-dial-glow: var(--vsa-color-accent-glow);
+  --vsa-dial-glow-blur: calc(var(--vsa-effect-glow-strength) * 8px);
+  --vsa-dial-hole: var(--vsa-gradient-hole);
+  --vsa-dial-hole-shadow: var(--vsa-shadow-hole);
+  --vsa-dial-hole-shadow-small: var(--vsa-shadow-raise-sm);
+  --vsa-dial-text: var(--vsa-color-text);
 }
 
 /* Part 2: looks. Raised = a surface over the canvas. Carved = a channel cut into the surface. */
