@@ -29,6 +29,8 @@ Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script add
 
 The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>`, else startup fails.
 
+`builder.AddVsa()` (VSA.Host) adds the web parts and calls `services.AddVsa(configuration, modules)` (VSA.Composition). VSA.Composition has no ASP.NET Core, so a Unity or console app calls it directly. Put each registration that is not about HTTP in VSA.Composition. See `docs/composition.md`.
+
 A presenter shows the events of its own module: it implements `IPresenterEvent<TEvent>`, and it gets each event, also when no view shows it. A view only renders: it inherits `PresenterWatcher` (one or more presenters) or `PresenterComponent<T>` (one presenter). A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
 
 ## Tests
@@ -40,6 +42,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Framework.Tests/` | Tests of one framework layer. One folder for each area, for example `Settings/`, `Host/` |
 | `tests/Consumer.Tests/`  | Tests that pack the framework and build a copy of a sample as a consumer  |
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
+| `tests/Composition.Tests/` | Tests of VSA.Composition in a plain `ServiceProvider`, with no ASP.NET Core |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
 
@@ -97,7 +100,7 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 A tag `v<version>` publishes all packages to GitHub Packages (`.github/workflows/publish.yml`). Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass.
 
-Eight framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Infrastructure and VSA.Module (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
+Nine framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Infrastructure, VSA.Module and VSA.Composition (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
 
 ## Scaffolding: the vsa tool
 
