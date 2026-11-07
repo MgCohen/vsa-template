@@ -33,14 +33,13 @@
   details.section[open] > summary::before { transform: rotate(45deg) translate(-2px, -2px); }
   details.section > summary:hover { background: var(--vsa-color-head-tint); }
   details.section > summary:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); }
-  details.section > summary .legend { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); }
   nav.side ul { list-style: none; margin: 0; padding: 0; }
   nav.side li a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--vsa-color-text-secondary); }
   nav.side li a:hover { background: var(--vsa-color-head-tint); }
   nav.side li a[aria-current="page"] { background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); color: var(--vsa-color-text); }
-  nav.side li a.api-only { color: var(--vsa-color-muted); }
+  nav.side ul.marked li a { justify-content: flex-start; }
+  nav.side .mark { flex: none; width: 14px; text-align: center; font-weight: 700; color: var(--vsa-color-accent); }
   .sub-group { margin: 10px 8px 2px; font-size: var(--vsa-font-size-caption); font-weight: 600; color: var(--vsa-color-text-secondary); }
-  .legend { text-transform: none; letter-spacing: 0; font-weight: 400; }
   .filter { margin: 0 6px 8px; }
   .lvl-tag { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
   .lvl-global { --lvl: var(--vsa-color-state-new); }
@@ -270,7 +269,8 @@ const titleOf = name => name.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCas
 async function buildNav() {
   const [ix, all] = await Promise.all([docsIndex(), manifest()]);
   const documented = new Set(ix.components.map(c => c.name));
-  const link = (href, label, cls = '') => `<li><a href="${href}" class="${cls}">${esc(label)}</a></li>`;
+  const link = (href, label) => `<li><a href="${href}">${esc(label)}</a></li>`;
+  const markedLink = (href, label, done) => `<li><a href="${href}"><span class="mark" ${done ? 'title="Has a VSA usage page"' : 'aria-hidden="true"'}>${done ? '✓' : ''}</span><span class="label">${esc(label)}</span></a></li>`;
   const names = [...new Set([...all.keys(), ...documented])];
   const byCategory = ix.categoryOrder.map(cat => [cat, names.filter(n => (ix.categories[n] || 'Helpers') === cat).sort()]);
   const section = (id, title, body, note = '') => `<details class="section" data-section="${id}"${folded.has(id) ? '' : ' open'}><summary>${esc(title)}${note}</summary>${body}</details>`;
@@ -278,7 +278,7 @@ async function buildNav() {
     <ul>${link('#/', 'Overview')}${link('#/gallery', 'Gallery')}</ul>
     ${section('foundations', 'Foundations', `<ul>${ix.foundations.map(f => link('#/foundations/' + f.name, f.title)).join('')}</ul>`)}
     ${section('tokens', 'Tokens', `<ul>${ix.tokens.map(t => link('#/tokens/' + t.name, t.title)).join('')}</ul>`)}
-    ${section('components', 'Components', byCategory.map(([cat, list]) => `<div class="sub-group">${esc(cat)}</div><ul>${list.map(n => link('#/components/' + n, ix.components.find(c => c.name === n)?.title || titleOf(n), documented.has(n) ? '' : 'api-only')).join('')}</ul>`).join(''), ' <span class="legend">dim = API only</span>')}`;
+    ${section('components', 'Components', byCategory.map(([cat, list]) => `<div class="sub-group">${esc(cat)}</div><ul class="marked">${list.map(n => markedLink('#/components/' + n, ix.components.find(c => c.name === n)?.title || titleOf(n), documented.has(n))).join('')}</ul>`).join(''))}`;
   document.querySelectorAll('nav.side details.section').forEach(d => d.addEventListener('toggle', () => {
     if (searching) return;
     if (d.open) folded.delete(d.dataset.section); else folded.add(d.dataset.section);
