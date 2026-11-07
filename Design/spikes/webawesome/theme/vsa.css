@@ -141,9 +141,14 @@ wa-button[variant="brand"]:not(:state(disabled), [appearance="plain"]):active::p
 }
 
 /* Raised: panels */
-wa-card {
+wa-card,
+wa-details:not([appearance='plain'])::part(details) {
   background: var(--vsa-gradient-surface);
   box-shadow: var(--vsa-shadow-raise);
+}
+
+wa-details::part(icon) {
+  color: var(--vsa-color-accent);
 }
 
 /* Carved: text fields */
