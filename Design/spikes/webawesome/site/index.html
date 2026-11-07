@@ -80,7 +80,8 @@
   .example details[open] summary::before { transform: rotate(45deg) translate(-2px, -2px); }
   .example summary:hover { color: var(--vsa-color-text); }
   .example summary:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: -2px; }
-  .example details pre { margin: 0 20px 20px; }
+  .example details[open] { padding-bottom: 20px; }
+  .example details pre { margin: 0 20px; }
 
   table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: var(--vsa-font-size-label); }
   th { text-align: left; font-weight: 600; color: var(--vsa-color-muted); padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); }
