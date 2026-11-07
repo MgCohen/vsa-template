@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
 using Shelf;
+using VSA.App;
 using VSA.Host;
 
 namespace Framework.Tests.Host;

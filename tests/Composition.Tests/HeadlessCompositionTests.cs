@@ -22,7 +22,8 @@ namespace Composition.Tests;
 public sealed class HeadlessCompositionTests {
     [Test]
     public void The_test_app_runs_with_no_AspNetCore_framework() {
-        var runtimeConfig = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Composition.Tests.runtimeconfig.json"));
+        var runtimeConfig = File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "Composition.Tests.runtimeconfig.json"));
 
         Assert.That(runtimeConfig, Does.Not.Contain("Microsoft.AspNetCore"));
         Assert.That(AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().Name),
@@ -31,7 +32,8 @@ public sealed class HeadlessCompositionTests {
 
     [Test]
     public async Task A_command_goes_through_two_modules_in_a_plain_service_provider() {
-        await using var provider = Build(new CardsModule(), new ResourcesModule());
+        await using var provider = Build(services =>
+            services.AddVsa(EmptyConfiguration(), new CardsModule(), new ResourcesModule()));
         await using var scope = provider.CreateAsyncScope();
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
@@ -41,17 +43,42 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
+    public async Task Core_then_modules_gives_the_same_app_as_AddVsa() {
+        await using var provider = Build(services => services
+            .AddVsaCore()
+            .AddVsaModules(EmptyConfiguration(), new CardsModule(), new ResourcesModule()));
+        await using var scope = provider.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
+
+        Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
+    }
+
+    [Test]
+    public void Modules_before_core_stops_the_composition() {
+        var services = new ServiceCollection();
+
+        var error = Assert.Throws<InvalidOperationException>(
+            () => services.AddVsaModules(EmptyConfiguration(), new SignalsModule()));
+
+        Assert.That(error.Message, Does.StartWith("AddVsaModules needs IIntegrationEventPublisher and ICommandSender.")
+            .And.EndWith("Call AddVsaCore before AddVsaModules, or call AddVsa."));
+    }
+
+    [Test]
     public void A_command_with_two_handlers_stops_the_composition() {
         var services = new ServiceCollection();
 
-        var error = Assert.Throws<InvalidOperationException>(() => services.AddVsa(EmptyConfiguration(), new EchoModule()));
+        var error = Assert.Throws<InvalidOperationException>(
+            () => services.AddVsa(EmptyConfiguration(), new EchoModule()));
 
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:"));
     }
 
     [Test]
     public async Task An_event_reaches_its_handler_and_a_live_presenter() {
-        await using var provider = Build(new SignalsModule());
+        await using var provider = Build(services => services.AddVsa(EmptyConfiguration(), new SignalsModule()));
         await using var scope = provider.CreateAsyncScope();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
 
@@ -71,11 +98,11 @@ public sealed class HeadlessCompositionTests {
         Assert.That(services.Any(s => s.ServiceType == typeof(IBus)), Is.False);
     }
 
-    static ServiceProvider Build(params VSA.Module.Module[] modules) {
+    static ServiceProvider Build(Action<IServiceCollection> addVsa) {
         var services = new ServiceCollection();
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        services.AddSingleton<IBus, NoRequestsBus>();
-        services.AddVsa(EmptyConfiguration(), modules);
+        services.AddSingleton<IBus>(new NoRequestsBus());
+        addVsa(services);
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 

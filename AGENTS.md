@@ -29,7 +29,7 @@ Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script add
 
 The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>`, else startup fails.
 
-`builder.AddVsa()` (VSA.Host) adds the web parts and calls `services.AddVsa(configuration, modules)` (VSA.Composition). VSA.Composition has no ASP.NET Core, so a Unity or console app calls it directly. Put each registration that is not about HTTP in VSA.Composition. See `docs/composition.md`.
+`builder.AddVsa()` (VSA.App) calls `AddVsaCore` and `AddVsaModules` (VSA.Composition) and `AddVsaHost` (VSA.Host). VSA.Composition has no ASP.NET Core, so a Unity or console app calls it directly. Put each registration that is not about HTTP in VSA.Composition, and each web registration in VSA.Host. See `docs/composition.md`.
 
 A presenter shows the events of its own module: it implements `IPresenterEvent<TEvent>`, and it gets each event, also when no view shows it. A view only renders: it inherits `PresenterWatcher` (one or more presenters) or `PresenterComponent<T>` (one presenter). A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
 

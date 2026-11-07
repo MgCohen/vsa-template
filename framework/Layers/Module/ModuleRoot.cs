@@ -31,8 +31,6 @@ public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<st
 
     public static ModuleRoot Of(Module module) => Of(module.GetType().Assembly);
 
-    // The assembly of one layer, for example "Handlers.Requests". A layer that the module does not have gives null.
-    // A recorded layer that does not load is an error.
     public Assembly? LayerAssembly(string layer) {
         var name = $"{Name}.{layer}";
         return Layers.Contains(name) ? Assembly.Load(name) : null;

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Resources;
 using Resources.Domain.Shared;
 using VSA.Contracts.Commands;
+using VSA.App;
 using VSA.Host;
 
 namespace Framework.Tests.Commands;

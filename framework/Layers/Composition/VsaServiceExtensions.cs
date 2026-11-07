@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Contracts.Commands;
+using VSA.Contracts.Events;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Module;
@@ -13,15 +15,27 @@ namespace VSA.Composition;
 
 public static class VsaServiceExtensions {
     public static IServiceCollection AddVsa(this IServiceCollection services, IConfiguration configuration) =>
-        services.AddVsa(configuration, [.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())]);
+        services.AddVsa(configuration, DiscoveredModules());
 
     public static IServiceCollection AddVsa(
-        this IServiceCollection services, IConfiguration configuration, params VSA.Module.Module[] modules) {
+        this IServiceCollection services, IConfiguration configuration, params VSA.Module.Module[] modules) =>
+        services.AddVsaCore().AddVsaModules(configuration, modules);
+
+    public static IServiceCollection AddVsaCore(this IServiceCollection services) {
         services.AddVsaEvents();
         services.AddVsaCommands();
 #if NET
         services.AddVsaLivePresenters();
 #endif
+        return services;
+    }
+
+    public static IServiceCollection AddVsaModules(this IServiceCollection services, IConfiguration configuration) =>
+        services.AddVsaModules(configuration, DiscoveredModules());
+
+    public static IServiceCollection AddVsaModules(
+        this IServiceCollection services, IConfiguration configuration, params VSA.Module.Module[] modules) {
+        RequireCore(services);
         var commandHandlers = new Dictionary<Type, Type>();
         foreach (var module in modules) {
             var root = ModuleRoot.Of(module);
@@ -33,6 +47,19 @@ public static class VsaServiceExtensions {
             module.Configure(new ModuleBuilder(module.Name, services, configuration));
         }
         return services;
+    }
+
+    public static VSA.Module.Module[] DiscoveredModules() =>
+        [.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())];
+
+    static void RequireCore(IServiceCollection services) {
+        Type[] coreServices = [typeof(IIntegrationEventPublisher), typeof(ICommandSender)];
+        var missing = coreServices.Where(core => !services.Any(s => s.ServiceType == core)).ToArray();
+        if (missing.Length > 0) {
+            throw new InvalidOperationException(
+                $"AddVsaModules needs {string.Join(" and ", missing.Select(m => m.Name))}. "
+                + "Call AddVsaCore before AddVsaModules, or call AddVsa.");
+        }
     }
 
     static void AddEventHandlers(IServiceCollection services, ModuleRoot root) {

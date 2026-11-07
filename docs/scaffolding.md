@@ -65,7 +65,7 @@ The templates build in this repository in source mode, as `samples/` does. The t
 | Source mode (repository) | Package mode (consumer) |
 |---|---|
 | `<Import ... VSA.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="VSA.Sdk" />` |
-| `<ProjectReference Include="$(VsaFrameworkSourceDir).../VSA.Host.csproj" />` | `<PackageReference Include="VSA.Host" Version="<tool version>" />` |
+| `<ProjectReference Include="$(VsaFrameworkSourceDir).../VSA.App.csproj" />` | `<PackageReference Include="VSA.App" Version="<tool version>" />` |
 
 If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
 

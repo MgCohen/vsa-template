@@ -4,22 +4,26 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
 using VSA.Module;
 using VSA.Presenters;
 
 namespace VSA.Host;
 
 public static class VsaHostExtensions {
-    public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder) =>
-        builder.AddVsa([.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())]);
-
-    public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder, params VSA.Module.Module[] modules) {
-        var services = builder.Services;
+    public static IServiceCollection AddVsaHost(this IServiceCollection services, params VSA.Module.Module[] modules) {
         services.AddVsaBus(LoopbackAddress);
-        services.AddVsa(builder.Configuration, modules);
-        AddRequestEndpoints(services, modules);
-        return builder;
+        Assembly[] requestHandlers = [.. modules
+            .Select(module => ModuleRoot.Of(module).LayerAssembly("Handlers.Requests"))
+            .OfType<Assembly>()];
+        if (requestHandlers.Length == 0) {
+            return services;
+        }
+        services.AddFastEndpoints(options => {
+            options.DisableAutoDiscovery = true;
+            options.Assemblies = requestHandlers;
+        });
+        services.AddSingleton<RequestEndpoints>();
+        return services;
     }
 
     public static WebApplication MapVsaRequests(this WebApplication app) {
@@ -27,20 +31,6 @@ public static class VsaHostExtensions {
             app.UseFastEndpoints();
         }
         return app;
-    }
-
-    static void AddRequestEndpoints(IServiceCollection services, VSA.Module.Module[] modules) {
-        Assembly[] requestHandlers = [.. modules
-            .Select(module => ModuleRoot.Of(module).LayerAssembly("Handlers.Requests"))
-            .OfType<Assembly>()];
-        if (requestHandlers.Length == 0) {
-            return;
-        }
-        services.AddFastEndpoints(options => {
-            options.DisableAutoDiscovery = true;
-            options.Assemblies = requestHandlers;
-        });
-        services.AddSingleton<RequestEndpoints>();
     }
 
     static Uri LoopbackAddress(IServiceProvider provider) {
