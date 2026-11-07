@@ -92,7 +92,7 @@ The app selects the container that reads the list:
 | DryIoc, Lamar, SimpleInjector | Their own integration packages |
 | VContainer | No support. The app needs a bridge |
 
-A VContainer bridge does two jobs: it copies each `ServiceDescriptor` into `IContainerBuilder`, and it wraps `IObjectResolver` as `IServiceProvider`.
+A Unity app that uses VContainer writes its own bridge. The bridge does two jobs: it copies each `ServiceDescriptor` into `IContainerBuilder`, and it wraps `IObjectResolver` as `IServiceProvider`.
 
 ## Module settings
 
@@ -113,9 +113,9 @@ A VContainer bridge does two jobs: it copies each `ServiceDescriptor` into `ICon
 ## Non-goals
 
 - No VSA container interface. Reason: `IServiceCollection` and `IServiceProvider` are already container-neutral, and most containers read them.
+- No VContainer bridge in the framework. Reason: only a Unity app with VContainer needs it, so the app keeps it.
 
 ## Open questions
 
 - In-process bus: `HttpBus` is the only `IBus`. A request handler is a FastEndpoints endpoint, so a request needs HTTP.
 - Views: `AddVsaViews` is an extension of `WebApplicationBuilder`. It can become an installer of `VSA.Views`.
-- VContainer bridge: an optional package in this repository, or code in `vsa-consumer-unity`?
