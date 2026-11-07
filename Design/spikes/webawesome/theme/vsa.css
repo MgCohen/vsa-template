@@ -122,21 +122,21 @@
 /* Part 2: looks. Raised = a surface over the canvas. Carved = a channel cut into the surface. */
 
 /* Raised: buttons */
-wa-button:not([appearance="plain"], [appearance="outlined"])::part(base) {
+wa-button:not([appearance="plain"], [appearance="outlined"])::part(button) {
   background: var(--vsa-gradient-surface);
   color: var(--vsa-color-text);
   box-shadow: var(--vsa-shadow-raise);
   border-color: transparent;
 }
-wa-button[variant="brand"]:not([appearance="plain"], [appearance="outlined"])::part(base) {
+wa-button[variant="brand"]:not([appearance="plain"], [appearance="outlined"])::part(button) {
   background: var(--vsa-color-accent);
   color: var(--vsa-color-on-accent);
   box-shadow: var(--vsa-shadow-raise), var(--vsa-shadow-glow);
 }
-wa-button:not(:state(disabled), [appearance="plain"]):active::part(base) {
+wa-button:not(:state(disabled), [appearance="plain"]):active::part(button) {
   box-shadow: var(--vsa-shadow-press);
 }
-wa-button[variant="brand"]:not(:state(disabled), [appearance="plain"]):active::part(base) {
+wa-button[variant="brand"]:not(:state(disabled), [appearance="plain"]):active::part(button) {
   box-shadow: var(--vsa-shadow-press), var(--vsa-shadow-glow);
 }
 
@@ -147,8 +147,8 @@ wa-card {
 }
 
 /* Carved: text fields */
-wa-input::part(base),
-wa-textarea::part(base),
+wa-input::part(input-wrapper),
+wa-textarea::part(textarea-wrapper),
 wa-select::part(combobox) {
   box-shadow: var(--vsa-shadow-carve);
   outline: var(--vsa-border-sunken);
