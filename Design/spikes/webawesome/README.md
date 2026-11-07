@@ -9,16 +9,18 @@ The spike does not change our own atoms in `components/`.
 | Path | Content |
 |---|---|
 | `theme/vsa.css` | Part 1: each `--wa-*` token gets a VSA alias value. Part 2: the raised and carved looks, with `::part()` |
+| `theme/code.css` | The code block: alias tokens for code colors, and the dark IDE look of `pre.vsa-code` |
 | `site/index.html` | The docs site: side menu, foundations, one page for each component, light and dark |
 | `docs/index.json` | The menu: the foundations pages and the components that have a usage page |
 | `docs/overview.md` | The first page |
-| `docs/foundations/*.md` | Color, typography, spacing, radius, elevation, motion |
+| `docs/foundations/*.md` | Color, typography, spacing, radius, elevation, motion, code |
 | `docs/components/<name>.md` | The usage page of one component: when to use it, variants as live examples, VSA tokens |
 
 ## How the site works
 
 - The site has no build. It reads the Markdown files in the browser.
 - A code block with the language `html preview` shows the live HTML and its code.
+- Each other code block is dark, as in an IDE, with highlight.js colors. Its text scales down until the longest line fits, to 8 px minimum.
 - A code block with the language `tokens <regex>` shows a table of the matching tokens. Each row shows the path to the source value, and the light and dark values.
 - The API tables (attributes, slots, events, parts, CSS properties, states) come from the Web Awesome `custom-elements.json`. Each of the 73 components gets an API page, also with no usage page.
 
@@ -27,8 +29,10 @@ The spike does not change our own atoms in `components/`.
 1. `tokens/fonts.css`, `tokens/global.css`, `tokens/alias.css`: our values, unchanged.
 2. Web Awesome `styles/themes/default.css` from jsDelivr: their default tokens, in cascade layers.
 3. `theme/vsa.css`: not in a layer, so it wins over all Web Awesome layers.
-4. Web Awesome `webawesome.loader.js` from jsDelivr: it loads each component when the page uses it.
-5. `marked` 11.2.0 from jsDelivr: it changes Markdown to HTML.
+4. `theme/code.css`: the code block.
+5. Web Awesome `webawesome.loader.js` from jsDelivr: it loads each component when the page uses it.
+6. `marked` 11.2.0 from jsDelivr: it changes Markdown to HTML.
+7. `highlight.js` 11.9.0 from cdnjs: it gives the code colors.
 
 The spike takes only the prebuilt Web Awesome files. It does not use the Web Awesome source, build, docs or tests.
 

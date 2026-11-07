@@ -23,6 +23,10 @@
     {
       "name": "motion",
       "title": "Motion"
+    },
+    {
+      "name": "code",
+      "title": "Code"
     }
   ],
   "tokens": [

@@ -35,7 +35,9 @@ A switch with no text must have an `aria-label`.
 ### With a hint
 
 ```html preview
-<wa-switch hint="Runs the tests after each build">Auto test</wa-switch>
+<wa-switch hint="Runs the tests after each build">
+  Auto test
+</wa-switch>
 ```
 
 ### Sizes
@@ -60,7 +62,10 @@ The switch sends `input` and then `change` when the user changes it. Read the st
 ```html
 <wa-switch id="sync">Sync</wa-switch>
 <script>
-  document.getElementById('sync').addEventListener('change', e => console.log(e.target.checked));
+  const sync = document.getElementById('sync');
+  sync.addEventListener('change', e => {
+    console.log(e.target.checked);
+  });
 </script>
 ```
 

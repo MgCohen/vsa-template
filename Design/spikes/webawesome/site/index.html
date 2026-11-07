@@ -9,8 +9,10 @@
 <link rel="stylesheet" href="../../../tokens/alias.css">
 <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/styles/themes/default.css">
 <link rel="stylesheet" href="../theme/vsa.css">
+<link rel="stylesheet" href="../theme/code.css">
 <script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/webawesome.loader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@11.2.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { background: var(--vsa-gradient-canvas); color: var(--vsa-color-text); }
@@ -66,8 +68,7 @@
   .page h3 { margin: 24px 0 8px; font: 600 var(--vsa-font-size-lead)/1.2 var(--vsa-font-body); }
   .page p, .page li { max-width: 75ch; }
   .page code { font: 12px/1.4 var(--vsa-font-mono); background: var(--vsa-color-head-tint); padding: 1px 5px; border-radius: 5px; }
-  .page pre { margin: 0; padding: 14px; overflow-x: auto; background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); border-radius: var(--vsa-radius-control); }
-  .page pre code { background: none; padding: 0; color: var(--vsa-color-sunken-text); }
+  .page pre.vsa-code { margin: 12px 0 20px; }
   .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
 
   .example { margin: 12px 0 20px; border-radius: var(--vsa-radius-card); background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise); }
@@ -81,7 +82,12 @@
   .example summary:hover { color: var(--vsa-color-text); }
   .example summary:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: -2px; }
   .example details[open] { padding-bottom: 20px; }
-  .example details pre { margin: 0 20px; }
+  .example details pre.vsa-code { margin: 0 20px; }
+  @media (max-width: 600px) {
+    .example details pre.vsa-code { margin: 0 8px; }
+    .example details[open] { padding-bottom: 8px; }
+    .page pre.vsa-code { padding: 10px; }
+  }
 
   table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: var(--vsa-font-size-label); }
   th { text-align: left; font-weight: 600; color: var(--vsa-color-muted); padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); }
@@ -106,7 +112,7 @@
 
   .menu-toggle { display: none; }
   @media (max-width: 760px) {
-    .shell { grid-template-columns: 1fr; }
+    .shell { grid-template-columns: minmax(0, 1fr); }
     nav.side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--vsa-color-line); padding: 14px 16px; }
     nav.side .lists { display: none; }
     nav.side.open .lists { display: block; }
@@ -202,7 +208,7 @@ function tokens() {
   return tokenMap;
 }
 /* The level of a token is the file that declares it. */
-const LEVELS = { 'global.css': 'Global', 'alias.css': 'Alias', 'vsa.css': 'Component' };
+const LEVELS = { 'global.css': 'Global', 'alias.css': 'Alias', 'code.css': 'Alias', 'vsa.css': 'Component' };
 function level(file) { return LEVELS[file] || 'Web Awesome default'; }
 function chain(name) {
   const map = tokens(); const steps = [name]; let v = map.get(name)?.value;
@@ -257,14 +263,37 @@ function tokenTable(query) {
 marked.use({ renderer: {
   code(code, info) {
     const lang = (info || '').trim();
-    if (lang === 'html preview') return `<div class="example"><div class="preview">${code}</div><details><summary>Code</summary><pre><code>${esc(code)}</code></pre></details></div>`;
+    if (lang === 'html preview') return `<div class="example"><div class="preview">${code}</div><details><summary>Code</summary>${codeBlock(code, 'html')}</details></div>`;
     if (lang.startsWith('tokens ')) return `<div data-tokens="${esc(lang.slice(7).trim())}"></div>`;
-    return false;
+    return codeBlock(code, lang.split(/\s+/)[0]);
   }
 } });
+/* Code blocks: dark, as in an IDE, with highlight.js colors. The text scales down until the longest line fits. */
+function codeBlock(code, lang) {
+  const language = lang && window.hljs?.getLanguage(lang) ? lang : '';
+  const html = language ? hljs.highlight(code, { language, ignoreIllegals: true }).value : esc(code);
+  return `<pre class="vsa-code"><code${language ? ` class="hljs language-${esc(language)}"` : ''}>${html}</code></pre>`;
+}
+function fitCode(root = document) {
+  root.querySelectorAll('pre.vsa-code').forEach(pre => {
+    if (!pre.offsetParent) return;
+    pre.style.fontSize = '';
+    const cs = getComputedStyle(pre);
+    const base = parseFloat(cs.fontSize);
+    const min = parseFloat(cs.getPropertyValue('--vsa-font-size-code-min')) || 8;
+    const room = pre.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const need = pre.firstElementChild.offsetWidth;
+    if (need > room) pre.style.fontSize = Math.max(min, Math.floor(base * room / need * 10) / 10) + 'px';
+  });
+}
+let fitFrame;
+addEventListener('resize', () => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(() => fitCode()); });
+document.addEventListener('toggle', e => { if (e.target instanceof HTMLDetailsElement) fitCode(e.target); }, true);
+document.fonts?.ready.then(() => fitCode());
 function renderMarkdown(md) {
   const div = document.createElement('div');
   div.innerHTML = marked.parse(md);
+  div.querySelectorAll('table').forEach(t => { const wrap = document.createElement('div'); wrap.className = 'table-wrap'; t.replaceWith(wrap); wrap.append(t); });
   return div;
 }
 
@@ -375,6 +404,7 @@ async function route() {
   main.replaceChildren(...page.childNodes);
   main.querySelector('h1 + p')?.classList.add('lead');
   markCurrent();
+  fitCode(main);
   document.querySelector('nav.side').classList.remove('open');
   window.scrollTo(0, 0);
 }
