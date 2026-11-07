@@ -25,7 +25,14 @@
   .seg button { all: unset; cursor: pointer; padding: 5px 10px; border-radius: var(--vsa-radius-pill); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-sunken-muted); }
   .seg button[aria-pressed="true"] { background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); color: var(--vsa-color-text); }
   .seg button:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); }
-  .group { margin: 14px 6px 6px; font: 600 var(--vsa-font-size-caption)/1 var(--vsa-font-body); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-muted); }
+  details.section { margin-top: 10px; border-top: 1px solid var(--vsa-color-line); padding-top: 6px; }
+  details.section > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 8px; font: 700 var(--vsa-font-size-label)/1 var(--vsa-font-body); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-text); }
+  details.section > summary::-webkit-details-marker { display: none; }
+  details.section > summary::before { content: ""; width: 7px; height: 7px; border-right: 2px solid var(--vsa-color-accent); border-bottom: 2px solid var(--vsa-color-accent); transform: rotate(-45deg); transition: transform var(--vsa-motion-fast); flex: none; }
+  details.section[open] > summary::before { transform: rotate(45deg) translate(-2px, -2px); }
+  details.section > summary:hover { background: var(--vsa-color-head-tint); }
+  details.section > summary:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); }
+  details.section > summary .legend { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: var(--vsa-font-size-caption); color: var(--vsa-color-muted); }
   nav.side ul { list-style: none; margin: 0; padding: 0; }
   nav.side li a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--vsa-color-text-secondary); }
   nav.side li a:hover { background: var(--vsa-color-head-tint); }
@@ -249,27 +256,40 @@ async function buildNav() {
   const link = (href, label, cls = '') => `<li><a href="${href}" class="${cls}">${esc(label)}</a></li>`;
   const names = [...new Set([...all.keys(), ...documented])];
   const byCategory = ix.categoryOrder.map(cat => [cat, names.filter(n => (ix.categories[n] || 'Helpers') === cat).sort()]);
+  const section = (id, title, body, note = '') => `<details class="section" data-section="${id}"${folded.has(id) ? '' : ' open'}><summary>${esc(title)}${note}</summary>${body}</details>`;
   document.querySelector('nav.side .lists').innerHTML = `
     <ul>${link('#/', 'Overview')}</ul>
-    <div class="group">Foundations</div>
-    <ul>${ix.foundations.map(f => link('#/foundations/' + f.name, f.title)).join('')}</ul>
-    <div class="group">Tokens</div>
-    <ul>${ix.tokens.map(t => link('#/tokens/' + t.name, t.title)).join('')}</ul>
-    <div class="group">Components <span class="legend">(dim: API page only)</span></div>
-    ${byCategory.map(([cat, list]) => `<div class="sub-group">${esc(cat)}</div><ul>${list.map(n => link('#/components/' + n, ix.components.find(c => c.name === n)?.title || titleOf(n), documented.has(n) ? '' : 'api-only')).join('')}</ul>`).join('')}`;
+    ${section('foundations', 'Foundations', `<ul>${ix.foundations.map(f => link('#/foundations/' + f.name, f.title)).join('')}</ul>`)}
+    ${section('tokens', 'Tokens', `<ul>${ix.tokens.map(t => link('#/tokens/' + t.name, t.title)).join('')}</ul>`)}
+    ${section('components', 'Components', byCategory.map(([cat, list]) => `<div class="sub-group">${esc(cat)}</div><ul>${list.map(n => link('#/components/' + n, ix.components.find(c => c.name === n)?.title || titleOf(n), documented.has(n) ? '' : 'api-only')).join('')}</ul>`).join(''), ' <span class="legend">dim = API only</span>')}`;
+  document.querySelectorAll('nav.side details.section').forEach(d => d.addEventListener('toggle', () => {
+    if (searching) return;
+    if (d.open) folded.delete(d.dataset.section); else folded.add(d.dataset.section);
+    try { localStorage.setItem(FOLD_KEY, JSON.stringify([...folded])); } catch {}
+  }));
   markCurrent();
 }
+const FOLD_KEY = 'vsa-ds-folded';
+let folded = new Set();
+try { folded = new Set(JSON.parse(localStorage.getItem(FOLD_KEY) || '[]')); } catch {}
+let searching = false;
 function filterNav(q) {
   q = q.trim().toLowerCase();
+  searching = !!q;
   const lists = document.querySelector('nav.side .lists');
   lists.querySelectorAll('li').forEach(li => { li.hidden = !!q && !li.textContent.toLowerCase().includes(q); });
   lists.querySelectorAll('ul').forEach(ul => {
     const empty = !!q && ![...ul.children].some(li => !li.hidden);
     ul.hidden = empty;
     const head = ul.previousElementSibling;
-    if (head?.classList.contains('sub-group') || head?.classList.contains('group')) head.hidden = empty;
+    if (head?.classList.contains('sub-group')) head.hidden = empty;
+  });
+  lists.querySelectorAll('details.section').forEach(d => {
+    d.hidden = !!q && ![...d.querySelectorAll('li')].some(li => !li.hidden);
+    d.open = q ? true : !folded.has(d.dataset.section);
   });
   if (q) document.querySelector('nav.side').classList.add('open');
+  setTimeout(() => { searching = false; });
 }
 document.querySelector('.filter').addEventListener('input', e => filterNav(e.target.value || ''));
 function markCurrent() {
