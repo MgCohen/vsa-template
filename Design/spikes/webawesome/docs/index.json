@@ -1,13 +1,133 @@
 {
   "foundations": [
-    { "name": "color", "title": "Color" },
-    { "name": "typography", "title": "Typography" },
-    { "name": "spacing", "title": "Spacing" },
-    { "name": "radius", "title": "Radius" },
-    { "name": "elevation", "title": "Elevation" },
-    { "name": "motion", "title": "Motion" }
+    {
+      "name": "color",
+      "title": "Color"
+    },
+    {
+      "name": "typography",
+      "title": "Typography"
+    },
+    {
+      "name": "spacing",
+      "title": "Spacing"
+    },
+    {
+      "name": "radius",
+      "title": "Radius"
+    },
+    {
+      "name": "elevation",
+      "title": "Elevation"
+    },
+    {
+      "name": "motion",
+      "title": "Motion"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "global",
+      "title": "Global"
+    },
+    {
+      "name": "alias",
+      "title": "Alias"
+    },
+    {
+      "name": "component",
+      "title": "Component"
+    }
   ],
   "components": [
-    { "name": "switch", "title": "Switch" }
-  ]
+    {
+      "name": "switch",
+      "title": "Switch"
+    }
+  ],
+  "categoryOrder": [
+    "Actions",
+    "Forms",
+    "Feedback",
+    "Navigation",
+    "Layout",
+    "Media",
+    "Helpers"
+  ],
+  "categories": {
+    "accordion": "Layout",
+    "accordion-item": "Layout",
+    "animated-image": "Media",
+    "animation": "Helpers",
+    "avatar": "Media",
+    "badge": "Feedback",
+    "breadcrumb": "Navigation",
+    "breadcrumb-item": "Navigation",
+    "button": "Actions",
+    "button-group": "Actions",
+    "callout": "Feedback",
+    "card": "Layout",
+    "carousel": "Media",
+    "carousel-item": "Media",
+    "checkbox": "Forms",
+    "checkbox-group": "Forms",
+    "code-highlighter": "Media",
+    "color-picker": "Forms",
+    "comparison": "Media",
+    "copy-button": "Actions",
+    "details": "Layout",
+    "dialog": "Layout",
+    "divider": "Layout",
+    "drawer": "Layout",
+    "dropdown": "Actions",
+    "dropdown-item": "Actions",
+    "format-bytes": "Helpers",
+    "format-date": "Helpers",
+    "format-number": "Helpers",
+    "icon": "Media",
+    "include": "Helpers",
+    "input": "Forms",
+    "intersection-observer": "Helpers",
+    "known-date": "Forms",
+    "markdown": "Media",
+    "mutation-observer": "Helpers",
+    "number-input": "Forms",
+    "option": "Forms",
+    "otp-input": "Forms",
+    "page": "Layout",
+    "pagination": "Navigation",
+    "popover": "Helpers",
+    "popup": "Helpers",
+    "progress-bar": "Feedback",
+    "progress-ring": "Feedback",
+    "qr-code": "Media",
+    "radio": "Forms",
+    "radio-group": "Forms",
+    "random-content": "Helpers",
+    "rating": "Forms",
+    "relative-time": "Helpers",
+    "resize-observer": "Helpers",
+    "scroller": "Layout",
+    "select": "Forms",
+    "skeleton": "Feedback",
+    "slider": "Forms",
+    "spinner": "Feedback",
+    "split-panel": "Layout",
+    "step": "Navigation",
+    "stepper": "Navigation",
+    "switch": "Forms",
+    "tab": "Navigation",
+    "tab-group": "Navigation",
+    "tab-panel": "Navigation",
+    "tag": "Feedback",
+    "tag-input": "Forms",
+    "textarea": "Forms",
+    "time-input": "Forms",
+    "toast": "Feedback",
+    "toast-item": "Feedback",
+    "tooltip": "Feedback",
+    "tree": "Navigation",
+    "tree-item": "Navigation",
+    "zoomable-frame": "Media"
+  }
 }

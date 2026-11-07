@@ -30,8 +30,17 @@
   nav.side li a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--vsa-color-text-secondary); }
   nav.side li a:hover { background: var(--vsa-color-head-tint); }
   nav.side li a[aria-current="page"] { background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); color: var(--vsa-color-text); }
-  nav.side li a .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--vsa-color-accent); align-self: center; }
-  .filter { margin: 4px 6px 8px; }
+  nav.side li a.api-only { color: var(--vsa-color-muted); }
+  .sub-group { margin: 10px 8px 2px; font-size: var(--vsa-font-size-caption); font-weight: 600; color: var(--vsa-color-text-secondary); }
+  .legend { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .filter { margin: 0 6px 8px; }
+  .lvl-tag { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+  .lvl-global { --lvl: var(--vsa-color-state-new); }
+  .lvl-alias { --lvl: var(--vsa-color-state-done); }
+  .lvl-component { --lvl: var(--vsa-color-accent); }
+  .lvl-web { --lvl: var(--vsa-color-muted); }
+  .lvl-tag { color: var(--lvl); background: color-mix(in srgb, var(--lvl) 14%, transparent); }
+  .chain .lvl { border-bottom: 2px solid color-mix(in srgb, var(--lvl) 55%, transparent); }
 
   main { padding: 32px 40px 80px; max-width: 1040px; width: 100%; }
   .page h1 { margin: 0 0 6px; font: var(--vsa-font-weight-display) var(--vsa-font-size-hero)/1.1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
@@ -91,6 +100,7 @@
       </div>
       <wa-button class="menu-toggle" size="small" appearance="outlined">Menu</wa-button>
     </div>
+    <wa-input class="filter" size="small" placeholder="Search pages" aria-label="Search pages" with-clear></wa-input>
     <div class="lists"></div>
   </nav>
   <main id="page" class="page" tabindex="-1"></main>
@@ -145,25 +155,31 @@ let tokenMap;
 function tokens() {
   if (tokenMap) return tokenMap;
   tokenMap = new Map();
-  const walk = rules => {
+  const walk = (rules, file) => {
     for (const r of rules) {
-      if (r instanceof CSSImportRule) { try { walk(r.styleSheet.cssRules); } catch {} continue; }
+      if (r instanceof CSSImportRule) { try { walk(r.styleSheet.cssRules, file); } catch {} continue; }
       if (r instanceof CSSMediaRule) continue;
       if (r instanceof CSSStyleRule && /:root/.test(r.selectorText)) {
-        for (const p of r.style) if (p.startsWith('--')) tokenMap.set(p, r.style.getPropertyValue(p).trim());
+        for (const p of r.style) if (p.startsWith('--')) tokenMap.set(p, { value: r.style.getPropertyValue(p).trim(), file });
       }
-      if (r.cssRules && !(r instanceof CSSStyleRule)) walk(r.cssRules);
+      if (r.cssRules && !(r instanceof CSSStyleRule)) walk(r.cssRules, file);
     }
   };
-  for (const s of document.styleSheets) { try { walk(s.cssRules); } catch {} }
+  for (const s of document.styleSheets) {
+    const file = (s.ownerNode?.dataset?.source || s.href || '').split('/').pop();
+    try { walk(s.cssRules, file); } catch {}
+  }
   return tokenMap;
 }
+/* The level of a token is the file that declares it. */
+const LEVELS = { 'global.css': 'Global', 'alias.css': 'Alias', 'vsa.css': 'Component' };
+function level(file) { return LEVELS[file] || 'Web Awesome default'; }
 function chain(name) {
-  const map = tokens(); const steps = [name]; let v = map.get(name);
+  const map = tokens(); const steps = [name]; let v = map.get(name)?.value;
   while (v) {
     const m = /^var\((--[\w-]+)\)$/.exec(v);
     if (!m || steps.includes(m[1])) break;
-    steps.push(m[1]); v = map.get(m[1]);
+    steps.push(m[1]); v = map.get(m[1])?.value;
   }
   return { steps, value: v };
 }
@@ -188,19 +204,23 @@ function demo(name, probeId) {
   else holder.innerHTML = `<span class="val">${esc(computed(box, name))}</span>`;
   return holder.innerHTML;
 }
-function tokenTable(pattern) {
+/* Query: an optional regex for the name, and an optional @file, for example "^--wa-color- @vsa.css". */
+function tokenTable(query) {
+  const fileArg = (query.match(/@(\S+)/) || [])[1];
+  const pattern = query.replace(/@\S+/, '').trim() || '.';
   const re = new RegExp(pattern);
-  const names = [...tokens().keys()].filter(n => re.test(n));
-  if (!names.length) return `<p class="empty">No token matches ${esc(pattern)}.</p>`;
+  const map = tokens();
+  const names = [...map.keys()].filter(n => re.test(n) && (!fileArg || map.get(n).file === fileArg));
+  if (!names.length) return `<p class="empty">No token matches ${esc(query)}.</p>`;
   const rows = names.map(n => {
     const c = chain(n);
-    const path = c.steps.map((s, i) => i === 0 ? `<b>${esc(s)}</b>` : esc(s)).join(' → ');
+    const path = c.steps.map((s, i) => `<span class="lvl lvl-${esc(level(map.get(s)?.file).split(' ')[0].toLowerCase())}" title="${esc(level(map.get(s)?.file))}">${i === 0 ? `<b>${esc(s)}</b>` : esc(s)}</span>`).join(' → ');
     const tail = c.value && !/^var\(--[\w-]+\)$/.test(c.value) ? ` → <span class="val">${esc(c.value.length > 70 ? c.value.slice(0, 70) + '…' : c.value)}</span>` : '';
     const light = `<div data-theme="light" class="wa-light" style="background:var(--vsa-color-surface);padding:6px 8px;border-radius:8px">${demo(n, 'probe-light')}</div>`;
     const dark = `<div data-theme="dark" class="wa-dark" style="background:var(--vsa-color-surface);padding:6px 8px;border-radius:8px">${demo(n, 'probe-dark')}</div>`;
-    return `<tr><td class="chain">${path}${tail}</td><td>${light}</td><td>${dark}</td></tr>`;
+    return `<tr><td><span class="lvl-tag lvl-${esc(level(map.get(n).file).split(' ')[0].toLowerCase())}">${esc(level(map.get(n).file))}</span></td><td class="chain">${path}${tail}</td><td>${light}</td><td>${dark}</td></tr>`;
   }).join('');
-  return `<div class="table-wrap"><table><thead><tr><th>Token and source</th><th>Light</th><th>Dark</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div class="table-wrap"><table><thead><tr><th>Level</th><th>Token and path to the value</th><th>Light</th><th>Dark</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* Markdown with two special code blocks: "html preview" shows the live HTML and its code; "tokens <regex>" shows a token table. */
@@ -222,27 +242,36 @@ function renderMarkdown(md) {
 let index;
 async function docsIndex() { return index ??= JSON.parse(await loadText('index.json')); }
 
+const titleOf = name => name.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
 async function buildNav() {
   const [ix, all] = await Promise.all([docsIndex(), manifest()]);
   const documented = new Set(ix.components.map(c => c.name));
-  const link = (href, label, dot) => `<li><a href="${href}">${esc(label)}${dot ? '<span class="dot" title="Has a usage page"></span>' : ''}</a></li>`;
-  const allNames = [...new Set([...all.keys(), ...documented])].sort();
+  const link = (href, label, cls = '') => `<li><a href="${href}" class="${cls}">${esc(label)}</a></li>`;
+  const names = [...new Set([...all.keys(), ...documented])];
+  const byCategory = ix.categoryOrder.map(cat => [cat, names.filter(n => (ix.categories[n] || 'Helpers') === cat).sort()]);
   document.querySelector('nav.side .lists').innerHTML = `
     <ul>${link('#/', 'Overview')}</ul>
     <div class="group">Foundations</div>
     <ul>${ix.foundations.map(f => link('#/foundations/' + f.name, f.title)).join('')}</ul>
-    <div class="group">Components</div>
-    <ul>${ix.components.map(c => link('#/components/' + c.name, c.title, true)).join('')}</ul>
-    <div class="group">All components (${allNames.length})</div>
-    <wa-input class="filter" size="small" placeholder="Filter" aria-label="Filter components" with-clear></wa-input>
-    <ul class="all">${allNames.map(n => link('#/components/' + n, n, documented.has(n))).join('')}</ul>`;
-  const filter = document.querySelector('.filter');
-  filter.addEventListener('input', () => {
-    const q = (filter.value || '').toLowerCase();
-    document.querySelectorAll('ul.all li').forEach(li => { li.hidden = q && !li.textContent.toLowerCase().includes(q); });
-  });
+    <div class="group">Tokens</div>
+    <ul>${ix.tokens.map(t => link('#/tokens/' + t.name, t.title)).join('')}</ul>
+    <div class="group">Components <span class="legend">(dim: API page only)</span></div>
+    ${byCategory.map(([cat, list]) => `<div class="sub-group">${esc(cat)}</div><ul>${list.map(n => link('#/components/' + n, ix.components.find(c => c.name === n)?.title || titleOf(n), documented.has(n) ? '' : 'api-only')).join('')}</ul>`).join('')}`;
   markCurrent();
 }
+function filterNav(q) {
+  q = q.trim().toLowerCase();
+  const lists = document.querySelector('nav.side .lists');
+  lists.querySelectorAll('li').forEach(li => { li.hidden = !!q && !li.textContent.toLowerCase().includes(q); });
+  lists.querySelectorAll('ul').forEach(ul => {
+    const empty = !!q && ![...ul.children].some(li => !li.hidden);
+    ul.hidden = empty;
+    const head = ul.previousElementSibling;
+    if (head?.classList.contains('sub-group') || head?.classList.contains('group')) head.hidden = empty;
+  });
+  if (q) document.querySelector('nav.side').classList.add('open');
+}
+document.querySelector('.filter').addEventListener('input', e => filterNav(e.target.value || ''));
 function markCurrent() {
   const h = location.hash || '#/';
   document.querySelectorAll('nav.side .lists a').forEach(a => {
@@ -267,7 +296,7 @@ async function componentPage(name) {
   const [ix, all] = await Promise.all([docsIndex(), manifest()]);
   const d = all.get(name); const doc = ix.components.find(c => c.name === name);
   const page = document.createElement('div');
-  const title = doc?.title || name.replace(/(^|-)(\w)/g, (_, s, c) => (s ? ' ' : '') + c.toUpperCase());
+  const title = doc?.title || titleOf(name);
   page.innerHTML = `<h1>${esc(title)}</h1>
     <p class="lead">${esc(d?.summary || doc?.summary || '')}</p>
     <div class="meta">${d ? `<code>&lt;wa-${esc(name)}&gt;</code><wa-badge variant="neutral" appearance="filled">${esc(d.status || '')}</wa-badge><a href="${esc(d.documentation)}" target="_blank" rel="noopener">Web Awesome docs</a>` : ''}
@@ -286,6 +315,7 @@ async function route() {
   let page;
   try {
     if (section === 'foundations' && name) page = await markdownPage('foundations/' + name + '.md');
+    else if (section === 'tokens' && name) page = await markdownPage('tokens/' + name + '.md');
     else if (section === 'components' && name) page = await componentPage(name);
     else page = await markdownPage('overview.md');
   } catch (e) {
