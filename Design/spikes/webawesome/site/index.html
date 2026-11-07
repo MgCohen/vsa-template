@@ -73,8 +73,14 @@
   .example { margin: 12px 0 20px; border-radius: var(--vsa-radius-card); background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise); }
   .example .preview { padding: 24px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
   .example details { border-top: 1px solid var(--vsa-color-line); }
-  .example summary { cursor: pointer; padding: 10px 24px; font-size: var(--vsa-font-size-label); color: var(--vsa-color-muted); }
-  .example details pre { margin: 0 14px 14px; }
+  .example summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 14px 24px 16px; border-radius: 0 0 var(--vsa-radius-card) var(--vsa-radius-card); font-size: var(--vsa-font-size-label); color: var(--vsa-color-muted); }
+  .example summary::-webkit-details-marker { display: none; }
+  .example summary::before { content: ""; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform var(--vsa-motion-fast); flex: none; }
+  .example details[open] summary { padding-bottom: 12px; border-radius: 0; }
+  .example details[open] summary::before { transform: rotate(45deg) translate(-2px, -2px); }
+  .example summary:hover { color: var(--vsa-color-text); }
+  .example summary:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); outline-offset: -2px; }
+  .example details pre { margin: 0 20px 20px; }
 
   table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: var(--vsa-font-size-label); }
   th { text-align: left; font-weight: 600; color: var(--vsa-color-muted); padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); }
