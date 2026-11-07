@@ -29,8 +29,8 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 |---|---|---|
 | `IIntegrationEventObserver` | `VSA.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `VSA.Handlers.Events` needs no reference to `VSA.Presenters` (it also targets `netstandard2.1`). |
 | `IPresenterEvent<TEvent>` | `VSA.Presenters` | A presenter implements it one time for each event that it shows. |
-| `LivePresenters` | `VSA.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `AddVsaLivePresenters` registers it as a singleton. |
-| `AddVsaPresenter(type)` | `VSA.Presenters` | Registers a scoped presenter. When the services make a presenter with `IPresenterEvent`, they add it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. `AddVsa` calls it for each presenter. |
+| `LivePresenters` | `VSA.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `PresenterInstaller` registers it as a singleton. `Connect` adds a presenter. |
+| `PresenterInstaller` | `VSA.Composition` | Registers each presenter as scoped. When the services make a presenter with `IPresenterEvent`, they connect it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. |
 | `LivePresenters.Dispatch` | `VSA.Presenters` | Optional scoped service. The app sets the thread of the events, for example the main thread in Unity. |
 | `PresenterWatcher` | `VSA.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` listens to `Changed` of each presenter and renders. |
 | `PresenterComponent<T>` | `VSA.Views` | A `PresenterWatcher` for one presenter, given as the `Presenter` parameter. |

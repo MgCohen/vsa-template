@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Composition;
 using VSA.Module;
 
 namespace Framework.Tests.Settings;
@@ -36,7 +37,7 @@ public sealed class SettingsTests {
     static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
-        (module ?? new SampleModule()).Configure(new ModuleBuilder("Sample", services, configuration));
+        (module ?? new SampleModule()).Configure(new ModuleBuilder("Sample", new MicrosoftServices(services), configuration));
         return services;
     }
 

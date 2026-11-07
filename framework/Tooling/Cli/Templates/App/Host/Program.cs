@@ -1,4 +1,3 @@
-using VSA.App;
 using VSA.Host;
 using VSA.Views;
 

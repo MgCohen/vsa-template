@@ -18,6 +18,10 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegratio
     // the work runs on the thread of the publisher.
     public delegate Task Dispatch(Func<Task> work);
 
+    public void Connect(Presenter presenter, Dispatch? dispatch = null) {
+        presenter.Connect(Add(presenter, dispatch));
+    }
+
     public IDisposable Add(Presenter presenter, Dispatch? dispatch = null) {
         var entry = dispatch ?? (work => work());
         lock (gate) {

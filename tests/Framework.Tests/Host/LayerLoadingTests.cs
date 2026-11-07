@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Shelf;
 using Shelf.Presenters;
-using VSA.App;
+using VSA.Host;
 
 // This assembly records a layer that does not exist, for MissingModule below.
 [assembly: AssemblyMetadata("VsaLayerAssembly", "Framework.Tests.Presenters")]

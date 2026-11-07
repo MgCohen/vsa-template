@@ -177,7 +177,7 @@ public sealed class ScaffoldingTests {
     public void AppProjectsUsePackagesWithTheToolVersion() {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
-        Assert.That(files.Single(f => f.Path == "App/Host/App.Host.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.App\" Version=\"{Version}\" />"));
+        Assert.That(files.Single(f => f.Path == "App/Host/App.Host.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.Host\" Version=\"{Version}\" />"));
         Assert.That(files.Single(f => f.Path == "App/Views/App.Views.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.Views\" Version=\"{Version}\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Vsa"));
     }

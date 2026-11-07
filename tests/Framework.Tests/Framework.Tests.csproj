@@ -6,7 +6,7 @@
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Layers/App/VSA.App.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Layers/Host/VSA.Host.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Bare/Bare.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Shelf/Shelf.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Twin/Twin.csproj" />

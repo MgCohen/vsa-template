@@ -6,6 +6,9 @@
     <ProjectReference Include="../Handlers/Events/VSA.Handlers.Events.csproj" />
     <ProjectReference Include="../Handlers/Commands/VSA.Handlers.Commands.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
   <!-- VSA.Presenters uses static abstract members (VSA.Contracts.Requests), so Unity cannot use it. See issue #44. -->
   <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.1'">
     <ProjectReference Include="../Presenters/VSA.Presenters.csproj" />

@@ -3,8 +3,9 @@ using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json;
 using VSA.Contracts.Requests;
+using VSA.Presenters;
 
-namespace VSA.Presenters;
+namespace VSA.Host;
 
 // Sends each request over HTTP to the method and route of its request type.
 // The host gives the base address. In the host process, it is the host itself (loopback).
