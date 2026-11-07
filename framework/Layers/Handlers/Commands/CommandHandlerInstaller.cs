@@ -1,10 +1,11 @@
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Commands;
 using VSA.Module;
 
 namespace VSA.Handlers.Commands;
 
-public sealed class CommandHandlerInstaller : IVsaInstaller {
-    public void Install(VsaContext context) {
+public static class CommandHandlerInstaller {
+    public static void Install(VsaContext context) {
         context.Services.AddScoped<ICommandSender, InProcessCommandSender>();
         var handlerOfCommand = new Dictionary<Type, Type>();
         foreach (var (service, handler) in context.Implementations(typeof(CommandHandler<,>))) {
@@ -14,7 +15,7 @@ public sealed class CommandHandlerInstaller : IVsaInstaller {
                     + $"{other.FullName} and {handler.FullName}. A command has one handler.");
             }
             handlerOfCommand[service] = handler;
-            context.Services.Add(service, handler, VsaLifetime.Scoped);
+            context.Services.AddScoped(service, handler);
         }
     }
 }

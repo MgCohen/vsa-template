@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Resources.Domain;
 using VSA.Module;
 

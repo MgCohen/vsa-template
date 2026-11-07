@@ -1,13 +1,15 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace VSA.Module;
 
-public sealed class VsaContext(IVsaServices services, IConfiguration configuration, IReadOnlyList<Module> modules) {
+public sealed class VsaContext(
+    IServiceCollection services, IConfiguration configuration, IReadOnlyList<Module> modules) {
     Type[]? moduleTypes;
 
-    public IVsaServices Services => services;
+    public IServiceCollection Services => services;
     public IConfiguration Configuration => configuration;
     public IReadOnlyList<Module> Modules => modules;
 

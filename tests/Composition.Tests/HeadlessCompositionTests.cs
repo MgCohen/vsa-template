@@ -80,22 +80,20 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void Code_between_the_layers_and_the_modules_runs_before_Configure() {
+    public async Task A_module_registration_wins_over_app_code_before_Install() {
         var services = Services();
-        var composer = Composer(services, new SignalsModule());
+        var appRingLog = new RingLog();
+        services.AddSingleton(appRingLog);
 
-        composer.InstallLayers();
-        var ringLogBeforeModules = composer.Context.Services.Contains(typeof(RingLog));
-        composer.ConfigureModules();
+        Composer(services, new SignalsModule()).Install();
+        await using var provider = Build(services);
 
-        Assert.That(ringLogBeforeModules, Is.False);
-        Assert.That(composer.Context.Services.Contains(typeof(RingLog)), Is.True);
-        Assert.That(services.Any(s => s.ServiceType == typeof(BellPresenter)), Is.True);
+        Assert.That(provider.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
     }
 
     [Test]
     public void Implementations_finds_the_handlers_and_not_the_helper_classes() {
-        var context = new VsaContext(new MicrosoftServices(Services()), EmptyConfiguration(), [new SignalsModule()]);
+        var context = new VsaContext(Services(), EmptyConfiguration(), [new SignalsModule()]);
 
         var handlers = context.Implementations(typeof(VSA.Handlers.Events.IntegrationEventHandler<>)).ToList();
         var presenters = context.Implementations(typeof(Presenter)).Select(p => p.Implementation).ToList();
@@ -108,12 +106,10 @@ public sealed class HeadlessCompositionTests {
     [Test]
     public async Task The_installers_also_run_by_hand_without_the_composer() {
         var services = Services();
-        var context = new VsaContext(
-            new MicrosoftServices(services), EmptyConfiguration(), [new CardsModule(), new ResourcesModule()]);
-        IVsaInstaller[] installers = [new EventHandlerInstaller(), new CommandHandlerInstaller(), new ModuleInstaller()];
-        foreach (var installer in installers) {
-            installer.Install(context);
-        }
+        var context = new VsaContext(services, EmptyConfiguration(), [new CardsModule(), new ResourcesModule()]);
+        EventHandlerInstaller.Install(context);
+        CommandHandlerInstaller.Install(context);
+        ModuleInstaller.Install(context);
         await using var provider = Build(services);
         await using var scope = provider.CreateAsyncScope();
 
@@ -124,7 +120,7 @@ public sealed class HeadlessCompositionTests {
     }
 
     static VsaComposer Composer(ServiceCollection services, params VSA.Module.Module[] modules) =>
-        new(new MicrosoftServices(services), EmptyConfiguration(), modules);
+        new(services, EmptyConfiguration(), modules);
 
     static ServiceCollection Services() {
         var services = new ServiceCollection();

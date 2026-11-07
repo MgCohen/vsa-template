@@ -1,17 +1,19 @@
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
 using VSA.Module;
 
 namespace VSA.Presenters;
 
-public sealed class PresenterInstaller : IVsaInstaller {
-    public void Install(VsaContext context) {
+public static class PresenterInstaller {
+    public static void Install(VsaContext context) {
         context.Services.AddSingleton<LivePresenters>();
-        context.Services.AddSingleton<IIntegrationEventObserver>(resolver => resolver.Require<LivePresenters>());
+        context.Services.AddSingleton<IIntegrationEventObserver>(
+            provider => provider.GetRequiredService<LivePresenters>());
         foreach (var (_, presenter) in context.Implementations(typeof(Presenter))) {
             if (ShowsEvents(presenter)) {
-                context.Services.Add(presenter, resolver => Connected(resolver, presenter), VsaLifetime.Scoped);
+                context.Services.AddScoped(presenter, provider => Connected(provider, presenter));
             } else {
-                context.Services.Add(presenter, presenter, VsaLifetime.Scoped);
+                context.Services.AddScoped(presenter);
             }
         }
     }
@@ -19,9 +21,10 @@ public sealed class PresenterInstaller : IVsaInstaller {
     static bool ShowsEvents(Type presenter) =>
         presenter.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>));
 
-    static Presenter Connected(IVsaResolver resolver, Type presenter) {
-        var instance = (Presenter)resolver.Create(presenter);
-        resolver.Require<LivePresenters>().Connect(instance, resolver.Resolve<LivePresenters.Dispatch>());
+    static Presenter Connected(IServiceProvider provider, Type presenter) {
+        var instance = (Presenter)ActivatorUtilities.CreateInstance(provider, presenter);
+        var dispatch = provider.GetService<LivePresenters.Dispatch>();
+        provider.GetRequiredService<LivePresenters>().Connect(instance, dispatch);
         return instance;
     }
 }

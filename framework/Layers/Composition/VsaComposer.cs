@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Module;
@@ -8,31 +9,19 @@ using VSA.Presenters;
 
 namespace VSA.Composition;
 
-public sealed class VsaComposer {
-    public VsaComposer(IVsaServices services, IConfiguration configuration)
-        : this(services, configuration, DiscoveredModules()) { }
-
-    public VsaComposer(IVsaServices services, IConfiguration configuration, params VSA.Module.Module[] modules) {
-        Context = new VsaContext(services, configuration, modules);
-    }
-
-    public VsaContext Context { get; }
-
-    public static VSA.Module.Module[] DiscoveredModules() =>
-        [.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())];
+public sealed class VsaComposer(
+    IServiceCollection services, IConfiguration configuration, IReadOnlyList<VSA.Module.Module>? modules = null) {
+    public VsaContext Context { get; } = new(services, configuration, modules ?? DiscoveredModules());
 
     public void Install() {
-        InstallLayers();
-        ConfigureModules();
-    }
-
-    public void InstallLayers() {
-        new EventHandlerInstaller().Install(Context);
-        new CommandHandlerInstaller().Install(Context);
+        EventHandlerInstaller.Install(Context);
+        CommandHandlerInstaller.Install(Context);
 #if NET
-        new PresenterInstaller().Install(Context);
+        PresenterInstaller.Install(Context);
 #endif
+        ModuleInstaller.Install(Context);
     }
 
-    public void ConfigureModules() => new ModuleInstaller().Install(Context);
+    static VSA.Module.Module[] DiscoveredModules() =>
+        [.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())];
 }
