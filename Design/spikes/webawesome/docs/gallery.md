@@ -54,8 +54,8 @@ One example of each component with the VSA look, grouped by category. To see all
 
 ```html preview
 <wa-breadcrumb>
-  <wa-breadcrumb-item>Modules</wa-breadcrumb-item>
-  <wa-breadcrumb-item>Orders</wa-breadcrumb-item>
+  <wa-breadcrumb-item href="#/gallery">Modules</wa-breadcrumb-item>
+  <wa-breadcrumb-item href="#/gallery">Orders</wa-breadcrumb-item>
   <wa-breadcrumb-item>Slices</wa-breadcrumb-item>
 </wa-breadcrumb>
 <wa-tab-group style="width: 100%">
