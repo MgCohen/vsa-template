@@ -30,9 +30,4 @@ public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<st
     };
 
     public static ModuleRoot Of(Module module) => Of(module.GetType().Assembly);
-
-    public Assembly? LayerAssembly(string layer) {
-        var name = $"{Name}.{layer}";
-        return Layers.Contains(name) ? Assembly.Load(name) : null;
-    }
 }

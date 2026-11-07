@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Module;
 
 sealed class MicrosoftResolver(IServiceProvider provider) : IVsaResolver {
     public object? Resolve(Type service) => provider.GetService(service);

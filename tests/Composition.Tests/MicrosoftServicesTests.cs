@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
 using VSA.Module;
 
 namespace Composition.Tests;

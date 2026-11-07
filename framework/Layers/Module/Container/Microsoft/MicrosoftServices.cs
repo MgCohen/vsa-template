@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Module;
 
 public sealed class MicrosoftServices : IVsaServices {
     readonly IServiceCollection services;

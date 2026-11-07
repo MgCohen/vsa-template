@@ -71,7 +71,7 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void The_default_installers_register_no_bus() {
+    public void The_composer_registers_no_bus() {
         var services = new ServiceCollection();
 
         Composer(services, new SignalsModule()).Install();
@@ -80,44 +80,29 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void A_removed_installer_does_not_run() {
+    public void Code_between_the_layers_and_the_modules_runs_before_Configure() {
         var services = Services();
+        var composer = Composer(services, new SignalsModule());
 
-        Composer(services, new SignalsModule()).Remove<PresenterInstaller>().Install();
+        composer.InstallLayers();
+        var ringLogBeforeModules = composer.Context.Services.Contains(typeof(RingLog));
+        composer.ConfigureModules();
 
-        Assert.That(services.Any(s => s.ServiceType == typeof(BellPresenter)), Is.False);
-        Assert.That(services.Any(s => s.ServiceType == typeof(LivePresenters)), Is.False);
+        Assert.That(ringLogBeforeModules, Is.False);
+        Assert.That(composer.Context.Services.Contains(typeof(RingLog)), Is.True);
+        Assert.That(services.Any(s => s.ServiceType == typeof(BellPresenter)), Is.True);
     }
 
     [Test]
-    public void An_installer_added_before_the_modules_runs_before_Configure() {
-        var services = Services();
-        var probe = new RingLogProbe();
+    public void Implementations_finds_the_handlers_and_not_the_helper_classes() {
+        var context = new VsaContext(new MicrosoftServices(Services()), EmptyConfiguration(), [new SignalsModule()]);
 
-        Composer(services, new SignalsModule()).AddBefore<ModuleInstaller>(probe).Install();
+        var handlers = context.Implementations(typeof(VSA.Handlers.Events.IntegrationEventHandler<>)).ToList();
+        var presenters = context.Implementations(typeof(Presenter)).Select(p => p.Implementation).ToList();
 
-        Assert.That(probe.RingLogWasRegistered, Is.False);
-        Assert.That(services.Any(s => s.ServiceType == typeof(RingLog)), Is.True);
-    }
-
-    [Test]
-    public void A_replaced_installer_runs_in_the_same_place() {
-        var probe = new RingLogProbe();
-        var composer = Composer(Services(), new SignalsModule()).Replace<ModuleInstaller>(probe);
-
-        composer.Install();
-
-        Assert.That(composer.Installers[^1], Is.SameAs(probe));
-        Assert.That(probe.RingLogWasRegistered, Is.False);
-    }
-
-    [Test]
-    public void An_installer_that_the_composer_does_not_have_is_an_error() {
-        var composer = Composer(Services()).Remove<PresenterInstaller>();
-
-        var error = Assert.Throws<InvalidOperationException>(() => composer.Remove<PresenterInstaller>());
-
-        Assert.That(error.Message, Is.EqualTo("The composer has no PresenterInstaller."));
+        Assert.That(handlers.Select(h => h.Service), Is.EqualTo(new[] { typeof(VSA.Handlers.Events.IntegrationEventHandler<Rang>) }));
+        Assert.That(handlers.Select(h => h.Implementation.Name), Is.EqualTo(new[] { "RangHandler" }));
+        Assert.That(presenters, Is.EqualTo(new[] { typeof(BellPresenter) }));
     }
 
     [Test]
@@ -152,12 +137,6 @@ public sealed class HeadlessCompositionTests {
         services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 
     static IConfiguration EmptyConfiguration() => new ConfigurationBuilder().Build();
-
-    sealed class RingLogProbe : IVsaInstaller {
-        public bool? RingLogWasRegistered { get; private set; }
-
-        public void Install(VsaContext context) => RingLogWasRegistered = context.Services.Contains(typeof(RingLog));
-    }
 
     sealed class NoRequestsBus : IBus {
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)

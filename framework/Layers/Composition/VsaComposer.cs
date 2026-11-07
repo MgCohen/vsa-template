@@ -18,44 +18,21 @@ public sealed class VsaComposer {
 
     public VsaContext Context { get; }
 
-    public List<IVsaInstaller> Installers { get; } = DefaultInstallers();
-
-    public static List<IVsaInstaller> DefaultInstallers() => [
-        new EventHandlerInstaller(),
-        new CommandHandlerInstaller(),
-#if NET
-        new PresenterInstaller(),
-#endif
-        new ModuleInstaller(),
-    ];
-
     public static VSA.Module.Module[] DiscoveredModules() =>
         [.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())];
 
-    public VsaComposer AddBefore<TInstaller>(IVsaInstaller installer) where TInstaller : IVsaInstaller {
-        Installers.Insert(IndexOf<TInstaller>(), installer);
-        return this;
-    }
-
-    public VsaComposer Replace<TInstaller>(IVsaInstaller installer) where TInstaller : IVsaInstaller {
-        Installers[IndexOf<TInstaller>()] = installer;
-        return this;
-    }
-
-    public VsaComposer Remove<TInstaller>() where TInstaller : IVsaInstaller {
-        Installers.RemoveAt(IndexOf<TInstaller>());
-        return this;
-    }
-
     public void Install() {
-        foreach (var installer in Installers) {
-            installer.Install(Context);
-        }
+        InstallLayers();
+        ConfigureModules();
     }
 
-    int IndexOf<TInstaller>() where TInstaller : IVsaInstaller {
-        var index = Installers.FindIndex(installer => installer is TInstaller);
-        return index >= 0 ? index
-            : throw new InvalidOperationException($"The composer has no {typeof(TInstaller).Name}.");
+    public void InstallLayers() {
+        new EventHandlerInstaller().Install(Context);
+        new CommandHandlerInstaller().Install(Context);
+#if NET
+        new PresenterInstaller().Install(Context);
+#endif
     }
+
+    public void ConfigureModules() => new ModuleInstaller().Install(Context);
 }

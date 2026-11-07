@@ -7,9 +7,9 @@ namespace VSA.Handlers.Requests;
 
 public sealed class RequestEndpointInstaller(IServiceCollection services) : IVsaInstaller {
     public void Install(VsaContext context) {
-        Assembly[] requestHandlers = [.. context.Modules
-            .Select(module => ModuleRoot.Of(module).LayerAssembly("Handlers.Requests"))
-            .OfType<Assembly>()];
+        Assembly[] requestHandlers = [.. context.Implementations(typeof(RoutedHandler<,>))
+            .Select(handler => handler.Implementation.Assembly)
+            .Distinct()];
         if (requestHandlers.Length == 0) {
             return;
         }

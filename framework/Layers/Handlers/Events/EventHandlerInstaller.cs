@@ -3,15 +3,11 @@ using VSA.Module;
 
 namespace VSA.Handlers.Events;
 
-public sealed class EventHandlerInstaller() : LayerInstaller("Handlers.Events") {
-    public override void Install(VsaContext context) {
+public sealed class EventHandlerInstaller : IVsaInstaller {
+    public void Install(VsaContext context) {
         context.Services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
-        base.Install(context);
-    }
-
-    protected override void Install(VsaContext context, Type type) {
-        if (ClosedBase(type, typeof(IntegrationEventHandler<>)) is { } handledEvent) {
-            context.Services.Add(handledEvent, type, VsaLifetime.Scoped);
+        foreach (var (service, handler) in context.Implementations(typeof(IntegrationEventHandler<>))) {
+            context.Services.Add(service, handler, VsaLifetime.Scoped);
         }
     }
 }

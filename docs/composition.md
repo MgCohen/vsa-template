@@ -1,62 +1,79 @@
 # Composition: the composer and its installers
 
-A `VsaComposer` registers an app. It finds the modules, then runs a list of installers in order. Each installer is one class for one kind of registration, and it is in the project of its layer. `builder.AddVsa()` (VSA.Host) runs the composer with the web installers. A Unity app or a console app runs the composer from `VSA.Composition`, which has no ASP.NET Core.
+A `VsaComposer` registers an app in two calls: `InstallLayers`, then `ConfigureModules`. Each layer has one installer class in its own project. `builder.AddVsa()` (VSA.Host) calls the composer and adds the web parts between the two calls. A Unity app or a console app calls the composer from `VSA.Composition`, which has no ASP.NET Core.
 
-## The composer runs the installers in order
+## Two call points
 
 ```mermaid
 flowchart LR
     D[ModuleDiscovery or given modules] --> X[VsaContext]
-    X --> E[EventHandlerInstaller]
-    E --> K[CommandHandlerInstaller]
-    K --> P[PresenterInstaller]
-    P --> W[Web installers]
-    W --> M[ModuleInstaller]
+    X --> L[InstallLayers]
+    L --> W[App code, for example the web parts]
+    W --> M[ConfigureModules]
 ```
 
-| Installer | Project | Registers |
+| Call | Runs | Registers |
 |---|---|---|
-| `EventHandlerInstaller` | `VSA.Handlers.Events` | The publisher and each `IntegrationEventHandler<T>` |
-| `CommandHandlerInstaller` | `VSA.Handlers.Commands` | The sender and each `CommandHandler<,>`. Stops at two handlers |
-| `PresenterInstaller` | `VSA.Presenters` (`net10.0`) | `LivePresenters` and each `Presenter` |
-| `LoopbackBusInstaller` | `VSA.Host` | `IBus` as `HttpBus` to the server address |
-| `RequestEndpointInstaller` | `VSA.Handlers.Requests` | FastEndpoints for `Handlers.Requests` |
-| `ModuleInstaller` | `VSA.Module` | `Module.Configure` of each module. Always last |
+| `InstallLayers()` | `EventHandlerInstaller` | The publisher and each `IntegrationEventHandler<T>` |
+| `InstallLayers()` | `CommandHandlerInstaller` | The sender and each `CommandHandler<,>`. Stops at two handlers |
+| `InstallLayers()` | `PresenterInstaller` (`net10.0`) | `LivePresenters` and each `Presenter` |
+| `ConfigureModules()` | `ModuleInstaller` | `Module.Configure` of each module |
+| `Install()` | Both calls | All of the above |
 
-The three layer installers inherit `LayerInstaller`. It gives each concrete type of one layer of each module to the installer.
+`ConfigureModules` runs last, because a module can replace a default in `Configure` (`ModuleBuilder.Replace`). App code that registers a default goes between the two calls.
 
-`ModuleInstaller` runs last, because a module can replace a default in `Configure` (`ModuleBuilder.Replace`). Each installer that registers a default goes before it.
+## Installers find their types
+
+An installer gets a `VsaContext`. `context.Implementations(typeof(TBase))` gives each concrete type of each module that derives from `TBase`, with its service type:
+
+```csharp
+foreach (var (service, handler) in context.Implementations(typeof(IntegrationEventHandler<>))) {
+    context.Services.Add(service, handler, VsaLifetime.Scoped);
+}
+```
+
+- For an open generic base, the service is the closed base, for example `IntegrationEventHandler<Rang>`.
+- For a plain base, for example `Presenter`, the service is the base.
+- The context reads the types of all layer projects of the modules one time. The layer rules keep each type in its layer, so no layer name is necessary.
 
 ## Projects
 
 ```
-Module/          IVsaServices, IVsaResolver, VsaLifetime, IVsaInstaller, VsaContext, LayerInstaller, ModuleInstaller
+Module/
+  Container/       IVsaServices, IVsaResolver, VsaLifetime
+    Microsoft/     MicrosoftServices, MicrosoftResolver
+  IVsaInstaller, VsaContext, ModuleInstaller, Module, ModuleBuilder, ModuleDiscovery, ...
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
 Handlers/Requests/   RequestEndpointInstaller
 Presenters/          PresenterInstaller
-Composition/     VsaComposer;  Microsoft/ MicrosoftServices, MicrosoftResolver
-Host/            VsaHostExtensions, WebComposer, LoopbackBusInstaller, HttpBus
+Composition/         VsaComposer
+Host/                VsaHostExtensions (AddVsa, MapVsaRequests, AddLoopbackBus), HttpBus
 ```
 
 Each layer project references `VSA.Module` with `PrivateAssets="all"`. So a module project of that layer does not see `VSA.Module`. The module root references `VSA.Module`, so the app has it at run time.
 
 ## Entry points
 
-| App | Code |
-|---|---|
-| ASP.NET Core, default | `builder.AddVsa();` |
-| ASP.NET Core, changed | `WebComposer.Create(builder).Remove<PresenterInstaller>().Install();` |
-| Unity or console | `new VsaComposer(new MicrosoftServices(services), configuration, modules).Install();` |
-| No composer | Make a `VsaContext`, then call `Install(context)` on each installer |
+```csharp
+builder.AddVsa();
 
-With no `modules` argument, the composer finds the modules with `ModuleDiscovery`: the module roots of `deps.json`, the Shared modules first. Unity has no `deps.json`, so a Unity app gives the modules.
+var composer = new VsaComposer(new MicrosoftServices(services), configuration, modules);
+composer.Install();
+```
 
-The composer changes its list with `AddBefore<T>(installer)`, `Replace<T>(installer)` and `Remove<T>()`. If the list has no `T`, the call throws.
+`builder.AddVsa()` does these steps:
+
+1. `composer.InstallLayers()`
+2. `VsaHostExtensions.AddLoopbackBus(services)`: `IBus` as `HttpBus` to the server address
+3. `RequestEndpointInstaller`: FastEndpoints for each `RoutedHandler<,>`
+4. `composer.ConfigureModules()`
+
+A web app with other needs does the same steps itself. With no `modules` argument, the composer finds the modules with `ModuleDiscovery`: the module roots of `deps.json`, the Shared modules first. Unity has no `deps.json`, so a Unity app gives the modules.
 
 ## The container adapter
 
-Module code and installers register on `IVsaServices`, a VSA interface. They do not use a container type.
+Module code and installers register on `IVsaServices`, a VSA interface. They do not use a container type. The adapter types are in `Module/Container/`.
 
 ```csharp
 public interface IVsaServices {
@@ -73,7 +90,7 @@ public interface IVsaServices {
 - `MicrosoftServices` is the adapter for Microsoft DI. It also registers `IVsaResolver`.
 - Another container, for example VContainer, needs one class that implements `IVsaServices` and one that implements `IVsaResolver`.
 
-A web installer uses `IServiceCollection` directly, because FastEndpoints and `AddHttpClient` need it. The web host always uses Microsoft DI.
+The web parts use `IServiceCollection` directly, because FastEndpoints and `AddHttpClient` need it. The web host always uses Microsoft DI.
 
 ## Module settings
 
@@ -83,13 +100,13 @@ A web installer uses `IServiceCollection` directly, because FastEndpoints and `A
 
 | Service | Web host | Headless app |
 |---|---|---|
-| `IBus` | `LoopbackBusInstaller` | The app registers one |
+| `IBus` | `AddLoopbackBus` | The app registers one |
 | `ILogger<T>` | ASP.NET Core logging | The app registers logging |
 | `IConfiguration` | `builder.Configuration` | An argument of the composer |
 
 ## Unity target
 
-`VSA.Composition` is a Unity layer (`VsaUnityLayer`). On `netstandard2.1` its default list has no `PresenterInstaller`, because `VSA.Contracts.Requests` uses `static abstract` members. Issue #44 tracks this. A Unity app also vendors `VSA.Composition.dll`.
+`VSA.Composition` is a Unity layer (`VsaUnityLayer`). On `netstandard2.1`, `InstallLayers` does not run `PresenterInstaller`, because `VSA.Contracts.Requests` uses `static abstract` members. Issue #44 tracks this. A Unity app also vendors `VSA.Composition.dll`.
 
 ## Open questions
 

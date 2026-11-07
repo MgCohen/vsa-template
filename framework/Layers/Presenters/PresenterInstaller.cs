@@ -3,27 +3,25 @@ using VSA.Module;
 
 namespace VSA.Presenters;
 
-public sealed class PresenterInstaller() : LayerInstaller("Presenters") {
-    public override void Install(VsaContext context) {
+public sealed class PresenterInstaller : IVsaInstaller {
+    public void Install(VsaContext context) {
         context.Services.AddSingleton<LivePresenters>();
         context.Services.AddSingleton<IIntegrationEventObserver>(resolver => resolver.Require<LivePresenters>());
-        base.Install(context);
+        foreach (var (_, presenter) in context.Implementations(typeof(Presenter))) {
+            if (ShowsEvents(presenter)) {
+                context.Services.Add(presenter, resolver => Connected(resolver, presenter), VsaLifetime.Scoped);
+            } else {
+                context.Services.Add(presenter, presenter, VsaLifetime.Scoped);
+            }
+        }
     }
 
-    protected override void Install(VsaContext context, Type type) {
-        if (!type.IsSubclassOf(typeof(Presenter))) {
-            return;
-        }
-        if (!type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>))) {
-            context.Services.Add(type, type, VsaLifetime.Scoped);
-            return;
-        }
-        context.Services.Add(type, resolver => Connected(resolver, type), VsaLifetime.Scoped);
-    }
+    static bool ShowsEvents(Type presenter) =>
+        presenter.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>));
 
-    static Presenter Connected(IVsaResolver resolver, Type type) {
-        var presenter = (Presenter)resolver.Create(type);
-        resolver.Require<LivePresenters>().Connect(presenter, resolver.Resolve<LivePresenters.Dispatch>());
-        return presenter;
+    static Presenter Connected(IVsaResolver resolver, Type presenter) {
+        var instance = (Presenter)resolver.Create(presenter);
+        resolver.Require<LivePresenters>().Connect(instance, resolver.Resolve<LivePresenters.Dispatch>());
+        return instance;
     }
 }
