@@ -24,7 +24,7 @@ The spike does not change our own atoms in `components/`.
 - A code block with the language `html preview` shows the live HTML and its code.
 - Each other code block is dark, as in an IDE, with highlight.js colors. Its text scales down until the longest line fits, to 8 px minimum.
 - A code block with the language `tokens <regex>` shows a table of the matching tokens. Each row shows the path to the source value, and the light and dark values.
-- The API tables (attributes, slots, events, parts, CSS properties, states) come from the Web Awesome `custom-elements.json`. Each of the 73 components gets an API page, also with no usage page.
+- The API tables (attributes, slots, events, parts, CSS properties, states) come from the Web Awesome `custom-elements.json` and from `components/custom-elements.json`. Each component gets an API page, also with no usage page.
 
 ## How the site loads
 
