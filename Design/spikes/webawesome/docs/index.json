@@ -1,0 +1,13 @@
+{
+  "foundations": [
+    { "name": "color", "title": "Color" },
+    { "name": "typography", "title": "Typography" },
+    { "name": "spacing", "title": "Spacing" },
+    { "name": "radius", "title": "Radius" },
+    { "name": "elevation", "title": "Elevation" },
+    { "name": "motion", "title": "Motion" }
+  ],
+  "components": [
+    { "name": "switch", "title": "Switch" }
+  ]
+}

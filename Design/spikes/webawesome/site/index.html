@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VSA Design System</title>
+<link rel="stylesheet" href="../../../tokens/fonts.css">
+<link rel="stylesheet" href="../../../tokens/global.css">
+<link rel="stylesheet" href="../../../tokens/alias.css">
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/styles/themes/default.css">
+<link rel="stylesheet" href="../theme/vsa.css">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/webawesome.loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@11.2.0/marked.min.js"></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--vsa-gradient-canvas); color: var(--vsa-color-text); }
+  body { margin: 0; font: var(--vsa-font-size-body)/var(--vsa-line-height-body) var(--vsa-font-body); min-height: 100vh; }
+  a { color: inherit; }
+
+  .shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
+  nav.side { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px 40px; border-right: 1px solid var(--vsa-color-line); }
+  .brand { display: block; text-decoration: none; margin: 0 6px 16px; font: var(--vsa-font-weight-display) 22px/1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
+  .brand small { display: block; margin-top: 6px; font: 500 var(--vsa-font-size-caption)/1.2 var(--vsa-font-body); letter-spacing: 0; color: var(--vsa-color-muted); }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; margin: 0 6px 16px; border-radius: var(--vsa-radius-pill); background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); }
+  .seg button { all: unset; cursor: pointer; padding: 5px 10px; border-radius: var(--vsa-radius-pill); font-size: var(--vsa-font-size-caption); color: var(--vsa-color-sunken-muted); }
+  .seg button[aria-pressed="true"] { background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); color: var(--vsa-color-text); }
+  .seg button:focus-visible { outline: var(--vsa-focus-width) solid var(--vsa-color-accent); }
+  .group { margin: 14px 6px 6px; font: 600 var(--vsa-font-size-caption)/1 var(--vsa-font-body); text-transform: uppercase; letter-spacing: var(--vsa-letter-spacing-caps); color: var(--vsa-color-muted); }
+  nav.side ul { list-style: none; margin: 0; padding: 0; }
+  nav.side li a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--vsa-color-text-secondary); }
+  nav.side li a:hover { background: var(--vsa-color-head-tint); }
+  nav.side li a[aria-current="page"] { background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise-sm); color: var(--vsa-color-text); }
+  nav.side li a .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--vsa-color-accent); align-self: center; }
+  .filter { margin: 4px 6px 8px; }
+
+  main { padding: 32px 40px 80px; max-width: 1040px; width: 100%; }
+  .page h1 { margin: 0 0 6px; font: var(--vsa-font-weight-display) var(--vsa-font-size-hero)/1.1 var(--vsa-font-display); letter-spacing: var(--vsa-letter-spacing-display); }
+  .page .lead { margin: 0 0 24px; font-size: var(--vsa-font-size-lead); color: var(--vsa-color-text-secondary); max-width: 70ch; }
+  .page h2 { margin: 36px 0 12px; font: 600 var(--vsa-font-size-title)/1.2 var(--vsa-font-body); }
+  .page h3 { margin: 24px 0 8px; font: 600 var(--vsa-font-size-lead)/1.2 var(--vsa-font-body); }
+  .page p, .page li { max-width: 75ch; }
+  .page code { font: 12px/1.4 var(--vsa-font-mono); background: var(--vsa-color-head-tint); padding: 1px 5px; border-radius: 5px; }
+  .page pre { margin: 0; padding: 14px; overflow-x: auto; background: var(--vsa-color-sunken); box-shadow: var(--vsa-shadow-carve); border-radius: var(--vsa-radius-control); }
+  .page pre code { background: none; padding: 0; color: var(--vsa-color-sunken-text); }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
+
+  .example { margin: 12px 0 20px; border-radius: var(--vsa-radius-card); background: var(--vsa-gradient-surface); box-shadow: var(--vsa-shadow-raise); }
+  .example .preview { padding: 24px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .example details { border-top: 1px solid var(--vsa-color-line); }
+  .example summary { cursor: pointer; padding: 10px 24px; font-size: var(--vsa-font-size-label); color: var(--vsa-color-muted); }
+  .example details pre { margin: 0 14px 14px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: var(--vsa-font-size-label); }
+  th { text-align: left; font-weight: 600; color: var(--vsa-color-muted); padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--vsa-color-line); vertical-align: top; }
+  td code { white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  .sw { display: inline-block; width: 28px; height: 20px; border-radius: 6px; vertical-align: middle; margin-right: 6px; box-shadow: inset 0 0 0 1px var(--vsa-color-line); }
+  .demo-shadow { width: 64px; height: 36px; border-radius: 10px; background: var(--vsa-gradient-surface); }
+  .demo-radius { width: 40px; height: 28px; background: var(--vsa-color-accent); }
+  .demo-space { height: 10px; background: var(--vsa-color-accent); border-radius: 3px; }
+  .val { font: 11px/1.4 var(--vsa-font-mono); color: var(--vsa-color-muted); word-break: break-all; }
+  .chain { font: 11px/1.6 var(--vsa-font-mono); color: var(--vsa-color-text-secondary); overflow-wrap: anywhere; width: 60%; }
+  td:has(> [data-theme]) { width: 20%; min-width: 96px; }
+  .chain b { color: var(--vsa-color-text); font-weight: 500; }
+  .probes { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .empty { color: var(--vsa-color-muted); font-style: italic; }
+
+  .menu-toggle { display: none; }
+  @media (max-width: 760px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--vsa-color-line); padding: 14px 16px; }
+    nav.side .lists { display: none; }
+    nav.side.open .lists { display: block; }
+    .menu-toggle { display: inline-flex; margin: 0 0 0 6px; }
+    .top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .top .seg { margin-bottom: 0; }
+    main { padding: 20px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="side" aria-label="Design system">
+    <div class="top">
+      <a class="brand" href="#/">VSA Design System<small>on Web Awesome 3.14.0</small></a>
+      <div class="seg" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="system">System</button>
+        <button type="button" data-theme-choice="light">Light</button>
+        <button type="button" data-theme-choice="dark">Dark</button>
+      </div>
+      <wa-button class="menu-toggle" size="small" appearance="outlined">Menu</wa-button>
+    </div>
+    <div class="lists"></div>
+  </nav>
+  <main id="page" class="page" tabindex="-1"></main>
+</div>
+<div class="probes" aria-hidden="true">
+  <div id="probe-light" data-theme="light" class="wa-light"><span></span></div>
+  <div id="probe-dark" data-theme="dark" class="wa-dark"><span></span></div>
+</div>
+<script>
+const MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@awesome.me/webawesome@3.14.0/dist-cdn/custom-elements.json';
+const DOCS_ROOT = '../docs/';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+async function loadText(path) {
+  if (window.VSA_FILES && path in window.VSA_FILES) return window.VSA_FILES[path];
+  const r = await fetch(DOCS_ROOT + path);
+  if (!r.ok) throw new Error(path + ': ' + r.status);
+  return r.text();
+}
+let manifestPromise;
+function manifest() {
+  manifestPromise ??= (window.WA_MANIFEST ? Promise.resolve(window.WA_MANIFEST) : fetch(MANIFEST_URL).then(r => r.json()))
+    .then(m => {
+      const list = m.modules.flatMap(x => x.declarations || []).filter(d => d.tagName);
+      return new Map(list.sort((a, b) => a.tagName.localeCompare(b.tagName)).map(d => [d.tagName.replace(/^wa-/, ''), d]));
+    });
+  return manifestPromise;
+}
+
+/* Theme */
+const KEY = 'vsa-ds-theme';
+const darkMq = matchMedia('(prefers-color-scheme: dark)');
+function readTheme() { try { return localStorage.getItem(KEY) || 'system'; } catch { return 'system'; } }
+function applyTheme(choice) {
+  const root = document.documentElement;
+  if (choice === 'system') root.removeAttribute('data-theme'); else root.dataset.theme = choice;
+  const isDark = choice === 'dark' || (choice === 'system' && darkMq.matches);
+  root.classList.toggle('wa-dark', isDark);
+  root.classList.toggle('wa-light', !isDark);
+  document.querySelectorAll('[data-theme-choice]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === choice)));
+}
+document.querySelectorAll('[data-theme-choice]').forEach(b => b.addEventListener('click', () => {
+  try { localStorage.setItem(KEY, b.dataset.themeChoice); } catch {}
+  applyTheme(b.dataset.themeChoice);
+}));
+darkMq.addEventListener('change', () => applyTheme(readTheme()));
+applyTheme(readTheme());
+document.querySelector('.menu-toggle').addEventListener('click', () => document.querySelector('nav.side').classList.toggle('open'));
+
+/* Tokens: declared values from the stylesheets this page can read. A later declaration wins. */
+let tokenMap;
+function tokens() {
+  if (tokenMap) return tokenMap;
+  tokenMap = new Map();
+  const walk = rules => {
+    for (const r of rules) {
+      if (r instanceof CSSImportRule) { try { walk(r.styleSheet.cssRules); } catch {} continue; }
+      if (r instanceof CSSMediaRule) continue;
+      if (r instanceof CSSStyleRule && /:root/.test(r.selectorText)) {
+        for (const p of r.style) if (p.startsWith('--')) tokenMap.set(p, r.style.getPropertyValue(p).trim());
+      }
+      if (r.cssRules && !(r instanceof CSSStyleRule)) walk(r.cssRules);
+    }
+  };
+  for (const s of document.styleSheets) { try { walk(s.cssRules); } catch {} }
+  return tokenMap;
+}
+function chain(name) {
+  const map = tokens(); const steps = [name]; let v = map.get(name);
+  while (v) {
+    const m = /^var\((--[\w-]+)\)$/.exec(v);
+    if (!m || steps.includes(m[1])) break;
+    steps.push(m[1]); v = map.get(m[1]);
+  }
+  return { steps, value: v };
+}
+function kind(name) {
+  if (/shadow-(?!blur|offset|color)|shadow-[sml]$|^--vsa-shadow/.test(name) && !/color/.test(name)) return 'shadow';
+  if (/color|gradient/.test(name)) return 'color';
+  if (/radius/.test(name)) return 'radius';
+  if (/space/.test(name)) return 'space';
+  if (/font-family/.test(name) || /^--vsa-font-(body|display|mono)$/.test(name)) return 'font';
+  return 'text';
+}
+function computed(probe, name) { return getComputedStyle(probe).getPropertyValue(name).trim(); }
+function demo(name, probeId) {
+  const k = kind(name); const v = `var(${name})`;
+  const box = document.getElementById(probeId);
+  const holder = document.createElement('span');
+  if (k === 'color') holder.innerHTML = `<span class="sw" style="background:${v}"></span>`;
+  else if (k === 'shadow') holder.innerHTML = `<div class="demo-shadow" style="box-shadow:${v}"></div>`;
+  else if (k === 'radius') holder.innerHTML = `<div class="demo-radius" style="border-radius:${v}"></div>`;
+  else if (k === 'space') holder.innerHTML = `<div class="demo-space" style="width:${v}"></div>`;
+  else if (k === 'font') holder.innerHTML = `<span style="font-family:${v};font-size:15px">Aa Runner 0123</span>`;
+  else holder.innerHTML = `<span class="val">${esc(computed(box, name))}</span>`;
+  return holder.innerHTML;
+}
+function tokenTable(pattern) {
+  const re = new RegExp(pattern);
+  const names = [...tokens().keys()].filter(n => re.test(n));
+  if (!names.length) return `<p class="empty">No token matches ${esc(pattern)}.</p>`;
+  const rows = names.map(n => {
+    const c = chain(n);
+    const path = c.steps.map((s, i) => i === 0 ? `<b>${esc(s)}</b>` : esc(s)).join(' → ');
+    const tail = c.value && !/^var\(--[\w-]+\)$/.test(c.value) ? ` → <span class="val">${esc(c.value.length > 70 ? c.value.slice(0, 70) + '…' : c.value)}</span>` : '';
+    const light = `<div data-theme="light" class="wa-light" style="background:var(--vsa-color-surface);padding:6px 8px;border-radius:8px">${demo(n, 'probe-light')}</div>`;
+    const dark = `<div data-theme="dark" class="wa-dark" style="background:var(--vsa-color-surface);padding:6px 8px;border-radius:8px">${demo(n, 'probe-dark')}</div>`;
+    return `<tr><td class="chain">${path}${tail}</td><td>${light}</td><td>${dark}</td></tr>`;
+  }).join('');
+  return `<div class="table-wrap"><table><thead><tr><th>Token and source</th><th>Light</th><th>Dark</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* Markdown with two special code blocks: "html preview" shows the live HTML and its code; "tokens <regex>" shows a token table. */
+marked.use({ renderer: {
+  code(code, info) {
+    const lang = (info || '').trim();
+    if (lang === 'html preview') return `<div class="example"><div class="preview">${code}</div><details><summary>Code</summary><pre><code>${esc(code)}</code></pre></details></div>`;
+    if (lang.startsWith('tokens ')) return `<div data-tokens="${esc(lang.slice(7).trim())}"></div>`;
+    return false;
+  }
+} });
+function renderMarkdown(md) {
+  const div = document.createElement('div');
+  div.innerHTML = marked.parse(md);
+  return div;
+}
+
+/* Pages */
+let index;
+async function docsIndex() { return index ??= JSON.parse(await loadText('index.json')); }
+
+async function buildNav() {
+  const [ix, all] = await Promise.all([docsIndex(), manifest()]);
+  const documented = new Set(ix.components.map(c => c.name));
+  const link = (href, label, dot) => `<li><a href="${href}">${esc(label)}${dot ? '<span class="dot" title="Has a usage page"></span>' : ''}</a></li>`;
+  const allNames = [...new Set([...all.keys(), ...documented])].sort();
+  document.querySelector('nav.side .lists').innerHTML = `
+    <ul>${link('#/', 'Overview')}</ul>
+    <div class="group">Foundations</div>
+    <ul>${ix.foundations.map(f => link('#/foundations/' + f.name, f.title)).join('')}</ul>
+    <div class="group">Components</div>
+    <ul>${ix.components.map(c => link('#/components/' + c.name, c.title, true)).join('')}</ul>
+    <div class="group">All components (${allNames.length})</div>
+    <wa-input class="filter" size="small" placeholder="Filter" aria-label="Filter components" with-clear></wa-input>
+    <ul class="all">${allNames.map(n => link('#/components/' + n, n, documented.has(n))).join('')}</ul>`;
+  const filter = document.querySelector('.filter');
+  filter.addEventListener('input', () => {
+    const q = (filter.value || '').toLowerCase();
+    document.querySelectorAll('ul.all li').forEach(li => { li.hidden = q && !li.textContent.toLowerCase().includes(q); });
+  });
+  markCurrent();
+}
+function markCurrent() {
+  const h = location.hash || '#/';
+  document.querySelectorAll('nav.side .lists a').forEach(a => {
+    if (a.getAttribute('href') === h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+}
+
+function apiTables(d) {
+  const table = (title, cols, rows) => rows.length ? `<h3>${title}</h3><div class="table-wrap"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '';
+  const attrs = (d.members || []).filter(m => m.kind === 'field' && m.privacy !== 'private' && m.privacy !== 'protected' && !m.static && (m.attribute || m.description));
+  return `<h2>API</h2>`
+    + table('Attributes and properties', ['Name', 'Attribute', 'Type', 'Default', 'Description'], attrs.map(m => `<tr><td><code>${esc(m.name)}</code></td><td>${m.attribute ? `<code>${esc(m.attribute)}</code>` : ''}</td><td><code>${esc(m.type?.text)}</code></td><td>${m.default ? `<code>${esc(m.default)}</code>` : ''}</td><td>${esc(m.description)}</td></tr>`))
+    + table('Slots', ['Name', 'Description'], (d.slots || []).map(s => `<tr><td><code>${esc(s.name || '(default)')}</code></td><td>${esc(s.description)}</td></tr>`))
+    + table('Events', ['Name', 'Description'], (d.events || []).filter(e => e.name).map(e => `<tr><td><code>${esc(e.name)}</code></td><td>${esc(e.description)}</td></tr>`))
+    + table('Methods', ['Name', 'Description'], (d.members || []).filter(m => m.kind === 'method' && !m.privacy && m.description).map(m => `<tr><td><code>${esc(m.name)}()</code></td><td>${esc(m.description)}</td></tr>`))
+    + table('CSS parts', ['Name', 'Description'], (d.cssParts || []).map(p => `<tr><td><code>${esc(p.name)}</code></td><td>${esc(p.description)}</td></tr>`))
+    + table('CSS custom properties', ['Name', 'Default', 'Description'], (d.cssProperties || []).map(p => `<tr><td><code>${esc(p.name)}</code></td><td>${p.default ? `<code>${esc(p.default)}</code>` : ''}</td><td>${esc(p.description)}</td></tr>`))
+    + table('Custom states', ['Name', 'Description'], (d.cssStates || []).map(p => `<tr><td><code>:state(${esc(p.name)})</code></td><td>${esc(p.description)}</td></tr>`));
+}
+
+async function componentPage(name) {
+  const [ix, all] = await Promise.all([docsIndex(), manifest()]);
+  const d = all.get(name); const doc = ix.components.find(c => c.name === name);
+  const page = document.createElement('div');
+  const title = doc?.title || name.replace(/(^|-)(\w)/g, (_, s, c) => (s ? ' ' : '') + c.toUpperCase());
+  page.innerHTML = `<h1>${esc(title)}</h1>
+    <p class="lead">${esc(d?.summary || doc?.summary || '')}</p>
+    <div class="meta">${d ? `<code>&lt;wa-${esc(name)}&gt;</code><wa-badge variant="neutral" appearance="filled">${esc(d.status || '')}</wa-badge><a href="${esc(d.documentation)}" target="_blank" rel="noopener">Web Awesome docs</a>` : ''}
+    ${doc ? '<wa-badge variant="brand">VSA usage page</wa-badge>' : '<wa-badge variant="warning" appearance="filled">No VSA usage page yet</wa-badge>'}</div>`;
+  if (doc) page.append(renderMarkdown(await loadText('components/' + name + '.md')));
+  if (d) page.insertAdjacentHTML('beforeend', apiTables(d));
+  return page;
+}
+async function markdownPage(path) {
+  return renderMarkdown(await loadText(path));
+}
+async function route() {
+  const main = document.getElementById('page');
+  const h = (location.hash || '#/').slice(2);
+  const [section, name] = h.split('/');
+  let page;
+  try {
+    if (section === 'foundations' && name) page = await markdownPage('foundations/' + name + '.md');
+    else if (section === 'components' && name) page = await componentPage(name);
+    else page = await markdownPage('overview.md');
+  } catch (e) {
+    page = document.createElement('div');
+    page.innerHTML = `<h1>Not found</h1><p class="empty">${esc(e.message)}</p>`;
+  }
+  page.querySelectorAll('[data-tokens]').forEach(el => { el.outerHTML = tokenTable(el.dataset.tokens); });
+  main.replaceChildren(...page.childNodes);
+  main.querySelector('h1 + p')?.classList.add('lead');
+  markCurrent();
+  document.querySelector('nav.side').classList.remove('open');
+  window.scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+buildNav();
+route();
+</script>
+</body>
+</html>

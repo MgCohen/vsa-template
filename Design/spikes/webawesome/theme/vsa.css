@@ -156,9 +156,10 @@ wa-select::part(combobox) {
 
 /* Carved: switch track, raised knob */
 wa-switch {
-  --width: 40px;
-  --height: 24px;
-  --thumb-size: 18px;
+  /* 40, 24 and 18 px at the 13 px body size. em keeps the size attribute working. */
+  --width: calc(40em / 13);
+  --height: calc(24em / 13);
+  --thumb-size: calc(18em / 13);
 }
 wa-switch::part(control) {
   background: var(--vsa-color-sunken);
@@ -193,7 +194,7 @@ wa-radio:state(checked)::part(control) {
 
 /* Carved: tracks */
 wa-slider::part(track),
-wa-progress-bar::part(base) {
+wa-progress-bar::part(progress-bar) {
   background: var(--vsa-color-sunken);
   box-shadow: var(--vsa-shadow-carve);
 }
