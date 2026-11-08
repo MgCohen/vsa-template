@@ -1,12 +1,12 @@
 <Project>
   <!-- The layers that Unity can use also target netstandard2.1 (see docs/consumers.md). -->
   <PropertyGroup>
-    <VsaUnityLayer Condition="'$(MSBuildProjectName)' == 'VSA.Domain' or '$(MSBuildProjectName)' == 'VSA.Contracts' or '$(MSBuildProjectName)' == 'VSA.Contracts.Events' or '$(MSBuildProjectName)' == 'VSA.Contracts.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Events' or '$(MSBuildProjectName)' == 'VSA.Infrastructure' or '$(MSBuildProjectName)' == 'VSA.Module' or '$(MSBuildProjectName)' == 'VSA.Composition'">true</VsaUnityLayer>
+    <VsaPortableLayer Condition="'$(MSBuildProjectName)' == 'VSA.Domain' or '$(MSBuildProjectName)' == 'VSA.Contracts' or '$(MSBuildProjectName)' == 'VSA.Contracts.Events' or '$(MSBuildProjectName)' == 'VSA.Contracts.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Events' or '$(MSBuildProjectName)' == 'VSA.Infrastructure' or '$(MSBuildProjectName)' == 'VSA.Module' or '$(MSBuildProjectName)' == 'VSA.Composition' or '$(MSBuildProjectName)' == 'VSA.Contracts.Requests' or '$(MSBuildProjectName)' == 'VSA.Handlers.Requests' or '$(MSBuildProjectName)' == 'VSA.Presenters'">true</VsaPortableLayer>
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework Condition="'$(VsaUnityLayer)' != 'true'">net10.0</TargetFramework>
-    <TargetFrameworks Condition="'$(VsaUnityLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>
+    <TargetFramework Condition="'$(VsaPortableLayer)' != 'true'">net10.0</TargetFramework>
+    <TargetFrameworks Condition="'$(VsaPortableLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

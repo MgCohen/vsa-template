@@ -5,8 +5,6 @@ using Signals.Presenters;
 using Signals.Slices.Ring;
 using VSA.Contracts.Events;
 using VSA.Handlers.Events;
-using VSA.Composition;
-using VSA.Host;
 using VSA.Presenters;
 
 namespace Framework.Tests.Host;
@@ -84,9 +82,5 @@ public sealed class PresenterEventTests {
     }
 
     static Task<IHost> Start(Action<IServiceCollection>? configure = null) =>
-        VsaBuilder.Create("--urls", "http://127.0.0.1:0")
-            .UseWebHost()
-            .Modules(new SignalsModule())
-            .Services(configure ?? (_ => { }))
-            .Start();
+        WebApps.OnTestServer(new SignalsModule()).Services(configure ?? (_ => { })).Start();
 }

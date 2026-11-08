@@ -24,7 +24,7 @@ public sealed class SliceRouterTests {
     static SliceSource CreateNoteResponse => File("CreateNote/CreateNoteResponse.cs",
         "public sealed record CreateNoteResponse(Guid Id) : IResponse;");
     static SliceSource CreateNoteHandler => File("CreateNote/CreateNoteHandler.cs", """
-        sealed class CreateNoteHandler(IRepository<Note, NoteId> notes) : RoutedHandler<CreateNoteRequest, CreateNoteResponse> {
+        sealed class CreateNoteHandler(IRepository<Note, NoteId> notes) : RequestHandler<CreateNoteRequest, CreateNoteResponse> {
             protected override Task<Result<CreateNoteResponse>> HandleRequestAsync(CreateNoteRequest request, CancellationToken ct) => null!;
         }
         """);
@@ -55,10 +55,10 @@ public sealed class SliceRouterTests {
             File("ListNotes/ListNotesResponse.cs", "public sealed record ListNotesResponse(IReadOnlyList<NoteDto> Notes) : IResponse;"),
             File("ListNotes/NoteDto.cs", "public sealed record NoteDto(Guid Id, AuthorDto Author);"),
             File("ListNotes/AuthorDto.cs", "public sealed record AuthorDto(string Name);"),
-            File("ListNotes/ListNotesHandler.cs", "sealed class ListNotesHandler : RoutedHandler<ListNotesRequest, ListNotesResponse> { }"),
+            File("ListNotes/ListNotesHandler.cs", "sealed class ListNotesHandler : RequestHandler<ListNotesRequest, ListNotesResponse> { }"),
             File("Shared/NoteSummary.cs", "public sealed record NoteSummary(string Title);"),
             File("ShowNote/ShowNoteResponse.cs", "public sealed record ShowNoteResponse(NoteSummary Summary) : IResponse;"),
-            File("ShowNote/ShowNoteHandler.cs", "sealed class ShowNoteHandler : RoutedHandler<ShowNoteRequest, ShowNoteResponse> { }"));
+            File("ShowNote/ShowNoteHandler.cs", "sealed class ShowNoteHandler : RequestHandler<ShowNoteRequest, ShowNoteResponse> { }"));
 
         Assert.That(routing.Errors, Is.Empty);
         using var scope = Assert.EnterMultipleScope();
@@ -85,7 +85,7 @@ public sealed class SliceRouterTests {
 
     static readonly SliceSource[] PipelineBases = [
         Known("Messages/Message.cs", "public abstract record Message; public sealed record MessageId(long Value) : IResponse;"),
-        Known("Messages/MessageHandler.cs", "public abstract class MessageHandler<T> : RoutedHandler<T, MessageId> { }"),
+        Known("Messages/MessageHandler.cs", "public abstract class MessageHandler<T> : RequestHandler<T, MessageId> { }"),
         Known("Messages/MessageEvent.cs", "public abstract record MessageEvent : IntegrationEvent;"),
     ];
 
@@ -105,7 +105,7 @@ public sealed class SliceRouterTests {
         Assert.That(routing.Layers.Keys, Has.None.Contains("Pipeline"), "The router does not route the known files.");
     }
 
-    // Two levels: BigDamageHandler : DamageHandler (own slice) : MessageHandler (Shared) : RoutedHandler.
+    // Two levels: BigDamageHandler : DamageHandler (own slice) : MessageHandler (Shared) : RequestHandler.
     [Test]
     public void The_router_follows_the_bases_to_any_depth() {
         var routing = SliceRouter.Route(Slices, [
@@ -171,12 +171,12 @@ public sealed class SliceRouterTests {
 
     static IEnumerable<TestCaseData> Errors() {
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse,
-            File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RoutedHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Log : IntegrationEventHandler<X> { }") },
+            File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RequestHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Log : IntegrationEventHandler<X> { }") },
             "has a request handler and an event handler").SetName("A slice with two kinds of handler");
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse, File("CreateNote/TitleRules.cs", "static class TitleRules { }") },
             "has no handler").SetName("A slice with a helper and no handler");
         yield return new TestCaseData(new[] { CreateNoteResponse, CreateNoteHandler,
-            File("CreateNote/CreateNoteRequest.cs", $"public sealed record CreateNoteRequest : IRequest<CreateNoteResponse> {{ {Routed} }} sealed class Helper : RoutedHandler<A, B> {{ }}") },
+            File("CreateNote/CreateNoteRequest.cs", $"public sealed record CreateNoteRequest : IRequest<CreateNoteResponse> {{ {Routed} }} sealed class Helper : RequestHandler<A, B> {{ }}") },
             "Put each in its own file").SetName("A file with a contract and a handler");
         yield return new TestCaseData(new[] { CreateNoteHandler,
             File("CreateNote/CreateNoteRequest.cs", $"public sealed record CreateNoteRequest : IRequest<CreateNoteResponse> {{ {Routed} }} public sealed record NoteCreated : IntegrationEvent;"),
@@ -190,12 +190,12 @@ public sealed class SliceRouterTests {
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteHandler,
             File("CreateNote/CreateNoteResponse.cs", "public sealed record CreateNoteResponse(NoteDto Note) : IResponse;"),
             File("ListNotes/NoteDto.cs", "public sealed record NoteDto(string Title);"),
-            File("ListNotes/ListNotesHandler.cs", "sealed class ListNotesHandler : RoutedHandler<A, B> { }") },
+            File("ListNotes/ListNotesHandler.cs", "sealed class ListNotesHandler : RequestHandler<A, B> { }") },
             "Move NoteDto to Slices/Shared/").SetName("A DTO from another slice");
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse, CreateNoteHandler, File("Shared/TitleRules.cs", "static class TitleRules { }") },
             "Slices/Shared/ holds only contracts").SetName("A helper in Shared");
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteResponse,
-            File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RoutedHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Pay : CommandHandler<A, B> { }") },
+            File("CreateNote/CreateNoteHandler.cs", "sealed class CreateNoteHandler : RequestHandler<CreateNoteRequest, CreateNoteResponse> { } sealed class Pay : CommandHandler<A, B> { }") },
             "has a request handler and a command handler").SetName("A slice with a request handler and a command handler");
         yield return new TestCaseData(new[] { CreateNoteRequest, CreateNoteHandler,
             File("CreateNote/CreateNoteResponse.cs", "public sealed record CreateNoteResponse(NoteDto Note) : IResponse;"),

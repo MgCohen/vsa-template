@@ -4,8 +4,8 @@ using VSA.Handlers.Requests;
 
 namespace Pipeline.Slices.Messages;
 
-// The base of the message handlers of each module. The router finds RoutedHandler through this base.
-public abstract class MessageHandler<TMessage> : RoutedHandler<TMessage, MessageId> where TMessage : Message, IRequest<MessageId> {
+// The base of the message handlers of each module. The router finds RequestHandler through this base.
+public abstract class MessageHandler<TMessage> : RequestHandler<TMessage, MessageId> where TMessage : Message, IRequest<MessageId> {
     public abstract MessageId Handle(TMessage message);
 
     protected sealed override Task<Result<MessageId>> HandleRequestAsync(TMessage request, CancellationToken ct) =>

@@ -15,7 +15,7 @@ await VsaBuilder.Create().UseGenericHost().Build().RunAsync();
 | Step | Use |
 |---|---|
 | `Create(args)` | Makes the builder. `args` go to the configuration of the host |
-| `UseWebHost()` (VSA.Host) | ASP.NET Core: request routes, loopback bus, views |
+| `UseWebHost()` (VSA.Host) | ASP.NET Core: the HTTP API of the requests, and the views |
 | `UseGenericHost()` (VSA.Composition) | The .NET Generic Host: no ASP.NET Core |
 | `Modules(...)` | Optional. Gives the modules. With no call, `AppScan` finds them. Tests use it |
 | `Services(...)` | Optional. App registrations, before the modules |
@@ -29,26 +29,43 @@ If the app selects no host, `Build()` stops with the message "The app has no hos
 VsaBuilder.Build()
 ├─ host.CreateBuilder(args)        WebApplicationBuilder, or HostApplicationBuilder
 ├─ AppScan.Modules()               only if the app gave no modules
-├─ VSA layer installers            events, commands, presenters (net10.0)
-├─ host.Install                    web: loopback bus, request routes, views
+├─ VSA layer installers            events, commands, requests, in-process bus, presenters
+├─ host.Install                    web: the request handlers to map, views
 ├─ Services(...) callbacks         app registrations
 ├─ Module.Configure                each module, last
-└─ host.Build                      web: Build, UseFastEndpoints, map the views
+└─ host.Build                      web: Build, map one route for each request, map the views
 ```
 
 `Module.Configure` runs last, because a module can replace a default with `ModuleBuilder.Replace`. The order is inside `Build`, so an app cannot change it.
 
-## Layers and hosts
+## Definitions and transports
 
-| Layer | Dispatch | Generic host | Web host |
+A module defines its requests, commands, events, handlers and presenters one time. The same code works on every host. The host selects only the transports:
+
+| Kind | Part | Generic host | Web host |
 |---|---|---|---|
-| Events (`IntegrationEventHandler<T>`) | In-process publisher | Yes | Yes |
-| Commands (`CommandHandler<,>`) | In-process sender | Yes | Yes |
-| Presenters | `LivePresenters` | `net10.0` only (issue #44) | Yes |
-| Requests (`RoutedHandler<,>`) | FastEndpoints routes, HTTP | No | Yes |
-| Views (`ViewsRoot`) | Razor components | No | Yes |
+| Definition | Events (`IntegrationEventHandler<T>`), in-process publisher | Yes | Yes |
+| Definition | Commands (`CommandHandler<,>`), in-process sender | Yes | Yes |
+| Definition | Requests (`RequestHandler<,>`), `InProcessBus` (`IBus`) | Yes | Yes |
+| Definition | Presenters, `LivePresenters` | Yes | Yes |
+| Transport | HTTP API: one route for each request | No | Yes |
+| Transport | Views (`ViewsRoot`): Razor components | No | Yes |
 
-The installers of the requests and the views need ASP.NET Core, so only the web host runs them. A Unity app keeps the events and the commands, and it has no routes.
+```
+Presenter → IBus.Send(request) → InProcessBus → RequestHandler<,>       every host
+API client → HTTP → route of the request → RequestHandler<,>            web host
+```
+
+A request gives its `Method` and `Route` as static members. Only the HTTP API reads them. On `netstandard2.1`, `IRoutedRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
+
+```csharp
+public interface IRoutedRequest {
+#if NET
+    static abstract HttpMethod Method { get; }
+    static abstract string Route { get; }
+#endif
+}
+```
 
 ## AppScan finds the parts of the app
 
@@ -76,9 +93,9 @@ Each layer has one internal static installer in its own project. Only VSA.Compos
 
 | Step | Events | Commands | Requests |
 |---|---|---|---|
-| 1. Find | `IntegrationEventHandler<>` | `CommandHandler<,>` | `RoutedHandler<,>` |
-| 2. Check | None | One handler for each command | None. No handlers: stop |
-| 3. Register | Publisher, each handler | Sender, each handler | FastEndpoints, for the handler assemblies |
+| 1. Find | `IntegrationEventHandler<>` | `CommandHandler<,>` | `RequestHandler<,>` |
+| 2. Check | None | One handler for each command | One handler for each request |
+| 3. Register | Publisher, each handler | Sender, each handler | Each handler. One handler for each request |
 
 ```csharp
 static class CommandHandlerInstaller {
@@ -93,7 +110,19 @@ static class CommandHandlerInstaller {
 }
 ```
 
-`ModuleTypes.Implementations(typeof(TBase))` gives each concrete type of the modules that derives from `TBase`, with its service type. `ModuleTypes` reads the layer assemblies of the modules one time. FastEndpoints takes assemblies, not types, so the request installer gives the assemblies of the handlers.
+`ModuleTypes.Implementations(typeof(TBase))` gives each concrete type of the modules that derives from `TBase`, with its service type. `ModuleTypes` reads the layer assemblies of the modules one time.
+
+## The HTTP API
+
+The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core minimal APIs (`MapMethods`).
+
+| Step | Source |
+|---|---|
+| Bind the request | The JSON body (`POST`, `PUT`, `PATCH`), then the route values, then the query |
+| Run the handler | The `RequestHandler<,>` of the request, from the scope of the HTTP request |
+| Success | 200 with the response as JSON |
+| Error of the handler | A problem response: 404 if the code ends with `.not_found`, else 400 |
+| Value that does not bind | A problem response, 400, title `request.not_valid` |
 
 ## Projects
 
@@ -101,11 +130,11 @@ static class CommandHandlerInstaller {
 Module/              Module, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
-Handlers/Requests/   RequestEndpointInstaller
+Handlers/Requests/   RequestHandler, RequestHandlerInstaller
 Presenters/          PresenterInstaller
 Views/               ViewsRoot, ViewsInstaller
-Composition/         VsaBuilder, IVsaHost, GenericVsaHost, VsaArchitecture
-Host/                UseWebHost, WebVsaHost, HttpBus
+Composition/         VsaBuilder, IVsaHost, GenericVsaHost, VsaArchitecture, InProcessBus
+Host/                UseWebHost, WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
 - `VsaArchitecture` (internal) holds the VSA choices: how to find the modules, the layer installers and their order. `VsaBuilder` calls it.
@@ -139,13 +168,13 @@ A Unity app that uses VContainer writes its own bridge. The bridge copies each `
 
 | Service | Web host | Generic host |
 |---|---|---|
-| `IBus` | `HttpBus` to the server address (loopback) | None. The app registers one with `Services(...)` |
+| `IBus` | `InProcessBus` | `InProcessBus` |
 | `ILogger<T>` | Yes | Yes |
 | `IConfiguration` | `appsettings.json`, environment, `args` | `appsettings.json`, environment, `args` |
 
 ## Unity target
 
-`VSA.Composition` is a Unity layer (`VsaUnityLayer`). On `netstandard2.1`, `Build` does not run `PresenterInstaller`, because `VSA.Contracts.Requests` uses `static abstract` members. Issue #44 tracks this.
+`VSA.Composition` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
 
 The generic host uses `Microsoft.Extensions.Hosting` 8.0. A Unity app vendors it and its dependencies, with `VSA.Composition.dll`. The Unity app calls `StopAsync()` on the host when it quits, and `RunAsync()` then ends.
 
@@ -157,7 +186,7 @@ The generic host uses `Microsoft.Extensions.Hosting` 8.0. A Unity app vendors it
 
 ## Open questions
 
-- In-process bus: `HttpBus` is the only `IBus`. A request handler is a FastEndpoints endpoint, so a request needs HTTP.
+- Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppScan` can read that list first.
 - Unity check: `AppDomain.GetAssemblies()` with IL2CPP, and `RunAsync` in an `async` `Start` method. Check both in `vsa-consumer-unity`.
 - Architecture definition: `VsaBuilder.Create(definition, args)` can make `VsaArchitecture` public, for other architectures.

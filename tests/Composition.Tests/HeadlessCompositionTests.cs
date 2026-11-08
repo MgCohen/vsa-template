@@ -1,3 +1,7 @@
+using Answers;
+using Answers.Slices.Answer;
+using Answers.Slices.GetItem;
+using Answers.Slices.ListAll;
 using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
@@ -12,7 +16,6 @@ using Signals.Slices.Ring;
 using VSA.Composition;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
-using VSA.Contracts.Requests;
 using VSA.Presenters;
 
 namespace Composition.Tests;
@@ -62,10 +65,37 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void The_generic_host_registers_no_bus() {
-        using var host = VsaBuilder.Create().UseGenericHost().Modules(new SignalsModule()).Build();
+    public async Task A_request_goes_to_its_handler_in_process_with_no_route() {
+        using var host = App(new AnswersModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var id = Guid.NewGuid();
 
-        Assert.That(host.Services.GetService<IBus>(), Is.Null);
+        var response = await scope.ServiceProvider.GetRequiredService<IBus>().Send(new GetItemRequest(id, 2, false));
+
+        Assert.That(response, Is.EqualTo(new GetItemResponse(id, 2, false)));
+    }
+
+    [Test]
+    public async Task A_request_error_is_a_RequestException() {
+        using var host = App(new AnswersModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+
+        var error = Assert.ThrowsAsync<RequestException>(() => bus.Send(new AnswerRequest("answers.not_found")));
+
+        Assert.That(error!.Code, Is.EqualTo("answers.not_found"));
+        Assert.That(error.Message, Is.EqualTo("The test error."));
+    }
+
+    [Test]
+    public async Task A_request_with_no_handler_is_an_error() {
+        using var host = App().Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+
+        var error = Assert.ThrowsAsync<InvalidOperationException>(() => bus.Send(new ListAllRequest()));
+
+        Assert.That(error!.Message, Does.StartWith("Request Answers.Slices.ListAll.ListAllRequest has no handler."));
     }
 
     [Test]
@@ -98,14 +128,5 @@ public sealed class HeadlessCompositionTests {
     }
 
     static VsaBuilder App(params VSA.Module.Module[] modules) =>
-        VsaBuilder.Create()
-            .UseGenericHost()
-            .Modules(modules)
-            .Services(services => services.AddSingleton<IBus>(new NoRequestsBus()));
-
-    sealed class NoRequestsBus : IBus {
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
-            where TResponse : IResponse =>
-            throw new InvalidOperationException("This test app has no request handlers.");
-    }
+        VsaBuilder.Create().UseGenericHost().Modules(modules);
 }

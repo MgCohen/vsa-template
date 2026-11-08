@@ -3,7 +3,7 @@ using VSA.Handlers.Requests;
 
 namespace Good.Slices.GetItem;
 
-sealed class GetItemHandler : RoutedHandler<GetItemRequest, GetItemResponse> {
+sealed class GetItemHandler : RequestHandler<GetItemRequest, GetItemResponse> {
     protected override Task<Result<GetItemResponse>> HandleRequestAsync(GetItemRequest request, CancellationToken ct) =>
         Task.FromResult<Result<GetItemResponse>>(new GetItemResponse(request.Id));
 }

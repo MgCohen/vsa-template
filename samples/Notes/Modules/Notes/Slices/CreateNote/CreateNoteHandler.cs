@@ -7,7 +7,7 @@ using VSA.Infrastructure;
 namespace Notes.Slices.CreateNote;
 
 sealed class CreateNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEventPublisher events)
-    : RoutedHandler<CreateNoteRequest, CreateNoteResponse> {
+    : RequestHandler<CreateNoteRequest, CreateNoteResponse> {
     protected override async Task<Result<CreateNoteResponse>> HandleRequestAsync(CreateNoteRequest request, CancellationToken ct) {
         var created = Note.Create(new AuthorId(request.AuthorId), request.Title);
         if (!created.IsSuccess) {

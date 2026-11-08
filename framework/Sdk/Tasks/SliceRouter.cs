@@ -33,7 +33,7 @@ public sealed class SliceRouting {
 //   IntegrationEvent                       Contracts/Events
 //   ICommand<T>                            Contracts/Commands
 //   a type that a contract type uses       the contracts project of that contract type (a DTO, a command result)
-//   other files of a slice                 Handlers/Requests (RoutedHandler), Handlers/Events (IntegrationEventHandler)
+//   other files of a slice                 Handlers/Requests (RequestHandler), Handlers/Events (IntegrationEventHandler)
 //                                          or Handlers/Commands (CommandHandler)
 // The router runs before the compile, so it has no semantic model. It reads the Roslyn syntax tree and matches types by
 // their simple names: first in the same slice, then in Slices/Shared/. The compiler and VSA1003 check the result.
@@ -154,7 +154,7 @@ public static class SliceRouter {
                     $"Slice {slice.Key} has {string.Join(" and ", kinds.OrderBy(k => k).Select(HandlerName))}. A slice has one kind of handler. Move one of them to its own slice."));
             } else if (kinds.Count == 0) {
                 routing.Errors.AddRange(open.Select(f => new SliceError(f,
-                    $"Slice {slice.Key} has no handler, so {Path.GetFileName(f)} has no project. Add a RoutedHandler, an IntegrationEventHandler or a CommandHandler to the slice, or move the file.")));
+                    $"Slice {slice.Key} has no handler, so {Path.GetFileName(f)} has no project. Add a RequestHandler, an IntegrationEventHandler or a CommandHandler to the slice, or move the file.")));
             } else {
                 var handlers = kinds[0] switch {
                     Kind.RequestHandler => HandlersRequests,
@@ -254,7 +254,7 @@ public static class SliceRouter {
                 }
             }
         }
-        return all.Contains("RoutedHandler") ? Kind.RequestHandler
+        return all.Contains("RequestHandler") ? Kind.RequestHandler
             : all.Contains("IntegrationEventHandler") ? Kind.EventHandler
             : all.Contains("CommandHandler") ? Kind.CommandHandler
             : all.Contains("IRequest") ? Kind.Request

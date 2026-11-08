@@ -50,7 +50,7 @@ Modules/Cards/
 | `<Module>.Contracts.Requests` | Slice files with `IRequest<T>` or `IResponse` types |
 | `<Module>.Contracts.Events` | Slice files with `IntegrationEvent` types |
 | `<Module>.Contracts.Commands` | Slice files with `ICommand<T>` types |
-| `<Module>.Handlers.Requests` | Other files of the slices with a `RoutedHandler` |
+| `<Module>.Handlers.Requests` | Other files of the slices with a `RequestHandler` |
 | `<Module>.Handlers.Events` | Other files of the slices with an `IntegrationEventHandler` |
 | `<Module>.Handlers.Commands` | Other files of the slices with a `CommandHandler` |
 
@@ -67,7 +67,7 @@ flowchart LR
 
 A command result has no marker. It goes to `Contracts.Commands` because its command names it: `PayCostCommand : ICommand<PayCostResult>`.
 
-`IResponse` is a marker interface. `IRequest`, `RoutedHandler`, `IBus.Send` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
+`IResponse` is a marker interface. `IRequest`, `RequestHandler`, `IBus.Send` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
 
 ## The router
 
@@ -78,7 +78,7 @@ The task `VsaRouteSliceFiles` (`framework/Sdk/Tasks`) selects the files of each 
 
    ```
    DealDamage        : Message, IRequest<MessageId>   → Contracts/Requests
-   DealDamageHandler : MessageHandler<DealDamage>      → MessageHandler : RoutedHandler → Handlers/Requests
+   DealDamageHandler : MessageHandler<DealDamage>      → MessageHandler : RequestHandler → Handlers/Requests
    PayCost           : Effect<PayCostResult>           → Effect<T> : ICommand<T>       → Contracts/Commands
    PayCostHandler    : CommandHandler<PayCost, PayCostResult>                          → Handlers/Commands
    ```
@@ -112,7 +112,7 @@ The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tas
 | Request handler and event handler in one slice | `CreateNote/` has `CreateNoteHandler` and a `NoteCreated` handler |
 | Request handler and command handler in one slice | `CreateNote/` has `CreateNoteHandler` and a `CommandHandler<A, B>` |
 | Files, but no handler in the slice | `Extra/Helper.cs` |
-| Contract type and handler type in one file | `CreateNoteRequest` and a `RoutedHandler` in one file |
+| Contract type and handler type in one file | `CreateNoteRequest` and a `RequestHandler` in one file |
 | Request type and event type in one file | `CreateNoteRequest` and `NoteCreated` in one file |
 | DTO used by a request and an event | `NoteDto` in `CreateNoteResponse` and in `NoteCreated` |
 | DTO used by a response and a command | `NoteDto` in `CreateNoteResponse` and in `SaveNote : ICommand<bool>` |
@@ -181,7 +181,7 @@ A command goes from one module to another in the same process. It has one handle
 
 | Message | Sent by | Handlers | Result | Transport |
 |---|---|---|---|---|
-| Request (`IRequest<T>`) | A client or a module | One `RoutedHandler` | `IResponse` | HTTP (`IBus.Send`) |
+| Request (`IRequest<T>`) | A client or a module | One `RequestHandler` | `IResponse` | In process (`IBus.Send`), or HTTP on the web host |
 | Command (`ICommand<T>`) | A handler of a module | One `CommandHandler` | Any type of the slice | In process, `ICommandSender` |
 | Event (`IntegrationEvent`) | A handler, after a change | Zero or more | None | `IIntegrationEventPublisher` |
 

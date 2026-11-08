@@ -116,7 +116,7 @@ public abstract class VsaUnitTest {
 
     static Type? HandledRequest(Type type) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {
-            if (b.IsGenericType && b.GetGenericTypeDefinition() == typeof(RoutedHandler<,>)) {
+            if (b.IsGenericType && b.GetGenericTypeDefinition() == typeof(RequestHandler<,>)) {
                 return b.GetGenericArguments()[0];
             }
         }

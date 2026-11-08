@@ -65,10 +65,12 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 | Infrastructure | `VSA.Infrastructure` | Yes |
 | Module | `VSA.Module` | Yes |
 | Composition | `VSA.Composition` | Yes, without presenters |
-| Contracts, requests | `VSA.Contracts.Requests` | No: `static abstract` members |
-| Handlers, requests; Host; Views | ASP.NET Core packages | No: ASP.NET Core |
+| Contracts, requests | `VSA.Contracts.Requests` | Yes. The route members are only on `net10.0` |
+| Handlers, requests | `VSA.Handlers.Requests` | Yes |
+| Presenters | `VSA.Presenters` | Yes |
+| Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
-The root `Directory.Build.props` lists the Unity layers (`VsaUnityLayer`). They target `net10.0` and `netstandard2.1`.
+The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`). They target `net10.0` and `netstandard2.1`.
 
 ### Rules for the netstandard2.1 target
 
