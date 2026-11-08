@@ -36,7 +36,7 @@ public sealed class HeadlessCompositionTests {
     [Test]
     public async Task A_command_goes_through_two_modules_in_a_plain_service_provider() {
         var services = Services();
-        Composer(services, new CardsModule(), new ResourcesModule()).Install();
+        VsaComposer.Install(Context(services, new CardsModule(), new ResourcesModule()));
         await using var provider = Build(services);
         await using var scope = provider.CreateAsyncScope();
 
@@ -48,9 +48,9 @@ public sealed class HeadlessCompositionTests {
 
     [Test]
     public void A_command_with_two_handlers_stops_the_composition() {
-        var composer = Composer(Services(), new EchoModule());
+        var context = Context(Services(), new EchoModule());
 
-        var error = Assert.Throws<InvalidOperationException>(composer.Install);
+        var error = Assert.Throws<InvalidOperationException>(() => VsaComposer.Install(context));
 
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:"));
     }
@@ -58,7 +58,7 @@ public sealed class HeadlessCompositionTests {
     [Test]
     public async Task An_event_reaches_its_handler_and_a_live_presenter() {
         var services = Services();
-        Composer(services, new SignalsModule()).Install();
+        VsaComposer.Install(Context(services, new SignalsModule()));
         await using var provider = Build(services);
         await using var scope = provider.CreateAsyncScope();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
@@ -74,7 +74,7 @@ public sealed class HeadlessCompositionTests {
     public void The_composer_registers_no_bus() {
         var services = new ServiceCollection();
 
-        Composer(services, new SignalsModule()).Install();
+        VsaComposer.Install(Context(services, new SignalsModule()));
 
         Assert.That(services.Any(s => s.ServiceType == typeof(IBus)), Is.False);
     }
@@ -85,7 +85,7 @@ public sealed class HeadlessCompositionTests {
         var appRingLog = new RingLog();
         services.AddSingleton(appRingLog);
 
-        Composer(services, new SignalsModule()).Install();
+        VsaComposer.Install(Context(services, new SignalsModule()));
         await using var provider = Build(services);
 
         Assert.That(provider.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
@@ -119,7 +119,7 @@ public sealed class HeadlessCompositionTests {
         Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
     }
 
-    static VsaComposer Composer(ServiceCollection services, params VSA.Module.Module[] modules) =>
+    static VsaContext Context(ServiceCollection services, params VSA.Module.Module[] modules) =>
         new(services, EmptyConfiguration(), modules);
 
     static ServiceCollection Services() {

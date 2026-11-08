@@ -6,8 +6,9 @@ namespace VSA.Handlers.Events;
 
 public static class EventHandlerInstaller {
     public static void Install(VsaContext context) {
+        var handlers = context.Implementations(typeof(IntegrationEventHandler<>));
         context.Services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
-        foreach (var (service, handler) in context.Implementations(typeof(IntegrationEventHandler<>))) {
+        foreach (var (service, handler) in handlers) {
             context.Services.AddScoped(service, handler);
         }
     }

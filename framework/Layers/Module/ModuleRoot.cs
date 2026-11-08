@@ -30,4 +30,19 @@ public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<st
     };
 
     public static ModuleRoot Of(Module module) => Of(module.GetType().Assembly);
+
+    public Module CreateModule() {
+        var classes = Assembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(Module)))
+            .ToArray();
+        return classes switch {
+            [var type] => (Module)Activator.CreateInstance(type)!,
+            [] => throw new InvalidOperationException(
+                $"Module {Name} has no Module class. "
+                + $"Add one class that inherits Module or Module<TSettings> to the {Name} module root."),
+            _ => throw new InvalidOperationException(
+                $"Module {Name} has {classes.Length} Module classes: "
+                + $"{string.Join(", ", classes.Select(t => t.FullName))}. A module root must have one."),
+        };
+    }
 }

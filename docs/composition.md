@@ -1,14 +1,14 @@
 # Composition: the composer and its installers
 
-A `VsaComposer` registers an app in one call: `Install()`. Each layer has one static installer class in its own project. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+`VsaComposer.Install(context)` registers an app in one call. Each layer has one static installer class in its own project. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## One call
 
 ```mermaid
 flowchart LR
-    D[ModuleDiscovery or given modules] --> X[VsaContext]
+    D[ModuleDiscovery.Modules or given modules] --> X[VsaContext]
     A[App code: defaults, web parts] --> I
-    X --> I[composer.Install]
+    X --> I[VsaComposer.Install]
     I --> L[Layer installers]
     L --> M[ModuleInstaller]
 ```
@@ -20,22 +20,34 @@ flowchart LR
 | 3 | `PresenterInstaller` (`net10.0`) | `LivePresenters` and each `Presenter` |
 | 4 | `ModuleInstaller` | `Module.Configure` of each module |
 
-`ModuleInstaller` runs last, because a module can replace a default in `Configure` (`ModuleBuilder.Replace`). App code that registers a default runs before `Install()`.
+`ModuleInstaller` runs last, because a module can replace a default in `Configure` (`ModuleBuilder.Replace`). App code that registers a default runs before `VsaComposer.Install`.
 
-## Installers find their types
+## Message installers have one shape
 
-An installer is a static class with one method, `Install(VsaContext context)`. `context.Implementations(typeof(TBase))` gives each concrete type of each module that derives from `TBase`, with its service type:
+An installer is a static class with one method, `Install(VsaContext context)`. Each message installer does the same 3 steps:
+
+| Step | Events | Commands | Requests |
+|---|---|---|---|
+| 1. Find | `IntegrationEventHandler<>` | `CommandHandler<,>` | `RoutedHandler<,>` |
+| 2. Check | None | One handler for each command | None. No handlers: stop |
+| 3. Register | Publisher, each handler | Sender, each handler | FastEndpoints, for the handler assemblies |
 
 ```csharp
-public static class EventHandlerInstaller {
+public static class CommandHandlerInstaller {
     public static void Install(VsaContext context) {
-        context.Services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
-        foreach (var (service, handler) in context.Implementations(typeof(IntegrationEventHandler<>))) {
+        var handlers = context.Implementations(typeof(CommandHandler<,>));
+        EnsureOneHandlerForEachCommand(handlers);
+        context.Services.AddScoped<ICommandSender, InProcessCommandSender>();
+        foreach (var (service, handler) in handlers) {
             context.Services.AddScoped(service, handler);
         }
     }
 }
 ```
+
+FastEndpoints takes assemblies, not types. So the request installer gives the assemblies of the handlers.
+
+`context.Implementations(typeof(TBase))` gives each concrete type of each module that derives from `TBase`, with its service type:
 
 - For an open generic base, the service is the closed base, for example `IntegrationEventHandler<Rang>`.
 - For a plain base, for example `Presenter`, the service is the base.
@@ -60,19 +72,18 @@ Each layer project references `VSA.Module` with `PrivateAssets="all"`. So a modu
 ```csharp
 builder.AddVsa();
 
-var composer = new VsaComposer(services, configuration, modules);
-composer.Install();
+VsaComposer.Install(new VsaContext(services, configuration, modules));
 ```
 
 `builder.AddVsa()` does these steps:
 
 1. `AddLoopbackBus(services)`: `IBus` as `HttpBus` to the server address.
-2. `RequestEndpointInstaller.Install(composer.Context)`: FastEndpoints for each `RoutedHandler<,>`.
-3. `composer.Install()`.
+2. `RequestEndpointInstaller.Install(context)`: FastEndpoints for each `RoutedHandler<,>`.
+3. `VsaComposer.Install(context)`.
 
 `app.MapVsaRequests()` calls `RequestEndpointInstaller.Map(app)`. It starts FastEndpoints only if the app has request handlers.
 
-With no `modules` argument, the composer finds the modules with `ModuleDiscovery`: the module roots of `deps.json`, the Shared modules first. Unity has no `deps.json`, so a Unity app gives the modules.
+With no `modules` argument, `VsaContext` calls `ModuleDiscovery.Modules()`. It finds the module roots of `deps.json`, the Shared modules first, and each root creates its one `Module` class (`ModuleRoot.CreateModule`). Unity has no `deps.json`, so a Unity app gives the modules.
 
 ## The container
 
@@ -104,7 +115,7 @@ A Unity app that uses VContainer writes its own bridge. The bridge does two jobs
 |---|---|---|
 | `IBus` | `AddLoopbackBus` | The app registers one |
 | `ILogger<T>` | ASP.NET Core logging | The app registers logging |
-| `IConfiguration` | `builder.Configuration` | An argument of the composer |
+| `IConfiguration` | `builder.Configuration` | An argument of `VsaContext` |
 
 ## Unity target
 

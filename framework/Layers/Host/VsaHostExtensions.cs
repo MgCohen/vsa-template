@@ -4,17 +4,18 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Composition;
 using VSA.Handlers.Requests;
+using VSA.Module;
 using VSA.Presenters;
 
 namespace VSA.Host;
 
 public static class VsaHostExtensions {
     public static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder) =>
-        builder.AddVsa(new VsaComposer(builder.Services, builder.Configuration));
+        builder.AddVsa(new VsaContext(builder.Services, builder.Configuration));
 
     public static WebApplicationBuilder AddVsa(
         this WebApplicationBuilder builder, params VSA.Module.Module[] modules) =>
-        builder.AddVsa(new VsaComposer(builder.Services, builder.Configuration, modules));
+        builder.AddVsa(new VsaContext(builder.Services, builder.Configuration, modules));
 
     public static WebApplication MapVsaRequests(this WebApplication app) {
         RequestEndpointInstaller.Map(app);
@@ -24,10 +25,10 @@ public static class VsaHostExtensions {
     public static IServiceCollection AddLoopbackBus(IServiceCollection services) =>
         services.AddHttpClient<IBus, HttpBus>((provider, client) => client.BaseAddress = LoopbackAddress(provider)).Services;
 
-    static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder, VsaComposer composer) {
+    static WebApplicationBuilder AddVsa(this WebApplicationBuilder builder, VsaContext context) {
         AddLoopbackBus(builder.Services);
-        RequestEndpointInstaller.Install(composer.Context);
-        composer.Install();
+        RequestEndpointInstaller.Install(context);
+        VsaComposer.Install(context);
         return builder;
     }
 

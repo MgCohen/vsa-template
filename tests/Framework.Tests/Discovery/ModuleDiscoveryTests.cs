@@ -38,10 +38,10 @@ public sealed class ModuleDiscoveryTests {
     }
 
     [Test]
-    public void ModulesAreCreatedInTheOrderOfTheRoots() {
-        var modules = ModuleDiscovery.CreateModules([ModuleRoot.Of(typeof(ShelfModule).Assembly)]);
+    public void RootCreatesItsOneModuleClass() {
+        var module = ModuleRoot.Of(typeof(ShelfModule).Assembly).CreateModule();
 
-        Assert.That(modules.Select(module => module.GetType()), Is.EqualTo(new[] { typeof(ShelfModule) }));
+        Assert.That(module, Is.TypeOf<ShelfModule>());
     }
 
     [Test]
@@ -49,7 +49,7 @@ public sealed class ModuleDiscoveryTests {
         // Shelf.Presenters has no Module class.
         var root = ModuleRoot.Of(typeof(ShelfPresenter).Assembly);
 
-        var error = Assert.Throws<InvalidOperationException>(() => ModuleDiscovery.CreateModules([root]));
+        var error = Assert.Throws<InvalidOperationException>(() => root.CreateModule());
 
         Assert.That(error.Message, Is.EqualTo(
             "Module Shelf.Presenters has no Module class. Add one class that inherits Module or Module<TSettings> to the Shelf.Presenters module root."));
@@ -59,7 +59,7 @@ public sealed class ModuleDiscoveryTests {
     public void RootWithTwoModuleClassesIsAnError() {
         var root = ModuleRoot.Of(typeof(TwinModule).Assembly);
 
-        var error = Assert.Throws<InvalidOperationException>(() => ModuleDiscovery.CreateModules([root]));
+        var error = Assert.Throws<InvalidOperationException>(() => root.CreateModule());
 
         Assert.That(error.Message, Does.StartWith("Module Twin has 2 Module classes: ")
             .And.Contain("Twin.TwinModule")

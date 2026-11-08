@@ -6,25 +6,19 @@ using Microsoft.Extensions.DependencyInjection;
 namespace VSA.Module;
 
 public sealed class VsaContext(
-    IServiceCollection services, IConfiguration configuration, IReadOnlyList<Module> modules) {
+    IServiceCollection services, IConfiguration configuration, IReadOnlyList<Module>? modules = null) {
+    readonly IReadOnlyList<Module> modules = modules ?? ModuleDiscovery.Modules();
     Type[]? moduleTypes;
 
     public IServiceCollection Services => services;
     public IConfiguration Configuration => configuration;
     public IReadOnlyList<Module> Modules => modules;
 
-    public IEnumerable<(Type Service, Type Implementation)> Implementations(Type baseType) {
-        foreach (var type in ModuleTypes()) {
-            if (ServiceOf(type, baseType) is { } service) {
-                yield return (service, type);
-            }
-        }
-    }
-
-    Type[] ModuleTypes() => moduleTypes ??= [.. modules
-        .SelectMany(module => ModuleRoot.Of(module).Layers)
-        .SelectMany(layer => Assembly.Load(layer).GetTypes())
-        .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(CompilerGeneratedAttribute)))];
+    public IReadOnlyList<(Type Service, Type Implementation)> Implementations(Type baseType) =>
+        [.. ModuleTypes()
+            .Select(type => (Service: ServiceOf(type, baseType), Implementation: type))
+            .Where(pair => pair.Service is not null)
+            .Select(pair => (pair.Service!, pair.Implementation))];
 
     static Type? ServiceOf(Type type, Type baseType) {
         if (!baseType.IsGenericTypeDefinition) {
@@ -37,4 +31,9 @@ public sealed class VsaContext(
         }
         return null;
     }
+
+    Type[] ModuleTypes() => moduleTypes ??= [.. modules
+        .SelectMany(module => ModuleRoot.Of(module).Layers)
+        .SelectMany(layer => Assembly.Load(layer).GetTypes())
+        .Where(t => t is { IsClass: true, IsAbstract: false } && !t.IsDefined(typeof(CompilerGeneratedAttribute)))];
 }

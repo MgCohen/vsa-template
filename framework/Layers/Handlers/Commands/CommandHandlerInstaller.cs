@@ -6,16 +6,20 @@ namespace VSA.Handlers.Commands;
 
 public static class CommandHandlerInstaller {
     public static void Install(VsaContext context) {
+        var handlers = context.Implementations(typeof(CommandHandler<,>));
+        EnsureOneHandlerForEachCommand(handlers);
         context.Services.AddScoped<ICommandSender, InProcessCommandSender>();
-        var handlerOfCommand = new Dictionary<Type, Type>();
-        foreach (var (service, handler) in context.Implementations(typeof(CommandHandler<,>))) {
-            if (handlerOfCommand.TryGetValue(service, out var other)) {
-                throw new InvalidOperationException(
-                    $"Command {service.GetGenericArguments()[0].FullName} has two handlers: "
-                    + $"{other.FullName} and {handler.FullName}. A command has one handler.");
-            }
-            handlerOfCommand[service] = handler;
+        foreach (var (service, handler) in handlers) {
             context.Services.AddScoped(service, handler);
+        }
+    }
+
+    static void EnsureOneHandlerForEachCommand(IReadOnlyList<(Type Service, Type Implementation)> handlers) {
+        foreach (var command in handlers.GroupBy(h => h.Service).Where(g => g.Count() > 1)) {
+            var names = command.Select(h => h.Implementation.FullName).ToArray();
+            throw new InvalidOperationException(
+                $"Command {command.Key.GetGenericArguments()[0].FullName} has two handlers: "
+                + $"{names[0]} and {names[1]}. A command has one handler.");
         }
     }
 }

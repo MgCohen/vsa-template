@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Module;
@@ -9,19 +7,13 @@ using VSA.Presenters;
 
 namespace VSA.Composition;
 
-public sealed class VsaComposer(
-    IServiceCollection services, IConfiguration configuration, IReadOnlyList<VSA.Module.Module>? modules = null) {
-    public VsaContext Context { get; } = new(services, configuration, modules ?? DiscoveredModules());
-
-    public void Install() {
-        EventHandlerInstaller.Install(Context);
-        CommandHandlerInstaller.Install(Context);
+public static class VsaComposer {
+    public static void Install(VsaContext context) {
+        EventHandlerInstaller.Install(context);
+        CommandHandlerInstaller.Install(context);
 #if NET
-        PresenterInstaller.Install(Context);
+        PresenterInstaller.Install(context);
 #endif
-        ModuleInstaller.Install(Context);
+        ModuleInstaller.Install(context);
     }
-
-    static VSA.Module.Module[] DiscoveredModules() =>
-        [.. ModuleDiscovery.CreateModules(ModuleDiscovery.FindRoots())];
 }

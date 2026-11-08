@@ -1,4 +1,3 @@
-using System.Reflection;
 using FastEndpoints;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,15 +7,13 @@ namespace VSA.Handlers.Requests;
 
 public static class RequestEndpointInstaller {
     public static void Install(VsaContext context) {
-        Assembly[] requestHandlers = [.. context.Implementations(typeof(RoutedHandler<,>))
-            .Select(handler => handler.Implementation.Assembly)
-            .Distinct()];
-        if (requestHandlers.Length == 0) {
+        var handlers = context.Implementations(typeof(RoutedHandler<,>));
+        if (handlers.Count == 0) {
             return;
         }
         context.Services.AddFastEndpoints(options => {
             options.DisableAutoDiscovery = true;
-            options.Assemblies = requestHandlers;
+            options.Assemblies = handlers.Select(h => h.Implementation.Assembly).Distinct();
         });
         context.Services.AddSingleton(new InstalledRequestEndpoints());
     }
