@@ -1,0 +1,9 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- The plugin modules that this layer uses. The spaces and the new line are on purpose: the tests check them. -->
+  <PropertyGroup>
+    <VsaPluginUses> RecordIds ;
+      Units ;</VsaPluginUses>
+  </PropertyGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

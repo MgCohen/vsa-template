@@ -80,7 +80,7 @@ public sealed class SliceRouterTests {
         Assert.That(LayerOf(routing, "CreateNote/Notes.cs"), Is.EqualTo("Handlers/Requests"));
     }
 
-    // A Shared module gives base types. The router reads the layer folders of the Shared modules as known files
+    // A plugin module gives base types. The router reads the layer folders of the plugin modules as known files
     // and follows the base names.
     static SliceSource Known(string path, string text) => new(Path.GetFullPath(Path.Combine(Slices, "..", "..", "Pipeline", path)), text);
 
@@ -91,7 +91,7 @@ public sealed class SliceRouterTests {
     ];
 
     [Test]
-    public void A_type_gets_its_kind_through_a_Shared_base() {
+    public void A_type_gets_its_kind_through_a_plugin_base() {
         var routing = SliceRouter.Route(Slices, [
             File("DealDamage/DealDamage.cs", $"public sealed record DealDamage(int Amount) : Message, IRequest<MessageId> {{ {Routed} }}"),
             File("DealDamage/DealDamageHandler.cs", "sealed class DealDamageHandler : MessageHandler<DealDamage> { }"),
@@ -106,7 +106,7 @@ public sealed class SliceRouterTests {
         Assert.That(routing.Layers.Keys, Has.None.Contains("Pipeline"), "The router does not route the known files.");
     }
 
-    // Two levels: BigDamageHandler : DamageHandler (own slice) : MessageHandler (Shared) : RequestHandler.
+    // Two levels: BigDamageHandler : DamageHandler (own slice) : MessageHandler (plugin) : RequestHandler.
     [Test]
     public void The_router_follows_the_bases_to_any_depth() {
         var routing = SliceRouter.Route(Slices, [
@@ -143,9 +143,9 @@ public sealed class SliceRouterTests {
         Assert.That(LayerOf(routing, "PayCost/CostRules.cs"), Is.EqualTo("Handlers/Commands"));
     }
 
-    // A command can inherit the marker through a base of a Shared module, for example PayCost : Effect<T> : ICommand<T>.
+    // A command can inherit the marker through a base of a plugin module, for example PayCost : Effect<T> : ICommand<T>.
     [Test]
-    public void A_command_with_a_Shared_base_goes_to_Contracts_Commands() {
+    public void A_command_with_a_plugin_base_goes_to_Contracts_Commands() {
         var routing = SliceRouter.Route(Slices, [
             File("PayCost/PayCost.cs", "public sealed record PayCost(int Amount) : Effect<PayCostResult>;"),
             File("PayCost/PayCostResult.cs", "public sealed record PayCostResult(bool Paid);"),

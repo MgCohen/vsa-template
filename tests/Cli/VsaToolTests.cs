@@ -6,7 +6,7 @@ using Tests.Shared;
 
 namespace Cli.Tests;
 
-// Uses the packed tool as a consumer does: new app, add module, add request, add command, doctor. Then builds and runs the app.
+// Uses the packed tool as a consumer does: new app, add module, add request, add command, add plugin, doctor. Then builds and runs the app.
 public sealed class VsaToolTests {
     string root = "";
     Dictionary<string, string> env = [];
@@ -49,11 +49,21 @@ public sealed class VsaToolTests {
         Assert.That(unknown.Succeeded, Is.False);
         Assert.That(unknown.Output, Does.Contain("The module Shipping does not exist"));
 
-        Directory.CreateDirectory(Path.Combine(app, "Shared", "Pipeline"));
-        var shared = Dotnet.Run(app, env, "vsa", "add", "module", "Pipeline");
-        Assert.That(shared.Succeeded, Is.False);
-        Assert.That(shared.Output, Does.Contain("The Shared module Pipeline exists"));
-        Directory.Delete(Path.Combine(app, "Shared"), recursive: true);
+        Directory.CreateDirectory(Path.Combine(app, "Plugins", "Pipeline"));
+        var plugin = Dotnet.Run(app, env, "vsa", "add", "module", "Pipeline");
+        Assert.That(plugin.Succeeded, Is.False);
+        Assert.That(plugin.Output, Does.Contain("The plugin module Pipeline exists"));
+        Directory.Delete(Path.Combine(app, "Plugins", "Pipeline"), recursive: true);
+
+        Dotnet.Run(app, env, "vsa", "add", "plugin", "Game").EnsureSuccess();
+        Assert.That(File.Exists(Path.Combine(app, "Plugins", "Game", "GamePlugin.cs")), Is.True);
+        Assert.That(File.Exists(Path.Combine(app, "Plugins", "Game", "Contracts", "Commands", "GameStep.cs")), Is.True);
+        var pluginAgain = Dotnet.Run(app, env, "vsa", "add", "plugin", "Game");
+        Assert.That(pluginAgain.Succeeded, Is.False);
+        Assert.That(pluginAgain.Output, Does.Contain("The plugin module Game exists"));
+        var pluginOfModule = Dotnet.Run(app, env, "vsa", "add", "plugin", "Billing");
+        Assert.That(pluginOfModule.Succeeded, Is.False);
+        Assert.That(pluginOfModule.Output, Does.Contain("The module Billing exists"));
 
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         Assert.That(Dotnet.Run(app, env, "test", "--solution", "Hello.slnx", "-c", "Release", "--no-build").EnsureSuccess().Output,

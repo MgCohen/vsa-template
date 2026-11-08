@@ -85,7 +85,7 @@ public interface IRoutedRequest {
 | Module root | A reference to `VSA.Module`, and the `VsaModule` metadata | One class that inherits `Module` (`ModuleRoot.CreateModule`) |
 | Views root | A reference to `VSA.Views` | One component that inherits `ViewsRoot` |
 
-The module roots are in order: the Shared modules first, then by name. If the app has a views root, the views run in that process. Two views roots stop the build.
+The module roots are in order: the plugin modules first, then by name. If the app has a views root, the views run in that process. Two views roots stop the build.
 
 ## Message installers have one shape
 
@@ -127,7 +127,7 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 ## Projects
 
 ```
-Module/              Module, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan
+Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
 Handlers/Requests/   RequestHandler, RequestHandlerInstaller

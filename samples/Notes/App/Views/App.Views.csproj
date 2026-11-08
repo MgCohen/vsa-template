@@ -4,6 +4,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../Modules/*/Projects/*.Presenters.csproj" PrivateAssets="all" />
-    <ProjectReference Include="$(VsaFrameworkSourceDir)Layers/Views/VSA.Views.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Views/VSA.Views.csproj" />
   </ItemGroup>
 </Project>

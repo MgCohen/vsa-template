@@ -6,9 +6,9 @@ namespace VSA.Cli.Scaffolding;
 static partial class Names {
     // Names that break the build of the app:
     //   App, Views, Pages, Home   the app folders and namespaces (CS0138 in App/Views/Pages)
-    //   Modules                   the root folder of the modules, where VSA.Sdk finds the layer of a project
+    //   Modules, Plugins          the root folders of the modules and the plugin modules, where VSA.Sdk finds the layer of a project
     //   System, Microsoft         a namespace with this name hides the .NET namespaces
-    static readonly string[] Reserved = ["App", "Views", "Pages", "Home", "Modules", "System", "Microsoft"];
+    static readonly string[] Reserved = ["App", "Views", "Pages", "Home", "Modules", "Plugins", "System", "Microsoft"];
 
     // The tool adds these suffixes to the name of a request or a command.
     static readonly Dictionary<string, string[]> Suffixes = new() {
@@ -25,7 +25,7 @@ static partial class Names {
             throw new VsaException($"The {kind} name '{name}' is reserved. Names cannot start with VSA or be one of: {string.Join(", ", Reserved)}.");
         }
         // The tool replaces the sample names in the templates. A name that contains one is replaced two times.
-        foreach (var sample in new[] { Templates.App, Templates.Module, Templates.Request, Templates.Command }) {
+        foreach (var sample in new[] { Templates.App, Templates.Module, Templates.Request, Templates.Command, Templates.Plugin }) {
             if (name.Contains(sample, StringComparison.Ordinal)) {
                 throw new VsaException($"The {kind} name '{name}' contains the template name {sample}. Use a different name.");
             }

@@ -1,6 +1,6 @@
 # Module layout
 
-A module (`Modules/<Module>/`) keeps each feature in one flat folder, `Slices/<Feature>/`, with any file names. Its layer projects are in one folder, `Projects/`. VSA.Sdk reads the type in each slice file and selects its project, so the assemblies follow the layer map. A Shared module (`Shared/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Shared module layout](#shared-module-layout)).
+A module (`Modules/<Module>/`) keeps each feature in one flat folder, `Slices/<Feature>/`, with any file names. Its layer projects are in one folder, `Projects/`. VSA.Sdk reads the type in each slice file and selects its project, so the assemblies follow the layer map. A plugin module (`Plugins/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Plugin module layout](#plugin-module-layout)).
 
 ## Layout
 
@@ -38,13 +38,13 @@ Modules/Cards/
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses.
 
-## Shared module layout
+## Plugin module layout
 
-A Shared module is the base of the same layer in each module, as `framework/Layers` is. It has the layout of the framework: one folder for each layer, and no `Slices/`.
+A plugin module is the base of the same layer in each module, as `framework/Core` is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`VSA1014`), and a module root inherits `Module` or `Module<TSettings>`. `vsa add plugin <Name>` writes a new one.
 
 ```
-Shared/Pipeline/
-├─ Pipeline.csproj, PipelineModule.cs                  module root
+Plugins/Pipeline/
+├─ Pipeline.csproj, PipelinePlugin.cs                  module root: PipelinePlugin : Plugin
 ├─ Projects/
 │  ├─ Pipeline.Contracts.Requests.csproj  Pipeline.Contracts.Events.csproj  Pipeline.Contracts.Commands.csproj
 │  └─ Pipeline.Handlers.Requests.csproj  Pipeline.Handlers.Events.csproj  Pipeline.Handlers.Commands.csproj
@@ -67,18 +67,18 @@ Shared/Pipeline/
 | `<Module>.Handlers.Events` | `Handlers/Events/**` |
 | `<Module>.Handlers.Commands` | `Handlers/Commands/**` |
 
-The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`) have the same folders as in a module. A subfolder of a layer folder goes to the same project. The router does not run in a Shared module.
+The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`) have the same folders as in a module. A subfolder of a layer folder goes to the same project. The router does not run in a plugin module.
 
-A module slice derives from a Shared base. The router reads the `Contracts/` and `Handlers/` folders of each Shared module, and finds the kind of the slice through the base:
+A module slice derives from a plugin base. The router reads the `Contracts/` and `Handlers/` folders of each plugin module, and finds the kind of the slice through the base:
 
 ```
-Modules/UsesShared/Slices/Heal/Heal.cs          Heal : Step<HealResult>               → Contracts/Commands
-Modules/UsesShared/Slices/Heal/HealHandler.cs   HealHandler : StepHandler<Heal, ...>  → Handlers/Commands
+Modules/UsesPlugins/Slices/Heal/Heal.cs          Heal : Step<HealResult>               → Contracts/Commands
+Modules/UsesPlugins/Slices/Heal/HealHandler.cs   HealHandler : StepHandler<Heal, ...>  → Handlers/Commands
 ```
 
 | Problem | Result |
 |---|---|
-| `Slices/` in a Shared module | `VSA0006`: move each file to the folder of its layer |
+| `Slices/` in a plugin module | `VSA0006`: move each file to the folder of its layer |
 | A `Contracts/` or `Handlers/` folder in a module | `VSA0006`: move each file to a slice |
 | A layer folder with no project of that layer | `VSA0006`: add the project |
 
@@ -118,7 +118,7 @@ A command result has no marker. It goes to `Contracts.Commands` because its comm
 The task `VsaRouteSliceFiles` (`framework/Sdk/Tasks`) selects the files of each contracts and handlers project. It runs before `BeforeCompile`, so the files are in `@(Compile)` for the build, the design-time build of the IDE and the analyzers.
 
 1. It parses each slice file with the Roslyn syntax parser.
-2. It finds the contract types and the handler types by their base types. A base that is not a marker counts with its own bases, to any depth. The router also reads the `Contracts/` and `Handlers/` folders of the Shared modules for these bases, but it does not route them:
+2. It finds the contract types and the handler types by their base types. A base that is not a marker counts with its own bases, to any depth. The router also reads the `Contracts/` and `Handlers/` folders of the plugin modules for these bases, but it does not route them:
 
    ```
    DealDamage        : Message, IRequest<MessageId>   → Contracts/Requests
@@ -130,9 +130,9 @@ The task `VsaRouteSliceFiles` (`framework/Sdk/Tasks`) selects the files of each 
 3. It follows the type names that a contract type uses. A name is found first in the same slice, then in `Slices/Shared/`.
 4. The other files of a slice go to the handlers project of the slice.
 
-`VSA1003` does not check the contracts projects of a Shared module, because a base type for the modules, for example `abstract record Id(long Value)`, has no marker.
+`VSA1003` does not check the contracts projects of a plugin module, because a base type for the modules, for example `abstract record Id(long Value)`, has no marker.
 
-The router runs before the compile, so it has no semantic model and matches types by simple name. A base type from a NuGet package, not from `Shared/`, is unknown to the router. The compiler and `VSA1003` then check the result with the real types.
+The router runs before the compile, so it has no semantic model and matches types by simple name. A base type from a NuGet package, not from `Plugins/`, is unknown to the router. The compiler and `VSA1003` then check the result with the real types.
 
 The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tasks/`. In this repository (source mode), `framework/Sdk/Tasks` builds the DLL, and MSBuild runs it in its own process (`TaskHostFactory`), so a rebuild of the task never finds the DLL locked.
 
@@ -143,7 +143,7 @@ The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tas
 | `VSA0001` | Reference written by hand | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0004` | Wrong project folder or name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0005` | Routing of the slice files (next table) | Build, design-time build | Build output, IDE error list |
-| `VSA0006` | Hand-written `Compile` item, uncompiled file, or `Slices/` in a Shared module | Restore, build, design-time build | Build output, IDE error list |
+| `VSA0006` | Hand-written `Compile` item, uncompiled file, or `Slices/` in a plugin module | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0007` | `VsaModuleUses` out of a module root, or a bad name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA1003` | Contracts projects hold only contract types and their DTOs | Compile, also while you type | Editor and build |
 | `VSA1005`–`VSA1007` | `Domain.Shared` types hold only immutable data | Compile, also while you type | Editor and build |
@@ -195,7 +195,7 @@ Which layer references which domain project:
 | `Handlers.*` | Yes | Yes | No | All modules |
 | `Presenters` | No | Yes | No | Listed modules |
 
-"All modules" also includes the Shared modules. A `Domain.Shared` project also gets the `Domain.Shared` project of each Shared module, as each layer does.
+"All modules" also includes the plugin modules. A `Domain.Shared` project also gets the `Domain.Shared` project of each plugin module, as each layer does.
 
 The listed modules are in `<VsaModuleUses>` of the module root. Write the list only there, with `;` between the names:
 
@@ -208,15 +208,17 @@ The listed modules are in `<VsaModuleUses>` of the module root. Write the list o
 </Project>
 ```
 
-The layer projects cannot see a property of the root project, so VSA.Sdk reads the root project file as text. `VSA0007` fails the build if a layer project sets `VsaModuleUses`, if a Shared module sets it, or if a name is not another module with a `Domain.Shared` project.
+The layer projects cannot see a property of the root project, so VSA.Sdk reads the root project file as text. `VSA0007` fails the build if a layer project sets `VsaModuleUses`, if a plugin module sets it, or if a name is not another module with a `Domain.Shared` project.
 
-## Three meanings of Shared
+## Plugins and the two meanings of Shared
 
 | Name | What it is | Who uses it | List |
 |---|---|---|---|
-| `Shared/` (root folder) | Shared modules: the base of each layer | The same layer of each module | `<VsaUses>` in a Shared layer project |
+| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | `<VsaPluginUses>` in a plugin layer project |
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
 | `Domain/Shared/` | The published domain of one module | Other modules (table above) | `<VsaModuleUses>` in the module root |
+
+"Shared" is the name of two things in one module: `Slices/Shared/` and `Domain/Shared/`. A base of the whole app is a plugin module, not a Shared one.
 
 The namespace of the published domain is `<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
 
