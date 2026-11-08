@@ -9,8 +9,8 @@ namespace Framework.Tests.Discovery;
 
 public sealed class ModuleDiscoveryTests {
     [Test]
-    public void SharedRootsAreFirstThenRootsAreInOrdinalOrderOfName() {
-        // This test project references the module roots Bare, Echo, Shelf, Signals and Twin, which get the Shared root Toolbox,
+    public void PluginRootsAreFirstThenRootsAreInOrdinalOrderOfName() {
+        // This test project references the module roots Bare, Echo, Shelf, Signals and Twin, which get the plugin root Toolbox,
         // and the module roots of the CommandApp fixture: Battle, Cards and Resources.
         var roots = ModuleDiscovery.FindRoots();
 
@@ -18,9 +18,9 @@ public sealed class ModuleDiscoveryTests {
     }
 
     [Test]
-    public void RootRecordsIfItIsShared() {
-        Assert.That(ModuleRoot.Of(typeof(ToolboxModule).Assembly).IsShared, Is.True);
-        Assert.That(ModuleRoot.Of(typeof(BareModule).Assembly).IsShared, Is.False);
+    public void RootRecordsIfItIsPlugin() {
+        Assert.That(ModuleRoot.Of(typeof(ToolboxPlugin).Assembly).IsPlugin, Is.True);
+        Assert.That(ModuleRoot.Of(typeof(BareModule).Assembly).IsPlugin, Is.False);
     }
 
     [Test]
@@ -65,5 +65,24 @@ public sealed class ModuleDiscoveryTests {
             .And.Contain("Twin.TwinModule")
             .And.Contain("Twin.OtherTwinModule")
             .And.EndWith(". A module root must have one."));
+    }
+
+    [Test]
+    public void PluginRootWithAModuleClassIsAnError() {
+        var root = ModuleRoot.Of(typeof(BareModule).Assembly) with { IsPlugin = true };
+
+        var error = Assert.Throws<InvalidOperationException>(() => ModuleDiscovery.CreateModules([root]));
+
+        Assert.That(error.Message, Is.EqualTo(
+            "Bare.BareModule is the root class of the plugin module Bare, but it inherits Module. Make it inherit Plugin or Plugin<TSettings>."));
+    }
+
+    [Test]
+    public void ModuleRootWithAPluginClassIsAnError() {
+        var root = ModuleRoot.Of(typeof(ToolboxPlugin).Assembly) with { IsPlugin = false };
+
+        var error = Assert.Throws<InvalidOperationException>(() => ModuleDiscovery.CreateModules([root]));
+
+        Assert.That(error.Message, Does.StartWith("Toolbox.ToolboxPlugin is the root class of the module Toolbox, but it inherits Plugin."));
     }
 }

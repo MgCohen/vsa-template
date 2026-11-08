@@ -5,6 +5,7 @@ try {
     return args switch {
         ["new", "app", var name, .. var rest] => NewAppCommand.Run(name, Options.Read(rest, "--source")),
         ["add", "module", var name] => AddModuleCommand.Run(name),
+        ["add", "plugin", var name] => AddPluginCommand.Run(name),
         ["add", "request", var name, .. var rest] => AddRequestCommand.Run(name, Options.Read(rest, "-m", "--module") is [.., var module] ? module : null),
         ["add", "command", var name, .. var rest] => AddCommandCommand.Run(name, Options.Read(rest, "-m", "--module") is [.., var module] ? module : null),
         ["doctor"] => DoctorCommand.Run(),
@@ -27,6 +28,7 @@ partial class Program {
         Usage:
           vsa new app <Name> [--source <feed>]   Makes a new app in the folder <Name>. Each --source replaces the GitHub feed of the VSA packages.
           vsa add module <Name>                  Adds a module with all layers and a starter page.
+          vsa add plugin <Name>                  Adds a plugin module: a base of the same layers in each module.
           vsa add request <Name> -m <Module>     Adds a request, its response and its handler.
           vsa add command <Name> -m <Module>     Adds a command, its result and its handler.
           vsa doctor                             Makes sure that the tool, VSA.Sdk and the packages have one version.

@@ -33,36 +33,36 @@ public sealed class LayerMapRuleTests {
     }
 }
 
-// The UsesShared fixture module uses the Shared modules of tests/Fixtures/SharedApp. Pipeline uses RecordIds and Units.
-public sealed class SharedModuleRuleTests {
-    static VsaApp App(bool pipelineIsShared = true, bool recordIdsIsShared = true) => new([
-        Root("UsesShared"),
-        Root("Pipeline") with { IsShared = pipelineIsShared },
-        Root("RecordIds") with { IsShared = recordIdsIsShared },
+// The UsesPlugins fixture module uses the plugin modules of tests/Fixtures/PluginApp. Pipeline uses RecordIds and Units.
+public sealed class PluginModuleRuleTests {
+    static VsaApp App(bool pipelineIsPlugin = true, bool recordIdsIsPlugin = true) => new([
+        Root("UsesPlugins"),
+        Root("Pipeline") with { IsPlugin = pipelineIsPlugin },
+        Root("RecordIds") with { IsPlugin = recordIdsIsPlugin },
         Root("Units"),
     ]);
 
     [Test]
-    public void The_Sdk_records_the_Shared_folder() {
-        Assert.That(Root("Pipeline").IsShared, Is.True);
-        Assert.That(Root("UsesShared").IsShared, Is.False);
+    public void The_Sdk_records_the_Plugins_folder() {
+        Assert.That(Root("Pipeline").IsPlugin, Is.True);
+        Assert.That(Root("UsesPlugins").IsPlugin, Is.False);
     }
 
     [Test]
-    public void Use_of_the_same_layer_of_a_Shared_module_passes() =>
+    public void Use_of_the_same_layer_of_a_plugin_module_passes() =>
         FixtureApp.Of(App()).VSA2001_module_projects_follow_the_layer_map();
 
     [Test]
-    public void Use_of_the_same_layer_of_a_module_that_is_not_Shared_fails() {
-        var message = Fails(FixtureApp.Of(App(pipelineIsShared: false)).VSA2001_module_projects_follow_the_layer_map);
-        // The layer project, and the types: the module request on the Shared base that is now a module.
-        Assert.That(message, Does.Contain("UsesShared.Contracts.Requests"));
-        Assert.That(message, Does.Contain("UsesShared.Slices.DealDamage.DealDamage does depend on \"Pipeline.Contracts.Requests.Message\""));
+    public void Use_of_the_same_layer_of_a_module_that_is_not_a_plugin_fails() {
+        var message = Fails(FixtureApp.Of(App(pipelineIsPlugin: false)).VSA2001_module_projects_follow_the_layer_map);
+        // The layer project, and the types: the module request on the plugin base that is now a module.
+        Assert.That(message, Does.Contain("UsesPlugins.Contracts.Requests"));
+        Assert.That(message, Does.Contain("UsesPlugins.Slices.DealDamage.DealDamage does depend on \"Pipeline.Contracts.Requests.Message\""));
     }
 
     [Test]
-    public void Use_of_a_module_by_a_Shared_module_fails() {
-        var message = Fails(FixtureApp.Of(App(recordIdsIsShared: false)).VSA2001_module_projects_follow_the_layer_map);
+    public void Use_of_a_module_by_a_plugin_module_fails() {
+        var message = Fails(FixtureApp.Of(App(recordIdsIsPlugin: false)).VSA2001_module_projects_follow_the_layer_map);
         Assert.That(message, Does.Contain("Pipeline.Contracts.Requests"));
         Assert.That(message, Does.Contain("Pipeline.Contracts.Requests.MessageId does depend on \"RecordIds.Contracts.Requests.Id\""));
     }

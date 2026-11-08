@@ -38,8 +38,8 @@ public sealed class SliceRouting {
 // The router runs before the compile, so it has no semantic model. It reads the Roslyn syntax tree and matches types by
 // their simple names: first in the same slice, then in Slices/Shared/. The compiler and VSA1003 check the result.
 // A type can inherit a marker through other types, for example DealDamage : Message : IRequest<X>. The router follows
-// the base names through the slice files and the known files (the layer folders of the Shared modules), to any depth.
-// A Shared module has no slices: VSA.Sdk compiles its layer folders, and the router does not run.
+// the base names through the slice files and the known files (the layer folders of the plugin modules), to any depth.
+// A plugin module has no slices: VSA.Sdk compiles its layer folders, and the router does not run.
 public static class SliceRouter {
     public const string ContractsRequests = "Contracts/Requests";
     public const string ContractsEvents = "Contracts/Events";
@@ -64,7 +64,7 @@ public static class SliceRouter {
 
     public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources) => Route(slicesDir, sources, []);
 
-    // known: files that are not routed, but whose types can be bases (the layer folders of the Shared modules).
+    // known: files that are not routed, but whose types can be bases (the layer folders of the plugin modules).
     public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources, IEnumerable<SliceSource> known) {
         var routing = new SliceRouting();
         var root = Path.GetFullPath(slicesDir);

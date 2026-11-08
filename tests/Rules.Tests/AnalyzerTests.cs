@@ -55,7 +55,7 @@ static class Analyzer {
             test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
         }
         Type[] layers = [typeof(VSA.Contracts.IMessage), typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
-            typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus)];
+            typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus), typeof(VSA.Module.Module)];
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }
@@ -272,4 +272,37 @@ public sealed class VsaAnalyzerTests {
     [Test]
     public void Each_rule_has_a_unique_ID() =>
         Assert.That(VsaAnalyzer.Rules.Select(r => r.Id), Is.Unique);
+}
+
+public sealed class PluginRootRuleTests {
+    const string Configure = "public override void Configure(VSA.Module.ModuleBuilder module) { }";
+
+    static string In(string rootFolder) => $"build_property.VsaRootFolder = {rootFolder}\n";
+
+    [Test]
+    public Task Plugin_root_that_inherits_Plugin_passes() => Analyzer.VerifyIn("Game", $$"""
+        public sealed class GamePlugin : VSA.Module.Plugin { {{Configure}} }
+        """, In("Plugins"));
+
+    [Test]
+    public Task Module_root_that_inherits_Module_passes() => Analyzer.VerifyIn("Shop", $$"""
+        public sealed class ShopModule : VSA.Module.Module { {{Configure}} }
+        """, In("Modules"));
+
+    [Test]
+    public Task Plugin_root_that_inherits_Module_fails() => Analyzer.VerifyIn("Game", $$"""
+        public sealed class {|#0:GameModule|} : VSA.Module.Module { {{Configure}} }
+        """, In("Plugins"),
+        Analyzer.Diagnostic(PluginRootRule.Descriptor, 0, "GameModule", "plugin module", "Game", "Module", "Plugin or Plugin<TSettings>"));
+
+    [Test]
+    public Task Module_root_that_inherits_Plugin_fails() => Analyzer.VerifyIn("Shop", $$"""
+        public sealed class {|#0:ShopPlugin|} : VSA.Module.Plugin { {{Configure}} }
+        """, In("Modules"),
+        Analyzer.Diagnostic(PluginRootRule.Descriptor, 0, "ShopPlugin", "module", "Shop", "Plugin", "Module or Module<TSettings>, or move the module to Plugins/"));
+
+    [Test]
+    public Task Code_out_of_a_root_folder_passes() => Analyzer.Verify($$"""
+        public sealed class ToolPlugin : VSA.Module.Plugin { {{Configure}} }
+        """);
 }

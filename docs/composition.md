@@ -69,7 +69,7 @@ composer.Install();
 3. `RequestEndpointInstaller`: FastEndpoints for each `RoutedHandler<,>`
 4. `composer.ConfigureModules()`
 
-A web app with other needs does the same steps itself. With no `modules` argument, the composer finds the modules with `ModuleDiscovery`: the module roots of `deps.json`, the Shared modules first. Unity has no `deps.json`, so a Unity app gives the modules.
+A web app with other needs does the same steps itself. With no `modules` argument, the composer finds the modules with `ModuleDiscovery`: the module roots of `deps.json`, the plugin modules first. Unity has no `deps.json`, so a Unity app gives the modules.
 
 ## The container adapter
 

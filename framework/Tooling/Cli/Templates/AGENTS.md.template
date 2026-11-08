@@ -9,7 +9,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `App/Host/`      | The web host. `Program.cs` calls `builder.AddVsa()`, which finds the modules |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Modules/<Name>/`| One module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/` |
-| `Shared/<Name>/` | One Shared module: a base of the same layers in each module. It has the layout of a module |
+| `Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
 | `Tests/`         | The VSA architecture tests, and one unit test file for each module  |
 
 A module project is only `<Project Sdk="VSA.Sdk" />`. VSA.Sdk gives each project its files and its references. In `Slices/`, the type in each file selects its project: requests and responses go to `Contracts.Requests`, commands and their results to `Contracts.Commands`, events to `Contracts.Events`, and the other files to the handlers project of the slice. Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0006`.
@@ -24,7 +24,7 @@ A command goes from one module to another module. It has one handler and one res
 </PropertyGroup>
 ```
 
-A Shared module is for base types of the app, as the VSA framework is the base of each layer: for example a message base in `Shared/Pipeline/Slices/Message/`. A Shared module has the same slice layout as a module. Each layer of each module gets the same layer of each Shared module. A Shared module never uses a module. A Shared layer that uses another Shared module names it in `<VsaUses>`, in its project file. Its root has one `Module` class. The host configures the Shared modules first, by name, and it loads them through the modules.
+A plugin module is for base types of the app, as the VSA framework is the base of each layer: for example a command base in `Plugins/Game/Contracts/Commands/GameStep.cs`. A plugin module has the layout of the framework: one folder for each layer, for example `Contracts/Commands/` and `Handlers/Commands/`, and no `Slices/` (`VSA0006`). Each layer of each module gets the same layer of each plugin module. A plugin module never uses a module. A plugin layer that uses another plugin module names it in `<VsaPluginUses>`, in its project file. Its root has one class that inherits `Plugin` (`VSA1014`). The host configures the plugin modules first, by name, and it loads them through the modules.
 
 ## Commands
 
@@ -35,6 +35,7 @@ dotnet tool restore                          # one time, after a new clone
 dotnet vsa add module <Name>                 # the layers, a status request and a page
 dotnet vsa add request <Name> -m <Module>    # a request, its response and its handler
 dotnet vsa add command <Name> -m <Module>    # a command, its result and its handler
+dotnet vsa add plugin <Name>                 # a plugin module with a base command
 dotnet vsa doctor                            # the tool, VSA.Sdk and the packages have one version
 dotnet test SampleApp.slnx                   # the architecture tests and the unit tests
 ```

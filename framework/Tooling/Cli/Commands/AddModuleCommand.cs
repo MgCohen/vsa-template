@@ -11,9 +11,9 @@ static class AddModuleCommand {
         if (Directory.Exists(Path.Combine(root, "Modules", name))) {
             throw new VsaException($"The module {name} exists: Modules/{name}");
         }
-        // A module and a Shared module with the same name have the same assembly names.
-        if (Directory.Exists(Path.Combine(root, "Shared", name))) {
-            throw new VsaException($"The Shared module {name} exists: Shared/{name}. Use a different name for the module.");
+        // A module and a plugin module with the same name have the same assembly names.
+        if (Directory.Exists(Path.Combine(root, "Plugins", name))) {
+            throw new VsaException($"The plugin module {name} exists: Plugins/{name}. Use a different name for the module.");
         }
         var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = name }, ToolVersion.Current);
         Console.WriteLine($"Adding the module {name}:");

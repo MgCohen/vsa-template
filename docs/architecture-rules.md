@@ -18,12 +18,12 @@ The editor and the build run the first group in each consumer project. The secon
 
 | ID | Level | Rule |
 |---|---|---|
-| `VSA0001` | Build | A module project or a Shared module project gets its references only from VSA.Sdk. |
-| `VSA0002` | Build | `VsaUses` is only in a Shared layer, and it names other Shared modules that have that layer. |
-| `VSA0003` | Build | A project in a `Modules` or `Shared` folder is in a root folder of the app root. |
+| `VSA0001` | Build | A module project or a plugin module project gets its references only from VSA.Sdk. |
+| `VSA0002` | Build | `VsaPluginUses` is only in a plugin layer, and it names other plugin modules that have that layer. |
+| `VSA0003` | Build | A project in a `Modules` or `Plugins` folder is in a root folder of the app root. |
 | `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
 | `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
-| `VSA0006` | Build | No `Compile` item written by hand, no `.cs` file that no project compiles, and no `Slices/` in a Shared module. |
+| `VSA0006` | Build | No `Compile` item written by hand, no `.cs` file that no project compiles, and no `Slices/` in a plugin module. |
 | `VSA0007` | Build | `VsaModuleUses` is only in a module root, and it names other modules that have a `Domain.Shared` project. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
@@ -39,36 +39,37 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1011` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
 | `VSA1012` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
 | `VSA1013` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
-| `VSA2001` | Architecture | Module projects use only what the layer map permits. A Shared module is a base, and it uses no module. |
+| `VSA1014` | Analyzers | The root class of a plugin module inherits `Plugin` or `Plugin<TSettings>`, and the root class of a module inherits `Module` or `Module<TSettings>`. The host also checks it at startup. |
+| `VSA2001` | Architecture | Module projects use only what the layer map permits. A plugin module is a base, and it uses no module. |
 | `VSA2002` | Architecture | `Module` classes are public and sealed. |
 
 The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk cannot run C# before compile. `SdkLayerMapTests` fails if the two maps are different.
 
-## Root folders and Shared modules
+## Root folders and plugin modules
 
-VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Shared`. A project in another folder gets no rules.
+VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Plugins`. A project in another folder gets no rules. `Shared/` is not a root folder: the plugin modules were Shared modules in `Shared/` before, so move each one to `Plugins/`.
 
-A Shared module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Layers` is the base of each layer:
+A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Layers` is the base of each layer:
 
 | From | Gets from VSA.Sdk |
 |---|---|
-| A module layer | The same layer of each Shared module. A module root gets each Shared root |
-| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each Shared module |
-| A Shared event handler | Also the events of its own Shared module. The `Handlers/Events` of a Shared module in `<VsaUses>` gives the events of that Shared module |
-| A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and Shared module |
-| A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and Shared module |
+| A module layer | The same layer of each plugin module. A module root gets each plugin root |
+| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each plugin module |
+| A plugin event handler | Also the events of its own plugin module. The `Handlers/Events` of a plugin module in `<VsaPluginUses>` gives the events of that plugin module |
+| A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and plugin module |
+| A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and plugin module |
 | A module `Domain.Shared` or `Presenters` | Also the `Domain.Shared` of each module in `<VsaModuleUses>`. `VSA0007` checks the names |
 | A presenter (`Presenters`) | The events of its own module only. A view that shows more than one module shows the presenter of each module |
-| A Shared layer | The same layer of each Shared module in `<VsaUses>` (names, with `;`). `VSA0002` checks the names |
-| A Shared module | No project of a module |
+| A plugin layer | The same layer of each plugin module in `<VsaPluginUses>` (names, with `;`). `VSA0002` checks the names |
+| A plugin module | No project of a module |
 
-A Shared module uses another Shared module only if it names it. Two Shared modules that name each other are a cycle, and MSBuild stops the build. A project in a `Modules` or `Shared` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
+A plugin module uses another plugin module only if it names it. Two plugin modules that name each other are a cycle, and MSBuild stops the build. A project in a `Modules` or `Plugins` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
 
-`VSA2001` checks a Shared module as a base: a module project may use what the map permits of a base, and a Shared project uses no module. The module root records its root folder (`VsaRootFolder`), and `ModuleRoot.IsShared` reads it.
+`VSA2001` checks a plugin module as a base: a module project may use what the map permits of a base, and a plugin project uses no module. The module root records its root folder (`VsaRootFolder`), and `ModuleRoot.IsPlugin` reads it.
 
 `VSA2001` permits a `listed` edge of the layer map only to a module in `<VsaModuleUses>`. The module root records each name (metadata `VsaModuleUse`), and `ModuleRoot.Uses` reads them. A presenter can compile against the `Domain.Shared` of each module through its own contracts, because the contracts reference each `Domain.Shared` project. So `VSA2001` is the check for the listed edge, not the compiler.
 
-The host configures the Shared modules first, then the other modules. In each group the order is by name, not by `VsaUses`. The host gets the Shared roots through the module roots, so an app with no module does not load its Shared modules.
+The host configures the plugin modules first, then the other modules. In each group the order is by name, not by `VsaPluginUses`. The host gets the plugin roots through the module roots, so an app with no module does not load its plugin modules.
 
 ## Analyzers: `VsaAnalyzer` and `VsaAnalyzerRule`
 

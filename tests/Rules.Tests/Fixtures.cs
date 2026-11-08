@@ -30,6 +30,6 @@ sealed class FixtureApp : VsaArchitectureTests {
 
     public static FixtureApp Of(string module, IReadOnlyList<Layer>? map = null) => new() { Module = module, Map = map };
 
-    // An app of more than one module root, for example a module and the Shared modules that it uses.
+    // An app of more than one module root, for example a module and the plugin modules that it uses.
     public static FixtureApp Of(VsaApp app) => new() { Given = app };
 }

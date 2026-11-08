@@ -5,10 +5,10 @@ namespace VSA.Module;
 // A module root assembly and the records that VSA.Sdk wrote in it at build time.
 // Name is the assembly name, the same as Module.Name. Layers are the assembly names of the layer projects
 // of the module, for example "Notes.Handlers.Requests". A layer that the module does not have is not in Layers.
-// IsShared: the module is in the Shared folder of the app, so it is the base of the same layer in each module.
+// IsPlugin: the module is in the Plugins folder of the app, so it is the base of the same layer in each module.
 // Uses: the modules in VsaModuleUses of the module root. Their Domain.Shared is visible to Domain.Shared and Presenters.
 public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<string> Layers) {
-    public bool IsShared { get; init; }
+    public bool IsPlugin { get; init; }
 
     public IReadOnlyList<string> Uses { get; init; } = [];
 
@@ -22,8 +22,8 @@ public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<st
         [.. assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .Where(a => a.Key == ModuleMetadata.LayerAssembly && a.Value is not null)
             .Select(a => a.Value!)]) {
-        IsShared = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .Any(a => a.Key == ModuleMetadata.RootFolder && a.Value == ModuleMetadata.Shared),
+        IsPlugin = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .Any(a => a.Key == ModuleMetadata.RootFolder && a.Value == ModuleMetadata.Plugins),
         Uses = [.. assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .Where(a => a.Key == ModuleMetadata.ModuleUse && a.Value is not null)
             .Select(a => a.Value!)],
