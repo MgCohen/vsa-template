@@ -1,7 +1,7 @@
-using Pipeline.Slices.Messages;
+using Pipeline.Contracts.Events;
 using VSA.Handlers.Events;
 
-namespace Pipeline.Slices.Audit;
+namespace Pipeline.Handlers.Events.Audit;
 
 // A Shared base of event handlers. It handles a Shared event, so this Handlers.Events project needs
 // the Contracts.Events project of its own Shared module.

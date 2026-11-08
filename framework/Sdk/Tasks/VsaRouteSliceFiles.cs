@@ -13,11 +13,8 @@ public sealed class VsaRouteSliceFiles : Microsoft.Build.Utilities.Task {
 
     public ITaskItem[] Files { get; set; } = [];
 
-    // The slice files of the Shared modules. The router reads their types as bases, and does not route them.
+    // The layer folders of the Shared modules. The router reads their types as bases, and does not route them.
     public ITaskItem[] KnownFiles { get; set; } = [];
-
-    // True in a Shared module: an unused type in Slices/Shared/ is a base for modules.
-    public bool IsShared { get; set; }
 
     [Required]
     public string Layer { get; set; } = "";
@@ -28,7 +25,7 @@ public sealed class VsaRouteSliceFiles : Microsoft.Build.Utilities.Task {
     public override bool Execute() {
         var sources = Files.Select(f => f.GetMetadata("FullPath")).Select(path => new SliceSource(path, File.ReadAllText(path)));
         var known = KnownFiles.Select(f => f.GetMetadata("FullPath")).Select(path => new SliceSource(path, File.ReadAllText(path)));
-        var routing = SliceRouter.Route(SlicesDir, sources, known, IsShared);
+        var routing = SliceRouter.Route(SlicesDir, sources, known);
         foreach (var error in routing.Errors) {
             Log.LogError(null, "VSA0005", null, error.File, 0, 0, 0, 0, error.Message);
         }

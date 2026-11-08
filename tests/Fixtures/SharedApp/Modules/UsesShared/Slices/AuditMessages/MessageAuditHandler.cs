@@ -1,5 +1,5 @@
-using Pipeline.Slices.Audit;
-using Pipeline.Slices.Messages;
+using Pipeline.Contracts.Events;
+using Pipeline.Handlers.Events.Audit;
 
 namespace UsesShared.Slices.AuditMessages;
 

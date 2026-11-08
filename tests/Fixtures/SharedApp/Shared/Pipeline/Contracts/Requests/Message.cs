@@ -1,8 +1,8 @@
-using RecordIds.Ids;
-using Units.Amounts;
+using RecordIds.Contracts.Requests;
+using Units.Contracts.Requests;
 using VSA.Contracts.Requests;
 
-namespace Pipeline.Slices.Messages;
+namespace Pipeline.Contracts.Requests;
 
 // The base of the messages of each module. A message of a module is a request with the response MessageId.
 public abstract record Message;
