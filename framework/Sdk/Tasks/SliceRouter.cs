@@ -38,8 +38,8 @@ public sealed class SliceRouting {
 // The router runs before the compile, so it has no semantic model. It reads the Roslyn syntax tree and matches types by
 // their simple names: first in the same slice, then in Slices/Shared/. The compiler and VSA1003 check the result.
 // A type can inherit a marker through other types, for example DealDamage : Message : IRequest<X>. The router follows
-// the base names through the slice files and the known files (the slice files of the Shared modules), to any depth.
-// In a Shared module, a type in Slices/Shared/ that no contract uses goes to Contracts/Requests: it is a base for modules.
+// the base names through the slice files and the known files (the layer folders of the Shared modules), to any depth.
+// A Shared module has no slices: VSA.Sdk compiles its layer folders, and the router does not run.
 public static class SliceRouter {
     public const string ContractsRequests = "Contracts/Requests";
     public const string ContractsEvents = "Contracts/Events";
@@ -62,10 +62,10 @@ public static class SliceRouter {
         public string Slice { get; set; } = "";
     }
 
-    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources) => Route(slicesDir, sources, [], isShared: false);
+    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources) => Route(slicesDir, sources, []);
 
-    // known: files that are not routed, but whose types can be bases (the slice files of the Shared modules).
-    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources, IEnumerable<SliceSource> known, bool isShared) {
+    // known: files that are not routed, but whose types can be bases (the layer folders of the Shared modules).
+    public static SliceRouting Route(string slicesDir, IEnumerable<SliceSource> sources, IEnumerable<SliceSource> known) {
         var routing = new SliceRouting();
         var root = Path.GetFullPath(slicesDir);
         var declarations = new List<Declaration>();
@@ -135,12 +135,6 @@ public static class SliceRouter {
         foreach (var slice in sliceOf.GroupBy(p => p.Value, p => p.Key)) {
             var open = slice.Where(f => !routing.Layers.ContainsKey(f)).OrderBy(f => f, StringComparer.Ordinal).ToList();
             if (open.Count == 0) {
-                continue;
-            }
-            if (slice.Key == Shared && isShared) {
-                foreach (var f in open) {
-                    routing.Layers[f] = ContractsRequests;
-                }
                 continue;
             }
             if (slice.Key == Shared) {

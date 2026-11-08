@@ -3,7 +3,7 @@
     The layer rules. They follow the layer map (framework/Testing/Core/Layers.cs).
     The app root is the folder of global.json, the same rule as the vsa tool. An app can set VsaAppRoot itself.
     A project with rules is in a root folder of the app: <root>/<RootFolder>/<Name>/. VsaRootFolders lists them.
-    A module (Modules/) and a Shared module (Shared/) have the same slice layout:
+    A module (Modules/) has this slice layout:
 
       Modules/Notes/Notes.csproj                              the module root: the *.cs files of Modules/Notes/
       Modules/Notes/Projects/Notes.Domain.Shared.csproj       Domain/Shared/** (the published domain)
@@ -17,9 +17,13 @@
       Modules/Notes/Projects/Notes.Handlers.Events.csproj     the other files of the slices with an event handler
       Modules/Notes/Projects/Notes.Handlers.Commands.csproj   the other files of the slices with a command handler
 
+    A Shared module (Shared/) has the layout of the framework: no Slices/, one folder for each layer.
+    Shared/Pipeline/Handlers/Commands/** goes to Shared/Pipeline/Projects/Pipeline.Handlers.Commands.csproj,
+    and the same for each other layer.
+
     VsaRootFolder is the root folder (Modules or Shared), and VsaModule is the folder after it.
     The layer of a project in Projects/ comes from its name.
-    The VsaRouteSliceFiles task (framework/Sdk/Tasks) selects the project of each file in Slices/ by its types.
+    The VsaRouteSliceFiles task (framework/Sdk/Tasks) selects the project of each file in Slices/ of a module by its types.
     A project that is not in a root folder gets no rules.
     A Shared module is the base of the same layer in each module, as the framework is.
     "Private" references use PrivateAssets="all". The framework base of each layer is exposed.
@@ -34,7 +38,7 @@
       VSA0003  a project in a Modules or Shared folder that is not a root folder of the app root (_VsaCheckRoot)
       VSA0004  a project in the wrong folder, or a project in Projects/ with a name that is not <Module>.<Layer> (_VsaCheck)
       VSA0005  a routing error, from the VsaRouteSliceFiles task
-      VSA0006  a Compile item written by hand, or a .cs file that no project compiles (_VsaCheck)
+      VSA0006  a Compile item written by hand, a .cs file that no project compiles, or Slices/ in a Shared module (_VsaCheck)
       VSA0007  VsaModuleUses out of a module root, or a bad name in it (_VsaCheckModuleUses)
     _VsaCheck uses lists made at evaluation, so the order of the requested targets does not change them.
   -->
@@ -73,7 +77,9 @@
     <_VsaLayerSuffix Condition="'$(VsaLayer)' != '' and '$(VsaLayer)' != 'Module'">.$(VsaLayer.Replace('/', '.'))</_VsaLayerSuffix>
     <!-- A module project in another folder, or with a wrong name: VSA0004. It gets no layer rules. -->
     <_VsaMisplaced Condition="'$(VsaLayer)' == ''">true</_VsaMisplaced>
-    <_VsaRouted Condition="'$(VsaLayer)' == 'Contracts/Requests' or '$(VsaLayer)' == 'Contracts/Events' or '$(VsaLayer)' == 'Contracts/Commands' or '$(VsaLayer)' == 'Handlers/Requests' or '$(VsaLayer)' == 'Handlers/Events' or '$(VsaLayer)' == 'Handlers/Commands'">true</_VsaRouted>
+    <_VsaMessageLayer Condition="'$(VsaLayer)' == 'Contracts/Requests' or '$(VsaLayer)' == 'Contracts/Events' or '$(VsaLayer)' == 'Contracts/Commands' or '$(VsaLayer)' == 'Handlers/Requests' or '$(VsaLayer)' == 'Handlers/Events' or '$(VsaLayer)' == 'Handlers/Commands'">true</_VsaMessageLayer>
+    <!-- In a module, the router gives the files of these layers. In a Shared module, the folder of the layer gives them. -->
+    <_VsaRouted Condition="'$(_VsaMessageLayer)' == 'true' and '$(VsaRootFolder)' == 'Modules'">true</_VsaRouted>
     <!-- Each module project takes only the files that VSA.Sdk gives it. -->
     <EnableDefaultCompileItems Condition="'$(VsaLayer)' != ''">false</EnableDefaultCompileItems>
   </PropertyGroup>
@@ -85,7 +91,7 @@
     <None Include="$(VsaModuleDir)Slices/**/*.cs" Link="Slices/%(RecursiveDir)%(Filename)%(Extension)" />
     <Watch Include="$(VsaModuleDir)Slices/**/*.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure' or '$(VsaLayer)' == 'Presenters' or '$(VsaLayer)' == 'Domain/Shared'">
+  <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure' or '$(VsaLayer)' == 'Presenters' or '$(VsaLayer)' == 'Domain/Shared' or ('$(_VsaMessageLayer)' == 'true' and '$(VsaRootFolder)' == 'Shared')">
     <Compile Include="$(VsaModuleDir)$(VsaLayer)/**/*.cs" VsaRule="true" Link="$(VsaLayer)/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <!-- Domain/Shared/ is the published domain. Its own project compiles it, so Domain leaves it out. -->
@@ -111,11 +117,10 @@
   <Target Name="_VsaRouteSlices" BeforeTargets="BeforeCompile" Condition="'$(_VsaRouted)' == 'true'">
     <ItemGroup>
       <_VsaSliceSource Include="$(VsaModuleDir)Slices/**/*.cs" />
-      <!-- The slice files of the other Shared modules: the router reads their types as bases. -->
-      <_VsaKnownSource Include="$(VsaSharedDir)*/Slices/**/*.cs" Exclude="$(VsaModuleDir)Slices/**" />
+      <!-- The layer folders of the Shared modules: the router reads their types as bases. -->
+      <_VsaKnownSource Include="$(VsaSharedDir)*/Contracts/**/*.cs;$(VsaSharedDir)*/Handlers/**/*.cs" />
     </ItemGroup>
-    <VsaRouteSliceFiles SlicesDir="$(VsaModuleDir)Slices/" Files="@(_VsaSliceSource)" KnownFiles="@(_VsaKnownSource)"
-                        IsShared="$([System.String]::Equals('$(VsaRootFolder)', 'Shared'))" Layer="$(VsaLayer)">
+    <VsaRouteSliceFiles SlicesDir="$(VsaModuleDir)Slices/" Files="@(_VsaSliceSource)" KnownFiles="@(_VsaKnownSource)" Layer="$(VsaLayer)">
       <Output TaskParameter="LayerFiles" ItemName="Compile" />
     </VsaRouteSliceFiles>
   </Target>
@@ -350,7 +355,26 @@
     <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Domain.Shared.csproj')">$(_VsaCompiled);$(VsaModuleDir)Domain/Shared/**</_VsaCompiled>
     <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Infrastructure.csproj')">$(_VsaCompiled);$(VsaModuleDir)Infrastructure/**</_VsaCompiled>
     <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Presenters.csproj')">$(_VsaCompiled);$(VsaModuleDir)Presenters/**</_VsaCompiled>
-    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Commands.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Commands.csproj')">$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
+    <_VsaCompiled Condition="'$(VsaRootFolder)' == 'Modules' and (Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Commands.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Commands.csproj'))">$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
+  </PropertyGroup>
+  <!-- A Shared module: the folder of each message layer counts only if its project exists. Slices/ is an error of its own. -->
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Shared'">
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Requests.csproj')">$(_VsaCompiled);$(VsaModuleDir)Contracts/Requests/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Events.csproj')">$(_VsaCompiled);$(VsaModuleDir)Contracts/Events/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Commands.csproj')">$(_VsaCompiled);$(VsaModuleDir)Contracts/Commands/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Requests.csproj')">$(_VsaCompiled);$(VsaModuleDir)Handlers/Requests/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Events.csproj')">$(_VsaCompiled);$(VsaModuleDir)Handlers/Events/**</_VsaCompiled>
+    <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Commands.csproj')">$(_VsaCompiled);$(VsaModuleDir)Handlers/Commands/**</_VsaCompiled>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Shared'">
+    <_VsaSharedSlice Include="$(VsaModuleDir)Slices/**/*.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Shared'">
+    <_VsaCompiled>$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
+    <_VsaFolders>Domain/, Domain/Shared/, Infrastructure/, Presenters/, Contracts/Requests/, Contracts/Events/, Contracts/Commands/, Handlers/Requests/, Handlers/Events/ or Handlers/Commands/</_VsaFolders>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Modules'">
+    <_VsaFolders>Domain/, Domain/Shared/, Infrastructure/, Presenters/ or a slice in Slices/</_VsaFolders>
   </PropertyGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
     <_VsaUncompiled Include="$(VsaModuleDir)**/*.cs" Exclude="$(_VsaCompiled)" />
@@ -366,6 +390,7 @@
     <ItemGroup>
       <!-- The path in the module with "/" on each OS. -->
       <_VsaUncompiledPath Include="@(_VsaUncompiled)" Path="%(_VsaUncompiled.Folder)$([System.String]::Copy('%(_VsaUncompiled.RecursiveDir)').Replace('\', '/'))%(_VsaUncompiled.Filename)%(_VsaUncompiled.Extension)" />
+      <_VsaSharedSlicePath Include="@(_VsaSharedSlice)" Path="Slices/$([System.String]::Copy('%(_VsaSharedSlice.RecursiveDir)').Replace('\', '/'))%(_VsaSharedSlice.Filename)%(_VsaSharedSlice.Extension)" />
       <_VsaHandReference Include="@(_VsaDeclaredReference)" Condition="'%(_VsaDeclaredReference.Kind)' == 'Project' or $([System.String]::Copy('%(Identity)').StartsWith('VSA.'))" />
     </ItemGroup>
     <Error Condition="'@(_VsaHandReference)' != ''" Code="VSA0001"
@@ -373,7 +398,9 @@
     <Error Condition="'@(_VsaDeclaredCompile)' != ''" Code="VSA0006"
            Text="$(MSBuildProjectName) has Compile items written by hand: @(_VsaDeclaredCompile). VSA.Sdk gives each project its files. Remove them, and put each file in the folder of its layer or in a slice." />
     <Error Condition="'@(_VsaUncompiled)' != ''" Code="VSA0006"
-           Text="No project of module $(VsaModule) compiles these files: @(_VsaUncompiledPath->'%(Path)'). Move each file to Domain/, Domain/Shared/, Infrastructure/, Presenters/ or a slice in Slices/, and make sure that the module has the project of that folder." />
+           Text="No project of module $(VsaModule) compiles these files: @(_VsaUncompiledPath->'%(Path)'). Move each file to $(_VsaFolders), and make sure that the module has the project of that folder." />
+    <Error Condition="'@(_VsaSharedSlice)' != ''" Code="VSA0006"
+           Text="$(VsaModule) is a Shared module, so it has no slices: @(_VsaSharedSlicePath->'%(Path)'). A Shared module has the layout of the framework. Move each file to the folder of its layer, for example Handlers/Commands/, and make sure that the module has the project of that layer." />
   </Target>
 
   <!-- Each name in VsaUses is another Shared module that has this layer. Only a Shared layer has VsaUses. -->

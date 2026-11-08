@@ -1,4 +1,4 @@
-using Pipeline.Slices.Messages;
+using Pipeline.Contracts.Requests;
 using VSA.Contracts.Requests;
 
 namespace UsesShared.Slices.DealDamage;

@@ -1,4 +1,4 @@
-using Pipeline.Slices.Messages;
+using Pipeline.Contracts.Events;
 using VSA.Handlers.Events;
 
 namespace UsesShared.Slices.OnMessageHandled;

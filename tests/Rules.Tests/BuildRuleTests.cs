@@ -23,17 +23,19 @@ public sealed class BuildRuleTests {
     DotnetResult Build(string project = "Modules/Shop/Shop.csproj") => workspace.Dotnet("build", project, "-nodeReuse:false");
 
     // Writes the files, builds, and then deletes the files, also when the test fails.
-    DotnetResult BuildWith(params (string Path, string Text)[] files) {
+    DotnetResult BuildWith(params (string Path, string Text)[] files) => BuildIn(Module, "Modules/Shop/Shop.csproj", files);
+
+    DotnetResult BuildIn(string folder, string project, params (string Path, string Text)[] files) {
         foreach (var (path, text) in files) {
-            var full = Path.Combine(Module, path);
+            var full = Path.Combine(folder, path);
             Directory.CreateDirectory(Path.GetDirectoryName(full)!);
             File.WriteAllText(full, text);
         }
         try {
-            return Build();
+            return Build(project);
         } finally {
             foreach (var (path, _) in files) {
-                File.Delete(Path.Combine(Module, path));
+                File.Delete(Path.Combine(folder, path));
             }
         }
     }
@@ -125,6 +127,28 @@ public sealed class BuildRuleTests {
     public void VSA0006_a_published_domain_file_with_no_Domain_Shared_project() {
         var result = BuildWith(("Domain/Shared/PriceKey.cs", "namespace Shop.Domain.Shared;\n\npublic sealed record PriceKey(string Name);\n"));
         Fails(result, "VSA0006", "compiles these files: Domain/Shared/PriceKey.cs.");
+    }
+
+    // Only a Shared module has layer folders for the message layers. Shop has the Handlers.Requests project.
+    [Test]
+    public void VSA0006_a_layer_folder_in_a_module() => Fails(
+        BuildWith(("Handlers/Requests/PriceBase.cs", "namespace Shop.Handlers.Requests;\n\npublic sealed class PriceBase { }\n")),
+        "VSA0006", "compiles these files: Handlers/Requests/PriceBase.cs. Move each file to Domain/, Domain/Shared/, Infrastructure/, Presenters/ or a slice in Slices/");
+
+    // A Shared module has the layout of the framework, so it has no slices.
+    [Test]
+    public void VSA0006_a_slice_in_a_Shared_module() {
+        var tools = Path.Combine(workspace.Src, "Shared", "Tools");
+        try {
+            Fails(BuildIn(tools, "Shared/Tools/Tools.csproj",
+                    ("Tools.csproj", "<Project Sdk=\"VSA.Sdk\" />\n"),
+                    ("Projects/Tools.Handlers.Requests.csproj", "<Project Sdk=\"VSA.Sdk\" />\n"),
+                    ("ToolsModule.cs", "namespace Tools;\n\npublic sealed class ToolsModule : VSA.Module.Module { }\n"),
+                    ("Slices/Lookup/LookupBase.cs", "namespace Tools.Slices.Lookup;\n\npublic abstract class LookupBase { }\n")),
+                "VSA0006", "Tools is a Shared module, so it has no slices: Slices/Lookup/LookupBase.cs.");
+        } finally {
+            Directory.Delete(tools, recursive: true);
+        }
     }
 
     [Test]

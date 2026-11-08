@@ -70,6 +70,21 @@ public sealed class SdkSharedTests {
         Assert.That(references, Does.Contain("Shared/Pipeline/Projects/Pipeline.Contracts.Requests.csproj"));
     }
 
+    // A Shared module has the layout of the framework: the folder of a layer, with its subfolders, goes to the project of that layer.
+    [Test]
+    public void A_Shared_layer_compiles_the_folder_of_its_layer() {
+        var result = Dotnet.Run(Repo.Root, null, ["msbuild", Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Events"), "-getItem:Compile"]).EnsureSuccess();
+        var root = App().Replace('\\', '/') + "/";
+        var files = JsonNode.Parse(result.Output)!["Items"]!["Compile"]!.AsArray()
+            .Select(item => ((string)item!["FullPath"]!).Replace('\\', '/'))
+            .Where(path => path.StartsWith(root, StringComparison.Ordinal))
+            .Select(path => path[root.Length..]);
+        Assert.That(files, Is.EquivalentTo(new[] {
+            "Shared/Pipeline/Handlers/Events/Audit/AuditConfig.cs",
+            "Shared/Pipeline/Handlers/Events/Audit/MessageAudit.cs",
+        }));
+    }
+
     [Test]
     public void A_Shared_root_gets_no_module() =>
         Assert.That(References(Project("Shared/Pipeline", "Pipeline")), Has.None.StartsWith("Modules/"));

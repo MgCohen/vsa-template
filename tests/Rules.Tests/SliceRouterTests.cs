@@ -80,13 +80,14 @@ public sealed class SliceRouterTests {
         Assert.That(LayerOf(routing, "CreateNote/Notes.cs"), Is.EqualTo("Handlers/Requests"));
     }
 
-    // A Shared module gives base types. The router reads the Shared slice files as known files and follows the base names.
-    static SliceSource Known(string path, string text) => new(Path.GetFullPath(Path.Combine(Slices, "..", "..", "Pipeline", "Slices", path)), text);
+    // A Shared module gives base types. The router reads the layer folders of the Shared modules as known files
+    // and follows the base names.
+    static SliceSource Known(string path, string text) => new(Path.GetFullPath(Path.Combine(Slices, "..", "..", "Pipeline", path)), text);
 
     static readonly SliceSource[] PipelineBases = [
-        Known("Messages/Message.cs", "public abstract record Message; public sealed record MessageId(long Value) : IResponse;"),
-        Known("Messages/MessageHandler.cs", "public abstract class MessageHandler<T> : RoutedHandler<T, MessageId> { }"),
-        Known("Messages/MessageEvent.cs", "public abstract record MessageEvent : IntegrationEvent;"),
+        Known("Contracts/Requests/Message.cs", "public abstract record Message; public sealed record MessageId(long Value) : IResponse;"),
+        Known("Handlers/Requests/MessageHandler.cs", "public abstract class MessageHandler<T> : RoutedHandler<T, MessageId> { }"),
+        Known("Contracts/Events/MessageEvent.cs", "public abstract record MessageEvent : IntegrationEvent;"),
     ];
 
     [Test]
@@ -95,7 +96,7 @@ public sealed class SliceRouterTests {
             File("DealDamage/DealDamage.cs", $"public sealed record DealDamage(int Amount) : Message, IRequest<MessageId> {{ {Routed} }}"),
             File("DealDamage/DealDamageHandler.cs", "sealed class DealDamageHandler : MessageHandler<DealDamage> { }"),
             File("DealDamage/DamageDealt.cs", "public sealed record DamageDealt : MessageEvent;"),
-        ], PipelineBases, isShared: false);
+        ], PipelineBases);
 
         Assert.That(routing.Errors, Is.Empty);
         using var scope = Assert.EnterMultipleScope();
@@ -110,7 +111,7 @@ public sealed class SliceRouterTests {
     public void The_router_follows_the_bases_to_any_depth() {
         var routing = SliceRouter.Route(Slices, [
             File("Damage/DamageHandler.cs", "abstract class DamageHandler : MessageHandler<Hit> { } sealed class BigDamageHandler : DamageHandler { }"),
-        ], PipelineBases, isShared: false);
+        ], PipelineBases);
 
         Assert.That(routing.Errors, Is.Empty);
         Assert.That(LayerOf(routing, "Damage/DamageHandler.cs"), Is.EqualTo("Handlers/Requests"));
@@ -123,15 +124,6 @@ public sealed class SliceRouterTests {
 
         Assert.That(routing.Errors, Is.Empty);
         Assert.That(LayerOf(routing, "CreateNote/Loop.cs"), Is.EqualTo("Handlers/Requests"));
-    }
-
-    // In a Shared module, Slices/Shared/ holds bases for the modules: a type that no contract uses goes to Contracts/Requests.
-    [Test]
-    public void In_a_Shared_module_an_unused_type_in_Shared_is_a_contracts_base() {
-        var routing = SliceRouter.Route(Slices, [File("Shared/Id.cs", "public abstract record Id(long Value);")], [], isShared: true);
-
-        Assert.That(routing.Errors, Is.Empty);
-        Assert.That(LayerOf(routing, "Shared/Id.cs"), Is.EqualTo("Contracts/Requests"));
     }
 
     // A command and the result that it names go to Contracts/Commands. The other files of the slice go to Handlers/Commands.
@@ -159,9 +151,11 @@ public sealed class SliceRouterTests {
             File("PayCost/PayCostResult.cs", "public sealed record PayCostResult(bool Paid);"),
             File("PayCost/PayCostHandler.cs", "sealed class PayCostHandler : EffectHandler<PayCost, PayCostResult> { }"),
         ], [
-            new SliceSource(Path.Combine(Path.GetTempPath(), "vsa-router", "Effects", "Slices", "Shared", "Effect.cs"),
-                "public abstract record Effect<T> : ICommand<T>; public abstract class EffectHandler<TC, TR> : CommandHandler<TC, TR> { }"),
-        ], isShared: false);
+            new SliceSource(Path.Combine(Path.GetTempPath(), "vsa-router", "Effects", "Contracts", "Commands", "Effect.cs"),
+                "public abstract record Effect<T> : ICommand<T>;"),
+            new SliceSource(Path.Combine(Path.GetTempPath(), "vsa-router", "Effects", "Handlers", "Commands", "EffectHandler.cs"),
+                "public abstract class EffectHandler<TC, TR> : CommandHandler<TC, TR> { }"),
+        ]);
 
         Assert.That(routing.Errors, Is.Empty);
         using var scope = Assert.EnterMultipleScope();
