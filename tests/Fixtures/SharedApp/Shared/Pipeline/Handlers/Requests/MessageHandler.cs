@@ -1,8 +1,9 @@
+using Pipeline.Contracts.Requests;
 using VSA.Contracts.Requests;
 using VSA.Domain;
 using VSA.Handlers.Requests;
 
-namespace Pipeline.Slices.Messages;
+namespace Pipeline.Handlers.Requests;
 
 // The base of the message handlers of each module. The router finds RequestHandler through this base.
 public abstract class MessageHandler<TMessage> : RequestHandler<TMessage, MessageId> where TMessage : Message, IRequest<MessageId> {

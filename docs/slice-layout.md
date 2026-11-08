@@ -1,6 +1,6 @@
 # Module layout
 
-A module (`Modules/<Module>/`) and a Shared module (`Shared/<Module>/`) have the same layout. A module keeps each feature in one flat folder, `Slices/<Feature>/`, with any file names. Its layer projects are in one folder, `Projects/`. VSA.Sdk reads the type in each slice file and selects its project, so the assemblies follow the layer map.
+A module (`Modules/<Module>/`) keeps each feature in one flat folder, `Slices/<Feature>/`, with any file names. Its layer projects are in one folder, `Projects/`. VSA.Sdk reads the type in each slice file and selects its project, so the assemblies follow the layer map. A Shared module (`Shared/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Shared module layout](#shared-module-layout)).
 
 ## Layout
 
@@ -38,6 +38,50 @@ Modules/Cards/
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses.
 
+## Shared module layout
+
+A Shared module is the base of the same layer in each module, as `framework/Layers` is. It has the layout of the framework: one folder for each layer, and no `Slices/`.
+
+```
+Shared/Pipeline/
+├─ Pipeline.csproj, PipelineModule.cs                  module root
+├─ Projects/
+│  ├─ Pipeline.Contracts.Requests.csproj  Pipeline.Contracts.Events.csproj  Pipeline.Contracts.Commands.csproj
+│  └─ Pipeline.Handlers.Requests.csproj  Pipeline.Handlers.Events.csproj  Pipeline.Handlers.Commands.csproj
+├─ Contracts/
+│  ├─ Requests/         Message.cs                     abstract record Message, MessageId : IResponse
+│  ├─ Events/           MessageHandled.cs
+│  └─ Commands/         Step.cs                        abstract record Step<T> : ICommand<T>
+└─ Handlers/
+   ├─ Requests/         MessageHandler.cs              abstract MessageHandler<T> : RequestHandler<T, MessageId>
+   ├─ Events/Audit/     MessageAudit.cs, AuditConfig.cs
+   └─ Commands/Steps/   StepHandler.cs                 abstract StepHandler<TStep, TResult> : CommandHandler<TStep, TResult>
+```
+
+| Project | Files |
+|---|---|
+| `<Module>.Contracts.Requests` | `Contracts/Requests/**` |
+| `<Module>.Contracts.Events` | `Contracts/Events/**` |
+| `<Module>.Contracts.Commands` | `Contracts/Commands/**` |
+| `<Module>.Handlers.Requests` | `Handlers/Requests/**` |
+| `<Module>.Handlers.Events` | `Handlers/Events/**` |
+| `<Module>.Handlers.Commands` | `Handlers/Commands/**` |
+
+The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`) have the same folders as in a module. A subfolder of a layer folder goes to the same project. The router does not run in a Shared module.
+
+A module slice derives from a Shared base. The router reads the `Contracts/` and `Handlers/` folders of each Shared module, and finds the kind of the slice through the base:
+
+```
+Modules/UsesShared/Slices/Heal/Heal.cs          Heal : Step<HealResult>               → Contracts/Commands
+Modules/UsesShared/Slices/Heal/HealHandler.cs   HealHandler : StepHandler<Heal, ...>  → Handlers/Commands
+```
+
+| Problem | Result |
+|---|---|
+| `Slices/` in a Shared module | `VSA0006`: move each file to the folder of its layer |
+| A `Contracts/` or `Handlers/` folder in a module | `VSA0006`: move each file to a slice |
+| A layer folder with no project of that layer | `VSA0006`: add the project |
+
 ## Projects and files
 
 | Project | Files |
@@ -74,7 +118,7 @@ A command result has no marker. It goes to `Contracts.Commands` because its comm
 The task `VsaRouteSliceFiles` (`framework/Sdk/Tasks`) selects the files of each contracts and handlers project. It runs before `BeforeCompile`, so the files are in `@(Compile)` for the build, the design-time build of the IDE and the analyzers.
 
 1. It parses each slice file with the Roslyn syntax parser.
-2. It finds the contract types and the handler types by their base types. A base that is not a marker counts with its own bases, to any depth. The router also reads the slice files of the Shared modules for these bases, but it does not route them:
+2. It finds the contract types and the handler types by their base types. A base that is not a marker counts with its own bases, to any depth. The router also reads the `Contracts/` and `Handlers/` folders of the Shared modules for these bases, but it does not route them:
 
    ```
    DealDamage        : Message, IRequest<MessageId>   → Contracts/Requests
@@ -85,7 +129,8 @@ The task `VsaRouteSliceFiles` (`framework/Sdk/Tasks`) selects the files of each 
 
 3. It follows the type names that a contract type uses. A name is found first in the same slice, then in `Slices/Shared/`.
 4. The other files of a slice go to the handlers project of the slice.
-5. In a Shared module, a file in `Slices/Shared/` that no contract uses goes to `Contracts/Requests`. It is a base type for the modules, for example `abstract record Id(long Value)`. `VSA1003` does not check the contracts projects of a Shared module.
+
+`VSA1003` does not check the contracts projects of a Shared module, because a base type for the modules, for example `abstract record Id(long Value)`, has no marker.
 
 The router runs before the compile, so it has no semantic model and matches types by simple name. A base type from a NuGet package, not from `Shared/`, is unknown to the router. The compiler and `VSA1003` then check the result with the real types.
 
@@ -98,7 +143,7 @@ The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tas
 | `VSA0001` | Reference written by hand | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0004` | Wrong project folder or name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0005` | Routing of the slice files (next table) | Build, design-time build | Build output, IDE error list |
-| `VSA0006` | Hand-written `Compile` item, or uncompiled file | Restore, build, design-time build | Build output, IDE error list |
+| `VSA0006` | Hand-written `Compile` item, uncompiled file, or `Slices/` in a Shared module | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0007` | `VsaModuleUses` out of a module root, or a bad name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA1003` | Contracts projects hold only contract types and their DTOs | Compile, also while you type | Editor and build |
 | `VSA1005`–`VSA1007` | `Domain.Shared` types hold only immutable data | Compile, also while you type | Editor and build |

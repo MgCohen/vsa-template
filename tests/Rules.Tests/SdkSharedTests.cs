@@ -49,7 +49,7 @@ public sealed class SdkSharedTests {
         Assert.That(References(Project("Modules/UsesShared/Projects", "UsesShared.Handlers.Events")),
             Does.Contain("Shared/Pipeline/Projects/Pipeline.Contracts.Events.csproj"));
 
-    // A Shared base of event handlers handles the events of its own Shared module (Pipeline.Slices.Audit).
+    // A Shared base of event handlers handles the events of its own Shared module (Pipeline.Handlers.Events.Audit).
     [Test]
     public void A_Shared_event_handler_gets_the_events_of_its_own_module() =>
         Assert.That(References(Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Events")),
@@ -68,6 +68,21 @@ public sealed class SdkSharedTests {
         var references = References(Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Requests"));
         Assert.That(references, Has.All.StartWith("Shared/Pipeline/"));
         Assert.That(references, Does.Contain("Shared/Pipeline/Projects/Pipeline.Contracts.Requests.csproj"));
+    }
+
+    // A Shared module has the layout of the framework: the folder of a layer, with its subfolders, goes to the project of that layer.
+    [Test]
+    public void A_Shared_layer_compiles_the_folder_of_its_layer() {
+        var result = Dotnet.Run(Repo.Root, null, ["msbuild", Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Events"), "-getItem:Compile"]).EnsureSuccess();
+        var root = App().Replace('\\', '/') + "/";
+        var files = JsonNode.Parse(result.Output)!["Items"]!["Compile"]!.AsArray()
+            .Select(item => ((string)item!["FullPath"]!).Replace('\\', '/'))
+            .Where(path => path.StartsWith(root, StringComparison.Ordinal))
+            .Select(path => path[root.Length..]);
+        Assert.That(files, Is.EquivalentTo(new[] {
+            "Shared/Pipeline/Handlers/Events/Audit/AuditConfig.cs",
+            "Shared/Pipeline/Handlers/Events/Audit/MessageAudit.cs",
+        }));
     }
 
     [Test]

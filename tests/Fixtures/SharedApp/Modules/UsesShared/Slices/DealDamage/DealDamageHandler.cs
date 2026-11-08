@@ -1,4 +1,5 @@
-using Pipeline.Slices.Messages;
+using Pipeline.Contracts.Requests;
+using Pipeline.Handlers.Requests;
 
 namespace UsesShared.Slices.DealDamage;
 
