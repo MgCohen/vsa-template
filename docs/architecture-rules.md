@@ -49,7 +49,7 @@ The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk
 
 VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Plugins`. A project in another folder gets no rules. `Shared/` is not a root folder: the plugin modules were Shared modules in `Shared/` before, so move each one to `Plugins/`.
 
-A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Layers` is the base of each layer:
+A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Core` is the base of each layer:
 
 | From | Gets from VSA.Sdk |
 |---|---|

@@ -156,34 +156,34 @@
     <_VsaFramework Include="VSA.Analyzers.Markers" Path="Analyzers/Markers" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Domain'">
-    <_VsaFramework Include="VSA.Domain" Path="Layers/Domain" />
+    <_VsaFramework Include="VSA.Domain" Path="Core/Domain" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Infrastructure'">
-    <_VsaFramework Include="VSA.Infrastructure" Path="Layers/Infrastructure/Core" />
+    <_VsaFramework Include="VSA.Infrastructure" Path="Core/Infrastructure/Core" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Requests'">
-    <_VsaFramework Include="VSA.Contracts.Requests" Path="Layers/Contracts/Requests" />
+    <_VsaFramework Include="VSA.Contracts.Requests" Path="Core/Contracts/Requests" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Events'">
-    <_VsaFramework Include="VSA.Contracts.Events" Path="Layers/Contracts/Events" />
+    <_VsaFramework Include="VSA.Contracts.Events" Path="Core/Contracts/Events" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Commands'">
-    <_VsaFramework Include="VSA.Contracts.Commands" Path="Layers/Contracts/Commands" />
+    <_VsaFramework Include="VSA.Contracts.Commands" Path="Core/Contracts/Commands" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Requests'">
-    <_VsaFramework Include="VSA.Handlers.Requests" Path="Layers/Handlers/Requests" />
+    <_VsaFramework Include="VSA.Handlers.Requests" Path="Core/Handlers/Requests" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Events'">
-    <_VsaFramework Include="VSA.Handlers.Events" Path="Layers/Handlers/Events" />
+    <_VsaFramework Include="VSA.Handlers.Events" Path="Core/Handlers/Events" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Commands'">
-    <_VsaFramework Include="VSA.Handlers.Commands" Path="Layers/Handlers/Commands" />
+    <_VsaFramework Include="VSA.Handlers.Commands" Path="Core/Handlers/Commands" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
-    <_VsaFramework Include="VSA.Presenters" Path="Layers/Presenters" />
+    <_VsaFramework Include="VSA.Presenters" Path="Core/Presenters" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
-    <_VsaFramework Include="VSA.Module" Path="Layers/Module" />
+    <_VsaFramework Include="VSA.Module" Path="Core/Module" />
   </ItemGroup>
 
   <!-- Source mode: project references into framework/. -->

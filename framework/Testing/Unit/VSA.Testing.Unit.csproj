@@ -4,10 +4,10 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../Layers/Handlers/Requests/VSA.Handlers.Requests.csproj" />
-    <ProjectReference Include="../../Layers/Infrastructure/Core/VSA.Infrastructure.csproj" />
-    <ProjectReference Include="../../Layers/Contracts/Events/VSA.Contracts.Events.csproj" />
-    <ProjectReference Include="../../Layers/Handlers/Commands/VSA.Handlers.Commands.csproj" />
+    <ProjectReference Include="../../Core/Handlers/Requests/VSA.Handlers.Requests.csproj" />
+    <ProjectReference Include="../../Core/Infrastructure/Core/VSA.Infrastructure.csproj" />
+    <ProjectReference Include="../../Core/Contracts/Events/VSA.Contracts.Events.csproj" />
+    <ProjectReference Include="../../Core/Handlers/Commands/VSA.Handlers.Commands.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NSubstitute" />

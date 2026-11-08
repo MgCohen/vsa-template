@@ -52,7 +52,7 @@ public sealed class HandlerContext {
 
 | Part | Rule |
 |---|---|
-| Project | `VSA.Handlers` (`framework/Layers/Handlers/Core/`), a Unity layer |
+| Project | `VSA.Handlers` (`framework/Core/Handlers/Core/`), a Unity layer |
 | Installer | `HandlerStepInstaller` finds each `HandlerStep<>` with `context.Implementations` |
 | Match | A step runs if its `TMessage` is assignable from the message type |
 | Order | `Order`, then the full type name. The chain of each message type is cached |
