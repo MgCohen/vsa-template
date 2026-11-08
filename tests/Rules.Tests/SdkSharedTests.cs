@@ -49,7 +49,7 @@ public sealed class SdkSharedTests {
         Assert.That(References(Project("Modules/UsesShared/Projects", "UsesShared.Handlers.Events")),
             Does.Contain("Shared/Pipeline/Projects/Pipeline.Contracts.Events.csproj"));
 
-    // A Shared base of event handlers handles the events of its own Shared module (Pipeline.Slices.Audit).
+    // A Shared base of event handlers handles the events of its own Shared module (Pipeline.Handlers.Events.Audit).
     [Test]
     public void A_Shared_event_handler_gets_the_events_of_its_own_module() =>
         Assert.That(References(Project("Shared/Pipeline/Projects", "Pipeline.Handlers.Events")),
