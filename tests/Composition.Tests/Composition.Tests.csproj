@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Layers/Composition/VSA.Composition.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Core/Composition/VSA.Composition.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Echo/Echo.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Answers/Answers.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Signals/Signals.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/Cards/Cards.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/Resources/Resources.csproj" />

@@ -1,9 +1,0 @@
-<Project>
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
-  <!-- The Shared modules that this layer uses. The spaces and the new line are on purpose: the tests check them. -->
-  <PropertyGroup>
-    <VsaUses> RecordIds ;
-      Units ;</VsaUses>
-  </PropertyGroup>
-  <Import Project="$(VsaSdkDir)Sdk.targets" />
-</Project>

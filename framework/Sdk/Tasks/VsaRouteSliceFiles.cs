@@ -13,7 +13,7 @@ public sealed class VsaRouteSliceFiles : Microsoft.Build.Utilities.Task {
 
     public ITaskItem[] Files { get; set; } = [];
 
-    // The layer folders of the Shared modules. The router reads their types as bases, and does not route them.
+    // The layer folders of the plugin modules. The router reads their types as bases, and does not route them.
     public ITaskItem[] KnownFiles { get; set; } = [];
 
     [Required]

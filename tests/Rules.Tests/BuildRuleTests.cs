@@ -129,23 +129,23 @@ public sealed class BuildRuleTests {
         Fails(result, "VSA0006", "compiles these files: Domain/Shared/PriceKey.cs.");
     }
 
-    // Only a Shared module has layer folders for the message layers. Shop has the Handlers.Requests project.
+    // Only a plugin module has layer folders for the message layers. Shop has the Handlers.Requests project.
     [Test]
     public void VSA0006_a_layer_folder_in_a_module() => Fails(
         BuildWith(("Handlers/Requests/PriceBase.cs", "namespace Shop.Handlers.Requests;\n\npublic sealed class PriceBase { }\n")),
         "VSA0006", "compiles these files: Handlers/Requests/PriceBase.cs. Move each file to Domain/, Domain/Shared/, Infrastructure/, Presenters/ or a slice in Slices/");
 
-    // A Shared module has the layout of the framework, so it has no slices.
+    // A plugin module has the layout of the framework, so it has no slices.
     [Test]
-    public void VSA0006_a_slice_in_a_Shared_module() {
-        var tools = Path.Combine(workspace.Src, "Shared", "Tools");
+    public void VSA0006_a_slice_in_a_plugin_module() {
+        var tools = Path.Combine(workspace.Src, "Plugins", "Tools");
         try {
-            Fails(BuildIn(tools, "Shared/Tools/Tools.csproj",
+            Fails(BuildIn(tools, "Plugins/Tools/Tools.csproj",
                     ("Tools.csproj", "<Project Sdk=\"VSA.Sdk\" />\n"),
                     ("Projects/Tools.Handlers.Requests.csproj", "<Project Sdk=\"VSA.Sdk\" />\n"),
-                    ("ToolsModule.cs", "namespace Tools;\n\npublic sealed class ToolsModule : VSA.Module.Module { }\n"),
+                    ("ToolsPlugin.cs", "namespace Tools;\n\npublic sealed class ToolsPlugin : VSA.Module.Plugin { }\n"),
                     ("Slices/Lookup/LookupBase.cs", "namespace Tools.Slices.Lookup;\n\npublic abstract class LookupBase { }\n")),
-                "VSA0006", "Tools is a Shared module, so it has no slices: Slices/Lookup/LookupBase.cs.");
+                "VSA0006", "Tools is a plugin module, so it has no slices: Slices/Lookup/LookupBase.cs.");
         } finally {
             Directory.Delete(tools, recursive: true);
         }

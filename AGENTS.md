@@ -10,7 +10,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 
 | Path                  | Purpose                                                                 |
 |-----------------------|-------------------------------------------------------------------------|
-| `framework/Layers/`   | The framework code: one project for each layer base. Ships as NuGet packages |
+| `framework/Core/`     | The framework core: one project for each layer base. Ships as NuGet packages. Plugin modules extend it |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project, the layer references and the slice router (`Tasks/`) |
 | `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build. `Markers/` (VSA.Analyzers.Markers): the attributes that the rules read, for example `[ReflectionBase]` |
 | `framework/Testing/`  | The test bases that ship: `Core/` (the layer map), `Architecture/` (ArchUnitNET), `Unit/` (NUnit, NSubstitute) |
@@ -19,17 +19,17 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
 
-A module is a folder `Modules/<Module>/`, and a Shared module is a folder `Shared/<Module>/`. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/` and `Presenters/`. A module has its other code in `Slices/<Feature>/`: the type in each file selects its project. A Shared module has no slices: it has the layout of the framework, with one folder for each layer, for example `Handlers/Commands/`. VSA.Sdk gives each project its files and its references. See `docs/slice-layout.md`.
+A module is a folder `Modules/<Module>/`, and a plugin module is a folder `Plugins/<Module>/`. The root project is `<Module>/<Module>.csproj`, and the layer projects are in `<Module>/Projects/`, named `<Module>.<Layer>`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/` and `Presenters/`. A module has its other code in `Slices/<Feature>/`: the type in each file selects its project. A plugin module has no slices: it has the layout of the framework, with one folder for each layer, for example `Handlers/Commands/`. Its root class inherits `Plugin` (`VSA1014`). The word "Shared" is only `Domain/Shared/` and `Slices/Shared/`. VSA.Sdk gives each project its files and its references. See `docs/slice-layout.md`.
 
-The app root is the folder of `global.json`. In this repository, `samples/`, `tests/Fixtures/` and the templates set the app root (`VsaAppRoot`) for each app, because the repository has one `global.json`. A Shared module is the base of the same layers in each module, as the framework is. See `docs/architecture-rules.md`.
+The app root is the folder of `global.json`. In this repository, `samples/`, `tests/Fixtures/` and the templates set the app root (`VsaAppRoot`) for each app, because the repository has one `global.json`. A plugin module is the base of the same layers in each module, as the framework is. See `docs/architecture-rules.md`.
 
 Do not add references or `Compile` items to a module project by hand: the build fails with `VSA0001` or `VSA0006`. Inside this repository, the sample projects import VSA.Sdk from source (`samples/VSA.Sdk.Dev.props`). A consumer project is only `<Project Sdk="VSA.Sdk" />`.
 
 Git ignores `VSA.slnx`. To make it, run `dotnet run solution.cs`. The script adds each `.csproj` in the repository, except `tests/Fixtures/`. After you add, move or remove a project, run the script again. Do not edit `VSA.slnx` by hand.
 
-The host finds the modules by itself: `Program.cs` calls `builder.AddVsa()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>`, else startup fails.
+The host finds the modules and the views by itself: `Program.cs` calls `VsaBuilder.Create(args).UseWebHost().Build().RunAsync()`. To add a module, add its files under `Modules/`. Do not edit `Program.cs`. Each module root has exactly one class that inherits `Module` or `Module<TSettings>` (`Plugin` or `Plugin<TSettings>` in a plugin module), else startup fails.
 
-`builder.AddVsa()` (VSA.Host) runs a `VsaComposer` with installers: one class for each kind of registration. Module code registers services on `IVsaServices`, not on a container type. VSA.Composition has no ASP.NET Core, so a Unity or console app runs the composer directly. The installer of a layer is in the project of that layer, for example `EventHandlerInstaller` in VSA.Handlers.Events. To add a kind of registration, write an `IVsaInstaller` in the project of its layer, and call it from `VsaComposer.InstallLayers` (or from `AddVsa` in VSA.Host if it needs ASP.NET Core). An installer finds its types with `context.Implementations(typeof(TBase))`. See `docs/composition.md`.
+`VsaBuilder` (VSA.Composition) is the one entry point. The host selects the split: `UseWebHost()` (VSA.Host) adds the HTTP API of the requests and the views, and `UseGenericHost()` is for Unity and console apps, with no ASP.NET Core. `Build()` runs the layer installers, then `Services(...)`, then `Module.Configure` of each module, and returns an `IHost`. `AppScan` finds the modules and the views root (`ViewsRoot`) in the loaded assemblies and the `.dll` files of the app. Module code registers services on `IServiceCollection` and resolves them with `IServiceProvider`. These interfaces are container-neutral, so do not add a VSA container interface. The installer of a layer is an internal static class in the project of that layer, for example `EventHandlerInstaller` in VSA.Handlers.Events. To add a kind of registration, write `Install(IServiceCollection services, ModuleTypes types)` in the project of its layer, and call it from `VsaArchitecture.InstallLayers` (or from `WebVsaHost.Install` if it needs ASP.NET Core). An installer finds its types with `types.Implementations(typeof(TBase))`. See `docs/composition.md`.
 
 A presenter shows the events of its own module: it implements `IPresenterEvent<TEvent>`, and it gets each event, also when no view shows it. A view only renders: it inherits `PresenterWatcher` (one or more presenters) or `PresenterComponent<T>` (one presenter). A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
 
@@ -42,7 +42,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Framework.Tests/` | Tests of one framework layer. One folder for each area, for example `Settings/`, `Host/` |
 | `tests/Consumer.Tests/`  | Tests that pack the framework and build a copy of a sample as a consumer  |
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
-| `tests/Composition.Tests/` | Tests of the composer, the installers and `MicrosoftServices`, with no ASP.NET Core |
+| `tests/Composition.Tests/` | Tests of the composer, the installers and `ModuleBuilder`, with no ASP.NET Core |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
 
@@ -100,18 +100,19 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 A tag `v<version>` publishes all packages to GitHub Packages (`.github/workflows/publish.yml`). Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass.
 
-Nine framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Infrastructure, VSA.Module and VSA.Composition (`VsaUnityLayer` in `Directory.Build.props`). For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
+Twelve framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Contracts.Requests, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Requests, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Presenters, VSA.Infrastructure, VSA.Module and VSA.Composition (`VsaPortableLayer` in `Directory.Build.props`). A module defines a request, a command, an event or a presenter one time, and the same code works on all hosts. Only the transports (VSA.Host, VSA.Views) need ASP.NET Core. For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
 
 ## Scaffolding: the vsa tool
 
 The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
 
 ```bash
-dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, .gitignore, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/
+dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, .gitignore, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/, Plugins/
 dotnet vsa add module <Name>                     # all layers, a status request, a presenter and a page
 dotnet vsa add request <Name> -m <Module>        # the request, the response and the handler
 dotnet vsa add command <Name> -m <Module>        # the command, the result and the handler; the command projects if they are missing
+dotnet vsa add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
 dotnet vsa doctor                                # the tool, VSA.Sdk and the VSA.* packages have one version
 ```
 
-The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction` and `SampleChange`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path, and the two projects `SampleModule.Contracts.Commands` and `SampleModule.Handlers.Commands`, belong to `add command`. Any other file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.
+The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction`, `SampleChange` and `SamplePlugin`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path, and the two projects `SampleModule.Contracts.Commands` and `SampleModule.Handlers.Commands`, belong to `add command`. A template file with `SamplePlugin` in its path belongs to `add plugin`. Any other file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.

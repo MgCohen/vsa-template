@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Notes.Domain;
 using Notes.Infrastructure;
 using VSA.Infrastructure;

@@ -30,6 +30,8 @@ public sealed class ScaffoldingTests {
     [TestCase("SampleActionLog")]
     [TestCase("SampleApp")]
     [TestCase("SampleChangeLog")]
+    [TestCase("SamplePluginBase")]
+    [TestCase("Plugins")]
     public void InvalidModuleNamesFail(string name) => Assert.Throws<VsaException>(() => Names.Check(name, "module"));
 
     [Test]
@@ -56,7 +58,8 @@ public sealed class ScaffoldingTests {
     // Each template file and its command. A new template file must be added here, so its command shows in the diff.
     [Test]
     public void EachTemplateFileHasOneCommand() {
-        const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command;
+        const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command,
+            Plugin = Templates.Kind.Plugin;
         (string, Templates.Kind)[] expected = [
             ("AGENTS.md.template", App),
             ("App/Host/App.Host.csproj", App),
@@ -93,6 +96,11 @@ public sealed class ScaffoldingTests {
             ("Modules/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
             ("Modules/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
             ("Modules/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
+            ("Plugins/.gitkeep", App),
+            ("Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
+            ("Plugins/SamplePlugin/Projects/SamplePlugin.Contracts.Commands.csproj", Plugin),
+            ("Plugins/SamplePlugin/SamplePlugin.csproj", Plugin),
+            ("Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),
             ("Tests/App.Tests.csproj", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
         ];
@@ -124,7 +132,7 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Does.Contain("App/Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("builder.AddVsa();"));
+        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("VsaBuilder.Create(args).UseWebHost().Build().RunAsync();"));
     }
 
     [Test]

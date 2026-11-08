@@ -4,9 +4,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Core/VSA.Testing.Core.csproj" />
-    <ProjectReference Include="../../Layers/Module/VSA.Module.csproj" />
-    <ProjectReference Include="../../Layers/Contracts/Requests/VSA.Contracts.Requests.csproj" />
-    <ProjectReference Include="../../Layers/Handlers/Requests/VSA.Handlers.Requests.csproj" />
+    <ProjectReference Include="../../Core/Module/VSA.Module.csproj" />
+    <ProjectReference Include="../../Core/Contracts/Requests/VSA.Contracts.Requests.csproj" />
+    <ProjectReference Include="../../Core/Handlers/Requests/VSA.Handlers.Requests.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="TngTech.ArchUnitNET.NUnit" />

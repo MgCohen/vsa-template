@@ -65,17 +65,19 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 | Infrastructure | `VSA.Infrastructure` | Yes |
 | Module | `VSA.Module` | Yes |
 | Composition | `VSA.Composition` | Yes, without presenters |
-| Contracts, requests | `VSA.Contracts.Requests` | No: `static abstract` members |
-| Handlers, requests; Host; Views | ASP.NET Core packages | No: ASP.NET Core |
+| Contracts, requests | `VSA.Contracts.Requests` | Yes. The route members are only on `net10.0` |
+| Handlers, requests | `VSA.Handlers.Requests` | Yes |
+| Presenters | `VSA.Presenters` | Yes |
+| Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
-The root `Directory.Build.props` lists the Unity layers (`VsaUnityLayer`). They target `net10.0` and `netstandard2.1`.
+The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`). They target `net10.0` and `netstandard2.1`.
 
 ### Rules for the netstandard2.1 target
 
 - Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
-- `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Layers/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- Unity has no `deps.json`, so `ModuleDiscovery` cannot find the modules. The Unity app gives the modules to `new VsaComposer(services, configuration, modules)` (`docs/composition.md`).
+- `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Core/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
+- `AppScan` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app starts with `VsaBuilder.Create().UseGenericHost().Build()` (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies.
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Open questions

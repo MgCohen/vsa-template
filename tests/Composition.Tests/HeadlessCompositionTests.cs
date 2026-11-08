@@ -1,11 +1,13 @@
+using Answers;
+using Answers.Slices.Answer;
+using Answers.Slices.GetItem;
+using Answers.Slices.ListAll;
 using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Echo;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
 using Signals;
@@ -14,10 +16,6 @@ using Signals.Slices.Ring;
 using VSA.Composition;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
-using VSA.Contracts.Requests;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Events;
-using VSA.Module;
 using VSA.Presenters;
 
 namespace Composition.Tests;
@@ -34,11 +32,9 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public async Task A_command_goes_through_two_modules_in_a_plain_service_provider() {
-        var services = Services();
-        Composer(services, new CardsModule(), new ResourcesModule()).Install();
-        await using var provider = Build(services);
-        await using var scope = provider.CreateAsyncScope();
+    public async Task A_command_goes_through_two_modules_in_a_generic_host() {
+        using var host = App(new CardsModule(), new ResourcesModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
             .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
@@ -47,100 +43,90 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void A_command_with_two_handlers_stops_the_composition() {
-        var composer = Composer(Services(), new EchoModule());
+    public void A_command_with_two_handlers_stops_the_build() {
+        var app = App(new EchoModule());
 
-        var error = Assert.Throws<InvalidOperationException>(composer.Install);
+        var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:"));
     }
 
     [Test]
     public async Task An_event_reaches_its_handler_and_a_live_presenter() {
-        var services = Services();
-        Composer(services, new SignalsModule()).Install();
-        await using var provider = Build(services);
-        await using var scope = provider.CreateAsyncScope();
+        using var host = App(new SignalsModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
 
         await scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>()
             .PublishAsync(new Rang("door"), CancellationToken.None);
 
-        Assert.That(provider.GetRequiredService<RingLog>().Bells, Is.EqualTo(new[] { "door" }));
+        Assert.That(host.Services.GetRequiredService<RingLog>().Bells, Is.EqualTo(new[] { "door" }));
         Assert.That(presenter.Last, Is.EqualTo("door"));
     }
 
     [Test]
-    public void The_composer_registers_no_bus() {
-        var services = new ServiceCollection();
+    public async Task A_request_goes_to_its_handler_in_process_with_no_route() {
+        using var host = App(new AnswersModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var id = Guid.NewGuid();
 
-        Composer(services, new SignalsModule()).Install();
+        var response = await scope.ServiceProvider.GetRequiredService<IBus>().Send(new GetItemRequest(id, 2, false));
 
-        Assert.That(services.Any(s => s.ServiceType == typeof(IBus)), Is.False);
+        Assert.That(response, Is.EqualTo(new GetItemResponse(id, 2, false)));
     }
 
     [Test]
-    public void Code_between_the_layers_and_the_modules_runs_before_Configure() {
-        var services = Services();
-        var composer = Composer(services, new SignalsModule());
+    public async Task A_request_error_is_a_RequestException() {
+        using var host = App(new AnswersModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        composer.InstallLayers();
-        var ringLogBeforeModules = composer.Context.Services.Contains(typeof(RingLog));
-        composer.ConfigureModules();
+        var error = Assert.ThrowsAsync<RequestException>(() => bus.Send(new AnswerRequest("answers.not_found")));
 
-        Assert.That(ringLogBeforeModules, Is.False);
-        Assert.That(composer.Context.Services.Contains(typeof(RingLog)), Is.True);
-        Assert.That(services.Any(s => s.ServiceType == typeof(BellPresenter)), Is.True);
+        Assert.That(error!.Code, Is.EqualTo("answers.not_found"));
+        Assert.That(error.Message, Is.EqualTo("The test error."));
     }
 
     [Test]
-    public void Implementations_finds_the_handlers_and_not_the_helper_classes() {
-        var context = new VsaContext(new MicrosoftServices(Services()), EmptyConfiguration(), [new SignalsModule()]);
+    public async Task A_request_with_no_handler_is_an_error() {
+        using var host = App().Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        var handlers = context.Implementations(typeof(VSA.Handlers.Events.IntegrationEventHandler<>)).ToList();
-        var presenters = context.Implementations(typeof(Presenter)).Select(p => p.Implementation).ToList();
+        var error = Assert.ThrowsAsync<InvalidOperationException>(() => bus.Send(new ListAllRequest()));
 
-        Assert.That(handlers.Select(h => h.Service), Is.EqualTo(new[] { typeof(VSA.Handlers.Events.IntegrationEventHandler<Rang>) }));
-        Assert.That(handlers.Select(h => h.Implementation.Name), Is.EqualTo(new[] { "RangHandler" }));
-        Assert.That(presenters, Is.EqualTo(new[] { typeof(BellPresenter) }));
+        Assert.That(error!.Message, Does.StartWith("Request Answers.Slices.ListAll.ListAllRequest has no handler."));
     }
 
     [Test]
-    public async Task The_installers_also_run_by_hand_without_the_composer() {
-        var services = Services();
-        var context = new VsaContext(
-            new MicrosoftServices(services), EmptyConfiguration(), [new CardsModule(), new ResourcesModule()]);
-        IVsaInstaller[] installers = [new EventHandlerInstaller(), new CommandHandlerInstaller(), new ModuleInstaller()];
-        foreach (var installer in installers) {
-            installer.Install(context);
-        }
-        await using var provider = Build(services);
-        await using var scope = provider.CreateAsyncScope();
+    public void A_module_registration_wins_over_app_services() {
+        var appRingLog = new RingLog();
 
-        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
-            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
+        using var host = App(new SignalsModule()).Services(services => services.AddSingleton(appRingLog)).Build();
 
-        Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
+        Assert.That(host.Services.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
     }
 
-    static VsaComposer Composer(ServiceCollection services, params VSA.Module.Module[] modules) =>
-        new(new MicrosoftServices(services), EmptyConfiguration(), modules);
+    [Test]
+    public void Build_with_no_host_is_an_error() {
+        var app = VsaBuilder.Create().Modules();
 
-    static ServiceCollection Services() {
-        var services = new ServiceCollection();
-        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        services.AddSingleton<IBus>(new NoRequestsBus());
-        return services;
+        var error = Assert.Throws<InvalidOperationException>(() => app.Build());
+
+        Assert.That(error.Message, Is.EqualTo(
+            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost()."));
     }
 
-    static ServiceProvider Build(ServiceCollection services) =>
-        services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+    [Test]
+    public async Task The_generic_host_runs_until_the_app_stops_it() {
+        using var host = App().Build();
 
-    static IConfiguration EmptyConfiguration() => new ConfigurationBuilder().Build();
+        var run = host.RunAsync();
+        await host.StopAsync();
 
-    sealed class NoRequestsBus : IBus {
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
-            where TResponse : IResponse =>
-            throw new InvalidOperationException("This test app has no request handlers.");
+        Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10))), Is.SameAs(run));
     }
+
+    static VsaBuilder App(params VSA.Module.Module[] modules) =>
+        VsaBuilder.Create().UseGenericHost().Modules(modules);
 }

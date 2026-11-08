@@ -19,12 +19,12 @@
     <ProjectReference Include="$(RepoRoot)framework/Sdk/Tasks/VSA.Sdk.Tasks.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
     <!-- The analyzer tests compile code against these assemblies. -->
-    <ProjectReference Include="$(RepoRoot)framework/Layers/Handlers/Events/VSA.Handlers.Events.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Layers/Presenters/VSA.Presenters.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Core/Handlers/Events/VSA.Handlers.Events.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Core/Presenters/VSA.Presenters.csproj" />
     <!-- Each fixture module root, with its layers. -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Rules/Modules/*/*.csproj" />
-    <!-- A fixture app with Shared modules, apart from the rule fixtures so that they do not get the Shared modules. -->
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/SharedApp/Modules/*/*.csproj" />
+    <!-- A fixture app with plugin modules, apart from the rule fixtures so that they do not get the plugin modules. -->
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/PluginApp/Modules/*/*.csproj" />
     <!-- A fixture app with commands, Domain.Shared projects and VsaModuleUses (Cards uses Resources). -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/*/*.csproj" />
   </ItemGroup>

@@ -1,6 +1,6 @@
 # Persistence
 
-VSA has one persistence port, `IRepository<T, TId>` (`framework/Layers/Infrastructure/Core/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
+VSA has one persistence port, `IRepository<T, TId>` (`framework/Core/Infrastructure/Core/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
 
 ## The port
 

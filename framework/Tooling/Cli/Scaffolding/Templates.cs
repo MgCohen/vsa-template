@@ -7,19 +7,21 @@ namespace VSA.Cli.Scaffolding;
 //   1. the path contains SampleAction                                  add request
 //   2. the path contains SampleChange, or the file is one of the two
 //      command projects (Projects/SampleModule.*.Commands.csproj)      add command
-//   3. the path is under Modules/SampleModule/, or the file name
+//   3. the path contains SamplePlugin (Plugins/SamplePlugin/)          add plugin
+//   4. the path is under Modules/SampleModule/, or the file name
 //      contains SampleModule (App/Views/Pages/SampleModulePage.razor)  add module
-//   4. all other files                                                 new app
+//   5. all other files                                                 new app
 // A ".template" suffix keeps a file inactive in this repository, for example AGENTS.md.template. The tool removes it.
 static partial class Templates {
     public const string App = "SampleApp";
     public const string Module = "SampleModule";
     public const string Request = "SampleAction";
     public const string Command = "SampleChange";
+    public const string Plugin = "SamplePlugin";
     const string Prefix = "Templates/";
     const string Suffix = ".template";
 
-    public enum Kind { App, Module, Request, Command }
+    public enum Kind { App, Module, Request, Command, Plugin }
 
     // The files of one command: (path relative to the app root, content), with the sample names replaced.
     public static IReadOnlyList<(string Path, string Content)> Files(Kind kind, IReadOnlyDictionary<string, string> names, string version) {
@@ -47,6 +49,7 @@ static partial class Templates {
     public static Kind KindOf(string path) =>
         path.Contains(Request, StringComparison.Ordinal) ? Kind.Request
         : path.Contains(Command, StringComparison.Ordinal) || CommandProjects.Contains(path) ? Kind.Command
+        : path.Contains(Plugin, StringComparison.Ordinal) ? Kind.Plugin
         : path.StartsWith($"Modules/{Module}/", StringComparison.Ordinal) || Path.GetFileName(path).Contains(Module, StringComparison.Ordinal) ? Kind.Module
         : Kind.App;
 

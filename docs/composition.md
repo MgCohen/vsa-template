@@ -1,114 +1,192 @@
-# Composition: the composer and its installers
+# Composition: VsaBuilder and its hosts
 
-A `VsaComposer` registers an app in two calls: `InstallLayers`, then `ConfigureModules`. Each layer has one installer class in its own project. `builder.AddVsa()` (VSA.Host) calls the composer and adds the web parts between the two calls. A Unity app or a console app calls the composer from `VSA.Composition`, which has no ASP.NET Core.
+An app starts with one builder call: `VsaBuilder.Create(args)`, then a host, then `Build()`. The host type selects the split between web and Unity. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
-## Two call points
-
-```mermaid
-flowchart LR
-    D[ModuleDiscovery or given modules] --> X[VsaContext]
-    X --> L[InstallLayers]
-    L --> W[App code, for example the web parts]
-    W --> M[ConfigureModules]
-```
-
-| Call | Runs | Registers |
-|---|---|---|
-| `InstallLayers()` | `EventHandlerInstaller` | The publisher and each `IntegrationEventHandler<T>` |
-| `InstallLayers()` | `CommandHandlerInstaller` | The sender and each `CommandHandler<,>`. Stops at two handlers |
-| `InstallLayers()` | `PresenterInstaller` (`net10.0`) | `LivePresenters` and each `Presenter` |
-| `ConfigureModules()` | `ModuleInstaller` | `Module.Configure` of each module |
-| `Install()` | Both calls | All of the above |
-
-`ConfigureModules` runs last, because a module can replace a default in `Configure` (`ModuleBuilder.Replace`). App code that registers a default goes between the two calls.
-
-## Installers find their types
-
-An installer gets a `VsaContext`. `context.Implementations(typeof(TBase))` gives each concrete type of each module that derives from `TBase`, with its service type:
+## Entry point
 
 ```csharp
-foreach (var (service, handler) in context.Implementations(typeof(IntegrationEventHandler<>))) {
-    context.Services.Add(service, handler, VsaLifetime.Scoped);
+// Web: App/Host/Program.cs
+await VsaBuilder.Create(args).UseWebHost().Build().RunAsync();
+
+// Unity or console
+await VsaBuilder.Create().UseGenericHost().Build().RunAsync();
+```
+
+| Step | Use |
+|---|---|
+| `Create(args)` | Makes the builder. `args` go to the configuration of the host |
+| `UseWebHost()` (VSA.Host) | ASP.NET Core: the HTTP API of the requests, and the views |
+| `UseGenericHost()` (VSA.Composition) | The .NET Generic Host: no ASP.NET Core |
+| `Modules(...)` | Optional. Gives the modules. With no call, `AppScan` finds them. Tests use it |
+| `Services(...)` | Optional. App registrations, before the modules |
+| `Build()` | Returns the standard `IHost`: `RunAsync`, `StartAsync`, `StopAsync`, `Services` |
+
+If the app selects no host, `Build()` stops with the message "The app has no host. Select one before Build: UseWebHost() or UseGenericHost()."
+
+## What Build does
+
+```
+VsaBuilder.Build()
+├─ host.CreateBuilder(args)        WebApplicationBuilder, or HostApplicationBuilder
+├─ AppScan.Modules()               only if the app gave no modules
+├─ VSA layer installers            events, commands, requests, in-process bus, presenters
+├─ host.Install                    web: the request handlers to map, views
+├─ Services(...) callbacks         app registrations
+├─ Module.Configure                each module, last
+└─ host.Build                      web: Build, map one route for each request, map the views
+```
+
+`Module.Configure` runs last, because a module can replace a default with `ModuleBuilder.Replace`. The order is inside `Build`, so an app cannot change it.
+
+## Definitions and transports
+
+A module defines its requests, commands, events, handlers and presenters one time. The same code works on every host. The host selects only the transports:
+
+| Kind | Part | Generic host | Web host |
+|---|---|---|---|
+| Definition | Events (`IntegrationEventHandler<T>`), in-process publisher | Yes | Yes |
+| Definition | Commands (`CommandHandler<,>`), in-process sender | Yes | Yes |
+| Definition | Requests (`RequestHandler<,>`), `InProcessBus` (`IBus`) | Yes | Yes |
+| Definition | Presenters, `LivePresenters` | Yes | Yes |
+| Transport | HTTP API: one route for each request | No | Yes |
+| Transport | Views (`ViewsRoot`): Razor components | No | Yes |
+
+```
+Presenter → IBus.Send(request) → InProcessBus → RequestHandler<,>       every host
+API client → HTTP → route of the request → RequestHandler<,>            web host
+```
+
+A request gives its `Method` and `Route` as static members. Only the HTTP API reads them. On `netstandard2.1`, `IRoutedRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
+
+```csharp
+public interface IRoutedRequest {
+#if NET
+    static abstract HttpMethod Method { get; }
+    static abstract string Route { get; }
+#endif
 }
 ```
 
-- For an open generic base, the service is the closed base, for example `IntegrationEventHandler<Rang>`.
-- For a plain base, for example `Presenter`, the service is the base.
-- The context reads the types of all layer projects of the modules one time. The layer rules keep each type in its layer, so no layer name is necessary.
+## AppScan finds the parts of the app
+
+`AppScan` reads 2 sources and keeps each assembly that references a given assembly:
+
+| Source | Finds |
+|---|---|
+| The loaded assemblies | Unity: all script assemblies load when the domain starts |
+| The `.dll` files in `AppContext.BaseDirectory` | .NET: a module assembly loads only when code uses one of its types |
+
+- The scan reads the metadata of a file with `System.Reflection.Metadata`. It loads only the files that reference the assembly.
+- A file that the runtime cannot load by name (not in `deps.json`) is not part of the app. The scan ignores it.
+- Each source finds nothing where it does not apply, so the scan has no Unity case.
+
+| Part | Scan for | Rule |
+|---|---|---|
+| Module root | A reference to `VSA.Module`, and the `VsaModule` metadata | One class that inherits `Module` (`ModuleRoot.CreateModule`) |
+| Views root | A reference to `VSA.Views` | One component that inherits `ViewsRoot` |
+
+The module roots are in order: the plugin modules first, then by name. If the app has a views root, the views run in that process. Two views roots stop the build.
+
+## Message installers have one shape
+
+Each layer has one internal static installer in its own project. Only VSA.Composition and VSA.Host call them (`InternalsVisibleTo`). Each message installer does the same 3 steps:
+
+| Step | Events | Commands | Requests |
+|---|---|---|---|
+| 1. Find | `IntegrationEventHandler<>` | `CommandHandler<,>` | `RequestHandler<,>` |
+| 2. Check | None | One handler for each command | One handler for each request |
+| 3. Register | Publisher, each handler | Sender, each handler | Each handler. One handler for each request |
+
+```csharp
+static class CommandHandlerInstaller {
+    internal static void Install(IServiceCollection services, ModuleTypes types) {
+        var handlers = types.Implementations(typeof(CommandHandler<,>));
+        EnsureOneHandlerForEachCommand(handlers);
+        services.AddScoped<ICommandSender, InProcessCommandSender>();
+        foreach (var (service, handler) in handlers) {
+            services.AddScoped(service, handler);
+        }
+    }
+}
+```
+
+`ModuleTypes.Implementations(typeof(TBase))` gives each concrete type of the modules that derives from `TBase`, with its service type. `ModuleTypes` reads the layer assemblies of the modules one time.
+
+## The HTTP API
+
+The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core minimal APIs (`MapMethods`).
+
+| Step | Source |
+|---|---|
+| Bind the request | The JSON body (`POST`, `PUT`, `PATCH`), then the route values, then the query |
+| Run the handler | The `RequestHandler<,>` of the request, from the scope of the HTTP request |
+| Success | 200 with the response as JSON |
+| Error of the handler | A problem response: 404 if the code ends with `.not_found`, else 400 |
+| Value that does not bind | A problem response, 400, title `request.not_valid` |
 
 ## Projects
 
 ```
-Module/
-  Container/       IVsaServices, IVsaResolver, VsaLifetime
-    Microsoft/     MicrosoftServices, MicrosoftResolver
-  IVsaInstaller, VsaContext, ModuleInstaller, Module, ModuleBuilder, ModuleDiscovery, ...
+Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
-Handlers/Requests/   RequestEndpointInstaller
+Handlers/Requests/   RequestHandler, RequestHandlerInstaller
 Presenters/          PresenterInstaller
-Composition/         VsaComposer
-Host/                VsaHostExtensions (AddVsa, MapVsaRequests, AddLoopbackBus), HttpBus
+Views/               ViewsRoot, ViewsInstaller
+Composition/         VsaBuilder, IVsaHost, GenericVsaHost, VsaArchitecture, InProcessBus
+Host/                UseWebHost, WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
-Each layer project references `VSA.Module` with `PrivateAssets="all"`. So a module project of that layer does not see `VSA.Module`. The module root references `VSA.Module`, so the app has it at run time.
+- `VsaArchitecture` (internal) holds the VSA choices: how to find the modules, the layer installers and their order. `VsaBuilder` calls it.
+- `IVsaHost` has 3 members: `CreateBuilder`, `Install` and `Build`. `GenericVsaHost` and `WebVsaHost` implement it.
+- Each layer project references `VSA.Module` with `PrivateAssets="all"`. So a module project of that layer does not see `VSA.Module`.
 
-## Entry points
+## The container
 
-```csharp
-builder.AddVsa();
+Module code and installers use two shared interfaces from .NET:
 
-var composer = new VsaComposer(new MicrosoftServices(services), configuration, modules);
-composer.Install();
-```
+| Interface | Job | Package |
+|---|---|---|
+| `IServiceCollection` | Registration: a list of `ServiceDescriptor` | `Microsoft.Extensions.DependencyInjection.Abstractions` |
+| `IServiceProvider` | Resolution: `GetService(Type)` | `System` |
 
-`builder.AddVsa()` does these steps:
+Both hosts build the Microsoft container. Other containers read `IServiceCollection` too:
 
-1. `composer.InstallLayers()`
-2. `VsaHostExtensions.AddLoopbackBus(services)`: `IBus` as `HttpBus` to the server address
-3. `RequestEndpointInstaller`: FastEndpoints for each `RoutedHandler<,>`
-4. `composer.ConfigureModules()`
+| Container | Reads `IServiceCollection` |
+|---|---|
+| Autofac | `builder.Populate(services)` (`Autofac.Extensions.DependencyInjection`) |
+| DryIoc, Lamar, SimpleInjector | Their own integration packages |
+| VContainer | No support. The app needs a bridge |
 
-A web app with other needs does the same steps itself. With no `modules` argument, the composer finds the modules with `ModuleDiscovery`: the module roots of `deps.json`, the Shared modules first. Unity has no `deps.json`, so a Unity app gives the modules.
-
-## The container adapter
-
-Module code and installers register on `IVsaServices`, a VSA interface. They do not use a container type. The adapter types are in `Module/Container/`.
-
-```csharp
-public interface IVsaServices {
-    void Add(Type service, Type implementation, VsaLifetime lifetime);
-    void Add(Type service, Func<IVsaResolver, object> factory, VsaLifetime lifetime);
-    void AddInstance(Type service, object instance);
-    VsaLifetime? LifetimeOf(Type service);
-    void RemoveAll(Type service);
-}
-```
-
-- `IVsaServices` also has `AddSingleton`, `AddScoped` and `AddTransient`, with the same forms as Microsoft DI.
-- `IVsaResolver` resolves services at run time: `Resolve`, `ResolveAll` and `Create`. The in-process publisher and sender use it.
-- `MicrosoftServices` is the adapter for Microsoft DI. It also registers `IVsaResolver`.
-- Another container, for example VContainer, needs one class that implements `IVsaServices` and one that implements `IVsaResolver`.
-
-The web parts use `IServiceCollection` directly, because FastEndpoints and `AddHttpClient` need it. The web host always uses Microsoft DI.
+A Unity app that uses VContainer writes its own bridge. The bridge copies each `ServiceDescriptor` into `IContainerBuilder`, and it wraps `IObjectResolver` as `IServiceProvider`.
 
 ## Module settings
 
 `Module<TSettings>` binds `Modules:{Name}` to `TSettings` and checks it. Then it registers the instance as a singleton. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
 
-## What a headless app gives
+## What each host gives
 
-| Service | Web host | Headless app |
+| Service | Web host | Generic host |
 |---|---|---|
-| `IBus` | `AddLoopbackBus` | The app registers one |
-| `ILogger<T>` | ASP.NET Core logging | The app registers logging |
-| `IConfiguration` | `builder.Configuration` | An argument of the composer |
+| `IBus` | `InProcessBus` | `InProcessBus` |
+| `ILogger<T>` | Yes | Yes |
+| `IConfiguration` | `appsettings.json`, environment, `args` | `appsettings.json`, environment, `args` |
 
 ## Unity target
 
-`VSA.Composition` is a Unity layer (`VsaUnityLayer`). On `netstandard2.1`, `InstallLayers` does not run `PresenterInstaller`, because `VSA.Contracts.Requests` uses `static abstract` members. Issue #44 tracks this. A Unity app also vendors `VSA.Composition.dll`.
+`VSA.Composition` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
+
+The generic host uses `Microsoft.Extensions.Hosting` 8.0. A Unity app vendors it and its dependencies, with `VSA.Composition.dll`. The Unity app calls `StopAsync()` on the host when it quits, and `RunAsync()` then ends.
+
+## Non-goals
+
+- No VSA container interface. Reason: `IServiceCollection` and `IServiceProvider` are already container-neutral, and most containers read them.
+- No VContainer bridge in the framework. Reason: only a Unity app with VContainer needs it, so the app keeps it.
+- No middleware hook on the web host. Reason: no app needs one. Add it when an app needs authentication or CORS before the routes.
 
 ## Open questions
 
-- In-process bus: `HttpBus` is the only `IBus`. A request handler is a FastEndpoints endpoint, so a request needs HTTP.
-- Views: `AddVsaViews` is an extension of `WebApplicationBuilder`. It can become an installer of `VSA.Views`.
+- Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
+- Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppScan` can read that list first.
+- Unity check: `AppDomain.GetAssemblies()` with IL2CPP, and `RunAsync` in an `async` `Start` method. Check both in `vsa-consumer-unity`.
+- Architecture definition: `VsaBuilder.Create(definition, args)` can make `VsaArchitecture` public, for other architectures.

@@ -10,7 +10,7 @@ namespace VSA.Analyzers;
 // them uses (a DTO). A command result has no marker. It passes because its command uses it.
 // In a slice module, VSA.Sdk selects the project of each file by its types (VsaSliceRouter.cs).
 // This rule checks the result, so a helper type that is in the same file as a contract cannot become public API.
-// A Shared module (VsaRootFolder = Shared) is not checked: its public types are bases for the modules.
+// A plugin module (VsaRootFolder = Plugins) is not checked: its public types are bases for the modules.
 public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1003",
@@ -28,7 +28,7 @@ public sealed class ContractTypeRule() : VsaAnalyzerRule(Descriptor) {
             return;
         }
         if (start.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.VsaRootFolder", out var root)
-            && root == "Shared") {
+            && root == "Plugins") {
             return;
         }
         var markers = new[] {
