@@ -57,14 +57,14 @@ public sealed class SharedModuleRuleTests {
         var message = Fails(FixtureApp.Of(App(pipelineIsShared: false)).VSA2001_module_projects_follow_the_layer_map);
         // The layer project, and the types: the module request on the Shared base that is now a module.
         Assert.That(message, Does.Contain("UsesShared.Contracts.Requests"));
-        Assert.That(message, Does.Contain("UsesShared.Slices.DealDamage.DealDamage does depend on \"Pipeline.Slices.Messages.Message\""));
+        Assert.That(message, Does.Contain("UsesShared.Slices.DealDamage.DealDamage does depend on \"Pipeline.Contracts.Requests.Message\""));
     }
 
     [Test]
     public void Use_of_a_module_by_a_Shared_module_fails() {
         var message = Fails(FixtureApp.Of(App(recordIdsIsShared: false)).VSA2001_module_projects_follow_the_layer_map);
         Assert.That(message, Does.Contain("Pipeline.Contracts.Requests"));
-        Assert.That(message, Does.Contain("Pipeline.Slices.Messages.MessageId does depend on \"RecordIds.Ids.Id\""));
+        Assert.That(message, Does.Contain("Pipeline.Contracts.Requests.MessageId does depend on \"RecordIds.Contracts.Requests.Id\""));
     }
 }
 
