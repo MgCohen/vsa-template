@@ -75,7 +75,7 @@ The root `Directory.Build.props` lists the Unity layers (`VsaUnityLayer`). They 
 - Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Layers/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- Unity has no `deps.json`, so `ModuleDiscovery` cannot find the modules. The Unity app gives the modules to `new VsaContext(services, configuration, modules)` (`docs/composition.md`).
+- `AppScan` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app starts with `VsaBuilder.Create().UseGenericHost().Build()` (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies.
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Open questions

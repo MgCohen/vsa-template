@@ -6,7 +6,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 
 | Path             | Purpose                                                              |
 |------------------|----------------------------------------------------------------------|
-| `App/Host/`      | The web host. `Program.cs` calls `builder.AddVsa()`, which finds the modules |
+| `App/Host/`      | The web host. `Program.cs` calls `VsaBuilder.Create(args).UseWebHost()`, which finds the modules and the views |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Modules/<Name>/`| One module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/` |
 | `Shared/<Name>/` | One Shared module: a base of the same layers in each module. It has the layout of a module |

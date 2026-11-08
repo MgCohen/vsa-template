@@ -3,7 +3,7 @@ using VSA.Contracts.Events;
 
 namespace VSA.Presenters;
 
-// The presenters that exist now, for the whole app. AddVsaPresenter adds each presenter when the services make it,
+// The presenters that exist now, for the whole app. PresenterInstaller adds each presenter when the services make it,
 // and the scope removes it when it ends. A view is not needed.
 // After each publish, each live presenter that implements IPresenterEvent<TEvent> gets the event one time.
 // The events of one presenter run one at a time, on the dispatcher of its scope if the app gives one

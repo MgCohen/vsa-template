@@ -2,8 +2,11 @@
   <ItemGroup>
     <ProjectReference Include="../../Contracts/Commands/VSA.Contracts.Commands.csproj" />
   </ItemGroup>
-  <!-- The installer of the layer uses VSA.Module. Private, so the module projects of this layer do not see VSA.Module. -->
+  <!-- The installer of the layer uses ModuleTypes (VSA.Module). Private, so the module projects of this layer do not see VSA.Module. -->
   <ItemGroup>
     <ProjectReference Include="../../Module/VSA.Module.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VSA.Composition" />
   </ItemGroup>
 </Project>

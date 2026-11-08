@@ -4,16 +4,17 @@ using VSA.Module;
 
 namespace VSA.Presenters;
 
-public static class PresenterInstaller {
-    public static void Install(VsaContext context) {
-        context.Services.AddSingleton<LivePresenters>();
-        context.Services.AddSingleton<IIntegrationEventObserver>(
+static class PresenterInstaller {
+    internal static void Install(IServiceCollection services, ModuleTypes types) {
+        var presenters = types.Implementations(typeof(Presenter));
+        services.AddSingleton<LivePresenters>();
+        services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
-        foreach (var (_, presenter) in context.Implementations(typeof(Presenter))) {
+        foreach (var (_, presenter) in presenters) {
             if (ShowsEvents(presenter)) {
-                context.Services.AddScoped(presenter, provider => Connected(provider, presenter));
+                services.AddScoped(presenter, provider => Connected(provider, presenter));
             } else {
-                context.Services.AddScoped(presenter);
+                services.AddScoped(presenter);
             }
         }
     }

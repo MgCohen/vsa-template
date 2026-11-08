@@ -4,7 +4,7 @@ namespace VSA.Presenters;
 //   top down:  a view calls a method, the presenter sends a request with IBus (Run).
 //   bottom up: an event of the module reaches the presenter (IPresenterEvent), and the presenter raises Changed.
 // The presenter gets its events by itself: the services connect it to LivePresenters when they make it
-// (AddVsaPresenter), and its scope disposes it. A view only listens to Changed and renders.
+// (PresenterInstaller), and its scope disposes it. A view only listens to Changed and renders.
 public abstract class Presenter(IBus bus) : IDisposable {
     IDisposable? live;
 
@@ -18,7 +18,7 @@ public abstract class Presenter(IBus bus) : IDisposable {
     // LivePresenters calls it after a presenter event.
     internal void RaiseChanged() => Changed?.Invoke();
 
-    // AddVsaPresenter calls it when the services make the presenter.
+    // PresenterInstaller calls it when the services make the presenter.
     internal void Connect(IDisposable connection) {
         live?.Dispose();
         live = connection;

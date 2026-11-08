@@ -5,4 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="../Presenters/VSA.Presenters.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VSA.Host" />
+  </ItemGroup>
 </Project>

@@ -5,13 +5,13 @@ using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Echo;
-using Microsoft.AspNetCore.Builder;
+using Framework.Tests.Host;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
 using VSA.Contracts.Commands;
-using VSA.Host;
 
 namespace Framework.Tests.Commands;
 
@@ -20,7 +20,7 @@ namespace Framework.Tests.Commands;
 public sealed class CommandTests {
     [Test]
     public async Task A_request_handler_sends_commands_through_two_modules() {
-        await using var app = await Start(new BattleModule(), new CardsModule(), new ResourcesModule());
+        using var app = await Start(new BattleModule(), new CardsModule(), new ResourcesModule());
         var client = app.GetTestClient();
 
         var played = await client.PostAsJsonAsync("/api/cards/play", new PlayCardRequest(4));
@@ -32,7 +32,7 @@ public sealed class CommandTests {
 
     [Test]
     public async Task The_sender_runs_the_handler_in_the_scope_of_the_caller() {
-        await using var app = await Start(new CardsModule(), new ResourcesModule());
+        using var app = await Start(new CardsModule(), new ResourcesModule());
         await using var scope = app.Services.CreateAsyncScope();
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
@@ -43,7 +43,7 @@ public sealed class CommandTests {
     // Cards sends a command of Resources, but the app has no Resources module.
     [Test]
     public async Task A_command_with_no_handler_is_an_error() {
-        await using var app = await Start(new CardsModule());
+        using var app = await Start(new CardsModule());
         await using var scope = app.Services.CreateAsyncScope();
         var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
 
@@ -54,20 +54,12 @@ public sealed class CommandTests {
 
     [Test]
     public void A_command_with_two_handlers_stops_start_up() {
-        var builder = WebApplication.CreateBuilder();
+        var builder = WebApps.OnTestServer(new EchoModule());
 
-        var error = Assert.Throws<InvalidOperationException>(() => builder.AddVsa(new EchoModule()));
+        var error = Assert.Throws<InvalidOperationException>(() => builder.Build());
 
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:").And.EndWith("A command has one handler."));
     }
 
-    static async Task<WebApplication> Start(params VSA.Module.Module[] modules) {
-        var builder = WebApplication.CreateBuilder();
-        builder.WebHost.UseTestServer();
-        builder.AddVsa(modules);
-        var app = builder.Build();
-        app.MapVsaRequests();
-        await app.StartAsync();
-        return app;
-    }
+    static Task<IHost> Start(params VSA.Module.Module[] modules) => WebApps.OnTestServer(modules).Start();
 }

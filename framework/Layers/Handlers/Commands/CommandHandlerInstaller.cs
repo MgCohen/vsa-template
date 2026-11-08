@@ -4,13 +4,13 @@ using VSA.Module;
 
 namespace VSA.Handlers.Commands;
 
-public static class CommandHandlerInstaller {
-    public static void Install(VsaContext context) {
-        var handlers = context.Implementations(typeof(CommandHandler<,>));
+static class CommandHandlerInstaller {
+    internal static void Install(IServiceCollection services, ModuleTypes types) {
+        var handlers = types.Implementations(typeof(CommandHandler<,>));
         EnsureOneHandlerForEachCommand(handlers);
-        context.Services.AddScoped<ICommandSender, InProcessCommandSender>();
+        services.AddScoped<ICommandSender, InProcessCommandSender>();
         foreach (var (service, handler) in handlers) {
-            context.Services.AddScoped(service, handler);
+            services.AddScoped(service, handler);
         }
     }
 

@@ -1,32 +1,30 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
 using VSA.Contracts.Events;
 using VSA.Handlers.Events;
+using VSA.Composition;
 using VSA.Host;
 using VSA.Presenters;
 
 namespace Framework.Tests.Host;
 
-// AddVsa with the Signals fixture: an event, its handler, a helper class next to the handler, and a presenter of the event.
+// VsaBuilder with the Signals fixture: an event, its handler, a helper class next to the handler, and a presenter of the event.
 public sealed class PresenterEventTests {
     [Test]
     public void HostRegistersTheEventHandlerAndNotTheHelperClass() {
-        var builder = WebApplication.CreateBuilder();
+        var registrations = WebApps.OnTestServer(new SignalsModule()).Registrations();
 
-        builder.AddVsa(new SignalsModule());
-
-        Assert.That(builder.Services.Any(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.True);
-        Assert.That(builder.Services.Any(s => s.ServiceType != typeof(RingLog) && s.ImplementationType == typeof(RingLog)), Is.False);
+        Assert.That(registrations.Any(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.True);
+        Assert.That(registrations.Any(s => s.ServiceType != typeof(RingLog) && s.ImplementationType == typeof(RingLog)), Is.False);
     }
 
     // Bottom up with no view: the services connect the presenter when they make it.
     [Test]
     public async Task APresenterGetsTheEventAfterItsHandlersWithNoView() {
-        await using var app = await Start();
+        using var app = await Start();
         using var scope = app.Services.CreateScope();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
         var changed = 0;
@@ -42,7 +40,7 @@ public sealed class PresenterEventTests {
     // The event is published in another scope, for example a request. Each presenter that exists gets it.
     [Test]
     public async Task APresenterInAnotherScopeGetsTheEvent() {
-        await using var app = await Start();
+        using var app = await Start();
         using var circuit = app.Services.CreateScope();
         var presenter = circuit.ServiceProvider.GetRequiredService<BellPresenter>();
 
@@ -56,7 +54,7 @@ public sealed class PresenterEventTests {
     // The end of the scope disposes the presenter, so it gets no more events.
     [Test]
     public async Task APresenterOfAScopeThatEndedGetsNothing() {
-        await using var app = await Start();
+        using var app = await Start();
         BellPresenter presenter;
         using (var circuit = app.Services.CreateScope()) {
             presenter = circuit.ServiceProvider.GetRequiredService<BellPresenter>();
@@ -72,7 +70,7 @@ public sealed class PresenterEventTests {
     [Test]
     public async Task AScopeDispatcherRunsTheEvent() {
         var dispatched = 0;
-        await using var app = await Start(services => services.AddScoped<LivePresenters.Dispatch>(_ => work => {
+        using var app = await Start(services => services.AddScoped<LivePresenters.Dispatch>(_ => work => {
             dispatched++;
             return work();
         }));
@@ -85,14 +83,10 @@ public sealed class PresenterEventTests {
         Assert.That(presenter.Last, Is.EqualTo("door"));
     }
 
-    static async Task<WebApplication> Start(Action<IServiceCollection>? configure = null) {
-        var builder = WebApplication.CreateBuilder();
-        // A real server on loopback: the presenter needs the address of the bus.
-        builder.WebHost.UseUrls("http://127.0.0.1:0");
-        builder.AddVsa(new SignalsModule());
-        configure?.Invoke(builder.Services);
-        var app = builder.Build();
-        await app.StartAsync();
-        return app;
-    }
+    static Task<IHost> Start(Action<IServiceCollection>? configure = null) =>
+        VsaBuilder.Create("--urls", "http://127.0.0.1:0")
+            .UseWebHost()
+            .Modules(new SignalsModule())
+            .Services(configure ?? (_ => { }))
+            .Start();
 }

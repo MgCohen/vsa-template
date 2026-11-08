@@ -2,10 +2,8 @@ using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Echo;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
 using Signals;
@@ -15,9 +13,6 @@ using VSA.Composition;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Contracts.Requests;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Events;
-using VSA.Module;
 using VSA.Presenters;
 
 namespace Composition.Tests;
@@ -34,11 +29,9 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public async Task A_command_goes_through_two_modules_in_a_plain_service_provider() {
-        var services = Services();
-        VsaComposer.Install(Context(services, new CardsModule(), new ResourcesModule()));
-        await using var provider = Build(services);
-        await using var scope = provider.CreateAsyncScope();
+    public async Task A_command_goes_through_two_modules_in_a_generic_host() {
+        using var host = App(new CardsModule(), new ResourcesModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
             .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
@@ -47,92 +40,68 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void A_command_with_two_handlers_stops_the_composition() {
-        var context = Context(Services(), new EchoModule());
+    public void A_command_with_two_handlers_stops_the_build() {
+        var app = App(new EchoModule());
 
-        var error = Assert.Throws<InvalidOperationException>(() => VsaComposer.Install(context));
+        var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:"));
     }
 
     [Test]
     public async Task An_event_reaches_its_handler_and_a_live_presenter() {
-        var services = Services();
-        VsaComposer.Install(Context(services, new SignalsModule()));
-        await using var provider = Build(services);
-        await using var scope = provider.CreateAsyncScope();
+        using var host = App(new SignalsModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
 
         await scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>()
             .PublishAsync(new Rang("door"), CancellationToken.None);
 
-        Assert.That(provider.GetRequiredService<RingLog>().Bells, Is.EqualTo(new[] { "door" }));
+        Assert.That(host.Services.GetRequiredService<RingLog>().Bells, Is.EqualTo(new[] { "door" }));
         Assert.That(presenter.Last, Is.EqualTo("door"));
     }
 
     [Test]
-    public void The_composer_registers_no_bus() {
-        var services = new ServiceCollection();
+    public void The_generic_host_registers_no_bus() {
+        using var host = VsaBuilder.Create().UseGenericHost().Modules(new SignalsModule()).Build();
 
-        VsaComposer.Install(Context(services, new SignalsModule()));
-
-        Assert.That(services.Any(s => s.ServiceType == typeof(IBus)), Is.False);
+        Assert.That(host.Services.GetService<IBus>(), Is.Null);
     }
 
     [Test]
-    public async Task A_module_registration_wins_over_app_code_before_Install() {
-        var services = Services();
+    public void A_module_registration_wins_over_app_services() {
         var appRingLog = new RingLog();
-        services.AddSingleton(appRingLog);
 
-        VsaComposer.Install(Context(services, new SignalsModule()));
-        await using var provider = Build(services);
+        using var host = App(new SignalsModule()).Services(services => services.AddSingleton(appRingLog)).Build();
 
-        Assert.That(provider.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
+        Assert.That(host.Services.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
     }
 
     [Test]
-    public void Implementations_finds_the_handlers_and_not_the_helper_classes() {
-        var context = new VsaContext(Services(), EmptyConfiguration(), [new SignalsModule()]);
+    public void Build_with_no_host_is_an_error() {
+        var app = VsaBuilder.Create().Modules();
 
-        var handlers = context.Implementations(typeof(VSA.Handlers.Events.IntegrationEventHandler<>)).ToList();
-        var presenters = context.Implementations(typeof(Presenter)).Select(p => p.Implementation).ToList();
+        var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
-        Assert.That(handlers.Select(h => h.Service), Is.EqualTo(new[] { typeof(VSA.Handlers.Events.IntegrationEventHandler<Rang>) }));
-        Assert.That(handlers.Select(h => h.Implementation.Name), Is.EqualTo(new[] { "RangHandler" }));
-        Assert.That(presenters, Is.EqualTo(new[] { typeof(BellPresenter) }));
+        Assert.That(error.Message, Is.EqualTo(
+            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost()."));
     }
 
     [Test]
-    public async Task The_installers_also_run_by_hand_without_the_composer() {
-        var services = Services();
-        var context = new VsaContext(services, EmptyConfiguration(), [new CardsModule(), new ResourcesModule()]);
-        EventHandlerInstaller.Install(context);
-        CommandHandlerInstaller.Install(context);
-        ModuleInstaller.Install(context);
-        await using var provider = Build(services);
-        await using var scope = provider.CreateAsyncScope();
+    public async Task The_generic_host_runs_until_the_app_stops_it() {
+        using var host = App().Build();
 
-        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
-            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
+        var run = host.RunAsync();
+        await host.StopAsync();
 
-        Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
+        Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10))), Is.SameAs(run));
     }
 
-    static VsaContext Context(ServiceCollection services, params VSA.Module.Module[] modules) =>
-        new(services, EmptyConfiguration(), modules);
-
-    static ServiceCollection Services() {
-        var services = new ServiceCollection();
-        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        services.AddSingleton<IBus>(new NoRequestsBus());
-        return services;
-    }
-
-    static ServiceProvider Build(ServiceCollection services) =>
-        services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
-
-    static IConfiguration EmptyConfiguration() => new ConfigurationBuilder().Build();
+    static VsaBuilder App(params VSA.Module.Module[] modules) =>
+        VsaBuilder.Create()
+            .UseGenericHost()
+            .Modules(modules)
+            .Services(services => services.AddSingleton<IBus>(new NoRequestsBus()));
 
     sealed class NoRequestsBus : IBus {
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)

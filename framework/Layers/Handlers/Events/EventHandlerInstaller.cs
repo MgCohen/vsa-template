@@ -4,12 +4,12 @@ using VSA.Module;
 
 namespace VSA.Handlers.Events;
 
-public static class EventHandlerInstaller {
-    public static void Install(VsaContext context) {
-        var handlers = context.Implementations(typeof(IntegrationEventHandler<>));
-        context.Services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
+static class EventHandlerInstaller {
+    internal static void Install(IServiceCollection services, ModuleTypes types) {
+        var handlers = types.Implementations(typeof(IntegrationEventHandler<>));
+        services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
         foreach (var (service, handler) in handlers) {
-            context.Services.AddScoped(service, handler);
+            services.AddScoped(service, handler);
         }
     }
 }

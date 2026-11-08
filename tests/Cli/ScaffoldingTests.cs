@@ -124,7 +124,7 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Does.Contain("App/Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("builder.AddVsa();"));
+        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("VsaBuilder.Create(args).UseWebHost().Build().RunAsync();"));
     }
 
     [Test]

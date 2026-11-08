@@ -1,28 +1,19 @@
 using FastEndpoints;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Module;
 
 namespace VSA.Handlers.Requests;
 
-public static class RequestEndpointInstaller {
-    public static void Install(VsaContext context) {
-        var handlers = context.Implementations(typeof(RoutedHandler<,>));
+static class RequestEndpointInstaller {
+    internal static bool Install(IServiceCollection services, ModuleTypes types) {
+        var handlers = types.Implementations(typeof(RoutedHandler<,>));
         if (handlers.Count == 0) {
-            return;
+            return false;
         }
-        context.Services.AddFastEndpoints(options => {
+        services.AddFastEndpoints(options => {
             options.DisableAutoDiscovery = true;
             options.Assemblies = handlers.Select(h => h.Implementation.Assembly).Distinct();
         });
-        context.Services.AddSingleton(new InstalledRequestEndpoints());
+        return true;
     }
-
-    public static void Map(IApplicationBuilder app) {
-        if (app.ApplicationServices.GetService<InstalledRequestEndpoints>() is not null) {
-            app.UseFastEndpoints();
-        }
-    }
-
-    sealed class InstalledRequestEndpoints;
 }
