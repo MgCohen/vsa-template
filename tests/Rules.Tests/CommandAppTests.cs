@@ -141,7 +141,7 @@ public sealed class UnitBaseCommandTests : VsaUnitTest {
 
         var result = await Send(new PayCostCommand(cost));
 
-        Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
+        Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
         Assert.That(Events.OfType<CostPaid>().Single().Cost, Is.EqualTo(cost));
         await commands.Received(1).SendAsync(new ChangeResourceCommand(ResourceKeys.Mana, -3), Arg.Any<CancellationToken>());
     }

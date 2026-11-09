@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Core/Composition/VSA.Composition.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Echo/Echo.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Arena/Arena.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Answers/Answers.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Signals/Signals.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/Cards/Cards.csproj" />

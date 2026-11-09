@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using VSA.Handlers;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Handlers.Requests;
@@ -12,6 +13,7 @@ static class VsaArchitecture {
     internal static IReadOnlyList<VSA.Module.Module> Modules() => AppScan.Modules();
 
     internal static void InstallLayers(IServiceCollection services, ModuleTypes types) {
+        PipelineInstaller.Install(services, types);
         EventHandlerInstaller.Install(services, types);
         CommandHandlerInstaller.Install(services, types);
         RequestHandlerInstaller.Install(services, types);

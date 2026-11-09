@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Notes.Domain;
-using Notes.Slices.CreateNote;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Notes.Domain;
+using Notes.Slices.CreateNote;
 using VSA.Contracts.Events;
 using VSA.Testing.Unit;
 
@@ -26,7 +26,7 @@ public sealed class CreateNoteTests : VsaUnitTest {
     public async Task Empty_title_fails_and_saves_nothing() {
         var result = await Handle(new CreateNoteRequest(Guid.NewGuid(), " "));
 
-        Assert.That(result.Error, Is.EqualTo(NoteErrors.TitleRequired));
+        Assert.That(result.Error?.Code, Is.EqualTo("notes.title_required"));
         Assert.That(Repository<Note, NoteId>().SaveCount, Is.Zero);
     }
 }
@@ -37,7 +37,8 @@ public sealed class CreateNotePublisherTests : VsaUnitTest {
 
     protected override void Configure(IServiceCollection services) {
         publisher = Mock<IIntegrationEventPublisher>();
-        publisher.PublishAsync(Arg.Any<NoteCreated>(), Arg.Any<CancellationToken>()).ThrowsAsync(new TimeoutException());
+        publisher.PublishAsync(Arg.Any<NoteCreated>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException());
     }
 
     [Test]

@@ -1,9 +1,9 @@
-using VSA.Domain;
+using VSA.Contracts;
 using VSA.Handlers.Requests;
 
 namespace Answers.Slices.ListAll;
 
 sealed class ListAllHandler : RequestHandler<ListAllRequest, ListAllResponse> {
-    protected override Task<Result<ListAllResponse>> HandleRequestAsync(ListAllRequest request, CancellationToken ct) =>
+    public override Task<Result<ListAllResponse>> HandleAsync(Envelope<ListAllRequest> envelope) =>
         Task.FromResult<Result<ListAllResponse>>(new ListAllResponse(3));
 }

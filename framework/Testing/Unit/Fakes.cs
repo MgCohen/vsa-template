@@ -1,3 +1,4 @@
+using VSA.Contracts;
 using VSA.Contracts.Events;
 using VSA.Domain;
 using VSA.Infrastructure;
@@ -51,8 +52,9 @@ public sealed class RecordingEventPublisher : IIntegrationEventPublisher {
 
     public IEnumerable<TEvent> OfType<TEvent>() where TEvent : IntegrationEvent => published.OfType<TEvent>();
 
-    public Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
+    public Task<Result<VSA.Contracts.Unit>> PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct)
+        where TEvent : IntegrationEvent {
         published.Add(integrationEvent);
-        return Task.CompletedTask;
+        return Task.FromResult<Result<VSA.Contracts.Unit>>(VSA.Contracts.Unit.Value);
     }
 }

@@ -1,6 +1,7 @@
 using Notes.Slices.CreateNote;
 using Notes.Slices.DeleteNote;
 using Notes.Slices.ListNotes;
+using VSA.Contracts;
 using VSA.Presenters;
 
 namespace Notes.Presenters;
@@ -16,18 +17,17 @@ public sealed class NotesPresenter(IBus bus) : Presenter(bus) {
 
     public Task LoadAsync() => Run(Load, Refresh);
 
-    public Task CreateAsync(string title) => Run(Create, async () => {
-        await Bus.Send(new CreateNoteRequest(SampleAuthor, title));
-        await Refresh();
-    });
+    public Task CreateAsync(string title) => Run(Create, async () =>
+        (await Bus.Send(new CreateNoteRequest(SampleAuthor, title))).Error ?? await Refresh());
 
-    public Task DeleteAsync(Guid id) => Run(Delete, async () => {
-        await Bus.Send(new DeleteNoteRequest(id));
-        await Refresh();
-    });
+    public Task DeleteAsync(Guid id) => Run(Delete, async () =>
+        (await Bus.Send(new DeleteNoteRequest(id))).Error ?? await Refresh());
 
-    async Task Refresh() {
-        var response = await Bus.Send(new ListNotesRequest());
-        Notes = [.. response.Notes.Select(NoteItem.From)];
+    async Task<Error?> Refresh() {
+        var listed = await Bus.Send(new ListNotesRequest());
+        if (listed.IsSuccess) {
+            Notes = [.. listed.Value.Notes.Select(NoteItem.From)];
+        }
+        return listed.Error;
     }
 }

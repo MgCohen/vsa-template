@@ -142,23 +142,23 @@ public sealed class EventHandlerRequestRuleTests {
     [Test]
     public Task Event_handler_with_no_request_passes() => Analyzer.Verify(Types + """
         sealed class DoneHandler : VSA.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task HandleAsync(Done integrationEvent, CancellationToken ct) => Task.CompletedTask;
+            public override Task<VSA.Contracts.Result<VSA.Contracts.Unit>> HandleAsync(VSA.Contracts.Envelope<Done> envelope) => null!;
         }
         """);
 
     [Test]
     public Task Event_handler_with_IBus_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler(VSA.Presenters.IBus {|#0:bus|}) : VSA.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task HandleAsync(Done integrationEvent, CancellationToken ct) => Task.CompletedTask;
+            public override Task<VSA.Contracts.Result<VSA.Contracts.Unit>> HandleAsync(VSA.Contracts.Envelope<Done> envelope) => null!;
         }
         """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "IBus"));
 
     [Test]
     public Task Event_handler_that_makes_a_request_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler : VSA.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task HandleAsync(Done integrationEvent, CancellationToken ct) {
+            public override Task<VSA.Contracts.Result<VSA.Contracts.Unit>> HandleAsync(VSA.Contracts.Envelope<Done> envelope) {
                 _ = {|#0:new Ping()|};
-                return Task.CompletedTask;
+                return null!;
             }
         }
         """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "Ping"));
@@ -167,7 +167,7 @@ public sealed class EventHandlerRequestRuleTests {
     [Test]
     public Task Other_class_that_sends_a_request_passes() => Analyzer.Verify(Types + """
         sealed class Sender(VSA.Presenters.IBus bus) {
-            public Task<Pong> Send() => bus.Send(new Ping());
+            public Task<VSA.Contracts.Result<Pong>> Send() => bus.Send(new Ping());
         }
         """);
 }

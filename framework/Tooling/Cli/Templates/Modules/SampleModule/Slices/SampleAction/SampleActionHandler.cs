@@ -1,9 +1,9 @@
-using VSA.Domain;
+using VSA.Contracts;
 using VSA.Handlers.Requests;
 
 namespace SampleModule.Slices.SampleAction;
 
 sealed class SampleActionHandler : RequestHandler<SampleActionRequest, SampleActionResponse> {
-    protected override Task<Result<SampleActionResponse>> HandleRequestAsync(SampleActionRequest request, CancellationToken ct) =>
+    public override Task<Result<SampleActionResponse>> HandleAsync(Envelope<SampleActionRequest> envelope) =>
         Task.FromResult<Result<SampleActionResponse>>(new SampleActionResponse());
 }

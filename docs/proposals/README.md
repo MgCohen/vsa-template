@@ -15,7 +15,7 @@ flowchart LR
 | # | Proposal | Size | Breaks consumers |
 |---|---|---|---|
 | 1 | [Rename Shared modules to Plugins](plugins.md) | Small: 69 files, mostly text | Yes: folder and property names |
-| 2 | [Handler pipeline](handler-pipeline.md) | Medium: one project, three dispatchers | No: steps are optional |
+| 2 | [Handler pipeline](../handler-pipeline.md) (done) | Medium: one project, four dispatchers | Yes: handler signatures, `Result<T>` from each send |
 | 3 | [Type classification](type-classification.md) | Small: one rule, one tool command | No |
 | 4 | [Architecture definition](architecture-definition.md) | Large: Sdk, router, tests, composer | No, if the VSA definition gives the same result |
 

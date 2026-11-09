@@ -230,7 +230,9 @@ A command goes from one module to another in the same process. It has one handle
 |---|---|---|---|---|
 | Request (`IRequest<T>`) | A client or a module | One `RequestHandler` | `IResponse` | In process (`IBus.Send`), or HTTP on the web host |
 | Command (`ICommand<T>`) | A handler of a module | One `CommandHandler` | Any type of the slice | In process, `ICommandSender` |
-| Event (`IntegrationEvent`) | A handler, after a change | Zero or more | None | `IIntegrationEventPublisher` |
+| Event (`IntegrationEvent`) | A handler, after a change | Zero or more | `Unit` | `IIntegrationEventPublisher` |
+
+Each handler takes the envelope of its message and returns `Result<T>`, and each send returns `Result<T>`. A slice can also have validators and Before or After events for its messages: they go to the project of the handler of the slice. See `docs/handler-pipeline.md`.
 
 A request and a command are messages (`IMessage`). An event is not a message. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`:
 
@@ -240,9 +242,9 @@ public sealed record ChangeResourceCommand(ResourceKey Resource, int Delta) : IC
 public sealed record ChangeResourceResult(bool Changed, int Value);
 
 sealed class ChangeResourceHandler(Wallet wallet) : CommandHandler<ChangeResourceCommand, ChangeResourceResult> {
-    public override Task<ChangeResourceResult> HandleAsync(ChangeResourceCommand command, CancellationToken ct) {
-        var changed = wallet.TryChange(command.Resource, command.Delta, out var value);
-        return Task.FromResult(new ChangeResourceResult(changed, value));
+    public override Task<Result<ChangeResourceResult>> HandleAsync(Envelope<ChangeResourceCommand> envelope) {
+        var changed = wallet.TryChange(envelope.Message.Resource, envelope.Message.Delta, out var value);
+        return Task.FromResult<Result<ChangeResourceResult>>(new ChangeResourceResult(changed, value));
     }
 }
 ```
@@ -252,8 +254,12 @@ To send a command, get `ICommandSender` from the services and call `SendAsync`:
 ```csharp
 // Modules/Cards/Slices/PayCost/PayCostHandler.cs
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events) : CommandHandler<PayCostCommand, PayCostResult> {
-    public override async Task<PayCostResult> HandleAsync(PayCostCommand command, CancellationToken ct) {
-        var changed = await commands.SendAsync(new ChangeResourceCommand(command.Cost.Resource, -command.Cost.Amount), ct);
+    public override async Task<Result<PayCostResult>> HandleAsync(Envelope<PayCostCommand> envelope) {
+        var cost = envelope.Message.Cost;
+        var changed = await commands.SendAsync(new ChangeResourceCommand(cost.Resource, -cost.Amount), envelope.Cancellation);
+        if (!changed.IsSuccess) {
+            return changed.Error!;
+        }
         ...
     }
 }

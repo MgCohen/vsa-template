@@ -1,13 +1,13 @@
+using VSA.Contracts;
 using VSA.Contracts.Requests;
-using VSA.Domain;
 
 namespace VSA.Handlers.Requests;
 
-public abstract class RequestHandler<TRequest, TResponse> : IRequestHandler<TResponse>
-    where TRequest : IRequest<TResponse>
+public abstract class RequestHandler<TRequest, TResponse> : IHandler<TRequest>
+    where TRequest : class, IRequest<TResponse>
     where TResponse : IResponse {
-    Task<Result<TResponse>> IRequestHandler<TResponse>.HandleAsync(IRequest<TResponse> request, CancellationToken ct) =>
-        HandleRequestAsync((TRequest)request, ct);
+    public abstract Task<Result<TResponse>> HandleAsync(Envelope<TRequest> envelope);
 
-    protected abstract Task<Result<TResponse>> HandleRequestAsync(TRequest request, CancellationToken ct);
+    async Task<IMessageResult> IHandler.HandleAsync(Envelope envelope) =>
+        await HandleAsync((Envelope<TRequest>)envelope);
 }

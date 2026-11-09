@@ -37,7 +37,7 @@ public sealed class CommandTests {
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
 
-        Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
+        Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }
 
     // Cards sends a command of Resources, but the app has no Resources module.
@@ -49,7 +49,7 @@ public sealed class CommandTests {
 
         var error = Assert.ThrowsAsync<InvalidOperationException>(() => sender.SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default));
 
-        Assert.That(error!.Message, Does.StartWith("Command Resources.Slices.ChangeResource.ChangeResourceCommand has no handler."));
+        Assert.That(error!.Message, Does.StartWith("Resources.Slices.ChangeResource.ChangeResourceCommand has no handler"));
     }
 
     [Test]
