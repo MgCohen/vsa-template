@@ -121,6 +121,20 @@ public sealed class PipelineTests {
     }
 
     [Test]
+    public async Task A_custom_pipeline_with_no_handler_for_the_message_falls_back() {
+        using var app = VsaBuilder.Create().UseGenericHost().Modules(new ArenaModule())
+            .Services(services => services.AddPipeline(new PipelineBuilder<StrikeCommand>()))
+            .Build();
+        await using var appScope = app.Services.CreateAsyncScope();
+
+        var result = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new StrikeCommand(5), default);
+
+        Assert.That(result.Value, Is.EqualTo(4));
+        Assert.That(app.Services.GetRequiredService<ArenaLog>().Lines, Does.Contain("audit:StrikeCommand:Accepted"));
+    }
+
+    [Test]
     public void A_message_base_has_one_pipeline() {
         var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>());
 

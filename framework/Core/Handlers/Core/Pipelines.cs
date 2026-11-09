@@ -31,7 +31,9 @@ public sealed class Pipelines {
     }
 
     PipelineRegistration For(PipelineKind kind, Type message) {
-        var custom = registrations.Where(r => r.Kind is null && r.Message.IsAssignableFrom(message)).ToList();
+        var custom = registrations
+            .Where(r => r.Kind is null && r.Message.IsAssignableFrom(message) && Instance(r).Runs(message))
+            .ToList();
         return custom.FirstOrDefault(c => custom.TrueForAll(o => o.Message.IsAssignableFrom(c.Message)))
             ?? registrations.FirstOrDefault(r => r.Kind == kind)
             ?? throw new InvalidOperationException($"No pipeline runs the {kind.ToString().ToLowerInvariant()}.");

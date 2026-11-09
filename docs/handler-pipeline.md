@@ -101,7 +101,7 @@ public sealed class ArenaModule : Module {
 | `.Build(services)` | A new instance with its own runner. Keep the builder to build more instances, for example one for each match |
 | `services.AddPipeline(builder)` | The module instance: `ICommandSender`, `IBus` and the publisher send each message of `TMessage` to it, and the services give it as `IPipeline<TMessage>` |
 
-A send goes to the most specific pipeline whose message base matches the message. If none matches, it goes to the default pipeline of its kind. A message base has one pipeline: a second `AddPipeline` for the same base fails.
+A send goes to the most specific pipeline whose message base matches the message and that has a handler for it (an event pipeline always runs the event). If none matches, it goes to the default pipeline of its kind. A message base has one pipeline: a second `AddPipeline` for the same base fails.
 
 ## Projects
 

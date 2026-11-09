@@ -31,6 +31,8 @@ sealed class Pipeline<TMessage> : IPipeline<TMessage>, IPipelineRun where TMessa
 
     public Task StartAsync() => Runner.StartAsync();
 
+    public bool Runs(Type message) => many || handlers.ContainsKey(message);
+
     public async Task<Envelope> RunAsync(object message, IServiceProvider scope, CancellationToken ct) {
         if (message is not TMessage) {
             throw new ArgumentException(
