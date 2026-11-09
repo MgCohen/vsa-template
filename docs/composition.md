@@ -95,7 +95,9 @@ Each layer has one internal static installer in its own project. Only VSA.Compos
 |---|---|---|---|
 | 1. Find | `IntegrationEventHandler<>` | `CommandHandler<,>` | `RequestHandler<,>` |
 | 2. Check | None | One handler for each command | One handler for each request |
-| 3. Register | Publisher, each handler | Sender, each handler | Each handler. One handler for each request |
+| 3. Register | Publisher, each handler, the default pipeline | Sender, each handler, the default pipeline | Each handler, the default pipeline |
+
+`PipelineInstaller` (VSA.Handlers) runs first: it finds the validators and the Before and After events of the modules. Each send goes through a pipeline (`docs/handler-pipeline.md`).
 
 ```csharp
 static class CommandHandlerInstaller {
@@ -103,6 +105,8 @@ static class CommandHandlerInstaller {
         var handlers = types.Implementations(typeof(CommandHandler<,>));
         EnsureOneHandlerForEachCommand(handlers);
         services.AddScoped<ICommandSender, InProcessCommandSender>();
+        services.AddDefaultPipeline(
+            PipelineKind.Commands, new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>)));
         foreach (var (service, handler) in handlers) {
             services.AddScoped(service, handler);
         }
@@ -119,7 +123,7 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 | Step | Source |
 |---|---|
 | Bind the request | The JSON body (`POST`, `PUT`, `PATCH`), then the route values, then the query |
-| Run the handler | The `RequestHandler<,>` of the request, from the scope of the HTTP request |
+| Run the handler | The pipeline of the request, with the services of the scope of the HTTP request |
 | Success | 200 with the response as JSON |
 | Error of the handler | A problem response: 404 if the code ends with `.not_found`, else 400 |
 | Value that does not bind | A problem response, 400, title `request.not_valid` |
@@ -128,6 +132,7 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 
 ```
 Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan
+Handlers/Core/       PipelineBuilder, Pipelines, the runners, Validator, Before, After, PipelineInstaller
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
 Handlers/Requests/   RequestHandler, RequestHandlerInstaller

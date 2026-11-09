@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="../Core/VSA.Handlers.csproj" />
     <ProjectReference Include="../../Domain/VSA.Domain.csproj" />
     <ProjectReference Include="../../Contracts/Requests/VSA.Contracts.Requests.csproj" />
   </ItemGroup>

@@ -1,4 +1,5 @@
 using Pipeline.Contracts.Commands;
+using VSA.Contracts;
 using VSA.Handlers.Commands;
 
 namespace Pipeline.Handlers.Commands.Steps;
@@ -8,5 +9,6 @@ namespace Pipeline.Handlers.Commands.Steps;
 public abstract class StepHandler<TStep, TResult> : CommandHandler<TStep, TResult> where TStep : Step<TResult> {
     protected abstract TResult Run(TStep step);
 
-    public sealed override Task<TResult> HandleAsync(TStep command, CancellationToken ct) => Task.FromResult(Run(command));
+    public sealed override Task<Result<TResult>> HandleAsync(Envelope<TStep> envelope) =>
+        Task.FromResult<Result<TResult>>(Run(envelope.Message));
 }

@@ -25,7 +25,7 @@ public sealed class SliceRouterTests {
         "public sealed record CreateNoteResponse(Guid Id) : IResponse;");
     static SliceSource CreateNoteHandler => File("CreateNote/CreateNoteHandler.cs", """
         sealed class CreateNoteHandler(IRepository<Note, NoteId> notes) : RequestHandler<CreateNoteRequest, CreateNoteResponse> {
-            protected override Task<Result<CreateNoteResponse>> HandleRequestAsync(CreateNoteRequest request, CancellationToken ct) => null!;
+            public override Task<Result<CreateNoteResponse>> HandleAsync(Envelope<CreateNoteRequest> envelope) => null!;
         }
         """);
 

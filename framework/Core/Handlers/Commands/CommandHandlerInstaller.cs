@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Module;
 
@@ -9,6 +10,8 @@ static class CommandHandlerInstaller {
         var handlers = types.Implementations(typeof(CommandHandler<,>));
         EnsureOneHandlerForEachCommand(handlers);
         services.AddScoped<ICommandSender, InProcessCommandSender>();
+        services.AddDefaultPipeline(
+            PipelineKind.Commands, new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>)));
         foreach (var (service, handler) in handlers) {
             services.AddScoped(service, handler);
         }

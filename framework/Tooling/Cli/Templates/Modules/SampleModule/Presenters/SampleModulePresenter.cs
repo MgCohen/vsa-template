@@ -8,7 +8,10 @@ public sealed class SampleModulePresenter(IBus bus) : Presenter(bus) {
     public OpState Load { get; } = new();
 
     public Task LoadAsync() => Run(Load, async () => {
-        var response = await Bus.Send(new GetStatusRequest());
-        Status = response.Status;
+        var status = await Bus.Send(new GetStatusRequest());
+        if (status.IsSuccess) {
+            Status = status.Value.Status;
+        }
+        return status.Error;
     });
 }

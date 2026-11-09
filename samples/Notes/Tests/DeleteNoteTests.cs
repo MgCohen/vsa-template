@@ -8,7 +8,7 @@ namespace Notes.Tests;
 public sealed class DeleteNoteTests : VsaUnitTest {
     [Test]
     public async Task Deletes_the_note_and_publishes_NoteDeleted() {
-        var note = Note.Create(new AuthorId(Guid.NewGuid()), "Old note").Value;
+        var note = Note.Create(new AuthorId(Guid.NewGuid()), "Old note");
         Repository<Note, NoteId>().With(note);
 
         var result = await Handle(new DeleteNoteRequest(note.Id.Value));
@@ -22,6 +22,6 @@ public sealed class DeleteNoteTests : VsaUnitTest {
     public async Task Unknown_note_fails() {
         var result = await Handle(new DeleteNoteRequest(Guid.NewGuid()));
 
-        Assert.That(result.Error, Is.EqualTo(NoteErrors.NotFound));
+        Assert.That(result.Error?.Code, Is.EqualTo("notes.not_found"));
     }
 }

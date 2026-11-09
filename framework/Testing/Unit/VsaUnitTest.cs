@@ -1,11 +1,13 @@
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
+using System.Reflection;
+using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Contracts.Requests;
 using VSA.Domain;
+using VSA.Handlers;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Requests;
 using VSA.Infrastructure;
@@ -73,23 +75,24 @@ public abstract class VsaUnitTest {
         Provider.GetRequiredService<IRepository<T, TId>>() as InMemoryRepository<T, TId>
         ?? throw new InvalidOperationException($"IRepository<{typeof(T).Name}, {typeof(TId).Name}> is replaced. Get it from Provider.");
 
-    // Finds the handler of the request, creates it with the services, and runs it.
+    // Finds the handler of the request and runs it through a pipeline with that one handler.
     // The handler is in the Handlers.Requests project of the same module: Notes.Contracts.Requests -> Notes.Handlers.Requests.
-    protected async Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default) where TResponse : IResponse {
-        var handler = HandlerOf(request.GetType());
-        var instance = ActivatorUtilities.CreateInstance(Provider, handler);
-        var method = handler.GetMethod("HandleRequestAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        return await (Task<Result<TResponse>>)method.Invoke(instance, [request, ct])!;
+    protected Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
+        where TResponse : IResponse {
+        ArgumentNullException.ThrowIfNull(request);
+        var pipeline = new PipelineBuilder<IMessage>().Handlers(HandlerOf(request.GetType())).Build(Provider);
+        return pipeline.SendAsync<TResponse>(request, ct);
     }
 
     // Finds the handler of the command, creates it with the services, and runs it.
     // The handler is in the Handlers.Commands project of the same module: Cards.Contracts.Commands -> Cards.Handlers.Commands.
     // A handler that sends other commands gets ICommandSender from the services: add a mock of it in Configure.
-    protected Task<TResult> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
+    protected Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
         ArgumentNullException.ThrowIfNull(command);
         var service = typeof(CommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
-        var instance = ActivatorUtilities.CreateInstance(Provider, CommandHandlerOf(command.GetType(), service));
-        return (Task<TResult>)service.GetMethod("HandleAsync")!.Invoke(instance, [command, ct])!;
+        var handler = CommandHandlerOf(command.GetType(), service);
+        var pipeline = new PipelineBuilder<IMessage>().Handlers(handler).Build(Provider);
+        return pipeline.SendAsync<TResult>(command, ct);
     }
 
     ServiceProvider Build() {

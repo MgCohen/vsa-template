@@ -1,3 +1,5 @@
+using VSA.Contracts;
+
 namespace VSA.Presenters;
 
 // The interface between the views and one module. Two directions:
@@ -24,15 +26,13 @@ public abstract class Presenter(IBus bus) : IDisposable {
         live = connection;
     }
 
-    // Sets Busy and Error on op, catches RequestException, raises Changed.
-    protected async Task Run(OpState op, Func<Task> body) {
+    // Sets Busy on op, runs body, puts the message of the Error that body gives on op, and raises Changed.
+    protected async Task Run(OpState op, Func<Task<Error?>> body) {
         op.Busy = true;
         op.Error = null;
         Changed?.Invoke();
         try {
-            await body();
-        } catch (RequestException e) {
-            op.Error = e.Message;
+            op.Error = (await body())?.Message;
         } finally {
             op.Busy = false;
             Changed?.Invoke();

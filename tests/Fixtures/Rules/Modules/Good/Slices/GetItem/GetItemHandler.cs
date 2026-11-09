@@ -1,9 +1,10 @@
-using VSA.Domain;
+using Good.Domain;
+using VSA.Contracts;
 using VSA.Handlers.Requests;
 
 namespace Good.Slices.GetItem;
 
 sealed class GetItemHandler : RequestHandler<GetItemRequest, GetItemResponse> {
-    protected override Task<Result<GetItemResponse>> HandleRequestAsync(GetItemRequest request, CancellationToken ct) =>
-        Task.FromResult<Result<GetItemResponse>>(new GetItemResponse(request.Id));
+    public override Task<Result<GetItemResponse>> HandleAsync(Envelope<GetItemRequest> envelope) =>
+        Task.FromResult<Result<GetItemResponse>>(new GetItemResponse(new Item(envelope.Message.Id).Id));
 }

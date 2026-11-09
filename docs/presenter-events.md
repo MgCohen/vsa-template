@@ -6,7 +6,7 @@ Changes go in two directions:
 
 | Direction | Path |
 |---|---|
-| Top down | A view calls a presenter method. The presenter sends a request with `IBus` (`Run`), and changes its state from the response |
+| Top down | A view calls a presenter method. The presenter sends a request with `IBus` (`Run`), and changes its state from the result. `Run` puts the message of the `Error` of the result on the `OpState` |
 | Bottom up | A handler publishes an event. The presenter gets it (`IPresenterEvent<TEvent>`), changes its state, and raises `Changed` |
 
 The bottom-up path works at the presenter level. It does not need a view: a view only listens to `Changed` and renders.
@@ -15,8 +15,8 @@ The bottom-up path works at the presenter level. It does not need a view: a view
 
 ```text
 module handler ──PublishAsync──▶ InProcessEventPublisher
-                                  1. each IntegrationEventHandler<TEvent>
-                                  2. each IIntegrationEventObserver ──▶ LivePresenters
+                                  1. the event pipeline: each IntegrationEventHandler<TEvent>
+                                  2. if the run is Accepted: each IIntegrationEventObserver ──▶ LivePresenters
                                                                          for each presenter that implements IPresenterEvent<TEvent>:
                                                                            on the dispatcher of its scope (if any), one event at a time:
                                                                              OnEventAsync(event), then Changed

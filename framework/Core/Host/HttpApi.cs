@@ -1,11 +1,11 @@
-using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.Reflection;
+using VSA.Contracts;
 using VSA.Contracts.Requests;
-using VSA.Domain;
 using VSA.Handlers.Requests;
 
 namespace VSA.Host;
@@ -34,9 +34,7 @@ static class HttpApi {
             return Results.Problem(
                 title: "request.not_valid", detail: e.Message, statusCode: StatusCodes.Status400BadRequest);
         }
-        IRequestHandler<TResponse> handler =
-            http.RequestServices.GetRequiredService<RequestHandler<TRequest, TResponse>>();
-        var result = await handler.HandleAsync(request, http.RequestAborted);
+        var result = await RequestDispatch.SendAsync(http.RequestServices, request, http.RequestAborted);
         return result.Error is { } error ? Problem(error) : Results.Ok(result.Value);
     }
 

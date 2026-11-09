@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="../Core/VSA.Handlers.csproj" />
     <ProjectReference Include="../../Contracts/Events/VSA.Contracts.Events.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -60,6 +60,8 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 | Layer | Package | Unity |
 |---|---|---|
 | Domain | `VSA.Domain` | Yes |
+| Contracts (`IMessage`, `Envelope`, `Result`) | `VSA.Contracts` | Yes |
+| Handler pipeline | `VSA.Handlers` | Yes |
 | Contracts, events | `VSA.Contracts.Events` | Yes |
 | Handlers, events | `VSA.Handlers.Events` | Yes |
 | Infrastructure | `VSA.Infrastructure` | Yes |

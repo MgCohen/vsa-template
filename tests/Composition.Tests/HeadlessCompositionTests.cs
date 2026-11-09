@@ -14,6 +14,7 @@ using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
 using VSA.Composition;
+using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Presenters;
@@ -39,7 +40,7 @@ public sealed class HeadlessCompositionTests {
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
             .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
 
-        Assert.That(result, Is.EqualTo(new PayCostResult(true, 7)));
+        Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }
 
     [Test]
@@ -72,19 +73,20 @@ public sealed class HeadlessCompositionTests {
 
         var response = await scope.ServiceProvider.GetRequiredService<IBus>().Send(new GetItemRequest(id, 2, false));
 
-        Assert.That(response, Is.EqualTo(new GetItemResponse(id, 2, false)));
+        Assert.That(response.Value, Is.EqualTo(new GetItemResponse(id, 2, false)));
     }
 
     [Test]
-    public async Task A_request_error_is_a_RequestException() {
+    public async Task A_request_error_comes_back_in_the_result() {
         using var host = App(new AnswersModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        var error = Assert.ThrowsAsync<RequestException>(() => bus.Send(new AnswerRequest("answers.not_found")));
+        var result = await bus.Send(new AnswerRequest("answers.not_found"));
 
-        Assert.That(error!.Code, Is.EqualTo("answers.not_found"));
-        Assert.That(error.Message, Is.EqualTo("The test error."));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(new Error("answers.not_found", "The test error.")));
+        Assert.That(result.Envelope?.State, Is.EqualTo(EnvelopeState.Accepted));
     }
 
     [Test]
@@ -95,7 +97,7 @@ public sealed class HeadlessCompositionTests {
 
         var error = Assert.ThrowsAsync<InvalidOperationException>(() => bus.Send(new ListAllRequest()));
 
-        Assert.That(error!.Message, Does.StartWith("Request Answers.Slices.ListAll.ListAllRequest has no handler."));
+        Assert.That(error!.Message, Does.StartWith("Answers.Slices.ListAll.ListAllRequest has no handler"));
     }
 
     [Test]

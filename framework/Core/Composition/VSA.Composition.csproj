@@ -4,6 +4,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Module/VSA.Module.csproj" />
+    <ProjectReference Include="../Handlers/Core/VSA.Handlers.csproj" />
     <ProjectReference Include="../Handlers/Events/VSA.Handlers.Events.csproj" />
     <ProjectReference Include="../Handlers/Commands/VSA.Handlers.Commands.csproj" />
     <ProjectReference Include="../Handlers/Requests/VSA.Handlers.Requests.csproj" />
