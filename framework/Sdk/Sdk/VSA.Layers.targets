@@ -39,7 +39,6 @@
       VSA0004  a project in the wrong folder, or a project in Projects/ with a name that is not <Module>.<Layer> (_VsaCheck)
       VSA0005  a routing error, from the VsaRouteSliceFiles task
       VSA0006  a Compile item written by hand, a .cs file that no project compiles, or Slices/ in a plugin module (_VsaCheck)
-      VSA0007  VsaModuleUses out of a module root, or a bad name in it (_VsaCheckModuleUses)
     _VsaCheck uses lists made at evaluation, so the order of the requested targets does not change them.
   -->
   <PropertyGroup>
@@ -95,6 +94,9 @@
     <Compile Include="$(VsaModuleDir)$(VsaLayer)/**/*.cs" VsaRule="true" Link="$(VsaLayer)/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <!-- Domain/Shared/ is the published domain. Its own project compiles it, so Domain leaves it out. -->
+  <!-- Domain.Shared gets no project of a module: the published domain of one module does not depend on another module.
+       A reference to the Domain.Shared of each module would be a cycle between two modules. -->
+  <ItemGroup Condition="'$(VsaLayer)' == 'Domain/Shared'" />
   <ItemGroup Condition="'$(VsaLayer)' == 'Domain'">
     <Compile Include="$(VsaModuleDir)Domain/**/*.cs" Exclude="$(VsaModuleDir)Domain/Shared/**" VsaRule="true" Link="Domain/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
@@ -256,7 +258,10 @@
   <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
     <!-- The events that a presenter shows (IPresenterEvent): the events of its own module only.
          A view that shows more than one module shows the presenter of each module. -->
-    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj;$(VsaModuleDir)Projects/*.Domain.Shared.csproj" PrivateAssets="all" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
+    <!-- anyModule: a presenter reads the published domain of all modules, and of all plugin modules. -->
+    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
     <!-- Exposed, not private: the host loads the handlers and presenters at run time,
@@ -285,68 +290,6 @@
     <ProjectReference VsaRule="true" Include="$(_VsaPluginUses)" />
   </ItemGroup>
 
-  <!-- VsaModuleUses: the modules whose published domain (Domain.Shared) this module uses. One list, in the module root:
-         <VsaModuleUses>Resources;Zones</VsaModuleUses> in Modules/<Module>/<Module>.csproj.
-       The layer projects cannot see a property of the root project, so they read the root project file as text.
-       The Domain.Shared and Presenters projects get the Domain.Shared project of each listed module. Exposed for
-       Domain.Shared, because its types use the listed types. Private for Presenters. _VsaCheckModuleUses checks the names. -->
-  <!-- The root file as text, with no XML comments, and the text of its VsaModuleUses element. One read of the file. -->
-  <PropertyGroup Condition="'$(VsaModule)' != '' and '$(VsaLayer)' != '' and Exists('$(VsaModuleDir)$(VsaModule).csproj')">
-    <_VsaRootText>$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(VsaModuleDir)$(VsaModule).csproj')), '(?s)&lt;!--.*?--&gt;', ''))</_VsaRootText>
-    <_VsaModuleUsesText Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(_VsaRootText)', '&lt;VsaModuleUses(\s[^&gt;]*)?&gt;'))">$([System.Text.RegularExpressions.Regex]::Replace('$(_VsaRootText)', '(?s)^.*?&lt;VsaModuleUses(?:\s[^&gt;]*)?&gt;(.*?)&lt;/VsaModuleUses&gt;.*$', '$1'))</_VsaModuleUsesText>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VsaModule)' != '' and '$(VsaLayer)' != '' and '$(VsaLayer)' != 'Module'">
-    <!-- A layer project that sets VsaModuleUses itself is an error (VSA0007): the list is in the module root only. -->
-    <_VsaModuleUsesInLayer Condition="'$(VsaModuleUses)' != ''">$(VsaModuleUses)</_VsaModuleUsesInLayer>
-    <VsaModuleUses>$(_VsaModuleUsesText)</VsaModuleUses>
-  </PropertyGroup>
-  <!-- The names with no spaces and no empty names: " A ;\n B ;" is "A;B". -->
-  <PropertyGroup Condition="'$(VsaModuleUses)' != ''">
-    <_VsaModuleUseNames>$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace($([System.Text.RegularExpressions.Regex]::Replace('$(VsaModuleUses)', '\s+', '')), ';+', ';').Trim(';'))))</_VsaModuleUseNames>
-  </PropertyGroup>
-  <!-- The root compares the value that MSBuild evaluates with the text that the layer projects read (VSA0007).
-       They are different for a Condition, two elements, or a value from another file or property. -->
-  <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(_VsaModuleUsesText)' != ''">
-    <_VsaModuleUseTextNames>$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace($([System.Text.RegularExpressions.Regex]::Replace('$(_VsaModuleUsesText)', '\s+', '')), ';+', ';').Trim(';'))))</_VsaModuleUseTextNames>
-  </PropertyGroup>
-  <!-- The module itself is not listed: VSA0007 reports it, and a reference to itself would be a cycle. -->
-  <PropertyGroup Condition="'$(VsaRootFolder)' == 'Modules' and '$(_VsaModuleUseNames)' != ''">
-    <_VsaListedNames>$([System.Text.RegularExpressions.Regex]::Replace(';$(_VsaModuleUseNames);', ';$(VsaModule);', ';', System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim(';'))</_VsaListedNames>
-    <_VsaListedShared Condition="'$(_VsaListedNames)' != ''">$(VsaModulesDir)$([MSBuild]::Unescape($(_VsaListedNames.Replace(';', '/Projects/*.Domain.Shared.csproj;$(VsaModulesDir)'))))/Projects/*.Domain.Shared.csproj</_VsaListedShared>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(VsaLayer)' == 'Domain/Shared'">
-    <ProjectReference VsaRule="true" Include="$(_VsaListedShared)" Condition="'$(_VsaListedShared)' != ''" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(VsaLayer)' == 'Presenters'">
-    <ProjectReference VsaRule="true" Include="$(_VsaListedShared)" PrivateAssets="all" Condition="'$(_VsaListedShared)' != ''" />
-  </ItemGroup>
-
-  <!-- The module root records its assembly name (the same as Module.Name), so the host finds it, its root folder,
-       and its layer projects, so the host loads only the layers that exist.
-       Keep the keys the same as VSA.Module.ModuleMetadata. Code reads the records through VSA.Module.ModuleRoot. -->
-  <Target Name="_VsaRecordLayers" BeforeTargets="GetAssemblyAttributes" Condition="'$(VsaLayer)' == 'Module'">
-    <ItemGroup>
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-        <_Parameter1>VsaModule</_Parameter1>
-        <_Parameter2>$(AssemblyName)</_Parameter2>
-      </AssemblyAttribute>
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-        <_Parameter1>VsaRootFolder</_Parameter1>
-        <_Parameter2>$(VsaRootFolder)</_Parameter2>
-      </AssemblyAttribute>
-      <!-- One record for each module in VsaModuleUses. VSA2001 reads them (ModuleRoot.Uses). -->
-      <_VsaModuleUse Include="$(_VsaModuleUseNames)" />
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'@(_VsaModuleUse)' != ''">
-        <_Parameter1>VsaModuleUse</_Parameter1>
-        <_Parameter2>%(_VsaModuleUse.Identity)</_Parameter2>
-      </AssemblyAttribute>
-      <!-- A module with no layer projects gets no layer record, not one empty record. -->
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'@(_VsaLayerProject)' != ''">
-        <_Parameter1>VsaLayerAssembly</_Parameter1>
-        <_Parameter2>%(_VsaLayerProject.Filename)</_Parameter2>
-      </AssemblyAttribute>
-    </ItemGroup>
-  </Target>
 
   <!-- The module root finds each .cs file that no project compiles (VSA0006). A layer folder counts only if its project exists. -->
   <PropertyGroup Condition="'$(VsaLayer)' == 'Module'">
@@ -415,26 +358,6 @@
            Text="$(MSBuildProjectName) sets VsaPluginUses, but it is not in a plugin module. A module gets each plugin module from VSA.Sdk. Remove VsaPluginUses." />
     <Error Condition="'$(VsaRootFolder)' == 'Plugins' and '@(_VsaBadUse)' != ''" Code="VSA0002"
            Text="$(MSBuildProjectName) is in layer $(VsaLayer) of the plugin module $(VsaModule). VsaPluginUses names these modules, but they are not other plugin modules with the layer $(VsaLayer): @(_VsaBadUse). Name only folders in $(VsaPluginsDir) that have $(_VsaLayerDir)&lt;Name&gt;$(_VsaLayerSuffix).csproj." />
-  </Target>
-
-  <!-- Each name in VsaModuleUses is another module in Modules/ that has a Domain.Shared project. Only a module root sets it.
-       The root checks the names, so each error shows one time. A layer project checks only that it does not set the list. -->
-  <Target Name="_VsaCheckModuleUses" BeforeTargets="CollectPackageReferences;ResolveProjectReferences"
-          Condition="'$(VsaModule)' != '' and ('$(_VsaModuleUsesInLayer)' != '' or ('$(VsaLayer)' == 'Module' and ('$(_VsaModuleUseNames)' != '' or '$(_VsaModuleUseTextNames)' != '')))">
-    <ItemGroup>
-      <_VsaModuleUseCheck Include="$(_VsaModuleUseNames)" />
-      <_VsaBadModuleUse Include="@(_VsaModuleUseCheck)" Condition="'%(Identity)' == '$(VsaModule)'
-          or !$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '^[A-Za-z_][A-Za-z0-9_]*$'))
-          or !Exists('$(VsaModulesDir)%(Identity)/Projects/%(Identity).Domain.Shared.csproj')" />
-    </ItemGroup>
-    <Error Condition="'$(_VsaModuleUsesInLayer)' != ''" Code="VSA0007"
-           Text="$(MSBuildProjectName) sets VsaModuleUses, but it is a layer project. Set VsaModuleUses in the module root, $(VsaModule).csproj, and remove it here." />
-    <Error Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' != 'Modules'" Code="VSA0007"
-           Text="$(MSBuildProjectName) is in the plugin module $(VsaModule), and it sets VsaModuleUses. A plugin module uses no module. To use another plugin module, set VsaPluginUses in the layer project." />
-    <Error Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Modules' and '@(_VsaBadModuleUse)' != ''" Code="VSA0007"
-           Text="$(MSBuildProjectName) is in module $(VsaModule). VsaModuleUses names these modules, but they are not other modules with a Domain.Shared project: @(_VsaBadModuleUse). Name only folders in $(VsaModulesDir) that have Projects/&lt;Name&gt;.Domain.Shared.csproj." />
-    <Error Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Modules' and '$(_VsaModuleUseNames)' != '$(_VsaModuleUseTextNames)'" Code="VSA0007"
-           Text="$(MSBuildProjectName) has VsaModuleUses '$(_VsaModuleUseNames)', but its file has the text '$(_VsaModuleUseTextNames)'. The layer projects read the text of the file. Write one VsaModuleUses element in $(VsaModule).csproj, with the names and no Condition." />
   </Target>
 
   <!-- A project in a Modules or Plugins folder that is not a root folder of the app root gets no rules. That is an error,

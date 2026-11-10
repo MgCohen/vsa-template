@@ -23,7 +23,7 @@ A module with commands and a published domain (`tests/Fixtures/CommandApp`):
 
 ```
 Modules/Cards/
-├─ Cards.csproj, CardsModule.cs                        module root, with <VsaModuleUses>Resources</VsaModuleUses>
+├─ Cards.csproj, CardsModule.cs                        module root
 ├─ Projects/
 │  ├─ Cards.Domain.Shared.csproj  Cards.Presenters.csproj  Cards.Contracts.Events.csproj
 │  └─ Cards.Contracts.Commands.csproj  Cards.Handlers.Commands.csproj
@@ -144,7 +144,6 @@ The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tas
 | `VSA0004` | Wrong project folder or name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA0005` | Routing of the slice files (next table) | Build, design-time build | Build output, IDE error list |
 | `VSA0006` | Hand-written `Compile` item, uncompiled file, or `Slices/` in a plugin module | Restore, build, design-time build | Build output, IDE error list |
-| `VSA0007` | `VsaModuleUses` out of a module root, or a bad name | Restore, build, design-time build | Build output, IDE error list |
 | `VSA1003` | Contracts projects hold only contract types and their DTOs | Compile, also while you type | Editor and build |
 | `VSA1005`–`VSA1007` | `Domain.Shared` types hold only immutable data | Compile, also while you type | Editor and build |
 | `CS` errors | Forbidden uses between projects, from the layer map | Compile | Editor and build |
@@ -176,11 +175,12 @@ Each of the six routed projects reports the same `VSA0005` errors, so one error 
 // Modules/Resources/Domain/Shared/ResourceKey.cs
 public sealed record ResourceKey(string Name);
 
-// Modules/Cards/Domain/Shared/Cost.cs: Cards lists Resources in VsaModuleUses
-public sealed record Cost(ResourceKey Resource, int Amount);
+// Modules/Cards/Domain/Shared/Cost.cs: no type of another module
+public sealed record Cost(string Resource, int Amount);
 ```
 
 - Put keys, ids and data records here. Put the rules in `Domain/`, for example `Resources/Domain/Wallet.cs`.
+- A `Domain.Shared` type uses only its own module. The published domain of one module does not depend on another module.
 - A type holds only immutable data: `VSA1005`, `VSA1006` and `VSA1007` check it (see `architecture-rules.md`).
 - If `Domain/Shared/` has files and the module has no `Domain.Shared` project, the build fails with `VSA0006`.
 
@@ -188,27 +188,16 @@ Which layer references which domain project:
 
 | Layer | Own Domain | Own Domain.Shared | Other Domain | Other Domain.Shared |
 |---|---|---|---|---|
-| `Domain.Shared` | No | – | No | Listed modules |
+| `Domain.Shared` | No | – | No | No |
 | `Domain` | – | Yes | No | No |
 | `Infrastructure` | Yes | Yes | No | No |
 | `Contracts.*` | No | Yes | No | All modules |
 | `Handlers.*` | Yes | Yes | No | All modules |
-| `Presenters` | No | Yes | No | Listed modules |
+| `Presenters` | No | Yes | No | All modules |
 
 "All modules" also includes the plugin modules. A `Domain.Shared` project also gets the `Domain.Shared` project of each plugin module, as each layer does.
 
-The listed modules are in `<VsaModuleUses>` of the module root. Write the list only there, with `;` between the names:
-
-```xml
-<!-- Modules/Cards/Cards.csproj -->
-<Project Sdk="VSA.Sdk">
-  <PropertyGroup>
-    <VsaModuleUses>Resources</VsaModuleUses>
-  </PropertyGroup>
-</Project>
-```
-
-The layer projects cannot see a property of the root project, so VSA.Sdk reads the root project file as text. `VSA0007` fails the build if a layer project sets `VsaModuleUses`, if a plugin module sets it, or if a name is not another module with a `Domain.Shared` project.
+A `Domain.Shared` project that used the `Domain.Shared` of all modules would make a project-reference cycle, because two modules would reference each other. So it uses only its own module. A message, a handler or a presenter of a module puts the types of two modules together.
 
 ## Plugins and the two meanings of Shared
 
@@ -216,7 +205,7 @@ The layer projects cannot see a property of the root project, so VSA.Sdk reads t
 |---|---|---|---|
 | `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | `<VsaPluginUses>` in a plugin layer project |
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
-| `Domain/Shared/` | The published domain of one module | Other modules (table above) | `<VsaModuleUses>` in the module root |
+| `Domain/Shared/` | The published domain of one module | Other modules (table above) | None |
 
 "Shared" is the name of two things in one module: `Slices/Shared/` and `Domain/Shared/`. A base of the whole app is a plugin module, not a Shared one.
 

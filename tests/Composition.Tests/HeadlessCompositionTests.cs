@@ -38,7 +38,7 @@ public sealed class HeadlessCompositionTests {
         await using var scope = host.Services.CreateAsyncScope();
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
-            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
+            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana.Name, 3)), default);
 
         Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }

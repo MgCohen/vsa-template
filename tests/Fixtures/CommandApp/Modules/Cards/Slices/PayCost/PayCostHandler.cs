@@ -1,3 +1,4 @@
+using Resources.Domain.Shared;
 using Resources.Slices.ChangeResource;
 using VSA.Contracts;
 using VSA.Contracts.Commands;
@@ -11,7 +12,7 @@ sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher 
     : CommandHandler<PayCostCommand, PayCostResult> {
     public override async Task<Result<PayCostResult>> HandleAsync(Envelope<PayCostCommand> envelope) {
         var cost = envelope.Message.Cost;
-        var changed = await commands.SendAsync(new ChangeResourceCommand(cost.Resource, -cost.Amount), envelope.Cancellation);
+        var changed = await commands.SendAsync(new ChangeResourceCommand(new ResourceKey(cost.Resource), -cost.Amount), envelope.Cancellation);
         if (!changed.IsSuccess) {
             return changed.Error!;
         }
