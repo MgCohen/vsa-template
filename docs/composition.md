@@ -1,6 +1,6 @@
 # Composition: VsaBuilder and its hosts
 
-An app starts with one builder call: `VsaBuilder.Create(args)`, then a host, then `Build()`. The host type selects the split between web and Unity. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one builder call: `VsaBuilder.Create(args)`, then a host and `Build()`, or `Compose(services)` with no host. Web and console apps use a host. A Unity app uses `Compose`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Entry point
 
@@ -8,20 +8,24 @@ An app starts with one builder call: `VsaBuilder.Create(args)`, then a host, the
 // Web: App/Host/Program.cs
 await VsaBuilder.Create(args).UseWebHost().Build().RunAsync();
 
-// Unity or console
-await VsaBuilder.Create().UseGenericHost().Build().RunAsync();
+// Console
+await VsaBuilder.Create(args).UseGenericHost().Build().RunAsync();
+
+// Unity, or any app that owns its own start: no host
+var services = VsaBuilder.Create().Compose(new ServiceCollection()).BuildServiceProvider();
 ```
 
 | Step | Use |
 |---|---|
 | `Create(args)` | Makes the builder. `args` go to the configuration of the host |
 | `UseWebHost()` (VSA.Host) | ASP.NET Core: the HTTP API of the requests, and the views |
-| `UseGenericHost()` (VSA.Composition) | The .NET Generic Host: no ASP.NET Core |
+| `UseGenericHost()` (VSA.Composition) | The .NET Generic Host for a console app: no ASP.NET Core |
 | `Modules(...)` | Optional. Gives the modules. With no call, `AppScan` finds them. Tests use it |
 | `Services(...)` | Optional. App registrations, before the modules |
 | `Build()` | Returns the standard `IHost`: `RunAsync`, `StartAsync`, `StopAsync`, `Services` |
+| `Compose(services, configuration)` | No host. Adds the VSA registrations to `services` and returns it. With no `configuration`, it reads `args` |
 
-If the app selects no host, `Build()` stops with the message "The app has no host. Select one before Build: UseWebHost() or UseGenericHost()."
+If the app selects no host, `Build()` stops with the message "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call Compose(services) with no host."
 
 ## What Build does
 
@@ -29,14 +33,16 @@ If the app selects no host, `Build()` stops with the message "The app has no hos
 VsaBuilder.Build()
 ├─ host.CreateBuilder(args)        WebApplicationBuilder, or HostApplicationBuilder
 ├─ AppScan.Modules()               only if the app gave no modules
-├─ VSA layer installers            events, commands, requests, in-process bus, presenters
 ├─ host.Install                    web: the request handlers to map, views
-├─ Services(...) callbacks         app registrations
-├─ Module.Configure                each module, last
+├─ Compose(services, configuration)
+│  ├─ IConfiguration, AddLogging   only if the host did not add them
+│  ├─ VSA layer installers         events, commands, requests, in-process bus, presenters
+│  ├─ Services(...) callbacks      app registrations
+│  └─ Module.Configure             each module, last
 └─ host.Build                      web: Build, map one route for each request, map the views
 ```
 
-`Module.Configure` runs last, because a module can replace a default with `ModuleBuilder.Replace`. The order is inside `Build`, so an app cannot change it.
+`Module.Configure` runs last, because a module can replace a default with `ModuleBuilder.Replace`. The order is inside `Compose`, so an app cannot change it. `Build()` and `Compose` give the same VSA registrations.
 
 ## Definitions and transports
 
@@ -155,15 +161,17 @@ Module code and installers use two shared interfaces from .NET:
 | `IServiceCollection` | Registration: a list of `ServiceDescriptor` | `Microsoft.Extensions.DependencyInjection.Abstractions` |
 | `IServiceProvider` | Resolution: `GetService(Type)` | `System` |
 
-Both hosts build the Microsoft container. Other containers read `IServiceCollection` too:
+`Build()` builds the Microsoft container. After `Compose`, the app selects the container. Other containers read `IServiceCollection` too:
 
 | Container | Reads `IServiceCollection` |
 |---|---|
 | Autofac | `builder.Populate(services)` (`Autofac.Extensions.DependencyInjection`) |
 | DryIoc, Lamar, SimpleInjector | Their own integration packages |
-| VContainer | No support. The app needs a bridge |
+| VContainer | No support. The app routes to the Microsoft container |
 
-A Unity app that uses VContainer writes its own bridge. The bridge copies each `ServiceDescriptor` into `IContainerBuilder`, and it wraps `IObjectResolver` as `IServiceProvider`.
+A Unity app that uses VContainer builds the Microsoft container from `Compose`, then routes to it. For each VSA service type, VContainer gets a registration that resolves the service from the Microsoft container. A singleton comes from the root. A scoped or transient service comes from one Microsoft scope for each VContainer scope. So VSA keeps the Microsoft semantics, and Unity classes get VSA services by constructor injection.
+
+A copy of each `ServiceDescriptor` into `IContainerBuilder` does not work. VContainer refuses two registrations of one implementation type, and VSA registers several instances of one type and reads them as a list (`AddPipeline`). The spike is on the branch `spike/compose-containers` of `vsa-consumer-unity`.
 
 ## Module settings
 
@@ -171,27 +179,49 @@ A Unity app that uses VContainer writes its own bridge. The bridge copies each `
 
 ## What each host gives
 
-| Service | Web host | Generic host |
-|---|---|---|
-| `IBus` | `InProcessBus` | `InProcessBus` |
-| `ILogger<T>` | Yes | Yes |
-| `IConfiguration` | `appsettings.json`, environment, `args` | `appsettings.json`, environment, `args` |
+| Service | Web host | Generic host | `Compose` (no host) |
+|---|---|---|---|
+| `IBus` | `InProcessBus` | `InProcessBus` | `InProcessBus` |
+| `ILogger<T>` | Yes, host providers | Yes, host providers | Yes, no providers. The app adds them |
+| `IConfiguration` | `appsettings.json`, environment, `args` | `appsettings.json`, environment, `args` | The one the app gives, or `args` |
+| Lifetime, environment, `IHostedService` start | Yes | Yes | None |
 
 ## Unity target
 
 `VSA.Composition` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
 
-The generic host uses `Microsoft.Extensions.Hosting` 8.0. A Unity app vendors it and its dependencies, with `VSA.Composition.dll`. The Unity app calls `StopAsync()` on the host when it quits, and `RunAsync()` then ends.
+A Unity app calls `Compose` and builds the container. It does not use a host. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
+
+```csharp
+public sealed class AppRoot : MonoBehaviour {
+    ServiceProvider services;
+
+    public IServiceProvider Services => services;
+
+    void Awake() {
+        services = VsaBuilder.Create("--Modules:Counter:Max=5")
+            .Services(s => s.AddLogging(l => l.AddProvider(new UnityLogProvider())))
+            .Compose(new ServiceCollection())
+            .BuildServiceProvider();
+    }
+
+    void OnDestroy() => services.Dispose();
+}
+```
+
+The app selects the entry point: a component, a VContainer `LifetimeScope` or a test. `UnityLogProvider` is app code that calls `Debug.Log`. The Unity check runs the EditMode tests of `vsa-consumer-unity` (Mono) against a local pack.
 
 ## Non-goals
 
 - No VSA container interface. Reason: `IServiceCollection` and `IServiceProvider` are already container-neutral, and most containers read them.
-- No VContainer bridge in the framework. Reason: only a Unity app with VContainer needs it, so the app keeps it.
+- No VContainer bridge in the framework. Reason: only a Unity app with VContainer needs it, so the app keeps it. Use the router, not a copy of the registrations.
+- No Unity host. Reason: Unity needs the VSA registrations, not a host. `Compose` gives them.
 - No middleware hook on the web host. Reason: no app needs one. Add it when an app needs authentication or CORS before the routes.
 
 ## Open questions
 
 - Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppScan` can read that list first.
-- Unity check: `AppDomain.GetAssemblies()` with IL2CPP, and `RunAsync` in an `async` `Start` method. Check both in `vsa-consumer-unity`.
+- IL2CPP check: the Unity check runs on Mono only. Run `AppScan` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
+- Hosting DLLs in Unity: VSA.Composition references `Microsoft.Extensions.Hosting` for `GenericVsaHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.
 - Architecture definition: `VsaBuilder.Create(definition, args)` can make `VsaArchitecture` public, for other architectures.
