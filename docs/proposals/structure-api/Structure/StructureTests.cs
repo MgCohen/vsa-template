@@ -39,6 +39,7 @@ public abstract class StructureTests<TStructure> where TStructure : AppStructure
         var part = Def.Find(layer);
         Types().That().Are(part.Own).Should()
             .FollowCustomCondition(type => Allowed(type, part), $"use only {string.Join(", ", part.Allowed.Append(part).Select(p => p.Path))}")
+            .WithoutRequiringPositiveResults()
             .Check(Arch);
     }
 

@@ -1,6 +1,17 @@
+using Microsoft.Extensions.DependencyInjection;
+using BadApp.Modules.Notes.Domain;
+using BadApp.Modules.Notes.Domain.Shared;
+using BadApp.Modules.Notes.Infrastructure;
+using VSA.Infrastructure;
+using VSA.Module;
+
 namespace BadApp.Modules.Notes;
 
-public class NotesModule : Fw.ModuleBase
+public sealed class NotesModule : Module
 {
-    public Type[] Handlers => [typeof(Slices.CreateNote.CreateNoteHandler), typeof(Slices.ArchiveNote.ArchiveNoteHandler)];
+    public override void Configure(ModuleBuilder module)
+    {
+        module.Services.AddSingleton<NoteStore>();
+        module.Services.AddScoped<IRepository<Note, NoteId>, NoteRepository>();
+    }
 }

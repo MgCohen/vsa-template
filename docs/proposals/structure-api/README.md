@@ -30,14 +30,15 @@ From [VsaStructure.cs](Structure/VsaStructure.cs):
 
 ```csharp
 Module       = Add(new Part("Modules")).Each("module");
-ModuleRoot   = Module.Add(new Part(typeof(ModuleBase))).Exactly(1);
+ModuleRoot   = Module.Add(new Part(typeof(Module))).Exactly(1);
 Domain       = Module.Add(new Part("Domain"));
 DomainShared = Domain.Add(new Part("Shared"));
 Feature      = Module.Add(new Part("Slices")).Each("feature");
-Handlers     = Feature.Add(new Part(typeof(Handler<>))).Exactly(1);
+Requests     = Feature.Add(new Part(typeof(IRequest<>)));
+Handlers     = Feature.Add(new Part(typeof(RequestHandler<,>))).Exactly(1);
 
 Domain.MayUse(DomainShared);
-Module.ExposeOnly(DomainShared, Requests);
+Module.ExposeOnly(DomainShared, Requests, Responses);
 Feature.ExposeOnly();
 ```
 
@@ -86,10 +87,11 @@ public class GoodAppTests() : StructureTests<VsaStructure>(App.Dll("GoodApp"))
 | Folder | Contains |
 |---|---|
 | `Structure/` | `Part`, `AppStructure`, the PDB reader, the test base, the VSA definition |
-| `Fw/` | Framework stubs: `IRequest`, `Handler<T>`, `ModuleBase`, `PluginBase` |
-| `GoodApp/` | A VSA app with no errors |
+| `GoodApp/` | A VSA app with no errors: Billing, Notes, Audit plugin |
 | `BadApp/` | The same app with 7 planted errors |
 | `Tests/` | The test classes of the two apps |
+
+The apps and the VSA definition use the real framework projects of this repository (`framework/Core/`). Each app has the layout of `samples/Notes`: a `Program.cs` with `VsaBuilder`, a module root that registers its repository, and one file for each request, response and handler.
 
 Run the tests of GoodApp (all pass):
 
@@ -116,4 +118,6 @@ Output of one BadApp failure:
 - Layer paths in the messages show `{module}`. Show the real item, for example `Modules/Billing/Domain`?
 - Uses of types outside the app (the framework, `System`) are not checked. How does a layer allow "the same layer of the framework"?
 - The layer map is simplified. For example, Infrastructure can use the Domain.Shared of another module. Add a "same item only" option to `MayUse`?
+- ArchUnitNET does not load the top-level `Program` class, so no rule checks `App/Host`. Is a check of the host necessary?
+- Each app is one project. With one project for each module, the PDB reader must give the folder relative to the app root (`global.json`), not to the project.
 - A plugin and a module have different layouts, so a layer such as `Handlers` is a different part in each tree. Is one part across both trees necessary?

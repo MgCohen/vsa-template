@@ -1,3 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><ProjectReference Include="../Fw/Fw.csproj" /></ItemGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../framework/Core/Composition/VSA.Composition.csproj" />
+    <ProjectReference Include="../../../../framework/Core/Domain/VSA.Domain.csproj" />
+    <ProjectReference Include="../../../../framework/Core/Infrastructure/Core/VSA.Infrastructure.csproj" />
+    <ProjectReference Include="../../../../framework/Core/Module/VSA.Module.csproj" />
+    <ProjectReference Include="../../../../framework/Core/Contracts/Requests/VSA.Contracts.Requests.csproj" />
+    <ProjectReference Include="../../../../framework/Core/Contracts/Commands/VSA.Contracts.Commands.csproj" />
+    <ProjectReference Include="../../../../framework/Core/Handlers/Requests/VSA.Handlers.Requests.csproj" />
+  </ItemGroup>
 </Project>

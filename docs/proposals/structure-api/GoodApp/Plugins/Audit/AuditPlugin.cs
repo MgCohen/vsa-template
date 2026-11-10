@@ -1,3 +1,8 @@
+using VSA.Module;
+
 namespace GoodApp.Plugins.Audit;
 
-public class AuditPlugin : Fw.PluginBase;
+public sealed class AuditPlugin : Plugin
+{
+    public override void Configure(ModuleBuilder module) { }
+}

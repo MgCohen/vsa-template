@@ -1,6 +1,17 @@
+using Microsoft.Extensions.DependencyInjection;
+using GoodApp.Modules.Billing.Domain;
+using GoodApp.Modules.Billing.Domain.Shared;
+using GoodApp.Modules.Billing.Infrastructure;
+using VSA.Infrastructure;
+using VSA.Module;
+
 namespace GoodApp.Modules.Billing;
 
-public class BillingModule : Fw.ModuleBase
+public sealed class BillingModule : Module
 {
-    public Type[] Handlers => [typeof(Slices.PayInvoice.PayInvoiceHandler), typeof(Infrastructure.InvoiceStore)];
+    public override void Configure(ModuleBuilder module)
+    {
+        module.Services.AddSingleton<InvoiceStore>();
+        module.Services.AddScoped<IRepository<Invoice, InvoiceId>, InvoiceRepository>();
+    }
 }
