@@ -116,7 +116,7 @@ public sealed class HeadlessCompositionTests {
         var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
         Assert.That(error.Message, Is.EqualTo(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost()."));
+            "The app has no host. Select one before Build: UseWebHost(), UseGenericHost() or UseUnityHost()."));
     }
 
     [Test]

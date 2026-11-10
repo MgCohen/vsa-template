@@ -23,6 +23,8 @@ public sealed class VsaBuilder {
 
     public VsaBuilder UseGenericHost() => UseHost(new GenericVsaHost());
 
+    public VsaBuilder UseUnityHost() => UseHost(new UnityVsaHost());
+
     public VsaBuilder Modules(params VSA.Module.Module[] given) {
         modules = given;
         return this;
@@ -35,7 +37,7 @@ public sealed class VsaBuilder {
 
     public IHost Build() {
         var selected = host ?? throw new InvalidOperationException(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost().");
+            "The app has no host. Select one before Build: UseWebHost(), UseGenericHost() or UseUnityHost().");
         var builder = selected.CreateBuilder(args);
         var types = new ModuleTypes(modules ?? VsaArchitecture.Modules());
         VsaArchitecture.InstallLayers(builder.Services, types);
