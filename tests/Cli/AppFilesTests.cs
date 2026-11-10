@@ -50,6 +50,24 @@ public sealed class AppFilesTests {
     }
 
     [Test]
+    public void UpdateWritesTheVersionToEachPlaceThatDoctorReads() {
+        Write("Directory.Packages.props", """<Project><ItemGroup><PackageVersion Include="VSA.Host" Version="0.0.1" /><PackageVersion Include="NUnit" Version="4.0.0" /></ItemGroup></Project>""");
+        Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="VSA.Host" /><PackageReference Include="VSA.Views" VersionOverride="0.0.2" /></ItemGroup></Project>""");
+        Write("Modules/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/0.2.0" />""");
+        Write("Modules/B/B.csproj", """<Project><Sdk Name="VSA.Sdk" Version="0.3.0" /></Project>""");
+        Write("Modules/C/C.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("global.json", """{ "msbuild-sdks": { "VSA.Sdk": "0.0.1" } }""");
+
+        var changed = UpdateCommand.SetVersion(root, V);
+
+        Assert.That(changed, Is.EqualTo(new[] { "global.json", "App/Host/App.Host.csproj", "Directory.Packages.props", "Modules/A/A.csproj", "Modules/B/B.csproj" }));
+        Assert.That(DoctorCommand.Versions(root).Select(f => f.Version).Distinct(), Is.EqualTo(new[] { V }));
+        Assert.That(File.ReadAllText(Path.Combine(root, "Directory.Packages.props")), Does.Contain("""<PackageVersion Include="NUnit" Version="4.0.0" />"""));
+        Assert.That(File.ReadAllText(Path.Combine(root, "Modules/A/A.csproj")), Does.Contain($"Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/{V}"));
+        Assert.That(UpdateCommand.SetVersion(root, V), Is.Empty);
+    }
+
+    [Test]
     public void AddRequestUsesTheModuleNameFromTheDisk() {
         Write("Modules/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
 

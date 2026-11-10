@@ -6,7 +6,7 @@ using Tests.Shared;
 
 namespace Cli.Tests;
 
-// Uses the packed tool as a consumer does: new app, add module, add request, add command, add plugin, doctor. Then builds and runs the app.
+// Uses the packed tool as a consumer does: new app, add module, add request, add command, add plugin, doctor, update. Then builds and runs the app.
 public sealed class VsaToolTests {
     string root = "";
     Dictionary<string, string> env = [];
@@ -82,6 +82,10 @@ public sealed class VsaToolTests {
         var doctor = Dotnet.Run(app, env, "vsa", "doctor");
         Assert.That(doctor.Succeeded, Is.False, doctor.Output);
         Assert.That(doctor.Output, Does.Contain("The versions are not the same"));
+
+        var update = Dotnet.Run(app, env, "vsa", "update", "--version", LocalFeed.Version).EnsureSuccess();
+        Assert.That(update.Output, Does.Contain("global.json"));
+        Assert.That(Dotnet.Run(app, env, "vsa", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use VSA {LocalFeed.Version}."));
     }
 
     // A new app has an empty Modules/ folder. It must build and start before the first add module.
