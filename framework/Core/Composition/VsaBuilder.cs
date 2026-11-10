@@ -9,6 +9,7 @@ public sealed class VsaBuilder {
     readonly List<Action<IServiceCollection>> services = [];
     IVsaHost? host;
     IReadOnlyList<VSA.Module.Module>? modules;
+    IKeySource keys = new ConstraintKeys();
 
     VsaBuilder(string[] args) {
         this.args = args;
@@ -28,6 +29,11 @@ public sealed class VsaBuilder {
         return this;
     }
 
+    public VsaBuilder Keys(IKeySource given) {
+        keys = given ?? throw new ArgumentNullException(nameof(given));
+        return this;
+    }
+
     public VsaBuilder Services(Action<IServiceCollection> configure) {
         services.Add(configure);
         return this;
@@ -37,7 +43,7 @@ public sealed class VsaBuilder {
         var selected = host ?? throw new InvalidOperationException(
             "The app has no host. Select one before Build: UseWebHost() or UseGenericHost().");
         var builder = selected.CreateBuilder(args);
-        var types = new ModuleTypes(modules ?? VsaArchitecture.Modules());
+        var types = new ModuleTypes(modules ?? VsaArchitecture.Modules(), keys);
         VsaArchitecture.InstallLayers(builder.Services, types);
         selected.Install(builder, types);
         foreach (var configure in services) {

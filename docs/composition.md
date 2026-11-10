@@ -116,6 +116,40 @@ static class CommandHandlerInstaller {
 
 `ModuleTypes.Implementations(typeof(TBase))` gives each concrete type of the modules that derives from `TBase`, with its service type. `ModuleTypes` reads the layer assemblies of the modules one time.
 
+### Open generic types and keys
+
+An open generic handler, validator or event is closed one time for each key. The installers get only closed types.
+
+```text
+open type   ChangeResourceHandler<T> : CommandHandler<ChangeResourceCommand<T>, int>  where T : struct, IResource
+keys        each type of the modules with [Key]                                        Health, Mana, Gold
+fit         the keys that meet each constraint of T                                    Health, Mana
+closed      ChangeResourceHandler<Health>, ChangeResourceHandler<Mana>
+```
+
+```csharp
+[Key]
+public interface IResource;
+
+public readonly record struct Health(int Value) : IResource;
+public sealed record ChangeResourceCommand<T>(int Delta) : ICommand<int> where T : struct, IResource;
+
+await commands.SendAsync(new ChangeResourceCommand<Health>(-2), ct);
+```
+
+| Rule | Detail |
+|---|---|
+| Key | A struct or a concrete class with `[Key]` (`VSA.Analyzers.Markers`) on the type, on a base class, or on an interface that it implements at any depth. |
+| Closed | Only an open type that derives from the scanned base. Other generic classes of a module do not change. |
+| Parameters | One generic parameter. An open handler with two or more parameters stops the start, with a message. |
+| No key fits | The open type gets no closed type. A send of that command fails with "has no handler". |
+
+The key source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, give the app another source:
+
+```csharp
+await VsaBuilder.Create(args).Keys(new GeneratedKeys()).UseWebHost().Build().RunAsync();
+```
+
 ## The HTTP API
 
 The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core minimal APIs (`MapMethods`).
@@ -131,7 +165,7 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 ## Projects
 
 ```
-Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan
+Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan, IKeySource, ConstraintKeys, KeyTypes
 Handlers/Core/       PipelineBuilder, Pipelines, the runners, Validator, Before, After, PipelineInstaller
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender

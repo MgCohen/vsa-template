@@ -8,6 +8,7 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Arena/Arena.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Answers/Answers.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Signals/Signals.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Modules/Meters/Meters.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/Cards/Cards.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/Resources/Resources.csproj" />
   </ItemGroup>

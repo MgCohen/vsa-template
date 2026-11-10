@@ -12,7 +12,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Core/`     | The framework core: one project for each layer base. Ships as NuGet packages. Plugin modules extend it |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project, the layer references and the slice router (`Tasks/`) |
-| `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build. `Markers/` (VSA.Analyzers.Markers): the attributes that the rules read, for example `[ReflectionBase]` |
+| `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build. `Markers/` (VSA.Analyzers.Markers): the marker attributes that the rules and the module scan read, for example `[ReflectionBase]` and `[Key]` |
 | `framework/Testing/`  | The test bases that ship: `Core/` (the layer map), `Architecture/` (ArchUnitNET), `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
