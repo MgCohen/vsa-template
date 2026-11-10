@@ -106,7 +106,7 @@ Thirteen framework projects also target `netstandard2.1`, for Unity: VSA.Domain,
 
 ## Scaffolding: the vsa tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`. The one exception is `vsa update`: it changes only the VSA versions.
 
 ```bash
 dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, .gitignore, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/, Plugins/
@@ -115,6 +115,7 @@ dotnet vsa add request <Name> -m <Module>        # the request, the response and
 dotnet vsa add command <Name> -m <Module>        # the command, the result and the handler; the command projects if they are missing
 dotnet vsa add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
 dotnet vsa doctor                                # the tool, VSA.Sdk and the VSA.* packages have one version
+dotnet vsa update                                # the tool, VSA.Sdk and the VSA.* packages move to the latest version
 ```
 
 The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction`, `SampleChange` and `SamplePlugin`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path, and the two projects `SampleModule.Contracts.Commands` and `SampleModule.Handlers.Commands`, belong to `add command`. A template file with `SamplePlugin` in its path belongs to `add plugin`. Any other file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.
