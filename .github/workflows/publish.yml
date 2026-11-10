@@ -1,27 +1,44 @@
 # Packs all framework packages with one version and pushes them to GitHub Packages.
-# Push a tag v<version> (for example v0.1.0 or v0.2.0-preview.1) to publish that version.
+# Each push to main publishes the next preview: the highest v<base>-preview.<n> tag plus one, with <base> from
+# Directory.Build.props. The workflow then pushes that tag.
+# Push a tag v<version> (for example v0.1.0 or v0.2.0-preview.1) to publish that version by hand.
 name: Publish
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 
       - name: Get the version from the tag
+        if: github.ref_type == 'tag'
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Get the next preview version
+        if: github.ref_type == 'branch'
+        run: |
+          base=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' Directory.Build.props | head -1)
+          last=$(git tag --list "v$base-preview.*" | sed "s|^v$base-preview\.||" | grep -E '^[0-9]+$' | sort -n | tail -1)
+          echo "VERSION=$base-preview.$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
 
       - name: Test
         run: |
@@ -45,3 +62,9 @@ jobs:
           --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
           --api-key "${{ secrets.GITHUB_TOKEN }}"
           --skip-duplicate
+
+      - name: Tag the version
+        if: github.ref_type == 'branch'
+        run: |
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
