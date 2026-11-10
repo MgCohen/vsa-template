@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+    <ProjectReference Include="../Structure/Structure.csproj" />
+    <ProjectReference Include="../GoodApp/GoodApp.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../BadApp/BadApp.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../GoodApp/bin/Debug/net10.0/GoodApp.dll;../GoodApp/bin/Debug/net10.0/GoodApp.pdb;../BadApp/bin/Debug/net10.0/BadApp.dll;../BadApp/bin/Debug/net10.0/BadApp.pdb" CopyToOutputDirectory="PreserveNewest" Link="apps/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup><Using Include="NUnit.Framework" /></ItemGroup>
+</Project>

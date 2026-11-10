@@ -1,0 +1,3 @@
+<Project>
+  <!-- This proposal builds on its own. It does not use the targets of the repository. -->
+</Project>

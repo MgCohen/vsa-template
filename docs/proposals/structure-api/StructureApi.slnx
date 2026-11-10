@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Fw/Fw.csproj" />
+  <Project Path="GoodApp/GoodApp.csproj" />
+  <Project Path="BadApp/BadApp.csproj" />
+  <Project Path="Structure/Structure.csproj" />
+  <Project Path="Tests/Tests.csproj" />
+</Solution>

@@ -1,0 +1,6 @@
+<Project>
+  <!-- This proposal builds on its own. It does not use the central package versions of the repository. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
