@@ -1,32 +1,59 @@
 # Packs all framework packages with one version and pushes them to GitHub Packages.
-# Push a tag v<version> (for example v0.1.0 or v0.2.0-preview.1) to publish that version.
+# Each push to main publishes the next preview: the highest v<base>-preview.<n> tag plus one, with <base> from
+# Directory.Build.props. The workflow pushes that tag before the packages, so a failed run does not give the
+# same number to a different commit. If the commit already has a preview tag, a rerun uses that version again.
+# Push a tag v<version> (for example v0.1.0 or v0.2.0-preview.1) to publish that version by hand.
 name: Publish
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 
-      - name: Get the version from the tag
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-
       - name: Test
         run: |
           dotnet run solution.cs
           dotnet test VSA.slnx -c Release
+
+      - name: Get the version from the tag
+        if: github.ref_type == 'tag'
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Get the preview version of the commit
+        if: github.ref_type == 'branch'
+        run: |
+          base=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' Directory.Build.props | head -1)
+          existing=$(git tag --points-at HEAD --list "v$base-preview.*" | sort -V | tail -1)
+          if [ -n "$existing" ]; then
+            echo "VERSION=${existing#v}" >> "$GITHUB_ENV"
+            echo "Commit already has $existing: publish it again."
+            exit 0
+          fi
+          last=$(git tag --list "v$base-preview.*" | sed "s|^v$base-preview\.||" | grep -E '^[0-9]+$' | sort -n | tail -1)
+          next="$base-preview.$(( ${last:-0} + 1 ))"
+          git tag "v$next"
+          git push origin "v$next"
+          echo "VERSION=$next" >> "$GITHUB_ENV"
 
       # The same project list as tests/Shared/LocalFeed.cs: each project under framework/.
       # The projects that do not ship set IsPackable to false.
