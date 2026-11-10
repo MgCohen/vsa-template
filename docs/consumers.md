@@ -80,6 +80,7 @@ The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Core/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AppScan` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app starts with `VsaBuilder.Create().UseGenericHost().Build()` (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies.
+- On `netstandard2.1`, `UseGenericHost()` removes the EventLog logger provider, because Mono does not support EventLog. A Unity app does not call `ClearProviders()` for this.
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Open questions

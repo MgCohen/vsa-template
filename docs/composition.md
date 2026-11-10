@@ -183,6 +183,10 @@ A Unity app that uses VContainer writes its own bridge. The bridge copies each `
 
 The generic host uses `Microsoft.Extensions.Hosting` 8.0. A Unity app vendors it and its dependencies, with `VSA.Composition.dll`. The Unity app calls `StopAsync()` on the host when it quits, and `RunAsync()` then ends.
 
+On Windows, `Host.CreateApplicationBuilder` adds the EventLog logger provider. Mono does not support EventLog, so the first `ILogger` in Unity throws `PlatformNotSupportedException`. The `netstandard2.1` build of `GenericVsaHost` removes that provider, and the `net10.0` build keeps it. A Unity app does not clear the logger providers itself.
+
+The Unity check ran in `vsa-consumer-unity` (EditMode tests, Mono). It found the EventLog problem, and the fix above closes it.
+
 ## Non-goals
 
 - No VSA container interface. Reason: `IServiceCollection` and `IServiceProvider` are already container-neutral, and most containers read them.
@@ -193,5 +197,5 @@ The generic host uses `Microsoft.Extensions.Hosting` 8.0. A Unity app vendors it
 
 - Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppScan` can read that list first.
-- Unity check: `AppDomain.GetAssemblies()` with IL2CPP, and `RunAsync` in an `async` `Start` method. Check both in `vsa-consumer-unity`.
+- IL2CPP check: the Unity check ran on Mono only. Run `AppDomain.GetAssemblies()` and `RunAsync` in an `async` `Start` method in an IL2CPP player build of `vsa-consumer-unity`.
 - Architecture definition: `VsaBuilder.Create(definition, args)` can make `VsaArchitecture` public, for other architectures.
