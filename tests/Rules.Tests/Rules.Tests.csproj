@@ -25,7 +25,7 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Rules/Modules/*/*.csproj" />
     <!-- A fixture app with plugin modules, apart from the rule fixtures so that they do not get the plugin modules. -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PluginApp/Modules/*/*.csproj" />
-    <!-- A fixture app with commands, Domain.Shared projects and VsaModuleUses (Cards uses Resources). -->
+    <!-- A fixture app with commands and Domain.Shared projects. -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Modules/*/*.csproj" />
   </ItemGroup>
 </Project>

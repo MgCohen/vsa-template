@@ -1,6 +1,4 @@
-using Resources.Domain.Shared;
-
 namespace Cards.Domain.Shared;
 
-// The published domain of Cards. It holds a key of Resources, a module in VsaModuleUses.
-public sealed record Cost(ResourceKey Resource, int Amount);
+// The published domain of Cards. It uses no other module: the resource is a name, not a key of Resources.
+public sealed record Cost(string Resource, int Amount);
