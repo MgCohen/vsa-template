@@ -8,7 +8,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 |------------------|----------------------------------------------------------------------|
 | `App/Host/`      | The web host. `Program.cs` calls `VsaBuilder.Create(args).UseWebHost()`, which finds the modules and the views |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
-| `Modules/<Name>/`| One module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Feature>/` |
+| `Features/<Name>/`| One feature module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
 | `Tests/`         | The VSA architecture tests, and one unit test file for each module  |
 
@@ -42,6 +42,6 @@ To update VSA, change the version in `global.json`, `dotnet-tools.json` and the 
 
 ## Core principles
 
-- **Organize by feature, not by layer.** Each slice is one folder, `Slices/<Feature>/`, with its request, response, events and handler. A slice has one kind of handler.
+- **Organize by slice, not by layer.** Each slice is one folder, `Slices/<Slice>/`, with its request, response, events and handler. A slice has one kind of handler.
 - **Modules are independent.** A module uses another module only through its contracts and its published domain.
 - **Keep shared code small.** Share code only when two or more slices need it.

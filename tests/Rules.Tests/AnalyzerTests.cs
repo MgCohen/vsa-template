@@ -287,7 +287,7 @@ public sealed class PluginRootRuleTests {
     [Test]
     public Task Module_root_that_inherits_Module_passes() => Analyzer.VerifyIn("Shop", $$"""
         public sealed class ShopModule : VSA.Module.Module { {{Configure}} }
-        """, In("Modules"));
+        """, In("Features"));
 
     [Test]
     public Task Plugin_root_that_inherits_Module_fails() => Analyzer.VerifyIn("Game", $$"""
@@ -298,7 +298,7 @@ public sealed class PluginRootRuleTests {
     [Test]
     public Task Module_root_that_inherits_Plugin_fails() => Analyzer.VerifyIn("Shop", $$"""
         public sealed class {|#0:ShopPlugin|} : VSA.Module.Plugin { {{Configure}} }
-        """, In("Modules"),
+        """, In("Features"),
         Analyzer.Diagnostic(PluginRootRule.Descriptor, 0, "ShopPlugin", "module", "Shop", "Plugin", "Module or Module<TSettings>, or move the module to Plugins/"));
 
     [Test]

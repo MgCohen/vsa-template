@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace VSA.Analyzers;
 
 // VSA1014: the root class of a plugin module (VsaRootFolder = Plugins) inherits Plugin, and the root class of a module
-// (VsaRootFolder = Modules) does not. The host configures the plugin modules first, and the name of the base says which one it is.
+// (VsaRootFolder = Features) does not. The host configures the plugin modules first, and the name of the base says which one it is.
 public sealed class PluginRootRule() : VsaAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "VSA1014",
@@ -16,7 +16,7 @@ public sealed class PluginRootRule() : VsaAnalyzerRule(Descriptor) {
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         var options = start.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
-        if (!options.TryGetValue("build_property.VsaRootFolder", out var root) || root is not ("Plugins" or "Modules")) {
+        if (!options.TryGetValue("build_property.VsaRootFolder", out var root) || root is not ("Plugins" or "Features")) {
             return;
         }
         var module = start.Compilation.GetTypeByMetadataName("VSA.Module.Module");

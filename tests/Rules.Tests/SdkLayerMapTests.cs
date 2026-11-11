@@ -98,7 +98,7 @@ public sealed partial class SdkLayerMapTests {
     [GeneratedRegex(@"^\$\(VsaModuleDir\)Projects/\*\.(.+)\.csproj$")]
     private static partial Regex OwnModule();
 
-    // $(VsaModulesDir)*/Projects/*.<Layer>.csproj: a layer of any module.
-    [GeneratedRegex(@"^\$\(VsaModulesDir\)\*/Projects/\*\.(.+)\.csproj$")]
+    // $(VsaFeaturesDir)*/Projects/*.<Layer>.csproj: a layer of any module.
+    [GeneratedRegex(@"^\$\(VsaFeaturesDir\)\*/Projects/\*\.(.+)\.csproj$")]
     private static partial Regex AnyModule();
 }

@@ -6,7 +6,7 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, req
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | Root files, `App/Host`, `App/Views`, `Tests/`, `Modules/`, `Plugins/` | None |
+| `new app <Name>` | Root files, `App/Host`, `App/Views`, `Tests/`, `Features/`, `Plugins/` | None |
 | `add module <Name>` | Layers, published domain, status request, presenter, page, unit test | Solution, with `dotnet sln add` |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler. If the module has no command projects: `Contracts.Commands` and `Handlers.Commands` | Solution, with `dotnet sln add`, if the tool writes the command projects |
@@ -16,15 +16,15 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, req
 
 Rules for all commands:
 
-- A name is a PascalCase C# identifier. Names that start with `VSA` are forbidden. These names are also forbidden, because they break the build: `App`, `Views`, `Pages`, `Home`, `Modules`, `Plugins`, `System`, `Microsoft`.
+- A name is a PascalCase C# identifier. Names that start with `VSA` are forbidden. These names are also forbidden, because they break the build: `App`, `Views`, `Pages`, `Home`, `Features`, `Plugins`, `System`, `Microsoft`.
 - A name cannot contain a template name (`SampleApp`, `SampleModule`, `SampleAction`, `SampleChange`, `SamplePlugin`).
 - A request name cannot end with `Request`, `Response` or `Handler`. A command name cannot end with `Command`, `Result` or `Handler`.
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
-- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Modules/<Name>/` exists: the two would have the same assembly names.
+- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same assembly names.
 - `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
-- `new app` writes a `.gitignore` for the build folders, also `bin~/` and `obj~/` of the layer projects in `Modules/<Module>/Projects/`.
+- `new app` writes a `.gitignore` for the build folders, also `bin~/` and `obj~/` of the layer projects in `Features/<Feature>/Projects/`.
 
 ## Template format A
 
@@ -33,14 +33,14 @@ framework/Tooling/Cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ App/Host/, App/Views/              new app
 ├─ App/Views/Pages/SampleModulePage.razor          add module
-├─ Modules/SampleModule/**                         add module
+├─ Features/SampleModule/**                         add module
 │  ├─ Projects/SampleModule.<Layer>.csproj         add module (eight layer projects, with Domain.Shared)
 │  ├─ Projects/SampleModule.*.Commands.csproj      add command (Contracts.Commands, Handlers.Commands)
 │  ├─ Domain/Shared/SampleModuleKey.cs             add module (the published domain)
 │  ├─ Slices/GetStatus/**                          add module (the status request)
 │  ├─ Slices/SampleAction/**                       add request
 │  └─ Slices/SampleChange/**                       add command
-├─ Modules/.gitkeep                                new app (keeps the empty Modules/ folder)
+├─ Features/.gitkeep                                new app (keeps the empty Features/ folder)
 ├─ Plugins/SamplePlugin/**                         add plugin (root, Contracts/Commands/SamplePluginStep.cs)
 ├─ Plugins/.gitkeep                                new app (keeps the empty Plugins/ folder)
 ├─ Tests/App.Tests.csproj                         new app (the architecture tests come from the package)
@@ -55,7 +55,7 @@ The path of a template file gives its command. The tool uses the first rule that
 | 1 | Contains `SampleAction` | `add request` | `SampleAction`, `SampleModule` |
 | 2 | Contains `SampleChange`, or is `Projects/SampleModule.Contracts.Commands.csproj` or `Projects/SampleModule.Handlers.Commands.csproj` | `add command` | `SampleChange`, `SampleModule` |
 | 3 | Contains `SamplePlugin` | `add plugin` | `SamplePlugin` |
-| 4 | Under `Modules/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
+| 4 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
 | 5 | Other | `new app` | `SampleApp` |
 
 `ScaffoldingTests.EachTemplateFileHasOneCommand` lists each template file with its command. If you add a template file, add it to this test.
