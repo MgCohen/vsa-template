@@ -55,7 +55,7 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A module layer | The same layer of each plugin module. A module root gets each plugin root |
 | A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each plugin module |
 | A plugin event handler | Also the events of its own plugin module. The `Handlers/Events` of a plugin module in `<VsaPluginUses>` gives the events of that plugin module |
-| A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and plugin module |
+| A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and plugin module, and the `Domain` and the `Infrastructure` of each plugin module |
 | A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and plugin module |
 | A module `Presenters` | Also the `Domain.Shared` of each module and plugin module |
 | A module `Domain.Shared` | No other module. A published domain does not depend on another module |
