@@ -19,6 +19,7 @@ static class VsaArchitecture {
         RequestHandlerInstaller.Install(services, types);
         services.AddScoped<IBus>(provider => new InProcessBus(provider));
         PresenterInstaller.Install(services, types);
+        ModuleTypeInstaller.Install(services, types);
     }
 
     internal static void ConfigureModules(IServiceCollection services, IConfiguration configuration, ModuleTypes types) {

@@ -7,4 +7,7 @@
     <PackageReference Include="System.ComponentModel.Annotations" />
     <PackageReference Include="System.Reflection.Metadata" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VSA.Composition" />
+  </ItemGroup>
 </Project>

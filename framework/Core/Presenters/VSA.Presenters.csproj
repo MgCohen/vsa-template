@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="../../Analyzers/Markers/VSA.Analyzers.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Contracts/Requests/VSA.Contracts.Requests.csproj" />
     <!-- A presenter gets the events of the modules (IPresenterEvent). It does not publish them (VSA1004). -->
     <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" />

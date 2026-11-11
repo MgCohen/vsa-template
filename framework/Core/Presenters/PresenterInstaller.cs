@@ -10,12 +10,8 @@ static class PresenterInstaller {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
-        foreach (var (_, presenter) in presenters) {
-            if (ShowsEvents(presenter)) {
-                services.AddScoped(presenter, provider => Connected(provider, presenter));
-            } else {
-                services.AddScoped(presenter);
-            }
+        foreach (var (_, presenter) in presenters.Where(p => ShowsEvents(p.Implementation))) {
+            services.AddScoped(presenter, provider => Connected(provider, presenter));
         }
     }
 

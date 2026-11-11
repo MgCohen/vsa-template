@@ -1,8 +1,10 @@
+using VSA.Analyzers.Markers;
 using VSA.Contracts;
 using VSA.Contracts.Requests;
 
 namespace VSA.Handlers.Requests;
 
+[AutoRegister]
 public abstract class RequestHandler<TRequest, TResponse> : IHandler<TRequest>
     where TRequest : class, IRequest<TResponse>
     where TResponse : IResponse {

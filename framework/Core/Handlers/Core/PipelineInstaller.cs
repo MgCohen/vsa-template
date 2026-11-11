@@ -9,9 +9,6 @@ static class PipelineInstaller {
         var catalog = new PipelineCatalog(types);
         services.AddSingleton(catalog);
         services.TryAddSingleton<IMessageIds, SequentialMessageIds>();
-        foreach (var (_, type) in catalog.Validators.Concat(catalog.Befores).Concat(catalog.Afters)) {
-            services.TryAddScoped(type);
-        }
         services.TryAddSingleton(provider => new Pipelines(provider, provider.GetServices<PipelineRegistration>()));
     }
 }
