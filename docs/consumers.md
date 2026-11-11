@@ -1,12 +1,13 @@
 # Release and consumers
 
-A tag `v<version>` publishes all VSA packages to GitHub Packages with that version. Two public consumer repos use the published packages: a .NET app and a Unity project. They are the release check: the local samples build VSA from source, and the consumers use only what ships.
+Each push to `main` publishes all VSA packages to GitHub Packages as the next preview. A tag `v<version>` publishes a stable version. Two public consumer repos use the published packages: a .NET app and a Unity project. They are the release check: the local samples build VSA from source, and the consumers use only what ships.
 
-## Release flow: a tag reaches the consumers
+## Release flow: a merge reaches the consumers
 
 ```mermaid
 flowchart LR
-    T[Tag v version] --> W[Publish workflow]
+    M[Merge to main] --> W[Publish workflow]
+    T[Tag v version] --> W
     W --> F[GitHub Packages feed]
     F --> D[vsa-consumer-dotnet]
     F --> V[vendor.cs]
@@ -16,16 +17,22 @@ flowchart LR
 | Item | Value |
 |---|---|
 | Workflow | `.github/workflows/publish.yml` |
-| Steps | Test, pack each project under `framework/`, push |
+| Steps | Test, get the version, pack each project under `framework/`, push |
+| Version on `main` | `<base>-preview.<n>`: `<base>` is `<Version>` in `Directory.Build.props`, `<n>` is the highest preview tag plus one |
+| Version on a tag | The tag name without `v` |
+| Tag on `main` | The workflow pushes `v<base>-preview.<n>` before the packages. A rerun of the same commit uses that tag again |
 | Feed | `https://nuget.pkg.github.com/MgCohen/index.json` |
 | Package visibility | Public, the same as this repository |
 
-To release:
+A preview needs no manual step: merge the change to `main`.
 
-1. Merge the change to `main`.
-2. Tag the merge commit: `git tag -a v0.2.0 -m v0.2.0`.
-3. Push the tag: `git push origin v0.2.0`.
-4. Update the VSA version in each consumer repo, then make sure that its checks pass.
+To release a stable version:
+
+1. Tag a commit on `main`: `git tag -a v0.2.0 -m v0.2.0`.
+2. Push the tag: `git push origin v0.2.0`.
+3. Set `<Version>` in `Directory.Build.props` to the next version, for example `0.3.0`. If you do not, the next previews (`0.2.0-preview.<n>`) sort below `0.2.0`, and consumers do not get them.
+
+After a new version, update the VSA version in each consumer repo, then make sure that its checks pass.
 
 ## Feed access
 

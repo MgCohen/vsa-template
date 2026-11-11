@@ -24,7 +24,6 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
 | `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
 | `VSA0006` | Build | No `Compile` item written by hand, no `.cs` file that no project compiles, and no `Slices/` in a plugin module. |
-| `VSA0007` | Build | `VsaModuleUses` is only in a module root, and it names other modules that have a `Domain.Shared` project. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
 | `VSA1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
@@ -58,16 +57,25 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A plugin event handler | Also the events of its own plugin module. The `Handlers/Events` of a plugin module in `<VsaPluginUses>` gives the events of that plugin module |
 | A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and plugin module |
 | A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and plugin module |
-| A module `Domain.Shared` or `Presenters` | Also the `Domain.Shared` of each module in `<VsaModuleUses>`. `VSA0007` checks the names |
+| A module `Presenters` | Also the `Domain.Shared` of each module and plugin module |
+| A module `Domain.Shared` | No other module. A published domain does not depend on another module |
 | A presenter (`Presenters`) | The events of its own module only. A view that shows more than one module shows the presenter of each module |
 | A plugin layer | The same layer of each plugin module in `<VsaPluginUses>` (names, with `;`). `VSA0002` checks the names |
 | A plugin module | No project of a module |
 
 A plugin module uses another plugin module only if it names it. Two plugin modules that name each other are a cycle, and MSBuild stops the build. A project in a `Modules` or `Plugins` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
 
-`VSA2001` checks a plugin module as a base: a module project may use what the map permits of a base, and a plugin project uses no module. The module root records its root folder (`VsaRootFolder`), and `ModuleRoot.IsPlugin` reads it.
+`VSA2001` checks a plugin module as a base: a module project may use what the map permits of a base, and a plugin project uses no module. `ModuleRoot.IsPlugin` is true when the root class inherits `Plugin`. `VSA1014` makes the root class agree with the root folder at build time.
 
-`VSA2001` permits a `listed` edge of the layer map only to a module in `<VsaModuleUses>`. The module root records each name (metadata `VsaModuleUse`), and `ModuleRoot.Uses` reads them. A presenter can compile against the `Domain.Shared` of each module through its own contracts, because the contracts reference each `Domain.Shared` project. So `VSA2001` is the check for the listed edge, not the compiler.
+The host and `VSA2001` find the module roots and their layer projects from the types and the assembly names, with no build records:
+
+| Fact | Source |
+|---|---|
+| Module root | An assembly with a public, top-level class that inherits `Module` or `Plugin` |
+| Plugin module | The root class inherits `Plugin` |
+| Layer projects | Each assembly named `<Module>.<Layer>` that loads, for each layer in `ModuleRoot.LayerNames` |
+
+A test project such as `Notes.Tests` is not a layer project, because `Tests` is not a layer name. A nested or internal class that inherits `Module`, for example in a test, does not make a module root. A test checks that `ModuleRoot.LayerNames` has the module layers of the layer map.
 
 The host configures the plugin modules first, then the other modules. In each group the order is by name, not by `VsaPluginUses`. The host gets the plugin roots through the module roots, so an app with no module does not load its plugin modules.
 

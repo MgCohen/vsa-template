@@ -1,6 +1,6 @@
 # Scaffolding: the vsa tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code (`dotnet run solution.cs` makes `VSA.slnx`). The tool, VSA.Sdk and the VSA.* packages have one version, and `vsa doctor` finds a mismatch.
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code (`dotnet run solution.cs` makes `VSA.slnx`). The tool, VSA.Sdk and the VSA.* packages have one version, `vsa doctor` finds a mismatch, and `vsa update` moves all to the latest version.
 
 ## Commands
 
@@ -12,6 +12,7 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, req
 | `add command <Name> -m <Module>` | Command, result, handler. If the module has no command projects: `Contracts.Commands` and `Handlers.Commands` | Solution, with `dotnet sln add`, if the tool writes the command projects |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts.Commands` with the base command `<Name>Step<TResult>` | Solution, with `dotnet sln add` |
 | `doctor` | None | None |
+| `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the VSA versions in `global.json` and the project files |
 
 Rules for all commands:
 
@@ -82,7 +83,7 @@ The architecture tests fail until the app has a module (`The_app_has_modules`).
 
 ## One version
 
-`new app` writes the version of the tool to these files. `vsa doctor` reads them and fails if two versions are different.
+`new app` writes the version of the tool to these files. `vsa doctor` reads them and fails if two versions are different. `vsa update` writes one version to all of them.
 
 | File | Item |
 |---|---|
@@ -90,6 +91,16 @@ The architecture tests fail until the app has a module (`The_app_has_modules`).
 | `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
 | `global.json` | `msbuild-sdks` → `VSA.Sdk` |
 | Each `.csproj` and `Directory.*.props` | Each `VSA.Sdk` pin (`Sdk="VSA.Sdk/1.0.0"`, `<Sdk Name="VSA.Sdk" Version="1.0.0" />`) and each `VSA.*` package reference. A reference with no version uses its `PackageVersion` |
+
+## Update
+
+`vsa update` moves an app to a new VSA version:
+
+1. `dotnet tool update vsa.cli --local` changes the tool manifest. With no `--version`, it gets the latest version on the feeds of the app. If the app uses a preview, it also accepts previews. With `--version`, it gets that version, also a lower one.
+2. The tool writes the version of the manifest to `global.json` and to each place in the table above. It changes no other item. A package reference with no version keeps its `PackageVersion`.
+3. The tool shows the changed files. Then run `dotnet build`.
+
+The running tool is the old version. So run `vsa doctor` after the update, not in the same command.
 
 ## Empty Domain
 

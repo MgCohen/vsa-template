@@ -16,13 +16,7 @@ A module project is only `<Project Sdk="VSA.Sdk" />`. VSA.Sdk gives each project
 
 A command goes from one module to another module. It has one handler and one result. A module sends it with `ICommandSender`. The command is `<Name>Command`, its result `<Name>Result` and its handler `<Name>Handler`, in `Slices/<Name>/`.
 
-`Domain/Shared/` is the published domain of a module: the project `<Module>.Domain.Shared`. Other modules read its types, for example the keys in a command. A type there is immutable and holds data only, with no methods (`VSA1005` to `VSA1007`). The rest of `Domain/` stays private to the module. If the published domain or the presenters of a module use the published domain of other modules, list them in the module root project:
-
-```xml
-<PropertyGroup>
-  <VsaModuleUses>Resources;Cards</VsaModuleUses>
-</PropertyGroup>
-```
+`Domain/Shared/` is the published domain of a module: the project `<Module>.Domain.Shared`. Other modules read its types, for example the keys in a command. A type there is immutable and holds data only, with no methods (`VSA1005` to `VSA1007`). The rest of `Domain/` stays private to the module. A published domain uses only its own module. The messages, handlers and presenters of a module can use the published domain of all modules.
 
 A plugin module is for base types of the app, as the VSA framework is the base of each layer: for example a command base in `Plugins/Game/Contracts/Commands/GameStep.cs`. A plugin module has the layout of the framework: one folder for each layer, for example `Contracts/Commands/` and `Handlers/Commands/`, and no `Slices/` (`VSA0006`). Each layer of each module gets the same layer of each plugin module. A plugin module never uses a module. A plugin layer that uses another plugin module names it in `<VsaPluginUses>`, in its project file. Its root has one class that inherits `Plugin` (`VSA1014`). The host configures the plugin modules first, by name, and it loads them through the modules.
 

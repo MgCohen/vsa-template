@@ -11,8 +11,7 @@ public enum Edge {
 }
 
 // One edge to a target layer, by name. AnyModule: a module project may use X of all modules, not only its own.
-// Listed: a module project may use X of its own module and of each module that its root lists in VsaModuleUses.
-public sealed record LayerEdge(string Target, Edge Edge, bool AnyModule, bool Listed = false);
+public sealed record LayerEdge(string Target, Edge Edge, bool AnyModule);
 
 // One layer part: its base project VSA.{Name} and the module or app projects of the layer.
 // References: what the layer may use.
@@ -23,12 +22,12 @@ public sealed class Layer(string name) {
     public string BaseAssembly => $"VSA.{Name}";
     public IReadOnlyList<LayerEdge> References => references;
 
-    public Layer Reference(Layer target, Edge edge = Edge.Both, bool anyModule = false, bool listed = false) =>
-        Reference(target.Name, edge, anyModule, listed);
+    public Layer Reference(Layer target, Edge edge = Edge.Both, bool anyModule = false) =>
+        Reference(target.Name, edge, anyModule);
 
-    // By name: for a layer that the map declares later, or for the layer itself.
-    public Layer Reference(string target, Edge edge = Edge.Both, bool anyModule = false, bool listed = false) {
-        references.Add(new(target, edge, anyModule, listed));
+    // By name: for a layer that the map declares later.
+    public Layer Reference(string target, Edge edge = Edge.Both, bool anyModule = false) {
+        references.Add(new(target, edge, anyModule));
         return this;
     }
 

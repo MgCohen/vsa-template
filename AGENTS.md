@@ -100,13 +100,13 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 ## Release and consumers
 
-A tag `v<version>` publishes all packages to GitHub Packages (`.github/workflows/publish.yml`). Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass.
+Each push to `main` publishes all packages to GitHub Packages as the next preview, `<base>-preview.<n>` (`.github/workflows/publish.yml`). A tag `v<version>` publishes a stable version. After a stable tag, set `<Version>` in `Directory.Build.props` to the next version. Two public repos use the published packages: `vsa-consumer-dotnet` and `vsa-consumer-unity`. After a release, update the VSA version in each one and make sure that its checks pass. See `docs/consumers.md`.
 
 Thirteen framework projects also target `netstandard2.1`, for Unity: VSA.Domain, VSA.Contracts, VSA.Handlers, VSA.Contracts.Requests, VSA.Contracts.Events, VSA.Contracts.Commands, VSA.Handlers.Requests, VSA.Handlers.Events, VSA.Handlers.Commands, VSA.Presenters, VSA.Infrastructure, VSA.Module and VSA.Composition (`VsaPortableLayer` in `Directory.Build.props`). A module defines a request, a command, an event or a presenter one time, and the same code works on all hosts. Only the transports (VSA.Host, VSA.Views) need ASP.NET Core. For that target, use only APIs of `netstandard2.1`, and the 8.0 `Microsoft.Extensions` packages. See `docs/consumers.md`.
 
 ## Scaffolding: the vsa tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`.
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file, except with `dotnet sln add`. The one exception is `vsa update`: it changes only the VSA versions.
 
 ```bash
 dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, .gitignore, dotnet-tools.json, <Name>.slnx, AGENTS.md, App/, Modules/, Plugins/
@@ -115,6 +115,7 @@ dotnet vsa add request <Name> -m <Module>        # the request, the response and
 dotnet vsa add command <Name> -m <Module>        # the command, the result and the handler; the command projects if they are missing
 dotnet vsa add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
 dotnet vsa doctor                                # the tool, VSA.Sdk and the VSA.* packages have one version
+dotnet vsa update                                # the tool, VSA.Sdk and the VSA.* packages move to the latest version
 ```
 
 The templates are in `framework/Tooling/Cli/Templates/`. They are one app that builds in `VSA.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction`, `SampleChange` and `SamplePlugin`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path, and the two projects `SampleModule.Contracts.Commands` and `SampleModule.Handlers.Commands`, belong to `add command`. A template file with `SamplePlugin` in its path belongs to `add plugin`. Any other file under `Modules/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `VSA.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.

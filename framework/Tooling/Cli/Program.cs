@@ -9,6 +9,7 @@ try {
         ["add", "request", var name, .. var rest] => AddRequestCommand.Run(name, Options.Read(rest, "-m", "--module") is [.., var module] ? module : null),
         ["add", "command", var name, .. var rest] => AddCommandCommand.Run(name, Options.Read(rest, "-m", "--module") is [.., var module] ? module : null),
         ["doctor"] => DoctorCommand.Run(),
+        ["update", .. var rest] => UpdateCommand.Run(Options.Read(rest, "--version") is [.., var version] ? version : null),
         ["--version"] => Write(ToolVersion.Current),
         [] or ["-h" or "--help" or "help"] => Write(Usage),
         _ => throw new VsaException($"Unknown command: {string.Join(' ', args)}{Environment.NewLine}{Environment.NewLine}{Usage}"),
@@ -32,6 +33,7 @@ partial class Program {
           vsa add request <Name> -m <Module>     Adds a request, its response and its handler.
           vsa add command <Name> -m <Module>     Adds a command, its result and its handler.
           vsa doctor                             Makes sure that the tool, VSA.Sdk and the packages have one version.
+          vsa update [--version <version>]       Moves the tool, VSA.Sdk and the packages to the latest version, or to <version>.
           vsa --version                          Shows the version of the tool.
         """;
 }

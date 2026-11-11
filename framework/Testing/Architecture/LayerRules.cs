@@ -16,7 +16,7 @@ static class LayerRules {
     // The base assembly of each layer name, or null if it does not load. Each base loads one time.
     static readonly ConcurrentDictionary<string, Assembly?> BaseAssemblies = new();
 
-    // The module roots and the layer projects that each root recorded at build time.
+    // The module roots and the layer projects of each root.
     public static IReadOnlyList<ModuleProject> Projects(VsaApp app) => [.. app.Modules.SelectMany(module =>
         module.Layers.Select(name => new ModuleProject(
             Assembly.Load(name), module, name.StartsWith(module.Name + ".", StringComparison.Ordinal) ? name[(module.Name.Length + 1)..] : name))
@@ -51,20 +51,17 @@ static class LayerRules {
 
     // A plugin module is a base, as the framework is: each project may use what the map permits of a base.
     // A plugin module uses no project of a module that is not a plugin.
-    // Listed: the target module is in the VsaModuleUses list of the source module root. The case of the name does not count,
-    // as for MSBuild on Windows.
     static bool Permits(Layer layer, ModuleProject source, ModuleProject target) =>
         target.Module == source.Module ? Permits(layer, target.Layer, own: true, module: true)
         : target.Module.IsPlugin ? Permits(layer, target.Layer, own: true, module: false)
-        : !source.Module.IsPlugin && Permits(layer, target.Layer, own: false, module: true, listed: source.Module.Uses.Contains(target.Module.Name, StringComparer.OrdinalIgnoreCase));
+        : !source.Module.IsPlugin && Permits(layer, target.Layer, own: false, module: true);
 
     // A module project always uses its own base. Each edge permits the base of its target.
-    // A module target needs an edge that is not BaseOnly, and the same module unless the edge is AnyModule,
-    // or the edge is Listed and the source module lists the target module.
-    static bool Permits(Layer source, string target, bool own, bool module, bool listed = false) =>
+    // A module target needs an edge that is not BaseOnly, and the same module unless the edge is AnyModule.
+    static bool Permits(Layer source, string target, bool own, bool module) =>
         (!module && target == source.Name)
         || source.References.Any(e => e.Target == target
-            && (!module || (e.Edge != Edge.BaseOnly && (own || e.AnyModule || (e.Listed && listed)))));
+            && (!module || (e.Edge != Edge.BaseOnly && (own || e.AnyModule))));
 
     static Assembly? Base(Layer layer) => BaseAssemblies.GetOrAdd(layer.BaseAssembly, static name => {
         try {

@@ -7,9 +7,8 @@ namespace VSA.Testing.Core;
 // VSA.Sdk sets the same references in MSBuild (VSA.Layers.targets). Keep the two the same.
 public static class Layers {
     // The published domain of a module: keys, ids and components that other modules read (Domain/Shared/).
-    // It uses the published domain of each module that its module root lists in VsaModuleUses.
-    public static readonly Layer DomainShared = new Layer("Domain.Shared")
-        .Reference("Domain.Shared", Edge.ModuleOnly, listed: true);
+    // It uses no other module: the published domain of one module does not depend on another module.
+    public static readonly Layer DomainShared = new("Domain.Shared");
 
     public static readonly Layer Domain = new Layer("Domain")
         .Reference(DomainShared, Edge.ModuleOnly);
@@ -52,10 +51,10 @@ public static class Layers {
         .Reference(ContractsCommands, anyModule: true);
 
     // A presenter sees the events of its own module only (IPresenterEvent). A view that shows more than one module
-    // shows the presenter of each module. A presenter reads the published domain of the listed modules.
+    // shows the presenter of each module. A presenter reads the published domain of all modules.
     // VSA1004 stops a presenter from publishing events.
     public static readonly Layer Presenters = new Layer("Presenters")
-        .Reference(DomainShared, Edge.ModuleOnly, listed: true)
+        .Reference(DomainShared, Edge.ModuleOnly, anyModule: true)
         .Reference(ContractsRequests)
         .Reference(ContractsEvents, Edge.ModuleOnly);
 

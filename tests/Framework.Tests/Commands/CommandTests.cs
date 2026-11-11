@@ -35,7 +35,7 @@ public sealed class CommandTests {
         using var app = await Start(new CardsModule(), new ResourcesModule());
         await using var scope = app.Services.CreateAsyncScope();
 
-        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
+        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana.Name, 3)), default);
 
         Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }
@@ -47,7 +47,7 @@ public sealed class CommandTests {
         await using var scope = app.Services.CreateAsyncScope();
         var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
 
-        var error = Assert.ThrowsAsync<InvalidOperationException>(() => sender.SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default));
+        var error = Assert.ThrowsAsync<InvalidOperationException>(() => sender.SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana.Name, 3)), default));
 
         Assert.That(error!.Message, Does.StartWith("Resources.Slices.ChangeResource.ChangeResourceCommand has no handler"));
     }
