@@ -141,6 +141,7 @@ await commands.SendAsync(new ChangeResourceCommand<Health>(-2), ct);
 |---|---|
 | Key | A struct or a concrete class with `[Key]` (`VSA.Analyzers.Markers`) on the type, on a base class, or on an interface that it implements at any depth. |
 | Closed | Only an open type that derives from the scanned base. Other generic classes of a module do not change. |
+| Constraints | `class`, `struct`, `unmanaged` and each type constraint. A struct with a reference field does not meet `unmanaged`. |
 | Parameters | One generic parameter. An open handler with two or more parameters stops the start, with a message. |
 | No key fits | The open type gets no closed type. A send of that command fails with "has no handler". |
 | Services | `ModuleTypes` is a singleton service. A plugin with its own base, for example a primitive handler base, reads its closed types with `Implementations(typeof(TBase))`. |

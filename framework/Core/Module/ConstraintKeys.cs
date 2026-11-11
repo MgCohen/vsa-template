@@ -20,7 +20,28 @@ public sealed class ConstraintKeys : IKeySource {
         if (constraints.Any(c => !c.ContainsGenericParameters && !c.IsAssignableFrom(candidate))) {
             return false;
         }
+        if (IsUnmanagedParameter(parameter) && !IsUnmanaged(candidate, [])) {
+            return false;
+        }
         return CanClose(parameter.DeclaringType, candidate);
+    }
+
+    static bool IsUnmanagedParameter(Type parameter) =>
+        parameter.GetCustomAttributesData()
+            .Any(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.IsUnmanagedAttribute");
+
+    static bool IsUnmanaged(Type type, HashSet<Type> seen) {
+        if (type.IsPrimitive || type.IsEnum || type.IsPointer) {
+            return true;
+        }
+        if (!type.IsValueType || type.IsGenericTypeDefinition) {
+            return false;
+        }
+        if (!seen.Add(type)) {
+            return true;
+        }
+        return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .All(f => IsUnmanaged(f.FieldType, seen));
     }
 
     static bool CanClose(Type? definition, Type candidate) {

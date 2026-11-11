@@ -119,6 +119,16 @@ public sealed class OpenGenericTests {
         Assert.That(keys, Is.EquivalentTo(new[] { typeof(StructOfMarkedInterface) }));
     }
 
+    [Test]
+    public void The_constraint_keys_meet_an_unmanaged_constraint_only_with_unmanaged_structs() {
+        var parameter = typeof(OnlyUnmanaged<>).GetGenericArguments()[0];
+        Type[] candidates = [typeof(MarkedStruct), typeof(MarkedStructWithText), typeof(MarkedStructWithNumbers)];
+
+        var keys = new ConstraintKeys().KeysFor(parameter, candidates);
+
+        Assert.That(keys, Is.EquivalentTo(new[] { typeof(MarkedStruct), typeof(MarkedStructWithNumbers) }));
+    }
+
     static VsaBuilder App() => VsaBuilder.Create().UseGenericHost().Modules(new MetersModule());
 
     [Key]
@@ -140,6 +150,14 @@ public sealed class OpenGenericTests {
     public readonly record struct UnmarkedStruct;
 
     [Key]
+    public readonly record struct MarkedStructWithText(string Text);
+
+    [Key]
+    public readonly record struct MarkedStructWithNumbers(int Count, Zone Zone, MarkedStruct Inner);
+
+    public enum Zone { Hand }
+
+    [Key]
     public abstract class MarkedBaseClass;
 
     public sealed class ClassOfMarkedBaseClass : MarkedBaseClass;
@@ -150,4 +168,6 @@ public sealed class OpenGenericTests {
     }
 
     sealed class OnlyMarkedStructs<T> where T : struct, IMarked;
+
+    sealed class OnlyUnmanaged<T> where T : unmanaged;
 }
