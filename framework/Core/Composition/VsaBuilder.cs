@@ -11,6 +11,7 @@ public sealed class VsaBuilder {
     readonly List<Action<IServiceCollection>> services = [];
     IVsaHost? host;
     IReadOnlyList<VSA.Module.Module>? modules;
+    IKeySource keys = new ConstraintKeys();
 
     VsaBuilder(string[] args) {
         this.args = args;
@@ -27,6 +28,11 @@ public sealed class VsaBuilder {
 
     public VsaBuilder Modules(params VSA.Module.Module[] given) {
         modules = given;
+        return this;
+    }
+
+    public VsaBuilder Keys(IKeySource given) {
+        keys = given ?? throw new ArgumentNullException(nameof(given));
         return this;
     }
 
@@ -56,6 +62,7 @@ public sealed class VsaBuilder {
     void Compose(IServiceCollection target, IConfiguration configuration, ModuleTypes types) {
         target.TryAddSingleton(configuration);
         target.AddLogging();
+        target.AddSingleton(types);
         VsaArchitecture.InstallLayers(target, types);
         foreach (var configure in services) {
             configure(target);
@@ -63,5 +70,5 @@ public sealed class VsaBuilder {
         VsaArchitecture.ConfigureModules(target, configuration, types);
     }
 
-    ModuleTypes Types() => new(modules ?? VsaArchitecture.Modules());
+    ModuleTypes Types() => new(modules ?? VsaArchitecture.Modules(), keys);
 }
