@@ -149,6 +149,11 @@ public sealed class SharedTypeBaseRuleTests {
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "CardKey", "Card.TypeKeys.TypeKey", "Card.TypeKeys.TypeKey"));
 
     [Test]
+    public Task Marker_interface_of_VSA_passes() => Analyzer.VerifyIn(Shared.Assembly, """
+        public readonly record struct Mana(int Value) : VSA.Analyzers.Markers.ITypeArgument;
+        """, ("VSA.Analyzers.Markers", "namespace VSA.Analyzers.Markers { public interface ITypeArgument { } }"));
+
+    [Test]
     public Task Base_in_allowed_bases_passes() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record Rank(int Value) : IEquatable<int>, IComparable<Rank> {
             public bool Equals(int other) => Value == other;

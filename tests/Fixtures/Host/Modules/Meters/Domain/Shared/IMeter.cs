@@ -2,5 +2,5 @@ using VSA.Analyzers.Markers;
 
 namespace Meters.Domain.Shared;
 
-[Key]
+[TypeArgument]
 public interface IMeter;

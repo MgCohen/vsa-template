@@ -6,13 +6,9 @@ namespace VSA.Handlers.Events;
 
 static class EventHandlerInstaller {
     internal static void Install(IServiceCollection services, ModuleTypes types) {
-        var handlers = types.Implementations(typeof(IntegrationEventHandler<>));
         services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
         services.AddDefaultPipeline(
             PipelineKind.Events,
             new PipelineBuilder<IntegrationEvent>().HandlersOf(typeof(IntegrationEventHandler<>)));
-        foreach (var (service, handler) in handlers) {
-            services.AddScoped(service, handler);
-        }
     }
 }

@@ -1,7 +1,9 @@
+using VSA.Analyzers.Markers;
 using VSA.Contracts;
 
 namespace VSA.Handlers;
 
+[AutoRegister]
 public abstract class Before<TMessage> : IBeforeCall where TMessage : class {
     public virtual int Order => 0;
 

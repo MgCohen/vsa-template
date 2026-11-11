@@ -44,7 +44,7 @@ VsaBuilder.Build()
 ├─ host.Install                    web: the request handlers to map, views
 ├─ Compose (the same as AddVsa)
 │  ├─ IConfiguration, AddLogging   only if the host did not add them
-│  ├─ VSA layer installers         events, commands, requests, in-process bus, presenters
+│  ├─ VSA layer installers         events, commands, requests, in-process bus, presenters, module types
 │  ├─ Services(...) callbacks      app registrations
 │  └─ Module.Configure             each module, last
 └─ host.Build                      web: Build, map one route for each request, map the views
@@ -101,70 +101,71 @@ public interface IRoutedRequest {
 
 The module roots are in order: the plugin modules first, then by name. If the app has a views root, the views run in that process. Two views roots stop the build.
 
-## Message installers have one shape
+## One discovery path
 
-Each layer has one internal static installer in its own project. Only VSA.Composition and VSA.Host call them (`InternalsVisibleTo`). Each message installer does the same 3 steps:
-
-| Step | Events | Commands | Requests |
-|---|---|---|---|
-| 1. Find | `IntegrationEventHandler<>` | `CommandHandler<,>` | `RequestHandler<,>` |
-| 2. Check | None | One handler for each command | One handler for each request |
-| 3. Register | Publisher, each handler, the default pipeline | Sender, each handler, the default pipeline | Each handler, the default pipeline |
-
-`PipelineInstaller` (VSA.Handlers) runs first: it finds the validators and the Before and After events of the modules. Each send goes through a pipeline (`docs/handler-pipeline.md`).
-
-```csharp
-static class CommandHandlerInstaller {
-    internal static void Install(IServiceCollection services, ModuleTypes types) {
-        var handlers = types.Implementations(typeof(CommandHandler<,>));
-        EnsureOneHandlerForEachCommand(handlers);
-        services.AddScoped<ICommandSender, InProcessCommandSender>();
-        services.AddDefaultPipeline(
-            PipelineKind.Commands, new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>)));
-        foreach (var (service, handler) in handlers) {
-            services.AddScoped(service, handler);
-        }
-    }
-}
-```
-
-`ModuleTypes.Implementations(typeof(TBase))` gives each concrete type of the modules that derives from `TBase`, with its service type. `ModuleTypes` reads the layer assemblies of the modules one time.
-
-### Open generic types and keys
-
-An open generic handler, validator or event is closed one time for each key. The installers get only closed types.
+`ModuleTypes` finds the types of the modules one time. Each installer reads the same result. Each send goes through a pipeline (`docs/handler-pipeline.md`).
 
 ```text
-open type   ChangeResourceHandler<T> : CommandHandler<ChangeResourceCommand<T>, int>  where T : struct, IResource
-keys        each type of the modules with [Key]                                        Health, Mana, Gold
-fit         the keys that meet each constraint of T                                    Health, Mana
-closed      ChangeResourceHandler<Health>, ChangeResourceHandler<Mana>
+ModuleTypes.Registered()
+├─ each concrete class with [AutoRegister]     closed class: as it is
+│  (on the class, a base class or an interface) open class: closed for each type argument
+└─ ModuleTypeInstaller                         registers each type and each marked base
+   Command, request, event, presenter installers  add only the sender, the pipeline and the checks
 ```
 
+| Marker | Side | Meaning |
+|---|---|---|
+| `[AutoRegister(lifetime)]`, `IAutoRegister` | Open or closed class | VSA registers each concrete class. Lifetime default: `Scoped`. |
+| `[TypeArgument]`, `ITypeArgument` | Type argument | A struct or a concrete class that closes the open classes. |
+| `[assembly: TypeArgument(typeof(int))]` | Type argument | A type that cannot have the attribute. |
+
+The markers are in `VSA.Analyzers.Markers`. The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, `Before<>`, `After<>` and `Presenter`. A class that derives from one of them needs no marker.
+
 ```csharp
-[Key]
+[TypeArgument]
 public interface IResource;
 
 public readonly record struct Health(int Value) : IResource;
-public sealed record ChangeResourceCommand<T>(int Delta) : ICommand<int> where T : struct, IResource;
 
-await commands.SendAsync(new ChangeResourceCommand<Health>(-2), ct);
+sealed class ChangeResourceHandler<T> : CommandHandler<ChangeResourceCommand<T>, int>
+    where T : struct, IResource { ... }                     // closed for Health, Mana
+
+public interface IDamageRule : IAutoRegister;
+sealed class DamageRule<T> : IDamageRule where T : struct, IWeapon { ... }   // closed for Sword, Dagger
+
+[AutoRegister(Lifetime.Singleton)]
+sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 ```
+
+### Rules
 
 | Rule | Detail |
 |---|---|
-| Key | A struct or a concrete class with `[Key]` (`VSA.Analyzers.Markers`) on the type, on a base class, or on an interface that it implements at any depth. |
-| Closed | Only an open type that derives from the scanned base. Other generic classes of a module do not change. |
+| Registration | The class itself, and each base class or interface with the marker, except `IAutoRegister`. |
+| One instance | Each marked base resolves the class itself, so a scope has one instance. |
+| Type arguments | Only marked types and assembly types. A type without the marker is never a type argument. |
 | Constraints | `class`, `struct`, `unmanaged` and each type constraint. A struct with a reference field does not meet `unmanaged`. |
-| Parameters | One generic parameter. An open handler with two or more parameters stops the start, with a message. |
-| No key fits | The open type gets no closed type. A send of that command fails with "has no handler". |
-| Services | `ModuleTypes` is a singleton service. A plugin with its own base, for example a primitive handler base, reads its closed types with `Implementations(typeof(TBase))`. |
+| Parameters | One generic parameter. An open class with two or more parameters stops the start, with a message. |
+| No marker | VSA does not close or register the class. |
+| No type argument fits | The open class gets no closed type. A send of that command fails with "has no handler". |
+| Owner | An installer can register a class first, for example a presenter with a factory. The installer step does not replace it. |
 
-The key source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, give the app another source:
+`ModuleTypes` is a singleton service. `Implementations(typeof(TBase))` gives the registered types that derive from `TBase`, with that base as the service. A plugin reads its own types with it.
+
+The type argument source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, give the app another source:
 
 ```csharp
 await VsaBuilder.Create(args).Keys(new GeneratedKeys()).UseWebHost().Build().RunAsync();
 ```
+
+### Checks
+
+The checks read the registered types. They do not find types.
+
+| Check | Rule |
+|---|---|
+| Commands | One handler for each command |
+| Requests | One handler for each request |
 
 ## The HTTP API
 
@@ -181,7 +182,7 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 ## Projects
 
 ```
-Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, AppScan, IKeySource, ConstraintKeys, KeyTypes
+Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, ModuleTypeInstaller, AppScan, IKeySource, ConstraintKeys, MarkedTypes
 Handlers/Core/       PipelineBuilder, Pipelines, the runners, Validator, Before, After, PipelineInstaller
 Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
 Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender

@@ -28,6 +28,17 @@ public sealed class OpenGenericTests {
     }
 
     [Test]
+    public async Task An_assembly_attribute_gives_a_type_argument_that_cannot_have_the_attribute() {
+        using var host = App().Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
+
+        var count = await sender.SendAsync(new ChangeMeterCommand<int>(4), default);
+
+        Assert.That(count.Value, Is.EqualTo("Int32 4"));
+    }
+
+    [Test]
     public void A_type_with_no_key_marker_gets_no_closed_handler() {
         using var host = App().Build();
         using var scope = host.Services.CreateScope();
@@ -63,11 +74,13 @@ public sealed class OpenGenericTests {
             typeof(CommandHandler<ChangeMeterCommand<Heat>, string>),
             typeof(CommandHandler<ChangeMeterCommand<Charge>, string>),
             typeof(CommandHandler<ChangeMeterCommand<Pressure>, string>),
+            typeof(CommandHandler<ChangeMeterCommand<int>, string>),
         }));
         Assert.That(validators.Select(v => v.Service), Is.EquivalentTo(new[] {
             typeof(Validator<ChangeMeterCommand<Heat>>),
             typeof(Validator<ChangeMeterCommand<Charge>>),
             typeof(Validator<ChangeMeterCommand<Pressure>>),
+            typeof(Validator<ChangeMeterCommand<int>>),
         }));
         Assert.That(handlers.Concat(validators).Select(h => h.Implementation),
             Has.None.Matches<Type>(t => t.ContainsGenericParameters));
@@ -105,8 +118,8 @@ public sealed class OpenGenericTests {
     [TestCase(typeof(UnmarkedStruct), false)]
     [TestCase(typeof(MarkedBaseClass), false)]
     [TestCase(typeof(IMarked), false)]
-    public void A_type_is_a_key_when_it_its_base_class_or_an_interface_has_the_marker(Type type, bool isKey) {
-        Assert.That(KeyTypes.IsKey(type), Is.EqualTo(isKey));
+    public void A_type_is_a_type_argument_when_it_its_base_class_or_an_interface_has_the_marker(Type type, bool isKey) {
+        Assert.That(MarkedTypes.IsTypeArgument(type), Is.EqualTo(isKey));
     }
 
     [Test]
@@ -129,16 +142,61 @@ public sealed class OpenGenericTests {
         Assert.That(keys, Is.EquivalentTo(new[] { typeof(MarkedStruct), typeof(MarkedStructWithNumbers) }));
     }
 
+    [Test]
+    public void An_open_class_with_the_marker_interface_is_closed_and_registered_as_its_marked_interface() {
+        using var host = App().Build();
+        using var scope = host.Services.CreateScope();
+
+        var rules = scope.ServiceProvider.GetServices<IMeterRule>();
+
+        Assert.That(rules.Select(r => r.Meter), Is.EquivalentTo(new[] { "Heat", "Charge" }));
+    }
+
+    [Test]
+    public void The_lifetime_of_the_attribute_is_the_lifetime_of_the_registration() {
+        using var host = App().Build();
+        var cache = Registered("MeterCache`1").MakeGenericType(typeof(Heat));
+        using var first = host.Services.CreateScope();
+        using var second = host.Services.CreateScope();
+
+        var a = first.ServiceProvider.GetRequiredService(cache);
+        var b = second.ServiceProvider.GetRequiredService(cache);
+
+        Assert.That(a, Is.SameAs(b));
+    }
+
+    [Test]
+    public void One_instance_in_a_scope_serves_the_type_and_its_marked_interface() {
+        using var host = App().Build();
+        using var scope = host.Services.CreateScope();
+        var rule = Registered("MeterRule`1").MakeGenericType(typeof(Heat));
+
+        var byType = scope.ServiceProvider.GetRequiredService(rule);
+        var byInterface = scope.ServiceProvider.GetServices<IMeterRule>().Single(r => r.Meter == "Heat");
+
+        Assert.That(byInterface, Is.SameAs(byType));
+    }
+
+    [Test]
+    public void An_open_class_with_no_marker_is_not_closed_and_not_registered() {
+        var types = new ModuleTypes([new MetersModule()]);
+
+        Assert.That(types.Registered().Select(t => t.Name), Has.None.EqualTo("MeterHelper`1"));
+    }
+
+    static Type Registered(string name) =>
+        new ModuleTypes([new MetersModule()]).Registered().First(t => t.Name == name).GetGenericTypeDefinition();
+
     static VsaBuilder App() => VsaBuilder.Create().UseGenericHost().Modules(new MetersModule());
 
-    [Key]
+    [TypeArgument]
     public interface IMarked;
 
     public interface IExtendsMarked : IMarked;
 
     public interface IUnmarked;
 
-    [Key]
+    [TypeArgument]
     public readonly record struct MarkedStruct;
 
     public readonly record struct StructOfMarkedInterface : IMarked;
@@ -149,15 +207,15 @@ public sealed class OpenGenericTests {
 
     public readonly record struct UnmarkedStruct;
 
-    [Key]
+    [TypeArgument]
     public readonly record struct MarkedStructWithText(string Text);
 
-    [Key]
+    [TypeArgument]
     public readonly record struct MarkedStructWithNumbers(int Count, Zone Zone, MarkedStruct Inner);
 
     public enum Zone { Hand }
 
-    [Key]
+    [TypeArgument]
     public abstract class MarkedBaseClass;
 
     public sealed class ClassOfMarkedBaseClass : MarkedBaseClass;

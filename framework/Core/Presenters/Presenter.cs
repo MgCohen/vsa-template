@@ -1,3 +1,4 @@
+using VSA.Analyzers.Markers;
 using VSA.Contracts;
 
 namespace VSA.Presenters;
@@ -7,6 +8,7 @@ namespace VSA.Presenters;
 //   bottom up: an event of the module reaches the presenter (IPresenterEvent), and the presenter raises Changed.
 // The presenter gets its events by itself: the services connect it to LivePresenters when they make it
 // (PresenterInstaller), and its scope disposes it. A view only listens to Changed and renders.
+[AutoRegister]
 public abstract class Presenter(IBus bus) : IDisposable {
     IDisposable? live;
 

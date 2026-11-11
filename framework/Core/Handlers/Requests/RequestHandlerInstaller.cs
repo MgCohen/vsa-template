@@ -6,13 +6,9 @@ namespace VSA.Handlers.Requests;
 
 static class RequestHandlerInstaller {
     internal static void Install(IServiceCollection services, ModuleTypes types) {
-        var handlers = types.Implementations(typeof(RequestHandler<,>));
-        EnsureOneHandlerForEachRequest(handlers);
+        EnsureOneHandlerForEachRequest(types.Implementations(typeof(RequestHandler<,>)));
         services.AddDefaultPipeline(
             PipelineKind.Requests, new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));
-        foreach (var (service, handler) in handlers) {
-            services.AddScoped(service, handler);
-        }
     }
 
     static void EnsureOneHandlerForEachRequest(IReadOnlyList<(Type Service, Type Implementation)> handlers) {
