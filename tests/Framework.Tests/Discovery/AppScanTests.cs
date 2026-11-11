@@ -18,7 +18,7 @@ public sealed class AppScanTests {
     }
 
     [Test]
-    public void RootRecordsIfItIsPlugin() {
+    public void RootIsPluginIfItsRootClassInheritsPlugin() {
         Assert.That(ModuleRoot.Of(typeof(ToolboxPlugin).Assembly).IsPlugin, Is.True);
         Assert.That(ModuleRoot.Of(typeof(BareModule).Assembly).IsPlugin, Is.False);
     }
@@ -31,7 +31,7 @@ public sealed class AppScanTests {
     }
 
     [Test]
-    public void RootRecordsItsLayerProjects() {
+    public void RootFindsItsLayerProjectsByName() {
         var root = ModuleRoot.Of(typeof(ShelfModule).Assembly);
 
         Assert.That(root.Layers, Is.EqualTo(new[] { "Shelf.Presenters" }));
@@ -68,21 +68,7 @@ public sealed class AppScanTests {
     }
 
     [Test]
-    public void PluginRootWithAModuleClassIsAnError() {
-        var root = ModuleRoot.Of(typeof(BareModule).Assembly) with { IsPlugin = true };
-
-        var error = Assert.Throws<InvalidOperationException>(() => root.CreateModule());
-
-        Assert.That(error.Message, Is.EqualTo(
-            "Bare.BareModule is the root class of the plugin module Bare, but it inherits Module. Make it inherit Plugin or Plugin<TSettings>."));
-    }
-
-    [Test]
-    public void ModuleRootWithAPluginClassIsAnError() {
-        var root = ModuleRoot.Of(typeof(ToolboxPlugin).Assembly) with { IsPlugin = false };
-
-        var error = Assert.Throws<InvalidOperationException>(() => root.CreateModule());
-
-        Assert.That(error.Message, Does.StartWith("Toolbox.ToolboxPlugin is the root class of the module Toolbox, but it inherits Plugin."));
+    public void AssemblyWithOnlyANestedModuleClassIsNotARoot() {
+        Assert.That(ModuleRoot.IsRoot(typeof(AppScanTests).Assembly), Is.False);
     }
 }

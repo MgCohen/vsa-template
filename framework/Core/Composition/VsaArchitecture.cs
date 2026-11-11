@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 using VSA.Handlers;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
@@ -21,9 +21,9 @@ static class VsaArchitecture {
         PresenterInstaller.Install(services, types);
     }
 
-    internal static void ConfigureModules(IHostApplicationBuilder builder, ModuleTypes types) {
+    internal static void ConfigureModules(IServiceCollection services, IConfiguration configuration, ModuleTypes types) {
         foreach (var module in types.Modules) {
-            module.Configure(new ModuleBuilder(module.Name, builder.Services, builder.Configuration));
+            module.Configure(new ModuleBuilder(module.Name, services, configuration));
         }
     }
 }

@@ -38,7 +38,7 @@ public sealed class HeadlessCompositionTests {
         await using var scope = host.Services.CreateAsyncScope();
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
-            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana, 3)), default);
+            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana.Name, 3)), default);
 
         Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }
@@ -116,7 +116,7 @@ public sealed class HeadlessCompositionTests {
         var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
         Assert.That(error.Message, Is.EqualTo(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost()."));
+            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call services.AddVsa(args) with no host."));
     }
 
     [Test]

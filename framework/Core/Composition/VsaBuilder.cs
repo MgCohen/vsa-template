@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using VSA.Module;
 
@@ -41,16 +43,32 @@ public sealed class VsaBuilder {
 
     public IHost Build() {
         var selected = host ?? throw new InvalidOperationException(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost().");
+            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call services.AddVsa(args) with no host.");
         var builder = selected.CreateBuilder(args);
-        var types = new ModuleTypes(modules ?? VsaArchitecture.Modules(), keys);
-        builder.Services.AddSingleton(types);
-        VsaArchitecture.InstallLayers(builder.Services, types);
+        var types = Types();
         selected.Install(builder, types);
-        foreach (var configure in services) {
-            configure(builder.Services);
-        }
-        VsaArchitecture.ConfigureModules(builder, types);
+        Compose(builder.Services, builder.Configuration, types);
         return selected.Build(builder);
     }
+
+    internal IServiceCollection Compose(IServiceCollection services) {
+        Compose(services, ConfigurationOf(services) ?? new ConfigurationBuilder().AddCommandLine(args).Build(), Types());
+        return services;
+    }
+
+    static IConfiguration? ConfigurationOf(IServiceCollection services) =>
+        services.LastOrDefault(service => service.ServiceType == typeof(IConfiguration))?.ImplementationInstance as IConfiguration;
+
+    void Compose(IServiceCollection target, IConfiguration configuration, ModuleTypes types) {
+        target.TryAddSingleton(configuration);
+        target.AddLogging();
+        target.AddSingleton(types);
+        VsaArchitecture.InstallLayers(target, types);
+        foreach (var configure in services) {
+            configure(target);
+        }
+        VsaArchitecture.ConfigureModules(target, configuration, types);
+    }
+
+    ModuleTypes Types() => new(modules ?? VsaArchitecture.Modules(), keys);
 }
