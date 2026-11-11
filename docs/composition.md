@@ -143,6 +143,7 @@ await commands.SendAsync(new ChangeResourceCommand<Health>(-2), ct);
 | Closed | Only an open type that derives from the scanned base. Other generic classes of a module do not change. |
 | Parameters | One generic parameter. An open handler with two or more parameters stops the start, with a message. |
 | No key fits | The open type gets no closed type. A send of that command fails with "has no handler". |
+| Services | `ModuleTypes` is a singleton service. A plugin with its own base, for example a primitive handler base, reads its closed types with `Implementations(typeof(TBase))`. |
 
 The key source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, give the app another source:
 

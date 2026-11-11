@@ -87,6 +87,16 @@ public sealed class OpenGenericTests {
         Assert.That(charge!.Message, Does.Contain("has no handler"));
     }
 
+    [Test]
+    public void The_services_give_the_module_types_with_the_closed_types() {
+        using var host = App().Build();
+
+        var types = host.Services.GetRequiredService<ModuleTypes>();
+
+        Assert.That(types.Implementations(typeof(CommandHandler<,>)).Select(h => h.Service),
+            Does.Contain(typeof(CommandHandler<ChangeMeterCommand<Pressure>, string>)));
+    }
+
     [TestCase(typeof(MarkedStruct), true)]
     [TestCase(typeof(StructOfMarkedInterface), true)]
     [TestCase(typeof(StructOfInterfaceThatExtendsAMarkedInterface), true)]

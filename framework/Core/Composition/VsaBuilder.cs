@@ -44,6 +44,7 @@ public sealed class VsaBuilder {
             "The app has no host. Select one before Build: UseWebHost() or UseGenericHost().");
         var builder = selected.CreateBuilder(args);
         var types = new ModuleTypes(modules ?? VsaArchitecture.Modules(), keys);
+        builder.Services.AddSingleton(types);
         VsaArchitecture.InstallLayers(builder.Services, types);
         selected.Install(builder, types);
         foreach (var configure in services) {
