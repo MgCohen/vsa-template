@@ -37,7 +37,7 @@ public sealed class VsaBuilder {
 
     public IHost Build() {
         var selected = host ?? throw new InvalidOperationException(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call Compose(services) with no host.");
+            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call services.AddVsa(args) with no host.");
         var builder = selected.CreateBuilder(args);
         var types = Types();
         selected.Install(builder, types);
@@ -45,10 +45,13 @@ public sealed class VsaBuilder {
         return selected.Build(builder);
     }
 
-    public IServiceCollection Compose(IServiceCollection services, IConfiguration? configuration = null) {
-        Compose(services, configuration ?? new ConfigurationBuilder().AddCommandLine(args).Build(), Types());
+    internal IServiceCollection Compose(IServiceCollection services) {
+        Compose(services, ConfigurationOf(services) ?? new ConfigurationBuilder().AddCommandLine(args).Build(), Types());
         return services;
     }
+
+    static IConfiguration? ConfigurationOf(IServiceCollection services) =>
+        services.LastOrDefault(service => service.ServiceType == typeof(IConfiguration))?.ImplementationInstance as IConfiguration;
 
     void Compose(IServiceCollection target, IConfiguration configuration, ModuleTypes types) {
         target.TryAddSingleton(configuration);

@@ -16,7 +16,7 @@ using VSA.Contracts.Events;
 
 namespace Composition.Tests;
 
-public sealed class ComposeTests {
+public sealed class AddVsaTests {
     [Test]
     public async Task A_command_goes_through_two_modules_with_no_host() {
         await using var provider = Compose(new CardsModule(), new ResourcesModule());
@@ -42,27 +42,27 @@ public sealed class ComposeTests {
     }
 
     [Test]
-    public async Task Compose_with_no_configuration_reads_the_args() {
-        await using var provider = VsaBuilder.Create("--Compose:FromArgs=yes").Modules()
-            .Compose(new ServiceCollection()).BuildServiceProvider();
+    public async Task AddVsa_with_no_configuration_reads_the_args() {
+        await using var provider = new ServiceCollection()
+            .AddVsa(["--Compose:FromArgs=yes"], vsa => vsa.Modules()).BuildServiceProvider();
 
         Assert.That(provider.GetRequiredService<IConfiguration>()["Compose:FromArgs"], Is.EqualTo("yes"));
     }
 
     [Test]
-    public async Task Compose_uses_the_configuration_that_the_app_gives() {
+    public async Task AddVsa_uses_the_configuration_that_the_app_registered_first() {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["Compose:FromApp"] = "yes" }).Build();
 
-        await using var provider = VsaBuilder.Create().Modules()
-            .Compose(new ServiceCollection(), configuration).BuildServiceProvider();
+        await using var provider = new ServiceCollection().AddSingleton<IConfiguration>(configuration)
+            .AddVsa(["--Compose:FromArgs=yes"], vsa => vsa.Modules()).BuildServiceProvider();
 
         Assert.That(provider.GetRequiredService<IConfiguration>(), Is.SameAs(configuration));
     }
 
     [Test]
-    public void Compose_adds_no_host_parts_and_no_logger_providers() {
-        var services = VsaBuilder.Create().Modules().Compose(new ServiceCollection());
+    public void AddVsa_adds_no_host_parts_and_no_logger_providers() {
+        var services = new ServiceCollection().AddVsa([], vsa => vsa.Modules());
 
         Assert.That(services.Select(service => service.ServiceType), Has.None.EqualTo(typeof(IHostLifetime))
             .And.None.EqualTo(typeof(IHostedService))
@@ -74,13 +74,13 @@ public sealed class ComposeTests {
     public async Task App_services_come_before_the_modules_with_no_host() {
         var appRingLog = new RingLog();
 
-        await using var provider = VsaBuilder.Create().Modules(new SignalsModule())
-            .Services(services => services.AddSingleton(appRingLog))
-            .Compose(new ServiceCollection()).BuildServiceProvider();
+        await using var provider = new ServiceCollection()
+            .AddVsa([], vsa => vsa.Modules(new SignalsModule()).Services(services => services.AddSingleton(appRingLog)))
+            .BuildServiceProvider();
 
         Assert.That(provider.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
     }
 
     static ServiceProvider Compose(params VSA.Module.Module[] modules) =>
-        VsaBuilder.Create().Modules(modules).Compose(new ServiceCollection()).BuildServiceProvider();
+        new ServiceCollection().AddVsa([], vsa => vsa.Modules(modules)).BuildServiceProvider();
 }
