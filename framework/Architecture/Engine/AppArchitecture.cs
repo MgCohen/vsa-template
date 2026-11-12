@@ -41,7 +41,12 @@ public sealed class AppArchitecture {
         var root = Path.GetFullPath(appRoot ?? FindAppRoot(sources.Values.Select(s => s.File)));
         var architecture = new ArchLoader().LoadAssemblies([.. list]).Build();
         var names = list.Select(a => a.GetName().Name).ToHashSet();
-        var types = architecture.Types.Where(t => names.Contains(t.Assembly.Name.Split(',')[0])).ToList();
+        var order = list.Select((assembly, index) => (Name: assembly.GetName().Name!, Index: index))
+            .GroupBy(a => a.Name).ToDictionary(g => g.Key, g => g.Min(a => a.Index));
+        var types = architecture.Types.Where(t => names.Contains(t.Assembly.Name.Split(',')[0]))
+            .GroupBy(t => t.FullName)
+            .Select(copies => copies.OrderBy(t => order[t.Assembly.Name.Split(',')[0]]).First())
+            .ToList();
         var outside = new List<string>();
         var unmapped = new List<(IType, Source)>();
         var bindings = Binder.Bind(definition, types, sources, root, outside, unmapped);

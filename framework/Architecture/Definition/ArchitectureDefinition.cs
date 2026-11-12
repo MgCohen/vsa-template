@@ -49,6 +49,8 @@ public abstract partial class ArchitectureDefinition {
         return pairs = all;
     }
 
+    public virtual IReadOnlyList<FolderMap> Folders(string appRoot) => [];
+
     protected virtual void Configure(Options options) { }
 
     protected abstract void Define(Root root);

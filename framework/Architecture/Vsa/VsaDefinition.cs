@@ -13,6 +13,49 @@ public class VsaDefinition : ArchitectureDefinition {
 
     protected VsaDefinition(string root) : base(root) { }
 
+    public const string DefaultUnitySource = "Source";
+
+    public string? UnityApp { get; init; }
+
+    public string UnitySource { get; init; } = DefaultUnitySource;
+
+    public override IReadOnlyList<FolderMap> Folders(string appRoot) {
+        if (!UnityProject.Is(appRoot)) {
+            return [];
+        }
+        var source = new FolderMap(UnitySource, "");
+        if ((UnityApp ?? FindUnityApp(appRoot)) is not { } app) {
+            return [source];
+        }
+        var appFolder = $"{UnityProject.AssetsFolder}/{app}";
+        return [new FolderMap(appFolder, ""), new FolderMap(appFolder, AppFolder), source];
+    }
+
+    static readonly string AppFolder = new App().Folder;
+
+    static readonly string[] UnityAppMarkers = [new Feature().GroupFolder!, new Plugin().GroupFolder!, new Views().Folder];
+
+    static string? FindUnityApp(string appRoot) {
+        var assets = Path.Combine(appRoot, UnityProject.AssetsFolder);
+        if (!Directory.Exists(assets)) {
+            return null;
+        }
+        var found = Directory.GetDirectories(assets)
+            .Where(folder => UnityAppMarkers.Any(marker => Directory.Exists(Path.Combine(folder, marker))))
+            .Select(Path.GetFileName)
+            .Where(name => !string.Equals(name, UnityProject.PluginsFolder, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+        return found.Count switch {
+            0 => null,
+            1 => found[0],
+            _ => throw new InvalidOperationException(
+                $"The Unity project has {found.Count} app folders in Assets: {string.Join(", ", found)}. "
+                + "Set UnityApp in the definition of the app: override Architecture in the app class "
+                + "and return new VsaDefinition(Rules) { UnityApp = \"<name>\" }."),
+        };
+    }
+
     protected override void Configure(Options options) {
         options.Own = Own.None;
         options.SameLayer = Permission.Allow;

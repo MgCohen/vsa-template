@@ -17,7 +17,7 @@ public static class SourceFiles {
             using var module = ModuleDefinition.ReadModule(dll, new ReaderParameters { ReadSymbols = true });
             foreach (var type in module.Types.SelectMany(Walk)) {
                 if (Find(type) is { } source) {
-                    result[type.FullName.Replace('/', '+')] = source;
+                    result.TryAdd(type.FullName.Replace('/', '+'), source);
                 }
             }
         }
