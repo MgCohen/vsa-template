@@ -16,6 +16,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `framework/Architecture/` | The architecture engine: `Definition/` (VSA.Architecture, the definition API), `Engine/` (VSA.Architecture.Engine: binding, discovery, checks with ArchUnitNET) |
 | `framework/Testing/`  | The test bases that ship: `Architecture/` (the VSA definition and the three architecture tests), `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
+| `framework/Tooling/Viewer/` | The architecture viewer: an in-repo VSA app (module `ArchitectureViewer`) with its sample input in `Data/`. Does not ship yet. See `docs/viewer.md` |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
@@ -47,6 +48,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
 | `tests/Architecture.Tests/` | Tests of the architecture engine, on the fixture apps in `tests/Fixtures/Architecture/` |
 | `tests/Composition.Tests/` | Tests of the composer, the installers and `ModuleBuilder`, with no ASP.NET Core |
+| `tests/Viewer.Tests/`    | Tests of the architecture viewer: unit, architecture and browser tests (category `Browser`, Playwright on Microsoft Edge) |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
 
