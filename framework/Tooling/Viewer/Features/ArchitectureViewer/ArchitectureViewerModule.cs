@@ -11,7 +11,8 @@ public sealed class ArchitectureViewerModule : Module
 {
     public override void Configure(ModuleBuilder module)
     {
-        module.Services.AddSingleton(_ => DataFolder.Read(AppContext.BaseDirectory));
+        string? input = module.Configuration[DataFolder.InputKey];
+        module.Services.AddSingleton(_ => DataFolder.Read(AppContext.BaseDirectory, input));
         module.Services.AddElkLayout();
         module.Services.AddScoped<IClipboard, BrowserClipboard>();
         foreach (Type shape in typeof(INodeShape).Assembly.GetTypes().Where(IsShape))

@@ -4,10 +4,11 @@ public static class DataFolder
 {
     public const string Name = "Data";
 
-    public static ArchitectureFiles Read(string appFolder)
+    public const string InputKey = "Viewer:Architecture";
+
+    public static ArchitectureFiles Read(string appFolder, string? input)
     {
-        string data = Path.Combine(appFolder, Name);
-        string layout = File.ReadAllText(Path.Combine(data, "layout.json"));
-        return new ArchitectureFiles(layout, File.ReadAllText(Path.Combine(data, "architecture.json")));
+        string path = input ?? Path.Combine(appFolder, Name, "architecture.json");
+        return new ArchitectureFiles(File.ReadAllText(path));
     }
 }

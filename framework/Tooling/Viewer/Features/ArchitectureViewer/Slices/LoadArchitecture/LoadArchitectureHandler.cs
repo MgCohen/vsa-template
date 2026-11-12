@@ -7,15 +7,15 @@ using VSA.Handlers.Requests;
 
 namespace ArchitectureViewer.Slices.LoadArchitecture;
 
-internal sealed class LoadArchitectureHandler(ArchitectureFiles files, IEnumerable<INodeShape> shapes)
+internal sealed class LoadArchitectureHandler(
+    ArchitectureFiles files, ILayoutEngine engine, IEnumerable<INodeShape> shapes)
     : RequestHandler<LoadArchitectureRequest, LoadArchitectureResponse>
 {
-    public override Task<Result<LoadArchitectureResponse>> HandleAsync(Envelope<LoadArchitectureRequest> envelope)
+    public override async Task<Result<LoadArchitectureResponse>> HandleAsync(
+        Envelope<LoadArchitectureRequest> envelope)
     {
-        LayoutData data = LayoutJson.Read(files.LayoutJson);
-        INodeShape shape = shapes.Named(envelope.Message.Shape);
-        LayoutData layout = Shaping.Apply(data, shape);
-        LoadArchitectureResponse response = new(data, layout, Shaping.Fits(data, shape), shapes.Names());
-        return Task.FromResult<Result<LoadArchitectureResponse>>(response);
+        LayoutData data = AppGraph.Of(files.ArchitectureJson);
+        LayoutData layout = await engine.Draw(data, shapes.Named(envelope.Message.Shape));
+        return new LoadArchitectureResponse(data, layout, true, shapes.Names());
     }
 }
