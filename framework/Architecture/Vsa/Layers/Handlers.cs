@@ -3,7 +3,7 @@ using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
 using VSA.Handlers.Requests;
 
-namespace VSA.Testing.Architecture;
+namespace VSA.Architecture.Vsa;
 
 public record Handlers : Layer {
     protected override void Define(Part part) {

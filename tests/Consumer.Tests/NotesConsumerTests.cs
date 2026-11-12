@@ -16,6 +16,8 @@ public sealed partial class NotesConsumerTests {
         UsePackages(workspace.Src);
 
         workspace.Dotnet("build", "App/Host", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        var runtimeDependencies = File.ReadAllText(Path.Combine(workspace.Src, "App", "Host", "bin", "Release", "net10.0", "App.Host.deps.json"));
+        Assert.That(runtimeDependencies, Does.Contain("VSA.Architecture.Vsa").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
 
         var url = $"http://127.0.0.1:{FreePort()}";
         using var app = workspace.Start("run", "--project", "App/Host", "-c", "Release", "--no-build", "--no-launch-profile", "--urls", url);

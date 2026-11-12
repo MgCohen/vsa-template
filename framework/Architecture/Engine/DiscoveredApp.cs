@@ -6,7 +6,9 @@ namespace VSA.Architecture.Engine;
 public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Definition, IReadOnlyList<Assembly> Assemblies) {
     public const string AppRootKey = "VsaAppRoot";
 
-    static readonly string EngineName = typeof(ArchitectureDefinition).Assembly.GetName().Name!;
+    static readonly string DefinitionName = typeof(ArchitectureDefinition).Assembly.GetName().Name!;
+
+    static readonly string EngineName = typeof(DiscoveredApp).Assembly.GetName().Name!;
 
     public static DiscoveredApp FromTestOutput(Type definition) {
         var entry = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("The test host has no entry assembly.");
@@ -18,24 +20,29 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
         appRoot = Path.GetFullPath(appRoot ?? FindGlobalJson(folder));
         var dlls = Directory.GetFiles(folder, "*.dll").Where(dll => exclude is null || !SameFile(dll, exclude.Location)).ToList();
         var tools = dlls.Where(IsArchitectureTool).ToList();
-        var instance = FindDefinition(definition, tools.Select(Assembly.LoadFrom).Append(exclude).Append(definition.Assembly));
-        var externals = instance.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
-        var candidates = dlls.Except(tools).ToList();
-        var app = candidates.Where(dll => HasSourceUnder(dll, appRoot)).ToList();
+        var app = dlls.Except(tools).Where(dll => HasSourceUnder(dll, appRoot)).ToList();
         if (app.Count == 0) {
             throw new InvalidOperationException(
                 $"No assembly in {folder} has source files under the app root {appRoot}. Reference the app projects from the test project.");
         }
-        var external = candidates.Where(dll => IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
+        var definers = dlls.Where(dll => References(dll, DefinitionName));
+        var searched = tools.Union(definers).Union(app).Select(Assembly.LoadFrom).Append(exclude).Append(definition.Assembly);
+        var instance = FindDefinition(definition, searched);
+        var externals = instance.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
+        var external = dlls.Except(tools).Except(app).Where(dll => IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
         var assemblies = app.Union(external).Select(Assembly.LoadFrom).ToList();
         return new DiscoveredApp(appRoot, instance, assemblies);
     }
 
     static ArchitectureDefinition FindDefinition(Type definition, IEnumerable<Assembly?> assemblies) {
         var all = assemblies.OfType<Assembly>().Distinct().SelectMany(TypesOf)
-            .Where(t => !t.IsAbstract && definition.IsAssignableFrom(t) && t.GetConstructor(Type.EmptyTypes) is not null)
+            .Where(t => !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) is not null)
             .Distinct().ToList();
-        var leaves = all.Where(t => !all.Any(other => other != t && t.IsAssignableFrom(other))).ToList();
+        var fromApp = FromApp(definition, Leaves(all.Where(typeof(IArchitectureSource).IsAssignableFrom).ToList()));
+        if (fromApp is not null) {
+            return fromApp;
+        }
+        var leaves = Leaves(all.Where(definition.IsAssignableFrom).ToList());
         return leaves.Count switch {
             1 => (ArchitectureDefinition)Activator.CreateInstance(leaves[0])!,
             0 => throw new InvalidOperationException(
@@ -45,6 +52,17 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
                 + "Keep one, or make one inherit the other."),
         };
     }
+
+    static ArchitectureDefinition? FromApp(Type definition, List<Type> apps) {
+        if (apps.Count > 1) {
+            throw new InvalidOperationException(
+                $"More than one app found: {string.Join(", ", apps.Select(t => t.FullName))}. Keep one app class, or make one inherit the other.");
+        }
+        var found = apps.Count == 1 ? ((IArchitectureSource)Activator.CreateInstance(apps[0])!).Architecture : null;
+        return definition.IsInstanceOfType(found) ? found : null;
+    }
+
+    static List<Type> Leaves(List<Type> types) => types.Where(t => !types.Any(other => other != t && t.IsAssignableFrom(other))).ToList();
 
     static IEnumerable<Type> TypesOf(Assembly assembly) {
         try {
@@ -58,12 +76,14 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
         externals.Any(e => name == e || name.StartsWith(e + ".", StringComparison.Ordinal));
 
     static bool IsArchitectureTool(string dll) {
-        if (Path.GetFileNameWithoutExtension(dll) == EngineName) {
-            return true;
-        }
+        var name = Path.GetFileNameWithoutExtension(dll);
+        return name == DefinitionName || name == EngineName || References(dll, EngineName);
+    }
+
+    static bool References(string dll, string assembly) {
         try {
             using var module = ModuleDefinition.ReadModule(dll);
-            return module.AssemblyReferences.Any(r => r.Name == EngineName);
+            return module.AssemblyReferences.Any(r => r.Name == assembly);
         } catch (Exception e) when (e is BadImageFormatException or InvalidOperationException or IOException) {
             return false;
         }

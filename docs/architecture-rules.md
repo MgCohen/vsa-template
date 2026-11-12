@@ -1,6 +1,6 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Testing/Architecture/VsaDefinition.cs`, see `architecture-engine.md`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Architecture/Vsa/VsaDefinition.cs`, see `architecture-engine.md`).
 
 ## Levels
 
@@ -239,6 +239,6 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
-3. Else change the rules of the VSA definition (`framework/Testing/Architecture/VsaDefinition.cs`). If the layers change, also change `VSA.Layers.targets`.
+3. Else change the rules of the VSA definition (`framework/Architecture/Vsa/VsaDefinition.cs`). If the layers change, also change `VSA.Layers.targets`.
 4. Add tests. For a build rule (`VSA0xxx`), add a case to `tests/Rules.Tests/BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

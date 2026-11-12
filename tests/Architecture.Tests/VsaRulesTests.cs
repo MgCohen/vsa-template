@@ -1,6 +1,6 @@
 using VSA.Architecture;
 using VSA.Architecture.Engine;
-using VSA.Testing.Architecture;
+using VSA.Architecture.Vsa;
 
 namespace Architecture.Tests;
 
