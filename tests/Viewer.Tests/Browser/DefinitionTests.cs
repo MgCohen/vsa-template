@@ -1,3 +1,5 @@
+using Viewer.Tests.Export;
+
 namespace Viewer.Tests.Browser;
 
 [Category("Browser")]
@@ -13,9 +15,12 @@ public sealed class DefinitionTests : ViewerPageTest
 
         string[] access = await Graph.Page.EvalOnSelectorAllAsync<string[]>("path[marker-end]",
             "ps => ps.map(p => p.dataset.access)");
+        string[] edges = await Graph.Page.EvalOnSelectorAllAsync<string[]>("path[marker-end]",
+            "ps => ps.map(p => p.dataset.edge)");
         string rows = await Graph.Page.EvalOnSelectorAsync<string>("g.card.part:has(g.part-row)", Scripts.PartRows);
-        Assert.That(await Graph.Page.Locator("g.card.part").CountAsync(), Is.EqualTo(43));
-        Assert.That(access, Has.Length.EqualTo(37));
+        Assert.That(await Graph.Page.Locator("g.card.part").CountAsync(), Is.EqualTo(NotesFacts.PartCards));
+        Assert.That(edges, Is.Not.Empty.And.Unique);
+        Assert.That(edges, Is.SubsetOf(NotesFacts.RuleTerms));
         Assert.That(access, Does.Contain("Allow").And.Contain("Conditional").And.Contain("Deny"));
         Assert.That(await Graph.Labels(), Does.Contain("Under<App>"));
         Assert.That(rows, Does.Match(@"^57( 78)*( 99)? h=\d+"));

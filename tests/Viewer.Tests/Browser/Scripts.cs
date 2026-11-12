@@ -43,6 +43,30 @@ public static class Scripts
         })
         """;
 
+    public const string ReachableHead = """
+        () => {
+          const cards = [...document.querySelectorAll('svg.canvas g.card')];
+          const ends = [...document.querySelectorAll('svg.canvas path[marker-end]')].flatMap(p => {
+            const m = p.getScreenCTM(), n = p.getTotalLength();
+            return [p.getPointAtLength(0), p.getPointAtLength(n)].map(q => new DOMPoint(q.x, q.y).matrixTransform(m));
+          });
+          const touched = c => {
+            const r = c.getBoundingClientRect();
+            return ends.some(q => q.x >= r.left - 8 && q.x <= r.right + 8 && q.y >= r.top && q.y <= r.bottom);
+          };
+          for (let i = 0; i < cards.length; i++) {
+            const head = cards[i].querySelector('g.head');
+            if (!head || !touched(cards[i])) continue;
+            const r = head.getBoundingClientRect();
+            const x = r.left + 20, y = r.top + 10;
+            if (x < 0 || y < 0 || x > innerWidth - 80 || y > innerHeight - 80) continue;
+            const hit = document.elementFromPoint(x, y);
+            if (hit && cards[i].contains(hit)) return [i, x, y];
+          }
+          return [-1, 0, 0];
+        }
+        """;
+
     public const string RowPlaces = """
         c => {
           const top = +c.querySelector('rect').getAttribute('y');

@@ -70,6 +70,14 @@ public sealed partial class GraphPage
             .Select(c => new CardBox(c[0].GetString()!, c[1].GetDouble(), c[2].GetDouble()))];
     }
 
+    public async Task<(int Index, float X, float Y)> ReachableHead()
+    {
+        JsonElement head = await Page.EvaluateAsync<JsonElement>(Scripts.ReachableHead);
+        int index = head[0].GetInt32();
+        Assert.That(index, Is.Not.Negative, "No card header is reachable by the mouse.");
+        return (index, (float)head[1].GetDouble(), (float)head[2].GetDouble());
+    }
+
     public async Task WaitRoutesChange(string before)
     {
         await Page.WaitForFunctionAsync(Scripts.RoutesChanged, before,

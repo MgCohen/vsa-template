@@ -1,10 +1,11 @@
+using Viewer.Tests.Export;
+
 namespace Viewer.Tests.Browser;
 
 [Category("Browser")]
 public sealed class LinkTests : ViewerPageTest
 {
     private const int FieldEdges = 39;
-    private const int SimpleEdges = 18;
 
     [Test]
     public async Task The_fields_shape_draws_each_row_edge_and_no_edge_crosses_a_card()
@@ -21,7 +22,7 @@ public sealed class LinkTests : ViewerPageTest
         string heights = await Graph.Page.EvalOnSelectorAllAsync<string>("g.card > rect:first-child",
             "rs => [...new Set(rs.map(r => r.getAttribute('height')))].join(',')");
         Assert.That(heights, Is.EqualTo("58"));
-        Assert.That(await Graph.EdgeCount(), Is.EqualTo(SimpleEdges));
+        Assert.That(await Graph.EdgeCount(), Is.EqualTo(NotesFacts.NodeEdges));
         Assert.That(await Graph.EdgesThroughCards(), Is.Zero);
     }
 
@@ -33,7 +34,7 @@ public sealed class LinkTests : ViewerPageTest
         CardPair pair = await Graph.FreePair();
 
         int drafts = await Graph.DrawLink(Graph.Port(pair.From, "Out", ""), Graph.Port(pair.To, "In", ""));
-        await Graph.WaitEdges(SimpleEdges + 1);
+        await Graph.WaitEdges(NotesFacts.NodeEdges + 1);
         await Graph.Settle();
         string added = (await Graph.Dotted()).Single();
 
@@ -42,7 +43,7 @@ public sealed class LinkTests : ViewerPageTest
         Assert.That(await Graph.EndsOnPorts(added, pair, "", ""), Is.True);
         Assert.That(await Graph.EdgesThroughCards(), Is.Zero);
         Assert.That(await Graph.DeleteLink(added), Is.True);
-        await Graph.WaitEdges(SimpleEdges);
+        await Graph.WaitEdges(NotesFacts.NodeEdges);
         await Graph.Settle();
         Assert.That(await Graph.Dotted(), Is.Empty);
         Assert.That(await Graph.EdgesThroughCards(), Is.Zero);

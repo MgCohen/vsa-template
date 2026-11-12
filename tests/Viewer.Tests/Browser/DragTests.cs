@@ -10,16 +10,16 @@ public sealed class DragTests : ViewerPageTest
     {
         await Graph.StartEditing();
         string view = await Graph.Transform();
-        ILocator card = Graph.Page.Locator("g.card").First;
+        (int index, float x, float y) = await Graph.ReachableHead();
+        ILocator card = Graph.Page.Locator("svg.canvas g.card").Nth(index);
         string? before = await card.GetAttributeAsync("transform");
         string routes = await Graph.Paths();
 
-        LocatorBoundingBoxResult box = (await Graph.Page.Locator("g.head").First.BoundingBoxAsync())!;
-        await Graph.Page.Mouse.MoveAsync(box.X + 20, box.Y + 10);
+        await Graph.Page.Mouse.MoveAsync(x, y);
         await Graph.Page.Mouse.DownAsync();
         for (int i = 1; i <= 5; i++)
         {
-            await Graph.Page.Mouse.MoveAsync(box.X + 20 + i * 8, box.Y + 10 + i * 4);
+            await Graph.Page.Mouse.MoveAsync(x + i * 8, y + i * 4);
         }
 
         Assert.That(await card.GetAttributeAsync("transform"), Is.Not.EqualTo(before));
@@ -47,8 +47,9 @@ public sealed class DragTests : ViewerPageTest
         await Graph.Page.WaitForTimeoutAsync(500);
         IReadOnlyList<CardBox> before = await Graph.Cards();
         string routes = await Graph.Paths();
-        CardBox below = before.First(c => c.Label.Contains("NoteDeleted", StringComparison.Ordinal));
-        CardBox moved = before.First(c => Math.Abs(c.X - below.X) < 5 && c.Y < below.Y && below.Y - c.Y < 150);
+        (CardBox moved, CardBox below) = before
+            .SelectMany(a => before.Where(b => Math.Abs(a.X - b.X) < 5 && b.Y > a.Y && b.Y - a.Y < 150).Select(b => (a, b)))
+            .First();
         int index = before.ToList().IndexOf(moved);
 
         string preview = await DragHeader(index, below.Y - moved.Y + 20);
@@ -64,12 +65,12 @@ public sealed class DragTests : ViewerPageTest
 
     private async Task DropFirstCard()
     {
-        LocatorBoundingBoxResult box = (await Graph.Page.Locator("g.head").First.BoundingBoxAsync())!;
-        await Graph.Page.Mouse.MoveAsync(box.X + 20, box.Y + 10);
+        (int _, float x, float y) = await Graph.ReachableHead();
+        await Graph.Page.Mouse.MoveAsync(x, y);
         await Graph.Page.Mouse.DownAsync();
         for (int i = 1; i <= 5; i++)
         {
-            await Graph.Page.Mouse.MoveAsync(box.X + 20 + i * 8, box.Y + 10 + i * 4);
+            await Graph.Page.Mouse.MoveAsync(x + i * 8, y + i * 4);
         }
         string during = await Graph.Paths();
         await Graph.Page.Mouse.UpAsync();
