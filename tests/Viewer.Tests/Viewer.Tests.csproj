@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests of the architecture viewer (framework/Tooling/Viewer): a unit test, the VSA architecture tests of the viewer app,
+       and browser tests that start the viewer and drive Microsoft Edge with Playwright (docs/viewer.md). -->
+  <PropertyGroup>
+    <VsaAppRoot>$(RepoRoot)framework/Tooling/Viewer/</VsaAppRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright.NUnit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)framework/Tooling/Viewer/App/Host/Viewer.Host.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
+  </ItemGroup>
+  <!-- The browser tests start the viewer from its own output folder, so they need the path of App.Host.dll. -->
+  <Target Name="AddViewerHostPath" AfterTargets="ResolveAssemblyReferences" BeforeTargets="GetAssemblyAttributes">
+    <ItemGroup>
+      <_ViewerHost Include="@(ReferencePath)" Condition="'%(Filename)' == 'App.Host'" />
+      <AssemblyMetadata Include="ViewerHost" Value="@(_ViewerHost->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+</Project>
