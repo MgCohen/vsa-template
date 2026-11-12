@@ -44,6 +44,20 @@ public sealed class SdkPluginTests {
             "Plugins/Units/Units.csproj",
         }));
 
+    [TestCase("UsesPlugins.Handlers.Requests")]
+    [TestCase("UsesPlugins.Handlers.Events")]
+    [TestCase("UsesPlugins.Handlers.Commands")]
+    public void A_module_handler_gets_the_Domain_and_the_Infrastructure_of_each_plugin_module(string project) =>
+        Assert.That(References(Project("Features/UsesPlugins/Projects", project)), Is.SupersetOf(new[] {
+            "Plugins/Units/Projects/Units.Domain.csproj",
+            "Plugins/Units/Projects/Units.Infrastructure.csproj",
+        }));
+
+    [Test]
+    public void A_module_contracts_project_gets_no_Domain_and_no_Infrastructure_of_a_plugin_module() =>
+        Assert.That(References(Project("Features/UsesPlugins/Projects", "UsesPlugins.Contracts.Commands")),
+            Has.None.EndsWith(".Domain.csproj").And.None.EndsWith(".Infrastructure.csproj"));
+
     [Test]
     public void A_module_event_handler_gets_the_events_of_each_plugin_module() =>
         Assert.That(References(Project("Features/UsesPlugins/Projects", "UsesPlugins.Handlers.Events")),

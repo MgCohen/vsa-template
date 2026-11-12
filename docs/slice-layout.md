@@ -203,7 +203,7 @@ A `Domain.Shared` project that used the `Domain.Shared` of all modules would mak
 
 | Name | What it is | Who uses it | List |
 |---|---|---|---|
-| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | `<VsaPluginUses>` in a plugin layer project |
+| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module. The handlers of each module also get its `Domain` and `Infrastructure` | `<VsaPluginUses>` in a plugin layer project |
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
 | `Domain/Shared/` | The published domain of one module | Other modules (table above) | None |
 
