@@ -98,6 +98,15 @@ map.For<Handlers.Requests>().Uses<Domain>(Access.Internal);        // use, but d
 
 A type exposes a part when a type of that part is in its signature: a base type, an interface, or the type of a member (a method return or parameter, a property, a field), with their generic arguments. The access of a member is the narrowest of the member and its type. The order is partial: `Protected` and `Internal` are not comparable, so `Protected` is not within `Internal`.
 
+The framework can require a public exposure, so the check ignores two exposures:
+
+| Exposure | Example |
+|---|---|
+| A base type or an interface of an `External` part, with its generic arguments | `: Presenter(bus), IPresenterEvent<Rang>` |
+| A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task OnEventAsync(Rang e)` |
+
+An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `VSA2003` if the rule limits `Note`.
+
 The first access that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.

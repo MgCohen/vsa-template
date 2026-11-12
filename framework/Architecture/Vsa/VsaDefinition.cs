@@ -25,6 +25,7 @@ public class VsaDefinition : ArchitectureDefinition {
         core.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
         core.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
         core.Add<Views>();
+        core.Add<Composition>().And<Host>();
 
         root.Add<App>().Add<Host>().And<Views>();
 
@@ -58,7 +59,7 @@ public class VsaDefinition : ArchitectureDefinition {
         map.For<Domain.Shared>().Denies<Domain>();
         map.For<Domain.Shared>().Uses<Domain.Shared>();
         map.For<Infrastructure>().Uses<Domain>().And<Infrastructure>();
-        map.For<Presenters>().Uses<Presenters>().And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>();
+        map.For<Presenters>().Uses<Presenters>().And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal);
         map.For<Contracts.Requests>().Uses<Contracts.Requests>().And<Domain.Shared>();
         map.For<Contracts.Events>().Uses<Contracts.Events>().And<Domain.Shared>();
         map.For<Contracts.Commands>().Uses<Contracts.Commands>().And<Domain.Shared>();
@@ -85,19 +86,20 @@ public class VsaDefinition : ArchitectureDefinition {
     static void ExceptionsToTheBorders(Map map) {
         map.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
         map.For<Domain>().Under<Plugin>().Uses<Domain.Shared>().InOther<Plugin>();
+        map.For<Presenters>().And<RootClass>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
         map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
             .Uses<Contracts.Commands>().And<Contracts.Events>().InOther<Feature>();
         map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
-            .Uses<Contracts.Events>().InOther<Slice>();
+            .Uses<Contracts.Commands>().And<Contracts.Events>().InOther<Slice>();
     }
 
     static void ModuleRootsAndTheApp(Map map) {
-        map.For<RootClass>().Uses<Core>().And<Plugin>();
+        map.For<RootClass>().Uses<Core>().And<Plugin>(Access.Internal);
         map.For<RootClass>().Under<Plugin>().Uses<Plugin>(Access.Internal).InOwn<Plugin>();
         map.For<RootClass>().Denies<RootClass>().Under<Plugin>();
         map.For<RootClass>().Under<Plugin>().Uses<RootClass>().InOwn<Plugin>();
         map.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal).InOwn<Feature>();
-        map.For<Host>().Under<App>().Uses<RootClass>().And<Core>();
+        map.For<Host>().Under<App>().Uses<Composition>().And<Host>();
         map.For<Views>().Under<App>().Uses<Presenters>().And<Views>();
     }
 }
