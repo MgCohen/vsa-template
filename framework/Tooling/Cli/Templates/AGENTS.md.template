@@ -6,7 +6,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 
 | Path             | Purpose                                                              |
 |------------------|----------------------------------------------------------------------|
-| `App/Host/`      | The web host. `Program.cs` calls `VsaBuilder.Create(args).UseWebHost()`, which finds the modules and the views |
+| `App/Host/`      | The web host. `Program.cs` calls `SampleAppApp.Run(args)`. The app class `SampleAppApp` starts the app, finds the modules and the views, and gives the app rules |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Features/<Name>/`| One feature module: its root project, `Projects/` (one project for each layer), `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
@@ -34,7 +34,7 @@ dotnet vsa doctor                            # the tool, VSA.Sdk and the package
 dotnet test SampleApp.slnx                   # the architecture tests and the unit tests
 ```
 
-The build adds the architecture tests to `Tests/`. They check each type against the VSA definition: `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To add a rule of the app, write `public partial class ArchitectureTests` in `Tests/`.
+The build adds the architecture tests to `Tests/`. They check each type against the VSA definition: `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To change the rules, override `Rules(Map)` in `App/Host/SampleAppApp.cs`. To add a test of the app, write `public partial class ArchitectureTests` in `Tests/`.
 
 The VSA packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 

@@ -6,7 +6,7 @@ public static class ArchitectureScope {
     static readonly AsyncLocal<AppArchitecture?> CurrentApp = new();
 
     public static AppArchitecture Current {
-        get => CurrentApp.Value ?? throw new InvalidOperationException("No architecture is loaded. Inherit ArchitectureTests<TDefinition>.");
+        get => CurrentApp.Value ?? throw new InvalidOperationException("No architecture is loaded. Inherit ArchitectureTests or ArchitectureTests<TDefinition>.");
         set => CurrentApp.Value = value;
     }
 }

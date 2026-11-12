@@ -1,12 +1,15 @@
 # Composition: VsaBuilder and its hosts
 
-An app starts with one call. Web and console apps use `VsaBuilder.Create(args)`, then a host and `Build()`. An app with no host, for example a Unity app, calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call. A web app calls `MyApp.Run(args)`: the app class `MyApp : VsaApp<MyApp>` uses `VsaBuilder`. A console app uses `VsaBuilder.Create(args)`, then a host and `Build()`. An app with no host, for example a Unity app, calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Entry point
 
 ```csharp
 // Web: App/Host/Program.cs
-await VsaBuilder.Create(args).UseWebHost().Build().RunAsync();
+return MyApp.Run(args);
+
+// Web: App/Host/MyApp.cs
+public class MyApp : VsaApp<MyApp>;
 
 // Console
 await VsaBuilder.Create(args).UseGenericHost().Build().RunAsync();
@@ -23,6 +26,27 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 | `Modules(...)` | Optional. Gives the modules. With no call, `AppScan` finds them. Tests use it |
 | `Services(...)` | Optional. App registrations, before the modules |
 | `Build()` | Returns the standard `IHost`: `RunAsync`, `StartAsync`, `StopAsync`, `Services` |
+
+## The app class
+
+`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the architecture tests read its rules (see `architecture-engine.md`). `VsaApp<TApp>` is in VSA.Host.
+
+```
+MyApp.Run(args)                       static, in VsaApp<TApp>
+└─ new MyApp().Start(args)            Build(args), then IHost.Run()
+   └─ Build(args)                     Builder(args).Services(Services).Build()
+      ├─ Builder(args)                VsaBuilder.Create(args).UseWebHost()
+      └─ Services(services)           app registrations, before the modules
+```
+
+| Member | Default | Override to |
+|---|---|---|
+| `Start(string[] args)` | Builds the host and runs it. Returns 0 | Change the run, or the exit code |
+| `Build(string[] args)` | `Builder(args).Services(Services).Build()` | Change the build |
+| `Builder(string[] args)` | `VsaBuilder.Create(args).UseWebHost()` | Select a host, the modules or the keys |
+| `Services(IServiceCollection)` | No registrations | Add app registrations |
+| `Rules(Map)` | No rules | Add app rules after the VSA rules |
+| `Architecture` | `new VsaDefinition(Rules)` | Not virtual |
 
 With no host, the app calls `AddVsa` on its own `IServiceCollection`:
 

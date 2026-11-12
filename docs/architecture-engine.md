@@ -17,7 +17,10 @@ flowchart LR
 |---|---|---|
 | `VSA.Architecture` | `framework/Architecture/Definition/` | The definition API. No ArchUnitNET |
 | `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | Binding, decisions, discovery, `.Check(app)` |
-| `VSA.Testing.Architecture` | `framework/Testing/Architecture/` | `VsaDefinition`, the test base, the build targets |
+| `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
+| `VSA.Testing.Architecture` | `framework/Testing/Architecture/` | The test base, the build targets |
+
+The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Host` (`VsaApp<TApp>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. The runtime does not get ArchUnitNET or Mono.Cecil.
 
 ## Definition API
 
@@ -125,7 +128,7 @@ The engine reads the source file and the first line of each type from the PDB fi
 
 ## The four tests
 
-`ArchitectureTests<TDefinition>` has the four tests. Each test is one native ArchUnitNET rule:
+`ArchitectureTests<TDefinition>` has the four tests. `ArchitectureTests` is `ArchitectureTests<ArchitectureDefinition>`: it reads the definition of the app. Each test is one native ArchUnitNET rule:
 
 ```csharp
 [TestCaseSource(nameof(PartInstances))]
@@ -164,11 +167,11 @@ Features/Notes/Slices/Read/ReadHandler.cs(6): error VSA2001: ReadHandler in Hand
 
 ## Test project of an app
 
-A test project references the host and `VSA.Testing.Architecture`. It writes no test class. The build adds this class to `obj/.../VsaArchitectureTests.g.cs`:
+The app class (`MyApp : VsaApp<MyApp>`, see `composition.md`) gives the rules for the runtime and for the tests. A test project references the host and `VSA.Testing.Architecture`. It writes no test class. The build adds this class to `obj/.../VsaArchitectureTests.g.cs`:
 
 ```csharp
 namespace <RootNamespace>;
-public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests<VSA.Testing.Architecture.VsaDefinition>;
+public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests;
 ```
 
 | Step | Source |
@@ -176,10 +179,23 @@ public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTe
 | App root | `AssemblyMetadata("VsaAppRoot")` of the test assembly, else the nearest `global.json` |
 | App DLLs | Each DLL of the test output with PDB source files under the app root |
 | External DLLs | Each DLL of the test output whose name an `External` part names |
-| Definition | The one class with no constructor parameters that is or inherits `TDefinition` |
-| Not loaded | The test assembly, and each DLL that references `VSA.Architecture` |
+| Definition | The `Architecture` of the most derived `IArchitectureSource` (the app class), if it is a `TDefinition` |
+| Fallback definition | The most derived class with no constructor parameters that is or inherits `TDefinition` |
+| Not loaded | The test assembly, `VSA.Architecture`, and each DLL that references `VSA.Architecture.Engine` |
 
-To add a rule of the app, write the other part of the class. `AreIn<TLayer>()` and `NotDependOnAny<TLayer>()` select the types of a layer:
+To change the VSA rules, override `Rules` in the app class. `VsaDefinition` applies these rules after its own rules, and a later rule wins:
+
+```csharp
+using VSA.Architecture;
+using VSA.Architecture.Vsa;
+using VSA.Host;
+
+public class MyApp : VsaApp<MyApp> {
+    protected override void Rules(Map map) => map.For<Presenters>().Denies<Contracts.Events>();
+}
+```
+
+To add a test of the app, write the other part of the class. `AreIn<TLayer>()` and `NotDependOnAny<TLayer>()` select the types of a layer. The layers are in the namespace `VSA.Architecture.Vsa`:
 
 ```csharp
 public partial class ArchitectureTests {
@@ -190,7 +206,7 @@ public partial class ArchitectureTests {
 }
 ```
 
-To change the VSA rules, write a class that inherits `VsaDefinition` in the test project. To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>`.
+To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>`.
 
 ## Tests of the engine
 
