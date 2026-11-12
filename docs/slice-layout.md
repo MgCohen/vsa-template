@@ -1,11 +1,11 @@
 # Module layout
 
-A module (`Modules/<Module>/`) keeps each feature in one flat folder, `Slices/<Feature>/`, with any file names. Its layer projects are in one folder, `Projects/`. VSA.Sdk reads the type in each slice file and selects its project, so the assemblies follow the layer map. A plugin module (`Plugins/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Plugin module layout](#plugin-module-layout)).
+A feature module (`Features/<Feature>/`) keeps each slice in one flat folder, `Slices/<Slice>/`, with any file names. Its layer projects are in one folder, `Projects/`. VSA.Sdk reads the type in each slice file and selects its project, so the assemblies follow the layer map. A plugin module (`Plugins/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Plugin module layout](#plugin-module-layout)).
 
 ## Layout
 
 ```
-Modules/Notes/
+Features/Notes/
 ├─ Notes.csproj, NotesModule.cs, NotesSettings.cs     module root
 ├─ Projects/                                           layer projects, with obj~/ and bin~/
 │  ├─ Notes.Domain.csproj  Notes.Infrastructure.csproj  Notes.Presenters.csproj
@@ -22,7 +22,7 @@ Modules/Notes/
 A module with commands and a published domain (`tests/Fixtures/CommandApp`):
 
 ```
-Modules/Cards/
+Features/Cards/
 ├─ Cards.csproj, CardsModule.cs                        module root
 ├─ Projects/
 │  ├─ Cards.Domain.Shared.csproj  Cards.Presenters.csproj  Cards.Contracts.Events.csproj
@@ -72,8 +72,8 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 A module slice derives from a plugin base. The router reads the `Contracts/` and `Handlers/` folders of each plugin module, and finds the kind of the slice through the base:
 
 ```
-Modules/UsesPlugins/Slices/Heal/Heal.cs          Heal : Step<HealResult>               → Contracts/Commands
-Modules/UsesPlugins/Slices/Heal/HealHandler.cs   HealHandler : StepHandler<Heal, ...>  → Handlers/Commands
+Features/UsesPlugins/Slices/Heal/Heal.cs          Heal : Step<HealResult>               → Contracts/Commands
+Features/UsesPlugins/Slices/Heal/HealHandler.cs   HealHandler : StepHandler<Heal, ...>  → Handlers/Commands
 ```
 
 | Problem | Result |
@@ -172,10 +172,10 @@ Each of the six routed projects reports the same `VSA0005` errors, so one error 
 `Domain/Shared/` is the published domain of a module. It goes to the project `<Module>.Domain.Shared`, and `<Module>.Domain` leaves it out. Other modules use these types in their commands, events and handlers.
 
 ```csharp
-// Modules/Resources/Domain/Shared/ResourceKey.cs
+// Features/Resources/Domain/Shared/ResourceKey.cs
 public sealed record ResourceKey(string Name);
 
-// Modules/Cards/Domain/Shared/Cost.cs: no type of another module
+// Features/Cards/Domain/Shared/Cost.cs: no type of another module
 public sealed record Cost(string Resource, int Amount);
 ```
 
@@ -226,7 +226,7 @@ Each handler takes the envelope of its message and returns `Result<T>`, and each
 A request and a command are messages (`IMessage`). An event is not a message. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`:
 
 ```csharp
-// Modules/Resources/Slices/ChangeResource/
+// Features/Resources/Slices/ChangeResource/
 public sealed record ChangeResourceCommand(ResourceKey Resource, int Delta) : ICommand<ChangeResourceResult>;
 public sealed record ChangeResourceResult(bool Changed, int Value);
 
@@ -241,7 +241,7 @@ sealed class ChangeResourceHandler(Wallet wallet) : CommandHandler<ChangeResourc
 To send a command, get `ICommandSender` from the services and call `SendAsync`:
 
 ```csharp
-// Modules/Cards/Slices/PayCost/PayCostHandler.cs
+// Features/Cards/Slices/PayCost/PayCostHandler.cs
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events) : CommandHandler<PayCostCommand, PayCostResult> {
     public override async Task<Result<PayCostResult>> HandleAsync(Envelope<PayCostCommand> envelope) {
         var cost = envelope.Message.Cost;

@@ -20,7 +20,7 @@ The editor and the build run the first group in each consumer project. The secon
 |---|---|---|
 | `VSA0001` | Build | A module project or a plugin module project gets its references only from VSA.Sdk. |
 | `VSA0002` | Build | `VsaPluginUses` is only in a plugin layer, and it names other plugin modules that have that layer. |
-| `VSA0003` | Build | A project in a `Modules` or `Plugins` folder is in a root folder of the app root. |
+| `VSA0003` | Build | A project in a `Features` or `Plugins` folder is in a root folder of the app root. |
 | `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
 | `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
 | `VSA0006` | Build | No `Compile` item written by hand, no `.cs` file that no project compiles, and no `Slices/` in a plugin module. |
@@ -46,7 +46,7 @@ The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk
 
 ## Root folders and plugin modules
 
-VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Modules` and `Plugins`. A project in another folder gets no rules. `Shared/` is not a root folder: the plugin modules were Shared modules in `Shared/` before, so move each one to `Plugins/`.
+VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Features` and `Plugins`. A project in another folder gets no rules. `Shared/` is not a root folder: the plugin modules were Shared modules in `Shared/` before, so move each one to `Plugins/`.
 
 A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Core` is the base of each layer:
 
@@ -63,7 +63,7 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A plugin layer | The same layer of each plugin module in `<VsaPluginUses>` (names, with `;`). `VSA0002` checks the names |
 | A plugin module | No project of a module |
 
-A plugin module uses another plugin module only if it names it. Two plugin modules that name each other are a cycle, and MSBuild stops the build. A project in a `Modules` or `Plugins` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
+A plugin module uses another plugin module only if it names it. Two plugin modules that name each other are a cycle, and MSBuild stops the build. A project in a `Features` or `Plugins` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
 
 `VSA2001` checks a plugin module as a base: a module project may use what the map permits of a base, and a plugin project uses no module. `ModuleRoot.IsPlugin` is true when the root class inherits `Plugin`. `VSA1014` makes the root class agree with the root folder at build time.
 
@@ -255,7 +255,7 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
 3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests`. Use the next free `VSA2xxx` ID in the test name.
-4. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Modules/`, and call the base test:
+4. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Features/`, and call the base test:
 
    ```csharp
    Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);

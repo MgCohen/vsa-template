@@ -40,36 +40,36 @@ public sealed class AppFilesTests {
 
     [Test]
     public void DoctorReadsTheSdkPinsInProjectFiles() {
-        Write("Modules/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/0.2.0" />""");
-        Write("Modules/B/B.csproj", """<Project><Sdk Name="VSA.Sdk" Version="0.3.0" /></Project>""");
-        Write("Modules/C/C.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/0.2.0" />""");
+        Write("Features/B/B.csproj", """<Project><Sdk Name="VSA.Sdk" Version="0.3.0" /></Project>""");
+        Write("Features/C/C.csproj", """<Project Sdk="VSA.Sdk" />""");
 
-        var pins = DoctorCommand.Versions(root).Where(f => f.Where.StartsWith("Modules/", StringComparison.Ordinal)).ToList();
+        var pins = DoctorCommand.Versions(root).Where(f => f.Where.StartsWith("Features/", StringComparison.Ordinal)).ToList();
 
-        Assert.That(pins, Is.EqualTo(new[] { ("Modules/A/A.csproj", "VSA.Sdk", (string?)"0.2.0"), ("Modules/B/B.csproj", "VSA.Sdk", "0.3.0") }));
+        Assert.That(pins, Is.EqualTo(new[] { ("Features/A/A.csproj", "VSA.Sdk", (string?)"0.2.0"), ("Features/B/B.csproj", "VSA.Sdk", "0.3.0") }));
     }
 
     [Test]
     public void UpdateWritesTheVersionToEachPlaceThatDoctorReads() {
         Write("Directory.Packages.props", """<Project><ItemGroup><PackageVersion Include="VSA.Host" Version="0.0.1" /><PackageVersion Include="NUnit" Version="4.0.0" /></ItemGroup></Project>""");
         Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="VSA.Host" /><PackageReference Include="VSA.Views" VersionOverride="0.0.2" /></ItemGroup></Project>""");
-        Write("Modules/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/0.2.0" />""");
-        Write("Modules/B/B.csproj", """<Project><Sdk Name="VSA.Sdk" Version="0.3.0" /></Project>""");
-        Write("Modules/C/C.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/0.2.0" />""");
+        Write("Features/B/B.csproj", """<Project><Sdk Name="VSA.Sdk" Version="0.3.0" /></Project>""");
+        Write("Features/C/C.csproj", """<Project Sdk="VSA.Sdk" />""");
         Write("global.json", """{ "msbuild-sdks": { "VSA.Sdk": "0.0.1" } }""");
 
         var changed = UpdateCommand.SetVersion(root, V);
 
-        Assert.That(changed, Is.EqualTo(new[] { "global.json", "App/Host/App.Host.csproj", "Directory.Packages.props", "Modules/A/A.csproj", "Modules/B/B.csproj" }));
+        Assert.That(changed, Is.EqualTo(new[] { "global.json", "App/Host/App.Host.csproj", "Directory.Packages.props", "Features/A/A.csproj", "Features/B/B.csproj" }));
         Assert.That(DoctorCommand.Versions(root).Select(f => f.Version).Distinct(), Is.EqualTo(new[] { V }));
         Assert.That(File.ReadAllText(Path.Combine(root, "Directory.Packages.props")), Does.Contain("""<PackageVersion Include="NUnit" Version="4.0.0" />"""));
-        Assert.That(File.ReadAllText(Path.Combine(root, "Modules/A/A.csproj")), Does.Contain($"Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/{V}"));
+        Assert.That(File.ReadAllText(Path.Combine(root, "Features/A/A.csproj")), Does.Contain($"Microsoft.Build.NoTargets/3.7.0;VSA.Sdk/{V}"));
         Assert.That(UpdateCommand.SetVersion(root, V), Is.Empty);
     }
 
     [Test]
     public void AddRequestUsesTheModuleNameFromTheDisk() {
-        Write("Modules/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
 
         Assert.That(AddRequestCommand.Module(root, "billing"), Is.EqualTo("Billing"));
         Assert.That(() => AddRequestCommand.Module(root, "Shipping"), Throws.TypeOf<VsaException>().With.Message.Contain("does not exist"));
@@ -77,15 +77,15 @@ public sealed class AppFilesTests {
 
     [Test]
     public void AddCommandWritesTheCommandProjectsOnlyIfTheModuleHasNone() {
-        Write("Modules/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
 
         var first = AddCommandCommand.Files(root, "ChangeLimit", "Billing").Select(f => f.Path).ToList();
-        Write("Modules/Billing/Projects/Billing.Contracts.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
-        Write("Modules/Billing/Projects/Billing.Handlers.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/Billing/Projects/Billing.Contracts.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/Billing/Projects/Billing.Handlers.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
         var second = AddCommandCommand.Files(root, "CloseLimit", "Billing").Select(f => f.Path).ToList();
 
-        Assert.That(first, Does.Contain("Modules/Billing/Projects/Billing.Contracts.Commands.csproj"));
-        Assert.That(first, Does.Contain("Modules/Billing/Projects/Billing.Handlers.Commands.csproj"));
+        Assert.That(first, Does.Contain("Features/Billing/Projects/Billing.Contracts.Commands.csproj"));
+        Assert.That(first, Does.Contain("Features/Billing/Projects/Billing.Handlers.Commands.csproj"));
         Assert.That(second, Has.None.EndsWith(".csproj"));
         Assert.That(second, Has.Count.EqualTo(3));
     }

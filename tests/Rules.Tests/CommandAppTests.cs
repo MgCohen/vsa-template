@@ -19,14 +19,14 @@ namespace Rules.Tests;
 public sealed class SdkCommandTests {
     static string App(params string[] parts) => Repo.Path(["tests", "Fixtures", "CommandApp", .. parts]);
 
-    static string Layer(string module, string layer) => App("Modules", module, "Projects", $"{module}.{layer}.csproj");
+    static string Layer(string module, string layer) => App("Features", module, "Projects", $"{module}.{layer}.csproj");
 
-    static string Root(string module) => App("Modules", module, $"{module}.csproj");
+    static string Root(string module) => App("Features", module, $"{module}.csproj");
 
     // The project references that VSA.Sdk gives, as paths in the fixture app, for example "Cards/Cards.Domain.Shared".
     static IReadOnlyList<string> References(string project, params string[] properties) {
         var result = Dotnet.Run(Repo.Root, null, ["msbuild", project, "-getItem:ProjectReference", .. properties]).EnsureSuccess();
-        var root = App("Modules").Replace('\\', '/') + "/";
+        var root = App("Features").Replace('\\', '/') + "/";
         return [.. JsonNode.Parse(result.Output)!["Items"]!["ProjectReference"]!.AsArray()
             .Select(item => ((string)item!["Identity"]!).Replace('\\', '/'))
             .Where(path => path.StartsWith(root, StringComparison.Ordinal))

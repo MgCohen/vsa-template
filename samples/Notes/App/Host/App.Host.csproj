@@ -7,7 +7,7 @@
     <!-- Not private: a test project that references the host must get every module layer,
          for WebApplicationFactory tests and module discovery. Only test projects reference the host. -->
     <ProjectReference Include="../Views/App.Views.csproj" />
-    <ProjectReference Include="../../Modules/*/*.csproj" />
+    <ProjectReference Include="../../Features/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Host/VSA.Host.csproj" />
   </ItemGroup>
 </Project>

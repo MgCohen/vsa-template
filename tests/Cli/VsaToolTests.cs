@@ -88,7 +88,7 @@ public sealed class VsaToolTests {
         Assert.That(Dotnet.Run(app, env, "vsa", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use VSA {LocalFeed.Version}."));
     }
 
-    // A new app has an empty Modules/ folder. It must build and start before the first add module.
+    // A new app has an empty Features/ folder. It must build and start before the first add module.
     [Test]
     [CancelAfter(600_000)]
     public async Task NewAppWithNoModuleBuildsAndRuns(CancellationToken ct) {

@@ -12,8 +12,8 @@ static class AddPluginCommand {
             throw new VsaException($"The plugin module {name} exists: Plugins/{name}");
         }
         // A module and a plugin module with the same name have the same assembly names.
-        if (Directory.Exists(Path.Combine(root, "Modules", name))) {
-            throw new VsaException($"The module {name} exists: Modules/{name}. Use a different name for the plugin module.");
+        if (Directory.Exists(Path.Combine(root, "Features", name))) {
+            throw new VsaException($"The module {name} exists: Features/{name}. Use a different name for the plugin module.");
         }
         var files = Templates.Files(Templates.Kind.Plugin, new Dictionary<string, string> { [Templates.Plugin] = name }, ToolVersion.Current);
         Console.WriteLine($"Adding the plugin module {name}:");

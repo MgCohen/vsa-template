@@ -8,8 +8,8 @@ static class AddModuleCommand {
     public static int Run(string name) {
         Names.Check(name, "module");
         var root = AppRoot.Find();
-        if (Directory.Exists(Path.Combine(root, "Modules", name))) {
-            throw new VsaException($"The module {name} exists: Modules/{name}");
+        if (Directory.Exists(Path.Combine(root, "Features", name))) {
+            throw new VsaException($"The module {name} exists: Features/{name}");
         }
         // A module and a plugin module with the same name have the same assembly names.
         if (Directory.Exists(Path.Combine(root, "Plugins", name))) {

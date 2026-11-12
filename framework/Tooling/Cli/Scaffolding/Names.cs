@@ -6,9 +6,9 @@ namespace VSA.Cli.Scaffolding;
 static partial class Names {
     // Names that break the build of the app:
     //   App, Views, Pages, Home   the app folders and namespaces (CS0138 in App/Views/Pages)
-    //   Modules, Plugins          the root folders of the modules and the plugin modules, where VSA.Sdk finds the layer of a project
+    //   Features, Plugins         the root folders of the modules and the plugin modules, where VSA.Sdk finds the layer of a project
     //   System, Microsoft         a namespace with this name hides the .NET namespaces
-    static readonly string[] Reserved = ["App", "Views", "Pages", "Home", "Modules", "Plugins", "System", "Microsoft"];
+    static readonly string[] Reserved = ["App", "Views", "Pages", "Home", "Features", "Plugins", "System", "Microsoft"];
 
     // The tool adds these suffixes to the name of a request or a command.
     static readonly Dictionary<string, string[]> Suffixes = new() {

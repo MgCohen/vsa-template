@@ -12,7 +12,7 @@ public sealed class FormattingBuildTests {
     [OneTimeSetUp]
     public void Build() {
         using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
-        build = workspace.Dotnet("build", "Modules/Styled/Styled.csproj", "-nodeReuse:false");
+        build = workspace.Dotnet("build", "Features/Styled/Styled.csproj", "-nodeReuse:false");
     }
 
     // TreatWarningsAsErrors is true in VSA.Sdk, but the formatting rules are in WarningsNotAsErrors.

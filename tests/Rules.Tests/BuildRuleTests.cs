@@ -9,7 +9,7 @@ namespace Rules.Tests;
 public sealed class BuildRuleTests {
     Workspace workspace = null!;
 
-    string Module => Path.Combine(workspace.Src, "Modules", "Shop");
+    string Module => Path.Combine(workspace.Src, "Features", "Shop");
 
     [OneTimeSetUp]
     public void Create() {
@@ -20,10 +20,10 @@ public sealed class BuildRuleTests {
     [OneTimeTearDown]
     public void Delete() => workspace.Dispose();
 
-    DotnetResult Build(string project = "Modules/Shop/Shop.csproj") => workspace.Dotnet("build", project, "-nodeReuse:false");
+    DotnetResult Build(string project = "Features/Shop/Shop.csproj") => workspace.Dotnet("build", project, "-nodeReuse:false");
 
     // Writes the files, builds, and then deletes the files, also when the test fails.
-    DotnetResult BuildWith(params (string Path, string Text)[] files) => BuildIn(Module, "Modules/Shop/Shop.csproj", files);
+    DotnetResult BuildWith(params (string Path, string Text)[] files) => BuildIn(Module, "Features/Shop/Shop.csproj", files);
 
     DotnetResult BuildIn(string folder, string project, params (string Path, string Text)[] files) {
         foreach (var (path, text) in files) {
@@ -79,7 +79,7 @@ public sealed class BuildRuleTests {
     // An IDE design-time build can start at Compile. The .NET SDK then adds the transitive references before the checks run.
     [Test]
     public void A_design_time_build_that_starts_at_Compile_passes() =>
-        workspace.Dotnet("msbuild", "Modules/Shop/Projects/Shop.Handlers.Requests.csproj", "-t:Compile", "-p:DesignTimeBuild=true",
+        workspace.Dotnet("msbuild", "Features/Shop/Projects/Shop.Handlers.Requests.csproj", "-t:Compile", "-p:DesignTimeBuild=true",
             "-p:BuildingProject=false", "-p:SkipCompilerExecution=true", "-p:ProvideCommandLineArgs=true", "-nodeReuse:false").EnsureSuccess();
 
     // The same project as a rule reference, but written by hand, so it has no VsaRule mark. A reference to the root would make a cycle.
