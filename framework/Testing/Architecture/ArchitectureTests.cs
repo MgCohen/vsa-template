@@ -9,48 +9,42 @@ namespace VSA.Testing.Architecture;
 public abstract class ArchitectureTests : ArchitectureTests<ArchitectureDefinition>;
 
 public abstract class ArchitectureTests<TDefinition> where TDefinition : ArchitectureDefinition {
-    static readonly Lazy<AppArchitecture> LoadedApp =
-        new(() => AppArchitecture.Load(DiscoveredApp.FromTestOutput(typeof(TDefinition))));
+    static readonly Lazy<ArchitectureMap> LoadedMap = new(() => ArchitectureMap.Load(typeof(TDefinition)));
 
-    protected static AppArchitecture Architecture => LoadedApp.Value;
+    protected static ArchitectureMap Map => LoadedMap.Value;
 
-    protected static IEnumerable<IType> AppTypes => Architecture.AppTypes;
+    protected static IEnumerable<IType> AppTypes => Map.AppTypes;
 
-    protected static IEnumerable<IType> BoundTypes => Architecture.BoundTypes;
+    protected static IEnumerable<IType> BoundTypes => Map.BoundTypes;
 
     protected static IEnumerable<TestCaseData> PartInstances =>
-        Architecture.PartInstances.Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
+        Map.PartInstances.Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
 
     protected static IEnumerable<TestCaseData> LimitedPartInstances =>
-        Architecture.PartInstances.Where(p => p.OfTypes.Count > 0 && p.Limited.Count > 0)
+        Map.PartInstances.Where(p => p.OfTypes.Count > 0 && p.Limited.Count > 0)
             .Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
 
     protected static IEnumerable<TestCaseData> ExposureLimitedPartInstances =>
-        Architecture.PartInstances.Where(p => p.Limits.Count > 0)
+        Map.PartInstances.Where(p => p.Limits.Count > 0)
             .Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
-
-    [SetUp]
-    public void UseThisArchitecture() {
-        ArchitectureScope.Current = Architecture;
-    }
 
     [TestCaseSource(nameof(PartInstances))]
     public void Uses_only_allowed_parts(PartInstance instance) {
-        Types().That().AreIn(instance).Should().NotDependOnAnyDeniedTo(instance).Check(Architecture);
+        Types().That().AreIn(instance).Should().NotDependOnAnyDeniedTo(instance).Check(Map);
     }
 
     [TestCaseSource(nameof(LimitedPartInstances))]
-    public void Has_the_type_of_its_part(PartInstance instance) {
-        Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Architecture);
+    public void Has_only_allowed_types(PartInstance instance) {
+        Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Map);
     }
 
     [TestCaseSource(nameof(ExposureLimitedPartInstances))]
     public void Exposes_only_allowed_parts(PartInstance instance) {
-        Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Architecture);
+        Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Map);
     }
 
     [Test]
     public void Each_type_is_in_a_part() {
-        Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Architecture);
+        Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Map);
     }
 }

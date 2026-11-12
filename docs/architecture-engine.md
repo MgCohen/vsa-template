@@ -16,7 +16,7 @@ flowchart LR
 | Project | Path | Contains |
 |---|---|---|
 | `VSA.Architecture` | `framework/Architecture/Definition/` | The definition API. No ArchUnitNET |
-| `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | Binding, decisions, discovery, `.Check(app)` |
+| `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | Binding, decisions, discovery, `.Check(map)` |
 | `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
 | `VSA.Testing.Architecture` | `framework/Testing/Architecture/` | The test base, the build targets |
 
@@ -31,18 +31,18 @@ public record Feature : Layer { public override string GroupFolder => "Features"
 public record Core : External { public override string Assembly => "VSA"; }
 
 public class VsaDefinition : ArchitectureDefinition {
-    protected override void Configure(Options options) => options.Unlisted = Permission.Deny;
+    protected override void Configure(Options options) => options.DefaultPermission = Permission.Deny;
 
     protected override void Define(Root root) {
         root.Add<Framework>().Add<Core>();
-        var feature = root.AddMany<Feature>();
-        feature.Add<RootClass>().NoFolder().OfType<VSA.Module.Module>();
-        feature.AddMany<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().NoFolder();
+        var feature = root.AddGroup<Feature>();
+        feature.Add<Module>().InParentFolder().OfType<VSA.Module.Module>();
+        feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
     }
 
-    protected override void Rules(Map map) {
-        map.For<Feature>().Denies<Feature>().InOther<Feature>();
-        map.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
+    protected override void Rules(RuleBook rules) {
+        rules.For<Feature>().Denies<Feature>().InOther<Feature>();
+        rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
     }
 }
 ```
@@ -50,32 +50,32 @@ public class VsaDefinition : ArchitectureDefinition {
 | Call | Effect |
 |---|---|
 | `Add<T>()`, `And<T>()` | A part in the folder of the layer, or a sibling part |
-| `AddMany<T>()` | A group: one part instance for each subfolder |
-| `NoFolder()` | The part shares the folder of its parent. Give it `OfType` |
+| `AddGroup<T>()` | A group: one part instance for each subfolder |
+| `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>()` | Each type of the part must be assignable to `T` |
 | `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
-| `Under<T>()`, `InOwn<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
+| `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `Unlisted` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Isolation`, `SameLayer`, `Reach` and `Access`.
+`Options` sets `DefaultPermission` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Boundary`, `UseSameLayer`, `Depth` and `Access`.
 
-`options.SameLayer = Permission.Allow` lets each part use each part of the same layer, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Isolation also limits them (see Isolation). The default is `Deny`.
+`options.UseSameLayer = true` lets each part use each part of the same layer, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
-## Isolation
+## Boundary
 
-An isolated group keeps its items apart: an allow rule reaches a part in another item of the group only if the rule crosses the group. The first value that is set wins:
+A closed group keeps its instances apart: an allow rule reaches a part in another instance of the group only if the rule crosses the group. The first value that is set wins:
 
-1. The parameter of the rule call: `Uses<Contracts.Commands>(Isolation.Open)` crosses each isolated group.
-2. The parameter of the group: `root.AddMany<Plugin>(Isolation.Open)`.
-3. `options.Isolation`. Its default is `Isolation.Open`.
+1. The parameter of the rule call: `Uses<Contracts.Commands>(Boundary.Open)` crosses each closed group.
+2. The parameter of the group: `root.AddGroup<Plugin>(Boundary.Open)`.
+3. `options.Boundary`. Its default is `Boundary.Open`.
 
-In the example, the first rule reaches the Domain of the own feature, of Core and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Isolation does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
+In the example, the first rule reaches the Domain of the own feature, of Core and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Boundary does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
 
 ```csharp
-options.Isolation = Isolation.Isolated;
-map.For<Infrastructure>().Uses<Domain>();
-map.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
+options.Boundary = Boundary.Closed;
+rules.For<Infrastructure>().Uses<Domain>();
+rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 ```
 
 ## External parts
@@ -86,19 +86,19 @@ The definition stops at these errors:
 
 | Definition | Error |
 |---|---|
-| `AddMany<External>()` | A DLL is not a group of folders |
-| An external under a group | A DLL has no copy for each group item |
+| `AddGroup<External>()` | A DLL is not a group of folders |
+| An external under a group | A DLL has no copy for each group instance |
 | An external under an external | The child gets its DLL name from its parent |
-| `AddMany` under an external | DLL names have no item segment |
-| `NoFolder()` on an external part | Its name is a DLL name segment |
+| `AddGroup` under an external | DLL names have no instance segment |
+| `InParentFolder()` on an external part | Its name is a DLL name segment |
 
-## Reach
+## Depth
 
-`Reach.Only` gives the part only. `Reach.WithChildren` gives the part and all its child parts. The first value that is set wins:
+`Depth.Self` gives the part only. `Depth.WithChildren` gives the part and all its child parts. The first value that is set wins:
 
-1. The parameter of the rule call, for example `Uses<Contracts>(Reach.WithChildren)`.
-2. The layer body, for example `part.Reaches(Reach.Only)` in `Define(Part)` of the layer.
-3. `options.Reach`.
+1. The parameter of the rule call, for example `Uses<Contracts>(Depth.WithChildren)`.
+2. The layer body, for example `options.Depth = Depth.Self` in `Configure(LayerOptions)` of the layer.
+3. `options.Depth`.
 
 ## Permission and access
 
@@ -112,8 +112,8 @@ A rule has two values:
 `Uses<T>()` allows the use. `Denies<T>()` denies it. An access limits an allowed use:
 
 ```csharp
-map.For<Contracts.Requests>().Uses<Domain.Shared>();               // use and expose
-map.For<Handlers.Requests>().Uses<Domain>(Access.Internal);        // use, but do not expose outside the assembly
+rules.For<Contracts.Requests>().Uses<Domain.Shared>();               // use and expose
+rules.For<Handlers.Requests>().Uses<Domain>(Access.Internal);        // use, but do not expose outside the assembly
 ```
 
 A type exposes a part when a type of that part is in its signature: a base type, an interface, or the type of a member (a method return or parameter, a property, a field), with their generic arguments. The access of a member is the narrowest of the member and its type. The order is partial: `Protected` and `Internal` are not comparable, so `Protected` is not within `Internal`.
@@ -130,7 +130,7 @@ An interface of the app or of .NET is not of an `External` part, so it counts. F
 The first access that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.
-2. The layer body, for example `part.Accesses(Access.Private)` in `Define(Part)` of the layer.
+2. The layer body, for example `options.Access = Access.Private` in `Configure(LayerOptions)` of the layer.
 3. `options.Access`. Its default is `Access.Public`, so a rule with no access allows use and exposure.
 
 ## Binding
@@ -138,9 +138,9 @@ The first access that is set wins:
 | Type | Part |
 |---|---|
 | In a DLL that an `External` part names | That part. The longest name wins |
-| Source file in a part folder | The deepest part that matches the folder. A group item matches each name |
+| Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
 | Source file only in `obj/` or `bin/` | The project folder of the file |
-| Helper type in a `NoFolder` folder | The part of the first type that uses it ("follows user") |
+| Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
 | Source file in no part folder | None: `VSA2102` |
 | Source file out of the definition root | Not checked |
 
@@ -153,22 +153,22 @@ The engine reads the source file and the first line of each type from the PDB fi
 ```csharp
 [TestCaseSource(nameof(PartInstances))]
 public void Uses_only_allowed_parts(PartInstance instance) {
-    Types().That().AreIn(instance).Should().NotDependOnAnyDeniedTo(instance).Check(Architecture);
+    Types().That().AreIn(instance).Should().NotDependOnAnyDeniedTo(instance).Check(Map);
 }
 
 [TestCaseSource(nameof(LimitedPartInstances))]
-public void Has_the_type_of_its_part(PartInstance instance) {
-    Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Architecture);
+public void Has_only_allowed_types(PartInstance instance) {
+    Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Map);
 }
 
 [TestCaseSource(nameof(ExposureLimitedPartInstances))]
 public void Exposes_only_allowed_parts(PartInstance instance) {
-    Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Architecture);
+    Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Map);
 }
 
 [Test]
 public void Each_type_is_in_a_part() {
-    Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Architecture);
+    Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Map);
 }
 ```
 
@@ -176,13 +176,13 @@ public void Each_type_is_in_a_part() {
 |---|---|---|
 | `VSA2001` | `Uses_only_allowed_parts` | A type uses a part that the rules deny |
 | `VSA2003` | `Exposes_only_allowed_parts` | A type exposes a part with more access than its rule allows |
-| `VSA2101` | `Has_the_type_of_its_part` | A type is not assignable to the `OfType` of its part |
+| `VSA2101` | `Has_only_allowed_types` | A type is not assignable to the `OfType` of its part |
 | `VSA2102` | `Each_type_is_in_a_part` | A type is in a folder that the definition does not have |
 
-`.Check(Architecture)` gives one line for each failure:
+`.Check(Map)` gives one line for each failure:
 
 ```text
-Features/Notes/Slices/Read/ReadHandler.cs(6): error VSA2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (Unlisted = Deny). Remove the use, or change the rule in Rules.
+Features/Notes/Slices/Read/ReadHandler.cs(6): error VSA2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
 ```
 
 ## Test project of an app
@@ -199,7 +199,7 @@ public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTe
 | App root | `AssemblyMetadata("VsaAppRoot")` of the test assembly, else the nearest `global.json` |
 | App DLLs | Each DLL of the test output with PDB source files under the app root |
 | External DLLs | Each DLL of the test output whose name an `External` part names |
-| Definition | The `Architecture` of the most derived `IArchitectureSource` (the app class), if it is a `TDefinition` |
+| Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class), if it is a `TDefinition` |
 | Fallback definition | The most derived class with no constructor parameters that is or inherits `TDefinition` |
 | Not loaded | The test assembly, `VSA.Architecture`, and each DLL that references `VSA.Architecture.Engine` |
 
@@ -211,17 +211,17 @@ using VSA.Architecture.Vsa;
 using VSA.Host;
 
 public class MyApp : VsaApp<MyApp> {
-    protected override void Rules(Map map) => map.For<Presenters>().Denies<Contracts.Events>();
+    protected override void Rules(RuleBook rules) => rules.For<Presenters>().Denies<Contracts.Events>();
 }
 ```
 
-To add a test of the app, write the other part of the class. `AreIn<TLayer>()` and `NotDependOnAny<TLayer>()` select the types of a layer. The layers are in the namespace `VSA.Architecture.Vsa`:
+To add a test of the app, write the other part of the class. `AreIn<TLayer>(Map)` and `NotDependOnAny<TLayer>(Map)` select the types of a layer. The layers are in the namespace `VSA.Architecture.Vsa`:
 
 ```csharp
 public partial class ArchitectureTests {
     [Test]
     public void Domain_does_not_use_Infrastructure() {
-        Types().That().AreIn<Domain>().Should().NotDependOnAny<Infrastructure>().Check(Architecture);
+        Types().That().AreIn<Domain>(Map).Should().NotDependOnAny<Infrastructure>(Map).Check(Map);
     }
 }
 ```

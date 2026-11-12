@@ -5,8 +5,8 @@ namespace Architecture.Tests;
 public record OpenTarget : Layer;
 
 public record ClosedTarget : Layer {
-    protected override void Define(Part part) {
-        part.Accesses(Access.Private);
+    protected override void Configure(LayerOptions options) {
+        options.Access = Access.Private;
     }
 }
 
@@ -23,8 +23,8 @@ public sealed class AccessDefinition<TTarget>(Access options, Access? method) : 
         root.Add<TTarget>();
     }
 
-    protected override void Rules(Map map) {
-        map.For<User>().Uses<TTarget>(method);
+    protected override void Rules(RuleBook rules) {
+        rules.For<User>().Uses<TTarget>(method);
     }
 }
 

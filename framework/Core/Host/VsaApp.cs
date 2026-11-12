@@ -6,7 +6,7 @@ using VSA.Composition;
 
 namespace VSA.Host;
 
-public abstract class VsaApp<TApp> : IArchitectureSource where TApp : VsaApp<TApp>, new() {
+public abstract class VsaApp<TApp> : IArchitectureProvider where TApp : VsaApp<TApp>, new() {
     public ArchitectureDefinition Architecture => new VsaDefinition(Rules);
 
     public static int Run(string[] args) => new TApp().Start(args);
@@ -23,5 +23,5 @@ public abstract class VsaApp<TApp> : IArchitectureSource where TApp : VsaApp<TAp
 
     protected virtual void Services(IServiceCollection services) { }
 
-    protected virtual void Rules(Map map) { }
+    protected virtual void Rules(RuleBook rules) { }
 }

@@ -59,7 +59,7 @@ public sealed class VsaAppTests {
     sealed class PlainApp : VsaApp<PlainApp>;
 
     sealed class RulesApp : VsaApp<RulesApp> {
-        protected override void Rules(Map map) => map.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
+        protected override void Rules(RuleBook rules) => rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
     }
 
     sealed class StartedApp : VsaApp<StartedApp> {

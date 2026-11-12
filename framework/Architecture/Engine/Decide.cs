@@ -3,22 +3,24 @@ using System.Runtime.CompilerServices;
 namespace VSA.Architecture.Engine;
 
 public static class Decide {
-    static readonly ConditionalWeakTable<ArchitectureDefinition, ILookup<(Part From, Part To), Pair>> PairsByParts = [];
+    static readonly ConditionalWeakTable<ArchitectureDefinition, ILookup<PartPair, PartRule>> RulesByParts = [];
 
-    public static (Permission Permission, Pair? Pair) For(ArchitectureDefinition definition, Binding from, Binding to) =>
-        For(definition, from.Part, from.Items, to.Part, to.Items);
+    public static Decision For(ArchitectureDefinition definition, Binding from, Binding to) =>
+        For(definition, from.Part, from.Values, to.Part, to.Values);
 
-    public static (Permission Permission, Pair? Pair) For(ArchitectureDefinition definition,
-        Part fromPart, IReadOnlyDictionary<string, string> fromItems, Part toPart, IReadOnlyDictionary<string, string> toItems) {
-        var pairs = PairsByParts.GetValue(definition, d => d.Resolve().ToLookup(p => (p.From, p.To)));
-        Pair? winner = null;
-        foreach (var pair in pairs[(fromPart, toPart)]) {
-            if (Holds(pair.Condition, fromItems, toItems)) {
-                winner = pair;
+    public static Decision For(ArchitectureDefinition definition,
+        Part fromPart, IReadOnlyDictionary<string, string> fromValues, Part toPart, IReadOnlyDictionary<string, string> toValues) {
+        var rules = RulesByParts.GetValue(definition, d => d.Resolve().ToLookup(r => new PartPair(r.From, r.To)));
+        PartRule? winner = null;
+        foreach (var rule in rules[new PartPair(fromPart, toPart)]) {
+            if (Holds(rule.Condition, fromValues, toValues)) {
+                winner = rule;
             }
         }
-        return (winner?.Permission ?? definition.Options.Unlisted, winner);
+        return new Decision(winner?.Permission ?? definition.Options.DefaultPermission, winner);
     }
+
+    readonly record struct PartPair(Part From, Part To);
 
     static bool Holds(string condition, IReadOnlyDictionary<string, string> from, IReadOnlyDictionary<string, string> to) =>
         condition == "always" || condition.Split(", ").All(term => {

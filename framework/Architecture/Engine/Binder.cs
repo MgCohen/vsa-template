@@ -4,8 +4,8 @@ namespace VSA.Architecture.Engine;
 
 public static class Binder {
     public static List<Binding> Bind(ArchitectureDefinition definition, IEnumerable<IType> types, Dictionary<string, Source> sources,
-        string appRoot, List<string> outside, List<(IType Type, Source Source)> unmapped) {
-        var folderParts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsMany)).ToList();
+        string appRoot, List<string> outside, List<UnmappedType> unmapped) {
+        var folderParts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup)).ToList();
         var externalParts = definition.Parts().Where(p => p.IsExternal).ToList();
         var rootPath = definition.Root.Path;
         var bound = new List<Binding>();
@@ -39,15 +39,15 @@ public static class Binder {
                 .Where(m => m.Pattern.Length <= folders.Length && m.Pattern.Select((s, i) => Matches(s, folders[i])).All(x => x))
                 .OrderByDescending(m => m.Pattern.Length)
                 .FirstOrDefault();
-            var undeclared = match.Part is not null && match.Part.IsMany && folders.Length > match.Pattern.Length;
+            var undeclared = match.Part is not null && match.Part.IsGroup && folders.Length > match.Pattern.Length;
             if (match.Part is null || undeclared) {
-                unmapped.Add((type, source with { File = relative }));
+                unmapped.Add(new UnmappedType(type, source with { File = relative }));
                 continue;
             }
 
             var part = Select(match.Part, type);
-            var items = part.Items.ToDictionary(i => i.Name, i => folders[i.Path.Split('/').Length - 1]);
-            bound.Add(new Binding(type, part, items, source with { File = relative }));
+            var values = part.Groups.ToDictionary(i => i.Name, i => folders[i.Path.Split('/').Length - 1]);
+            bound.Add(new Binding(type, part, values, source with { File = relative }));
         }
         return FollowUsers(bound);
     }
@@ -75,7 +75,7 @@ public static class Binder {
                 if (shared.Count == 0) {
                     continue;
                 }
-                var users = bound.Where(b => shared.Contains(b.Part) && b.Instance == helper.Instance
+                var users = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path
                     && b.Type.Dependencies.Any(d => d.Target == helper.Type)).Select(b => b.Part).Distinct().ToList();
                 var target = users.OrderBy(p => p.Types.Count == 0).ThenBy(p => shared.IndexOf(p)).FirstOrDefault();
                 if (target is null) {
@@ -98,5 +98,5 @@ public static class Binder {
     }
 
     static IEnumerable<Part> NoFolderChildren(Part part) =>
-        part.Children.Where(c => !c.HasFolder && !c.IsMany).SelectMany(c => new[] { c }.Concat(NoFolderChildren(c)));
+        part.Children.Where(c => !c.HasFolder && !c.IsGroup).SelectMany(c => new[] { c }.Concat(NoFolderChildren(c)));
 }
