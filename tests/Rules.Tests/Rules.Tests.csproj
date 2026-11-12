@@ -1,10 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <!-- The rule tests give their own apps to VsaArchitectureTests (FixtureApp). -->
-    <VsaArchitectureTests>false</VsaArchitectureTests>
-  </PropertyGroup>
-  <!-- Tests of the checks: the architecture rules on the fixtures in tests/Fixtures/Rules, the analyzers with the
-       Roslyn analyzer test library, the unit test base, and the layer map. NUnit comes from tests/Directory.Build.props. -->
+  <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the build rules of VSA.Sdk and the unit test base.
+       The architecture engine has its own tests in tests/Architecture.Tests. NUnit comes from tests/Directory.Build.props. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <!-- The test library asks for old versions. These are the versions that VSA.Analyzers uses, and a version with no known vulnerability. -->
@@ -13,7 +9,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Analyzers/VSA.Analyzers.csproj" />
     <!-- The slice router of VSA.Sdk (SliceRouterTests). -->
     <ProjectReference Include="$(RepoRoot)framework/Sdk/Tasks/VSA.Sdk.Tasks.csproj" />
@@ -21,11 +16,9 @@
     <!-- The analyzer tests compile code against these assemblies. -->
     <ProjectReference Include="$(RepoRoot)framework/Core/Handlers/Events/VSA.Handlers.Events.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Core/Presenters/VSA.Presenters.csproj" />
-    <!-- Each fixture module root, with its layers. -->
+    <!-- The fixture module of the unit test base (UnitBaseTests). -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Rules/Features/*/*.csproj" />
-    <!-- A fixture app with plugin modules, apart from the rule fixtures so that they do not get the plugin modules. -->
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/PluginApp/Features/*/*.csproj" />
-    <!-- A fixture app with commands and Domain.Shared projects. -->
+    <!-- A fixture app with commands and Domain.Shared projects (UnitBaseCommandTests). -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/*/*.csproj" />
   </ItemGroup>
 </Project>

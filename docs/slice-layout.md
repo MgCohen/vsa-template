@@ -147,7 +147,7 @@ The `VSA.Sdk` package holds the task DLL and its Roslyn dependencies in `Sdk/tas
 | `VSA1003` | Contracts projects hold only contract types and their DTOs | Compile, also while you type | Editor and build |
 | `VSA1005`–`VSA1007` | `Domain.Shared` types hold only immutable data | Compile, also while you type | Editor and build |
 | `CS` errors | Forbidden uses between projects, from the layer map | Compile | Editor and build |
-| `VSA2001` | Module projects follow the layer map | Test run | Test results |
+| `VSA2001` | Each type uses only the parts that the VSA definition permits | Test run | Test results |
 
 `VSA0001`, `VSA0004` and `VSA0006` are in one target, `_VsaCheck`. Their lists are made at evaluation, so the order of the requested targets does not change the result.
 

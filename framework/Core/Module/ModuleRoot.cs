@@ -9,8 +9,7 @@ namespace VSA.Module;
 // IsPlugin: the root class inherits Plugin, so the module is the base of the same layer in each module.
 // VSA1014 makes the root class agree with the root folder at build time.
 public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<string> Layers) {
-    // The layers of a module project, from the lowest. VSA0004 checks the same names on the project files,
-    // and a test checks them against the layer map of VSA.Testing.Core.
+    // The layers of a module project, from the lowest. VSA0004 checks the same names on the project files.
     public static readonly IReadOnlyList<string> LayerNames = [
         "Domain.Shared", "Domain", "Infrastructure",
         "Contracts.Requests", "Contracts.Events", "Contracts.Commands",

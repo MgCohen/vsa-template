@@ -2,6 +2,8 @@
 
 [Index](README.md)
 
+> Status: the architecture tests now use the engine in [architecture-engine.md](../architecture-engine.md). `Layers.cs`, `VSA.Testing.Core` and `SdkLayerMapTests` are removed. A copy is in `docs/legacy/architecture-tests/`.
+
 The VSA layers, root folders, markers and installers go into one architecture definition. A generic engine reads the definition: the Sdk, the router, the architecture tests and the composer. VSA is then the first definition, and another app can give a different architecture with the same engine.
 
 ## The problem: the definition is in six places

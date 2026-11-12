@@ -13,7 +13,8 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `framework/Core/`     | The framework core: one project for each layer base. Ships as NuGet packages. Plugin modules extend it |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project, the layer references and the slice router (`Tasks/`) |
 | `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build. `Markers/` (VSA.Analyzers.Markers): the marker attributes that the rules and the module scan read, for example `[ReflectionBase]`, `[AutoRegister]` and `[TypeArgument]` |
-| `framework/Testing/`  | The test bases that ship: `Core/` (the layer map), `Architecture/` (ArchUnitNET), `Unit/` (NUnit, NSubstitute) |
+| `framework/Architecture/` | The architecture engine: `Definition/` (VSA.Architecture, the definition API), `Engine/` (VSA.Architecture.Engine: binding, discovery, checks with ArchUnitNET) |
+| `framework/Testing/`  | The test bases that ship: `Architecture/` (the VSA definition and the three architecture tests), `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
@@ -44,6 +45,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Framework.Tests/` | Tests of one framework layer. One folder for each area, for example `Settings/`, `Host/` |
 | `tests/Consumer.Tests/`  | Tests that pack the framework and build a copy of a sample as a consumer  |
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
+| `tests/Architecture.Tests/` | Tests of the architecture engine, on the fixture apps in `tests/Fixtures/Architecture/` |
 | `tests/Composition.Tests/` | Tests of the composer, the installers and `ModuleBuilder`, with no ASP.NET Core |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
@@ -83,9 +85,9 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule` in `framework/Analyzers/`. The one `VsaAnalyzer` finds and runs it. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`. Each value that a rule uses (a limit, a list, an order) is an option: list it in `RequiredOptions`, write its value only in `framework/Sdk/Sdk/VSA.Rules.globalconfig`, and read it with `Options(...)`. A rule has no default value in code: a missing value gives `VSA1000`. A rule with a maximum inherits `LimitRule`. A rule about any code, not only modules, sets `IsModuleRule` to false: then it also checks the framework code.
-3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests` (`framework/Testing/Architecture/`). Write the rule only there. Use the next free `VSA2xxx` ID in the test name. For a layer rule, change the layer map in `framework/Testing/Core/Layers.cs` and in `VSA.Layers.targets`.
+3. Else change the rules of the VSA definition (`framework/Testing/Architecture/VsaDefinition.cs`). The three architecture tests (`VSA2001`, `VSA2101`, `VSA2102`) check them. For a layer change, also change `VSA.Layers.targets`. See `docs/architecture-engine.md`.
 4. Write a message that gives what is wrong, the type names, and the fix.
-5. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs` (built fixture `tests/Fixtures/Built/Shop`). For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Features/`, and call the base test with `FixtureApp.Of("<module>")`.
+5. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs` (built fixture `tests/Fixtures/Built/Shop`). For an analyzer, use the Roslyn analyzer test library (`AnalyzerTests.cs`). For the architecture engine, add a case to `tests/Architecture.Tests/` with the fixture apps in `tests/Fixtures/Architecture/`.
 6. Add the rule to the table in `docs/architecture-rules.md`.
 
 ## Working agreements

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The engine: it binds each type of the app to a part of the definition, decides each use, and explains each failure.
+       It reads the source files from the PDB files with Mono.Cecil. It has no test framework. -->
+  <ItemGroup>
+    <ProjectReference Include="../Definition/VSA.Architecture.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET" />
+    <PackageReference Include="Mono.Cecil" />
+  </ItemGroup>
+</Project>

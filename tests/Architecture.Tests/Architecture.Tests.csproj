@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests of the architecture engine on the fixture apps in tests/Fixtures/Architecture, with a small test definition.
+       The tests give their own definitions, so the build does not add the VSA test class. -->
+  <PropertyGroup>
+    <VsaArchitectureTests>false</VsaArchitectureTests>
+    <VsaAppRoot>$(RepoRoot)tests/Fixtures/Architecture/</VsaAppRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
+  </ItemGroup>
+</Project>

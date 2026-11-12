@@ -7,9 +7,7 @@ using Resources.Domain.Shared;
 using Resources.Slices.ChangeResource;
 using Tests.Shared;
 using VSA.Contracts.Commands;
-using VSA.Testing.Architecture;
 using VSA.Testing.Unit;
-using static Rules.Tests.Fixtures;
 
 namespace Rules.Tests;
 
@@ -76,17 +74,6 @@ public sealed class SdkCommandTests {
     [Test]
     public void A_command_handler_gets_its_own_events() =>
         Assert.That(References(Layer("Cards", "Handlers.Commands")), Does.Contain("Cards/Cards.Contracts.Events"));
-}
-
-public sealed class CommandAppRuleTests {
-    static VsaApp App() => new([
-        Root("Battle"),
-        Root("Cards"),
-        Root("Resources"),
-    ]);
-
-    [Test]
-    public void The_fixture_follows_the_layer_map() => FixtureApp.Of(App()).VSA2001_module_projects_follow_the_layer_map();
 }
 
 // The unit test base runs a command handler. The handler sends a command of Resources, so the test mocks ICommandSender.
