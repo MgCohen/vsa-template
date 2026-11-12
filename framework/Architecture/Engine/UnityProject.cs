@@ -1,11 +1,9 @@
-namespace VSA.Architecture;
+namespace VSA.Architecture.Engine;
 
-public static class UnityProject {
+static class UnityProject {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
     public const string LibraryFolder = "Library";
     public const string ScriptAssembliesFolder = "Library/ScriptAssemblies";
-    public const string AssetsFolder = "Assets";
-    public const string PluginsFolder = "Plugins";
 
     public static bool Is(string appRoot) => File.Exists(Path.Combine(appRoot, VersionFile));
 

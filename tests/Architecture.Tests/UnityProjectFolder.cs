@@ -3,17 +3,18 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
-using VSA.Architecture;
 
 namespace Architecture.Tests;
 
 sealed class UnityProjectFolder : IDisposable {
+    public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
+
     UnityProjectFolder(string root) {
         Root = root;
         Output = root + "-out";
         Directory.CreateDirectory(Output);
         Write("global.json", "{}");
-        Write(UnityProject.VersionFile, "m_EditorVersion: 6000.6.0f1");
+        Write(VersionFile, "m_EditorVersion: 6000.6.0f1");
     }
 
     public string Root { get; }

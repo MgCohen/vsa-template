@@ -1,4 +1,3 @@
-using VSA.Architecture;
 using VSA.Architecture.Engine;
 using VSA.Architecture.Vsa;
 
@@ -19,7 +18,7 @@ public sealed class UnityDiscoveryTests {
         var view = project.Write("Assets/Game/Views/Board.cs", "namespace Game.Views; public sealed class Board { public Notes.Domain.Note? Shown; }");
         var package = project.Write("Library/PackageCache/com.vendor.tool/Tool.cs", "namespace Vendor; public sealed class Tool { }");
         var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
-        project.Compile("Assembly-CSharp", UnityProject.ScriptAssemblies(project.Root), module, note, view, package);
+        project.Compile("Assembly-CSharp", Path.Combine(project.Root, "Library", "ScriptAssemblies"), module, note, view, package);
         project.Compile("Game.Modules", project.Output, module, note, tasks);
         app = DiscoveredApp.FromFolder(project.Output, typeof(VsaDefinition), project.Root);
         architecture = AppArchitecture.Load(app);

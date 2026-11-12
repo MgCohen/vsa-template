@@ -20,14 +20,14 @@ public class VsaDefinition : ArchitectureDefinition {
     public string UnitySource { get; init; } = DefaultUnitySource;
 
     public override IReadOnlyList<FolderMap> Folders(string appRoot) {
-        if (!UnityProject.Is(appRoot)) {
+        if (!UnityLayout.Is(appRoot)) {
             return [];
         }
         var source = new FolderMap(UnitySource, "");
         if ((UnityApp ?? FindUnityApp(appRoot)) is not { } app) {
             return [source];
         }
-        var appFolder = $"{UnityProject.AssetsFolder}/{app}";
+        var appFolder = $"{UnityLayout.AssetsFolder}/{app}";
         return [new FolderMap(appFolder, ""), new FolderMap(appFolder, AppFolder), source];
     }
 
@@ -36,14 +36,14 @@ public class VsaDefinition : ArchitectureDefinition {
     static readonly string[] UnityAppMarkers = [new Feature().GroupFolder!, new Plugin().GroupFolder!, new Views().Folder];
 
     static string? FindUnityApp(string appRoot) {
-        var assets = Path.Combine(appRoot, UnityProject.AssetsFolder);
+        var assets = Path.Combine(appRoot, UnityLayout.AssetsFolder);
         if (!Directory.Exists(assets)) {
             return null;
         }
         var found = Directory.GetDirectories(assets)
             .Where(folder => UnityAppMarkers.Any(marker => Directory.Exists(Path.Combine(folder, marker))))
             .Select(Path.GetFileName)
-            .Where(name => !string.Equals(name, UnityProject.PluginsFolder, StringComparison.OrdinalIgnoreCase))
+            .Where(name => !string.Equals(name, UnityLayout.PluginsFolder, StringComparison.OrdinalIgnoreCase))
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
         return found.Count switch {

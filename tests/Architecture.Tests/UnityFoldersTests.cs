@@ -7,7 +7,7 @@ public sealed class UnityFoldersTests {
     [Test]
     public void A_dotnet_app_has_no_folder_maps() {
         using var project = UnityProjectFolder.Create();
-        File.Delete(Path.Combine(project.Root, UnityProject.VersionFile));
+        File.Delete(Path.Combine(project.Root, UnityProjectFolder.VersionFile));
 
         Assert.That(new VsaDefinition().Folders(project.Root), Is.Empty);
     }
