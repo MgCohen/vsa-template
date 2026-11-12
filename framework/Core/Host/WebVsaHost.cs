@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VSA.Composition;
 using VSA.Handlers.Requests;
@@ -29,4 +30,11 @@ sealed class WebVsaHost : IVsaHost {
         }
         return app;
     }
+
+    public int Run(IHost app) {
+        app.Run();
+        return 0;
+    }
+
+    public void Stop(IHost app) => app.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
 }

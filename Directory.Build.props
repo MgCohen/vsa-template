@@ -1,7 +1,7 @@
 <Project>
   <!-- The layers that Unity can use also target netstandard2.1 (see docs/consumers.md). -->
   <PropertyGroup>
-    <VsaPortableLayer Condition="'$(MSBuildProjectName)' == 'VSA.Domain' or '$(MSBuildProjectName)' == 'VSA.Handlers' or '$(MSBuildProjectName)' == 'VSA.Contracts' or '$(MSBuildProjectName)' == 'VSA.Contracts.Events' or '$(MSBuildProjectName)' == 'VSA.Contracts.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Events' or '$(MSBuildProjectName)' == 'VSA.Infrastructure' or '$(MSBuildProjectName)' == 'VSA.Module' or '$(MSBuildProjectName)' == 'VSA.Composition' or '$(MSBuildProjectName)' == 'VSA.Contracts.Requests' or '$(MSBuildProjectName)' == 'VSA.Handlers.Requests' or '$(MSBuildProjectName)' == 'VSA.Presenters'">true</VsaPortableLayer>
+    <VsaPortableLayer Condition="'$(MSBuildProjectName)' == 'VSA.Domain' or '$(MSBuildProjectName)' == 'VSA.Handlers' or '$(MSBuildProjectName)' == 'VSA.Contracts' or '$(MSBuildProjectName)' == 'VSA.Contracts.Events' or '$(MSBuildProjectName)' == 'VSA.Contracts.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Events' or '$(MSBuildProjectName)' == 'VSA.Infrastructure' or '$(MSBuildProjectName)' == 'VSA.Module' or '$(MSBuildProjectName)' == 'VSA.Composition' or '$(MSBuildProjectName)' == 'VSA.Contracts.Requests' or '$(MSBuildProjectName)' == 'VSA.Handlers.Requests' or '$(MSBuildProjectName)' == 'VSA.Presenters' or '$(MSBuildProjectName)' == 'VSA.Architecture' or '$(MSBuildProjectName)' == 'VSA.Architecture.Vsa'">true</VsaPortableLayer>
   </PropertyGroup>
 
   <PropertyGroup>

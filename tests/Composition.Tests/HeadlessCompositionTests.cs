@@ -110,13 +110,12 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void Build_with_no_host_is_an_error() {
+    public void Build_with_no_host_and_no_VSA_Host_selects_the_generic_host() {
         var app = VsaBuilder.Create().Modules();
 
-        var error = Assert.Throws<InvalidOperationException>(() => app.Build());
+        using var host = app.Build();
 
-        Assert.That(error.Message, Is.EqualTo(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call services.AddVsa(args) with no host."));
+        Assert.That(app.SelectedHost().GetType().Name, Is.EqualTo("GenericVsaHost"));
     }
 
     [Test]
