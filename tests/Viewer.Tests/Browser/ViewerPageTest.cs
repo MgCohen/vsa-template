@@ -5,7 +5,7 @@ namespace Viewer.Tests.Browser;
 
 public abstract class ViewerPageTest : PlaywrightTest
 {
-    private const int AppEdges = 39;
+    private const int AppEdges = 1;
 
     private IBrowser? browser;
     private IBrowserContext? context;

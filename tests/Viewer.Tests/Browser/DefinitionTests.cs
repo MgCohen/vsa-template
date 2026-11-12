@@ -3,8 +3,8 @@ namespace Viewer.Tests.Browser;
 [Category("Browser")]
 public sealed class DefinitionTests : ViewerPageTest
 {
-    private const string RootToCore = "r20:RootClass>Core";
-    private const string PluginToFeature = "r12:Plugin>Feature";
+    private const string RootToCore = "r24:RootClass>Core";
+    private const string PluginToFeature = "r15:Plugin>Feature";
 
     [Test]
     public async Task The_definition_view_draws_each_part_and_one_edge_for_each_rule_and_layer_pair()

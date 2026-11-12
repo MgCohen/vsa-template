@@ -72,7 +72,7 @@ public sealed partial class GraphPage
         await Page.SelectOptionAsync("select.draft-access", "Allow");
         await Page.SelectOptionAsync("select.draft-condition", "InOwn");
         await Page.SelectOptionAsync("select.draft-layer", "Feature");
-        int drafts = await DrawLink(Port("p36", "Out", ""), Port("p35", "In", ""));
+        int drafts = await DrawLink(Port("p39", "Out", ""), Port("p38", "In", ""));
         await WaitFor(Scripts.NewRuleDrawn, null);
         await Settle();
         return drafts;

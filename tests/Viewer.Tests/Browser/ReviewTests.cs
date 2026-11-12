@@ -3,9 +3,9 @@ namespace Viewer.Tests.Browser;
 [Category("Browser")]
 public sealed class ReviewTests : ViewerPageTest
 {
-    private const string Merged = "r18:Handlers.Requests>Contracts.Events";
-    private const string First = "r18:Handlers.Requests>Contracts.Events";
-    private const string Second = "r19:Handlers.Requests>Contracts.Events";
+    private const string Merged = "r22:Handlers.Requests>Contracts.Events";
+    private const string First = "r22:Handlers.Requests>Contracts.Events";
+    private const string Second = "r23:Handlers.Requests>Contracts.Events";
 
     [Test]
     public async Task A_merged_edge_lists_each_rule_and_Delete_asks_for_a_rule()
@@ -55,8 +55,8 @@ public sealed class ReviewTests : ViewerPageTest
     {
         await Graph.ShowDefinition();
         await Graph.StartEditing();
-        await Graph.RemoveRule("r20:RootClass>Core");
-        await Graph.FlipRule("r12:Plugin>Feature", "Allow");
+        await Graph.RemoveRule("r24:RootClass>Core");
+        await Graph.FlipRule("r15:Plugin>Feature", "Allow");
         await Graph.Press("Reset view");
         string fit = await Graph.Transform();
         int[] point = await Graph.Page.EvaluateAsync<int[]>(Scripts.BackgroundPoint);
@@ -68,11 +68,11 @@ public sealed class ReviewTests : ViewerPageTest
         Assert.That(panned, Is.Not.EqualTo(fit));
         Assert.That(await Graph.Transform(), Is.EqualTo(fit));
         Assert.That(await Graph.Changes(), Is.EqualTo("2 rule changes, 0 what-if links"));
-        Assert.That(await Graph.EdgeAttribute("r20:RootClass>Core", "data-removed"), Is.EqualTo("true"));
+        Assert.That(await Graph.EdgeAttribute("r24:RootClass>Core", "data-removed"), Is.EqualTo("true"));
         await Graph.Page.ClickAsync("button:has-text(\"Discard changes\")");
         await Graph.WaitChangesStartWith("0 rule");
         Assert.That(await Graph.Pending(), Is.Empty);
-        Assert.That(await Graph.EdgeAttribute("r20:RootClass>Core", "data-removed"), Is.EqualTo("false"));
-        Assert.That(await Graph.EdgeAttribute("r12:Plugin>Feature", "data-access"), Is.EqualTo("Deny"));
+        Assert.That(await Graph.EdgeAttribute("r24:RootClass>Core", "data-removed"), Is.EqualTo("false"));
+        Assert.That(await Graph.EdgeAttribute("r15:Plugin>Feature", "data-access"), Is.EqualTo("Deny"));
     }
 }

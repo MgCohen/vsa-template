@@ -74,8 +74,8 @@ public sealed class ExportTests : ViewerPageTest
         await Graph.StartEditing();
         await Graph.AddWhatIfLink();
         await Graph.ShowDefinition();
-        await Graph.RemoveRule("r20:RootClass>Core");
-        await Graph.FlipRule("r12:Plugin>Feature", "Allow");
+        await Graph.RemoveRule("r24:RootClass>Core");
+        await Graph.FlipRule("r15:Plugin>Feature", "Allow");
         await Graph.AddConditionalRule();
     }
 }

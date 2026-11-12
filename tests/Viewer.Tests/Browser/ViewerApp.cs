@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using ArchitectureViewer.Infrastructure;
+using Viewer.Tests.Export;
 
 namespace Viewer.Tests.Browser;
 
@@ -33,6 +35,8 @@ public sealed class ViewerApp : IDisposable
         start.ArgumentList.Add(host);
         start.ArgumentList.Add("--urls");
         start.ArgumentList.Add(url);
+        start.ArgumentList.Add($"--{DataFolder.InputKey}");
+        start.ArgumentList.Add(NotesExport.File);
         start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         Process process = Process.Start(start)!;
         process.OutputDataReceived += (_, _) => { };
