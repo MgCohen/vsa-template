@@ -34,7 +34,7 @@ dotnet vsa doctor                            # the tool, VSA.Sdk and the package
 dotnet test SampleApp.slnx                   # the architecture tests and the unit tests
 ```
 
-The architecture tests fail until the app has a module: with no module, each rule has nothing to check.
+The build adds the architecture tests to `Tests/`. They check each type against the VSA definition: `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To add a rule of the app, write `public partial class ArchitectureTests` in `Tests/`.
 
 The VSA packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 

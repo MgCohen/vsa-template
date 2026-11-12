@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- An app that follows the test definition of tests/Architecture.Tests. -->
+  <ItemGroup>
+    <ProjectReference Include="../Kit/Kit.csproj" />
+  </ItemGroup>
+</Project>

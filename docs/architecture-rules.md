@@ -1,6 +1,6 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one layer map (`framework/Testing/Core/Layers.cs`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Testing/Architecture/VsaDefinition.cs`, see `architecture-engine.md`).
 
 ## Levels
 
@@ -8,7 +8,7 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 |---|---|---|---|
 | Editor and build | Build | `VSA.Sdk` (`framework/Sdk`) | `VSA0xxx` |
 | Editor and build | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` (`framework/Analyzers`) | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
-| Tests | Architecture | `VSA.Testing.Architecture` (ArchUnitNET) | `VSA2xxx` |
+| Tests | Architecture | `VSA.Testing.Architecture` (architecture engine, ArchUnitNET) | `VSA2xxx` |
 | Tests | Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `VSA.Testing.EndToEnd` | Not started |
 
@@ -39,10 +39,11 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1012` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
 | `VSA1013` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
 | `VSA1014` | Analyzers | The root class of a plugin module inherits `Plugin` or `Plugin<TSettings>`, and the root class of a module inherits `Module` or `Module<TSettings>`. The host also checks it at startup. |
-| `VSA2001` | Architecture | Module projects use only what the layer map permits. A plugin module is a base, and it uses no module. |
-| `VSA2002` | Architecture | `Module` classes are public and sealed. |
+| `VSA2001` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
+| `VSA2101` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
+| `VSA2102` | Architecture | Each type of the app is in a folder of a part. |
 
-The layer map is also in `framework/Sdk/Sdk/VSA.Layers.targets`, because VSA.Sdk cannot run C# before compile. `SdkLayerMapTests` fails if the two maps are different.
+`framework/Sdk/Sdk/VSA.Layers.targets` gives the project references of each layer, because VSA.Sdk cannot run C# before compile. Keep it the same as the VSA definition. No test compares the two.
 
 ## Root folders and plugin modules
 
@@ -65,9 +66,9 @@ A plugin module has the layers of a module and the folder layout of the framewor
 
 A plugin module uses another plugin module only if it names it. Two plugin modules that name each other are a cycle, and MSBuild stops the build. A project in a `Features` or `Plugins` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
 
-`VSA2001` checks a plugin module as a base: a module project may use what the map permits of a base, and a plugin project uses no module. `ModuleRoot.IsPlugin` is true when the root class inherits `Plugin`. `VSA1014` makes the root class agree with the root folder at build time.
+The VSA definition denies each use of a feature module by a plugin module (`VSA2001`). `ModuleRoot.IsPlugin` is true when the root class inherits `Plugin`. `VSA1014` makes the root class agree with the root folder at build time.
 
-The host and `VSA2001` find the module roots and their layer projects from the types and the assembly names, with no build records:
+The host finds the module roots and their layer projects from the types and the assembly names, with no build records:
 
 | Fact | Source |
 |---|---|
@@ -75,7 +76,7 @@ The host and `VSA2001` find the module roots and their layer projects from the t
 | Plugin module | The root class inherits `Plugin` |
 | Layer projects | Each assembly named `<Module>.<Layer>` that loads, for each layer in `ModuleRoot.LayerNames` |
 
-A test project such as `Notes.Tests` is not a layer project, because `Tests` is not a layer name. A nested or internal class that inherits `Module`, for example in a test, does not make a module root. A test checks that `ModuleRoot.LayerNames` has the module layers of the layer map.
+A test project such as `Notes.Tests` is not a layer project, because `Tests` is not a layer name. A nested or internal class that inherits `Module`, for example in a test, does not make a module root.
 
 The host configures the plugin modules first, then the other modules. In each group the order is by name, not by `VsaPluginUses`. The host gets the plugin roots through the module roots, so an app with no module does not load its plugin modules.
 
@@ -196,28 +197,11 @@ A suppressor can hide a warning that `TreatWarningsAsErrors` makes an error, for
 
 Each layer references `VSA.Analyzers.Markers`. It is a separate package because VSA.Analyzers is private (`PrivateAssets="all"`): a DLL in it does not reach the host at runtime.
 
-## Architecture: `VsaArchitectureTests`
+## Architecture: `ArchitectureTests<TDefinition>`
 
-Each rule is one `[Test]` with an ArchUnitNET rule. A consumer test project references the host and `VSA.Testing.Architecture`, and it gets each rule as a test with no code. NUnit runs tests only from the test assembly, so the package adds one class to the project at build time:
+The architecture engine binds each type of the app to a part of the VSA definition. Three native ArchUnitNET tests give `VSA2001`, `VSA2101` and `VSA2102`. A consumer test project references the host and `VSA.Testing.Architecture`, and it writes no test class: the build adds `ArchitectureTests` to `obj/.../VsaArchitectureTests.g.cs` (`framework/Testing/Architecture/build/`). See `architecture-engine.md` for the definition API, the binding and app rules.
 
-```csharp
-namespace <RootNamespace>;
-public partial class ArchitectureTests : VSA.Testing.Architecture.VsaArchitectureTests;
-```
-
-The build writes it to `obj/.../VsaArchitectureTests.g.cs` (`framework/Testing/Architecture/build/`). To add an app rule, write the other part of the class in the root namespace of the test project:
-
-```csharp
-public partial class ArchitectureTests {
-    [Test]
-    public void Presenters_are_sealed() =>
-        Classes().That().HaveNameEndingWith("Presenter").Should().BeSealed().Check(Architecture);
-}
-```
-
-To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>` in the test project. `Rules.Tests` does this, because it gives its own apps (`FixtureApp`). In this repository, `Directory.Build.targets` imports the same target for each project with a `ProjectReference` to `VSA.Testing.Architecture`.
-
-`App`, `LayerMap` and `Architecture` are virtual. A fixture test gives other modules or another layer map. `The_app_has_modules` fails if the test run has no module root, because then each rule passes with nothing to check.
+To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>` in the test project. `Architecture.Tests` does this, because it gives its own definitions. In this repository, `Directory.Build.targets` imports the same target for each project with a `ProjectReference` to `VSA.Testing.Architecture`.
 
 ## Unit: `VsaUnitTest`
 
@@ -254,11 +238,6 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
-3. Else add one `[Test]` with an ArchUnitNET rule to `VsaArchitectureTests`. Use the next free `VSA2xxx` ID in the test name.
-4. Add tests in `tests/Rules.Tests/`. For a build rule (`VSA0xxx`), add a case to `BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `AnalyzerTests.cs`. For an architecture rule, add a good and a bad fixture module in `tests/Fixtures/Rules/Features/`, and call the base test:
-
-   ```csharp
-   Fails(FixtureApp.Of("OpenModuleClass").VSA2002_Module_classes_are_public_and_sealed);
-   ```
-
+3. Else change the rules of the VSA definition (`framework/Testing/Architecture/VsaDefinition.cs`). If the layers change, also change `VSA.Layers.targets`.
+4. Add tests. For a build rule (`VSA0xxx`), add a case to `tests/Rules.Tests/BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

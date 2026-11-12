@@ -79,7 +79,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
 
-The architecture tests fail until the app has a module (`The_app_has_modules`).
+The build adds the architecture tests to `Tests/` (see [architecture-engine.md](architecture-engine.md)). The tests write no test class.
 
 ## One version
 

@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The marker types of the engine fixture apps. The test definition binds this DLL to the external part Kit. -->
+</Project>

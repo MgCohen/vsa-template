@@ -1,6 +1,7 @@
 <Project>
   <!--
-    The layer rules. They follow the layer map (framework/Testing/Core/Layers.cs).
+    The layer rules: the project references that each layer gets. The architecture tests check the uses of each type
+    with the VSA definition (framework/Testing/Architecture/VsaDefinition.cs). Keep the two the same.
     The app root is the folder of global.json, the same rule as the vsa tool. An app can set VsaAppRoot itself.
     A project with rules is in a root folder of the app: <root>/<RootFolder>/<Name>/. VsaRootFolders lists them.
     A module (Features/) has this slice layout:

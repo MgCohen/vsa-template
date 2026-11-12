@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- An app that breaks the test definition of tests/Architecture.Tests. Each type here has one known problem. -->
+  <ItemGroup>
+    <ProjectReference Include="../Kit/Kit.csproj" />
+  </ItemGroup>
+</Project>
