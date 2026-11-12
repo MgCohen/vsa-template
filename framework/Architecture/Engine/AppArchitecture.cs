@@ -18,6 +18,7 @@ public sealed class AppArchitecture {
         Bindings = bindings;
         Unmapped = unmapped;
         byType = bindings.ToDictionary(b => b.Type);
+        FrameworkTypes = bindings.Where(b => b.External).Select(b => b.Type).ToHashSet();
         PartInstances = [.. bindings.Where(b => !b.External).GroupBy(b => (b.Part, b.Instance)).Select(MakePartInstance)];
     }
 
@@ -28,6 +29,7 @@ public sealed class AppArchitecture {
     public IReadOnlyList<Binding> Bindings { get; }
     public IReadOnlyList<(IType Type, Source Source)> Unmapped { get; }
     public IReadOnlyList<PartInstance> PartInstances { get; }
+    public IReadOnlySet<IType> FrameworkTypes { get; }
     public IReadOnlyList<IType> BoundTypes => [.. Bindings.Where(b => !b.External).Select(b => b.Type)];
     public IReadOnlyList<IType> AppTypes => [.. BoundTypes.Concat(Unmapped.Select(u => u.Type))];
 
@@ -48,6 +50,8 @@ public sealed class AppArchitecture {
 
     public IEnumerable<IType> In<TLayer>() where TLayer : Layer =>
         Bindings.Where(b => b.Part.SelfAndAncestors().Any(p => p.Is(typeof(TLayer)))).Select(b => b.Type);
+
+    public IEnumerable<Exposure> ExposuresOf(IType type) => Exposures.Of(type, FrameworkTypes.Contains);
 
     public IReadOnlyList<string> Findings(IType type) {
         var where = Location(type);
@@ -73,7 +77,7 @@ public sealed class AppArchitecture {
             findings.Add($"{where}: error VSA2001: {type.Name} in {from.Where} uses {to.Type.Name} in {to.Where}: {why}. "
                 + "Remove the use, or change the rule in Rules.");
         }
-        foreach (var exposure in Exposures.Of(type).DistinctBy(e => (e.Target, e.Member))) {
+        foreach (var exposure in ExposuresOf(type).DistinctBy(e => (e.Target, e.Member))) {
             if (!byType.TryGetValue(exposure.Target, out var to) || (to.Part == from.Part && to.Instance == from.Instance)) {
                 continue;
             }
@@ -124,7 +128,8 @@ public sealed class AppArchitecture {
             .SelectMany(t => t.Types.Select(type => (Type: type, t.Decision.Pair!.Access)))
             .ToDictionary(t => t.Type, t => t.Access);
         var limited = instance.Where(b => !b.FollowsUser).Select(b => b.Type).ToList();
-        return new PartInstance(first.Where, [.. instance.Select(b => b.Type)], denied, limited, first.Part.Types, limits);
+        return new PartInstance(
+            first.Where, [.. instance.Select(b => b.Type)], denied, limited, first.Part.Types, limits, FrameworkTypes);
     }
 
     string Relative(string file) => (Path.IsPathRooted(file) ? Path.GetRelativePath(AppRoot, file) : file).Replace('\\', '/');

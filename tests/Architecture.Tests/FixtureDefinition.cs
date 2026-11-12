@@ -78,6 +78,7 @@ public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app
         map.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
         map.For<Slice>().Denies<Presenters>().And<RootClass>().InOwn<Feature>();
         map.For<Presenters>().Uses<Domain>(Access.Internal);
+        map.For<Presenters>().Uses<Contracts.Events>(Access.Internal);
     }
 }
 
