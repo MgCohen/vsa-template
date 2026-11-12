@@ -40,4 +40,27 @@ public sealed class GoodAppTests : ArchitectureTests<GoodDefinition> {
     public void An_external_DLL_is_not_a_part_instance() {
         Assert.That(Architecture.PartInstances.Select(p => p.Name), Has.None.StartsWith("KitLayer"));
     }
+
+    [Test]
+    public void A_member_that_implements_a_framework_interface_exposes_nothing() {
+        var presenter = Architecture.BoundTypes.Single(t => t.Name == "BellPresenter");
+
+        Assert.That(Architecture.ExposuresOf(presenter).Select(e => e.Member), Has.None.Contains("OnEventAsync"));
+    }
+
+    [Test]
+    public void A_framework_interface_in_the_header_exposes_nothing() {
+        var presenter = Architecture.BoundTypes.Single(t => t.Name == "BellPresenter");
+
+        var baseTypes = Architecture.ExposuresOf(presenter).Where(e => e.Member == "base type").Select(e => e.Target.Name);
+
+        Assert.That(baseTypes, Is.EqualTo(new[] { "Object" }));
+    }
+
+    [Test]
+    public void A_presenter_with_a_framework_interface_in_the_header_has_no_findings() {
+        var presenter = Architecture.BoundTypes.Single(t => t.Name == "BellPresenter");
+
+        Assert.That(Architecture.Findings(presenter), Is.Empty);
+    }
 }
