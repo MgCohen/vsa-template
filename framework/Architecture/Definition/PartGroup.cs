@@ -11,6 +11,9 @@ public sealed class PartGroup {
 
     public PartGroup AddMany<T>(string? folder = null) where T : Layer, new() => new(parts.Select(p => p.AddMany<T>(folder)));
 
+    public PartGroup AddMany<T>(Isolation isolation, string? folder = null) where T : Layer, new() =>
+        new(parts.Select(p => p.AddMany<T>(isolation, folder)));
+
     public PartGroup And<T>() where T : Layer, new() {
         var parents = parts.Select(p => p.Parent ?? throw new InvalidOperationException("The root has no sibling.")).Distinct();
         return new(parts.Concat(parents.Select(p => p.Add<T>())));

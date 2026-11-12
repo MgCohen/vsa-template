@@ -16,6 +16,7 @@ public class VsaDefinition : ArchitectureDefinition {
     protected override void Configure(Options options) {
         options.Own = Own.None;
         options.SameLayer = Permission.Allow;
+        options.Isolation = Isolation.Isolated;
     }
 
     protected override void Define(Root root) {
@@ -28,7 +29,7 @@ public class VsaDefinition : ArchitectureDefinition {
 
         root.Add<App>().Add<Host>().And<Views>();
 
-        var plugin = root.AddMany<Plugin>();
+        var plugin = root.AddMany<Plugin>(Isolation.Open);
         plugin.Add<RootClass>().NoFolder().OfType<VSA.Module.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
@@ -58,18 +59,16 @@ public class VsaDefinition : ArchitectureDefinition {
         map.For<Handlers.Requests>().Uses<Contracts.Requests>();
 
         map.For<Plugin>().Denies<Feature>();
-        map.For<Feature>().Denies<Feature>().InOther<Feature>();
-        map.For<Slice>().Denies<Slice>().InOther<Slice>();
         map.For<Domain>().Under<Plugin>().Denies<Domain>(Reach.Only).InOther<Plugin>();
 
         map.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
         map.For<Presenters>().And<RootClass>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
         map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
-            .Uses<Contracts.Commands>().And<Contracts.Events>();
+            .Uses<Contracts.Commands>(Isolation.Open).And<Contracts.Events>(Isolation.Open);
 
         map.For<RootClass>().Uses<Core>().And<Plugin>(Access.Internal);
         map.For<RootClass>().Denies<RootClass>().Under<Plugin>();
-        map.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal).InOwn<Feature>();
+        map.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal);
         map.For<Host>().Uses<Composition>();
         map.For<Views>().Uses<Presenters>();
 

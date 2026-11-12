@@ -5,6 +5,7 @@ public class Part {
     readonly List<Type> types = [];
     Reach? reach;
     Access? access;
+    Isolation? isolation;
     string? folder;
 
     protected internal Part(Layer? layer, string? folder, Part? parent, bool many = false) {
@@ -26,6 +27,7 @@ public class Part {
     public string Name => Layer is null ? "(root)" : Layer.Display(Layer.GetType());
     public Reach? Reach => reach;
     public Access? Access => access;
+    public Isolation? Isolation => isolation;
     public IEnumerable<Part> Items => SelfAndAncestors().Where(p => p.IsMany);
 
     public string Path {
@@ -51,6 +53,12 @@ public class Part {
     public Part AddMany<T>(string? folder = null) where T : Layer, new() {
         var layer = new T();
         return Attach(new Part(layer, folder ?? layer.GroupFolder ?? layer.Folder, this, many: true));
+    }
+
+    public Part AddMany<T>(Isolation isolation, string? folder = null) where T : Layer, new() {
+        var part = AddMany<T>(folder);
+        part.isolation = isolation;
+        return part;
     }
 
     public PartGroup And<T>() where T : Layer, new() => new PartGroup([this]).And<T>();
