@@ -1,13 +1,13 @@
 namespace VSA.Architecture;
 
 public abstract class Rule<TSelf> : Chain<TSelf>, IRuleEntries where TSelf : Rule<TSelf> {
-    internal Access Access;
+    internal Permission Permission;
     internal List<Entry> From = [];
     internal string Source = "";
 
     List<Entry> IRuleEntries.From => From;
     List<Entry> IRuleEntries.Targets => Entries;
-    Access IRuleEntries.Access => Access;
+    Permission IRuleEntries.Permission => Permission;
     string IRuleEntries.Source => Source;
     string IRuleEntries.Text => ToString();
 
@@ -16,5 +16,5 @@ public abstract class Rule<TSelf> : Chain<TSelf>, IRuleEntries where TSelf : Rul
     public TSelf InOther<T>() where T : Layer => Filter("InOther", typeof(T));
 
     public override string ToString() =>
-        $"{string.Join(" and ", From)} {(Access == Access.Allow ? "uses" : "denies")} {string.Join(" and ", Entries)}";
+        $"{string.Join(" and ", From)} {(Permission == Permission.Allow ? "uses" : "denies")} {string.Join(" and ", Entries)}";
 }

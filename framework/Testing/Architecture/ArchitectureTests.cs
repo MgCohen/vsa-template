@@ -23,6 +23,10 @@ public abstract class ArchitectureTests<TDefinition> where TDefinition : Archite
         Architecture.PartInstances.Where(p => p.OfTypes.Count > 0 && p.Limited.Count > 0)
             .Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
 
+    protected static IEnumerable<TestCaseData> ExposureLimitedPartInstances =>
+        Architecture.PartInstances.Where(p => p.Limits.Count > 0)
+            .Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
+
     [SetUp]
     public void UseThisArchitecture() {
         ArchitectureScope.Current = Architecture;
@@ -36,6 +40,11 @@ public abstract class ArchitectureTests<TDefinition> where TDefinition : Archite
     [TestCaseSource(nameof(LimitedPartInstances))]
     public void Has_the_type_of_its_part(PartInstance instance) {
         Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Architecture);
+    }
+
+    [TestCaseSource(nameof(ExposureLimitedPartInstances))]
+    public void Exposes_only_allowed_parts(PartInstance instance) {
+        Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Architecture);
     }
 
     [Test]

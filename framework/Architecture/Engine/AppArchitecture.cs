@@ -66,12 +66,24 @@ public sealed class AppArchitecture {
                 continue;
             }
             var (access, pair) = Decide.For(definition, from, to);
-            if (access != Access.Deny) {
+            if (access != Permission.Deny) {
                 continue;
             }
             var why = pair is null ? "no rule allows it (Unlisted = Deny)" : $"the rule \"{pair.Rule}\" denies it";
             findings.Add($"{where}: error VSA2001: {type.Name} in {from.Where} uses {to.Type.Name} in {to.Where}: {why}. "
                 + "Remove the use, or change the rule in Rules.");
+        }
+        foreach (var exposure in Exposures.Of(type).DistinctBy(e => (e.Target, e.Member))) {
+            if (!byType.TryGetValue(exposure.Target, out var to) || (to.Part == from.Part && to.Instance == from.Instance)) {
+                continue;
+            }
+            var (permission, pair) = Decide.For(definition, from, to);
+            if (permission != Permission.Allow || pair is null || exposure.Access.IsWithin(pair.Access)) {
+                continue;
+            }
+            findings.Add($"{where}: error VSA2003: {type.Name} in {from.Where} exposes {to.Type.Name} in {to.Where} "
+                + $"in {exposure.Member} with {exposure.Access} access, but the rule \"{pair.Rule}\" allows {pair.Access} at most. "
+                + "Make the member less visible, or change the rule in Rules.");
         }
         return findings;
     }
@@ -102,13 +114,17 @@ public sealed class AppArchitecture {
 
     PartInstance MakePartInstance(IGrouping<(Part Part, string Instance), Binding> instance) {
         var first = instance.First();
-        var denied = Bindings
+        var targets = Bindings
             .Where(t => !(t.Part == first.Part && t.Instance == first.Instance))
             .GroupBy(t => (t.Part, t.Instance))
-            .Where(target => Decide.For(definition, first, target.First()).Access == Access.Deny)
-            .SelectMany(target => target.Select(t => t.Type)).ToList();
+            .Select(target => (Types: target.Select(t => t.Type), Decision: Decide.For(definition, first, target.First())))
+            .ToList();
+        var denied = targets.Where(t => t.Decision.Permission == Permission.Deny).SelectMany(t => t.Types).ToList();
+        var limits = targets.Where(t => t.Decision.Permission == Permission.Allow && t.Decision.Pair is { Access: not Access.Public })
+            .SelectMany(t => t.Types.Select(type => (Type: type, t.Decision.Pair!.Access)))
+            .ToDictionary(t => t.Type, t => t.Access);
         var limited = instance.Where(b => !b.FollowsUser).Select(b => b.Type).ToList();
-        return new PartInstance(first.Where, [.. instance.Select(b => b.Type)], denied, limited, first.Part.Types);
+        return new PartInstance(first.Where, [.. instance.Select(b => b.Type)], denied, limited, first.Part.Types, limits);
     }
 
     string Relative(string file) => (Path.IsPathRooted(file) ? Path.GetRelativePath(AppRoot, file) : file).Replace('\\', '/');

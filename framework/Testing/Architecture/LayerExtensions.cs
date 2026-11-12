@@ -16,4 +16,10 @@ public static class LayerExtensions {
 
     public static TypesShouldConjunction NotDependOnAnyDeniedTo(this TypesShould should, PartInstance instance) =>
         should.NotDependOnAny(instance.Denied);
+
+    public static TypesShouldConjunction ExposeOnlyWithinLimitsOf(this TypesShould should, PartInstance instance) =>
+        should.FollowCustomCondition(
+            type => Exposures.Of(type).All(e => !instance.Limits.TryGetValue(e.Target, out var limit) || e.Access.IsWithin(limit)),
+            "expose other parts only within the access of their rules",
+            "exposes a type of another part with more access than its rule allows");
 }

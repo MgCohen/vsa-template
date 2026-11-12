@@ -64,6 +64,17 @@ public sealed class BadAppTests {
     }
 
     [Test]
+    public void A_public_member_that_exposes_a_use_only_part_gives_VSA2003() {
+        var failures = Failures(BadApp.App.PartInstances.Where(p => p.Limits.Count > 0), new BadApp().Exposes_only_allowed_parts);
+
+        Assert.That(failures, Does.EndWith(
+            $"error VSA2003: InvoicePresenter in Presenters ({Billing}/Presenters) exposes Invoice in Domain ({Billing}/Domain) "
+            + "in Shown with Public access, but the rule \"Presenters uses Domain(Internal)\" allows Internal at most. "
+            + "Make the member less visible, or change the rule in Rules."));
+        Assert.That(failures.Split(Environment.NewLine), Has.Length.EqualTo(1), failures);
+    }
+
+    [Test]
     public void A_type_in_an_undeclared_folder_fails_Each_type_is_in_a_part_with_VSA2102() {
         var failure = Assert.Throws<ArchitectureException>(new BadApp().Each_type_is_in_a_part)!.Message;
 

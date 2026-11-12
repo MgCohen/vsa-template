@@ -8,7 +8,7 @@ public class VsaDefinition : ArchitectureDefinition {
     protected VsaDefinition(string root) : base(root) { }
 
     protected override void Configure(Options options) {
-        options.Unlisted = Access.Deny;
+        options.Unlisted = Permission.Deny;
         options.Own = Own.None;
         options.Reach = Reach.WithChildren;
     }
@@ -51,16 +51,16 @@ public class VsaDefinition : ArchitectureDefinition {
         map.For<Domain.Shared>().Denies<Domain>();
         map.For<Domain.Shared>().Uses<Domain.Shared>();
         map.For<Infrastructure>().Uses<Domain>().And<Infrastructure>();
-        map.For<Presenters>().Uses<Presenters>().And<Contracts.Requests>().And<Contracts.Events>().And<Domain.Shared>();
+        map.For<Presenters>().Uses<Presenters>().And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>();
         map.For<Contracts.Requests>().Uses<Contracts.Requests>().And<Domain.Shared>();
         map.For<Contracts.Events>().Uses<Contracts.Events>().And<Domain.Shared>();
         map.For<Contracts.Commands>().Uses<Contracts.Commands>().And<Domain.Shared>();
         map.For<Handlers.Requests>().Uses<Handlers.Requests>()
-            .And<Contracts.Requests>().And<Contracts.Commands>().And<Contracts.Events>().And<Domain>().And<Infrastructure>();
+            .And<Contracts.Requests>().And<Contracts.Commands>().And<Contracts.Events>().And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         map.For<Handlers.Events>().Uses<Handlers.Events>()
-            .And<Contracts.Commands>().And<Contracts.Events>().And<Domain>().And<Infrastructure>();
+            .And<Contracts.Commands>().And<Contracts.Events>().And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         map.For<Handlers.Commands>().Uses<Handlers.Commands>()
-            .And<Contracts.Commands>().And<Contracts.Events>().And<Domain>().And<Infrastructure>();
+            .And<Contracts.Commands>().And<Contracts.Events>().And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
 
         map.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>().Uses<Contracts>();
         map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Uses<Handlers>().And<Contracts>();
@@ -86,9 +86,10 @@ public class VsaDefinition : ArchitectureDefinition {
 
     static void ModuleRootsAndTheApp(Map map) {
         map.For<RootClass>().Uses<Core>().And<Plugin>();
+        map.For<RootClass>().Under<Plugin>().Uses<Plugin>(Access.Internal).InOwn<Plugin>();
         map.For<RootClass>().Denies<RootClass>().Under<Plugin>();
         map.For<RootClass>().Under<Plugin>().Uses<RootClass>().InOwn<Plugin>();
-        map.For<RootClass>().Under<Feature>().Uses<Feature>().InOwn<Feature>();
+        map.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal).InOwn<Feature>();
         map.For<Host>().Under<App>().Uses<RootClass>();
         map.For<Views>().Under<App>().Uses<Presenters>().And<Views>();
     }
