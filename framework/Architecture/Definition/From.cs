@@ -10,15 +10,17 @@ public sealed class From : Chain<From> {
         Begin(layer, reach);
     }
 
-    public Uses Uses<T>(Reach? reach = null) where T : Layer => Start(new Uses(), typeof(T), reach, Access.Allow);
+    public Uses Uses<T>(Reach? reach = null) where T : Layer => Uses<T>(null, reach);
 
-    public Denies Denies<T>(Reach? reach = null) where T : Layer => Start(new Denies(), typeof(T), reach, Access.Deny);
+    public Uses Uses<T>(Access? access, Reach? reach = null) where T : Layer => Start(new Uses(), typeof(T), reach, access, Permission.Allow);
 
-    TRule Start<TRule>(TRule rule, Type to, Reach? reach, Access access) where TRule : Rule<TRule> {
-        rule.Access = access;
+    public Denies Denies<T>(Reach? reach = null) where T : Layer => Start(new Denies(), typeof(T), reach, null, Permission.Deny);
+
+    TRule Start<TRule>(TRule rule, Type to, Reach? reach, Access? access, Permission permission) where TRule : Rule<TRule> {
+        rule.Permission = permission;
         rule.From = Entries;
         rule.Source = source;
-        rule.Begin(to, reach);
+        rule.Begin(to, reach, access);
         rules.Add(rule);
         return rule;
     }

@@ -56,7 +56,7 @@ public record Handlers : Layer {
 
 public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app) {
     protected override void Configure(Options options) {
-        options.Unlisted = Access.Deny;
+        options.Unlisted = Permission.Deny;
         options.Own = Own.AllGroups;
     }
 
@@ -77,6 +77,7 @@ public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app
         map.For<Domain>().Denies<KitLayer>();
         map.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
         map.For<Slice>().Denies<Presenters>().And<RootClass>().InOwn<Feature>();
+        map.For<Presenters>().Uses<Domain>(Access.Internal);
     }
 }
 

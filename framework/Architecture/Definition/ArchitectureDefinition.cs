@@ -3,7 +3,7 @@ namespace VSA.Architecture;
 public abstract partial class ArchitectureDefinition {
     readonly string rootPath;
     readonly List<string> conflicts = [];
-    readonly List<(string Rule, string Source, Access Access, int Count)> summary = [];
+    readonly List<(string Rule, string Source, Permission Permission, int Count)> summary = [];
     Root? root;
     Options? options;
     List<Pair>? pairs;
@@ -137,11 +137,11 @@ public abstract partial class ArchitectureDefinition {
                 if (same is null) {
                     continue;
                 }
-                all.Add(new Pair(from, to, Same(same), Access.Allow, "own", $"own ({Options.Own})"));
+                all.Add(new Pair(from, to, Same(same), Permission.Allow, "own", $"own ({Options.Own})"));
                 count++;
             }
         }
-        summary.Add(($"own ({Options.Own})", "options", Access.Allow, count));
+        summary.Add(($"own ({Options.Own})", "options", Permission.Allow, count));
     }
 
     void AddRule(List<Pair> all, IRuleEntries rule) {
@@ -162,7 +162,7 @@ public abstract partial class ArchitectureDefinition {
                     if (Condition(from, to, entry) is not { } condition) {
                         continue;
                     }
-                    all.Add(new Pair(from, to, condition, rule.Access, rule.Source, rule.Text));
+                    all.Add(new Pair(from, to, condition, rule.Permission, rule.Source, rule.Text, entry.Access ?? to.Access ?? Options.Access));
                     count++;
                 }
             }
@@ -171,7 +171,7 @@ public abstract partial class ArchitectureDefinition {
                     $"Rules: \"{rule.Text}\": the target {entry} matches no part. Change the target or remove the rule.");
             }
         }
-        summary.Add((rule.Text, rule.Source, rule.Access, count));
+        summary.Add((rule.Text, rule.Source, rule.Permission, count));
     }
 
     void Validate(Entry entry, string text) {
@@ -188,9 +188,9 @@ public abstract partial class ArchitectureDefinition {
             var list = group.ToList();
             for (var i = 1; i < list.Count; i++) {
                 for (var j = 0; j < i; j++) {
-                    if (list[j].Access != list[i].Access && (list[i].Condition == "always" || list[i].Condition == list[j].Condition)) {
+                    if (list[j].Permission != list[i].Permission && (list[i].Condition == "always" || list[i].Condition == list[j].Condition)) {
                         conflicts.Add($"{group.Key.From.Name} ({group.Key.From.Path}) -> {group.Key.To.Name} ({group.Key.To.Path}): "
-                            + $"{list[j].Access} [{list[j].Source}] becomes {list[i].Access} [{list[i].Source}]");
+                            + $"{list[j].Permission} [{list[j].Source}] becomes {list[i].Permission} [{list[i].Source}]");
                     }
                 }
             }

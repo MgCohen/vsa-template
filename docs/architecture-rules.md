@@ -40,6 +40,7 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA1013` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
 | `VSA1014` | Analyzers | The root class of a plugin module inherits `Plugin` or `Plugin<TSettings>`, and the root class of a module inherits `Module` or `Module<TSettings>`. The host also checks it at startup. |
 | `VSA2001` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
+| `VSA2003` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
 | `VSA2101` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
 | `VSA2102` | Architecture | Each type of the app is in a folder of a part. |
 
@@ -199,7 +200,7 @@ Each layer references `VSA.Analyzers.Markers`. It is a separate package because 
 
 ## Architecture: `ArchitectureTests<TDefinition>`
 
-The architecture engine binds each type of the app to a part of the VSA definition. Three native ArchUnitNET tests give `VSA2001`, `VSA2101` and `VSA2102`. A consumer test project references the host and `VSA.Testing.Architecture`, and it writes no test class: the build adds `ArchitectureTests` to `obj/.../VsaArchitectureTests.g.cs` (`framework/Testing/Architecture/build/`). See `architecture-engine.md` for the definition API, the binding and app rules.
+The architecture engine binds each type of the app to a part of the VSA definition. Four native ArchUnitNET tests give `VSA2001`, `VSA2003`, `VSA2101` and `VSA2102`. A consumer test project references the host and `VSA.Testing.Architecture`, and it writes no test class: the build adds `ArchitectureTests` to `obj/.../VsaArchitectureTests.g.cs` (`framework/Testing/Architecture/build/`). See `architecture-engine.md` for the definition API, the binding and app rules.
 
 To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>` in the test project. `Architecture.Tests` does this, because it gives its own definitions. In this repository, `Directory.Build.targets` imports the same target for each project with a `ProjectReference` to `VSA.Testing.Architecture`.
 

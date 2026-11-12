@@ -5,10 +5,10 @@ namespace VSA.Architecture.Engine;
 public static class Decide {
     static readonly ConditionalWeakTable<ArchitectureDefinition, ILookup<(Part From, Part To), Pair>> PairsByParts = [];
 
-    public static (Access Access, Pair? Pair) For(ArchitectureDefinition definition, Binding from, Binding to) =>
+    public static (Permission Permission, Pair? Pair) For(ArchitectureDefinition definition, Binding from, Binding to) =>
         For(definition, from.Part, from.Items, to.Part, to.Items);
 
-    public static (Access Access, Pair? Pair) For(ArchitectureDefinition definition,
+    public static (Permission Permission, Pair? Pair) For(ArchitectureDefinition definition,
         Part fromPart, IReadOnlyDictionary<string, string> fromItems, Part toPart, IReadOnlyDictionary<string, string> toItems) {
         var pairs = PairsByParts.GetValue(definition, d => d.Resolve().ToLookup(p => (p.From, p.To)));
         Pair? winner = null;
@@ -17,7 +17,7 @@ public static class Decide {
                 winner = pair;
             }
         }
-        return (winner?.Access ?? definition.Options.Unlisted, winner);
+        return (winner?.Permission ?? definition.Options.Unlisted, winner);
     }
 
     static bool Holds(string condition, IReadOnlyDictionary<string, string> from, IReadOnlyDictionary<string, string> to) =>

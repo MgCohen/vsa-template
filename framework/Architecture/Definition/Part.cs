@@ -4,6 +4,7 @@ public class Part {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
     Reach? reach;
+    Access? access;
     string? folder;
 
     protected internal Part(Layer? layer, string? folder, Part? parent, bool many = false) {
@@ -24,6 +25,7 @@ public class Part {
     public IReadOnlyList<Type> Types => types;
     public string Name => Layer is null ? "(root)" : Layer.Display(Layer.GetType());
     public Reach? Reach => reach;
+    public Access? Access => access;
     public IEnumerable<Part> Items => SelfAndAncestors().Where(p => p.IsMany);
 
     public string Path {
@@ -64,6 +66,11 @@ public class Part {
 
     public Part Reaches(Reach value) {
         reach = value;
+        return this;
+    }
+
+    public Part Accesses(Access value) {
+        access = value;
         return this;
     }
 

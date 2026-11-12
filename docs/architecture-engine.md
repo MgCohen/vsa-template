@@ -28,7 +28,7 @@ public record Feature : Layer { public override string GroupFolder => "Features"
 public record Core : External { public override string Assembly => "VSA"; }
 
 public class VsaDefinition : ArchitectureDefinition {
-    protected override void Configure(Options options) => options.Unlisted = Access.Deny;
+    protected override void Configure(Options options) => options.Unlisted = Permission.Deny;
 
     protected override void Define(Root root) {
         root.Add<Framework>().Add<Core>();
@@ -53,7 +53,7 @@ public class VsaDefinition : ArchitectureDefinition {
 | `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
 | `Under<T>()`, `InOwn<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `Unlisted` (the access when no rule applies), `Own` (the access between parts of the same group) and `Reach`.
+`Options` sets `Unlisted` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Reach` and `Access`.
 
 ## External parts
 
@@ -77,6 +77,30 @@ The definition stops at these errors:
 2. The layer body, for example `part.Reaches(Reach.Only)` in `Define(Part)` of the layer.
 3. `options.Reach`.
 
+## Permission and access
+
+A rule has two values:
+
+| Value | Enum | Values | Question |
+|---|---|---|---|
+| Permission | `Permission` | `Allow`, `Deny` | May this part use that part? |
+| Access | `Access` | `Private`, `PrivateProtected`, `Protected`, `Internal`, `ProtectedInternal`, `Public` | How visible may the use be? |
+
+`Uses<T>()` allows the use. `Denies<T>()` denies it. An access limits an allowed use:
+
+```csharp
+map.For<Contracts.Requests>().Uses<Domain.Shared>();               // use and expose
+map.For<Handlers.Requests>().Uses<Domain>(Access.Internal);        // use, but do not expose outside the assembly
+```
+
+A type exposes a part when a type of that part is in its signature: a base type, an interface, or the type of a member (a method return or parameter, a property, a field), with their generic arguments. The access of a member is the narrowest of the member and its type. The order is partial: `Protected` and `Internal` are not comparable, so `Protected` is not within `Internal`.
+
+The first access that is set wins:
+
+1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.
+2. The layer body, for example `part.Accesses(Access.Private)` in `Define(Part)` of the layer.
+3. `options.Access`. Its default is `Access.Public`, so a rule with no access allows use and exposure.
+
 ## Binding
 
 | Type | Part |
@@ -90,9 +114,9 @@ The definition stops at these errors:
 
 The engine reads the source file and the first line of each type from the PDB file, with Mono.Cecil.
 
-## The three tests
+## The four tests
 
-`ArchitectureTests<TDefinition>` has the three tests. Each test is one native ArchUnitNET rule:
+`ArchitectureTests<TDefinition>` has the four tests. Each test is one native ArchUnitNET rule:
 
 ```csharp
 [TestCaseSource(nameof(PartInstances))]
@@ -105,6 +129,11 @@ public void Has_the_type_of_its_part(PartInstance instance) {
     Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Architecture);
 }
 
+[TestCaseSource(nameof(ExposureLimitedPartInstances))]
+public void Exposes_only_allowed_parts(PartInstance instance) {
+    Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Architecture);
+}
+
 [Test]
 public void Each_type_is_in_a_part() {
     Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Architecture);
@@ -114,6 +143,7 @@ public void Each_type_is_in_a_part() {
 | ID | Test | Failure |
 |---|---|---|
 | `VSA2001` | `Uses_only_allowed_parts` | A type uses a part that the rules deny |
+| `VSA2003` | `Exposes_only_allowed_parts` | A type exposes a part with more access than its rule allows |
 | `VSA2101` | `Has_the_type_of_its_part` | A type is not assignable to the `OfType` of its part |
 | `VSA2102` | `Each_type_is_in_a_part` | A type is in a folder that the definition does not have |
 
