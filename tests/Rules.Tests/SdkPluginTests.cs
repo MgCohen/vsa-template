@@ -30,7 +30,7 @@ public sealed class SdkPluginTests {
 
     [Test]
     public void A_module_layer_gets_the_same_layer_of_each_plugin_module() =>
-        Assert.That(References(Project("Modules/UsesPlugins/Projects", "UsesPlugins.Contracts.Requests")), Is.EquivalentTo(new[] {
+        Assert.That(References(Project("Features/UsesPlugins/Projects", "UsesPlugins.Contracts.Requests")), Is.EquivalentTo(new[] {
             "Plugins/Pipeline/Projects/Pipeline.Contracts.Requests.csproj",
             "Plugins/RecordIds/Projects/RecordIds.Contracts.Requests.csproj",
             "Plugins/Units/Projects/Units.Contracts.Requests.csproj",
@@ -38,7 +38,7 @@ public sealed class SdkPluginTests {
 
     [Test]
     public void A_module_root_gets_each_plugin_root() =>
-        Assert.That(References(Project("Modules/UsesPlugins", "UsesPlugins")), Is.SupersetOf(new[] {
+        Assert.That(References(Project("Features/UsesPlugins", "UsesPlugins")), Is.SupersetOf(new[] {
             "Plugins/Pipeline/Pipeline.csproj",
             "Plugins/RecordIds/RecordIds.csproj",
             "Plugins/Units/Units.csproj",
@@ -60,7 +60,7 @@ public sealed class SdkPluginTests {
 
     [Test]
     public void A_module_event_handler_gets_the_events_of_each_plugin_module() =>
-        Assert.That(References(Project("Modules/UsesPlugins/Projects", "UsesPlugins.Handlers.Events")),
+        Assert.That(References(Project("Features/UsesPlugins/Projects", "UsesPlugins.Handlers.Events")),
             Does.Contain("Plugins/Pipeline/Projects/Pipeline.Contracts.Events.csproj"));
 
     // A plugin base of event handlers handles the events of its own plugin module (Pipeline.Handlers.Events.Audit).
@@ -101,11 +101,11 @@ public sealed class SdkPluginTests {
 
     [Test]
     public void A_plugin_root_gets_no_module() =>
-        Assert.That(References(Project("Plugins/Pipeline", "Pipeline")), Has.None.StartsWith("Modules/"));
+        Assert.That(References(Project("Plugins/Pipeline", "Pipeline")), Has.None.StartsWith("Features/"));
 
     [TestCase("Missing", Description = "no plugin module with this name")]
     [TestCase("Pipeline", Description = "the module itself")]
-    [TestCase("../../Modules/UsesPlugins", Description = "a path, not a name")]
+    [TestCase("../../Features/UsesPlugins", Description = "a path, not a name")]
     [TestCase("*", Description = "a glob, not a name")]
     public void A_bad_name_in_VsaPluginUses_fails(string name) =>
         Assert.That(Fails(Project("Plugins/Pipeline/Projects", "Pipeline.Contracts.Requests"), "_VsaCheckUses", $"-p:VsaPluginUses={name}"),
@@ -118,13 +118,13 @@ public sealed class SdkPluginTests {
 
     [Test]
     public void VsaPluginUses_in_a_module_fails() =>
-        Assert.That(Fails(Project("Modules/UsesPlugins/Projects", "UsesPlugins.Contracts.Requests"), "_VsaCheckUses", "-p:VsaPluginUses=Pipeline"),
+        Assert.That(Fails(Project("Features/UsesPlugins/Projects", "UsesPlugins.Contracts.Requests"), "_VsaCheckUses", "-p:VsaPluginUses=Pipeline"),
             Does.Contain("VSA0002").And.Contain("is not in a plugin module"));
 
-    // The app root of another app: the project is in a Modules folder, but not in the Modules folder of that root.
+    // The app root of another app: the project is in a Features folder, but not in the Features folder of that root.
     [Test]
-    public void A_project_in_a_Modules_folder_out_of_the_app_root_fails() =>
-        Assert.That(Fails(Project("Modules/UsesPlugins", "UsesPlugins"), "_VsaCheckRoot", $"-p:VsaAppRoot={Repo.Path("tests", "Fixtures", "Rules")}"),
+    public void A_project_in_a_Features_folder_out_of_the_app_root_fails() =>
+        Assert.That(Fails(Project("Features/UsesPlugins", "UsesPlugins"), "_VsaCheckRoot", $"-p:VsaAppRoot={Repo.Path("tests", "Fixtures", "Rules")}"),
             Does.Contain("VSA0003"));
 
     // Shared/ was the folder of the plugin modules. It is now a folder like any other: a project in it gets no rules.

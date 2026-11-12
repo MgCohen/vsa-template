@@ -17,10 +17,10 @@ static class AddRequestCommand {
         return 0;
     }
 
-    // The module name as its folder has it on disk. On Windows "-m billing" finds Modules/Billing, and the namespaces
+    // The module name as its folder has it on disk. On Windows "-m billing" finds Features/Billing, and the namespaces
     // must use "Billing".
     internal static string Module(string root, string module) {
-        var modules = Path.Combine(root, "Modules");
+        var modules = Path.Combine(root, "Features");
         var folder = Directory.Exists(modules)
             ? Directory.EnumerateDirectories(modules).Select(Path.GetFileName).FirstOrDefault(d => string.Equals(d, module, StringComparison.OrdinalIgnoreCase))
             : null;

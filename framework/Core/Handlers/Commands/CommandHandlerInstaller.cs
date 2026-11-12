@@ -7,14 +7,10 @@ namespace VSA.Handlers.Commands;
 
 static class CommandHandlerInstaller {
     internal static void Install(IServiceCollection services, ModuleTypes types) {
-        var handlers = types.Implementations(typeof(CommandHandler<,>));
-        EnsureOneHandlerForEachCommand(handlers);
+        EnsureOneHandlerForEachCommand(types.Implementations(typeof(CommandHandler<,>)));
         services.AddScoped<ICommandSender, InProcessCommandSender>();
         services.AddDefaultPipeline(
             PipelineKind.Commands, new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>)));
-        foreach (var (service, handler) in handlers) {
-            services.AddScoped(service, handler);
-        }
     }
 
     static void EnsureOneHandlerForEachCommand(IReadOnlyList<(Type Service, Type Implementation)> handlers) {

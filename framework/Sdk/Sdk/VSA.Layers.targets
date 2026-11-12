@@ -3,25 +3,25 @@
     The layer rules. They follow the layer map (framework/Testing/Core/Layers.cs).
     The app root is the folder of global.json, the same rule as the vsa tool. An app can set VsaAppRoot itself.
     A project with rules is in a root folder of the app: <root>/<RootFolder>/<Name>/. VsaRootFolders lists them.
-    A module (Modules/) has this slice layout:
+    A module (Features/) has this slice layout:
 
-      Modules/Notes/Notes.csproj                              the module root: the *.cs files of Modules/Notes/
-      Modules/Notes/Projects/Notes.Domain.Shared.csproj       Domain/Shared/** (the published domain)
-      Modules/Notes/Projects/Notes.Domain.csproj              Domain/** except Domain/Shared/**
-      Modules/Notes/Projects/Notes.Infrastructure.csproj      Infrastructure/**
-      Modules/Notes/Projects/Notes.Presenters.csproj          Presenters/**
-      Modules/Notes/Projects/Notes.Contracts.Requests.csproj  the slice files with requests, responses and their DTOs
-      Modules/Notes/Projects/Notes.Contracts.Events.csproj    the slice files with events and their DTOs
-      Modules/Notes/Projects/Notes.Contracts.Commands.csproj  the slice files with commands and their results
-      Modules/Notes/Projects/Notes.Handlers.Requests.csproj   the other files of the slices with a request handler
-      Modules/Notes/Projects/Notes.Handlers.Events.csproj     the other files of the slices with an event handler
-      Modules/Notes/Projects/Notes.Handlers.Commands.csproj   the other files of the slices with a command handler
+      Features/Notes/Notes.csproj                             the module root: the *.cs files of Features/Notes/
+      Features/Notes/Projects/Notes.Domain.Shared.csproj      Domain/Shared/** (the published domain)
+      Features/Notes/Projects/Notes.Domain.csproj             Domain/** except Domain/Shared/**
+      Features/Notes/Projects/Notes.Infrastructure.csproj     Infrastructure/**
+      Features/Notes/Projects/Notes.Presenters.csproj         Presenters/**
+      Features/Notes/Projects/Notes.Contracts.Requests.csproj the slice files with requests, responses and their DTOs
+      Features/Notes/Projects/Notes.Contracts.Events.csproj   the slice files with events and their DTOs
+      Features/Notes/Projects/Notes.Contracts.Commands.csproj the slice files with commands and their results
+      Features/Notes/Projects/Notes.Handlers.Requests.csproj  the other files of the slices with a request handler
+      Features/Notes/Projects/Notes.Handlers.Events.csproj    the other files of the slices with an event handler
+      Features/Notes/Projects/Notes.Handlers.Commands.csproj  the other files of the slices with a command handler
 
     A plugin module (Plugins/) has the layout of the framework: no Slices/, one folder for each layer.
     Plugins/Pipeline/Handlers/Commands/** goes to Plugins/Pipeline/Projects/Pipeline.Handlers.Commands.csproj,
     and the same for each other layer.
 
-    VsaRootFolder is the root folder (Modules or Plugins), and VsaModule is the folder after it.
+    VsaRootFolder is the root folder (Features or Plugins), and VsaModule is the folder after it.
     The layer of a project in Projects/ comes from its name.
     The VsaRouteSliceFiles task (framework/Sdk/Tasks) selects the project of each file in Slices/ of a module by its types.
     A project that is not in a root folder gets no rules.
@@ -35,7 +35,7 @@
     Checks:
       VSA0001  a reference written by hand (_VsaCheck)
       VSA0002  VsaPluginUses out of a plugin layer, or a bad name in it (_VsaCheckUses)
-      VSA0003  a project in a Modules or Plugins folder that is not a root folder of the app root (_VsaCheckRoot)
+      VSA0003  a project in a Features or Plugins folder that is not a root folder of the app root (_VsaCheckRoot)
       VSA0004  a project in the wrong folder, or a project in Projects/ with a name that is not <Module>.<Layer> (_VsaCheck)
       VSA0005  a routing error, from the VsaRouteSliceFiles task
       VSA0006  a Compile item written by hand, a .cs file that no project compiles, or Slices/ in a plugin module (_VsaCheck)
@@ -43,8 +43,8 @@
   -->
   <PropertyGroup>
     <VsaAppRoot Condition="'$(VsaAppRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'global.json'))</VsaAppRoot>
-    <!-- The rules below know Modules and Plugins. A new root folder in this list also needs its own rules. -->
-    <VsaRootFolders Condition="'$(VsaRootFolders)' == ''">Modules;Plugins</VsaRootFolders>
+    <!-- The rules below know Features and Plugins. A new root folder in this list also needs its own rules. -->
+    <VsaRootFolders Condition="'$(VsaRootFolders)' == ''">Features;Plugins</VsaRootFolders>
     <_VsaRoot Condition="'$(VsaAppRoot)' != ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(VsaAppRoot)').Replace('\', '/'))</_VsaRoot>
     <_VsaPath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)').Replace('\', '/'))</_VsaPath>
     <_VsaCheckedPath>$(_VsaPath)</_VsaCheckedPath>
@@ -60,7 +60,7 @@
     <VsaRootFolder Condition="$([System.String]::Copy(';$(VsaRootFolders);').Contains(';$(_VsaRootPart);'))">$(_VsaRootPart)</VsaRootFolder>
   </PropertyGroup>
   <PropertyGroup Condition="'$(VsaRootFolder)' != ''">
-    <VsaModulesDir>$(_VsaRoot)Modules/</VsaModulesDir>
+    <VsaFeaturesDir>$(_VsaRoot)Features/</VsaFeaturesDir>
     <VsaPluginsDir>$(_VsaRoot)Plugins/</VsaPluginsDir>
     <_VsaRelative>$(_VsaUnder.Substring($([MSBuild]::Add($(_VsaFirst), 1))))</_VsaRelative>
     <_VsaSlash>$(_VsaRelative.IndexOf('/'))</_VsaSlash>
@@ -78,7 +78,7 @@
     <_VsaMisplaced Condition="'$(VsaLayer)' == ''">true</_VsaMisplaced>
     <_VsaMessageLayer Condition="'$(VsaLayer)' == 'Contracts/Requests' or '$(VsaLayer)' == 'Contracts/Events' or '$(VsaLayer)' == 'Contracts/Commands' or '$(VsaLayer)' == 'Handlers/Requests' or '$(VsaLayer)' == 'Handlers/Events' or '$(VsaLayer)' == 'Handlers/Commands'">true</_VsaMessageLayer>
     <!-- In a module, the router gives the files of these layers. In a plugin module, the folder of the layer gives them. -->
-    <_VsaRouted Condition="'$(_VsaMessageLayer)' == 'true' and '$(VsaRootFolder)' == 'Modules'">true</_VsaRouted>
+    <_VsaRouted Condition="'$(_VsaMessageLayer)' == 'true' and '$(VsaRootFolder)' == 'Features'">true</_VsaRouted>
     <!-- Each module project takes only the files that VSA.Sdk gives it. -->
     <EnableDefaultCompileItems Condition="'$(VsaLayer)' != ''">false</EnableDefaultCompileItems>
   </PropertyGroup>
@@ -218,15 +218,15 @@
   </ItemGroup>
   <!-- anyModule: a message carries the keys and ids of all modules, and of all plugin modules. -->
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Requests'">
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Events'">
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Contracts/Commands'">
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
   <!-- anyModule: each handler reads the published domain of all modules, and sends the commands of all modules. -->
@@ -235,7 +235,7 @@
     <!-- A module handler gets the Domain and the Infrastructure of each plugin module, as it gets its own: a plugin module is a base. -->
     <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaModulesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaFeaturesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <!-- A plugin module uses no module: its handlers get its own published domain and commands only. -->
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj;$(VsaModuleDir)Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
@@ -244,8 +244,8 @@
     <!-- A module handler gets the Domain and the Infrastructure of each plugin module, as it gets its own: a plugin module is a base. -->
     <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
     <!-- anyModule: the events of all modules, and of all plugin modules -->
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Contracts.Events.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Events.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaModulesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Contracts.Events.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Events.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaFeaturesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <!-- A plugin module uses no module: its handlers get its own published domain and commands only. -->
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj;$(VsaModuleDir)Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Plugins'" />
     <!-- A plugin module: its own events. Exposed, so the Handlers.Events of a plugin module in VsaPluginUses gives its events too. -->
@@ -256,7 +256,7 @@
     <!-- A module handler gets the Domain and the Infrastructure of each plugin module, as it gets its own: a plugin module is a base. -->
     <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaModulesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaFeaturesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <!-- A plugin module uses no module: its handlers get its own published domain and commands only. -->
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj;$(VsaModuleDir)Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
@@ -266,7 +266,7 @@
          A view that shows more than one module shows the presenter of each module. -->
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
     <!-- anyModule: a presenter reads the published domain of all modules, and of all plugin modules. -->
-    <ProjectReference VsaRule="true" Include="$(VsaModulesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.Shared.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Plugins'" />
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
@@ -281,7 +281,7 @@
        So a plugin module uses another one only if it names it. Two plugin modules that name each other are a cycle,
        and MSBuild stops the build. Exposed, not private, as the framework base of each layer is.
        No rule gives a module to a plugin module. -->
-  <ItemGroup Condition="'$(VsaRootFolder)' == 'Modules' and '$(VsaLayer)' != ''">
+  <ItemGroup Condition="'$(VsaRootFolder)' == 'Features' and '$(VsaLayer)' != ''">
     <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/$(_VsaLayerDir)*$(_VsaLayerSuffix).csproj" />
   </ItemGroup>
   <!-- VsaPluginUses with no spaces and no empty names: " A ;\n B ;" is "A;B". _VsaCheckUses checks each name.
@@ -304,7 +304,7 @@
     <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Domain.Shared.csproj')">$(_VsaCompiled);$(VsaModuleDir)Domain/Shared/**</_VsaCompiled>
     <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Infrastructure.csproj')">$(_VsaCompiled);$(VsaModuleDir)Infrastructure/**</_VsaCompiled>
     <_VsaCompiled Condition="Exists('$(VsaModuleDir)Projects/$(VsaModule).Presenters.csproj')">$(_VsaCompiled);$(VsaModuleDir)Presenters/**</_VsaCompiled>
-    <_VsaCompiled Condition="'$(VsaRootFolder)' == 'Modules' and (Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Commands.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Commands.csproj'))">$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
+    <_VsaCompiled Condition="'$(VsaRootFolder)' == 'Features' and (Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Handlers.Commands.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Requests.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Events.csproj') or Exists('$(VsaModuleDir)Projects/$(VsaModule).Contracts.Commands.csproj'))">$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
   </PropertyGroup>
   <!-- A plugin module: the folder of each message layer counts only if its project exists. Slices/ is an error of its own. -->
   <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Plugins'">
@@ -322,7 +322,7 @@
     <_VsaCompiled>$(_VsaCompiled);$(VsaModuleDir)Slices/**</_VsaCompiled>
     <_VsaFolders>Domain/, Domain/Shared/, Infrastructure/, Presenters/, Contracts/Requests/, Contracts/Events/, Contracts/Commands/, Handlers/Requests/, Handlers/Events/ or Handlers/Commands/</_VsaFolders>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Modules'">
+  <PropertyGroup Condition="'$(VsaLayer)' == 'Module' and '$(VsaRootFolder)' == 'Features'">
     <_VsaFolders>Domain/, Domain/Shared/, Infrastructure/, Presenters/ or a slice in Slices/</_VsaFolders>
   </PropertyGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
@@ -366,11 +366,11 @@
            Text="$(MSBuildProjectName) is in layer $(VsaLayer) of the plugin module $(VsaModule). VsaPluginUses names these modules, but they are not other plugin modules with the layer $(VsaLayer): @(_VsaBadUse). Name only folders in $(VsaPluginsDir) that have $(_VsaLayerDir)&lt;Name&gt;$(_VsaLayerSuffix).csproj." />
   </Target>
 
-  <!-- A project in a Modules or Plugins folder that is not a root folder of the app root gets no rules. That is an error,
+  <!-- A project in a Features or Plugins folder that is not a root folder of the app root gets no rules. That is an error,
        because the build would fail later with missing references. -->
   <Target Name="_VsaCheckRoot" BeforeTargets="CollectPackageReferences;ResolveProjectReferences"
-          Condition="'$(VsaRootFolder)' == '' and ($(_VsaCheckedPath.Contains('/Modules/')) or $(_VsaCheckedPath.Contains('/Plugins/')))">
+          Condition="'$(VsaRootFolder)' == '' and ($(_VsaCheckedPath.Contains('/Features/')) or $(_VsaCheckedPath.Contains('/Plugins/')))">
     <Error Code="VSA0003"
-           Text="$(MSBuildProjectName) is in a Modules or Plugins folder, but not in $(_VsaRoot)Modules/ or $(_VsaRoot)Plugins/. The app root is the folder of global.json ($(VsaAppRoot)). Move the project, or set VsaAppRoot to the app folder." />
+           Text="$(MSBuildProjectName) is in a Features or Plugins folder, but not in $(_VsaRoot)Features/ or $(_VsaRoot)Plugins/. The app root is the folder of global.json ($(VsaAppRoot)). Move the project, or set VsaAppRoot to the app folder." />
   </Target>
 </Project>

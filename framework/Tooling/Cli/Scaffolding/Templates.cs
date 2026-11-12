@@ -8,7 +8,7 @@ namespace VSA.Cli.Scaffolding;
 //   2. the path contains SampleChange, or the file is one of the two
 //      command projects (Projects/SampleModule.*.Commands.csproj)      add command
 //   3. the path contains SamplePlugin (Plugins/SamplePlugin/)          add plugin
-//   4. the path is under Modules/SampleModule/, or the file name
+//   4. the path is under Features/SampleModule/, or the file name
 //      contains SampleModule (App/Views/Pages/SampleModulePage.razor)  add module
 //   5. all other files                                                 new app
 // A ".template" suffix keeps a file inactive in this repository, for example AGENTS.md.template. The tool removes it.
@@ -50,13 +50,13 @@ static partial class Templates {
         path.Contains(Request, StringComparison.Ordinal) ? Kind.Request
         : path.Contains(Command, StringComparison.Ordinal) || CommandProjects.Contains(path) ? Kind.Command
         : path.Contains(Plugin, StringComparison.Ordinal) ? Kind.Plugin
-        : path.StartsWith($"Modules/{Module}/", StringComparison.Ordinal) || Path.GetFileName(path).Contains(Module, StringComparison.Ordinal) ? Kind.Module
+        : path.StartsWith($"Features/{Module}/", StringComparison.Ordinal) || Path.GetFileName(path).Contains(Module, StringComparison.Ordinal) ? Kind.Module
         : Kind.App;
 
     // A module gets the command projects with its first command, so a module with no command has no empty projects.
     public static readonly string[] CommandProjects = [
-        $"Modules/{Module}/Projects/{Module}.Contracts.Commands.csproj",
-        $"Modules/{Module}/Projects/{Module}.Handlers.Commands.csproj",
+        $"Features/{Module}/Projects/{Module}.Contracts.Commands.csproj",
+        $"Features/{Module}/Projects/{Module}.Handlers.Commands.csproj",
     ];
 
     // The path of each template file, relative to Templates/, before the names are replaced.

@@ -20,7 +20,7 @@ public sealed class ScaffoldingTests {
     [TestCase("")]
     [TestCase("App")]
     [TestCase("VSAThings")]
-    [TestCase("Modules")]
+    [TestCase("Features")]
     [TestCase("Home")]
     [TestCase("Pages")]
     [TestCase("Views")]
@@ -72,30 +72,30 @@ public sealed class ScaffoldingTests {
             ("App/Views/Pages/SampleModulePage.razor", Module),
             ("App/Views/Routes.razor", App),
             ("App/Views/_Imports.razor", App),
-            ("Modules/.gitkeep", App),
-            ("Modules/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
-            ("Modules/SampleModule/Presenters/SampleModulePresenter.cs", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Contracts.Commands.csproj", Command),
-            ("Modules/SampleModule/Projects/SampleModule.Contracts.Events.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Contracts.Requests.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Domain.Shared.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Domain.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Handlers.Commands.csproj", Command),
-            ("Modules/SampleModule/Projects/SampleModule.Handlers.Events.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Handlers.Requests.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Infrastructure.csproj", Module),
-            ("Modules/SampleModule/Projects/SampleModule.Presenters.csproj", Module),
-            ("Modules/SampleModule/SampleModule.csproj", Module),
-            ("Modules/SampleModule/SampleModuleModule.cs", Module),
-            ("Modules/SampleModule/Slices/GetStatus/GetStatusHandler.cs", Module),
-            ("Modules/SampleModule/Slices/GetStatus/GetStatusRequest.cs", Module),
-            ("Modules/SampleModule/Slices/GetStatus/GetStatusResponse.cs", Module),
-            ("Modules/SampleModule/Slices/SampleAction/SampleActionHandler.cs", Request),
-            ("Modules/SampleModule/Slices/SampleAction/SampleActionRequest.cs", Request),
-            ("Modules/SampleModule/Slices/SampleAction/SampleActionResponse.cs", Request),
-            ("Modules/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
-            ("Modules/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
-            ("Modules/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
+            ("Features/.gitkeep", App),
+            ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
+            ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
+            ("Features/SampleModule/Projects/SampleModule.Contracts.Commands.csproj", Command),
+            ("Features/SampleModule/Projects/SampleModule.Contracts.Events.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Contracts.Requests.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Domain.Shared.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Domain.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Handlers.Commands.csproj", Command),
+            ("Features/SampleModule/Projects/SampleModule.Handlers.Events.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Handlers.Requests.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Infrastructure.csproj", Module),
+            ("Features/SampleModule/Projects/SampleModule.Presenters.csproj", Module),
+            ("Features/SampleModule/SampleModule.csproj", Module),
+            ("Features/SampleModule/SampleModuleModule.cs", Module),
+            ("Features/SampleModule/Slices/GetStatus/GetStatusHandler.cs", Module),
+            ("Features/SampleModule/Slices/GetStatus/GetStatusRequest.cs", Module),
+            ("Features/SampleModule/Slices/GetStatus/GetStatusResponse.cs", Module),
+            ("Features/SampleModule/Slices/SampleAction/SampleActionHandler.cs", Request),
+            ("Features/SampleModule/Slices/SampleAction/SampleActionRequest.cs", Request),
+            ("Features/SampleModule/Slices/SampleAction/SampleActionResponse.cs", Request),
+            ("Features/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
+            ("Features/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
+            ("Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
             ("Plugins/.gitkeep", App),
             ("Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
             ("Plugins/SamplePlugin/Projects/SamplePlugin.Contracts.Commands.csproj", Plugin),
@@ -196,18 +196,18 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             projects.Select(p => p.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Modules/OrderHistory/OrderHistory.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Contracts.Events.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Contracts.Requests.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Domain.Shared.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Domain.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Handlers.Events.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Handlers.Requests.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Infrastructure.csproj",
-                        "Modules/OrderHistory/Projects/OrderHistory.Presenters.csproj"]));
+            Is.EqualTo(["Features/OrderHistory/OrderHistory.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Contracts.Events.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Contracts.Requests.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Domain.Shared.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Domain.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Handlers.Events.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Handlers.Requests.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Infrastructure.csproj",
+                        "Features/OrderHistory/Projects/OrderHistory.Presenters.csproj"]));
         Assert.That(projects.Select(p => p.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
         Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
-        Assert.That(files.Single(f => f.Path == "Modules/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace OrderHistory.Domain.Shared;"));
+        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace OrderHistory.Domain.Shared;"));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
     }
 
@@ -218,9 +218,9 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Modules/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs",
-                        "Modules/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
-                        "Modules/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
+            Is.EqualTo(["Features/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs",
+                        "Features/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
+                        "Features/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
         Assert.That(string.Concat(files.Select(f => f.Content)), Does.Contain("\"/api/billing/create-invoice\""));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }
@@ -232,11 +232,11 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Modules/Billing/Projects/Billing.Contracts.Commands.csproj",
-                        "Modules/Billing/Projects/Billing.Handlers.Commands.csproj",
-                        "Modules/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
-                        "Modules/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
-                        "Modules/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
+            Is.EqualTo(["Features/Billing/Projects/Billing.Contracts.Commands.csproj",
+                        "Features/Billing/Projects/Billing.Handlers.Commands.csproj",
+                        "Features/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
+                        "Features/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
+                        "Features/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
         Assert.That(files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
         Assert.That(files.Single(f => f.Path.EndsWith("ChangeLimitCommand.cs")).Content, Does.Contain("ChangeLimitCommand : ICommand<ChangeLimitResult>"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));

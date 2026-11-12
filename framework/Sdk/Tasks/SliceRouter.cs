@@ -75,7 +75,7 @@ public static class SliceRouter {
             var relative = Relative(root, path);
             var slash = relative.IndexOf('/');
             if (slash < 0) {
-                routing.Errors.Add(new(path, $"{relative} is directly in Slices/. Move it into a slice folder, for example Slices/<Feature>/{relative}."));
+                routing.Errors.Add(new(path, $"{relative} is directly in Slices/. Move it into a slice folder, for example Slices/<Slice>/{relative}."));
                 continue;
             }
             var slice = relative.Substring(0, slash);

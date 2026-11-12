@@ -10,7 +10,7 @@
   <ItemGroup>
     <!-- No PrivateAssets: a test project that references the host also gets the module layers. -->
     <ProjectReference Include="../Views/App.Views.csproj" />
-    <ProjectReference Include="../../Modules/*/*.csproj" />
+    <ProjectReference Include="../../Features/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Host/VSA.Host.csproj" />
   </ItemGroup>
 </Project>
