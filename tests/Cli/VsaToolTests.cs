@@ -13,7 +13,7 @@ public sealed class VsaToolTests {
 
     [SetUp]
     public void SetUp() {
-        root = TempFolder.Create();
+        root = TempFolder.Stable(TestContext.CurrentContext.Test.FullName);
         // Each test run packs the same test version with new content. So the test uses its own NuGet cache, and its own
         // DOTNET_CLI_HOME: the tool resolver cache in it remembers the path of a local tool for each version.
         env = new Dictionary<string, string> {
@@ -21,9 +21,6 @@ public sealed class VsaToolTests {
             ["DOTNET_CLI_HOME"] = Path.Combine(root, "home"),
         };
     }
-
-    [TearDown]
-    public void TearDown() => TempFolder.Delete(root);
 
     [Test]
     [CancelAfter(600_000)]
@@ -113,7 +110,9 @@ public sealed class VsaToolTests {
     // the failure messages.
     async Task RunAndCall(string app, CancellationToken ct, Func<HttpClient, StringBuilder, Task> calls) {
         var url = $"http://127.0.0.1:{FreePort()}";
-        using var process = Dotnet.Start(app, env, "run", "--project", "App/Host", "-c", "Release", "--no-build", "--no-launch-profile", "--urls", url);
+        var host = Path.Combine(app, "App", "Host");
+        var dll = Directory.GetFiles(Path.Combine(host, "bin", "Release"), "App.Host.dll", SearchOption.AllDirectories).Single();
+        using var process = Dotnet.Start(host, env, dll, "--urls", url);
         var output = new StringBuilder();
         process.OutputDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };
         process.ErrorDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };
@@ -129,19 +128,23 @@ public sealed class VsaToolTests {
         }
     }
 
+    // The first start of a new build can be slow when a virus scanner examines each new file.
+    static readonly TimeSpan StartLimit = TimeSpan.FromMinutes(3);
+
     static async Task WaitUntilStarted(HttpClient client, Process app, StringBuilder output, CancellationToken ct) {
-        var until = DateTime.UtcNow.AddMinutes(1);
-        while (DateTime.UtcNow < until) {
+        var started = DateTime.UtcNow;
+        while (DateTime.UtcNow - started < StartLimit) {
             Assert.That(app.HasExited, Is.False, () => $"The app stopped with exit code {app.ExitCode}.\n{output}");
             try {
                 if ((await client.GetAsync("/", ct)).StatusCode == HttpStatusCode.OK) {
+                    TestContext.Out.WriteLine($"The app started in {(DateTime.UtcNow - started).TotalSeconds:0} s.");
                     return;
                 }
             } catch (HttpRequestException) {
             }
             await Task.Delay(500, ct);
         }
-        Assert.Fail($"The app did not start in one minute.\n{output}");
+        Assert.Fail($"The app did not start in {StartLimit.TotalMinutes} minutes.\n{output}");
     }
 
     static int FreePort() {
