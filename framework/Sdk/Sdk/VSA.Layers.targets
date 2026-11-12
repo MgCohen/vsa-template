@@ -233,7 +233,7 @@
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Requests'">
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
     <!-- A module handler gets the Domain and the Infrastructure of each plugin module, as it gets its own: a plugin module is a base. -->
-    <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Requests.csproj;$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
     <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaFeaturesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <!-- A plugin module uses no module: its handlers get its own published domain and commands only. -->
@@ -242,7 +242,7 @@
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Events'">
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
     <!-- A module handler gets the Domain and the Infrastructure of each plugin module, as it gets its own: a plugin module is a base. -->
-    <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <!-- anyModule: the events of all modules, and of all plugin modules -->
     <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Contracts.Events.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Events.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaFeaturesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
@@ -254,7 +254,7 @@
   <ItemGroup Condition="'$(VsaLayer)' == 'Handlers/Commands'">
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Domain.csproj;$(VsaModuleDir)Projects/*.Infrastructure.csproj" PrivateAssets="all" />
     <!-- A module handler gets the Domain and the Infrastructure of each plugin module, as it gets its own: a plugin module is a base. -->
-    <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Modules'" />
+    <ProjectReference VsaRule="true" Include="$(VsaPluginsDir)*/Projects/*.Domain.csproj;$(VsaPluginsDir)*/Projects/*.Infrastructure.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <ProjectReference VsaRule="true" Include="$(VsaModuleDir)Projects/*.Contracts.Events.csproj" PrivateAssets="all" />
     <ProjectReference VsaRule="true" Include="$(VsaFeaturesDir)*/Projects/*.Domain.Shared.csproj;$(VsaFeaturesDir)*/Projects/*.Contracts.Commands.csproj;$(VsaPluginsDir)*/Projects/*.Domain.Shared.csproj;$(VsaPluginsDir)*/Projects/*.Contracts.Commands.csproj" PrivateAssets="all" Condition="'$(VsaRootFolder)' == 'Features'" />
     <!-- A plugin module uses no module: its handlers get its own published domain and commands only. -->
