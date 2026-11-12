@@ -3,7 +3,7 @@ using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Contracts.Requests;
 
-namespace VSA.Testing.Architecture;
+namespace VSA.Architecture.Vsa;
 
 public record Contracts : Layer {
     protected override void Define(Part part) {

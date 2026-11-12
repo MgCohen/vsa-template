@@ -6,6 +6,8 @@ using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace VSA.Testing.Architecture;
 
+public abstract class ArchitectureTests : ArchitectureTests<ArchitectureDefinition>;
+
 public abstract class ArchitectureTests<TDefinition> where TDefinition : ArchitectureDefinition {
     static readonly Lazy<AppArchitecture> LoadedApp =
         new(() => AppArchitecture.Load(DiscoveredApp.FromTestOutput(typeof(TDefinition))));

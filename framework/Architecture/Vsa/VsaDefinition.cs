@@ -1,9 +1,15 @@
 using VSA.Architecture;
 
-namespace VSA.Testing.Architecture;
+namespace VSA.Architecture.Vsa;
 
 public class VsaDefinition : ArchitectureDefinition {
+    readonly Action<Map>? appRules;
+
     public VsaDefinition() { }
+
+    public VsaDefinition(Action<Map> appRules) {
+        this.appRules = appRules;
+    }
 
     protected VsaDefinition(string root) : base(root) { }
 
@@ -44,6 +50,7 @@ public class VsaDefinition : ArchitectureDefinition {
         Borders(map);
         ExceptionsToTheBorders(map);
         ModuleRootsAndTheApp(map);
+        appRules?.Invoke(map);
     }
 
     static void UsesOfEachLayer(Map map) {
@@ -90,7 +97,7 @@ public class VsaDefinition : ArchitectureDefinition {
         map.For<RootClass>().Denies<RootClass>().Under<Plugin>();
         map.For<RootClass>().Under<Plugin>().Uses<RootClass>().InOwn<Plugin>();
         map.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal).InOwn<Feature>();
-        map.For<Host>().Under<App>().Uses<RootClass>();
+        map.For<Host>().Under<App>().Uses<RootClass>().And<Core>();
         map.For<Views>().Under<App>().Uses<Presenters>().And<Views>();
     }
 }

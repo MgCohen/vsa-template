@@ -65,6 +65,7 @@ public sealed class ScaffoldingTests {
             ("App/Host/App.Host.csproj", App),
             ("App/Host/Program.cs", App),
             ("App/Host/Properties/launchSettings.json", App),
+            ("App/Host/SampleAppApp.cs", App),
             ("App/Host/appsettings.json", App),
             ("App/Views/App.Views.csproj", App),
             ("App/Views/App.razor", App),
@@ -132,7 +133,8 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Does.Contain("App/Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("VsaBuilder.Create(args).UseWebHost().Build().RunAsync();"));
+        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("return HelloApp.Run(args);"));
+        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : VsaApp<HelloApp>;"));
     }
 
     [Test]
