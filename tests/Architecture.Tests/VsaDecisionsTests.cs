@@ -21,7 +21,7 @@ public sealed class VsaDecisionsTests {
             + "If the change is correct, copy the .actual.txt file over the baseline.");
     }
 
-    internal static IEnumerable<string> Decisions(ArchitectureDefinition definition) {
+    static IEnumerable<string> Decisions(ArchitectureDefinition definition) {
         var parts = definition.Parts().ToList();
         foreach (var from in parts.Where(p => !p.IsExternal)) {
             var fromItems = from.Items.ToDictionary(i => i.Name, _ => "a");
@@ -39,19 +39,6 @@ public sealed class VsaDecisionsTests {
                 }
                 foreach (var (scenario, decision) in decisions) {
                     yield return $"{Label(from)} -> {Label(to)} [{scenario}] {decision}";
-                }
-            }
-        }
-    }
-
-    internal static IEnumerable<string> Winners(ArchitectureDefinition definition) {
-        var parts = definition.Parts().Where(p => !p.IsExternal).ToList();
-        foreach (var from in parts) {
-            var fromItems = from.Items.ToDictionary(i => i.Name, _ => "a");
-            foreach (var to in definition.Parts()) {
-                foreach (var items in Scenarios(to).Where(items => !(from == to && items.All(i => fromItems[i.Key] == i.Value)))) {
-                    var (permission, pair) = VSA.Architecture.Engine.Decide.For(definition, from, fromItems, to, items);
-                    yield return $"{Label(from)} -> {Label(to)} [{Describe(fromItems, items)}] {permission} WIN {pair?.Rule}";
                 }
             }
         }
@@ -75,5 +62,5 @@ public sealed class VsaDecisionsTests {
 
     static string Label(Part part) => string.Join("/", part.SelfAndAncestors().Reverse().Skip(1).Select(p => p.Name));
 
-    internal static string BaselineFile([CallerFilePath] string path = "") => Path.Combine(Path.GetDirectoryName(path)!, "VsaDecisions.txt");
+    static string BaselineFile([CallerFilePath] string path = "") => Path.Combine(Path.GetDirectoryName(path)!, "VsaDecisions.txt");
 }
