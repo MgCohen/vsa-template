@@ -4,6 +4,7 @@ using VSA.Contracts;
 namespace VSA.Handlers;
 
 [AutoRegister]
+[RequireDerived]
 public abstract class Validator<TMessage> : IValidation where TMessage : class {
     public virtual int Order => 0;
 

@@ -20,7 +20,7 @@ flowchart LR
 | `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
 | `VSA.Testing.Architecture` | `framework/Testing/Architecture/` | The test base, the build targets |
 
-The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Host` (`VsaApp<TApp>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. The runtime does not get ArchUnitNET or Mono.Cecil.
+The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TApp>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET or Mono.Cecil.
 
 ## Definition API
 
@@ -143,8 +143,37 @@ The first access that is set wins:
 | Helper type in a `NoFolder` folder | The part of the first type that uses it ("follows user") |
 | Source file in no part folder | None: `VSA2102` |
 | Source file out of the definition root | Not checked |
+| Source file in no folder map (if the definition has maps) | Not checked |
 
 The engine reads the source file and the first line of each type from the PDB file, with Mono.Cecil.
+
+## Unity projects
+
+If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity project. Unity compiles `Assets/`, so the folders of a Unity app are not the folders of a .NET app.
+
+| Folder | Binds as | Contains |
+|---|---|---|
+| `Assets/<UnityApp>/` | The root | `Features/`, `Plugins/` |
+| `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
+| `<UnitySource>/` (default `Source`) | The root | `Features/`, `Plugins/` of the .NET projects |
+
+`ArchitectureDefinition.Folders(appRoot)` gives these folder maps (`FolderMap(Folder, As)`). With no maps, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaDefinition` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it:
+
+```csharp
+public class MyApp : VsaApp<MyApp> {
+    public override ArchitectureDefinition Architecture => new VsaDefinition(Rules) { UnityApp = "Cards", UnitySource = "Modules" };
+}
+```
+
+Discovery also reads the DLLs that Unity compiles:
+
+| Step | Unity project |
+|---|---|
+| App DLLs | Also `Library/ScriptAssemblies/*.dll` with PDB sources under the app root |
+| No `Library/ScriptAssemblies/` | A warning in `DiscoveredApp.Warnings`. The test base writes it to the test output |
+| A DLL name in the test output too | The engine loads the test output DLL only |
+| A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
+| Source file under `Library/` | Not app code (package cache, generated types) |
 
 ## The four tests
 
@@ -202,13 +231,14 @@ public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTe
 | Definition | The `Architecture` of the most derived `IArchitectureSource` (the app class), if it is a `TDefinition` |
 | Fallback definition | The most derived class with no constructor parameters that is or inherits `TDefinition` |
 | Not loaded | The test assembly, `VSA.Architecture`, and each DLL that references `VSA.Architecture.Engine` |
+| Unity DLLs | See "Unity projects" |
 
 To change the VSA rules, override `Rules` in the app class. `VsaDefinition` applies these rules after its own rules, and a later rule wins:
 
 ```csharp
 using VSA.Architecture;
 using VSA.Architecture.Vsa;
-using VSA.Host;
+using VSA.Composition;
 
 public class MyApp : VsaApp<MyApp> {
     protected override void Rules(Map map) => map.For<Presenters>().Denies<Contracts.Events>();

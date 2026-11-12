@@ -8,6 +8,7 @@ public static class Binder {
         var folderParts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsMany)).ToList();
         var externalParts = definition.Parts().Where(p => p.IsExternal).ToList();
         var rootPath = definition.Root.Path;
+        var maps = definition.Folders(appRoot);
         var bound = new List<Binding>();
         foreach (var type in types) {
             var assembly = type.Assembly.Name.Split(',')[0];
@@ -25,28 +26,34 @@ public static class Binder {
                 continue;
             }
             var relative = Path.GetRelativePath(appRoot, source.File).Replace('\\', '/');
-            if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) || !IsUnder(relative, rootPath)) {
+            if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative)) {
                 outside.Add(type.FullName);
                 continue;
             }
-            var folders = relative.Split('/')[..^1];
-            if (folders.Any(f => f.StartsWith("obj", StringComparison.Ordinal) || f.StartsWith("bin", StringComparison.Ordinal))) {
+            var candidates = maps.Count == 0 ? [relative] : MappedPaths(relative, maps);
+            if (candidates.Count == 0 || !candidates.Any(path => IsUnder(path, rootPath))) {
+                outside.Add(type.FullName);
+                continue;
+            }
+            if (relative.Split('/')[..^1].Any(f => f.StartsWith("obj", StringComparison.Ordinal) || f.StartsWith("bin", StringComparison.Ordinal))) {
                 continue;
             }
 
-            var match = folderParts
-                .Select(p => (Part: p, Pattern: p.Path.Split('/')))
-                .Where(m => m.Pattern.Length <= folders.Length && m.Pattern.Select((s, i) => Matches(s, folders[i])).All(x => x))
+            var match = candidates.Where(path => IsUnder(path, rootPath))
+                .Select(path => path.Split('/')[..^1])
+                .SelectMany(folders => folderParts
+                    .Select(p => (Part: p, Pattern: p.Path.Split('/'), Folders: folders))
+                    .Where(m => m.Pattern.Length <= folders.Length && m.Pattern.Select((s, i) => Matches(s, folders[i])).All(x => x)))
                 .OrderByDescending(m => m.Pattern.Length)
                 .FirstOrDefault();
-            var undeclared = match.Part is not null && match.Part.IsMany && folders.Length > match.Pattern.Length;
+            var undeclared = match.Part is not null && match.Part.IsMany && match.Folders.Length > match.Pattern.Length;
             if (match.Part is null || undeclared) {
                 unmapped.Add((type, source with { File = relative }));
                 continue;
             }
 
             var part = Select(match.Part, type);
-            var items = part.Items.ToDictionary(i => i.Name, i => folders[i.Path.Split('/').Length - 1]);
+            var items = part.Items.ToDictionary(i => i.Name, i => match.Folders[i.Path.Split('/').Length - 1]);
             bound.Add(new Binding(type, part, items, source with { File = relative }));
         }
         return FollowUsers(bound);
@@ -59,6 +66,12 @@ public static class Binder {
             .Concat(type.ImplementedInterfaces);
         return bases.Any(b => b.FullName == name);
     }
+
+    static List<string> MappedPaths(string relative, IReadOnlyList<FolderMap> maps) => [.. maps
+        .Where(map => relative.StartsWith(map.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
+        .Select(map => map.As.Length == 0
+            ? relative[(map.Folder.TrimEnd('/').Length + 1)..]
+            : $"{map.As.TrimEnd('/')}/{relative[(map.Folder.TrimEnd('/').Length + 1)..]}")];
 
     static bool IsUnder(string relative, string rootPath) =>
         rootPath.Length == 0 || relative.StartsWith(rootPath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);

@@ -6,6 +6,8 @@ namespace VSA.Architecture.Engine;
 public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Definition, IReadOnlyList<Assembly> Assemblies) {
     public const string AppRootKey = "VsaAppRoot";
 
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+
     static readonly string DefinitionName = typeof(ArchitectureDefinition).Assembly.GetName().Name!;
 
     static readonly string EngineName = typeof(DiscoveredApp).Assembly.GetName().Name!;
@@ -19,8 +21,10 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
     public static DiscoveredApp FromFolder(string folder, Type definition, string? appRoot = null, Assembly? exclude = null) {
         appRoot = Path.GetFullPath(appRoot ?? FindGlobalJson(folder));
         var dlls = Directory.GetFiles(folder, "*.dll").Where(dll => exclude is null || !SameFile(dll, exclude.Location)).ToList();
+        var warnings = new List<string>();
+        var unity = UnityScriptAssemblies(appRoot, dlls, warnings);
         var tools = dlls.Where(IsArchitectureTool).ToList();
-        var app = dlls.Except(tools).Where(dll => HasSourceUnder(dll, appRoot)).ToList();
+        var app = unity.Concat(dlls.Except(tools)).Where(dll => HasSourceUnder(dll, appRoot)).ToList();
         if (app.Count == 0) {
             throw new InvalidOperationException(
                 $"No assembly in {folder} has source files under the app root {appRoot}. Reference the app projects from the test project.");
@@ -31,7 +35,22 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
         var externals = instance.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         var external = dlls.Except(tools).Except(app).Where(dll => IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
         var assemblies = app.Union(external).Select(Assembly.LoadFrom).ToList();
-        return new DiscoveredApp(appRoot, instance, assemblies);
+        return new DiscoveredApp(appRoot, instance, assemblies) { Warnings = warnings };
+    }
+
+    static List<string> UnityScriptAssemblies(string appRoot, List<string> dlls, List<string> warnings) {
+        if (!UnityProject.Is(appRoot)) {
+            return [];
+        }
+        var folder = UnityProject.ScriptAssemblies(appRoot);
+        if (!Directory.Exists(folder)) {
+            warnings.Add($"warning: {appRoot} is a Unity project, but it has no {UnityProject.ScriptAssembliesFolder} folder. "
+                + "The checks read only the .NET build, so they do not check the code that only Unity compiles. "
+                + "Open the project in Unity to compile its scripts, then run the tests again.");
+            return [];
+        }
+        var loaded = dlls.Select(Path.GetFileNameWithoutExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return [.. Directory.GetFiles(folder, "*.dll").Where(dll => !loaded.Contains(Path.GetFileNameWithoutExtension(dll)))];
     }
 
     static ArchitectureDefinition FindDefinition(Type definition, IEnumerable<Assembly?> assemblies) {
@@ -98,7 +117,9 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
             var prefix = Path.TrimEndingDirectorySeparator(appRoot) + Path.DirectorySeparatorChar;
             return module.Types.SelectMany(t => t.Methods).Where(m => m.HasBody)
                 .SelectMany(m => m.DebugInformation.SequencePoints)
-                .Any(p => Path.IsPathRooted(p.Document.Url) && Path.GetFullPath(p.Document.Url).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+                .Where(p => Path.IsPathRooted(p.Document.Url))
+                .Select(p => Path.GetFullPath(p.Document.Url))
+                .Any(file => file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && !UnityProject.IsInLibrary(file[prefix.Length..]));
         } catch (Exception e) when (e is BadImageFormatException or InvalidOperationException or IOException) {
             return false;
         }

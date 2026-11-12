@@ -10,9 +10,16 @@ public abstract class ArchitectureTests : ArchitectureTests<ArchitectureDefiniti
 
 public abstract class ArchitectureTests<TDefinition> where TDefinition : ArchitectureDefinition {
     static readonly Lazy<AppArchitecture> LoadedApp =
-        new(() => AppArchitecture.Load(DiscoveredApp.FromTestOutput(typeof(TDefinition))));
+        new(() => Load(DiscoveredApp.FromTestOutput(typeof(TDefinition))));
 
     protected static AppArchitecture Architecture => LoadedApp.Value;
+
+    static AppArchitecture Load(DiscoveredApp app) {
+        foreach (var warning in app.Warnings) {
+            TestContext.Progress.WriteLine(warning);
+        }
+        return AppArchitecture.Load(app);
+    }
 
     protected static IEnumerable<IType> AppTypes => Architecture.AppTypes;
 

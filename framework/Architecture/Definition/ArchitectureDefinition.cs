@@ -37,7 +37,7 @@ public abstract partial class ArchitectureDefinition {
         AddSameLayer(all);
 
         var map = new Map(Root);
-        foreach (var layer in Parts().Select(p => p.Layer!).DistinctBy(l => l.GetType())) {
+        foreach (var layer in Parts().Select(p => p.Layer!).GroupBy(l => l.GetType()).Select(g => g.First())) {
             layer.Rules(new LayerRules(layer.GetType(), map.Rules));
         }
         Rules(map);
@@ -48,6 +48,8 @@ public abstract partial class ArchitectureDefinition {
         FindConflicts(all);
         return pairs = all;
     }
+
+    public virtual IReadOnlyList<FolderMap> Folders(string appRoot) => [];
 
     protected virtual void Configure(Options options) { }
 
