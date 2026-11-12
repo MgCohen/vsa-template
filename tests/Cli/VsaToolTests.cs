@@ -128,12 +128,11 @@ public sealed class VsaToolTests {
         }
     }
 
-    // The first start of a new build can be slow when a virus scanner examines each new file.
-    static readonly TimeSpan StartLimit = TimeSpan.FromMinutes(3);
+    static readonly TimeSpan StartLimitForVirusScannedBuild = TimeSpan.FromMinutes(3);
 
     static async Task WaitUntilStarted(HttpClient client, Process app, StringBuilder output, CancellationToken ct) {
         var started = DateTime.UtcNow;
-        while (DateTime.UtcNow - started < StartLimit) {
+        while (DateTime.UtcNow - started < StartLimitForVirusScannedBuild) {
             Assert.That(app.HasExited, Is.False, () => $"The app stopped with exit code {app.ExitCode}.\n{output}");
             try {
                 if ((await client.GetAsync("/", ct)).StatusCode == HttpStatusCode.OK) {
@@ -144,7 +143,7 @@ public sealed class VsaToolTests {
             }
             await Task.Delay(500, ct);
         }
-        Assert.Fail($"The app did not start in {StartLimit.TotalMinutes} minutes.\n{output}");
+        Assert.Fail($"The app did not start in {StartLimitForVirusScannedBuild.TotalMinutes} minutes.\n{output}");
     }
 
     static int FreePort() {
