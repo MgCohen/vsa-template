@@ -34,6 +34,7 @@ public abstract partial class ArchitectureDefinition {
         }
         var all = new List<Pair>();
         AddOwn(all);
+        AddSameLayer(all);
 
         var map = new Map(Root);
         foreach (var layer in Parts().Select(p => p.Layer!).DistinctBy(l => l.GetType())) {
@@ -144,6 +145,20 @@ public abstract partial class ArchitectureDefinition {
         summary.Add(($"own ({Options.Own})", "options", Permission.Allow, count));
     }
 
+    void AddSameLayer(List<Pair> all) {
+        if (Options.SameLayer != Permission.Allow) {
+            return;
+        }
+        var count = 0;
+        foreach (var from in Parts()) {
+            foreach (var to in Parts().Where(t => t.Layer!.GetType() == from.Layer!.GetType())) {
+                all.Add(new Pair(from, to, Isolate(from, to, "always", null), Permission.Allow, "same layer", "same layer", to.Access ?? Options.Access));
+                count++;
+            }
+        }
+        summary.Add(("same layer", "options", Permission.Allow, count));
+    }
+
     void AddRule(List<Pair> all, IRuleEntries rule) {
         var body = rule.Source != "definition";
         var named = rule.From.Concat(rule.Targets).SelectMany(e => e.Filters.Select(f => f.Target).Append(e.Target));
@@ -162,6 +177,9 @@ public abstract partial class ArchitectureDefinition {
                     if (Condition(from, to, entry) is not { } condition) {
                         continue;
                     }
+                    if (rule.Permission == Permission.Allow) {
+                        condition = Isolate(from, to, condition, entry);
+                    }
                     all.Add(new Pair(from, to, condition, rule.Permission, rule.Source, rule.Text, entry.Access ?? to.Access ?? Options.Access));
                     count++;
                 }
@@ -172,6 +190,22 @@ public abstract partial class ArchitectureDefinition {
             }
         }
         summary.Add((rule.Text, rule.Source, rule.Permission, count));
+    }
+
+    string Isolate(Part from, Part to, string condition, Entry? entry) {
+        if (entry?.Isolation == Isolation.Open) {
+            return condition;
+        }
+        var terms = condition == "always" ? new List<string>() : [.. condition.Split(", ")];
+        foreach (var item in to.Items.Reverse()) {
+            if (entry?.Filters.Any(f => f.Kind == "InOther" && item.Is(f.Target)) == true) {
+                break;
+            }
+            if ((item.Isolation ?? Options.Isolation) == Isolation.Isolated && from.Items.Contains(item) && !terms.Contains($"same {item.Name}")) {
+                terms.Add($"same {item.Name}");
+            }
+        }
+        return terms.Count == 0 ? "always" : string.Join(", ", terms);
     }
 
     void Validate(Entry entry, string text) {

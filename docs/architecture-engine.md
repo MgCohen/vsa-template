@@ -56,7 +56,27 @@ public class VsaDefinition : ArchitectureDefinition {
 | `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
 | `Under<T>()`, `InOwn<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `Unlisted` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Reach` and `Access`.
+`Options` sets `Unlisted` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Isolation`, `SameLayer`, `Reach` and `Access`.
+
+`options.SameLayer = Permission.Allow` lets each part use each part of the same layer, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Isolation also limits them (see Isolation). The default is `Deny`.
+
+The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
+
+## Isolation
+
+An isolated group keeps its items apart: an allow rule reaches a part in another item of the group only if the rule crosses the group. The first value that is set wins:
+
+1. The parameter of the rule call: `Uses<Contracts.Commands>(Isolation.Open)` crosses each isolated group.
+2. The parameter of the group: `root.AddMany<Plugin>(Isolation.Open)`.
+3. `options.Isolation`. Its default is `Isolation.Open`.
+
+In the example, the first rule reaches the Domain of the own feature, of Core and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Isolation does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
+
+```csharp
+options.Isolation = Isolation.Isolated;
+map.For<Infrastructure>().Uses<Domain>();
+map.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
+```
 
 ## External parts
 

@@ -14,13 +14,16 @@ public sealed class From : Chain<From> {
 
     public Uses Uses<T>(Access? access, Reach? reach = null) where T : Layer => Start(new Uses(), typeof(T), reach, access, Permission.Allow);
 
+    public Uses Uses<T>(Isolation isolation, Access? access = null, Reach? reach = null) where T : Layer =>
+        Start(new Uses(), typeof(T), reach, access, Permission.Allow, isolation);
+
     public Denies Denies<T>(Reach? reach = null) where T : Layer => Start(new Denies(), typeof(T), reach, null, Permission.Deny);
 
-    TRule Start<TRule>(TRule rule, Type to, Reach? reach, Access? access, Permission permission) where TRule : Rule<TRule> {
+    TRule Start<TRule>(TRule rule, Type to, Reach? reach, Access? access, Permission permission, Isolation? isolation = null) where TRule : Rule<TRule> {
         rule.Permission = permission;
         rule.From = Entries;
         rule.Source = source;
-        rule.Begin(to, reach, access);
+        rule.Begin(to, reach, access, isolation);
         rules.Add(rule);
         return rule;
     }
