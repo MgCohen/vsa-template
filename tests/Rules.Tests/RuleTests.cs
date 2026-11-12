@@ -35,11 +35,11 @@ public sealed class LayerMapRuleTests {
 
 // The UsesPlugins fixture module uses the plugin modules of tests/Fixtures/PluginApp. Pipeline uses RecordIds and Units.
 public sealed class PluginModuleRuleTests {
-    static VsaApp App(bool pipelineIsPlugin = true, bool recordIdsIsPlugin = true) => new([
+    static VsaApp App(bool pipelineIsPlugin = true, bool recordIdsIsPlugin = true, bool unitsIsPlugin = true) => new([
         Root("UsesPlugins"),
         Root("Pipeline") with { IsPlugin = pipelineIsPlugin },
         Root("RecordIds") with { IsPlugin = recordIdsIsPlugin },
-        Root("Units"),
+        Root("Units") with { IsPlugin = unitsIsPlugin },
     ]);
 
     [Test]
@@ -58,6 +58,18 @@ public sealed class PluginModuleRuleTests {
         // The layer project, and the types: the module request on the plugin base that is now a module.
         Assert.That(message, Does.Contain("UsesPlugins.Contracts.Requests"));
         Assert.That(message, Does.Contain("UsesPlugins.Slices.DealDamage.DealDamage does depend on \"Pipeline.Contracts.Requests.Message\""));
+    }
+
+    // UsesPlugins.Handlers.Commands uses Units.Domain and Units.Infrastructure (ReadMeterHandler).
+    [Test]
+    public void Use_of_the_Domain_and_the_Infrastructure_of_a_plugin_module_in_a_handler_passes() =>
+        FixtureApp.Of(App()).VSA2001_module_projects_follow_the_layer_map();
+
+    [Test]
+    public void Use_of_the_Infrastructure_of_a_module_that_is_not_a_plugin_in_a_handler_fails() {
+        var message = Fails(FixtureApp.Of(App(unitsIsPlugin: false)).VSA2001_module_projects_follow_the_layer_map);
+        Assert.That(message, Does.Contain("UsesPlugins.Handlers.Commands"));
+        Assert.That(message, Does.Contain("Units.Infrastructure.MeterStore"));
     }
 
     [Test]
