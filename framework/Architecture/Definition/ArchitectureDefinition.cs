@@ -34,6 +34,7 @@ public abstract partial class ArchitectureDefinition {
         }
         var all = new List<Pair>();
         AddOwn(all);
+        AddSameLayer(all);
 
         var map = new Map(Root);
         foreach (var layer in Parts().Select(p => p.Layer!).DistinctBy(l => l.GetType())) {
@@ -142,6 +143,20 @@ public abstract partial class ArchitectureDefinition {
             }
         }
         summary.Add(($"own ({Options.Own})", "options", Permission.Allow, count));
+    }
+
+    void AddSameLayer(List<Pair> all) {
+        if (Options.SameLayer != Permission.Allow) {
+            return;
+        }
+        var count = 0;
+        foreach (var from in Parts()) {
+            foreach (var to in Parts().Where(t => t.Layer!.GetType() == from.Layer!.GetType())) {
+                all.Add(new Pair(from, to, "always", Permission.Allow, "same layer", "same layer", to.Access ?? Options.Access));
+                count++;
+            }
+        }
+        summary.Add(("same layer", "options", Permission.Allow, count));
     }
 
     void AddRule(List<Pair> all, IRuleEntries rule) {

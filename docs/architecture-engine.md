@@ -58,6 +58,10 @@ public class VsaDefinition : ArchitectureDefinition {
 
 `Options` sets `Unlisted` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Reach` and `Access`.
 
+`options.SameLayer = Permission.Allow` lets each part use each part of the same layer, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them, for example `map.For<Feature>().Denies<Feature>().InOther<Feature>()`. The default is `Deny`.
+
+The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
+
 ## External parts
 
 An `External` part binds the types of a DLL by its name, not by its folder. `Core` binds `VSA.dll` and each `VSA.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `VSA.Contracts.Requests`. The types of an external DLL are rule targets: a rule can deny them.
