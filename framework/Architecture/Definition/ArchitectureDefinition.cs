@@ -37,7 +37,7 @@ public abstract partial class ArchitectureDefinition {
         AddSameLayer(all);
 
         var book = new RuleBook(Root);
-        foreach (var layer in Parts().Select(p => p.Layer!).DistinctBy(l => l.GetType())) {
+        foreach (var layer in Parts().Select(p => p.Layer!).GroupBy(l => l.GetType()).Select(g => g.First())) {
             layer.Rules(new LayerRules(layer.GetType(), book.Rules));
         }
         Rules(book);
@@ -48,6 +48,8 @@ public abstract partial class ArchitectureDefinition {
         FindConflicts(all);
         return pairs = all;
     }
+
+    public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
 
     protected virtual void Configure(Options options) { }
 

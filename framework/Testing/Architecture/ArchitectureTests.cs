@@ -9,9 +9,17 @@ namespace VSA.Testing.Architecture;
 public abstract class ArchitectureTests : ArchitectureTests<ArchitectureDefinition>;
 
 public abstract class ArchitectureTests<TDefinition> where TDefinition : ArchitectureDefinition {
-    static readonly Lazy<ArchitectureMap> LoadedMap = new(() => ArchitectureMap.Load(typeof(TDefinition)));
+    static readonly Lazy<ArchitectureMap> LoadedMap = new(() => Load(typeof(TDefinition)));
 
     protected static ArchitectureMap Map => LoadedMap.Value;
+
+    static ArchitectureMap Load(Type definition) {
+        var map = ArchitectureMap.Load(definition);
+        foreach (var warning in map.Warnings) {
+            TestContext.Progress.WriteLine(warning);
+        }
+        return map;
+    }
 
     protected static IEnumerable<IType> AppTypes => Map.AppTypes;
 

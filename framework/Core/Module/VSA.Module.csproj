@@ -8,6 +8,9 @@
     <PackageReference Include="System.Reflection.Metadata" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../../Analyzers/Markers/VSA.Analyzers.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="VSA.Composition" />
   </ItemGroup>
 </Project>
