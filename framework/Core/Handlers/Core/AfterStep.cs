@@ -1,7 +1,10 @@
+using VSA.Analyzers.Markers;
 using VSA.Contracts;
 
 namespace VSA.Handlers;
 
+[RequireDerived]
+[Preserve]
 public abstract class AfterStep<TMessage> : IAfterCall where TMessage : class {
     public virtual int Order => 0;
 
