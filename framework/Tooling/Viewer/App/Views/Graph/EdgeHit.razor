@@ -1,0 +1,18 @@
+@if (Points.Count > 1)
+{
+    <path class="edge-hit" data-edge="@Link.Id" data-from="@Link.FromNode" data-to="@Link.ToNode" d="@path" fill="none" stroke="transparent" stroke-width="10"
+          @onpointerdown="e => OnDown.InvokeAsync((Target.OnEdge(Link.Id), e))" @onpointerdown:stopPropagation
+          @onpointerup="e => OnUp.InvokeAsync((Target.OnEdge(Link.Id), e))" @onpointerup:stopPropagation />
+}
+
+@code {
+    private string path = "";
+
+    [Parameter, EditorRequired] public LinkItem Link { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<double[]> Points { get; set; } = [];
+    [Parameter] public EventCallback<(Target Target, PointerEventArgs Pointer)> OnDown { get; set; }
+    [Parameter] public EventCallback<(Target Target, PointerEventArgs Pointer)> OnUp { get; set; }
+
+    protected override void OnParametersSet() =>
+        path = string.Concat(Points.Select((p, k) => Svg.Format($"{(k == 0 ? "M" : "L")}{p[0]},{p[1]}")));
+}

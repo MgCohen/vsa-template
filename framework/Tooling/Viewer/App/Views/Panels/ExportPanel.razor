@@ -1,0 +1,24 @@
+@inherits PresenterComponent<GraphPresenter>
+@if (Graph.Export is { } export)
+{
+    <div class="export">
+        <div class="bar">
+            <strong>changes.json</strong>
+            <button @onclick="() => Graph.Copy(export.Json)">Copy JSON</button>
+            <a class="download" download="changes.json" href="@DataUrl(export)">Download changes.json</a>
+            <button @onclick="Graph.CloseExport">Close</button>
+        </div>
+        <pre class="json">@export.Json</pre>
+        <div class="bar">
+            <strong>C# lines for Rules(Map)</strong>
+            <button @onclick="() => Graph.Copy(export.Code)">Copy C#</button>
+        </div>
+        <pre class="code">@export.Code</pre>
+    </div>
+}
+
+@code {
+    private GraphPresenter Graph => Presenter;
+
+    private static string DataUrl(ExportText export) => $"data:application/json;charset=utf-8,{Uri.EscapeDataString(export.Json)}";
+}

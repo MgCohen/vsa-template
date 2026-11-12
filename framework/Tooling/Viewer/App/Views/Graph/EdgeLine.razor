@@ -1,0 +1,37 @@
+@if (Points.Count > 1)
+{
+    <g pointer-events="none" opacity="@Svg.N(Link.Removed ? Opacity * 0.3 : Opacity)">
+        @if (Link.Pending && !Link.Removed)
+        {
+            <path class="pending-halo" d="@path" stroke="@Theme.Pending" stroke-opacity="0.22" stroke-width="7" stroke-linecap="round" />
+        }
+        <path d="@path" data-edge="@Link.Id" data-access="@Link.Access" data-pending="@(Link.Pending ? "true" : "false")" data-removed="@(Link.Removed ? "true" : "false")"
+              stroke="@Color" stroke-width="@(Link.Denied ? "2.4" : "1.4")" stroke-dasharray="@Dashes" stroke-linecap="round" marker-end="@Marker" />
+        <circle cx="@Svg.N(Points[0][0])" cy="@Svg.N(Points[0][1])" r="2.6" fill="@Color" />
+        @if (Text is not null)
+        {
+            <g class="edge-label"><text x="@Svg.N(Middle[0] + 4)" y="@Svg.N(Middle[1] - 4)" font-size="10.5" fill="@Color" stroke="#f4f5f8" stroke-width="3" paint-order="stroke"
+                                        text-decoration="@(Link.Removed ? "line-through" : null)">@Text</text></g>
+        }
+    </g>
+}
+
+@code {
+    private string path = "";
+    private object? drawn;
+
+    [Parameter, EditorRequired] public LinkItem Link { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<double[]> Points { get; set; } = [];
+    [Parameter] public double Opacity { get; set; } = 1;
+
+    private string Color => Link.Denied ? Theme.Deny : Link.Unchecked ? Theme.Unchecked : Link.Conditional ? Theme.Conditional : Theme.Edge;
+    private string Marker => Link.Denied ? "url(#arrow-deny)" : Link.Conditional ? "url(#arrow-conditional)" : "url(#arrow-allow)";
+    private string? Dashes => Link.Removed ? "4 4" : Link.Denied ? "7 4" : Link.Unchecked ? "2 4" : null;
+    private string? Text => Link.Removed ? $"{Link.Label} removed".TrimStart() : Link.Pending ? $"{Link.Label} pending".TrimStart() : Link.Label;
+    private double[] Middle => [(Points[(Points.Count - 1) / 2][0] + Points[Points.Count / 2][0]) / 2, (Points[(Points.Count - 1) / 2][1] + Points[Points.Count / 2][1]) / 2];
+    private object State => (path, Opacity, Link.Access, Link.Label, Link.Pending, Link.Removed);
+
+    protected override void OnParametersSet() => path = Points.Count > 1 ? RoundedPath.Build(Points, 10) : "";
+    protected override bool ShouldRender() => !Equals(drawn, State);
+    protected override void OnAfterRender(bool firstRender) => drawn = State;
+}

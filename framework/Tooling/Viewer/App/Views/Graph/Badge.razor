@@ -1,0 +1,12 @@
+<rect x="@Svg.N(Left)" y="@Svg.N(Y)" width="@Svg.N(Width)" height="18" rx="9" fill="#ffffff" stroke="#e2e5ec" />
+<circle cx="@Svg.N(Left + 10)" cy="@Svg.N(Y + 9)" r="3.2" fill="none" stroke="#4b5468" stroke-width="1.2" />
+<text x="@Svg.N(Left + 18)" y="@Svg.N(Y + 13)" font-size="10.5" fill="#4b5468">@Text</text>
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+    [Parameter] public double Right { get; set; }
+    [Parameter] public double Y { get; set; }
+
+    private double Width => Theme.BadgeWidth(Text);
+    private double Left => Right - Width;
+}

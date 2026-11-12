@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <PropertyGroup>
+    <!-- The handlers are found by type, so CA1812 is a false warning here (issue #41). -->
+    <NoWarn>$(NoWarn);CA1812</NoWarn>
+  </PropertyGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

@@ -1,0 +1,19 @@
+<circle class="port" cx="@Svg.N(X)" cy="@Svg.N(Y)" r="2.6" />
+@if (Edit)
+{
+    <circle class="port-hit" data-port="@Port.Id" data-side="@Port.Side" cx="@Svg.N(X)" cy="@Svg.N(Y)" r="7"
+            @onpointerdown="e => OnDown.InvokeAsync((Spot, e))" @onpointerdown:stopPropagation
+            @onpointerup="e => OnUp.InvokeAsync((Spot, e))" @onpointerup:stopPropagation />
+}
+
+@code {
+    [Parameter, EditorRequired] public CardItem Card { get; set; } = default!;
+    [Parameter, EditorRequired] public PortItem Port { get; set; } = default!;
+    [Parameter] public bool Edit { get; set; }
+    [Parameter] public EventCallback<(Target Target, PointerEventArgs Pointer)> OnDown { get; set; }
+    [Parameter] public EventCallback<(Target Target, PointerEventArgs Pointer)> OnUp { get; set; }
+
+    private double X => Card.X + (Port.Out ? Card.W : 0);
+    private double Y => Card.Y + Port.Y;
+    private Target Spot => new(Card.Id, Port.RowId, Port.Id);
+}

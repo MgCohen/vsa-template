@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <!-- The project file names differ from the templates (App.Host), so VSA.slnx has no name twice. The assembly names stay. -->
+    <AssemblyName>App.Host</AssemblyName>
+    <RootNamespace>App.Host</RootNamespace>
+    <!-- The views are in App.Views, so the SDK does not find .razor files here. This adds blazor.web.js. -->
+    <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The sample input of the viewer (docs/viewer.md). The module reads it from Data/ next to the app. -->
+    <Content Include="../../Data/*.json" Link="Data/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Not private: a test project that references the host must get every module layer. -->
+    <ProjectReference Include="../Views/Viewer.Views.csproj" />
+    <ProjectReference Include="../../Features/*/*.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Host/VSA.Host.csproj" />
+  </ItemGroup>
+</Project>

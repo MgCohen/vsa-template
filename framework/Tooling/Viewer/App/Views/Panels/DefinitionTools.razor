@@ -1,0 +1,42 @@
+@inherits PresenterComponent<GraphPresenter>
+@if (Graph.Kind == GraphKind.Definition)
+{
+    <div class="tools">
+        <label class="import">Import architecture.json <InputFile accept=".json" OnChange="Import" /></label>
+        <span>New rule:</span>
+        <select class="draft-access" value="@Graph.RuleDraft.Access" @onchange="e => Graph.SetRuleDraft(Graph.RuleDraft with { Access = Text(e) })">
+            <option value="@RuleDraft.Allow">Uses</option>
+            <option value="@RuleDraft.Deny">Denies</option>
+        </select>
+        <select class="draft-condition" value="@Graph.RuleDraft.Condition" @onchange="e => Graph.SetRuleDraft(Graph.RuleDraft with { Condition = Text(e) })">
+            @foreach (var condition in RuleDraft.Conditions)
+            {
+                <option value="@condition">@condition</option>
+            }
+        </select>
+        <select class="draft-layer" value="@Graph.RuleDraft.Layer" disabled="@(Graph.RuleDraft.Condition == RuleDraft.None)"
+                @onchange="e => Graph.SetRuleDraft(Graph.RuleDraft with { Layer = Text(e) })">
+            @foreach (var layer in Graph.Layers)
+            {
+                <option value="@layer">@layer</option>
+            }
+        </select>
+        <button @onclick="Graph.FlipAccess">Flip allow / deny</button>
+        @if (Graph.Message is { } message)
+        {
+            <span class="message">@message</span>
+        }
+    </div>
+}
+
+@code {
+    private GraphPresenter Graph => Presenter;
+
+    private static string Text(ChangeEventArgs e) => e.Value?.ToString() ?? "";
+
+    private async Task Import(InputFileChangeEventArgs e)
+    {
+        using var reader = new StreamReader(e.File.OpenReadStream(20_000_000));
+        await Graph.Import(await reader.ReadToEndAsync());
+    }
+}
