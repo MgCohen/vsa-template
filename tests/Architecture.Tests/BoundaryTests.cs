@@ -14,7 +14,6 @@ public sealed class BoundaryDefinition(Boundary options, Boundary? group, CrossR
     }
 
     protected override void Configure(Options configured) {
-        configured.Own = Own.None;
         configured.Boundary = options;
     }
 

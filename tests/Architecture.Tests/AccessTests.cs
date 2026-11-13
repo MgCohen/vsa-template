@@ -14,7 +14,6 @@ public sealed class AccessDefinition<TTarget>(Access options, Access? method) : 
     public Access UserAccess => Resolve().Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
 
     protected override void Configure(Options configured) {
-        configured.Own = Own.None;
         configured.Access = options;
     }
 

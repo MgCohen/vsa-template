@@ -33,7 +33,6 @@ public abstract partial class ArchitectureDefinition {
             return pairs;
         }
         var all = new List<PartRule>();
-        AddOwn(all);
         AddSameLayer(all);
 
         var book = new RuleBook(Root);
@@ -83,9 +82,6 @@ public abstract partial class ArchitectureDefinition {
         _ => throw new InvalidOperationException($"Depth {depth} has no expansion. Add it to Expand."),
     };
 
-    static string Same(IEnumerable<Part> groups) =>
-        string.Join(", ", groups.Reverse().Select(i => $"same {i.Name}")) is { Length: > 0 } same ? same : "always";
-
     static string? Condition(Part from, Part to, Entry entry) {
         var parts = new List<string>();
         foreach (var filter in entry.Filters) {
@@ -123,29 +119,6 @@ public abstract partial class ArchitectureDefinition {
 
     IEnumerable<Part> Branch(Entry entry) =>
         Parts().Where(p => p.Is(entry.Target)).SelectMany(p => Expand(p, entry.Depth ?? p.Depth ?? Options.Depth)).Distinct();
-
-    void AddOwn(List<PartRule> all) {
-        if (Options.Own == Own.None) {
-            return;
-        }
-        var count = 0;
-        foreach (var from in Parts()) {
-            foreach (var to in Parts().Where(t => t.Top == from.Top)) {
-                var same = Options.Own switch {
-                    Own.AllGroups => to.Groups.All(i => i.Holds(from)) ? to.Groups.ToList() : null,
-                    Own.Outer => to.Groups.LastOrDefault() is { } outer ? (outer.Holds(from) ? [outer] : null) : [],
-                    Own.Inner => from.Groups.FirstOrDefault() is { } inner ? (inner.Holds(to) ? [inner] : null) : [],
-                    _ => null,
-                };
-                if (same is null) {
-                    continue;
-                }
-                all.Add(new PartRule(from, to, Same(same), Permission.Allow, "own", $"own ({Options.Own})"));
-                count++;
-            }
-        }
-        summary.Add(new RuleSummary($"own ({Options.Own})", "options", Permission.Allow, count));
-    }
 
     void AddSameLayer(List<PartRule> all) {
         if (!Options.UseSameLayer) {

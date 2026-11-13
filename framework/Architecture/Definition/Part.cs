@@ -43,7 +43,6 @@ public class Part {
         }
     }
 
-    internal Part Top => SelfAndAncestors().First(p => p.Parent?.Parent is null);
 
     public Part Add<T>() where T : Layer, new() {
         var layer = new T();

@@ -5,7 +5,7 @@ namespace VSA.Architecture;
 public abstract partial class ArchitectureDefinition {
     public string Report() {
         Resolve();
-        var text = new StringBuilder($"Options: DefaultPermission = {Options.DefaultPermission}, Own = {Options.Own}\n\n");
+        var text = new StringBuilder($"Options: DefaultPermission = {Options.DefaultPermission}\n\n");
         foreach (var line in summary) {
             text.AppendLine($"{line.Permission,-5}  {line.Rule,-100} {line.Count,4} pairs  [{line.Source}]");
         }

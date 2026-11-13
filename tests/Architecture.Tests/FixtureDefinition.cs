@@ -57,7 +57,7 @@ public record Handlers : Layer {
 public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app) {
     protected override void Configure(Options options) {
         options.DefaultPermission = Permission.Deny;
-        options.Own = Own.AllGroups;
+        options.Boundary = Boundary.Closed;
     }
 
     protected override void Define(Root root) {
@@ -73,6 +73,7 @@ public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app
     }
 
     protected override void Rules(RuleBook rules) {
+        rules.For<Feature>().Uses<Feature>();
         rules.For<Feature>().Uses<KitLayer>();
         rules.For<Domain>().Denies<KitLayer>();
         rules.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
