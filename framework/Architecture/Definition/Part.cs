@@ -3,20 +3,21 @@ namespace VSA.Architecture;
 public class Part {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
-    Reach? reach;
+    Depth? depth;
     Access? access;
+    Boundary? boundary;
     string? folder;
 
-    protected internal Part(Layer? layer, string? folder, Part? parent, bool many = false) {
+    protected internal Part(Layer? layer, string? folder, Part? parent, bool group = false) {
         Layer = layer;
         this.folder = folder;
         Parent = parent;
-        IsMany = many;
+        IsGroup = group;
     }
 
     public Layer? Layer { get; }
     public Part? Parent { get; }
-    public bool IsMany { get; }
+    public bool IsGroup { get; }
     public bool HasFolder => folder is not null;
     public string? Assembly => Layer is External external ? external.Assembly
         : Parent?.Assembly is { } parent ? $"{parent}.{folder}" : null;
@@ -24,13 +25,14 @@ public class Part {
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
     public string Name => Layer is null ? "(root)" : Layer.Display(Layer.GetType());
-    public Reach? Reach => reach;
+    public Depth? Depth => depth;
     public Access? Access => access;
-    public IEnumerable<Part> Items => SelfAndAncestors().Where(p => p.IsMany);
+    public Boundary? Boundary => boundary;
+    public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
 
     public string Path {
         get {
-            var own = IsMany ? $"{folder}/{{{Name.ToLowerInvariant()}}}" : folder;
+            var own = IsGroup ? $"{folder}/{{{Name.ToLowerInvariant()}}}" : folder;
             if (Parent is null) {
                 return own ?? "";
             }
@@ -41,36 +43,31 @@ public class Part {
         }
     }
 
-    internal Part Top => SelfAndAncestors().First(p => p.Parent?.Parent is null);
 
     public Part Add<T>() where T : Layer, new() {
         var layer = new T();
         return Attach(new Part(layer, layer.Folder, this));
     }
 
-    public Part AddMany<T>(string? folder = null) where T : Layer, new() {
+    public Part AddGroup<T>(string? folder = null) where T : Layer, new() {
         var layer = new T();
-        return Attach(new Part(layer, folder ?? layer.GroupFolder ?? layer.Folder, this, many: true));
+        return Attach(new Part(layer, folder ?? layer.GroupFolder ?? layer.Folder, this, group: true));
+    }
+
+    public Part AddGroup<T>(Boundary boundary, string? folder = null) where T : Layer, new() {
+        var part = AddGroup<T>(folder);
+        part.boundary = boundary;
+        return part;
     }
 
     public PartGroup And<T>() where T : Layer, new() => new PartGroup([this]).And<T>();
 
-    public Part NoFolder() {
+    public Part InParentFolder() {
         if (IsExternal) {
             throw new InvalidOperationException(
-                $"Define: {Name} is in the external {Assembly}. An external part has no NoFolder, because its name is a DLL name segment. Remove NoFolder.");
+                $"Define: {Name} is in the external {Assembly}. An external part has no InParentFolder, because its name is a DLL name segment. Remove InParentFolder.");
         }
         folder = null;
-        return this;
-    }
-
-    public Part Reaches(Reach value) {
-        reach = value;
-        return this;
-    }
-
-    public Part Accesses(Access value) {
-        access = value;
         return this;
     }
 
@@ -101,6 +98,9 @@ public class Part {
 
     Part Attach(Part child) {
         Block(child);
+        var options = child.Layer!.Configured();
+        child.depth = options.Depth;
+        child.access = options.Access;
         children.Add(child);
         child.Layer!.Define(child);
         return child;
@@ -108,23 +108,23 @@ public class Part {
 
     void Block(Part child) {
         var name = child.Name;
-        if (child.Layer is External && child.IsMany) {
+        if (child.Layer is External && child.IsGroup) {
             throw new InvalidOperationException(
-                $"Define: AddMany<{name}>() makes a group of an external. A DLL is not a group of folders. Use Add<{name}>().");
+                $"Define: AddGroup<{name}>() makes a group of an external. A DLL is not a group of folders. Use Add<{name}>().");
         }
-        if (child.Layer is External && SelfAndAncestors().Any(p => p.IsMany)) {
+        if (child.Layer is External && SelfAndAncestors().Any(p => p.IsGroup)) {
             throw new InvalidOperationException(
-                $"Define: the external {name} is under the group {SelfAndAncestors().First(p => p.IsMany).Name}. "
-                + $"A DLL has no copy for each group item. Add {name} outside the group.");
+                $"Define: the external {name} is under the group {SelfAndAncestors().First(p => p.IsGroup).Name}. "
+                + $"A DLL has no copy for each group instance. Add {name} outside the group.");
         }
         if (child.Layer is External && IsExternal) {
             throw new InvalidOperationException(
                 $"Define: the external {name} is under the external {Assembly}. "
                 + $"The child of an external gets its DLL name from its parent. Add {name} outside {Name}.");
         }
-        if (child.IsMany && IsExternal) {
+        if (child.IsGroup && IsExternal) {
             throw new InvalidOperationException(
-                $"Define: AddMany<{name}>() is under the external {Assembly}. DLL names have no item segment. Use Add<{name}>().");
+                $"Define: AddGroup<{name}>() is under the external {Assembly}. DLL names have no instance segment. Use Add<{name}>().");
         }
     }
 }

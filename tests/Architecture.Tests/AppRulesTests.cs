@@ -6,26 +6,26 @@ using Vsa = VSA.Architecture.Vsa;
 
 namespace Architecture.Tests;
 
-public sealed class RulesApp : IArchitectureSource {
-    public ArchitectureDefinition Architecture => new VsaDefinition(map => map.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>());
+public sealed class RulesApp : IArchitectureProvider {
+    public ArchitectureDefinition Architecture => new VsaDefinition(rules => rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>());
 }
 
 public sealed class AppRulesTests {
     static readonly string FixtureRoot = typeof(AppRulesTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-        .Single(a => a.Key == DiscoveredApp.AppRootKey).Value!;
+        .Single(a => a.Key == ArchitectureMap.AppRootKey).Value!;
 
     static readonly Dictionary<string, string> NotesSlice = new() { ["Feature"] = "Notes", ["Slice"] = "CreateNote" };
 
     [Test]
     public void Discovery_reads_the_rules_of_the_app_before_the_definitions() {
-        var app = DiscoveredApp.FromFolder(AppContext.BaseDirectory, typeof(ArchitectureDefinition), FixtureRoot);
+        var app = ArchitectureMap.Load(typeof(ArchitectureDefinition), AppContext.BaseDirectory, FixtureRoot);
 
         Assert.That(PresentersUseEvents(app.Definition), Is.EqualTo(Permission.Deny));
     }
 
     [Test]
     public void Discovery_of_a_named_definition_does_not_read_the_app() {
-        var app = DiscoveredApp.FromFolder(AppContext.BaseDirectory, typeof(GoodDefinition), FixtureRoot);
+        var app = ArchitectureMap.Load(typeof(GoodDefinition), AppContext.BaseDirectory, FixtureRoot);
 
         Assert.That(app.Definition, Is.TypeOf<GoodDefinition>());
     }
@@ -50,5 +50,5 @@ public sealed class AppRulesTests {
     }
 
     static Part FeaturePart(ArchitectureDefinition definition, Type layer) =>
-        definition.Parts().Single(p => p.Is(layer) && p.Items.Any(i => i.Is(typeof(Vsa.Feature))));
+        definition.Parts().Single(p => p.Is(layer) && p.Groups.Any(i => i.Is(typeof(Vsa.Feature))));
 }

@@ -3,20 +3,62 @@ using VSA.Architecture;
 namespace VSA.Architecture.Vsa;
 
 public class VsaDefinition : ArchitectureDefinition {
-    readonly Action<Map>? appRules;
+    readonly Action<RuleBook>? appRules;
 
     public VsaDefinition() { }
 
-    public VsaDefinition(Action<Map> appRules) {
+    public VsaDefinition(Action<RuleBook> appRules) {
         this.appRules = appRules;
     }
 
     protected VsaDefinition(string root) : base(root) { }
 
+    public const string DefaultUnitySource = "Source";
+
+    public string? UnityApp { get; init; }
+
+    public string UnitySource { get; init; } = DefaultUnitySource;
+
+    public override IReadOnlyList<FolderAlias> FolderAliases(string appRoot) {
+        if (!UnityLayout.Is(appRoot)) {
+            return [];
+        }
+        var source = new FolderAlias(UnitySource, "");
+        if ((UnityApp ?? FindUnityApp(appRoot)) is not { } app) {
+            return [source];
+        }
+        var appFolder = $"{UnityLayout.AssetsFolder}/{app}";
+        return [new FolderAlias(appFolder, ""), new FolderAlias(appFolder, AppFolder), source];
+    }
+
+    static readonly string AppFolder = new App().Folder;
+
+    static readonly string[] UnityAppMarkers = [new Feature().GroupFolder!, new Plugin().GroupFolder!, new Views().Folder];
+
+    static string? FindUnityApp(string appRoot) {
+        var assets = Path.Combine(appRoot, UnityLayout.AssetsFolder);
+        if (!Directory.Exists(assets)) {
+            return null;
+        }
+        var found = Directory.GetDirectories(assets)
+            .Where(folder => UnityAppMarkers.Any(marker => Directory.Exists(Path.Combine(folder, marker))))
+            .Select(Path.GetFileName)
+            .Where(name => !string.Equals(name, UnityLayout.PluginsFolder, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+        return found.Count switch {
+            0 => null,
+            1 => found[0],
+            _ => throw new InvalidOperationException(
+                $"The Unity project has {found.Count} app folders in Assets: {string.Join(", ", found)}. "
+                + "Set UnityApp in the definition of the app: override Architecture in the app class "
+                + "and return new VsaDefinition(Rules) { UnityApp = \"<name>\" }."),
+        };
+    }
+
     protected override void Configure(Options options) {
-        options.Unlisted = Permission.Deny;
-        options.Own = Own.None;
-        options.Reach = Reach.WithChildren;
+        options.UseSameLayer = true;
+        options.Boundary = Boundary.Closed;
     }
 
     protected override void Define(Root root) {
@@ -29,77 +71,49 @@ public class VsaDefinition : ArchitectureDefinition {
 
         root.Add<App>().Add<Host>().And<Views>();
 
-        var plugin = root.AddMany<Plugin>();
-        plugin.Add<RootClass>().NoFolder().OfType<VSA.Module.Plugin>();
+        var plugin = root.AddGroup<Plugin>(Boundary.Open);
+        plugin.Add<Module>().InParentFolder().OfType<VSA.Module.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
         plugin.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
         plugin.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
 
-        var feature = root.AddMany<Feature>();
-        feature.Add<RootClass>().NoFolder().OfType<VSA.Module.Module>();
+        var feature = root.AddGroup<Feature>();
+        feature.Add<Module>().InParentFolder().OfType<VSA.Module.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();
-        feature.AddMany<Slice>()
+        feature.AddGroup<Slice>()
             .Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
             .And<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
-            .NoFolder();
+            .InParentFolder();
     }
 
-    protected override void Rules(Map map) {
-        UsesOfEachLayer(map);
-        Borders(map);
-        ExceptionsToTheBorders(map);
-        ModuleRootsAndTheApp(map);
-        appRules?.Invoke(map);
-    }
+    protected override void Rules(RuleBook rules) {
+        rules.For<Domain>().Uses<Domain.Shared>();
+        rules.For<Infrastructure>().Uses<Domain>();
+        rules.For<Presenters>().Uses<Contracts>()
+            .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal);
+        rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
+            .Uses<Contracts>().And<Domain.Shared>();
+        rules.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
+            .Uses<Handlers>().And<Contracts>().And<Contracts.Commands>().And<Contracts.Events>()
+            .And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
+        rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
 
-    static void UsesOfEachLayer(Map map) {
-        map.For<Domain>().Uses<Domain>();
-        map.For<Domain.Shared>().Denies<Domain>();
-        map.For<Domain.Shared>().Uses<Domain.Shared>();
-        map.For<Infrastructure>().Uses<Domain>().And<Infrastructure>();
-        map.For<Presenters>().Uses<Presenters>().And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal);
-        map.For<Contracts.Requests>().Uses<Contracts.Requests>().And<Domain.Shared>();
-        map.For<Contracts.Events>().Uses<Contracts.Events>().And<Domain.Shared>();
-        map.For<Contracts.Commands>().Uses<Contracts.Commands>().And<Domain.Shared>();
-        map.For<Handlers.Requests>().Uses<Handlers.Requests>()
-            .And<Contracts.Requests>().And<Contracts.Commands>().And<Contracts.Events>().And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
-        map.For<Handlers.Events>().Uses<Handlers.Events>()
-            .And<Contracts.Commands>().And<Contracts.Events>().And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
-        map.For<Handlers.Commands>().Uses<Handlers.Commands>()
-            .And<Contracts.Commands>().And<Contracts.Events>().And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
+        rules.For<Plugin>().Denies<Feature>();
+        rules.For<Domain>().Under<Plugin>().Denies<Domain>(Depth.Self).InOther<Plugin>();
 
-        map.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>().Uses<Contracts>();
-        map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Uses<Handlers>().And<Contracts>();
-        map.For<Presenters>().Uses<Contracts>();
-    }
+        rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
+        rules.For<Presenters>().And<Module>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
+        rules.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
+            .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-    static void Borders(Map map) {
-        map.For<Core>().Denies<Plugin>().And<Feature>();
-        map.For<Plugin>().Denies<Feature>();
-        map.For<Feature>().Denies<Feature>().InOther<Feature>();
-        map.For<Slice>().Denies<Slice>().InOther<Slice>();
-        map.For<Domain>().Under<Plugin>().Denies<Domain>().InOther<Plugin>();
-    }
+        rules.For<Module>().Uses<Core>().And<Plugin>(Access.Internal);
+        rules.For<Module>().Denies<Module>().Under<Plugin>();
+        rules.For<Module>().Under<Feature>().Uses<Feature>(Access.Internal);
+        rules.For<Host>().Uses<Composition>();
+        rules.For<Views>().Uses<Presenters>();
 
-    static void ExceptionsToTheBorders(Map map) {
-        map.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
-        map.For<Domain>().Under<Plugin>().Uses<Domain.Shared>().InOther<Plugin>();
-        map.For<Presenters>().And<RootClass>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
-        map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
-            .Uses<Contracts.Commands>().And<Contracts.Events>().InOther<Feature>();
-        map.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
-            .Uses<Contracts.Commands>().And<Contracts.Events>().InOther<Slice>();
-    }
-
-    static void ModuleRootsAndTheApp(Map map) {
-        map.For<RootClass>().Uses<Core>().And<Plugin>(Access.Internal);
-        map.For<RootClass>().Under<Plugin>().Uses<Plugin>(Access.Internal).InOwn<Plugin>();
-        map.For<RootClass>().Denies<RootClass>().Under<Plugin>();
-        map.For<RootClass>().Under<Plugin>().Uses<RootClass>().InOwn<Plugin>();
-        map.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal).InOwn<Feature>();
-        map.For<Host>().Under<App>().Uses<Composition>().And<Host>();
-        map.For<Views>().Under<App>().Uses<Presenters>().And<Views>();
+        appRules?.Invoke(rules);
     }
 }

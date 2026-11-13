@@ -8,7 +8,7 @@ public record KitLayer : External {
     public override string Assembly => "Kit";
 }
 
-public record RootClass : Layer;
+public record Module : Layer;
 
 public record Feature : Layer {
     public override string GroupFolder => "Features";
@@ -56,29 +56,30 @@ public record Handlers : Layer {
 
 public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app) {
     protected override void Configure(Options options) {
-        options.Unlisted = Permission.Deny;
-        options.Own = Own.AllGroups;
+        options.DefaultPermission = Permission.Deny;
+        options.Boundary = Boundary.Closed;
     }
 
     protected override void Define(Root root) {
         root.Add<KitLayer>();
-        var feature = root.AddMany<Feature>();
-        feature.Add<RootClass>().NoFolder().OfType<IModuleRoot>();
+        var feature = root.AddGroup<Feature>();
+        feature.Add<Module>().InParentFolder().OfType<IModuleRoot>();
         feature.Add<Domain>();
         feature.Add<Presenters>();
-        feature.AddMany<Slice>()
+        feature.AddGroup<Slice>()
             .Add<Contracts.Requests>().And<Contracts.Events>()
             .And<Handlers.Requests>().And<Handlers.Events>()
-            .NoFolder();
+            .InParentFolder();
     }
 
-    protected override void Rules(Map map) {
-        map.For<Feature>().Uses<KitLayer>();
-        map.For<Domain>().Denies<KitLayer>();
-        map.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
-        map.For<Slice>().Denies<Presenters>().And<RootClass>().InOwn<Feature>();
-        map.For<Presenters>().Uses<Domain>(Access.Internal);
-        map.For<Presenters>().Uses<Contracts.Events>(Access.Internal);
+    protected override void Rules(RuleBook rules) {
+        rules.For<Feature>().Uses<Feature>();
+        rules.For<Feature>().Uses<KitLayer>();
+        rules.For<Domain>().Denies<KitLayer>();
+        rules.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
+        rules.For<Slice>().Denies<Presenters>().And<Module>().InSame<Feature>();
+        rules.For<Presenters>().Uses<Domain>(Access.Internal);
+        rules.For<Presenters>().Uses<Contracts.Events>(Access.Internal);
     }
 }
 

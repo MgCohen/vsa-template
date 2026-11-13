@@ -24,8 +24,8 @@ public sealed class VsaRulesTests {
     [TestCase("Core", "Composition", Permission.Allow)]
     [TestCase("Core", "Host", Permission.Allow)]
     [TestCase("Core", "Domain", Permission.Deny)]
-    [TestCase("Feature", "RootClass", Permission.Deny)]
-    [TestCase("Plugin", "RootClass", Permission.Deny)]
+    [TestCase("Feature", "Module", Permission.Deny)]
+    [TestCase("Plugin", "Module", Permission.Deny)]
     public void The_app_host_uses_only_the_framework_entry(string group, string to, Permission expected) {
         Assert.That(Decide(Place("App", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
     }
@@ -34,8 +34,8 @@ public sealed class VsaRulesTests {
     [TestCase("Presenters", "Feature", "Domain.Shared", "B")]
     [TestCase("Presenters", "Plugin", "Domain.Shared", "A")]
     [TestCase("Presenters", "Core", "Contracts.Events", "A")]
-    [TestCase("RootClass", "Feature", "Domain.Shared", "B")]
-    [TestCase("RootClass", "Plugin", "Infrastructure", "A")]
+    [TestCase("Module", "Feature", "Domain.Shared", "B")]
+    [TestCase("Module", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
         var (permission, pair) = Decide(Place("Feature", from), Place(group, to, feature));
 
@@ -44,22 +44,23 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var (permission, pair) = Decide(Place("Feature", "RootClass"), Place("Core", "Domain"));
+        var (permission, pair) = Decide(Place("Feature", "Module"), Place("Core", "Domain"));
 
         Assert.That((permission, pair?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
 
-    static (Permission Permission, Pair? Pair) Decide(
-        (Part Part, IReadOnlyDictionary<string, string> Items) from, (Part Part, IReadOnlyDictionary<string, string> Items) to) =>
-        VSA.Architecture.Engine.Decide.For(Definition, from.Part, from.Items, to.Part, to.Items);
+    static Decision Decide(PartPlace from, PartPlace to) =>
+        VSA.Architecture.Engine.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
 
-    static (Part, IReadOnlyDictionary<string, string>) Place(string group, string name, string feature = "A", string slice = "s1") {
+    static PartPlace Place(string group, string name, string feature = "A", string slice = "s1") {
         var part = Definition.Parts().Single(p => p.Name == name && p.SelfAndAncestors().Any(a => a.Name == group));
-        var items = part.Items.ToDictionary(i => i.Name, i => i.Name switch {
+        var values = part.Groups.ToDictionary(i => i.Name, i => i.Name switch {
             "Feature" => feature,
             "Slice" => slice,
             _ => "P",
         });
-        return (part, items);
+        return new PartPlace(part, values);
     }
+
+    sealed record PartPlace(Part Part, IReadOnlyDictionary<string, string> Values);
 }
