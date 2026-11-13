@@ -12,7 +12,7 @@ sealed class LoadDefinitionHandler : CommandHandler<LoadDefinitionCommand, LoadD
         if (versions.Count > 0) {
             return Done(new LoadDefinitionResult(null, [], versions));
         }
-        var app = loader.AppAssemblies(command.AppRoot);
+        var app = loader.AppAssemblies(command.AppRoot, command.Skip);
         if (app.Count == 0) {
             return Done(Failed($"No assembly in {command.Bin} has source files under the app root {command.AppRoot}. "
                 + "Build the host project of the app, and give its output folder to --bin."));

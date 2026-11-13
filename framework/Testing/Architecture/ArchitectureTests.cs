@@ -52,6 +52,16 @@ public abstract class ArchitectureTests<TDefinition> where TDefinition : Archite
     }
 
     [Test]
+    public void The_rule_engine_finds_no_errors() {
+        var run = RuleEngine.Run();
+        if (run is null) {
+            Assert.Ignore("The rule engine is not installed. Add the VSA.Architecture.Build package to this test project.");
+        }
+        Assert.That(run.Errors, Is.Empty, run.Report);
+        Assert.That(run.ExitCode, Is.Zero, run.Report);
+    }
+
+    [Test]
     public void Each_type_is_in_a_part() {
         Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Map);
     }

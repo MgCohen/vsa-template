@@ -18,6 +18,7 @@ public static class LocalFeed {
         var feed = System.IO.Path.Combine(root, "feed");
         // A solution of only the framework projects: the samples and the tests do not ship.
         var projects = Directory.EnumerateFiles(Repo.Path("framework"), "*.csproj", SearchOption.AllDirectories)
+            .Append(Repo.Path("engine", "Build", "VSA.Architecture.Build.csproj"))
             .Select(p => $"  <Project Path=\"{System.IO.Path.GetRelativePath(root, p).Replace('\\', '/')}\" />");
         var solution = System.IO.Path.Combine(root, "pack.slnx");
         File.WriteAllLines(solution, ["<Solution>", .. projects, "</Solution>"]);

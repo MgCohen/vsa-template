@@ -16,6 +16,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `framework/Architecture/` | The architecture engine: `Definition/` (VSA.Architecture, the definition API), `Vsa/` (VSA.Architecture.Vsa: `VsaDefinition` and the VSA layers), `Engine/` (VSA.Architecture.Engine: binding, discovery, checks with ArchUnitNET). The runtime references only `Definition/` and `Vsa/` |
 | `framework/Testing/`  | The test bases that ship: `Architecture/` (the architecture tests and the generated test class), `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
+| `engine/`             | The rule engine app (a VSA console app: Check, Definition, Rules, Report, and the temporary Hello plugin) and `Build/`, the build hook package VSA.Architecture.Build. See "The rule engine" below |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
@@ -36,6 +37,12 @@ Each message goes through a pipeline to its handler (VSA.Handlers). A handler ta
 
 A presenter shows the events of its own module: it implements `IPresenterEvent<TEvent>`, and it gets each event, also when no view shows it. A view only renders: it inherits `PresenterWatcher` (one or more presenters) or `PresenterComponent<T>` (one presenter). A presenter does not publish events (`VSA1004`). See `docs/presenter-events.md`.
 
+## The rule engine
+
+The rule engine checks the architecture of an app after each build. It is a VSA console app in `engine/`: `UseConsoleHost()` sends its one entry command, `RunCheckCommand`. Its handler is the composition root, one command for each step: Definition (loads the app and its definition), Rules (checks the layer rules), Report (writes `file(line,col): error CODE: text` lines). Only `Rules/Infrastructure/` uses ArchUnitNET, and the engine definition (`engine/App/Host/EngineDefinition.cs`) checks that. An optional step (a plugin) is a feature module with one command, and the composition root sends it unless `--off` names it.
+
+An app installs it with one package on its host project: `<PackageReference Include="VSA.Architecture.Build" PrivateAssets="all" />`. Switches: `-p:VsaCheck=false`, `-p:VsaCheckMode=Warn`, `-p:VsaCheckOff=<plugin>`. In a test project the build does not check: `ArchitectureTests` starts the same engine. Run it by hand with `dotnet engine/App/Host/bin/Debug/net10.0/vsa-engine.dll --root <app root> --bin <host output>`.
+
 ## Tests
 
 Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use NUnit on Microsoft.Testing.Platform (set in `global.json`). NUnit also runs in Unity (Unity Test Framework), and xUnit does not.
@@ -47,6 +54,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
 | `tests/Architecture.Tests/` | Tests of the architecture engine, on the fixture apps in `tests/Fixtures/Architecture/` |
 | `tests/Composition.Tests/` | Tests of the composer, the installers and `ModuleBuilder`, with no ASP.NET Core |
+| `tests/Engine.Tests/`    | Tests of the rule engine app, in the test process, on `samples/Notes`     |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
 

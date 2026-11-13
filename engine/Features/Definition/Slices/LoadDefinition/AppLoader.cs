@@ -36,10 +36,12 @@ sealed class AppLoader : AssemblyLoadContext {
         }
     }
 
-    public List<Assembly> AppAssemblies(string appRoot) {
+    public List<Assembly> AppAssemblies(string appRoot, IReadOnlyList<string> skip) {
         var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(appRoot)) + Path.DirectorySeparatorChar;
         return [.. Directory.GetFiles(bin, "*.dll")
-            .Where(dll => !Shared.Contains(Path.GetFileNameWithoutExtension(dll)) && HasSourceUnder(dll, prefix))
+            .Where(dll => !Shared.Contains(Path.GetFileNameWithoutExtension(dll)))
+            .Where(dll => !skip.Contains(Path.GetFileNameWithoutExtension(dll), StringComparer.OrdinalIgnoreCase))
+            .Where(dll => HasSourceUnder(dll, prefix))
             .Select(LoadFromAssemblyPath)];
     }
 

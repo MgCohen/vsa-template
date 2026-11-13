@@ -45,7 +45,7 @@ public sealed partial class NotesConsumerTests {
 
     // Changes the projects from the source mode of this repository to the consumer form.
     // A module project becomes <Project Sdk="VSA.Sdk">. A reference to a framework project becomes a package reference.
-    static void UsePackages(string root) {
+    internal static void UsePackages(string root) {
         foreach (var file in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)) {
             var text = File.ReadAllText(file);
             if (text.Contains("VSA.Sdk.Dev.props")) {
