@@ -94,6 +94,7 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 
 - Follow the conventions of the surrounding code (naming, structure).
 - Do not write comments in C# code (`VSA1013`). Put the information in a name: a type, a member, a variable or a test.
+- Both namespace forms are allowed (block and file-scoped). A MonoBehaviour must use a block namespace in Unity.
 - Add or update tests with every behavior change.
 - Document notable architecture decisions in `docs/`.
 - Keep this file current when conventions change.
