@@ -1,6 +1,7 @@
 <Project>
   <!-- Adds the class that runs the VSA architecture tests on the app of the test run: NUnit runs tests only from
-       the test assembly. The tests are in ArchitectureTests (VSA.Testing.Architecture). The engine reads the rules of the
+       the test assembly. The TestFixture attribute keeps the NUnit reference, also when the project has no test of its own,
+       else NUnit finds no tests. The tests are in ArchitectureTests (VSA.Testing.Architecture). The engine reads the rules of the
        app class (MyApp : VsaApp<MyApp>). If there is no app class, it uses the most derived architecture definition.
        The class is partial, so a test project adds its own rules in partial class ArchitectureTests. To stop the class,
        set VsaArchitectureTests to false. The engine finds the app root from the VsaAppRoot metadata, or else from the
@@ -16,7 +17,7 @@
     </PropertyGroup>
     <WriteLinesToFile Condition="'$(_VsaWritesArchitectureTests)' == 'true'"
                       File="$(_VsaArchitectureTestsFile)"
-                      Lines="namespace $(RootNamespace)%3B;public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests%3B"
+                      Lines="namespace $(RootNamespace)%3B;[NUnit.Framework.TestFixture];public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests%3B"
                       Overwrite="true" WriteOnlyWhenDifferent="true" />
     <ItemGroup Condition="'$(_VsaWritesArchitectureTests)' == 'true'">
       <Compile Include="$(_VsaArchitectureTestsFile)" />

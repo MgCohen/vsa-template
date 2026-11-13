@@ -220,8 +220,11 @@ The app class (`MyApp : VsaApp<MyApp>`, see `composition.md`) gives the rules fo
 
 ```csharp
 namespace <RootNamespace>;
+[NUnit.Framework.TestFixture]
 public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests;
 ```
+
+`[TestFixture]` keeps the reference to `nunit.framework` in the test assembly. Without it, a test project with no test of its own has no NUnit reference, and NUnit finds 0 tests. `tests/Consumer.Tests` checks this with the built fixture `tests/Fixtures/Built/GeneratedTests`.
 
 | Step | Source |
 |---|---|
