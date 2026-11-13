@@ -24,7 +24,6 @@ public sealed class DepthDefinition<TTarget>(Depth options, Depth? method) : Arc
     public bool UserUsesTheChild => Resolve().Any(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TargetChild)));
 
     protected override void Configure(Options configured) {
-        configured.Own = Own.None;
         configured.Depth = options;
     }
 

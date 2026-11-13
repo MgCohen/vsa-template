@@ -57,7 +57,6 @@ public class VsaDefinition : ArchitectureDefinition {
     }
 
     protected override void Configure(Options options) {
-        options.Own = Own.None;
         options.UseSameLayer = true;
         options.Boundary = Boundary.Closed;
     }

@@ -56,7 +56,7 @@ public class VsaDefinition : ArchitectureDefinition {
 | `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `DefaultPermission` (the permission when no rule applies), `Own` (the permission between parts of the same group), `Boundary`, `UseSameLayer`, `Depth` and `Access`.
+`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameLayer`, `Depth` and `Access`.
 
 `options.UseSameLayer = true` lets each part use each part of the same layer, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 

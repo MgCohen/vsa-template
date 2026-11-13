@@ -9,7 +9,6 @@ public sealed class SameLayerDefinition(bool useSameLayer) : ArchitectureDefinit
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
     protected override void Configure(Options configured) {
-        configured.Own = Own.None;
         configured.UseSameLayer = useSameLayer;
     }
 
@@ -58,7 +57,6 @@ public sealed class DenyingSameLayerDefinition : ArchitectureDefinition {
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
     protected override void Configure(Options configured) {
-        configured.Own = Own.None;
         configured.UseSameLayer = true;
     }
 
