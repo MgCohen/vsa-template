@@ -175,7 +175,7 @@ The markers are in `VSA.Analyzers.Markers`. The same package has the stripping m
 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
-| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Module` |
+| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Module`, `VsaApp<TApp>` |
 | `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IVsaHost`, `IRunner`, and the internal `IEnvelopeFactory`, `IBeforeCall`, `IAfterCall` |
 | `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>` |
 

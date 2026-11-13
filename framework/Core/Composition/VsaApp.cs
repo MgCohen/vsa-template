@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using VSA.Analyzers.Markers;
 using VSA.Architecture;
 using VSA.Architecture.Vsa;
 
 namespace VSA.Composition;
 
+[RequireDerived]
 public abstract class VsaApp<TApp> : IArchitectureProvider where TApp : VsaApp<TApp>, new() {
     static readonly object Gate = new();
     static Running? running;

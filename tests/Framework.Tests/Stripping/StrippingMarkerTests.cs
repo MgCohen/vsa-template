@@ -29,6 +29,7 @@ public sealed class StrippingMarkerTests {
     [TestCase(typeof(AfterStep<>))]
     [TestCase(typeof(Presenter))]
     [TestCase(typeof(VSA.Module.Module))]
+    [TestCase(typeof(VsaApp<>))]
     public void A_base_class_that_the_scan_reads_keeps_its_derived_classes(Type scannedBase) {
         Assert.That(scannedBase.IsDefined(typeof(RequireDerivedAttribute), inherit: false), Is.True);
     }
