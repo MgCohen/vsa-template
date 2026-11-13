@@ -1,4 +1,4 @@
-namespace Report.Domain.Shared;
+namespace Steps.Domain.Shared;
 
 public enum FindingSeverity {
     Error,

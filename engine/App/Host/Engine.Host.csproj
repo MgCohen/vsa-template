@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../Features/*/*.csproj" />
+    <ProjectReference Include="../../Plugins/*/*.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Composition/VSA.Composition.csproj" />
   </ItemGroup>
 </Project>

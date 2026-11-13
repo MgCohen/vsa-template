@@ -1,5 +1,5 @@
-using Report.Domain.Shared;
+using Steps.Domain.Shared;
 
 namespace Rules.Slices.CheckRules;
 
-public sealed record CheckRulesResult(IReadOnlyList<Finding> Findings, int Types);
+public sealed record CheckRulesResult(IReadOnlyList<Finding> Findings, int Types) : IStepResult;

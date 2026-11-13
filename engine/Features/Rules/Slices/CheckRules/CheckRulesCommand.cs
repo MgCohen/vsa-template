@@ -1,8 +1,6 @@
-using System.Reflection;
-using VSA.Architecture;
-using VSA.Contracts.Commands;
+using Definition.Domain.Shared;
+using Steps.Contracts.Commands;
 
 namespace Rules.Slices.CheckRules;
 
-public sealed record CheckRulesCommand(ArchitectureDefinition Definition, IReadOnlyList<Assembly> Assemblies, string AppRoot)
-    : ICommand<CheckRulesResult>;
+public sealed record CheckRulesCommand(LoadedApp App) : EngineStep<CheckRulesResult>;
