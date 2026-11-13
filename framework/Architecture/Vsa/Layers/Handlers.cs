@@ -6,8 +6,8 @@ using VSA.Handlers.Requests;
 namespace VSA.Architecture.Vsa;
 
 public record Handlers : Layer {
-    protected override void Define(Part part) {
-        part.Reaches(Reach.Only);
+    protected override void Configure(LayerOptions options) {
+        options.Depth = Depth.Self;
     }
 
     public record Requests : Layer {

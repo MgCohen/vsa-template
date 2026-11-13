@@ -47,7 +47,7 @@ MyApp.Run(args)                       static, in VsaApp<TApp>
 | `Build(string[] args)` | `Builder(args).Services(Services).Build()` | Change the build |
 | `Builder(string[] args)` | `VsaBuilder.Create(args)` | Select a host, the modules or the keys |
 | `Services(IServiceCollection)` | No registrations | Add app registrations |
-| `Rules(Map)` | No rules | Add app rules after the VSA rules |
+| `Rules(RuleBook)` | No rules | Add app rules after the VSA rules |
 | `Architecture` | `new VsaDefinition(Rules)` | Set the Unity folders: `UnityApp`, `UnitySource` (see `architecture-engine.md`) |
 
 The static members control the lifetime of the app:

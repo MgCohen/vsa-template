@@ -24,11 +24,11 @@ public sealed class VsaDecisionsTests {
     static IEnumerable<string> Decisions(ArchitectureDefinition definition) {
         var parts = definition.Parts().ToList();
         foreach (var from in parts.Where(p => !p.IsExternal)) {
-            var fromItems = from.Items.ToDictionary(i => i.Name, _ => "a");
+            var fromValues = from.Groups.ToDictionary(i => i.Name, _ => "a");
             foreach (var to in parts) {
                 var decisions = Scenarios(to)
-                    .Where(items => !(from == to && items.All(i => fromItems[i.Key] == i.Value)))
-                    .Select(items => (Scenario: Describe(fromItems, items), Decision: Decide(definition, from, fromItems, to, items)))
+                    .Where(values => !(from == to && values.All(i => fromValues[i.Key] == i.Value)))
+                    .Select(values => new { Scenario = Describe(fromValues, values), Decision = Decide(definition, from, fromValues, to, values) })
                     .ToList();
                 if (decisions.Count == 0) {
                     continue;
@@ -37,8 +37,8 @@ public sealed class VsaDecisionsTests {
                     yield return $"{Label(from)} -> {Label(to)} [any] {decisions[0].Decision}";
                     continue;
                 }
-                foreach (var (scenario, decision) in decisions) {
-                    yield return $"{Label(from)} -> {Label(to)} [{scenario}] {decision}";
+                foreach (var decision in decisions) {
+                    yield return $"{Label(from)} -> {Label(to)} [{decision.Scenario}] {decision.Decision}";
                 }
             }
         }
@@ -46,8 +46,8 @@ public sealed class VsaDecisionsTests {
 
     static IEnumerable<Dictionary<string, string>> Scenarios(Part to) {
         IEnumerable<Dictionary<string, string>> all = [[]];
-        foreach (var item in to.Items.Reverse()) {
-            all = all.SelectMany(items => new[] { "a", "b" }.Select(value => new Dictionary<string, string>(items) { [item.Name] = value }));
+        foreach (var group in to.Groups.Reverse()) {
+            all = all.SelectMany(values => new[] { "a", "b" }.Select(value => new Dictionary<string, string>(values) { [group.Name] = value }));
         }
         return all;
     }
@@ -55,9 +55,9 @@ public sealed class VsaDecisionsTests {
     static string Describe(Dictionary<string, string> from, Dictionary<string, string> to) =>
         string.Join(" ", to.Select(i => from.TryGetValue(i.Key, out var value) ? $"{(value == i.Value ? "same" : "other")} {i.Key}" : $"{i.Key} {i.Value}"));
 
-    static string Decide(ArchitectureDefinition definition, Part from, Dictionary<string, string> fromItems, Part to, Dictionary<string, string> toItems) {
-        var (permission, pair) = VSA.Architecture.Engine.Decide.For(definition, from, fromItems, to, toItems);
-        return permission == Permission.Allow ? $"Allow {pair?.Access.ToString() ?? "(unlisted)"}" : "Deny";
+    static string Decide(ArchitectureDefinition definition, Part from, Dictionary<string, string> fromValues, Part to, Dictionary<string, string> toValues) {
+        var (permission, pair) = VSA.Architecture.Engine.Decide.For(definition, from, fromValues, to, toValues);
+        return permission == Permission.Allow ? $"Allow {pair?.Access.ToString() ?? "(default)"}" : "Deny";
     }
 
     static string Label(Part part) => string.Join("/", part.SelfAndAncestors().Reverse().Skip(1).Select(p => p.Name));

@@ -4,11 +4,11 @@ namespace VSA.Architecture.Engine;
 
 public static class Binder {
     public static List<Binding> Bind(ArchitectureDefinition definition, IEnumerable<IType> types, Dictionary<string, Source> sources,
-        string appRoot, List<string> outside, List<(IType Type, Source Source)> unmapped) {
-        var folderParts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsMany)).ToList();
+        string appRoot, List<string> outside, List<UnmappedType> unmapped) {
+        var folderParts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup)).ToList();
         var externalParts = definition.Parts().Where(p => p.IsExternal).ToList();
         var rootPath = definition.Root.Path;
-        var maps = definition.Folders(appRoot);
+        var aliases = definition.FolderAliases(appRoot);
         var bound = new List<Binding>();
         foreach (var type in types) {
             var assembly = type.Assembly.Name.Split(',')[0];
@@ -30,7 +30,7 @@ public static class Binder {
                 outside.Add(type.FullName);
                 continue;
             }
-            var candidates = maps.Count == 0 ? [relative] : MappedPaths(relative, maps);
+            var candidates = aliases.Count == 0 ? [relative] : AliasedPaths(relative, aliases);
             if (candidates.Count == 0 || !candidates.Any(path => IsUnder(path, rootPath))) {
                 outside.Add(type.FullName);
                 continue;
@@ -42,19 +42,19 @@ public static class Binder {
             var match = candidates.Where(path => IsUnder(path, rootPath))
                 .Select(path => path.Split('/')[..^1])
                 .SelectMany(folders => folderParts
-                    .Select(p => (Part: p, Pattern: p.Path.Split('/'), Folders: folders))
+                    .Select(p => new { Part = p, Pattern = p.Path.Split('/'), Folders = folders })
                     .Where(m => m.Pattern.Length <= folders.Length && m.Pattern.Select((s, i) => Matches(s, folders[i])).All(x => x)))
                 .OrderByDescending(m => m.Pattern.Length)
                 .FirstOrDefault();
-            var undeclared = match.Part is not null && match.Part.IsMany && match.Folders.Length > match.Pattern.Length;
-            if (match.Part is null || undeclared) {
-                unmapped.Add((type, source with { File = relative }));
+            var undeclared = match is not null && match.Part.IsGroup && match.Folders.Length > match.Pattern.Length;
+            if (match is null || undeclared) {
+                unmapped.Add(new UnmappedType(type, source with { File = relative }));
                 continue;
             }
 
             var part = Select(match.Part, type);
-            var items = part.Items.ToDictionary(i => i.Name, i => match.Folders[i.Path.Split('/').Length - 1]);
-            bound.Add(new Binding(type, part, items, source with { File = relative }));
+            var values = part.Groups.ToDictionary(i => i.Name, i => match.Folders[i.Path.Split('/').Length - 1]);
+            bound.Add(new Binding(type, part, values, source with { File = relative }));
         }
         return FollowUsers(bound);
     }
@@ -67,11 +67,11 @@ public static class Binder {
         return bases.Any(b => b.FullName == name);
     }
 
-    static List<string> MappedPaths(string relative, IReadOnlyList<FolderMap> maps) => [.. maps
-        .Where(map => relative.StartsWith(map.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
-        .Select(map => map.As.Length == 0
-            ? relative[(map.Folder.TrimEnd('/').Length + 1)..]
-            : $"{map.As.TrimEnd('/')}/{relative[(map.Folder.TrimEnd('/').Length + 1)..]}")];
+    static List<string> AliasedPaths(string relative, IReadOnlyList<FolderAlias> aliases) => [.. aliases
+        .Where(alias => relative.StartsWith(alias.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
+        .Select(alias => alias.As.Length == 0
+            ? relative[(alias.Folder.TrimEnd('/').Length + 1)..]
+            : $"{alias.As.TrimEnd('/')}/{relative[(alias.Folder.TrimEnd('/').Length + 1)..]}")];
 
     static bool IsUnder(string relative, string rootPath) =>
         rootPath.Length == 0 || relative.StartsWith(rootPath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
@@ -84,11 +84,11 @@ public static class Binder {
             changed = false;
             for (var i = 0; i < bound.Count; i++) {
                 var helper = bound[i];
-                var shared = NoFolderChildren(helper.Part).ToList();
+                var shared = ParentFolderChildren(helper.Part).ToList();
                 if (shared.Count == 0) {
                     continue;
                 }
-                var users = bound.Where(b => shared.Contains(b.Part) && b.Instance == helper.Instance
+                var users = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path
                     && b.Type.Dependencies.Any(d => d.Target == helper.Type)).Select(b => b.Part).Distinct().ToList();
                 var target = users.OrderBy(p => p.Types.Count == 0).ThenBy(p => shared.IndexOf(p)).FirstOrDefault();
                 if (target is null) {
@@ -102,7 +102,7 @@ public static class Binder {
     }
 
     static Part Select(Part folderPart, IType type) {
-        var shared = NoFolderChildren(folderPart).Where(p => p.Types.Any(t => type.Is(t))).ToList();
+        var shared = ParentFolderChildren(folderPart).Where(p => p.Types.Any(t => type.Is(t))).ToList();
         if (shared.Count > 1) {
             throw new InvalidOperationException(
                 $"{type.FullName} matches {string.Join(" and ", shared.Select(p => p.Name))}, which share one folder. Give each part a different type.");
@@ -110,6 +110,6 @@ public static class Binder {
         return shared.Count == 1 ? shared[0] : folderPart;
     }
 
-    static IEnumerable<Part> NoFolderChildren(Part part) =>
-        part.Children.Where(c => !c.HasFolder && !c.IsMany).SelectMany(c => new[] { c }.Concat(NoFolderChildren(c)));
+    static IEnumerable<Part> ParentFolderChildren(Part part) =>
+        part.Children.Where(c => !c.HasFolder && !c.IsGroup).SelectMany(c => new[] { c }.Concat(ParentFolderChildren(c)));
 }

@@ -7,9 +7,9 @@ public sealed class LayerRules {
         from = new From(layer, null, $"layer {Layer.Display(layer)}", rules);
     }
 
-    public Uses Uses<T>(Reach? reach = null) where T : Layer => from.Uses<T>(reach);
+    public Uses Uses<T>(Depth? depth = null) where T : Layer => from.Uses<T>(depth);
 
-    public Uses Uses<T>(Access? access, Reach? reach = null) where T : Layer => from.Uses<T>(access, reach);
+    public Uses Uses<T>(Access? access, Depth? depth = null) where T : Layer => from.Uses<T>(access, depth);
 
-    public Denies Denies<T>(Reach? reach = null) where T : Layer => from.Denies<T>(reach);
+    public Denies Denies<T>(Depth? depth = null) where T : Layer => from.Denies<T>(depth);
 }

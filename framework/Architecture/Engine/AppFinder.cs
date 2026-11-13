@@ -3,22 +3,18 @@ using Mono.Cecil;
 
 namespace VSA.Architecture.Engine;
 
-public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Definition, IReadOnlyList<Assembly> Assemblies) {
-    public const string AppRootKey = "VsaAppRoot";
-
-    public IReadOnlyList<string> Warnings { get; init; } = [];
-
+internal static class AppFinder {
     static readonly string DefinitionName = typeof(ArchitectureDefinition).Assembly.GetName().Name!;
 
-    static readonly string EngineName = typeof(DiscoveredApp).Assembly.GetName().Name!;
+    static readonly string EngineName = typeof(AppFinder).Assembly.GetName().Name!;
 
-    public static DiscoveredApp FromTestOutput(Type definition) {
+    public static ArchitectureMap FromTestOutput(Type definition) {
         var entry = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("The test host has no entry assembly.");
-        var root = entry.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == AppRootKey)?.Value;
+        var root = entry.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == ArchitectureMap.AppRootKey)?.Value;
         return FromFolder(AppContext.BaseDirectory, definition, string.IsNullOrEmpty(root) ? null : root, entry);
     }
 
-    public static DiscoveredApp FromFolder(string folder, Type definition, string? appRoot = null, Assembly? exclude = null) {
+    public static ArchitectureMap FromFolder(string folder, Type definition, string? appRoot = null, Assembly? exclude = null) {
         appRoot = Path.GetFullPath(appRoot ?? FindGlobalJson(folder));
         var dlls = Directory.GetFiles(folder, "*.dll").Where(dll => exclude is null || !SameFile(dll, exclude.Location)).ToList();
         var warnings = new List<string>();
@@ -35,7 +31,7 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
         var externals = instance.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         var external = dlls.Except(tools).Except(app).Where(dll => IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
         var assemblies = app.Union(external).Select(Assembly.LoadFrom).ToList();
-        return new DiscoveredApp(appRoot, instance, assemblies) { Warnings = warnings };
+        return ArchitectureMap.Load(instance, assemblies, appRoot, warnings);
     }
 
     static List<string> UnityScriptAssemblies(string appRoot, List<string> dlls, List<string> warnings) {
@@ -57,7 +53,7 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
         var all = assemblies.OfType<Assembly>().Distinct().SelectMany(TypesOf)
             .Where(t => !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) is not null)
             .Distinct().ToList();
-        var fromApp = FromApp(definition, Leaves(all.Where(typeof(IArchitectureSource).IsAssignableFrom).ToList()));
+        var fromApp = FromApp(definition, Leaves(all.Where(typeof(IArchitectureProvider).IsAssignableFrom).ToList()));
         if (fromApp is not null) {
             return fromApp;
         }
@@ -77,7 +73,7 @@ public sealed record DiscoveredApp(string AppRoot, ArchitectureDefinition Defini
             throw new InvalidOperationException(
                 $"More than one app found: {string.Join(", ", apps.Select(t => t.FullName))}. Keep one app class, or make one inherit the other.");
         }
-        var found = apps.Count == 1 ? ((IArchitectureSource)Activator.CreateInstance(apps[0])!).Architecture : null;
+        var found = apps.Count == 1 ? ((IArchitectureProvider)Activator.CreateInstance(apps[0])!).Architecture : null;
         return definition.IsInstanceOfType(found) ? found : null;
     }
 
