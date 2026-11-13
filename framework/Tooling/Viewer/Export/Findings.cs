@@ -9,7 +9,7 @@ internal static class Findings
 {
     private const string Error = ": error ";
 
-    public static IEnumerable<FindingData> Of(AppArchitecture architecture, IType type, string typeId)
+    public static IEnumerable<FindingData> Of(ArchitectureMap architecture, IType type, string typeId)
     {
         return architecture.Findings(type).Select(text => Parse(text, typeId));
     }

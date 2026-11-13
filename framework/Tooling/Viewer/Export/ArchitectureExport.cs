@@ -16,7 +16,7 @@ public static class ArchitectureExport
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    public static ExportFile Of(AppArchitecture architecture, string name, string root)
+    public static ExportFile Of(ArchitectureMap architecture, string name, string root)
     {
         DefinitionExport definition = new(architecture.Definition);
         AppExport app = new(architecture, definition);

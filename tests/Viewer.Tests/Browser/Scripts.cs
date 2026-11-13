@@ -134,7 +134,8 @@ public static class Scripts
 
     public const string VisibleEdgePoint = """
         p => {
-          for (const f of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8]) {
+          for (let i = 0; i <= 18; i++) {
+            const f = 0.5 + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.05;
             const q = p.getPointAtLength(p.getTotalLength() * f).matrixTransform(p.getScreenCTM());
             if (document.elementFromPoint(q.x, q.y) === p) return [q.x, q.y];
           }

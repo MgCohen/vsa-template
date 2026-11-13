@@ -13,9 +13,8 @@ public static class Program
             return 1;
         }
         AppFolder.Resolve(args[0]);
-        DiscoveredApp app = DiscoveredApp.FromFolder(args[0], typeof(ArchitectureDefinition), args[1]);
-        AppArchitecture architecture = AppArchitecture.Load(app);
-        string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(app.AppRoot));
+        ArchitectureMap architecture = ArchitectureMap.Load(typeof(ArchitectureDefinition), args[0], args[1]);
+        string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(architecture.AppRoot));
         string root = args[1].Replace(Path.DirectorySeparatorChar, '/');
         ArchitectureExport.Write(ArchitectureExport.Of(architecture, name, root), args[2]);
         Console.WriteLine($"{args[2]}: {architecture.Bindings.Count} bindings");

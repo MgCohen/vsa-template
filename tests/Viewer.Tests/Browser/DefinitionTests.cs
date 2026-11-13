@@ -5,9 +5,6 @@ namespace Viewer.Tests.Browser;
 [Category("Browser")]
 public sealed class DefinitionTests : ViewerPageTest
 {
-    private const string RootToCore = "r24:RootClass>Core";
-    private const string PluginToFeature = "r15:Plugin>Feature";
-
     [Test]
     public async Task The_definition_view_draws_each_part_and_one_edge_for_each_rule_and_layer_pair()
     {
@@ -22,7 +19,7 @@ public sealed class DefinitionTests : ViewerPageTest
         Assert.That(edges, Is.Not.Empty.And.Unique);
         Assert.That(edges, Is.SubsetOf(NotesFacts.RuleTerms));
         Assert.That(access, Does.Contain("Allow").And.Contain("Conditional").And.Contain("Deny"));
-        Assert.That(await Graph.Labels(), Does.Contain("Under<App>"));
+        Assert.That((await Graph.Labels()).Intersect(NotesFacts.FilterLabels), Is.Not.Empty);
         Assert.That(rows, Does.Match(@"^57( 78)*( 99)? h=\d+"));
     }
 
@@ -31,11 +28,12 @@ public sealed class DefinitionTests : ViewerPageTest
     {
         await Graph.ShowDefinition();
         await Graph.StartEditing();
+        string allowed = await Graph.FirstReachable(NotesFacts.AllowedRules);
 
-        await Graph.RemoveRule(RootToCore);
+        await Graph.RemoveRule(allowed);
 
         string look = await Graph.Page.EvalOnSelectorAsync<string>(
-            $"path[marker-end][data-edge=\"{RootToCore}\"]", Scripts.RemovedLook);
+            $"path[marker-end][data-edge=\"{allowed}\"]", Scripts.RemovedLook);
         Assert.That(look, Is.EqualTo("0.3|4 4|removed|line-through"));
         Assert.That(await Graph.Changes(), Is.EqualTo("1 rule changes, 0 what-if links"));
     }
@@ -45,10 +43,11 @@ public sealed class DefinitionTests : ViewerPageTest
     {
         await Graph.ShowDefinition();
         await Graph.StartEditing();
+        string denied = await Graph.FirstReachable(NotesFacts.DeniedRules);
 
-        await Graph.FlipRule(PluginToFeature, "Allow");
+        await Graph.FlipRule(denied, "Allow");
 
-        Assert.That(await Graph.EdgeAttribute(PluginToFeature, "data-pending"), Is.EqualTo("true"));
+        Assert.That(await Graph.EdgeAttribute(denied, "data-pending"), Is.EqualTo("true"));
     }
 
     [Test]

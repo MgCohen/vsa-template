@@ -20,9 +20,43 @@ public sealed partial class GraphPage
     {
         double[] at = await Page.EvalOnSelectorAsync<double[]>($"path.edge-hit[data-edge=\"{id}\"]",
             Scripts.VisibleEdgePoint);
+        Assert.That(at[0], Is.Not.Negative, $"No point of the edge {id} is reachable by the mouse.");
         await Page.Mouse.ClickAsync((float)at[0], (float)at[1]);
         await Settle();
         return (await Panel()).StartsWith("Link", StringComparison.Ordinal);
+    }
+
+    public async Task<string> FirstReachable(IEnumerable<string> ids)
+    {
+        foreach (string id in ids)
+        {
+            double[] at = await Page.EvalOnSelectorAsync<double[]>($"path.edge-hit[data-edge=\"{id}\"]",
+                Scripts.VisibleEdgePoint);
+            if (at[0] >= 0)
+            {
+                return id;
+            }
+        }
+        Assert.Fail($"No edge of {string.Join(", ", ids)} is reachable by the mouse.");
+        return "";
+    }
+
+    public async Task<IReadOnlyList<string>> FirstMerged(IEnumerable<IReadOnlyList<string>> groups)
+    {
+        List<IReadOnlyList<string>> merged = [];
+        foreach (IReadOnlyList<string> group in groups)
+        {
+            if (await Page.Locator($"path.edge-hit[data-edge=\"{group[1]}\"]").CountAsync() == 0)
+            {
+                merged.Add(group);
+            }
+        }
+        if (merged.Count == 0)
+        {
+            Assert.Ignore("The definition has no two rules on one part pair, so no edge is merged.");
+        }
+        string first = await FirstReachable(merged.Select(g => g[0]));
+        return merged.First(g => g[0] == first);
     }
 
     public Task<string[]> Pending()

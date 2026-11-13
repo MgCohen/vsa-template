@@ -48,7 +48,8 @@ public sealed class DragTests : ViewerPageTest
         IReadOnlyList<CardBox> before = await Graph.Cards();
         string routes = await Graph.Paths();
         (CardBox moved, CardBox below) = before
-            .SelectMany(a => before.Where(b => Math.Abs(a.X - b.X) < 5 && b.Y > a.Y && b.Y - a.Y < 150).Select(b => (a, b)))
+            .SelectMany(a => before.Where(b => Math.Abs(a.X - b.X) < 5 && b.Y > a.Y && b.Y - a.Y < 150)
+                .Select(b => (a, b)))
             .First();
         int index = before.ToList().IndexOf(moved);
 

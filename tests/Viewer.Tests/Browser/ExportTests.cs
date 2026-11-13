@@ -1,3 +1,5 @@
+using Viewer.Tests.Export;
+
 using System.Text.Json;
 using Microsoft.Playwright;
 
@@ -6,14 +8,7 @@ namespace Viewer.Tests.Browser;
 [Category("Browser")]
 public sealed class ExportTests : ViewerPageTest
 {
-    private static readonly string[] expectedCode =
-    [
-        "- map.For<RootClass>().Uses<Core>().And<Plugin>();",
-        "+ map.For<RootClass>().Uses<Plugin>();",
-        "- map.For<Plugin>().Denies<Feature>();",
-        "+ map.For<Plugin>().Uses<Feature>();",
-        "+ map.For<Presenters>().Uses<Infrastructure>().InOwn<Feature>();",
-    ];
+    private string[] expectedCode = [];
 
     [Test]
     public async Task Export_gives_typed_operations_and_the_CSharp_lines()
@@ -64,6 +59,16 @@ public sealed class ExportTests : ViewerPageTest
         Assert.That(download.SuggestedFilename, Is.EqualTo("changes.json"));
     }
 
+    private static string From(string edge)
+    {
+        return edge.Split(':')[1].Split('>')[0];
+    }
+
+    private static string To(string edge)
+    {
+        return edge.Split('>')[1];
+    }
+
     private async Task<string[]> Code()
     {
         return (await Graph.Page.TextContentAsync(".export pre.code") ?? "").Split('\n');
@@ -74,8 +79,17 @@ public sealed class ExportTests : ViewerPageTest
         await Graph.StartEditing();
         await Graph.AddWhatIfLink();
         await Graph.ShowDefinition();
-        await Graph.RemoveRule("r24:RootClass>Core");
-        await Graph.FlipRule("r15:Plugin>Feature", "Allow");
+        string allowed = await Graph.FirstReachable(NotesFacts.AllowedRules);
+        string denied = await Graph.FirstReachable(NotesFacts.DeniedRules);
+        expectedCode =
+        [
+            $"- map.For<{From(allowed)}>().Uses<{To(allowed)}>();",
+            $"- map.For<{From(denied)}>().Denies<{To(denied)}>();",
+            $"+ map.For<{From(denied)}>().Uses<{To(denied)}>();",
+            "+ map.For<Presenters>().Uses<Infrastructure>().InOwn<Feature>();",
+        ];
+        await Graph.RemoveRule(allowed);
+        await Graph.FlipRule(denied, "Allow");
         await Graph.AddConditionalRule();
     }
 }

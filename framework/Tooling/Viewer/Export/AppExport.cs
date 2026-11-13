@@ -5,7 +5,7 @@ using VSA.Architecture.Engine;
 
 namespace Viewer.Export;
 
-public sealed class AppExport(AppArchitecture architecture, DefinitionExport definition)
+public sealed class AppExport(ArchitectureMap architecture, DefinitionExport definition)
 {
     private readonly Dictionary<string, InstanceData> instances = [];
     private readonly Dictionary<Binding, TypeData> types = [];
@@ -30,7 +30,7 @@ public sealed class AppExport(AppArchitecture architecture, DefinitionExport def
 
     private TypeData TypeOf(Binding binding)
     {
-        string instance = InstanceOf(binding.Part, binding.Items);
+        string instance = InstanceOf(binding.Part, binding.Values);
         string file = Relative(binding.Source.File);
         string id = $"t{types.Count}";
         return new TypeData(
@@ -46,8 +46,8 @@ public sealed class AppExport(AppArchitecture architecture, DefinitionExport def
             {
                 continue;
             }
-            (Permission permission, Pair? pair) = Decide.For(architecture.Definition, from, to);
-            string? rule = pair is null ? null : definition.RuleIds[pair.Rule];
+            (Permission permission, PartRule? pair) = Decide.For(architecture.Definition, from, to);
+            string? rule = pair is null ? null : definition.RuleIds[pair.Text];
             yield return new UseData(types[from].Id, types[to].Id, permission.ToString(), rule);
         }
     }
@@ -62,8 +62,8 @@ public sealed class AppExport(AppArchitecture architecture, DefinitionExport def
             return id;
         }
         string? parent = part.Parent is null ? null : InstanceOf(part.Parent, items);
-        Dictionary<string, string> own = part.Items.Where(i => items.ContainsKey(i.Name))
-            .ToDictionary(i => i.Name, i => items[i.Name]);
+        Dictionary<string, string> own = part.Groups.Where(g => items.ContainsKey(g.Name))
+            .ToDictionary(g => g.Name, g => items[g.Name]);
         instances[id] = new InstanceData(id, definition.PartIds[part], part.Name, parent, path, own);
         return id;
     }
