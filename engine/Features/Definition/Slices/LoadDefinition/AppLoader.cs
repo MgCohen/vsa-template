@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Runtime.Loader;
-using Mono.Cecil;
 using Report.Domain.Shared;
 using VSA.Architecture;
 
@@ -81,17 +81,19 @@ sealed class AppLoader : AssemblyLoadContext {
     }
 
     static bool HasSourceUnder(string dll, string prefix) {
-        if (!File.Exists(Path.ChangeExtension(dll, ".pdb"))) {
+        var pdb = Path.ChangeExtension(dll, ".pdb");
+        if (!File.Exists(pdb)) {
             return false;
         }
         try {
-            using var module = ModuleDefinition.ReadModule(dll, new ReaderParameters { ReadSymbols = true });
-            return module.Types.SelectMany(t => t.Methods).Where(m => m.HasBody)
-                .SelectMany(m => m.DebugInformation.SequencePoints)
-                .Select(p => p.Document.Url)
+            using var stream = File.OpenRead(pdb);
+            using var provider = MetadataReaderProvider.FromPortablePdbStream(stream);
+            var reader = provider.GetMetadataReader();
+            return reader.Documents
+                .Select(handle => reader.GetString(reader.GetDocument(handle).Name))
                 .Where(Path.IsPathRooted)
-                .Any(url => Path.GetFullPath(url).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-        } catch (Exception e) when (e is BadImageFormatException or InvalidOperationException or IOException) {
+                .Any(file => Path.GetFullPath(file).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        } catch (Exception e) when (e is BadImageFormatException or IOException) {
             return false;
         }
     }
