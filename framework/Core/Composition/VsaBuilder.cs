@@ -26,6 +26,8 @@ public sealed class VsaBuilder {
 
     public VsaBuilder UseGenericHost() => UseHost(new GenericVsaHost());
 
+    public VsaBuilder UseConsoleHost() => UseHost(new ConsoleVsaHost());
+
     public VsaBuilder Modules(params VSA.Module.Module[] given) {
         modules = given;
         return this;
