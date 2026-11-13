@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace Viewer.Export;
+namespace Architecture.Export;
 
 internal static class AppFolder
 {

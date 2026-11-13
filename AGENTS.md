@@ -13,9 +13,9 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `framework/Core/`     | The framework core: one project for each layer base. Ships as NuGet packages. Plugin modules extend it |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each module project, the layer references and the slice router (`Tasks/`) |
 | `framework/Analyzers/`| VSA.Analyzers: the Roslyn rules that run in the editor and the build. `Markers/` (VSA.Analyzers.Markers): the marker attributes that the rules and the module scan read, for example `[ReflectionBase]`, `[AutoRegister]` and `[TypeArgument]`, and the IL2CPP stripping markers `[Preserve]`, `[RequireDerived]` and `[RequireImplementors]` |
-| `framework/Architecture/` | The architecture engine: `Definition/` (VSA.Architecture, the definition API), `Vsa/` (VSA.Architecture.Vsa: `VsaDefinition` and the VSA layers), `Engine/` (VSA.Architecture.Engine: binding, discovery, checks with ArchUnitNET). The runtime references only `Definition/` and `Vsa/` |
+| `framework/Architecture/` | The architecture engine: `Definition/` (VSA.Architecture, the definition API), `Vsa/` (VSA.Architecture.Vsa: `VsaDefinition` and the VSA layers), `Engine/` (VSA.Architecture.Engine: binding, discovery, checks with ArchUnitNET, and the export of `architecture.json`), `Data/` (VSA.Architecture.Data: the model of `architecture.json`, see `docs/architecture-data.md`). The runtime references only `Definition/` and `Vsa/` |
 | `framework/Testing/`  | The test bases that ship: `Architecture/` (the architecture tests and the generated test class), `Unit/` (NUnit, NSubstitute) |
-| `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
+| `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`), and `Export/` (the tool that writes `architecture.json`, does not ship) |
 | `framework/Tooling/Viewer/` | The architecture viewer: an in-repo VSA app (module `ArchitectureViewer`) with its sample input in `Data/`. Does not ship yet. See `docs/viewer.md` |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |

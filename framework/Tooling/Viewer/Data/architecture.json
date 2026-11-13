@@ -1,12 +1,19 @@
 {
-  "version": 2,
+  "version": 3,
   "definition": {
     "name": "VsaDefinition",
-    "unlisted": "Deny",
+    "options": {
+      "defaultPermission": "Deny",
+      "boundary": "Closed",
+      "useSameLayer": true,
+      "depth": "WithChildren",
+      "access": "Public"
+    },
     "parts": [
       {
         "id": "p0",
         "layer": "(root)",
+        "parent": null,
         "path": "",
         "many": false,
         "hasFolder": true,
@@ -489,12 +496,16 @@
         "from": [
           {
             "layer": "Domain",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Domain.Shared",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -508,12 +519,16 @@
         "from": [
           {
             "layer": "Infrastructure",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Domain",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -527,26 +542,33 @@
         "from": [
           {
             "layer": "Presenters",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Contracts",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts.Requests",
+            "depth": null,
             "access": "Internal",
             "filters": []
           },
           {
             "layer": "Contracts.Events",
+            "depth": null,
             "access": "Internal",
             "filters": []
           },
           {
             "layer": "Domain.Shared",
+            "depth": null,
             "access": "Internal",
             "filters": []
           }
@@ -561,24 +583,34 @@
         "from": [
           {
             "layer": "Contracts.Requests",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts.Events",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts.Commands",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Contracts",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Domain.Shared",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -592,41 +624,57 @@
         "from": [
           {
             "layer": "Handlers.Requests",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Handlers.Events",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Handlers.Commands",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Handlers",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts.Commands",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts.Events",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Domain",
+            "depth": null,
             "access": "Internal",
             "filters": []
           },
           {
             "layer": "Infrastructure",
+            "depth": null,
             "access": "Internal",
             "filters": []
           }
@@ -641,12 +689,16 @@
         "from": [
           {
             "layer": "Handlers.Requests",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Contracts.Requests",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -660,12 +712,16 @@
         "from": [
           {
             "layer": "Plugin",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Feature",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -679,6 +735,8 @@
         "from": [
           {
             "layer": "Domain",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -690,7 +748,8 @@
         "to": [
           {
             "layer": "Domain",
-            "reach": "Self",
+            "depth": "Self",
+            "access": null,
             "filters": [
               {
                 "kind": "InOther",
@@ -709,12 +768,16 @@
         "from": [
           {
             "layer": "Feature",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Domain.Shared",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "InOther",
@@ -733,6 +796,8 @@
         "from": [
           {
             "layer": "Presenters",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -742,6 +807,8 @@
           },
           {
             "layer": "Module",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -753,6 +820,7 @@
         "to": [
           {
             "layer": "Domain.Shared",
+            "depth": null,
             "access": "Internal",
             "filters": [
               {
@@ -772,6 +840,8 @@
         "from": [
           {
             "layer": "Handlers.Requests",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -781,6 +851,8 @@
           },
           {
             "layer": "Handlers.Events",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -790,6 +862,8 @@
           },
           {
             "layer": "Handlers.Commands",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -801,10 +875,14 @@
         "to": [
           {
             "layer": "Contracts.Commands",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Contracts.Events",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -818,16 +896,21 @@
         "from": [
           {
             "layer": "Module",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Core",
+            "depth": null,
+            "access": null,
             "filters": []
           },
           {
             "layer": "Plugin",
+            "depth": null,
             "access": "Internal",
             "filters": []
           }
@@ -842,12 +925,16 @@
         "from": [
           {
             "layer": "Module",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Module",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -866,6 +953,8 @@
         "from": [
           {
             "layer": "Module",
+            "depth": null,
+            "access": null,
             "filters": [
               {
                 "kind": "Under",
@@ -877,6 +966,7 @@
         "to": [
           {
             "layer": "Feature",
+            "depth": null,
             "access": "Internal",
             "filters": []
           }
@@ -891,12 +981,16 @@
         "from": [
           {
             "layer": "Host",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Composition",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -910,12 +1004,16 @@
         "from": [
           {
             "layer": "Views",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ],
         "to": [
           {
             "layer": "Presenters",
+            "depth": null,
+            "access": null,
             "filters": []
           }
         ]
@@ -6980,6 +7078,7 @@
         "id": "p0@",
         "part": "p0",
         "layer": "(root)",
+        "parent": null,
         "path": "",
         "items": {}
       },

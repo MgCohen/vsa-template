@@ -25,7 +25,8 @@ public static class NotesExport
         process.WaitForExit();
         if (process.ExitCode != 0)
         {
-            throw new InvalidOperationException($"Viewer.Export stopped with exit code {process.ExitCode}. {log}");
+            throw new InvalidOperationException(
+                $"Architecture.Export stopped with exit code {process.ExitCode}. {log}");
         }
         return output;
     }

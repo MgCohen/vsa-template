@@ -1,4 +1,5 @@
 using ArchitectureViewer.Domain.Shared;
+using VSA.Architecture.Data;
 
 namespace ArchitectureViewer.Infrastructure;
 
@@ -6,13 +7,13 @@ public sealed class AppGraph
 {
     public const int MaxRows = 3;
 
-    private readonly AppImport.FileDto file;
-    private readonly Dictionary<string, AppImport.InstanceDto> instances;
-    private readonly Dictionary<string, List<AppImport.TypeDto>> typesOf;
+    private readonly ArchitectureFile file;
+    private readonly Dictionary<string, InstanceData> instances;
+    private readonly Dictionary<string, List<TypeData>> typesOf;
     private readonly HashSet<string> shown;
     private readonly Dictionary<string, RowPlace> rowOfType = [];
 
-    private AppGraph(AppImport.FileDto file)
+    private AppGraph(ArchitectureFile file)
     {
         this.file = file;
         instances = file.App.Instances.ToDictionary(i => i.Id);
@@ -23,7 +24,7 @@ public sealed class AppGraph
 
     public static LayoutData Of(string json)
     {
-        return new AppGraph(AppImport.Read(json)).Layout();
+        return new AppGraph(ArchitectureJson.Read(json)).Layout();
     }
 
     private static string Last(string path)
@@ -33,7 +34,7 @@ public sealed class AppGraph
 
     private LayoutData Layout()
     {
-        List<AppImport.InstanceDto> visible = [.. file.App.Instances.Where(i => shown.Contains(i.Id))];
+        List<InstanceData> visible = [.. file.App.Instances.Where(i => shown.Contains(i.Id))];
         HashSet<string> parents = [.. visible.Select(i => i.Parent).OfType<string>()];
         List<Group> groups = [.. visible.Where(i => parents.Contains(i.Id)).Select(GroupOf)];
         List<Node> nodes = [.. visible.Where(i => !parents.Contains(i.Id)).Select(NodeOf)];
@@ -48,7 +49,7 @@ public sealed class AppGraph
         }
     }
 
-    private Group GroupOf(AppImport.InstanceDto instance)
+    private Group GroupOf(InstanceData instance)
     {
         int depth = Lineage(instance.Id).Count() - 1;
         string title = instance.Parent is null ? $"{file.App.Name} app"
@@ -57,9 +58,9 @@ public sealed class AppGraph
         return new Group(instance.Id, instance.Parent, title, kind, instance.Path, depth, 0, 0, 0, 0);
     }
 
-    private Node NodeOf(AppImport.InstanceDto instance)
+    private Node NodeOf(InstanceData instance)
     {
-        List<AppImport.TypeDto> types = typesOf[instance.Id];
+        List<TypeData> types = typesOf[instance.Id];
         int count = types.Count > MaxRows + 1 ? MaxRows : types.Count;
         List<Row> rows = [.. types.Take(count)
             .Select(t => new Row(t.Id, t.Name, TypeRoles.Of(t.Name, instance.Layer), false, [t.Id]))];
@@ -82,7 +83,7 @@ public sealed class AppGraph
     private List<Edge> Edges()
     {
         Dictionary<string, string> names = file.App.Types.ToDictionary(t => t.Id, t => t.Name);
-        List<AppImport.UseDto> uses = [.. file.App.Dependencies.SelectMany(d => d.Uses)
+        List<UseData> uses = [.. file.App.Dependencies.SelectMany(d => d.Uses)
             .Where(u => rowOfType.ContainsKey(u.From) && rowOfType.ContainsKey(u.To))
             .Where(u => rowOfType[u.From].Node != rowOfType[u.To].Node)];
         return [.. uses.GroupBy(u => (From: rowOfType[u.From], To: rowOfType[u.To])).Select((g, i) => new Edge(
@@ -98,15 +99,15 @@ public sealed class AppGraph
 
     private string RuleText(string? rule)
     {
-        return rule is null ? $"no rule allows it (Unlisted = {file.Definition.Unlisted})"
+        return rule is null ? $"no rule allows it (DefaultPermission = {file.Definition.Options.DefaultPermission})"
             : file.Definition.Rules.First(r => r.Id == rule).Text;
     }
 
-    private string GroupName(AppImport.InstanceDto instance)
+    private string GroupName(InstanceData instance)
     {
         foreach (string id in Lineage(instance.Id).Skip(1))
         {
-            AppImport.InstanceDto at = instances[id];
+            InstanceData at = instances[id];
             if (IsMany(at))
             {
                 return Last(at.Path);
@@ -119,7 +120,7 @@ public sealed class AppGraph
         return Last(instance.Path);
     }
 
-    private bool IsMany(AppImport.InstanceDto instance)
+    private bool IsMany(InstanceData instance)
     {
         return file.Definition.Parts.First(p => p.Id == instance.Part).Many;
     }
