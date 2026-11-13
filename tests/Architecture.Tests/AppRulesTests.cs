@@ -1,4 +1,3 @@
-using System.Reflection;
 using VSA.Architecture;
 using VSA.Architecture.Engine;
 using VSA.Architecture.Vsa;
@@ -11,24 +10,7 @@ public sealed class RulesApp : IArchitectureProvider {
 }
 
 public sealed class AppRulesTests {
-    static readonly string FixtureRoot = typeof(AppRulesTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-        .Single(a => a.Key == ArchitectureMap.AppRootKey).Value!;
-
     static readonly Dictionary<string, string> NotesSlice = new() { ["Feature"] = "Notes", ["Slice"] = "CreateNote" };
-
-    [Test]
-    public void Discovery_reads_the_rules_of_the_app_before_the_definitions() {
-        var app = ArchitectureMap.Load(typeof(ArchitectureDefinition), AppContext.BaseDirectory, FixtureRoot);
-
-        Assert.That(PresentersUseEvents(app.Definition), Is.EqualTo(Permission.Deny));
-    }
-
-    [Test]
-    public void Discovery_of_a_named_definition_does_not_read_the_app() {
-        var app = ArchitectureMap.Load(typeof(GoodDefinition), AppContext.BaseDirectory, FixtureRoot);
-
-        Assert.That(app.Definition, Is.TypeOf<GoodDefinition>());
-    }
 
     [Test]
     public void The_VSA_rules_allow_a_use_that_the_app_rule_denies() {

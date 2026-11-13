@@ -1,7 +1,0 @@
-<Project>
-  <!-- NuGet imports this file into each project that references the package. -->
-  <PropertyGroup>
-    <VsaUsesArchitectureTests>true</VsaUsesArchitectureTests>
-  </PropertyGroup>
-  <Import Project="$(MSBuildThisFileDirectory)VsaArchitectureTests.targets" />
-</Project>

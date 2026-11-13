@@ -3,11 +3,6 @@
        VsaCheck=false turns it off. VsaCheckMode=Warn reports each error as a warning.
        VsaCheckOff lists the optional engine steps (plugins) to turn off, for example Hello.
        The stamp file skips the check when no input changed. -->
-  <!-- In a test project the build does not check: ArchitectureTests runs the same engine and reads its path from this metadata. -->
-  <PropertyGroup>
-    <_VsaIsTest Condition="'$(IsTestProject)' == 'true' or '$(EnableNUnitRunner)' == 'true'">true</_VsaIsTest>
-    <VsaCheck Condition="'$(VsaCheck)' == '' and '$(_VsaIsTest)' == 'true'">false</VsaCheck>
-  </PropertyGroup>
   <PropertyGroup>
     <VsaCheck Condition="'$(VsaCheck)' == ''">true</VsaCheck>
     <VsaCheckMode Condition="'$(VsaCheckMode)' == ''">Error</VsaCheckMode>
@@ -15,10 +10,6 @@
     <_VsaDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_VsaDotnet>
     <_VsaDotnet Condition="'$(_VsaDotnet)' == ''">dotnet</_VsaDotnet>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(_VsaIsTest)' == 'true'">
-    <AssemblyMetadata Include="VsaEngine" Value="$(_VsaEngine)" />
-  </ItemGroup>
 
   <Target Name="_VsaCheckInputs">
     <PropertyGroup>
