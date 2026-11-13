@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>vsa-engine</AssemblyName>
+    <RootNamespace>VsaEngine</RootNamespace>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A web app definition can need ASP.NET Core types when the engine makes its app class. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../Features/*/*.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Composition/VSA.Composition.csproj" />
+  </ItemGroup>
+</Project>

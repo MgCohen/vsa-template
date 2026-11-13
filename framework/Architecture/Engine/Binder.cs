@@ -89,7 +89,8 @@ public static class Binder {
                     continue;
                 }
                 var users = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path
-                    && b.Type.Dependencies.Any(d => d.Target == helper.Type)).Select(b => b.Part).Distinct().ToList();
+                    && b.Type.Dependencies.Any(d => d.Target == helper.Type || d.TargetGenericArguments.Any(g => g.Type == helper.Type)))
+                    .Select(b => b.Part).Distinct().ToList();
                 var target = users.OrderBy(p => p.Types.Count == 0).ThenBy(p => shared.IndexOf(p)).FirstOrDefault();
                 if (target is null) {
                     continue;
