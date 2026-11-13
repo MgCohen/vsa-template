@@ -3,10 +3,10 @@ namespace VSA.Architecture;
 public abstract partial class ArchitectureDefinition {
     readonly string rootPath;
     readonly List<string> conflicts = [];
-    readonly List<(string Rule, string Source, Permission Permission, int Count)> summary = [];
+    readonly List<RuleSummary> summary = [];
     Root? root;
     Options? options;
-    List<Pair>? pairs;
+    List<PartRule>? pairs;
 
     protected ArchitectureDefinition(string rootPath = "") {
         this.rootPath = rootPath;
@@ -28,34 +28,36 @@ public abstract partial class ArchitectureDefinition {
 
     public IEnumerable<Part> Parts() => Root.Walk().Skip(1);
 
-    public IReadOnlyList<Pair> Resolve() {
+    public IReadOnlyList<PartRule> Resolve() {
         if (pairs is not null) {
             return pairs;
         }
-        var all = new List<Pair>();
-        AddOwn(all);
+        var all = new List<PartRule>();
+        AddSameLayer(all);
 
-        var map = new Map(Root);
-        foreach (var layer in Parts().Select(p => p.Layer!).DistinctBy(l => l.GetType())) {
-            layer.Rules(new LayerRules(layer.GetType(), map.Rules));
+        var book = new RuleBook(Root);
+        foreach (var layer in Parts().Select(p => p.Layer!).GroupBy(l => l.GetType()).Select(g => g.First())) {
+            layer.Rules(new LayerRules(layer.GetType(), book.Rules));
         }
-        Rules(map);
+        Rules(book);
 
-        foreach (var rule in map.Rules) {
+        foreach (var rule in book.Rules) {
             AddRule(all, rule);
         }
         FindConflicts(all);
         return pairs = all;
     }
 
+    public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
+
     protected virtual void Configure(Options options) { }
 
     protected abstract void Define(Root root);
 
-    protected virtual void Rules(Map map) { }
+    protected virtual void Rules(RuleBook rules) { }
 
     static void CheckShared(Root root) {
-        var groups = root.Walk().Skip(1).Where(p => !p.HasFolder && !p.IsMany).GroupBy(p => p.Parent).Where(g => g.Count() > 1);
+        var groups = root.Walk().Skip(1).Where(p => !p.HasFolder && !p.IsGroup).GroupBy(p => p.Parent).Where(g => g.Count() > 1);
         foreach (var shared in groups) {
             var parts = shared.ToList();
             var none = parts.FirstOrDefault(p => p.Types.Count == 0);
@@ -65,7 +67,7 @@ public abstract partial class ArchitectureDefinition {
                     + $"{string.Join(", ", parts.Where(p => p != none).Select(p => p.Name))}, but it has no OfType. "
                     + "Add OfType<T>() to each part in a shared folder.");
             }
-            var twice = parts.SelectMany(p => p.Types.Select(t => (Part: p, Type: t))).GroupBy(x => x.Type).FirstOrDefault(g => g.Count() > 1);
+            var twice = parts.SelectMany(p => p.Types.Select(t => new { Part = p, Type = t })).GroupBy(x => x.Type).FirstOrDefault(g => g.Count() > 1);
             if (twice is not null) {
                 throw new InvalidOperationException(
                     $"Define: {string.Join(" and ", twice.Select(x => x.Part.Name))} share the folder \"{shared.Key!.Path}\" "
@@ -74,14 +76,11 @@ public abstract partial class ArchitectureDefinition {
         }
     }
 
-    static IEnumerable<Part> Expand(Part part, Reach reach) => reach switch {
-        Reach.Only => [part],
-        Reach.WithChildren => part.Walk(),
-        _ => throw new InvalidOperationException($"Reach {reach} has no expansion. Add it to Expand."),
+    static IEnumerable<Part> Expand(Part part, Depth depth) => depth switch {
+        Depth.Self => [part],
+        Depth.WithChildren => part.Walk(),
+        _ => throw new InvalidOperationException($"Depth {depth} has no expansion. Add it to Expand."),
     };
-
-    static string Same(IEnumerable<Part> items) =>
-        string.Join(", ", items.Reverse().Select(i => $"same {i.Name}")) is { Length: > 0 } same ? same : "always";
 
     static string? Condition(Part from, Part to, Entry entry) {
         var parts = new List<string>();
@@ -92,19 +91,19 @@ public abstract partial class ArchitectureDefinition {
                         return null;
                     }
                     break;
-                case "InOwn":
-                    var own = to.Items.FirstOrDefault(i => i.Is(filter.Target));
+                case "InSame":
+                    var own = to.Groups.FirstOrDefault(i => i.Is(filter.Target));
                     if (own is null || !own.Holds(from)) {
                         return null;
                     }
                     parts.Add($"same {own.Name}");
                     break;
                 case "InOther":
-                    var other = to.Items.FirstOrDefault(i => i.Is(filter.Target));
+                    var other = to.Groups.FirstOrDefault(i => i.Is(filter.Target));
                     if (other is null || !other.Parent!.Holds(from)) {
                         return null;
                     }
-                    parts.AddRange(other.Ancestors().Where(a => a.IsMany).Reverse().Select(a => $"same {a.Name}"));
+                    parts.AddRange(other.Ancestors().Where(a => a.IsGroup).Reverse().Select(a => $"same {a.Name}"));
                     parts.Add($"other {other.Name}");
                     break;
             }
@@ -119,32 +118,23 @@ public abstract partial class ArchitectureDefinition {
     }
 
     IEnumerable<Part> Branch(Entry entry) =>
-        Parts().Where(p => p.Is(entry.Target)).SelectMany(p => Expand(p, entry.Reach ?? p.Reach ?? Options.Reach)).Distinct();
+        Parts().Where(p => p.Is(entry.Target)).SelectMany(p => Expand(p, entry.Depth ?? p.Depth ?? Options.Depth)).Distinct();
 
-    void AddOwn(List<Pair> all) {
-        if (Options.Own == Own.None) {
+    void AddSameLayer(List<PartRule> all) {
+        if (!Options.UseSameLayer) {
             return;
         }
         var count = 0;
         foreach (var from in Parts()) {
-            foreach (var to in Parts().Where(t => t.Top == from.Top)) {
-                var same = Options.Own switch {
-                    Own.AllGroups => to.Items.All(i => i.Holds(from)) ? to.Items.ToList() : null,
-                    Own.Outer => to.Items.LastOrDefault() is { } outer ? (outer.Holds(from) ? [outer] : null) : [],
-                    Own.Inner => from.Items.FirstOrDefault() is { } inner ? (inner.Holds(to) ? [inner] : null) : [],
-                    _ => null,
-                };
-                if (same is null) {
-                    continue;
-                }
-                all.Add(new Pair(from, to, Same(same), Permission.Allow, "own", $"own ({Options.Own})"));
+            foreach (var to in Parts().Where(t => t.Layer!.GetType() == from.Layer!.GetType())) {
+                all.Add(new PartRule(from, to, ApplyBoundaries(from, to, "always", null), Permission.Allow, "same layer", "same layer", to.Access ?? Options.Access));
                 count++;
             }
         }
-        summary.Add(($"own ({Options.Own})", "options", Permission.Allow, count));
+        summary.Add(new RuleSummary("same layer", "options", Permission.Allow, count));
     }
 
-    void AddRule(List<Pair> all, IRuleEntries rule) {
+    void AddRule(List<PartRule> all, IRuleEntries rule) {
         var body = rule.Source != "definition";
         var named = rule.From.Concat(rule.Targets).SelectMany(e => e.Filters.Select(f => f.Target).Append(e.Target));
         if (body && named.Any(t => !Parts().Any(p => p.Is(t)))) {
@@ -162,7 +152,10 @@ public abstract partial class ArchitectureDefinition {
                     if (Condition(from, to, entry) is not { } condition) {
                         continue;
                     }
-                    all.Add(new Pair(from, to, condition, rule.Permission, rule.Source, rule.Text, entry.Access ?? to.Access ?? Options.Access));
+                    if (rule.Permission == Permission.Allow) {
+                        condition = ApplyBoundaries(from, to, condition, entry);
+                    }
+                    all.Add(new PartRule(from, to, condition, rule.Permission, rule.Source, rule.Text, entry.Access ?? to.Access ?? Options.Access));
                     count++;
                 }
             }
@@ -171,20 +164,36 @@ public abstract partial class ArchitectureDefinition {
                     $"Rules: \"{rule.Text}\": the target {entry} matches no part. Change the target or remove the rule.");
             }
         }
-        summary.Add((rule.Text, rule.Source, rule.Permission, count));
+        summary.Add(new RuleSummary(rule.Text, rule.Source, rule.Permission, count));
+    }
+
+    string ApplyBoundaries(Part from, Part to, string condition, Entry? entry) {
+        if (entry?.Boundary == Boundary.Open) {
+            return condition;
+        }
+        var terms = condition == "always" ? new List<string>() : [.. condition.Split(", ")];
+        foreach (var group in to.Groups.Reverse()) {
+            if (entry?.Filters.Any(f => f.Kind == "InOther" && group.Is(f.Target)) == true) {
+                break;
+            }
+            if ((group.Boundary ?? Options.Boundary) == Boundary.Closed && from.Groups.Contains(group) && !terms.Contains($"same {group.Name}")) {
+                terms.Add($"same {group.Name}");
+            }
+        }
+        return terms.Count == 0 ? "always" : string.Join(", ", terms);
     }
 
     void Validate(Entry entry, string text) {
         foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts().Any(p => p.Is(t)))) {
-            throw new InvalidOperationException($"Rules: \"{text}\" names {Layer.Display(target)}, but the map has no part of that layer.");
+            throw new InvalidOperationException($"Rules: \"{text}\" names {Layer.Display(target)}, but the definition has no part of that layer.");
         }
-        foreach (var filter in entry.Filters.Where(f => f.Kind != "Under" && !Parts().Any(p => p.Is(f.Target) && p.IsMany))) {
-            throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a layer that AddMany adds.");
+        foreach (var filter in entry.Filters.Where(f => f.Kind != "Under" && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
+            throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a layer that AddGroup adds.");
         }
     }
 
-    void FindConflicts(List<Pair> all) {
-        foreach (var group in all.GroupBy(p => (p.From, p.To))) {
+    void FindConflicts(List<PartRule> all) {
+        foreach (var group in all.GroupBy(p => new { p.From, p.To })) {
             var list = group.ToList();
             for (var i = 1; i < list.Count; i++) {
                 for (var j = 0; j < i; j++) {

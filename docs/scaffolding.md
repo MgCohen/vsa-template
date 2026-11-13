@@ -6,7 +6,7 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, req
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | Root files, `App/Host`, `App/Views`, `Tests/`, `Features/`, `Plugins/` | None |
+| `new app <Name>` | Root files, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/` | None |
 | `add module <Name>` | Layers, published domain, status request, presenter, page, unit test | Solution, with `dotnet sln add` |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler. If the module has no command projects: `Contracts.Commands` and `Handlers.Commands` | Solution, with `dotnet sln add`, if the tool writes the command projects |
@@ -31,7 +31,7 @@ Rules for all commands:
 ```
 framework/Tooling/Cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
-├─ App/Host/, App/Views/              new app
+├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
 ├─ App/Views/Pages/SampleModulePage.razor          add module
 ├─ Features/SampleModule/**                         add module
 │  ├─ Projects/SampleModule.<Layer>.csproj         add module (eight layer projects, with Domain.Shared)
@@ -79,7 +79,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
 
-The build adds the architecture tests to `Tests/` (see [architecture-engine.md](architecture-engine.md)). The tests write no test class.
+The build adds the architecture tests to `Tests/` (see [architecture-engine.md](architecture-engine.md)). The tests write no test class. They read the rules of `App/Host/<Name>App.cs`.
 
 ## One version
 

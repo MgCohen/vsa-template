@@ -5,7 +5,7 @@ namespace Architecture.Tests;
 
 [Explicit("A test of BadAppTests calls the base tests on the bad app.")]
 public sealed class BadApp : ArchitectureTests<BadDefinition> {
-    public static AppArchitecture App => Architecture;
+    public static ArchitectureMap App => Map;
 }
 
 public sealed class BadAppTests {
@@ -21,7 +21,7 @@ public sealed class BadAppTests {
     public void A_use_that_no_rule_allows_gives_VSA2001_with_the_file_and_line() {
         Assert.That(UseFailures.Value, Does.Contain(
             $"{Notes}/Slices/ReadInvoice/ReadInvoiceHandler.cs(6): error VSA2001: ReadInvoiceHandler in Handlers.Requests "
-            + $"({Notes}/Slices/ReadInvoice) uses Invoice in Domain ({Billing}/Domain): no rule allows it (Unlisted = Deny). "
+            + $"({Notes}/Slices/ReadInvoice) uses Invoice in Domain ({Billing}/Domain): no rule allows it (DefaultPermission = Deny). "
             + "Remove the use, or change the rule in Rules."));
     }
 
@@ -30,7 +30,7 @@ public sealed class BadAppTests {
         Assert.That(UseFailures.Value, Does.Contain(
             $"{Billing}/Slices/CreateInvoice/CreateInvoiceHandler.cs(6): error VSA2001: CreateInvoiceHandler in Handlers.Requests "
             + $"({Billing}/Slices/CreateInvoice) uses InvoicePresenter in Presenters ({Billing}/Presenters): "
-            + "the rule \"Slice denies Presenters InOwn<Feature> and RootClass InOwn<Feature>\" denies it."));
+            + "the rule \"Slice denies Presenters InSame<Feature> and Module InSame<Feature>\" denies it."));
     }
 
     [Test]
@@ -59,7 +59,7 @@ public sealed class BadAppTests {
 
     [Test]
     public void A_type_that_is_not_the_type_of_its_part_fails_with_VSA2101() {
-        var failures = Failures(BadApp.App.PartInstances.Where(p => p.OfTypes.Count > 0 && p.Limited.Count > 0), new BadApp().Has_the_type_of_its_part);
+        var failures = Failures(BadApp.App.PartInstances.Where(p => p.OfTypes.Count > 0 && p.Limited.Count > 0), new BadApp().Has_only_allowed_types);
 
         Assert.That(failures, Is.EqualTo(
             $"{Billing}/Presenters/Formatting.cs(4): error VSA2101: Formatting is in Presenters ({Billing}/Presenters), "

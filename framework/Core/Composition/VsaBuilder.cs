@@ -41,9 +41,10 @@ public sealed class VsaBuilder {
         return this;
     }
 
+    public IVsaHost SelectedHost() => host ??= VsaHosts.Find();
+
     public IHost Build() {
-        var selected = host ?? throw new InvalidOperationException(
-            "The app has no host. Select one before Build: UseWebHost() or UseGenericHost(). Or call services.AddVsa(args) with no host.");
+        var selected = SelectedHost();
         var builder = selected.CreateBuilder(args);
         var types = Types();
         selected.Install(builder, types);

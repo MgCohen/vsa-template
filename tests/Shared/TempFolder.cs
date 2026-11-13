@@ -8,6 +8,16 @@ public static class TempFolder {
         return path;
     }
 
+    public static string Stable(string name) {
+        var id = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(name)))[..8].ToLowerInvariant();
+        var path = Path.Combine(Path.GetTempPath(), "vsa", $"s{id}");
+        if (Directory.Exists(path)) {
+            Directory.Delete(path, recursive: true);
+        }
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
     // A process can keep a file open for a short time after it stops. Then the folder stays until the next clean.
     public static void Delete(string path) {
         try {

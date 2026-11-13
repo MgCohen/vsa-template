@@ -11,7 +11,7 @@ public abstract class Rule<TSelf> : Chain<TSelf>, IRuleEntries where TSelf : Rul
     string IRuleEntries.Source => Source;
     string IRuleEntries.Text => ToString();
 
-    public TSelf InOwn<T>() where T : Layer => Filter("InOwn", typeof(T));
+    public TSelf InSame<T>() where T : Layer => Filter("InSame", typeof(T));
 
     public TSelf InOther<T>() where T : Layer => Filter("InOther", typeof(T));
 

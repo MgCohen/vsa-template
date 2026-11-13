@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VSA.Module;
 
@@ -10,4 +11,11 @@ sealed class GenericVsaHost : IVsaHost {
     }
 
     public IHost Build(IHostApplicationBuilder builder) => ((HostApplicationBuilder)builder).Build();
+
+    public int Run(IHost app) {
+        app.Run();
+        return 0;
+    }
+
+    public void Stop(IHost app) => app.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
 }
