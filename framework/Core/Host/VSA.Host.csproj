@@ -9,6 +9,5 @@
     <ProjectReference Include="../Handlers/Requests/VSA.Handlers.Requests.csproj" />
     <ProjectReference Include="../Presenters/VSA.Presenters.csproj" />
     <ProjectReference Include="../Views/VSA.Views.csproj" />
-    <ProjectReference Include="../../Architecture/Vsa/VSA.Architecture.Vsa.csproj" />
   </ItemGroup>
 </Project>

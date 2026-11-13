@@ -9,6 +9,7 @@ namespace VSA.Presenters;
 // The presenter gets its events by itself: the services connect it to LivePresenters when they make it
 // (PresenterInstaller), and its scope disposes it. A view only listens to Changed and renders.
 [AutoRegister]
+[RequireDerived]
 public abstract class Presenter(IBus bus) : IDisposable {
     IDisposable? live;
 
