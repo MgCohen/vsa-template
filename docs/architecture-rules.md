@@ -24,6 +24,8 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
 | `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
 | `VSA0006` | Build | No `Compile` item written by hand, no `.cs` file that no project compiles, and no `Slices/` in a plugin module. |
+| `VSA0007` | Build | A module project of a Unity app targets `netstandard2.1`, or sets `VsaUnityCopy` to false. |
+| `VSA0008` | Build | The .NET test project of a Unity app finds one app folder in `Assets/`, and no module source there uses `UnityEngine`. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
 | `VSA1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |

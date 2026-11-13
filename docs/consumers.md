@@ -62,6 +62,30 @@ If `GITHUB_TOKEN` is not set, restore fails with 401.
 
 Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `vendor.cs` writes them: it publishes a `netstandard2.1` project with the VSA packages, then copies the DLLs to `Assets/Plugins/VSA`.
 
+### Unity app build
+
+VSA.Sdk finds a Unity app by `ProjectSettings/ProjectVersion.txt` in the app root. Unity compiles only `Assets/`, so VSA.Sdk does three more things.
+
+```text
+<app root>/
+  ProjectSettings/ProjectVersion.txt
+  Assets/<App>/Features/, Plugins/   module sources that Unity compiles
+  Assets/<App>/Views/                views (Unity only)
+  Assets/Plugins/VSA/                module DLLs and PDBs (committed)
+  Source/Features/, Plugins/         module projects (VSA.Sdk, netstandard2.1)
+  Source/<Name>.Tests/               the .NET tests of all modules
+```
+
+| Part | Build result | Property |
+|---|---|---|
+| Module project in `Source/` | Copies its DLL and PDB to `Assets/Plugins/VSA/` after the `netstandard2.1` build | `VsaUnityCopy=false` stops the copy. `VsaUnityPluginsDir` sets the folder |
+| Test project in `Source/`, name ends in `.Tests` | Compiles `Assets/<App>/Features/**` and `Assets/<App>/Plugins/**`, and gets the module bases and each module project in `Source/` | `VsaUnityApp` sets `<App>`. `VsaUnityModuleSources=false` stops it |
+| Module project on `netstandard2.1` | Gets `IsExternalInit`, so records and `init` compile | None |
+
+`VsaUnitySource` sets the name of `Source/`. Also set `UnitySource` in `VsaDefinition` to the same name (`architecture-engine.md`). A module project that does not target `netstandard2.1` fails with `VSA0007`. A module source in `Assets/` that uses `UnityEngine` fails the test build with `VSA0008`: put Unity code in a view.
+
+VSA.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer compiler also runs it. An analyzer that references a newer Roslyn does not run in Unity (`CS9057`).
+
 ### Layers that Unity can use
 
 | Layer | Package | Unity |
