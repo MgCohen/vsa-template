@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Assembly = System.Reflection.Assembly;
 using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
@@ -7,6 +8,8 @@ namespace VSA.Architecture.Engine;
 
 public sealed class ArchitectureMap {
     public const string AppRootKey = "VsaAppRoot";
+
+    static readonly ConcurrentDictionary<System.Type, Lazy<ArchitectureMap>> LoadedFromTestOutput = new();
 
     readonly ArchitectureDefinition definition;
     readonly Dictionary<IType, Binding> byType;
@@ -38,7 +41,8 @@ public sealed class ArchitectureMap {
     public IReadOnlyList<IType> BoundTypes => [.. Bindings.Where(b => !b.External).Select(b => b.Type)];
     public IReadOnlyList<IType> AppTypes => [.. BoundTypes.Concat(Unmapped.Select(u => u.Type))];
 
-    public static ArchitectureMap Load(System.Type definition) => AppFinder.FromTestOutput(definition);
+    public static ArchitectureMap Load(System.Type definition) =>
+        LoadedFromTestOutput.GetOrAdd(definition, type => new Lazy<ArchitectureMap>(() => AppFinder.FromTestOutput(type))).Value;
 
     public static ArchitectureMap Load(System.Type definition, string folder, string? appRoot = null) => AppFinder.FromFolder(folder, definition, appRoot);
 
