@@ -92,6 +92,23 @@ public sealed class BuildRuleTests {
             """),
         "VSA0001", "Remove these references: Shop.Contracts.Requests.csproj");
 
+    // Temporary (issue #89): the app folder gives one layer one more VSA.* package, and VSA0001 accepts it.
+    [Test]
+    public void VSA0001_accepts_an_app_reference_of_the_app_folder() {
+        var result = BuildIn(workspace.Src, "Features/Shop/Shop.csproj", ("Directory.Build.props", """
+            <Project>
+              <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+              <ItemGroup>
+                <VsaAppReference Include="VSA.Architecture" Layer="Handlers/Requests" Path="Architecture/Definition" />
+              </ItemGroup>
+            </Project>
+            """));
+
+        result.EnsureSuccess();
+        var assets = Path.Combine(Module, "Projects", "obj~", "Shop.Handlers.Requests", "project.assets.json");
+        Assert.That(File.ReadAllText(assets), Does.Contain("\"VSA.Architecture/"));
+    }
+
     [Test]
     public void VSA0004_a_project_name_that_is_not_module_and_layer() => Fails(
         BuildWith(("Projects/Prices.csproj", "<Project Sdk=\"VSA.Sdk\" />\n")),
