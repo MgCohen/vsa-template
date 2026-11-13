@@ -40,6 +40,8 @@
       VSA0004  a project in the wrong folder, or a project in Projects/ with a name that is not <Module>.<Layer> (_VsaCheck)
       VSA0005  a routing error, from the VsaRouteSliceFiles task
       VSA0006  a Compile item written by hand, a .cs file that no project compiles, or Slices/ in a plugin module (_VsaCheck)
+      VSA0007  a module project of a Unity app that does not target netstandard2.1 (_VsaCheck)
+      VSA0008  the .NET test project of a Unity app finds more than one app folder, or a module source that uses UnityEngine (_VsaUnitySources)
     _VsaCheck uses lists made at evaluation, so the order of the requested targets does not change them.
   -->
   <PropertyGroup>
@@ -50,9 +52,19 @@
     <_VsaPath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)').Replace('\', '/'))</_VsaPath>
     <_VsaCheckedPath>$(_VsaPath)</_VsaCheckedPath>
   </PropertyGroup>
+  <!-- A Unity app (ProjectSettings/ProjectVersion.txt in the app root): Unity compiles Assets/, so the module projects
+       are in a sibling folder of Assets/, VsaUnitySource. VsaDefinition.UnitySource has the same default. -->
+  <PropertyGroup Condition="'$(_VsaRoot)' != '' and Exists('$(_VsaRoot)ProjectSettings/ProjectVersion.txt')">
+    <VsaUnityProject>true</VsaUnityProject>
+    <VsaUnitySource Condition="'$(VsaUnitySource)' == ''">Source</VsaUnitySource>
+    <_VsaGroupRoot>$(_VsaRoot)$(VsaUnitySource)/</_VsaGroupRoot>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_VsaGroupRoot Condition="'$(_VsaGroupRoot)' == ''">$(_VsaRoot)</_VsaGroupRoot>
+  </PropertyGroup>
   <!-- Not case-sensitive, for the drive letter and the folder names on Windows. -->
-  <PropertyGroup Condition="'$(_VsaRoot)' != '' and $(_VsaPath.ToLowerInvariant().StartsWith($(_VsaRoot.ToLowerInvariant())))">
-    <_VsaUnder>$(_VsaPath.Substring($(_VsaRoot.Length)).TrimEnd('/'))</_VsaUnder>
+  <PropertyGroup Condition="'$(_VsaGroupRoot)' != '' and $(_VsaPath.ToLowerInvariant().StartsWith($(_VsaGroupRoot.ToLowerInvariant())))">
+    <_VsaUnder>$(_VsaPath.Substring($(_VsaGroupRoot.Length)).TrimEnd('/'))</_VsaUnder>
     <_VsaFirst>$(_VsaUnder.IndexOf('/'))</_VsaFirst>
     <_VsaCheckedPath>/$(_VsaUnder)/</_VsaCheckedPath>
   </PropertyGroup>
@@ -61,14 +73,14 @@
     <VsaRootFolder Condition="$([System.String]::Copy(';$(VsaRootFolders);').Contains(';$(_VsaRootPart);'))">$(_VsaRootPart)</VsaRootFolder>
   </PropertyGroup>
   <PropertyGroup Condition="'$(VsaRootFolder)' != ''">
-    <VsaFeaturesDir>$(_VsaRoot)Features/</VsaFeaturesDir>
-    <VsaPluginsDir>$(_VsaRoot)Plugins/</VsaPluginsDir>
+    <VsaFeaturesDir>$(_VsaGroupRoot)Features/</VsaFeaturesDir>
+    <VsaPluginsDir>$(_VsaGroupRoot)Plugins/</VsaPluginsDir>
     <_VsaRelative>$(_VsaUnder.Substring($([MSBuild]::Add($(_VsaFirst), 1))))</_VsaRelative>
     <_VsaSlash>$(_VsaRelative.IndexOf('/'))</_VsaSlash>
     <VsaModule Condition="'$(_VsaSlash)' == '-1'">$(_VsaRelative)</VsaModule>
     <VsaModule Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring(0, $(_VsaSlash)))</VsaModule>
     <_VsaFolder Condition="'$(_VsaSlash)' != '-1'">$(_VsaRelative.Substring($([MSBuild]::Add($(_VsaSlash), 1))))</_VsaFolder>
-    <VsaModuleDir>$(_VsaRoot)$(VsaRootFolder)/$(VsaModule)/</VsaModuleDir>
+    <VsaModuleDir>$(_VsaGroupRoot)$(VsaRootFolder)/$(VsaModule)/</VsaModuleDir>
     <VsaLayer Condition="'$(_VsaSlash)' == '-1'">Module</VsaLayer>
     <VsaLayer Condition="'$(_VsaFolder)' == 'Projects' and $(MSBuildProjectName.StartsWith('$(VsaModule).'))">$(MSBuildProjectName.Substring($([MSBuild]::Add($(VsaModule.Length), 1))).Replace('.', '/'))</VsaLayer>
     <!-- The project of this layer in another module: <Name>/<_VsaLayerDir><Name><_VsaLayerSuffix>.csproj.
@@ -187,6 +199,13 @@
   </ItemGroup>
   <ItemGroup Condition="'$(VsaLayer)' == 'Module'">
     <_VsaFramework Include="VSA.Module" Path="Core/Module" />
+  </ItemGroup>
+
+  <!-- Temporary (issue #89): VsaAppReference gives one layer of each module of the app one more VSA.* package,
+       for example <VsaAppReference Include="VSA.Architecture.Data" Layer="Infrastructure" Path="Architecture/Data" />.
+       Declare it in a Directory.Build.props of the app folder. Path is the project folder under framework/ in source mode. -->
+  <ItemGroup Condition="'$(VsaLayer)' != ''">
+    <_VsaFramework Include="@(VsaAppReference->WithMetadataValue('Layer', '$(VsaLayer)'))" />
   </ItemGroup>
 
   <!-- Source mode: project references into framework/. -->
@@ -351,6 +370,8 @@
            Text="No project of module $(VsaModule) compiles these files: @(_VsaUncompiledPath->'%(Path)'). Move each file to $(_VsaFolders), and make sure that the module has the project of that folder." />
     <Error Condition="'@(_VsaPluginSlice)' != ''" Code="VSA0006"
            Text="$(VsaModule) is a plugin module, so it has no slices: @(_VsaPluginSlicePath->'%(Path)'). A plugin module has the layout of the framework. Move each file to the folder of its layer, for example Handlers/Commands/, and make sure that the module has the project of that layer." />
+    <Error Condition="'$(VsaUnityCopy)' == 'true' and !$([System.String]::Copy(';$(TargetFrameworks);$(TargetFramework);').Contains(';netstandard2.1;'))" Code="VSA0007"
+           Text="$(MSBuildProjectName) is a module project of a Unity app, and it targets $(TargetFramework)$(TargetFrameworks). Unity loads only netstandard2.1. Set TargetFramework to netstandard2.1 (for example in Directory.Build.props), or set VsaUnityCopy to false if Unity does not use this module." />
   </Target>
 
   <!-- Each name in VsaPluginUses is another plugin module that has this layer. Only a plugin layer has VsaPluginUses. -->
@@ -372,6 +393,70 @@
   <Target Name="_VsaCheckRoot" BeforeTargets="CollectPackageReferences;ResolveProjectReferences"
           Condition="'$(VsaRootFolder)' == '' and ($(_VsaCheckedPath.Contains('/Features/')) or $(_VsaCheckedPath.Contains('/Plugins/')))">
     <Error Code="VSA0003"
-           Text="$(MSBuildProjectName) is in a Features or Plugins folder, but not in $(_VsaRoot)Features/ or $(_VsaRoot)Plugins/. The app root is the folder of global.json ($(VsaAppRoot)). Move the project, or set VsaAppRoot to the app folder." />
+           Text="$(MSBuildProjectName) is in a Features or Plugins folder, but not in $(_VsaGroupRoot)Features/ or $(_VsaGroupRoot)Plugins/. The app root is the folder of global.json ($(VsaAppRoot)). Move the project, or set VsaAppRoot to the app folder." />
+  </Target>
+  <!-- A Unity app. Unity does not run VSA.Sdk: it gets the module DLLs, and the .NET tests compile the module sources of Assets/.
+       Each module project copies its DLL and PDB to VsaUnityPluginsDir after the netstandard2.1 build. VsaUnityCopy=false stops it. -->
+  <PropertyGroup Condition="'$(VsaUnityProject)' == 'true' and '$(VsaLayer)' != ''">
+    <VsaUnityCopy Condition="'$(VsaUnityCopy)' == ''">true</VsaUnityCopy>
+    <VsaUnityPluginsDir Condition="'$(VsaUnityPluginsDir)' == ''">$(_VsaRoot)Assets/Plugins/VSA/</VsaUnityPluginsDir>
+  </PropertyGroup>
+  <Target Name="_VsaCopyToUnity" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(VsaUnityCopy)' == 'true' and '$(TargetFramework)' == 'netstandard2.1'">
+    <ItemGroup>
+      <_VsaUnityFile Include="$(TargetPath)" />
+      <_VsaUnityFile Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_VsaUnityFile)" DestinationFolder="$(VsaUnityPluginsDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
+  <ItemGroup Condition="'$(VsaLayer)' != '' and '$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Include="$(MSBuildThisFileDirectory)Polyfills/*.cs" VsaRule="true" Visible="false" />
+  </ItemGroup>
+
+  <!-- The .NET test project of a Unity app: a project in VsaUnitySource, not in a module, with a name that ends in ".Tests".
+       It also compiles the module sources in Assets/<VsaUnityApp>/Features/ and Plugins/, so dotnet test runs them.
+       It gets the framework bases of the module layers and each module project in VsaUnitySource.
+       VsaUnityApp is the one folder in Assets/ (not Assets/Plugins/) with Features/, Plugins/ or Views/, as in VsaDefinition. -->
+  <PropertyGroup Condition="'$(VsaUnityProject)' == 'true' and '$(VsaRootFolder)' == '' and '$(VsaUnityModuleSources)' == '' and $(MSBuildProjectName.EndsWith('.Tests')) and $(_VsaPath.ToLowerInvariant().StartsWith($(_VsaGroupRoot.ToLowerInvariant())))">
+    <VsaUnityModuleSources>true</VsaUnityModuleSources>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VsaUnityModuleSources)' == 'true'">
+    <_VsaFramework Include="VSA.Analyzers.Markers" Path="Analyzers/Markers" />
+    <_VsaFramework Include="VSA.Module" Path="Core/Module" />
+    <_VsaFramework Include="VSA.Domain" Path="Core/Domain" />
+    <_VsaFramework Include="VSA.Infrastructure" Path="Core/Infrastructure/Core" />
+    <_VsaFramework Include="VSA.Contracts.Requests" Path="Core/Contracts/Requests" />
+    <_VsaFramework Include="VSA.Contracts.Events" Path="Core/Contracts/Events" />
+    <_VsaFramework Include="VSA.Contracts.Commands" Path="Core/Contracts/Commands" />
+    <_VsaFramework Include="VSA.Handlers.Requests" Path="Core/Handlers/Requests" />
+    <_VsaFramework Include="VSA.Handlers.Events" Path="Core/Handlers/Events" />
+    <_VsaFramework Include="VSA.Handlers.Commands" Path="Core/Handlers/Commands" />
+    <_VsaFramework Include="VSA.Presenters" Path="Core/Presenters" />
+    <ProjectReference VsaRule="true" Include="$(_VsaGroupRoot)Features/*/*.csproj;$(_VsaGroupRoot)Plugins/*/*.csproj" />
+  </ItemGroup>
+  <Target Name="_VsaUnitySources" BeforeTargets="BeforeCompile" Condition="'$(VsaUnityModuleSources)' == 'true'">
+    <ItemGroup Condition="'$(VsaUnityApp)' == '' and Exists('$(_VsaRoot)Assets')">
+      <_VsaUnityApp Include="$([System.IO.Directory]::GetDirectories('$(_VsaRoot)Assets'))" />
+      <_VsaUnityApp Remove="@(_VsaUnityApp)" Condition="'%(Filename)%(Extension)' == 'Plugins' or !(Exists('%(FullPath)/Features') or Exists('%(FullPath)/Plugins') or Exists('%(FullPath)/Views'))" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(VsaUnityApp)' != ''">
+      <_VsaUnityApp Include="$(_VsaRoot)Assets/$(VsaUnityApp)" />
+    </ItemGroup>
+    <Error Condition="'@(_VsaUnityApp->Count())' &gt; 1" Code="VSA0008"
+           Text="$(MSBuildProjectName) compiles the module sources of the Unity app, but Assets/ has more than one app folder: @(_VsaUnityApp->'%(Filename)%(Extension)'). Set VsaUnityApp to the name of the app folder." />
+    <PropertyGroup>
+      <_VsaUnityAppDir>@(_VsaUnityApp->'%(FullPath)')</_VsaUnityAppDir>
+      <_VsaUnityAppName>@(_VsaUnityApp->'%(Filename)%(Extension)')</_VsaUnityAppName>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_VsaUnityAppDir)' != ''">
+      <_VsaUnitySource Include="$(_VsaUnityAppDir)/Features/**/*.cs" Folder="Features" />
+      <_VsaUnitySource Include="$(_VsaUnityAppDir)/Plugins/**/*.cs" Folder="Plugins" />
+      <_VsaUnityUse Include="@(_VsaUnitySource)" Condition="$([System.IO.File]::ReadAllText('%(_VsaUnitySource.FullPath)').Contains('UnityEngine'))"
+                    Path="%(_VsaUnitySource.Folder)/$([System.String]::Copy('%(_VsaUnitySource.RecursiveDir)').Replace('\', '/'))%(_VsaUnitySource.Filename)%(_VsaUnitySource.Extension)" />
+      <Compile Include="@(_VsaUnitySource)" Link="$(_VsaUnityAppName)/%(_VsaUnitySource.Folder)/%(_VsaUnitySource.RecursiveDir)%(_VsaUnitySource.Filename)%(_VsaUnitySource.Extension)" />
+    </ItemGroup>
+    <Error Condition="'@(_VsaUnityUse)' != ''" Code="VSA0008"
+           Text="These module sources in Assets/$(_VsaUnityAppName)/ use UnityEngine: @(_VsaUnityUse->'%(Path)'). The .NET tests compile each module, and module code does not use Unity. Move the Unity code to a view in Assets/$(_VsaUnityAppName)/Views/." />
   </Target>
 </Project>

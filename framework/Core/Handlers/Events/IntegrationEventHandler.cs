@@ -6,6 +6,7 @@ namespace VSA.Handlers.Events;
 
 [AutoRegister]
 [RequireDerived]
+[Preserve]
 public abstract class IntegrationEventHandler<TEvent> : IHandler<TEvent> where TEvent : IntegrationEvent {
     protected static Task<Result<Unit>> Done { get; } = Task.FromResult<Result<Unit>>(Unit.Value);
 

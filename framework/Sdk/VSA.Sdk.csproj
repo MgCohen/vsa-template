@@ -10,6 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="Sdk/**" Pack="true" PackagePath="Sdk" />
+    <!-- Sdk/Polyfills/ holds sources for the module projects, not for this project. -->
+    <Compile Remove="Sdk/**" />
     <!-- Tasks/ is its own project (VSA.Sdk.Tasks). This package holds its output in Sdk/tasks/. -->
     <Compile Remove="Tasks/**" />
     <None Remove="Tasks/**" />
