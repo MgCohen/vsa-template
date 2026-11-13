@@ -18,7 +18,7 @@ The editor and the build run the first group in each consumer project. The secon
 
 | ID | Level | Rule |
 |---|---|---|
-| `VSA0001` | Build | A module project or a plugin module project gets its references only from VSA.Sdk. |
+| `VSA0001` | Build | A module project or a plugin module project gets its references only from VSA.Sdk. A `VsaAppReference` of the app folder is accepted (temporary, see below). |
 | `VSA0002` | Build | `VsaPluginUses` is only in a plugin layer, and it names other plugin modules that have that layer. |
 | `VSA0003` | Build | A project in a `Features` or `Plugins` folder is in a root folder of the app root. |
 | `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
@@ -47,6 +47,26 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA2102` | Architecture | Each type of the app is in a folder of a part. |
 
 `framework/Sdk/Sdk/VSA.Layers.targets` gives the project references of each layer, because VSA.Sdk cannot run C# before compile. Keep it the same as the VSA definition. No test compares the two.
+
+## Temporary: `VsaAppReference`
+
+This item is temporary. Issue [#89](https://github.com/MgCohen/vsa-template/issues/89) replaces it: the definition will give the references at build time, and `VsaAppReference` will go.
+
+A module project cannot reference a `VSA.*` package by hand (`VSA0001`). If a module of the app needs a VSA library that is not a layer base, declare it in a `Directory.Build.props` of the app folder:
+
+```xml
+<ItemGroup>
+  <VsaAppReference Include="VSA.Architecture.Data" Layer="Infrastructure" Path="Architecture/Data" />
+</ItemGroup>
+```
+
+| Metadata | Use |
+|---|---|
+| `Include` | The package ID. Package mode uses the version of VSA.Sdk. |
+| `Layer` | The layer that gets the reference in each module, as `VsaLayer` gives it, for example `Infrastructure` or `Handlers/Requests`. |
+| `Path` | Source mode only: the project folder under `framework/`. |
+
+VSA.Sdk adds the reference with the framework references of that layer, so `VSA0001` accepts it.
 
 ## Root folders and plugin modules
 

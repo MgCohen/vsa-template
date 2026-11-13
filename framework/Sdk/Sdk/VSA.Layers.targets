@@ -201,6 +201,13 @@
     <_VsaFramework Include="VSA.Module" Path="Core/Module" />
   </ItemGroup>
 
+  <!-- Temporary (issue #89): VsaAppReference gives one layer of each module of the app one more VSA.* package,
+       for example <VsaAppReference Include="VSA.Architecture.Data" Layer="Infrastructure" Path="Architecture/Data" />.
+       Declare it in a Directory.Build.props of the app folder. Path is the project folder under framework/ in source mode. -->
+  <ItemGroup Condition="'$(VsaLayer)' != ''">
+    <_VsaFramework Include="@(VsaAppReference->WithMetadataValue('Layer', '$(VsaLayer)'))" />
+  </ItemGroup>
+
   <!-- Source mode: project references into framework/. -->
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
     <ProjectReference Include="@(_VsaFramework->'$(VsaFrameworkSourceDir)%(Path)/%(Identity).csproj')" VsaRule="true" />
