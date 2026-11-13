@@ -5,6 +5,7 @@ namespace VSA.Handlers;
 
 [AutoRegister]
 [RequireDerived]
+[Preserve]
 public abstract class Before<TMessage> : IBeforeCall where TMessage : class {
     public virtual int Order => 0;
 

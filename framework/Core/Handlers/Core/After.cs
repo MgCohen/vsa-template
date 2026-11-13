@@ -5,6 +5,7 @@ namespace VSA.Handlers;
 
 [AutoRegister]
 [RequireDerived]
+[Preserve]
 public abstract class After<TMessage> : IAfterCall where TMessage : class {
     public virtual int Order => 0;
 

@@ -10,6 +10,7 @@ namespace VSA.Presenters;
 // (PresenterInstaller), and its scope disposes it. A view only listens to Changed and renders.
 [AutoRegister]
 [RequireDerived]
+[Preserve]
 public abstract class Presenter(IBus bus) : IDisposable {
     IDisposable? live;
 

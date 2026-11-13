@@ -6,6 +6,7 @@ namespace VSA.Handlers.Requests;
 
 [AutoRegister]
 [RequireDerived]
+[Preserve]
 public abstract class RequestHandler<TRequest, TResponse> : IHandler<TRequest>
     where TRequest : class, IRequest<TResponse>
     where TResponse : IResponse {
