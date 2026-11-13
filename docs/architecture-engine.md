@@ -177,7 +177,7 @@ Discovery also reads the DLLs that Unity compiles:
 
 ## The four tests
 
-`ArchitectureTests<TDefinition>` has the four tests. `ArchitectureTests` is `ArchitectureTests<ArchitectureDefinition>`: it reads the definition of the app. Each test is one native ArchUnitNET rule:
+`ArchitectureTests<TDefinition>` has the four tests. It inherits `ArchitectureTestBase<TDefinition>`, which loads the map and has no tests. `ArchitectureTests` is `ArchitectureTests<ArchitectureDefinition>`: it reads the definition of the app. Each test is one native ArchUnitNET rule:
 
 ```csharp
 [TestCaseSource(nameof(PartInstances))]
@@ -221,7 +221,7 @@ The app class (`MyApp : VsaApp<MyApp>`, see `composition.md`) gives the rules fo
 ```csharp
 namespace <RootNamespace>;
 [NUnit.Framework.TestFixture]
-public partial class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests;
+public sealed class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests;
 ```
 
 `[TestFixture]` keeps the reference to `nunit.framework` in the test assembly. Without it, a test project with no test of its own has no NUnit reference, and NUnit finds 0 tests. `tests/Consumer.Tests` checks this with the built fixture `tests/Fixtures/Built/GeneratedTests`.
@@ -248,10 +248,10 @@ public class MyApp : VsaApp<MyApp> {
 }
 ```
 
-To add a test of the app, write the other part of the class. `AreIn<TLayer>(Map)` and `NotDependOnAny<TLayer>(Map)` select the types of a layer. The layers are in the namespace `VSA.Architecture.Vsa`:
+The generated class is sealed. To add a test of the app, write your own class that inherits `ArchitectureTestBase`. The base gives `Map`, `AppTypes` and `BoundTypes`, and it has no tests, so the four tests do not run two times. Do not inherit `ArchitectureTests`. `ArchitectureMap.Load(Type)` loads the app one time for each definition type in the test process, so the generated class and your class use the same map. `AreIn<TLayer>(Map)` and `NotDependOnAny<TLayer>(Map)` select the types of a layer. The layers are in the namespace `VSA.Architecture.Vsa`:
 
 ```csharp
-public partial class ArchitectureTests {
+public class AppRules : ArchitectureTestBase {
     [Test]
     public void Domain_does_not_use_Infrastructure() {
         Types().That().AreIn<Domain>(Map).Should().NotDependOnAny<Infrastructure>(Map).Check(Map);
