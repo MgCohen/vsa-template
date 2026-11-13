@@ -10,8 +10,9 @@ using System.Text;
 
 var root = Path.GetDirectoryName(Here())!;
 
-// The tests build these projects themselves, in a copy. They are not part of the solution.
-string[] excluded = ["tests/Fixtures/", "docs/legacy/"];
+// The tests build these projects themselves, in a copy. The tutorials build outside the repository.
+// They are not part of the solution.
+string[] excluded = ["tests/Fixtures/", "docs/legacy/", "docs/tutorials/"];
 
 var projects = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
     .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/'))
