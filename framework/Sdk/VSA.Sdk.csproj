@@ -5,31 +5,13 @@
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-    <!-- NU5100: the task DLL in Sdk/tasks/ is for MSBuild, not a library reference. -->
-    <NoWarn>$(NoWarn);NU5128;NU5100</NoWarn>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Sdk/**" Pack="true" PackagePath="Sdk" />
     <!-- Sdk/Polyfills/ holds sources for the module projects, not for this project. -->
     <Compile Remove="Sdk/**" />
-    <!-- Tasks/ is its own project (VSA.Sdk.Tasks). This package holds its output in Sdk/tasks/. -->
-    <Compile Remove="Tasks/**" />
-    <None Remove="Tasks/**" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Tasks/VSA.Sdk.Tasks.csproj" ReferenceOutputAssembly="false" Private="false" />
-  </ItemGroup>
-  <!-- The task DLL and its dependencies (Roslyn), without the MSBuild assemblies, which MSBuild gives. -->
-  <Target Name="_VsaPackTasks" BeforeTargets="_GetPackageFiles">
-    <PropertyGroup>
-      <_VsaTasksDir>$([MSBuild]::NormalizeDirectory('$(ProjectDir)', '$(IntermediateOutputPath)', 'tasks'))</_VsaTasksDir>
-    </PropertyGroup>
-    <MSBuild Projects="Tasks/VSA.Sdk.Tasks.csproj" Targets="Publish" Properties="Configuration=$(Configuration);PublishDir=$(_VsaTasksDir)" />
-    <ItemGroup>
-      <None Include="$(_VsaTasksDir)*.dll" Pack="true" PackagePath="Sdk/tasks" Visible="false" />
-    </ItemGroup>
-  </Target>
-
   <!-- The SDK adds the VSA.* packages with its own version, so all packages stay at one version. -->
   <Target Name="_VsaWriteVersion" BeforeTargets="_GetPackageFiles">
     <PropertyGroup>
