@@ -24,7 +24,6 @@ public sealed class FormattingBuildTests {
     [TestCase("VSA1010", "LongFile.cs")]
     [TestCase("VSA1011", "TwoTypes.cs")]
     [TestCase("VSA1012", "MemberOrder.cs")]
-    [TestCase("IDE0161", "BuiltInRules.cs")]
     [TestCase("IDE0055", "BuiltInRules.cs")]
     [TestCase("IDE0040", "BuiltInRules.cs")]
     [TestCase("IDE2000", "BuiltInRules.cs")]
@@ -83,6 +82,19 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Migrations_give_no_warnings() =>
         Assert.That(Lines(": warning ").Where(line => line.Contains("Migrations", StringComparison.Ordinal)), Is.Empty);
+
+    [Test]
+    public void Both_namespace_forms_give_no_warning() =>
+        Assert.That(Lines("IDE0161"), Is.Empty, build.Output);
+
+    [Test]
+    public void Test_project_may_have_underscores_in_names()
+    {
+        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
+        var result = workspace.Dotnet("build", "Styled.Tests/Styled.Tests.csproj", "-nodeReuse:false");
+        Assert.That(result.Succeeded, Is.True, result.Output);
+        Assert.That(result.Output, Does.Not.Contain("CA1707"), result.Output);
+    }
 
     IEnumerable<string> Lines(string text) =>
         build.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));

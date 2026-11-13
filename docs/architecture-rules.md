@@ -127,6 +127,7 @@ vsa.VSA1001.check_responses = true             # rule option
 | File | Holds |
 |---|---|
 | `VSA.globalconfig` | The built-in .NET rules: editor and code style options, severities |
+| `VSA.Tests.globalconfig` | The built-in rules that are off in a project whose name ends with `.Tests` (CA1707, underscores in test names) |
 | `VSA.Rules.globalconfig` | The values of the VSA rules. No rule has a default in code |
 | `VSA.Rules.props` | The MSBuild setup: both files, `EnforceCodeStyleInBuild`, the formatting rules as warnings |
 
@@ -142,7 +143,6 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 |---|---|---|
 | `IDE0055` | Each brace on its own line (Allman) | `csharp_new_line_before_open_brace` |
 | `IDE0011` | Braces on each `if`, `for`, `while` | `csharp_prefer_braces` |
-| `IDE0161` | File-scoped namespace | `csharp_style_namespace_declarations` |
 | `IDE2000` | No two blank lines in a row | `dotnet_style_allow_multiple_blank_lines_experimental` |
 | `IDE0008` | Explicit type, except where the line shows the type | `csharp_style_var_*` |
 | `IDE0040` | Access modifier on each member, except in an interface | `dotnet_style_require_accessibility_modifiers` |
