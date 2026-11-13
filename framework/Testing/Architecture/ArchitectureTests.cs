@@ -8,23 +8,7 @@ namespace VSA.Testing.Architecture;
 
 public abstract class ArchitectureTests : ArchitectureTests<ArchitectureDefinition>;
 
-public abstract class ArchitectureTests<TDefinition> where TDefinition : ArchitectureDefinition {
-    static readonly Lazy<ArchitectureMap> LoadedMap = new(() => Load(typeof(TDefinition)));
-
-    protected static ArchitectureMap Map => LoadedMap.Value;
-
-    static ArchitectureMap Load(Type definition) {
-        var map = ArchitectureMap.Load(definition);
-        foreach (var warning in map.Warnings) {
-            TestContext.Progress.WriteLine(warning);
-        }
-        return map;
-    }
-
-    protected static IEnumerable<IType> AppTypes => Map.AppTypes;
-
-    protected static IEnumerable<IType> BoundTypes => Map.BoundTypes;
-
+public abstract class ArchitectureTests<TDefinition> : ArchitectureTestBase<TDefinition> where TDefinition : ArchitectureDefinition {
     protected static IEnumerable<TestCaseData> PartInstances =>
         Map.PartInstances.Select(p => new TestCaseData(p).SetArgDisplayNames(p.Name));
 
