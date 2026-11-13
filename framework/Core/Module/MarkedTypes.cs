@@ -1,12 +1,13 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Analyzers.Markers;
 
 namespace VSA.Module;
 
 public static class MarkedTypes {
-    public const string TypeArgumentName = "VSA.Analyzers.Markers.TypeArgumentAttribute";
-    public const string AutoRegisterName = "VSA.Analyzers.Markers.AutoRegisterAttribute";
-    const string AutoRegisterInterface = "VSA.Analyzers.Markers.IAutoRegister";
+    public static readonly string TypeArgumentName = typeof(TypeArgumentAttribute).FullName!;
+    public static readonly string AutoRegisterName = typeof(AutoRegisterAttribute).FullName!;
+    static readonly string AutoRegisterInterface = typeof(IAutoRegister).FullName!;
 
     public static bool IsTypeArgument(Type type) =>
         !type.ContainsGenericParameters

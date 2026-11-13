@@ -62,6 +62,30 @@ If `GITHUB_TOKEN` is not set, restore fails with 401.
 
 Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `vendor.cs` writes them: it publishes a `netstandard2.1` project with the VSA packages, then copies the DLLs to `Assets/Plugins/VSA`.
 
+### Unity app build
+
+VSA.Sdk finds a Unity app by `ProjectSettings/ProjectVersion.txt` in the app root. Unity compiles only `Assets/`, so VSA.Sdk does three more things.
+
+```text
+<app root>/
+  ProjectSettings/ProjectVersion.txt
+  Assets/<App>/Features/, Plugins/   module sources that Unity compiles
+  Assets/<App>/Views/                views (Unity only)
+  Assets/Plugins/VSA/                module DLLs and PDBs (committed)
+  Source/Features/, Plugins/         module projects (VSA.Sdk, netstandard2.1)
+  Source/<Name>.Tests/               the .NET tests of all modules
+```
+
+| Part | Build result | Property |
+|---|---|---|
+| Module project in `Source/` | Copies its DLL and PDB to `Assets/Plugins/VSA/` after the `netstandard2.1` build | `VsaUnityCopy=false` stops the copy. `VsaUnityPluginsDir` sets the folder |
+| Test project in `Source/`, name ends in `.Tests` | Compiles `Assets/<App>/Features/**` and `Assets/<App>/Plugins/**`, and gets the module bases and each module project in `Source/` | `VsaUnityApp` sets `<App>`. `VsaUnityModuleSources=false` stops it |
+| Module project on `netstandard2.1` | Gets `IsExternalInit`, so records and `init` compile | None |
+
+`VsaUnitySource` sets the name of `Source/`. Also set `UnitySource` in `VsaDefinition` to the same name (`architecture-engine.md`). A module project that does not target `netstandard2.1` fails with `VSA0007`. A module source in `Assets/` that uses `UnityEngine` fails the test build with `VSA0008`: put Unity code in a view.
+
+VSA.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer compiler also runs it. An analyzer that references a newer Roslyn does not run in Unity (`CS9057`).
+
 ### Layers that Unity can use
 
 | Layer | Package | Unity |
@@ -88,6 +112,7 @@ The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Core/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AppScan` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app calls `MyApp.Run(args)` through the Unity host, or `new ServiceCollection().AddVsa(args)` with no host (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies, because VSA.Composition references them.
+- An IL2CPP player with stripping High needs `<assembly fullname="VSA.Analyzers.Markers" preserve="all" />` in a `link.xml`. The UPM package ships it (`docs/composition.md`).
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Open questions

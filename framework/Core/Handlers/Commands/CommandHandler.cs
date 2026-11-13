@@ -6,6 +6,7 @@ namespace VSA.Handlers.Commands;
 
 [AutoRegister]
 [RequireDerived]
+[Preserve]
 public abstract class CommandHandler<TCommand, TResult> : IHandler<TCommand>
     where TCommand : class, ICommand<TResult> {
     public abstract Task<Result<TResult>> HandleAsync(Envelope<TCommand> envelope);
