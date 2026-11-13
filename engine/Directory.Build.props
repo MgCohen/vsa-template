@@ -12,6 +12,7 @@
   <ItemGroup>
     <VsaAppReference Include="VSA.Architecture" Layer="Contracts/Commands" Path="Architecture/Definition" />
     <VsaAppReference Include="VSA.Architecture" Layer="Handlers/Commands" Path="Architecture/Definition" />
+    <VsaAppReference Include="VSA.Architecture" Layer="Domain/Shared" Path="Architecture/Definition" />
     <VsaAppReference Include="VSA.Architecture.Engine" Layer="Infrastructure" Path="Architecture/Engine" />
   </ItemGroup>
 </Project>

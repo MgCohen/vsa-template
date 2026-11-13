@@ -1,5 +1,5 @@
-using Report.Domain.Shared;
+using Steps.Domain.Shared;
 
 namespace Hello.Slices.SayHello;
 
-public sealed record SayHelloResult(IReadOnlyList<Finding> Findings);
+public sealed record SayHelloResult(IReadOnlyList<Finding> Findings) : IStepResult;

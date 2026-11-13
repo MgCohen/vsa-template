@@ -1,5 +1,5 @@
-using VSA.Contracts.Commands;
+using Steps.Contracts.Commands;
 
 namespace Hello.Slices.SayHello;
 
-public sealed record SayHelloCommand(string AppRoot) : ICommand<SayHelloResult>;
+public sealed record SayHelloCommand(string AppRoot) : EngineStep<SayHelloResult>;

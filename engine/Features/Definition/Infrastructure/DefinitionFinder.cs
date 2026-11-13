@@ -1,9 +1,9 @@
 using System.Reflection;
 using VSA.Architecture;
 
-namespace Definition.Slices.LoadDefinition;
+namespace Definition.Infrastructure;
 
-static class DefinitionFinder {
+public static class DefinitionFinder {
     public static ArchitectureDefinition? Find(IReadOnlyList<Assembly> app) {
         var types = app.SelectMany(TypesOf)
             .Where(t => t is { IsAbstract: false, ContainsGenericParameters: false } && t.GetConstructor(Type.EmptyTypes) is not null)

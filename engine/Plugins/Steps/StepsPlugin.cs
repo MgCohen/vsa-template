@@ -1,8 +1,8 @@
 using VSA.Module;
 
-namespace Check;
+namespace Steps;
 
-public sealed class CheckModule : Module {
+public sealed class StepsPlugin : Plugin {
     public override void Configure(ModuleBuilder module) {
     }
 }

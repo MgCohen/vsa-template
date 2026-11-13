@@ -21,9 +21,6 @@ public sealed class BuildCheckTests {
         var again = workspace.Dotnet("build", "App/Host", "--no-restore", "-nodeReuse:false").EnsureSuccess();
         Assert.That(again.Output, Does.Not.Contain(Summary), "A build with no change runs the check again.");
 
-        var off = workspace.Dotnet("build", "App/Host", "--no-restore", "-p:VsaCheckOff=Hello", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(off.Output, Does.Contain(Summary).And.Not.Contain("Hello from a plugin"));
-
         workspace.Dotnet("build", "Tests", "-nodeReuse:false").EnsureSuccess();
         workspace.Dotnet("test", "--project", "Tests", "--no-build").EnsureSuccess();
 

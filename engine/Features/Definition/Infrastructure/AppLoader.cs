@@ -2,12 +2,11 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.Loader;
-using Report.Domain.Shared;
 using VSA.Architecture;
 
-namespace Definition.Slices.LoadDefinition;
+namespace Definition.Infrastructure;
 
-sealed class AppLoader : AssemblyLoadContext {
+public sealed class AppLoader : AssemblyLoadContext {
     static readonly HashSet<string> Shared = SharedClosure(typeof(ArchitectureDefinition).Assembly);
     readonly string bin;
     readonly AssemblyDependencyResolver? resolver;
@@ -20,7 +19,8 @@ sealed class AppLoader : AssemblyLoadContext {
         resolver = main is null ? null : new AssemblyDependencyResolver(main);
     }
 
-    public IEnumerable<Finding> VersionFindings() {
+    public List<string> VersionMismatches() {
+        var mismatches = new List<string>();
         foreach (var name in Shared.Order(StringComparer.Ordinal)) {
             var dll = Path.Combine(bin, name + ".dll");
             var engineCopy = Path.Combine(AppContext.BaseDirectory, name + ".dll");
@@ -30,14 +30,14 @@ sealed class AppLoader : AssemblyLoadContext {
             var app = PackageVersion(dll);
             var engine = PackageVersion(engineCopy);
             if (app != engine) {
-                yield return new Finding("VSA3001", FindingSeverity.Error,
-                    $"The app uses {name} {app}, but the engine uses {engine}. Use one version: run dotnet vsa update.", dll, 1);
+                mismatches.Add($"the app uses {name} {app}, the engine uses {engine}");
             }
         }
+        return mismatches;
     }
 
     public List<Assembly> AppAssemblies(string appRoot, IReadOnlyList<string> skip) {
-        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(appRoot)) + Path.DirectorySeparatorChar;
+        var prefix = Path.TrimEndingDirectorySeparator(appRoot) + Path.DirectorySeparatorChar;
         return [.. Directory.GetFiles(bin, "*.dll")
             .Where(dll => !Shared.Contains(Path.GetFileNameWithoutExtension(dll)))
             .Where(dll => !skip.Contains(Path.GetFileNameWithoutExtension(dll), StringComparer.OrdinalIgnoreCase))
@@ -51,13 +51,13 @@ sealed class AppLoader : AssemblyLoadContext {
             .Where(name => !Shared.Contains(name) && names.Any(e => name == e || name.StartsWith(e + ".", StringComparison.Ordinal)))
             .Select(name => LoadFromAssemblyName(new AssemblyName(name)));
 
-    protected override Assembly? Load(AssemblyName name) {
-        if (Shared.Contains(name.Name!)) {
+    protected override Assembly? Load(AssemblyName assemblyName) {
+        if (Shared.Contains(assemblyName.Name!)) {
             return null;
         }
-        var path = resolver?.ResolveAssemblyToPath(name);
+        var path = resolver?.ResolveAssemblyToPath(assemblyName);
         if (path is null) {
-            var local = Path.Combine(bin, name.Name + ".dll");
+            var local = Path.Combine(bin, assemblyName.Name + ".dll");
             path = File.Exists(local) ? local : null;
         }
         return path is null ? null : LoadFromAssemblyPath(path);

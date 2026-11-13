@@ -1,13 +1,14 @@
-using Report.Domain.Shared;
+using System.Diagnostics;
+using Steps.Domain.Shared;
 using VSA.Contracts;
 using VSA.Handlers.Commands;
 
 namespace Report.Slices.WriteReport;
 
-sealed class WriteReportHandler : CommandHandler<WriteReportCommand, WriteReportResult> {
+sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResult> {
     const string Origin = "vsa-engine";
 
-    public override Task<Result<WriteReportResult>> HandleAsync(Envelope<WriteReportCommand> envelope) {
+    public override Task<Result<ReportResult>> HandleAsync(Envelope<WriteReportCommand> envelope) {
         var command = envelope.Message;
         var warnOnly = string.Equals(command.Mode, "Warn", StringComparison.OrdinalIgnoreCase);
         var findings = command.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error
@@ -19,8 +20,13 @@ sealed class WriteReportHandler : CommandHandler<WriteReportCommand, WriteReport
         }
         var errors = findings.Count(f => f.Severity == FindingSeverity.Error);
         var warnings = findings.Count(f => f.Severity == FindingSeverity.Warning);
-        Console.Error.WriteLine($"{Origin}: {command.Summary} {errors} errors, {warnings} warnings.");
-        return Task.FromResult<Result<WriteReportResult>>(new WriteReportResult(errors > 0 ? 1 : 0, lines));
+        Console.Error.WriteLine($"{Origin}: {errors} errors, {warnings} warnings, {ElapsedMilliseconds()} ms.");
+        return Task.FromResult<Result<ReportResult>>(new ReportResult(errors > 0 ? 1 : 0, lines));
+    }
+
+    static long ElapsedMilliseconds() {
+        using var process = Process.GetCurrentProcess();
+        return (long)(DateTime.Now - process.StartTime).TotalMilliseconds;
     }
 
     static string Line(Finding finding) {
