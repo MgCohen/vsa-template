@@ -39,6 +39,14 @@ public sealed class DefinitionFileTests {
     }
 
     [Test]
+    public void The_bad_app_checked_with_its_definition_file_gives_the_same_findings() {
+        var fromFile = FixtureApps.Load(FromFile(new BadDefinition()), AppContext.BaseDirectory, FixtureApps.Root);
+
+        Assert.That(fromFile.Findings().Select(FixtureApps.Line), Is.EqualTo(FixtureApps.Bad.Findings().Select(FixtureApps.Line)));
+        Assert.That(fromFile.Findings(), Has.Count.EqualTo(12));
+    }
+
+    [Test]
     public void A_file_of_another_version_fails_the_read() {
         var file = DefinitionExport.Of(new VsaDefinition()) with { Version = DefinitionJson.Version + 1 };
 

@@ -25,6 +25,7 @@
     <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Definition/VSA.Architecture.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Definition/VSA.Architecture.Vsa.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Core/VSA.Architecture.Engine.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Data/VSA.Architecture.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="VSA.Architecture.Build.targets" Pack="true" PackagePath="build/" />
