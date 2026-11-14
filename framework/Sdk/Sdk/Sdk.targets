@@ -21,27 +21,28 @@
   <!-- The framework bases of all layers. The architecture definition, not the references, decides which layer uses which base:
        the rule engine checks each use after the build. Path is the project folder under framework/ in source mode. -->
   <ItemGroup>
-    <_VsaFramework Include="VSA.Analyzers" Path="Analyzers" />
+    <_VsaFramework Include="VSA.Analyzers" Path="Architectures/Vsa/Rules" />
     <_VsaFramework Include="VSA.Kernel.Analyzers" Path="Kernel/Analyzers" Condition="'$(VsaFrameworkSourceDir)' != ''" />
-    <_VsaFramework Include="VSA.Analyzers.Markers" Path="Analyzers/Markers" />
-    <_VsaFramework Include="VSA.Domain" Path="Core/Domain" />
-    <_VsaFramework Include="VSA.Infrastructure" Path="Core/Infrastructure/Core" />
-    <_VsaFramework Include="VSA.Contracts.Requests" Path="Core/Contracts/Requests" />
-    <_VsaFramework Include="VSA.Contracts.Events" Path="Core/Contracts/Events" />
-    <_VsaFramework Include="VSA.Contracts.Commands" Path="Core/Contracts/Commands" />
-    <_VsaFramework Include="VSA.Handlers.Requests" Path="Core/Handlers/Requests" />
-    <_VsaFramework Include="VSA.Handlers.Events" Path="Core/Handlers/Events" />
-    <_VsaFramework Include="VSA.Handlers.Commands" Path="Core/Handlers/Commands" />
-    <_VsaFramework Include="VSA.Presenters" Path="Core/Presenters" />
+    <_VsaFramework Include="VSA.Analyzers.Markers" Path="Kernel/Markers" />
+    <_VsaFramework Include="VSA.Domain" Path="Architectures/Vsa/Domain" />
+    <_VsaFramework Include="VSA.Infrastructure" Path="Architectures/Vsa/Infrastructure" />
+    <_VsaFramework Include="VSA.Contracts.Requests" Path="Architectures/Vsa/Contracts/Requests" />
+    <_VsaFramework Include="VSA.Contracts.Events" Path="Architectures/Vsa/Contracts/Events" />
+    <_VsaFramework Include="VSA.Contracts.Commands" Path="Architectures/Vsa/Contracts/Commands" />
+    <_VsaFramework Include="VSA.Handlers.Requests" Path="Architectures/Vsa/Handlers/Requests" />
+    <_VsaFramework Include="VSA.Handlers.Events" Path="Architectures/Vsa/Handlers/Events" />
+    <_VsaFramework Include="VSA.Handlers.Commands" Path="Architectures/Vsa/Handlers/Commands" />
+    <_VsaFramework Include="VSA.Presenters" Path="Architectures/Vsa/Presenters" />
     <_VsaFramework Include="VSA.Kernel" Path="Kernel" />
-    <_VsaFramework Include="VSA.Module" Path="Core/Module" />
-    <_VsaFramework Include="VSA.Composition" Path="Core/Composition" />
+    <_VsaFramework Include="VSA.Module" Path="Architectures/Vsa/Module" />
+    <_VsaFramework Include="VSA.Composition" Path="Architectures/Vsa/Composition" />
+    <_VsaFramework Include="VSA.Architecture.Vsa" Path="Architectures/Vsa/Definition" />
   </ItemGroup>
 
   <!-- Source mode (this repository): project references into framework/, when VsaFrameworkSourceDir is set. -->
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
     <ProjectReference Include="@(_VsaFramework->'$(VsaFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
-    <ProjectReference Update="$(VsaFrameworkSourceDir)Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Update="$(VsaFrameworkSourceDir)Architectures/Vsa/Rules/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <ProjectReference Update="$(VsaFrameworkSourceDir)Kernel/Analyzers/VSA.Kernel.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 

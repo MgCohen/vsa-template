@@ -26,6 +26,6 @@
 
   <!-- netstandard2.1 does not have some types that the compiler needs. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <Compile Include="$(MSBuildThisFileDirectory)framework/Core/Polyfills/*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)framework/Polyfills/*.cs" />
   </ItemGroup>
 </Project>

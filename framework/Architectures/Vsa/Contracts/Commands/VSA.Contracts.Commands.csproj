@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../Components/Messages/Contracts/VSA.Contracts.csproj" />
+  </ItemGroup>
+</Project>
