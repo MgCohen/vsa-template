@@ -43,7 +43,7 @@ public sealed class VsaBuilder {
         return this;
     }
 
-    public IVsaHost SelectedHost() => host ??= VsaHosts.Find();
+    public IVsaHost SelectedHost() => host ??= new GenericVsaHost();
 
     public IHost Build() {
         var selected = SelectedHost();

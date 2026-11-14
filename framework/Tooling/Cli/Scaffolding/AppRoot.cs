@@ -17,16 +17,4 @@ static class AppRoot {
     // The VSA.Sdk version in global.json, or null.
     public static string? SdkVersion(string globalJson) =>
         (JsonNode.Parse(File.ReadAllText(globalJson)) as JsonObject)?["msbuild-sdks"]?["VSA.Sdk"]?.GetValue<string>();
-
-    // The solution of the app. The tool adds new projects to it with 'dotnet sln add'.
-    public static string Solution(string root) =>
-        Directory.GetFiles(root, "*.slnx") is [var solution] ? solution
-        : throw new VsaException($"The app folder must have one .slnx file: {root}");
-
-    public static void AddToSolution(string root, IEnumerable<string> projects) {
-        var (code, output) = Dotnet.Run(root, ["sln", Solution(root), "add", .. projects]);
-        if (code != 0) {
-            throw new VsaException($"'dotnet sln add' failed. The files are written. Add the projects to the solution by hand.{Environment.NewLine}{output}");
-        }
-    }
 }

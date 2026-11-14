@@ -3,7 +3,7 @@ using VSA.Cli.Scaffolding;
 
 namespace VSA.Cli.Commands;
 
-// vsa new app <Name>: the root files with the version of this tool, App/Host, App/Views, Tests and an empty Features/ folder
+// vsa new app <Name>: the root files with the version of this tool, the root project, App/Host, App/Views, Tests and an empty Features/ folder
 // (only Features/.gitkeep, so that git keeps the folder).
 static class NewAppCommand {
     // The .NET SDK of a new app. VSA.Sdk targets net10.0.
@@ -19,7 +19,7 @@ static class NewAppCommand {
             ("dotnet-tools.json", ToolsJson(version)),
             ("nuget.config", NugetConfig(sources)),
             (".gitignore", GitIgnore),
-            ($"{name}.slnx", Solution),
+            ($"{name}.slnx", Solution.Replace(Templates.App, name, StringComparison.Ordinal)),
         };
         files.AddRange(Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = name }, version));
         Console.WriteLine($"Making the app {name} (VSA {version}):");
@@ -71,12 +71,9 @@ static class NewAppCommand {
 
         """;
 
-    // The build folders. The layer projects in Features/<Module>/Projects/ build to bin~/ and obj~/ (VSA.Sdk).
     internal const string GitIgnore = """
         bin/
         obj/
-        bin~/
-        obj~/
         TestResults/
         *.user
         .vs/
@@ -124,10 +121,7 @@ static class NewAppCommand {
 
     const string Solution = """
         <Solution>
-          <Folder Name="/App/">
-            <Project Path="App/Host/App.Host.csproj" />
-            <Project Path="App/Views/App.Views.csproj" />
-          </Folder>
+          <Project Path="SampleApp.csproj" />
           <Folder Name="/Tests/">
             <Project Path="Tests/App.Tests.csproj" />
           </Folder>

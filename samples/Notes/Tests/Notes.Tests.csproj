@@ -10,7 +10,7 @@
     <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../App/Host/App.Host.csproj" />
+    <ProjectReference Include="../Notes.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Testing/Unit/VSA.Testing.Unit.csproj" />
   </ItemGroup>
 </Project>

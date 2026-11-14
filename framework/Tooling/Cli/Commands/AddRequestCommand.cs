@@ -24,7 +24,7 @@ static class AddRequestCommand {
         var folder = Directory.Exists(modules)
             ? Directory.EnumerateDirectories(modules).Select(Path.GetFileName).FirstOrDefault(d => string.Equals(d, module, StringComparison.OrdinalIgnoreCase))
             : null;
-        if (folder is null || !File.Exists(Path.Combine(modules, folder, $"{folder}.csproj"))) {
+        if (folder is null) {
             throw new VsaException($"The module {module} does not exist. Add it with 'vsa add module {module}'.");
         }
         return Names.Check(folder, "module");

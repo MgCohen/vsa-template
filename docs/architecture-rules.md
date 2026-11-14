@@ -6,7 +6,6 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
-| Editor and build | Build | `VSA.Sdk` (`framework/Sdk`) | `VSA0xxx` |
 | Editor and build | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` (`framework/Analyzers`) | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
 | Build of the host | Architecture | `VSA.Architecture.Build` (rule engine, ArchUnitNET) | `VSA2xxx` |
 | Tests | Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | None |
@@ -18,14 +17,6 @@ The editor and the build run the first group in each consumer project. The build
 
 | ID | Level | Rule |
 |---|---|---|
-| `VSA0001` | Build | A module project or a plugin module project gets its references only from VSA.Sdk. A `VsaAppReference` of the app folder is accepted (temporary, see below). |
-| `VSA0002` | Build | `VsaPluginUses` is only in a plugin layer, and it names other plugin modules that have that layer. |
-| `VSA0003` | Build | A project in a `Features` or `Plugins` folder is in a root folder of the app root. |
-| `VSA0004` | Build | A module project is the root `<RootFolder>/<Module>/<Module>.csproj` or `<RootFolder>/<Module>/Projects/<Module>.<Layer>.csproj`. |
-| `VSA0005` | Build | The type of each slice file selects one project. See `slice-layout.md`. |
-| `VSA0006` | Build | No `Compile` item written by hand, no `.cs` file that no project compiles, and no `Slices/` in a plugin module. |
-| `VSA0007` | Build | A module project of a Unity app targets `netstandard2.1`, or sets `VsaUnityCopy` to false. |
-| `VSA0008` | Build | The .NET test project of a Unity app finds one app folder in `Assets/`, and no module source there uses `UnityEngine`. |
 | `VSA1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `VSA1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
 | `VSA1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
@@ -47,62 +38,31 @@ The editor and the build run the first group in each consumer project. The build
 | `VSA2102` | Architecture | Each type of the app is in a folder of a part. |
 | `VSA2103` | Architecture | A warning: a Unity project has no `Library/ScriptAssemblies/` folder, so the checks do not read the code that only Unity compiles. |
 
-`framework/Sdk/Sdk/VSA.Layers.targets` gives the project references of each layer, because VSA.Sdk cannot run C# before compile. Keep it the same as the VSA definition. No test compares the two.
+## Plugin modules
 
-## Temporary: `VsaAppReference`
+A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Core` is the base of each layer. The VSA definition gives its rules:
 
-This item is temporary. Issue [#89](https://github.com/MgCohen/vsa-template/issues/89) replaces it: the definition will give the references at build time, and `VsaAppReference` will go.
-
-A module project cannot reference a `VSA.*` package by hand (`VSA0001`). If a module of the app needs a VSA library that is not a layer base, declare it in a `Directory.Build.props` of the app folder:
-
-```xml
-<ItemGroup>
-  <VsaAppReference Include="VSA.Architecture.Data" Layer="Infrastructure" Path="Architecture/Data" />
-</ItemGroup>
-```
-
-| Metadata | Use |
+| Rule | Check |
 |---|---|
-| `Include` | The package ID. Package mode uses the version of VSA.Sdk. |
-| `Layer` | The layer that gets the reference in each module, as `VsaLayer` gives it, for example `Infrastructure` or `Handlers/Requests`. |
-| `Path` | Source mode only: the project folder under `framework/`. |
+| A plugin module uses no feature module | `VSA2001` |
+| The `Domain` of a plugin module uses no `Domain` of another plugin module | `VSA2001` |
+| A module root uses the plugin modules | `VSA2001` |
+| `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `VSA2001` |
+| The root class of a plugin inherits `Plugin` | `VSA1014`, and the host at startup |
 
-VSA.Sdk adds the reference with the framework references of that layer, so `VSA0001` accepts it.
+The project references do not enforce the layers. VSA.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
-## Root folders and plugin modules
-
-VSA.Sdk finds the module of a project from its folder in the app: `<root>/<RootFolder>/<Name>/`. The layer comes from the project name in `Projects/` (see `slice-layout.md`). The app root is the folder of `global.json` (property `VsaAppRoot`). The root folders are in `VsaRootFolders`: `Features` and `Plugins`. A project in another folder gets no rules. `Shared/` is not a root folder: the plugin modules were Shared modules in `Shared/` before, so move each one to `Plugins/`.
-
-A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Core` is the base of each layer:
-
-| From | Gets from VSA.Sdk |
-|---|---|
-| A module layer | The same layer of each plugin module. A module root gets each plugin root |
-| A module event handler (`Handlers/Events`) | Also the events (`Contracts/Events`) of each module and each plugin module |
-| A plugin event handler | Also the events of its own plugin module. The `Handlers/Events` of a plugin module in `<VsaPluginUses>` gives the events of that plugin module |
-| A module handler (`Handlers/*`) | Also the commands and the `Domain.Shared` of each module and plugin module, and the `Domain` and the `Infrastructure` of each plugin module |
-| A module contracts project (`Contracts/*`) | Also the `Domain.Shared` of each module and plugin module |
-| A module `Presenters` | Also the `Domain.Shared` of each module and plugin module |
-| A module `Domain.Shared` | No other module. A published domain does not depend on another module |
-| A presenter (`Presenters`) | The events of its own module only. A view that shows more than one module shows the presenter of each module |
-| A plugin layer | The same layer of each plugin module in `<VsaPluginUses>` (names, with `;`). `VSA0002` checks the names |
-| A plugin module | No project of a module |
-
-A plugin module uses another plugin module only if it names it. Two plugin modules that name each other are a cycle, and MSBuild stops the build. A project in a `Features` or `Plugins` folder out of the app root fails with `VSA0003`: set `VsaAppRoot` if the app is not in the folder of `global.json`.
-
-The VSA definition denies each use of a feature module by a plugin module (`VSA2001`). `ModuleRoot.IsPlugin` is true when the root class inherits `Plugin`. `VSA1014` makes the root class agree with the root folder at build time.
-
-The host finds the module roots and their layer projects from the types and the assembly names, with no build records:
+The host finds the module roots from the types, with no build records:
 
 | Fact | Source |
 |---|---|
-| Module root | An assembly with a public, top-level class that inherits `Module` or `Plugin` |
+| Module root | A public, top-level class that inherits `Module` or `Plugin` |
+| Module name | The last part of the namespace of the root class |
 | Plugin module | The root class inherits `Plugin` |
-| Layer projects | Each assembly named `<Module>.<Layer>` that loads, for each layer in `ModuleRoot.LayerNames` |
 
-A test project such as `Notes.Tests` is not a layer project, because `Tests` is not a layer name. A nested or internal class that inherits `Module`, for example in a test, does not make a module root.
+One assembly can have many modules. Two root classes in one module namespace stop startup. A nested or internal class that inherits `Module`, for example in a test, does not make a module root.
 
-The host configures the plugin modules first, then the other modules. In each group the order is by name, not by `VsaPluginUses`. The host gets the plugin roots through the module roots, so an app with no module does not load its plugin modules.
+The host configures the plugin modules first, then the other modules. In each group the order is by name. The host gets the plugin roots through the module roots, so an app with no module does not load its plugin modules.
 
 ## Analyzers: `VsaAnalyzer` and `VsaAnalyzerRule`
 
@@ -260,6 +220,6 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
-3. Else change the rules of the VSA definition (`framework/Architecture/Vsa/VsaDefinition.cs`). If the layers change, also change `VSA.Layers.targets`.
-4. Add tests. For a build rule (`VSA0xxx`), add a case to `tests/Rules.Tests/BuildRuleTests.cs`: it builds the built fixture `tests/Fixtures/Built/Shop` from the packed packages. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
+3. Else change the rules of the VSA definition (`framework/Architecture/Vsa/VsaDefinition.cs`).
+4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

@@ -7,12 +7,4 @@
     <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'framework'))</VsaFrameworkSourceDir>
     <VsaAppRoot>$(MSBuildThisFileDirectory)</VsaAppRoot>
   </PropertyGroup>
-  <!-- The step commands carry the definition. Only the Infrastructure layer gets the checker library (ArchUnitNET):
-       it is the adapter, and EngineDefinition allows no other layer to use it. -->
-  <ItemGroup>
-    <VsaAppReference Include="VSA.Architecture" Layer="Contracts/Commands" Path="Architecture/Definition" />
-    <VsaAppReference Include="VSA.Architecture" Layer="Handlers/Commands" Path="Architecture/Definition" />
-    <VsaAppReference Include="VSA.Architecture" Layer="Domain/Shared" Path="Architecture/Definition" />
-    <VsaAppReference Include="VSA.Architecture.Engine" Layer="Infrastructure" Path="Architecture/Engine" />
-  </ItemGroup>
 </Project>

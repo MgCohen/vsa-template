@@ -9,6 +9,7 @@ using Steps.Domain.Shared;
 using Tests.Shared;
 using VSA.Composition;
 using VSA.Contracts.Commands;
+using VSA.Module;
 
 namespace Engine.Tests;
 
@@ -17,6 +18,15 @@ public sealed class RunEngineTests {
     const string RulesSkipped =
         "vsa-engine: VSA3004: CheckRules skipped: App is missing, because an earlier step failed.";
     static readonly string Notes = Repo.Path("samples", "Notes");
+
+    [Test]
+    public void The_scan_finds_each_module_of_the_one_engine_assembly() {
+        var engine = typeof(StepsPlugin).Assembly;
+
+        var modules = AppScan.ModuleRoots().Where(root => root.Assembly == engine).Select(root => root.Name);
+
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Hello", "Report", "Rules" }));
+    }
 
     [Test]
     public async Task The_engine_finds_no_errors_in_Notes() {
