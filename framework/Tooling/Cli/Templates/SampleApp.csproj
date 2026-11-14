@@ -4,8 +4,8 @@
     <RootNamespace>App</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Host/VSA.Host.csproj" />
-    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Views/VSA.Views.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Host/VSA.Host.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Views/VSA.Views.csproj" />
   </ItemGroup>
   <Import Project="$(VsaSdkDir)Sdk.targets" />
 </Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Remove="Analyzers/**;Markers/**" />
+    <None Remove="Analyzers/**;Markers/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.ComponentModel.Annotations" />
+    <PackageReference Include="System.Reflection.Metadata" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Markers/VSA.Analyzers.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VSA.Module" />
+  </ItemGroup>
+</Project>

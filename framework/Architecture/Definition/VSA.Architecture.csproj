@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- The architecture definition API: layers, parts and rules. It has no test framework and no ArchUnitNET reference. -->
-  <ItemGroup>
-    <InternalsVisibleTo Include="VSA.Architecture.Engine" />
-    <InternalsVisibleTo Include="Viewer.Export" />
-  </ItemGroup>
-</Project>
