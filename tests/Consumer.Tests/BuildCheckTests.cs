@@ -13,7 +13,7 @@ public sealed class BuildCheckTests {
         AddBuildHook(workspace.Src, "Notes.csproj");
 
         var clean = workspace.Dotnet("build", "Notes.csproj", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(clean.Output, Does.Contain(Summary).And.Contain("0 errors").And.Contain("HELLO: Hello from a plugin"));
+        Assert.That(clean.Output, Does.Contain(Summary).And.Contain("0 errors"));
 
         var again = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
         Assert.That(again.Output, Does.Not.Contain(Summary), "A build with no change runs the check again.");

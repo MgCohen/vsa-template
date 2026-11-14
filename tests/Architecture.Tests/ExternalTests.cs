@@ -10,9 +10,9 @@ public record OtherLib : External {
     public override string Assembly => "OtherLib";
 }
 
-public record Group : Layer;
+public record Group : Concept;
 
-public record Child : Layer;
+public record Child : Concept;
 
 public sealed class InlineDefinition(Action<Root> define) : ArchitectureDefinition {
     protected override void Define(Root root) {

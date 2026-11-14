@@ -3,7 +3,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Core/Composition/VSA.Composition.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Composition/VSA.Composition.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Echo/Echo.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Arena/Arena.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Answers/Answers.csproj" />

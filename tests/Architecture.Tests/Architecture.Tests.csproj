@@ -5,8 +5,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Architecture/Engine/VSA.Architecture.Engine.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Architecture/Vsa/VSA.Architecture.Vsa.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Engine/Core/VSA.Architecture.Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Definition/VSA.Architecture.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 using VSA.Module;
+using VSA.Kernel;
 
 namespace SampleModule;
 
@@ -6,6 +7,6 @@ namespace SampleModule;
 // When Domain has an aggregate, register its IRepository here, for example:
 //   module.Services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();
 public sealed class SampleModuleModule : Module {
-    public override void Configure(ModuleBuilder module) {
+    public override void Configure(AnchorBuilder module) {
     }
 }
