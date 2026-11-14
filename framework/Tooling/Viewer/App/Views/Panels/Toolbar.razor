@@ -11,7 +11,7 @@
     <button class="@(Graph.Editing ? "on" : "")" @onclick="Graph.ToggleEditing">Edit: drag nodes, draw links</button>
     <button @onclick="Graph.ResetView">Reset view</button>
     <button @onclick="Graph.Discard">Discard changes</button>
-    <button @onclick="Graph.ExportChanges">Export changes</button>
+    <button @onclick="Graph.ExportDefinition">Export definition</button>
     <span class="changes">@Graph.RuleChangeCount rule changes, @Graph.LinkChangeCount what-if links</span>
 </div>
 

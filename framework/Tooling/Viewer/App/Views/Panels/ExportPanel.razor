@@ -3,17 +3,12 @@
 {
     <div class="export">
         <div class="bar">
-            <strong>changes.json</strong>
+            <strong>definition.json</strong>
             <button @onclick="() => Graph.Copy(export.Json)">Copy JSON</button>
-            <a class="download" download="changes.json" href="@DataUrl(export)">Download changes.json</a>
+            <a class="download" download="definition.json" href="@DataUrl(export)">Download definition.json</a>
             <button @onclick="Graph.CloseExport">Close</button>
         </div>
         <pre class="json">@export.Json</pre>
-        <div class="bar">
-            <strong>C# lines for Rules(Map)</strong>
-            <button @onclick="() => Graph.Copy(export.Code)">Copy C#</button>
-        </div>
-        <pre class="code">@export.Code</pre>
     </div>
 }
 

@@ -1,93 +1,74 @@
-using Viewer.Tests.Export;
-
-using System.Text.Json;
+using ArchitectureViewer.Domain.Shared;
+using ArchitectureViewer.Infrastructure;
 using Microsoft.Playwright;
+using Viewer.Tests.Export;
 
 namespace Viewer.Tests.Browser;
 
 [Category("Browser")]
 public sealed class ExportTests : ViewerPageTest
 {
-    private string[] expectedCode = [];
+    private string allowed = "";
+    private string denied = "";
 
     [Test]
-    public async Task Export_gives_typed_operations_and_the_CSharp_lines()
+    public async Task Export_gives_a_definition_file_with_the_changes()
     {
         await MakeChanges();
 
-        await Graph.Press("Export changes");
-        await Graph.Page.WaitForSelectorAsync(".export pre.code");
+        Definition edited = ArchitectureImport.Read(await ExportedJson());
 
-        using JsonDocument json = JsonDocument.Parse(await Graph.Page.TextContentAsync(".export pre.json") ?? "");
-        JsonElement changes = json.RootElement.GetProperty("changes");
-        JsonElement add = changes[2];
-        JsonElement[] whatIf = [.. json.RootElement.GetProperty("whatIf").EnumerateArray()];
-        Assert.That(changes.EnumerateArray().Select(c => c.GetProperty("op").GetString()),
-            Is.EqualTo(new[] { "RemoveRule", "ChangeAccess", "AddRule" }));
-        Assert.That(add.GetProperty("from").GetString(), Is.EqualTo("Presenters"));
-        Assert.That(add.GetProperty("to").GetString(), Is.EqualTo("Infrastructure"));
-        Assert.That(add.GetProperty("access").GetString(), Is.EqualTo("Uses"));
-        Assert.That(add.GetProperty("condition").GetProperty("kind").GetString(), Is.EqualTo("InSame"));
-        Assert.That(add.GetProperty("condition").GetProperty("layer").GetString(), Is.EqualTo("Feature"));
-        Assert.That(whatIf.Select(w => w.GetProperty("op").GetString()), Is.EqualTo(new[] { "AddLink" }));
-        Assert.That(await Code(), Is.EqualTo(expectedCode));
+        Assert.That(edited.Rules, Has.None.Matches<Rule>(r => Covers(r, allowed, Access.Allow)));
+        Assert.That(edited.Rules, Has.None.Matches<Rule>(r => Covers(r, denied, Access.Deny)));
+        Assert.That(edited.Rules, Has.Some.Matches<Rule>(r => Covers(r, denied, Access.Allow)));
+        Assert.That(edited.Rules, Has.Some.Matches<Rule>(r => r.Access == Access.Allow
+            && r.Froms.Any(f => f.Layer == "Presenters")
+            && r.Tos.Any(t => t.Layer == "Infrastructure" && t.Conditions.Contains(new Condition(Condition.InSame, "Feature")))));
     }
 
     [Test]
-    public async Task Copy_puts_the_CSharp_lines_on_the_clipboard()
+    public async Task Copy_puts_the_definition_file_on_the_clipboard()
     {
         await MakeChanges();
-        await Graph.Press("Export changes");
-        await Graph.Page.WaitForSelectorAsync(".export pre.code");
+        string json = await ExportedJson();
 
-        await Graph.Press("Copy C#");
+        await Graph.Press("Copy JSON");
         string copied = await Graph.Page.EvaluateAsync<string>("() => navigator.clipboard.readText()");
 
-        string lines = copied.Replace("\r\n", "\n", StringComparison.Ordinal);
-        Assert.That(lines, Is.EqualTo(string.Join('\n', expectedCode)));
+        Assert.That(copied.Replace("\r\n", "\n", StringComparison.Ordinal), Is.EqualTo(json.Replace("\r\n", "\n", StringComparison.Ordinal)));
     }
 
     [Test]
-    public async Task The_download_link_gives_changes_json()
+    public async Task The_download_link_gives_definition_json()
     {
         await MakeChanges();
-        await Graph.Press("Export changes");
-        await Graph.Page.WaitForSelectorAsync(".export pre.code");
+        await ExportedJson();
 
         IDownload download = await Graph.Page.RunAndWaitForDownloadAsync(() => Graph.Page.ClickAsync("a.download"));
 
-        Assert.That(download.SuggestedFilename, Is.EqualTo("changes.json"));
+        Assert.That(download.SuggestedFilename, Is.EqualTo("definition.json"));
     }
 
-    private static string From(string edge)
+    private static bool Covers(Rule rule, string edge, string access)
     {
-        return edge.Split(':')[1].Split('>')[0];
+        string from = edge.Split(':')[1].Split('>')[0];
+        string to = edge.Split('>')[1];
+        return rule.Access == access && rule.Froms.Any(f => f.Layer == from) && rule.Tos.Any(t => t.Layer == to);
     }
 
-    private static string To(string edge)
+    private async Task<string> ExportedJson()
     {
-        return edge.Split('>')[1];
-    }
-
-    private async Task<string[]> Code()
-    {
-        return (await Graph.Page.TextContentAsync(".export pre.code") ?? "").Split('\n');
+        await Graph.Press("Export definition");
+        await Graph.Page.WaitForSelectorAsync(".export pre.json");
+        return await Graph.Page.TextContentAsync(".export pre.json") ?? "";
     }
 
     private async Task MakeChanges()
     {
         await Graph.StartEditing();
-        await Graph.AddWhatIfLink();
         await Graph.ShowDefinition();
-        string allowed = await Graph.FirstReachable(NotesFacts.AllowedRules);
-        string denied = await Graph.FirstReachable(NotesFacts.DeniedRules);
-        expectedCode =
-        [
-            $"- map.For<{From(allowed)}>().Uses<{To(allowed)}>();",
-            $"- map.For<{From(denied)}>().Denies<{To(denied)}>();",
-            $"+ map.For<{From(denied)}>().Uses<{To(denied)}>();",
-            "+ map.For<Presenters>().Uses<Infrastructure>().InSame<Feature>();",
-        ];
+        allowed = await Graph.FirstReachable(NotesFacts.AllowedRules);
+        denied = await Graph.FirstReachable(NotesFacts.DeniedRules);
         await Graph.RemoveRule(allowed);
         await Graph.FlipRule(denied, "Allow");
         await Graph.AddConditionalRule();

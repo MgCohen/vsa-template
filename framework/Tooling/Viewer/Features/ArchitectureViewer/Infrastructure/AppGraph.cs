@@ -56,8 +56,8 @@ public sealed class AppGraph
     {
         int depth = Lineage(instance.Id).Count() - 1;
         string title = instance.Parent is null ? $"{file.App.Name} app"
-            : IsMany(instance) ? Last(instance.Path) : instance.Layer;
-        string kind = instance.Parent is null ? "App root" : IsMany(instance) ? instance.Layer : "Folder";
+            : instance.Many ? Last(instance.Path) : instance.Layer;
+        string kind = instance.Parent is null ? "App root" : instance.Many ? instance.Layer : "Folder";
         return new Group(instance.Id, instance.Parent, title, kind, instance.Path, depth, 0, 0, 0, 0);
     }
 
@@ -110,7 +110,7 @@ public sealed class AppGraph
         foreach (string id in Lineage(instance.Id).Skip(1))
         {
             InstanceData at = instances[id];
-            if (IsMany(at))
+            if (at.Many)
             {
                 return Last(at.Path);
             }
@@ -120,11 +120,6 @@ public sealed class AppGraph
             }
         }
         return Last(instance.Path);
-    }
-
-    private static bool IsMany(InstanceData instance)
-    {
-        return instance.Many;
     }
 
     private sealed record RowPlace(string Node, string Row);

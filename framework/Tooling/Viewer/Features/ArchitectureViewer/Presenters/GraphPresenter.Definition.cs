@@ -3,7 +3,7 @@ using ArchitectureViewer.Presenters.Items;
 using ArchitectureViewer.Slices.AddRule;
 using ArchitectureViewer.Slices.ChangeAccess;
 using ArchitectureViewer.Slices.CopyText;
-using ArchitectureViewer.Slices.ExportChanges;
+using ArchitectureViewer.Slices.ExportDefinition;
 using ArchitectureViewer.Slices.LoadDefinition;
 using ArchitectureViewer.Slices.RemoveRule;
 using VSA.Contracts;
@@ -97,12 +97,12 @@ public sealed partial class GraphPresenter
         }
     }
 
-    public async Task ExportChanges()
+    public async Task ExportDefinition()
     {
-        LayoutData app = Kind == GraphKind.App ? data : boards[GraphKind.App].Data;
-        ExportChangesRequest request = new(definition, ruleChanges, changes, app);
-        Result<ExportChangesResponse> exported = await Bus.Send(request);
-        Export = exported.IsSuccess ? new ExportText(exported.Value.Json, exported.Value.Code) : null;
+        ExportDefinitionRequest request = new(source, definition, ruleChanges);
+        Result<ExportDefinitionResponse> exported = await Bus.Send(request);
+        Message = exported.Error?.Message;
+        Export = exported.IsSuccess ? new ExportText(exported.Value.Json) : null;
         await Notify();
     }
 
@@ -159,7 +159,7 @@ public sealed partial class GraphPresenter
         data = changed;
         if (Export is not null)
         {
-            await ExportChanges();
+            await ExportDefinition();
         }
         await Show(shown);
     }

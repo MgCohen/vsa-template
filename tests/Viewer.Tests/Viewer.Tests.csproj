@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Tooling/Viewer/Viewer.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Testing/VSA.Testing.Unit.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
   </ItemGroup>
   <!-- The tests make the viewer input from samples/Notes with the export of the rule engine at the start of the run. These two
        projects only build: their assemblies stay out of the test output. -->
