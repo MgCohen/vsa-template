@@ -110,7 +110,7 @@ A relative path starts at the folder of the assembly of the definition class. `J
 | A definition from its file gives the same tree, pairs, report and findings | `DefinitionFileTests` checks four definitions and the bad fixture app |
 | The import gives a data-driven definition, and no tool writes C# | One model: the data. The tools transform data into the mapping |
 | `FolderAliases` stay in code | Only the Unity host needs them, and they do not change the rules |
-
-## Open questions
-
-- An app that uses a data-driven definition in its build check needs `--definition` in `VSA.Architecture.Build.targets`. Is an MSBuild property (for example `VsaDefinitionFile`) the correct form?
+| An exported file is output only. No build hook reads `definition.json` or `architecture.json` back | A second source of truth can become stale, and the build then passes on the file, not on the code |
+| `--definition <file>` is a manual engine option. `VSA.Architecture.Build.targets` does not use it | The loop and the tests use it. The build check uses the one definition of the app |
+| An app with a data definition has only that definition | If an app adopts a `definition.json` as its definition, its coded definition is removed. The file is committed, and a person owns it. A build never reads a coded definition and a file next to it |
+| A viewer export becomes the definition only when the user adopts it | No tool and no build step adopts a file automatically |
