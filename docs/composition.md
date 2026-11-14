@@ -263,7 +263,10 @@ Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
 Handlers/Requests/   RequestHandler, RequestHandlerInstaller
 Presenters/          PresenterInstaller
 Views/               ViewsRoot, ViewsInstaller
-Composition/         VsaBuilder, IVsaHost, GenericVsaHost, VsaArchitecture, InProcessBus
+Composition/         VsaApp, VsaBuilder, VsaArchitecture, InProcessBus
+  Hosts/             IVsaHost, GenericVsaHost
+  Hosts/Console/     ConsoleVsaHost, ConsoleEntry, ConsoleExit
+  Factories/         IFactory, AddFactory
 Host/                UseWebHost, WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
