@@ -20,9 +20,8 @@ csharp_new_line_before_finally = true
 # Each if, else, for, foreach, while, using and lock has braces.
 csharp_prefer_braces = true
 dotnet_diagnostic.IDE0011.severity = warning
-# File-scoped namespaces.
-csharp_style_namespace_declarations = file_scoped
-dotnet_diagnostic.IDE0161.severity = warning
+# Off by decision: block and file-scoped namespaces are both correct. Unity 6000.6 cannot find a MonoBehaviour in a file-scoped namespace.
+dotnet_diagnostic.IDE0161.severity = none
 # No two blank lines in a row.
 dotnet_style_allow_multiple_blank_lines_experimental = false
 dotnet_diagnostic.IDE2000.severity = warning

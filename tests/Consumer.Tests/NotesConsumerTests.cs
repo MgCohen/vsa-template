@@ -15,12 +15,12 @@ public sealed partial class NotesConsumerTests {
         using var workspace = Workspace.Create(Repo.Path("samples", "Notes"));
         UsePackages(workspace.Src);
 
-        workspace.Dotnet("build", "App/Host", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
-        var runtimeDependencies = File.ReadAllText(Path.Combine(workspace.Src, "App", "Host", "bin", "Release", "net10.0", "App.Host.deps.json"));
+        workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        var runtimeDependencies = File.ReadAllText(Path.Combine(workspace.Src, "bin", "Release", "net10.0", "Notes.deps.json"));
         Assert.That(runtimeDependencies, Does.Contain("VSA.Architecture.Vsa").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
 
         var url = $"http://127.0.0.1:{FreePort()}";
-        using var app = workspace.Start("run", "--project", "App/Host", "-c", "Release", "--no-build", "--no-launch-profile", "--urls", url);
+        using var app = workspace.Start("run", "--project", "Notes.csproj", "-c", "Release", "--no-build", "--no-launch-profile", "--urls", url);
         var output = new StringBuilder();
         app.OutputDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };
         app.ErrorDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };
@@ -44,11 +44,15 @@ public sealed partial class NotesConsumerTests {
     }
 
     // Changes the projects from the source mode of this repository to the consumer form.
-    // A module project becomes <Project Sdk="VSA.Sdk">. A reference to a framework project becomes a package reference.
-    static void UsePackages(string root) {
+    // A project becomes <Project Sdk="VSA.Sdk">, or gets <Sdk Name="VSA.Sdk" /> after another SDK (the web root project).
+    // A reference to a framework project becomes a package reference.
+    internal static void UsePackages(string root) {
         foreach (var file in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)) {
             var text = File.ReadAllText(file);
-            if (text.Contains("VSA.Sdk.Dev.props")) {
+            if (text.Contains("VSA.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
+                text = DevImport().Replace(text, "");
+                text = text.Insert(text.IndexOf('>') + 1, "\n  <Sdk Name=\"VSA.Sdk\" />");
+            } else if (text.Contains("VSA.Sdk.Dev.props")) {
                 text = DevImport().Replace(text, "");
                 text = text.Replace("<Project>", "<Project Sdk=\"VSA.Sdk\">");
                 text = EmptyProject().Replace(text, "<Project Sdk=\"VSA.Sdk\" />");

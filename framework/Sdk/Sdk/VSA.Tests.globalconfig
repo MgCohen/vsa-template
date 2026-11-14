@@ -1,0 +1,6 @@
+# The built-in .NET rules that do not apply to a project whose name ends with ".Tests".
+is_global = true
+global_level = 0
+
+# Off by decision. CA1707: a test name has underscores, for example Build_passes.
+dotnet_diagnostic.CA1707.severity = none

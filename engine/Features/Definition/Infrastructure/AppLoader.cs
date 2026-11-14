@@ -1,0 +1,102 @@
+using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Runtime.Loader;
+using VSA.Architecture;
+
+namespace Definition.Infrastructure;
+
+public sealed class AppLoader : AssemblyLoadContext {
+    static readonly HashSet<string> Shared = SharedClosure(typeof(ArchitectureDefinition).Assembly);
+    readonly string bin;
+    readonly AssemblyDependencyResolver? resolver;
+
+    public AppLoader(string bin) : base("vsa-app", isCollectible: false) {
+        this.bin = bin;
+        var main = Directory.GetFiles(bin, "*.deps.json")
+            .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))
+            .FirstOrDefault(File.Exists);
+        resolver = main is null ? null : new AssemblyDependencyResolver(main);
+    }
+
+    public List<string> VersionMismatches() {
+        var mismatches = new List<string>();
+        foreach (var name in Shared.Order(StringComparer.Ordinal)) {
+            var dll = Path.Combine(bin, name + ".dll");
+            var engineCopy = Path.Combine(AppContext.BaseDirectory, name + ".dll");
+            if (!File.Exists(dll) || !File.Exists(engineCopy)) {
+                continue;
+            }
+            var app = PackageVersion(dll);
+            var engine = PackageVersion(engineCopy);
+            if (app != engine) {
+                mismatches.Add($"the app uses {name} {app}, the engine uses {engine}");
+            }
+        }
+        return mismatches;
+    }
+
+    public List<Assembly> AppAssemblies(string appRoot, IReadOnlyList<string> skip) {
+        var prefix = Path.TrimEndingDirectorySeparator(appRoot) + Path.DirectorySeparatorChar;
+        return [.. Directory.GetFiles(bin, "*.dll")
+            .Where(dll => !Shared.Contains(Path.GetFileNameWithoutExtension(dll)))
+            .Where(dll => !skip.Contains(Path.GetFileNameWithoutExtension(dll), StringComparer.OrdinalIgnoreCase))
+            .Where(dll => HasSourceUnder(dll, prefix))
+            .Select(LoadFromAssemblyPath)];
+    }
+
+    public IEnumerable<Assembly> ExternalAssemblies(IReadOnlyList<string> names) =>
+        Directory.GetFiles(bin, "*.dll")
+            .Select(dll => Path.GetFileNameWithoutExtension(dll))
+            .Where(name => !Shared.Contains(name) && names.Any(e => name == e || name.StartsWith(e + ".", StringComparison.Ordinal)))
+            .Select(name => LoadFromAssemblyName(new AssemblyName(name)));
+
+    protected override Assembly? Load(AssemblyName assemblyName) {
+        if (Shared.Contains(assemblyName.Name!)) {
+            return null;
+        }
+        var path = resolver?.ResolveAssemblyToPath(assemblyName);
+        if (path is null) {
+            var local = Path.Combine(bin, assemblyName.Name + ".dll");
+            path = File.Exists(local) ? local : null;
+        }
+        return path is null ? null : LoadFromAssemblyPath(path);
+    }
+
+    static HashSet<string> SharedClosure(Assembly root) {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { root.GetName().Name! };
+        foreach (var reference in root.GetReferencedAssemblies().Where(r => !IsFramework(r.Name!))) {
+            names.UnionWith(SharedClosure(Assembly.Load(reference)));
+        }
+        return names;
+    }
+
+    static bool IsFramework(string name) =>
+        name is "netstandard" or "mscorlib"
+        || name.StartsWith("System", StringComparison.Ordinal)
+        || name.StartsWith("Microsoft.", StringComparison.Ordinal);
+
+    static string PackageVersion(string dll) {
+        var version = FileVersionInfo.GetVersionInfo(dll).ProductVersion ?? "";
+        var plus = version.IndexOf('+', StringComparison.Ordinal);
+        return plus < 0 ? version : version[..plus];
+    }
+
+    static bool HasSourceUnder(string dll, string prefix) {
+        var pdb = Path.ChangeExtension(dll, ".pdb");
+        if (!File.Exists(pdb)) {
+            return false;
+        }
+        try {
+            using var stream = File.OpenRead(pdb);
+            using var provider = MetadataReaderProvider.FromPortablePdbStream(stream);
+            var reader = provider.GetMetadataReader();
+            return reader.Documents
+                .Select(handle => reader.GetString(reader.GetDocument(handle).Name))
+                .Where(Path.IsPathRooted)
+                .Any(file => Path.GetFullPath(file).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        } catch (Exception e) when (e is BadImageFormatException or IOException) {
+            return false;
+        }
+    }
+}

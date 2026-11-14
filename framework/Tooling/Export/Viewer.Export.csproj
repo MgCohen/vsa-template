@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The viewer input: it loads an app with the architecture engine and writes architecture.json (docs/viewer.md). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A VSA app can use ASP.NET Core, so the export loads its assemblies with that shared framework. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../Architecture/Engine/VSA.Architecture.Engine.csproj" />
+  </ItemGroup>
+</Project>

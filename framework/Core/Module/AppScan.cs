@@ -8,8 +8,7 @@ public static class AppScan {
     public static IReadOnlyList<Module> Modules() => [.. ModuleRoots().Select(root => root.CreateModule())];
 
     public static IReadOnlyList<ModuleRoot> ModuleRoots() => [.. AssembliesThatReference(typeof(Module).Assembly)
-        .Where(ModuleRoot.IsRoot)
-        .Select(ModuleRoot.Of)
+        .SelectMany(ModuleRoot.In)
         .OrderBy(root => !root.IsPlugin)
         .ThenBy(root => root.Name, StringComparer.Ordinal)];
 

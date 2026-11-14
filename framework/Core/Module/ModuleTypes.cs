@@ -56,8 +56,5 @@ public sealed class ModuleTypes(IReadOnlyList<Module> modules, IKeySource keys) 
         .SelectMany(assembly => assembly.GetTypes())
         .Where(t => !t.IsDefined(typeof(CompilerGeneratedAttribute)))];
 
-    Assembly[] Assemblies() => assemblies ??= [.. modules
-        .Select(ModuleRoot.Of)
-        .SelectMany(root => root.Layers.Select(Assembly.Load).Prepend(root.Assembly))
-        .Distinct()];
+    Assembly[] Assemblies() => assemblies ??= [.. modules.Select(module => module.GetType().Assembly).Distinct()];
 }

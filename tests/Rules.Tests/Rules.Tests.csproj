@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the build rules of VSA.Sdk and the unit test base.
+  <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the formatting build of VSA.Sdk and the unit test base.
        The architecture engine has its own tests in tests/Architecture.Tests. NUnit comes from tests/Directory.Build.props. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
@@ -10,8 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Analyzers/VSA.Analyzers.csproj" />
-    <!-- The slice router of VSA.Sdk (SliceRouterTests). -->
-    <ProjectReference Include="$(RepoRoot)framework/Sdk/Tasks/VSA.Sdk.Tasks.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
     <!-- The analyzer tests compile code against these assemblies. -->
     <ProjectReference Include="$(RepoRoot)framework/Core/Handlers/Events/VSA.Handlers.Events.csproj" />
