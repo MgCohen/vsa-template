@@ -1,28 +1,47 @@
 # Architecture data
 
-`definition.json` holds an architecture definition as data: options, part tree and rules. `JsonDefinition` loads it as a working `ArchitectureDefinition`, and the engine app exports it from a C# definition. `architecture.json` holds the resolved app (level 2) for the viewer. Both models are in `VSA.Architecture.Data` (`framework/Engine/Data/`), and no tool owns them.
+`definition.json` holds an architecture definition as data: options, part tree and rules. `JsonDefinition` loads it as a working `ArchitectureDefinition`. `architecture.json` holds the resolved app (level 2) for the viewer. Both models are in `VSA.Architecture.Data` (`framework/Engine/Data/`), and no tool owns them. The engine and the viewer use the same library to export, edit and import, so each operation has one implementation.
+
+## The loop
 
 ```mermaid
 flowchart LR
     C[C# definition] --> X[engine --export]
     X --> D[definition.json]
-    D --> J[JsonDefinition]
-    J --> R[Resolve: level 1]
-    J --> E[engine checks: level 2]
-    E --> A[architecture.json]
-    A --> V[viewer]
+    X --> A[architecture.json]
+    D --> V[viewer]
+    A --> V
+    V -- Export definition --> D2[definition.json, edited]
+    D2 -- Import --> V
+    D2 --> K[engine --definition]
+    K --> F[findings]
+```
+
+1. The engine exports the coded definition: `--export <folder>` writes `definition.json` and `architecture.json`.
+2. The viewer shows both files. You edit the rules in the Definition view.
+3. "Export definition" writes a new `definition.json` with the edits.
+4. The engine checks the app with that file: `--definition <file>`.
+5. The viewer can import the new file and edit it again.
+
+An import always gives a data-driven definition. No tool parses or writes C# code. If you change a coded definition in the viewer, the result is a new `definition.json`, not a change to the code.
+
+```bash
+dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --export out
+dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --definition out/definition.json
 ```
 
 ## Parts
 
 | Part | Path | Contains |
 |---|---|---|
-| Definition model | `framework/Engine/Data/` | `DefinitionFile`, `DefinitionJson`, `DefinitionExport`, `JsonDefinition` |
+| Definition model | `framework/Engine/Data/` | `DefinitionFile`, `DefinitionJson`, `DefinitionExport`, `JsonDefinition`, `DefinitionRules` |
+| Definition edits | `framework/Engine/Data/` | `DefinitionEdit.Apply(file, edits)` with `RuleEdit` (`Add`, `Remove`, `ChangeVerb`) |
 | App model | `framework/Engine/Data/` | `ArchitectureFile`, `ArchitectureJson` |
-| Export step | `engine/Features/Export/` | `ExportDefinition`: `--export <file>` writes `definition.json` |
-| App export | `framework/Engine/Core/Export/` | `ArchitectureExport.Of(map, name, root)` gives an `ArchitectureFile` |
-| Viewer import | `framework/Tooling/Viewer/` | `ArchitectureImport` reads `definition.json` with `JsonDefinition` and `DefinitionRules` |
-| Tests | `tests/Architecture.Tests/` | `DefinitionFileTests`, `DataConceptTests`, `ExportTests` |
+| App export | `framework/Engine/Core/Export/` | `ArchitectureExport.Of(map, name)` gives an `ArchitectureFile` |
+| Export step | `engine/Features/Export/` | `ExportFiles`: `--export <folder>` writes the two files |
+| Definition file input | `engine/Features/Definition/` | `LoadDefinition`: `--definition <file>` uses `JsonDefinition` |
+| Viewer import and export | `framework/Tooling/Viewer/` | `ArchitectureImport` reads `definition.json`. `DefinitionChanges` gives the edits to `DefinitionEdit` |
+| Tests | `tests/Architecture.Tests/`, `tests/Engine.Tests/`, `tests/Viewer.Tests/Export/` | `DefinitionFileTests`, `DataConceptTests`, `ExportTests`, `RunEngineTests`, `LoopTests` |
 
 ## definition.json
 
@@ -47,10 +66,26 @@ flowchart LR
 - The concepts give their own rules (`Concept.Rules`) from code, so the file does not hold them.
 - `DefinitionJson.Schema()` gives the JSON schema. It lists the closed values: `FilterKind`, `RuleVerb`, `Depth`, `Access`, `Boundary`, `Permission`.
 
+## Edits
+
+`DefinitionEdit.Apply` finds a rule by its text and a term by its concept name, for example `Presenters`.
+
+| Edit | Result |
+|---|---|
+| `Remove` of one pair of a rule | The rule is split into the rules that keep the other pairs. Each term keeps its depth, access and filters |
+| `ChangeVerb` of one pair | The pair is removed from its rule, and a new rule gives the pair with the other verb |
+| `Add` | A new rule at the end, with the filters of each term |
+
+A rule of a concept comes from code, so an edit of it fails with a message. A concept name that is not in the file also fails.
+
+## architecture.json
+
+`architecture.json` (version 4) has only the app: instances, types, uses, dependencies and findings. A use names its rule by its text. An instance has `many`: true if its part is a group. The definition is only in `definition.json`.
+
 ## JsonDefinition
 
 ```csharp
-public sealed class NotesDefinition() : JsonDefinition("definition.json");
+var definition = new JsonDefinition("definition.json");
 ```
 
 A relative path starts at the folder of the assembly of the definition class. `JsonDefinition` reads the file one time.
@@ -59,16 +94,23 @@ A relative path starts at the folder of the assembly of the definition class. `J
 
 `DataConcept(Concept Inner, ConceptData Data)` wraps a code concept. It uses the `folder`, `groupFolder`, `depth` and `access` of `Data` if they are set, else the values of `Inner`. `Concept.Identity` gives the type of `Inner`, so the rules of `Inner` match the wrapper.
 
+## Unity
+
+`VSA.Architecture.Data` also targets `netstandard2.1`. Unity 6000.6 ships `System.Text.Json` 8, so that target uses the 8.0 package. Two features need version 9 or later, so they are only in the `net10.0` target:
+
+- `DefinitionJson.Schema()` and `ArchitectureJson.Schema()`.
+- The strict read: a missing field or a null in a non-null field fails the read.
+
 ## Rules
 
 | Rule | Reason |
 |---|---|
-| The reader fails on a missing field (`RespectRequiredConstructorParameters`) | A drift between the export and a reader fails the tests |
+| The reader fails on a missing field (`RespectRequiredConstructorParameters`, `net10.0`) | A drift between the export and a reader fails the tests |
 | The writer writes each field, also a null field | The reader needs each field |
 | A definition from its file gives the same tree, pairs, report and findings | `DefinitionFileTests` checks four definitions and the bad fixture app |
+| The import gives a data-driven definition, and no tool writes C# | One model: the data. The tools transform data into the mapping |
+| `FolderAliases` stay in code | Only the Unity host needs them, and they do not change the rules |
 
 ## Open questions
 
-- `FolderAliases` (Unity): in the file, or in code only?
-- The data project targets `net10.0`, because the schema needs `System.Text.Json` 9. Must `JsonDefinition` run in Unity (`netstandard2.1`)?
-- The viewer edits and adds data in `definition.json`. This comes after viewer v1.
+- An app that uses a data-driven definition in its build check needs `--definition` in `VSA.Architecture.Build.targets`. Is an MSBuild property (for example `VsaDefinitionFile`) the correct form?

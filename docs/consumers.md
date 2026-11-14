@@ -90,7 +90,7 @@ The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`).
 
 ### Rules for the netstandard2.1 target
 
-- Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`).
+- Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`). Unity 6000.6 also ships `System.Text.Json` 8.0, so VSA.Architecture.Data uses the 8.0 package for that target.
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AnchorScan` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app calls `new MyApp().Run(args)` through the Unity host, or `new ServiceCollection().AddVsa(args)` with no host (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies, because VSA.Composition references them.

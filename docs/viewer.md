@@ -11,7 +11,7 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 | Views | `App/Views/` | Pages, panels, graph and shape components |
 | Host | `App/Host/` | `ViewerApp` (selects `WebVsaHost`), `ViewerDefinition` (the app rules) and the fixed `Program.cs` line |
 | Static files | `wwwroot/` | `app.css`, elkjs and its interop script |
-| Default input | `Data/` | `definition.json` and `architecture.json` of `samples/Notes`, made by `Architecture.Export` (`framework/Tooling/Export/`) |
+| Default input | `Data/` | `definition.json` and `architecture.json` of `samples/Notes`, made by the engine export (`--export`) |
 | Licenses | `THIRD-PARTY-NOTICES.md`, `LICENSE-EPL-2.0.md` | Z.Blazor.Diagrams (MIT), elkjs 0.9.3 (EPL-2.0) |
 | Tests | `tests/Viewer.Tests/` | Unit and browser tests |
 
@@ -29,7 +29,7 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 
 ```mermaid
 flowchart LR
-    A[App output folder] --> X[Architecture.Export]
+    A[App output folder] --> X[engine --export]
     X --> D[architecture.json]
     X --> F[definition.json]
     D --> M[ArchitectureViewerModule]
@@ -46,23 +46,28 @@ flowchart LR
 ## Make the export
 
 1. Build the app, for example `dotnet build samples/Notes`.
-2. Run `dotnet run --project framework/Tooling/Export -- samples/Notes/bin/Debug/net10.0 samples/Notes out/architecture.json`. The tool also writes `out/definition.json`.
+2. Run `dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --export out`. The engine writes `out/definition.json` and `out/architecture.json`.
 3. Start the viewer with `--Viewer:Architecture out/architecture.json`.
-
-The arguments are the app output folder, the app root and the output file. The export loads the app with `ArchitectureMap.Load`, which finds the definition in the app output.
 
 ## Export shape
 
+`definition.json` is described in `architecture-data.md`. `architecture.json` (version 4) has one section:
+
 | Section | Fields |
 |---|---|
-| `definition` | `name`, `unlisted`, `own`, `parts`, `rules`, `pairs` |
-| `definition.parts[]` | `id`, `layer`, `parent`, `path`, `many`, `hasFolder`, `ofType` |
-| `definition.rules[]` | `id`, `text`, `source`, `access`, `pairs`, `from[]`, `to[]` |
-| `definition.rules[].from[]`, `to[]` | `layer`, `reach`, `access`, `filters[]` (`kind`, `layer`) |
-| `definition.pairs[]` | `from`, `to`, `condition`, `access`, `rule`, `order`, `memberAccess` |
-| `app` | `name`, `root`, `instances`, `types`, `dependencies`, `findings` |
+| `app` | `name`, `instances`, `types`, `dependencies`, `findings` |
+| `app.instances[]` | `id`, `layer`, `many`, `parent`, `path`, `items` |
+| `app.dependencies[].uses[]` | `from`, `to`, `access`, `rule` (the text of the rule, or null) |
 
-Version 2 adds the rule terms (`from`, `to`) and `memberAccess`. The text of a rule stays for display. The import reads the terms, not the text, because the text now has access options such as `Domain(Internal)`.
+## Edit and export the definition
+
+1. Open the Definition view.
+2. Remove a rule, flip a rule between allow and deny, or draw a new rule.
+3. Push "Export definition". The panel shows the new `definition.json`, with "Copy JSON" and "Download definition.json".
+4. To edit it again, import the file with "Import definition.json".
+5. To check the app with it, run the engine with `--definition <file>`.
+
+The export applies the edits to the loaded `definition.json` with `DefinitionEdit` (`VSA.Architecture.Data`). The export is always a data-driven definition: the viewer does not write C# code. The what-if links of the App view are not in the export.
 
 ## Run the viewer
 
@@ -74,10 +79,10 @@ Version 2 adds the rule terms (`from`, `to`) and `memberAccess`. The text of a r
 | Kind | Tests | Needs |
 |---|---|---|
 | Unit | `SelectItemTests` (2) | Nothing |
-| Export | `ExportImportTests` (4): the export of `samples/Notes` goes into the import | `samples/Notes` builds |
+| Export | `ExportImportTests` (4): the export of `samples/Notes` goes into the import. `LoopTests` (3): an edited definition goes through the engine and back into the import | `samples/Notes` and the engine build |
 | Browser | 23 tests in category `Browser` | Playwright Chromium (the tests install it on the first run, about 150 MB) |
 
-At the start of the run, `NotesExport` runs `Architecture.Export` on the output of `samples/Notes` and writes a temporary `architecture.json` and `definition.json`. The test project builds `Architecture.Export` and `samples/Notes` with `ReferenceOutputAssembly="false"`, so their assemblies stay out of the test output.
+At the start of the run, `NotesExport` runs the engine with `--export` on the output of `samples/Notes` and writes a temporary `architecture.json` and `definition.json`. The test project builds the engine and `samples/Notes` with `ReferenceOutputAssembly="false"`, so their assemblies stay out of the test output.
 
 The browser tests start `Viewer.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development` and `--Viewer:Architecture` set to that file. At the start of the run, `ViewerSetup` installs the Playwright Chromium if it is missing, and starts it one time. Each test opens a new browser context and page, so each test has a new Blazor circuit and new presenter state.
 
@@ -101,7 +106,7 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 | One root project `Viewer.csproj`, assembly name `Viewer` | Each app has one root project (main). The name is not `App`, so `VSA.slnx` has no name twice |
 | Default input in `Data/`, copied to the host output | The viewer starts with no setting. `vsa view` (next PR) gives the setting |
 | No `layout.json` | The viewer runs ELK on load for the App view, as it does for the Definition view |
-| `Architecture.Export` is a separate executable | It loads the assemblies of the app. The viewer and the app cannot load in one process |
+| The engine exports the files, not the viewer | The engine loads the assemblies of the app. The viewer and the app cannot load in one process. One export for each tool |
 | `ViewerDefinition` gives two app rules: Infrastructure and Host may use the `Core` part itself (`Depth.Self`) | `VSA.Architecture.Data` binds to `Core`. The app class names layer types, which are in `Core`. Both rules are temporary (issue #89) |
 | The viewer reads the file with `VSA.Architecture.Data` | One model for each tool. The root project references it |
 | The import fails on a missing field (`RespectRequiredConstructorParameters`) | A drift between the export and the import fails the tests |
@@ -117,7 +122,7 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 | Item | Content |
 |---|---|
 | `VSA.Viewer` package and `vsa view` | Ship the viewer. `vsa view` runs the engine export, then starts the viewer on it |
-| `vsa apply` | Write `changes.json` into the definition |
+| Export of what-if links | The App view links are not in `definition.json` |
 | Folding | Fold groups for large apps |
 
 ## Known limits
