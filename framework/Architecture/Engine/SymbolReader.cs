@@ -7,6 +7,9 @@ namespace VSA.Architecture.Engine;
 sealed class SymbolReader : IDisposable {
     static readonly Guid TypeDefinitionDocuments = new("932E74BC-DBA9-4478-8D46-0F32A7BAB3D3");
     static readonly string[] GeneratedFolders = ["obj", "bin"];
+    const string EmbeddedAttribute = "Microsoft.CodeAnalysis.EmbeddedAttribute";
+    const int OutputFolders = 2;
+    const int GeneratorFolders = 2;
     static readonly char[] Separators = ['/', Path.DirectorySeparatorChar];
 
     readonly PEReader image;
@@ -24,7 +27,7 @@ sealed class SymbolReader : IDisposable {
     public IReadOnlyList<string> Documents() => [.. pdb.Documents.Select(DocumentName)];
 
     public IEnumerable<TypeSource> TypeSources() {
-        foreach (var handle in metadata.TypeDefinitions) {
+        foreach (var handle in metadata.TypeDefinitions.Where(h => !IsEmbedded(h))) {
             if (Find(handle) is { } source) {
                 yield return new TypeSource(FullName(handle), source);
             }
@@ -34,6 +37,25 @@ sealed class SymbolReader : IDisposable {
     public void Dispose() {
         symbols.Dispose();
         image.Dispose();
+    }
+
+    bool IsEmbedded(TypeDefinitionHandle handle) =>
+        metadata.GetTypeDefinition(handle).GetCustomAttributes()
+            .Select(a => AttributeTypeName(metadata.GetCustomAttribute(a)))
+            .Any(name => name == EmbeddedAttribute);
+
+    string? AttributeTypeName(CustomAttribute attribute) => attribute.Constructor.Kind switch {
+        HandleKind.MethodDefinition => FullName(metadata.GetMethodDefinition((MethodDefinitionHandle)attribute.Constructor).GetDeclaringType()),
+        HandleKind.MemberReference => ReferenceName(metadata.GetMemberReference((MemberReferenceHandle)attribute.Constructor).Parent),
+        _ => null,
+    };
+
+    string? ReferenceName(EntityHandle parent) {
+        if (parent.Kind != HandleKind.TypeReference) {
+            return null;
+        }
+        var type = metadata.GetTypeReference((TypeReferenceHandle)parent);
+        return $"{metadata.GetString(type.Namespace)}.{metadata.GetString(type.Name)}";
     }
 
     string FullName(TypeDefinitionHandle handle) {
@@ -102,7 +124,13 @@ sealed class SymbolReader : IDisposable {
             return source;
         }
         var segments = source.File.Split(Separators);
-        var project = string.Join("/", segments.TakeWhile(segment => !GeneratedFolders.Contains(segment, StringComparer.OrdinalIgnoreCase)));
-        return new Source($"{project}/{segments[^1]}", 1);
+        var output = Array.FindIndex(segments, segment => GeneratedFolders.Contains(segment, StringComparer.OrdinalIgnoreCase));
+        var project = string.Join("/", segments[..output]);
+        return new Source($"{project}/{string.Join("/", HintPath(segments[(output + 1)..]))}", 1);
+    }
+
+    static string[] HintPath(string[] underOutput) {
+        var generated = underOutput.Length > OutputFolders ? underOutput[OutputFolders..] : underOutput[^1..];
+        return generated.Length > GeneratorFolders + 1 ? generated[GeneratorFolders..] : generated[^1..];
     }
 }
