@@ -19,7 +19,7 @@ public sealed class ExportTests {
         var options = FixtureApps.Bad.Definition.Options;
 
         Assert.That(Bad.Value.Definition.Options, Is.EqualTo(new OptionsData(options.DefaultPermission.ToString(),
-            options.Boundary.ToString(), options.UseSameLayer, options.Depth.ToString(), options.Access.ToString())));
+            options.Boundary.ToString(), options.UseSameConcept, options.Depth.ToString(), options.Access.ToString())));
     }
 
     [Test]

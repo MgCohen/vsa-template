@@ -8,6 +8,6 @@
   <ItemGroup>
     <!-- A VSA app can use ASP.NET Core, so the export loads its assemblies with that shared framework. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../../Architecture/Engine/VSA.Architecture.Engine.csproj" />
+    <ProjectReference Include="../../Engine/Core/VSA.Architecture.Engine.csproj" />
   </ItemGroup>
 </Project>

@@ -16,19 +16,20 @@ flowchart LR
 
 | Project | Path | Contains |
 |---|---|---|
-| `VSA.Architecture` | `framework/Architecture/Definition/` | The definition API. No ArchUnitNET |
-| `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | The core: load, bind, decide, check |
-| `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
+| `VSA.Architecture` | `framework/Engine/Definition/` | The definition API. No ArchUnitNET |
+| `VSA.Architecture.Engine` | `framework/Engine/Core/` | The core: load, bind, decide, check |
+| `VSA.Architecture.Vsa` | `framework/Architectures/Vsa/Definition/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
 | Engine app | `engine/` | The runner: Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
-The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TDefinition>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app references `VSA.Architecture` through `VSA.Composition` (`VsaApp<TDefinition>`), and VSA.Sdk gives each project `VSA.Architecture.Vsa`. So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
-A layer is a record. A definition adds the layers to a tree in `Define`, and gives the rules in `Rules`.
+A concept is a record that inherits `Concept`. A definition adds the concepts to a tree in `Define`, and gives the rules in `Rules`. VSA calls its concepts layers: each VSA layer inherits `Layer : Concept`. An `Anchor` is the concept of the root part of a group instance: it is in the folder of its parent, as the VSA `Module` is the root of each feature.
 
 ```csharp
 public record Feature : Layer { public override string GroupFolder => "Features"; }
+public record Module : Anchor;
 public record Core : External { public override string Assembly => "VSA"; }
 
 public class VsaDefinition : ArchitectureDefinition {
@@ -57,9 +58,9 @@ public class VsaDefinition : ArchitectureDefinition {
 | `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameLayer`, `Depth` and `Access`.
+`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth` and `Access`.
 
-`options.UseSameLayer = true` lets each part use each part of the same layer, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
+`options.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
@@ -98,7 +99,7 @@ The definition stops at these errors:
 `Depth.Self` gives the part only. `Depth.WithChildren` gives the part and all its child parts. The first value that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Contracts>(Depth.WithChildren)`.
-2. The layer body, for example `options.Depth = Depth.Self` in `Configure(LayerOptions)` of the layer.
+2. The layer body, for example `options.Depth = Depth.Self` in `Configure(ConceptOptions)` of the layer.
 3. `options.Depth`.
 
 ## Permission and access
@@ -131,7 +132,7 @@ An interface of the app or of .NET is not of an `External` part, so it counts. F
 The first access that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.
-2. The layer body, for example `options.Access = Access.Private` in `Configure(LayerOptions)` of the layer.
+2. The layer body, for example `options.Access = Access.Private` in `Configure(ConceptOptions)` of the layer.
 3. `options.Access`. Its default is `Access.Public`, so a rule with no access allows use and exposure.
 
 ## Binding

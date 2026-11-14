@@ -1,15 +1,16 @@
 <Project>
   <!-- The VSA analyzer rules about any code (the format) also check the framework and its tests.
        VsaFrameworkCode turns off the rules about module code, for example the layers. A VSA.Sdk project gets the analyzer from VSA.Sdk.
-       VSA.Analyzers cannot check itself, and Rules.Tests references it as a library. -->
+       The rules about any code are in VSA.Kernel.Analyzers. The two analyzer projects do not check themselves,
+       and Rules.Tests references them as libraries. -->
   <PropertyGroup Condition="'$(UsingVsaSdk)' != 'true'">
     <VsaFrameworkCode>true</VsaFrameworkCode>
   </PropertyGroup>
   <ItemGroup Condition="'$(UsingVsaSdk)' != 'true'">
     <CompilerVisibleProperty Include="VsaFrameworkCode" />
   </ItemGroup>
-  <ItemGroup Condition="'$(UsingVsaSdk)' != 'true' and '$(MSBuildProjectName)' != 'VSA.Analyzers' and '$(MSBuildProjectName)' != 'Rules.Tests'">
-    <ProjectReference Include="$(MSBuildThisFileDirectory)framework/Analyzers/VSA.Analyzers.csproj"
+  <ItemGroup Condition="'$(UsingVsaSdk)' != 'true' and '$(MSBuildProjectName)' != 'VSA.Analyzers' and '$(MSBuildProjectName)' != 'VSA.Kernel.Analyzers' and '$(MSBuildProjectName)' != 'Rules.Tests'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/VSA.Kernel.Analyzers.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The base of the unit tests: send a request or a command to its handler, with default fakes for the framework services and NSubstitute mocks for other services. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Handlers/Requests/VSA.Handlers.Requests.csproj" />
+    <ProjectReference Include="../Infrastructure/VSA.Infrastructure.csproj" />
+    <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" />
+    <ProjectReference Include="../Handlers/Commands/VSA.Handlers.Commands.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="NUnit" />
+  </ItemGroup>
+</Project>

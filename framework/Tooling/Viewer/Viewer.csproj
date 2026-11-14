@@ -9,10 +9,10 @@
     <Content Update="Data/*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Host/VSA.Host.csproj" />
-    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Views/VSA.Views.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Host/VSA.Host.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Views/VSA.Views.csproj" />
     <!-- The viewer reads architecture.json with the shared model (docs/architecture-data.md). -->
-    <ProjectReference Include="$(VsaFrameworkSourceDir)Architecture/Data/VSA.Architecture.Data.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Data/VSA.Architecture.Data.csproj" />
   </ItemGroup>
   <Import Project="$(VsaSdkDir)Sdk.targets" />
 </Project>

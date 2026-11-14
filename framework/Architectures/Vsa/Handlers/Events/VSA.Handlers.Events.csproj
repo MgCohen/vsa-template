@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../Kernel/Markers/VSA.Analyzers.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../Components/Messages/Handlers/VSA.Handlers.csproj" />
+    <ProjectReference Include="../../Contracts/Events/VSA.Contracts.Events.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+  <!-- The installer of the layer uses AnchorTypes (VSA.Kernel). Private, so the module projects of this layer do not see VSA.Kernel. -->
+  <ItemGroup>
+    <ProjectReference Include="../../../../Kernel/VSA.Kernel.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../Kernel/VSA.Kernel.csproj" />
+  </ItemGroup>
+</Project>

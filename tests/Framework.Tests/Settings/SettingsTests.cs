@@ -3,6 +3,7 @@ using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Module;
+using VSA.Kernel;
 
 namespace Framework.Tests.Settings;
 
@@ -36,7 +37,7 @@ public sealed class SettingsTests {
     static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
-        (module ?? new SampleModule()).Configure(new ModuleBuilder("Sample", services, configuration));
+        (module ?? new SampleModule()).Configure(new AnchorBuilder("Sample", services, configuration));
         return services;
     }
 
@@ -57,6 +58,6 @@ public sealed class SettingsTests {
             }
         }
 
-        public override void Configure(ModuleBuilder module, SampleSettings settings) => Settings = settings;
+        public override void Configure(AnchorBuilder module, SampleSettings settings) => Settings = settings;
     }
 }

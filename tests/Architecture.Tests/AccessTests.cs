@@ -2,15 +2,15 @@ using VSA.Architecture;
 
 namespace Architecture.Tests;
 
-public record OpenTarget : Layer;
+public record OpenTarget : Concept;
 
-public record ClosedTarget : Layer {
-    protected override void Configure(LayerOptions options) {
+public record ClosedTarget : Concept {
+    protected override void Configure(ConceptOptions options) {
         options.Access = Access.Private;
     }
 }
 
-public sealed class AccessDefinition<TTarget>(Access options, Access? method) : ArchitectureDefinition where TTarget : Layer, new() {
+public sealed class AccessDefinition<TTarget>(Access options, Access? method) : ArchitectureDefinition where TTarget : Concept, new() {
     public Access UserAccess => Resolve().Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
 
     protected override void Configure(Options configured) {

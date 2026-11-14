@@ -2,13 +2,14 @@ using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Handlers.Commands;
 using VSA.Module;
+using VSA.Kernel;
 
 namespace Composition.Tests;
 
 public sealed class OneAssemblyModuleTests {
     [Test]
     public void The_scan_reads_the_handlers_in_the_root_assembly_of_a_module() {
-        var types = new ModuleTypes([new OneAssemblyModule()]);
+        var types = new AnchorTypes([new OneAssemblyModule()]);
 
         var handlers = types.Implementations(typeof(CommandHandler<,>)).Select(found => found.Implementation);
 
@@ -16,7 +17,7 @@ public sealed class OneAssemblyModuleTests {
     }
 
     public sealed class OneAssemblyModule : VSA.Module.Module {
-        public override void Configure(ModuleBuilder module) {
+        public override void Configure(AnchorBuilder module) {
         }
     }
 

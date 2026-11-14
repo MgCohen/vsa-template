@@ -9,7 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Tooling/Viewer/Viewer.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Testing/VSA.Testing.Unit.csproj" />
   </ItemGroup>
   <!-- The tests make the viewer input from samples/Notes with Architecture.Export at the start of the run. These two projects
        only build: their assemblies stay out of the test output. -->

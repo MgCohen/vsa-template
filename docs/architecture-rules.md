@@ -1,12 +1,12 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Architecture/Vsa/VsaDefinition.cs`, see `architecture-engine.md`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Architectures/Vsa/Definition/VsaDefinition.cs`, see `architecture-engine.md`).
 
 ## Levels
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
-| Editor and build | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` (`framework/Analyzers`) | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
+| Editor and build | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` (`framework/Architectures/Vsa/Rules`, with `VSA.Kernel.Analyzers`) | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
 | Build of the host | Architecture | `VSA.Architecture.Build` (rule engine, ArchUnitNET) | `VSA2xxx` |
 | Tests | Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `VSA.Testing.EndToEnd` | Not started |
@@ -40,7 +40,7 @@ The editor and the build run the first group in each consumer project. The build
 
 ## Plugin modules
 
-A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as `framework/Core` is the base of each layer. The VSA definition gives its rules:
+A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as the VSA pack (`framework/Architectures/Vsa`) is the base of each layer. The VSA definition gives its rules:
 
 | Rule | Check |
 |---|---|
@@ -220,6 +220,6 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
-3. Else change the rules of the VSA definition (`framework/Architecture/Vsa/VsaDefinition.cs`).
+3. Else change the rules of the VSA definition (`framework/Architectures/Vsa/Definition/VsaDefinition.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

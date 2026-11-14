@@ -1,6 +1,6 @@
 # Architecture data
 
-`architecture.json` is the one file between the architecture tools. The architecture engine exports it from an app, and the viewer reads it. The model of the file is `VSA.Architecture.Data` (`framework/Architecture/Data/`). No tool owns the model.
+`architecture.json` is the one file between the architecture tools. The architecture engine exports it from an app, and the viewer reads it. The model of the file is `VSA.Architecture.Data` (`framework/Engine/Data/`). No tool owns the model.
 
 ```mermaid
 flowchart LR
@@ -14,8 +14,8 @@ flowchart LR
 
 | Part | Path | Contains |
 |---|---|---|
-| Model | `framework/Architecture/Data/` (`VSA.Architecture.Data`) | The records, `ArchitectureJson` (`Read`, `Write`, `Save`, `Schema`) and `ArchitectureJson.Version` |
-| Export | `framework/Architecture/Engine/Export/` | `ArchitectureExport.Of(map, name, root)` gives an `ArchitectureFile` from an `ArchitectureMap` |
+| Model | `framework/Engine/Data/` (`VSA.Architecture.Data`) | The records, `ArchitectureJson` (`Read`, `Write`, `Save`, `Schema`) and `ArchitectureJson.Version` |
+| Export | `framework/Engine/Core/Export/` | `ArchitectureExport.Of(map, name, root)` gives an `ArchitectureFile` from an `ArchitectureMap` |
 | Export tool | `framework/Tooling/Export/` (`Architecture.Export`) | `Architecture.Export <app output folder> <app root> <architecture.json>`. It does not ship. A later `vsa export` command replaces it |
 | Tests | `tests/Architecture.Tests/ExportTests.cs` | Round trip, options, uses, findings, version and schema, on the bad fixture app |
 
@@ -38,7 +38,6 @@ flowchart LR
 |---|---|
 | The reader fails on a missing field (`RespectRequiredConstructorParameters`) | A drift between the export and a reader fails the tests |
 | The writer writes each field, also a null field | The reader needs each field |
-| A module of an app references the model with `VsaAppReference` | `VSA0001` blocks a hand-written reference. This is temporary (issue [#89](https://github.com/MgCohen/vsa-template/issues/89)) |
 
 ## Open questions
 

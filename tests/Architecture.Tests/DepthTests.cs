@@ -2,25 +2,25 @@ using VSA.Architecture;
 
 namespace Architecture.Tests;
 
-public record User : Layer;
+public record User : Concept;
 
-public record Target : Layer;
+public record Target : Concept;
 
-public record OnlyTarget : Layer {
-    protected override void Configure(LayerOptions options) {
+public record OnlyTarget : Concept {
+    protected override void Configure(ConceptOptions options) {
         options.Depth = Depth.Self;
     }
 }
 
-public record WideTarget : Layer {
-    protected override void Configure(LayerOptions options) {
+public record WideTarget : Concept {
+    protected override void Configure(ConceptOptions options) {
         options.Depth = Depth.WithChildren;
     }
 }
 
-public record TargetChild : Layer;
+public record TargetChild : Concept;
 
-public sealed class DepthDefinition<TTarget>(Depth options, Depth? method) : ArchitectureDefinition where TTarget : Layer, new() {
+public sealed class DepthDefinition<TTarget>(Depth options, Depth? method) : ArchitectureDefinition where TTarget : Concept, new() {
     public bool UserUsesTheChild => Resolve().Any(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TargetChild)));
 
     protected override void Configure(Options configured) {

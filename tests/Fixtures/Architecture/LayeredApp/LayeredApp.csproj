@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A second architecture with no VSA type: three concepts Ui, Logic and Data. Data/OrderStore uses Ui, which the definition denies. -->
+</Project>

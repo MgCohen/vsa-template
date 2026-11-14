@@ -301,7 +301,7 @@ public sealed class RuleOptionTests {
     // Each option of each rule is in VSA.Rules.globalconfig, with a valid value.
     [Test]
     public void Rules_config_has_each_option() {
-        var missing = VsaAnalyzer.Rules.SelectMany(rule => rule.RequiredOptions
+        var missing = Analyzer.AllRules.SelectMany(rule => rule.RequiredOptions
             .Where(option => !option.IsValid(TryValue($"vsa.{rule.Id}.{option.Key}")))
             .Select(option => $"vsa.{rule.Id}.{option.Key}"));
         Assert.That(missing, Is.Empty, RulesConfig.Path);
