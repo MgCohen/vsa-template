@@ -1,17 +1,17 @@
 namespace VSA.Architecture;
 
-public abstract record Layer {
+public abstract record Concept {
     public virtual string Folder => GetType().Name;
     public virtual string? GroupFolder => null;
 
-    protected internal virtual void Configure(LayerOptions options) { }
+    protected internal virtual void Configure(ConceptOptions options) { }
 
     protected internal virtual void Define(Part part) { }
 
-    protected internal virtual void Rules(LayerRules rules) { }
+    protected internal virtual void Rules(ConceptRules rules) { }
 
-    internal LayerOptions Configured() {
-        var options = new LayerOptions();
+    internal ConceptOptions Configured() {
+        var options = new ConceptOptions();
         Configure(options);
         return options;
     }

@@ -6,7 +6,7 @@ using VSA.Contracts.Requests;
 namespace VSA.Architecture.Vsa;
 
 public record Contracts : Layer {
-    protected override void Configure(LayerOptions options) {
+    protected override void Configure(ConceptOptions options) {
         options.Depth = Depth.Self;
     }
 

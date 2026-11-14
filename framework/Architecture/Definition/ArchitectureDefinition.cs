@@ -33,11 +33,11 @@ public abstract partial class ArchitectureDefinition {
             return pairs;
         }
         var all = new List<PartRule>();
-        AddSameLayer(all);
+        AddSameConcept(all);
 
         var book = new RuleBook(Root);
-        foreach (var layer in Parts().Select(p => p.Layer!).GroupBy(l => l.GetType()).Select(g => g.First())) {
-            layer.Rules(new LayerRules(layer.GetType(), book.Rules));
+        foreach (var concept in Parts().Select(p => p.Concept!).GroupBy(l => l.GetType()).Select(g => g.First())) {
+            concept.Rules(new ConceptRules(concept.GetType(), book.Rules));
         }
         Rules(book);
 
@@ -120,18 +120,18 @@ public abstract partial class ArchitectureDefinition {
     IEnumerable<Part> Branch(Entry entry) =>
         Parts().Where(p => p.Is(entry.Target)).SelectMany(p => Expand(p, entry.Depth ?? p.Depth ?? Options.Depth)).Distinct();
 
-    void AddSameLayer(List<PartRule> all) {
-        if (!Options.UseSameLayer) {
+    void AddSameConcept(List<PartRule> all) {
+        if (!Options.UseSameConcept) {
             return;
         }
         var count = 0;
         foreach (var from in Parts()) {
-            foreach (var to in Parts().Where(t => t.Layer!.GetType() == from.Layer!.GetType())) {
-                all.Add(new PartRule(from, to, ApplyBoundaries(from, to, "always", null), Permission.Allow, "same layer", "same layer", to.Access ?? Options.Access));
+            foreach (var to in Parts().Where(t => t.Concept!.GetType() == from.Concept!.GetType())) {
+                all.Add(new PartRule(from, to, ApplyBoundaries(from, to, "always", null), Permission.Allow, "same concept", "same concept", to.Access ?? Options.Access));
                 count++;
             }
         }
-        summary.Add(new RuleSummary("same layer", "options", Permission.Allow, count));
+        summary.Add(new RuleSummary("same concept", "options", Permission.Allow, count));
     }
 
     void AddRule(List<PartRule> all, IRuleEntries rule) {
@@ -185,10 +185,10 @@ public abstract partial class ArchitectureDefinition {
 
     void Validate(Entry entry, string text) {
         foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts().Any(p => p.Is(t)))) {
-            throw new InvalidOperationException($"Rules: \"{text}\" names {Layer.Display(target)}, but the definition has no part of that layer.");
+            throw new InvalidOperationException($"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
         }
         foreach (var filter in entry.Filters.Where(f => f.Kind != "Under" && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
-            throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a layer that AddGroup adds.");
+            throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a concept that AddGroup adds.");
         }
     }
 

@@ -2,14 +2,14 @@ using VSA.Architecture;
 
 namespace Architecture.Tests;
 
-public record Package : Layer;
+public record Package : Concept;
 
-public sealed class SameLayerDefinition(bool useSameLayer) : ArchitectureDefinition {
+public sealed class SameConceptDefinition(bool useSameConcept) : ArchitectureDefinition {
     public Permission Decision(string fromPath, string toPath) =>
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
     protected override void Configure(Options configured) {
-        configured.UseSameLayer = useSameLayer;
+        configured.UseSameConcept = useSameConcept;
     }
 
     protected override void Define(Root root) {
@@ -22,17 +22,17 @@ public sealed class SameLayerDefinition(bool useSameLayer) : ArchitectureDefinit
     }
 }
 
-public sealed class SameLayerTests {
+public sealed class SameConceptTests {
     [Test]
     public void A_part_uses_the_other_parts_of_its_layer_when_the_option_allows_it() {
-        var definition = new SameLayerDefinition(true);
+        var definition = new SameConceptDefinition(true);
 
         Assert.That(definition.Decision("Package/{package}/Target", "Target"), Is.EqualTo(Permission.Allow));
     }
 
     [Test]
     public void A_part_does_not_use_the_other_parts_of_its_layer_by_default() {
-        var definition = new SameLayerDefinition(false);
+        var definition = new SameConceptDefinition(false);
 
         Assert.That(definition.Decision("Package/{package}/Target", "Target"), Is.EqualTo(Permission.Deny));
     }
@@ -46,7 +46,7 @@ public sealed class SameLayerTests {
 
     [Test]
     public void The_same_layer_option_allows_no_other_layer() {
-        var definition = new SameLayerDefinition(true);
+        var definition = new SameConceptDefinition(true);
 
         Assert.That(definition.Decision("Package/{package}/Target", "Package/{package}/User"), Is.EqualTo(Permission.Deny));
     }
@@ -57,7 +57,7 @@ public sealed class DenyingSameLayerDefinition : ArchitectureDefinition {
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
     protected override void Configure(Options configured) {
-        configured.UseSameLayer = true;
+        configured.UseSameConcept = true;
     }
 
     protected override void Define(Root root) {

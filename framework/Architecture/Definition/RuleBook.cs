@@ -8,10 +8,10 @@ public sealed class RuleBook {
         this.root = root;
     }
 
-    public From For<T>(Depth? depth = null) where T : Layer {
+    public From For<T>(Depth? depth = null) where T : Concept {
         if (!root.Walk().Any(p => p.Is(typeof(T)))) {
             throw new InvalidOperationException(
-                $"Rules: For<{Layer.Display(typeof(T))}>() names a layer that the definition does not have. Add it in Define, or remove the rule.");
+                $"Rules: For<{Concept.Display(typeof(T))}>() names a concept that the definition does not have. Add it in Define, or remove the rule.");
         }
         return new From(typeof(T), depth, "definition", Rules);
     }

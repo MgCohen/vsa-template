@@ -16,9 +16,9 @@ public abstract partial class ArchitectureDefinition {
         return text.ToString();
     }
 
-    public string Explain(string path, string layer) {
-        var text = new StringBuilder($"{layer} in {path}:");
-        var rows = Resolve().Where(p => p.From.Path == path && p.From.Name == layer)
+    public string Explain(string path, string concept) {
+        var text = new StringBuilder($"{concept} in {path}:");
+        var rows = Resolve().Where(p => p.From.Path == path && p.From.Name == concept)
             .GroupBy(p => (p.To.Name, p.To.Path)).OrderBy(g => g.Key.Path).ThenBy(g => g.Key.Name);
         foreach (var row in rows) {
             var steps = string.Join("  then  ", row.Select(p => $"{p.Permission} if {p.Condition} [{p.Source}]"));

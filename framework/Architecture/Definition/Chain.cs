@@ -5,13 +5,13 @@ public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
     int runStart;
     bool filtered;
 
-    public TSelf And<T>(Depth? depth = null) where T : Layer => And<T>(null, depth);
+    public TSelf And<T>(Depth? depth = null) where T : Concept => And<T>(null, depth);
 
-    public TSelf And<T>(Access? access, Depth? depth = null) where T : Layer => And<T>(access, depth, null);
+    public TSelf And<T>(Access? access, Depth? depth = null) where T : Concept => And<T>(access, depth, null);
 
-    public TSelf And<T>(Boundary boundary, Access? access = null, Depth? depth = null) where T : Layer => And<T>(access, depth, boundary);
+    public TSelf And<T>(Boundary boundary, Access? access = null, Depth? depth = null) where T : Concept => And<T>(access, depth, boundary);
 
-    TSelf And<T>(Access? access, Depth? depth, Boundary? boundary) where T : Layer {
+    TSelf And<T>(Access? access, Depth? depth, Boundary? boundary) where T : Concept {
         if (filtered) {
             runStart = Entries.Count;
         }
@@ -19,16 +19,16 @@ public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
         return Begin(typeof(T), depth, access, boundary);
     }
 
-    public TSelf Under<T>() where T : Layer => Filter("Under", typeof(T));
+    public TSelf Under<T>() where T : Concept => Filter("Under", typeof(T));
 
-    internal TSelf Begin(Type layer, Depth? depth, Access? access = null, Boundary? boundary = null) {
-        Entries.Add(new Entry(layer, depth, access, boundary));
+    internal TSelf Begin(Type concept, Depth? depth, Access? access = null, Boundary? boundary = null) {
+        Entries.Add(new Entry(concept, depth, access, boundary));
         return (TSelf)this;
     }
 
-    internal TSelf Filter(string kind, Type layer) {
+    internal TSelf Filter(string kind, Type concept) {
         foreach (var entry in Entries.Skip(runStart)) {
-            entry.Filters.Add(new Filter(kind, layer));
+            entry.Filters.Add(new Filter(kind, concept));
         }
         filtered = true;
         return (TSelf)this;

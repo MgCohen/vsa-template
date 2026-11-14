@@ -7,14 +7,14 @@ public sealed class PartGroup {
         this.parts = [.. parts];
     }
 
-    public PartGroup Add<T>() where T : Layer, new() => new(parts.Select(p => p.Add<T>()));
+    public PartGroup Add<T>() where T : Concept, new() => new(parts.Select(p => p.Add<T>()));
 
-    public PartGroup AddGroup<T>(string? folder = null) where T : Layer, new() => new(parts.Select(p => p.AddGroup<T>(folder)));
+    public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() => new(parts.Select(p => p.AddGroup<T>(folder)));
 
-    public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Layer, new() =>
+    public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() =>
         new(parts.Select(p => p.AddGroup<T>(boundary, folder)));
 
-    public PartGroup And<T>() where T : Layer, new() {
+    public PartGroup And<T>() where T : Concept, new() {
         var parents = parts.Select(p => p.Parent ?? throw new InvalidOperationException("The root has no sibling.")).Distinct();
         return new(parts.Concat(parents.Select(p => p.Add<T>())));
     }
