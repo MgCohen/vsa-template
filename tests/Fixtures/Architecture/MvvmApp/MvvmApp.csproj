@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The MVVM app of the "Hello MVVM" guide, with its own definition (Engine/Architecture/MvvmDefinition.cs).
+       App/View/GreetingView uses the model Greeting directly, which the definition denies. The viewer loop tests use it. -->
+  <ItemGroup>
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Definition/VSA.Architecture.csproj" />
+  </ItemGroup>
+</Project>

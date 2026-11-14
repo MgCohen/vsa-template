@@ -22,7 +22,7 @@ public static class DefinitionEdit {
     }
 
     static List<string?> RuleTexts(DefinitionFile file) {
-        List<string?> texts = [.. new JsonDefinition(file).DefinitionRules().Select(r => r.Text)];
+        List<string?> texts = [.. new JsonDefinition(file, MissingTypes.StandIn).DefinitionRules().Select(r => r.Text)];
         if (texts.Count != file.Rules.Count) {
             throw new InvalidOperationException(
                 $"The definition file has {file.Rules.Count} rules, and its definition gives {texts.Count}. "
@@ -53,27 +53,21 @@ public static class DefinitionEdit {
         new([TermOf(edit.From, edit.FromFilters, concepts)], edit.Verb, [TermOf(edit.To, edit.ToFilters, concepts)]);
 
     static TermNode TermOf(string name, IReadOnlyList<NamedFilter>? filters, Dictionary<string, string> concepts) =>
-        new(TypeName(name, concepts), null, null, null,
-            [.. (filters ?? []).Select(f => new FilterNode(f.Kind, TypeName(f.Concept, concepts)))]);
+        new(ConceptType(name, concepts), null, null, null,
+            [.. (filters ?? []).Select(f => new FilterNode(f.Kind, ConceptType(f.Concept, concepts)))]);
 
-    static string TypeName(string name, Dictionary<string, string> concepts) =>
+    static string ConceptType(string name, Dictionary<string, string> concepts) =>
         concepts.TryGetValue(name, out var type)
             ? type
             : throw new InvalidOperationException(
                 $"The definition file has no concept {name}. Use a concept of a part or a rule of the file.");
 
-    static Dictionary<string, string> ConceptNames(DefinitionFile file) {
-        IEnumerable<string> parts = file.Parts.SelectMany(Walk).Select(p => p.Concept);
-        IEnumerable<string> terms = file.Rules.SelectMany(r => r.From.Concat(r.To))
-            .SelectMany(t => t.Filters.Select(f => f.Concept).Append(t.Concept));
-        return parts.Concat(terms).Distinct()
-            .GroupBy(type => DefinitionRules.Name(JsonDefinition.TypeOf(type)))
+    static Dictionary<string, string> ConceptNames(DefinitionFile file) =>
+        TypeResolver.ConceptNames(file).Distinct()
+            .GroupBy(type => TypeName.Parse(type).Display)
             .ToDictionary(g => g.Key, g => g.First());
-    }
 
-    static IEnumerable<PartNode> Walk(PartNode part) => part.Children.SelectMany(Walk).Prepend(part);
-
-    static string Name(TermNode term) => DefinitionRules.Name(JsonDefinition.TypeOf(term.Concept));
+    static string Name(TermNode term) => TypeName.Parse(term.Concept).Display;
 
     static string Pair(string from, string to) => $"{from}>{to}";
 }

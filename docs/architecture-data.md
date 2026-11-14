@@ -41,7 +41,21 @@ dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin sample
 | Export step | `engine/Features/Export/` | `ExportFiles`: `--export <folder>` writes the two files |
 | Definition file input | `engine/Features/Definition/` | `LoadDefinition`: `--definition <file>` uses `JsonDefinition` |
 | Viewer import and export | `framework/Tooling/Viewer/` | `ArchitectureImport` reads `definition.json`. `DefinitionChanges` gives the edits to `DefinitionEdit` |
-| Tests | `tests/Architecture.Tests/`, `tests/Engine.Tests/`, `tests/Viewer.Tests/Export/` | `DefinitionFileTests`, `DataConceptTests`, `ExportTests`, `RunEngineTests`, `LoopTests` |
+| Tests | `tests/Architecture.Tests/`, `tests/Engine.Tests/`, `tests/Viewer.Tests/Export/` | `DefinitionFileTests`, `DataConceptTests`, `ExportTests`, `RunEngineTests`, `LoopTests`, `MvvmLoopTests` |
+| MVVM fixture | `tests/Fixtures/Architecture/MvvmApp/` | The app of the "Hello MVVM" guide, with its own `MvvmDefinition` and one rule break: `GreetingView` uses the model `Greeting` |
+
+## The MVVM loop test
+
+`MvvmLoopTests` runs the full loop on an app whose concepts are not VSA types:
+
+| Step | Result |
+|---|---|
+| The engine checks the app with the coded definition, and exports the two files | 1 error: `GreetingView` uses `Greeting` |
+| The engine checks the app with the exported `definition.json` | The same error text, line for line |
+| The viewer reads the two files, with no app assembly | It shows the parts, the 4 rules, the types and the denied use |
+| The viewer adds the rule View uses Model, and the engine checks with the new file | 0 errors |
+| The viewer removes the rule ViewModel uses Model, and the engine checks with the new file | 3 errors: the old one, `GreetingViewModel` uses `Greeting`, and `ViewModelBase` uses `ModelBase` |
+| The edited file is imported again, and a second edit removes the added rule | The original error again |
 
 ## definition.json
 
@@ -89,6 +103,17 @@ var definition = new JsonDefinition("definition.json");
 ```
 
 A relative path starts at the folder of the assembly of the definition class. `JsonDefinition` reads the file one time.
+
+### Types that are not loaded
+
+A definition file names its concepts and types, for example `Mvvm.Engine.Architecture.View, MvvmApp`. A tool that does not load the app assemblies, for example the viewer, does not have these types. The second argument of `JsonDefinition` selects what happens:
+
+| `MissingTypes` | Result | Used by |
+|---|---|---|
+| `Fail` (default) | A missing type fails with its name | The engine. It checks the real types of the app |
+| `StandIn` | A missing type gets a stand-in type with the same full name, assembly name and nesting. A stand-in concept has no own rules | The viewer import, `DefinitionEdit` |
+
+With stand-ins, a file gives the same parts, pairs and rule texts as with the real types, and an export of it gives the same file. So the viewer can show and edit the definition of any app from the file alone.
 
 ## DataConcept
 

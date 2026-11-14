@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using System.Reflection;
-
 namespace Viewer.Tests.Export;
 
 public static class NotesExport
@@ -19,16 +16,7 @@ public static class NotesExport
 
     public static DotnetRun Engine(params string[] arguments)
     {
-        ProcessStartInfo start = new("dotnet") { UseShellExecute = false, RedirectStandardOutput = true };
-        string[] app = ["exec", Metadata("Engine"), "--root", Metadata("NotesRoot"), "--bin", Metadata("NotesOutput")];
-        foreach (string argument in app.Concat(arguments))
-        {
-            start.ArgumentList.Add(argument);
-        }
-        using Process process = Process.Start(start)!;
-        string log = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-        return new DotnetRun(process.ExitCode, log);
+        return EngineProcess.Run(EngineProcess.Metadata("NotesRoot"), EngineProcess.Metadata("NotesOutput"), arguments);
     }
 
     private static string Make()
@@ -40,11 +28,5 @@ public static class NotesExport
             throw new InvalidOperationException($"The rule engine stopped with exit code {run.ExitCode}. {run.Output}");
         }
         return output;
-    }
-
-    private static string Metadata(string key)
-    {
-        return typeof(NotesExport).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .Single(a => a.Key == key).Value!;
     }
 }

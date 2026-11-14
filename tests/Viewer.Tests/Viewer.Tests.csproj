@@ -12,16 +12,19 @@
     <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Testing/VSA.Testing.Unit.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
   </ItemGroup>
-  <!-- The tests make the viewer input from samples/Notes with the export of the rule engine at the start of the run. These two
-       projects only build: their assemblies stay out of the test output. -->
+  <!-- The tests make the viewer input from samples/Notes and the MVVM fixture with the export of the rule engine.
+       These projects only build: their assemblies stay out of the test output. -->
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)samples/Notes/Notes.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/MvvmApp/MvvmApp.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyMetadata Include="Engine" Value="$(RepoRoot)engine/bin/$(Configuration)/$(TargetFramework)/vsa-engine.dll" />
     <AssemblyMetadata Include="NotesOutput" Value="$(RepoRoot)samples/Notes/bin/$(Configuration)/$(TargetFramework)" />
     <AssemblyMetadata Include="NotesRoot" Value="$(RepoRoot)samples/Notes" />
+    <AssemblyMetadata Include="MvvmOutput" Value="$(RepoRoot)tests/Fixtures/Architecture/MvvmApp/bin/$(Configuration)/$(TargetFramework)" />
+    <AssemblyMetadata Include="MvvmRoot" Value="$(RepoRoot)tests/Fixtures/Architecture/MvvmApp" />
   </ItemGroup>
   <!-- The browser tests start the viewer from its own output folder, so they need the path of Viewer.dll. -->
   <Target Name="AddViewerHostPath" AfterTargets="ResolveAssemblyReferences" BeforeTargets="GetAssemblyAttributes">

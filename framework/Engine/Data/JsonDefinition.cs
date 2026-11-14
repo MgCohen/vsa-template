@@ -1,18 +1,20 @@
-using System.Text.Json;
-
 namespace VSA.Architecture.Data;
 
 public class JsonDefinition : ArchitectureDefinition {
     readonly string file;
+    readonly MissingTypes missing;
     DefinitionFile? data;
+    TypeResolver? types;
 
-    public JsonDefinition(string file) {
+    public JsonDefinition(string file, MissingTypes missing = MissingTypes.Fail) {
         this.file = file;
+        this.missing = missing;
     }
 
-    public JsonDefinition(DefinitionFile data) {
+    public JsonDefinition(DefinitionFile data, MissingTypes missing = MissingTypes.Fail) {
         file = "";
         this.data = data;
+        this.missing = missing;
     }
 
     public DefinitionFile Data => data ??= DefinitionJson.Read(File.ReadAllText(FilePath));
@@ -43,7 +45,9 @@ public class JsonDefinition : ArchitectureDefinition {
         }
     }
 
-    static void Add(Part parent, PartNode node) {
+    Type TypeOf(string name) => (types ??= new TypeResolver(Data, missing)).Of(name);
+
+    void Add(Part parent, PartNode node) {
         var concept = (Concept)Activator.CreateInstance(TypeOf(node.Concept))!;
         var part = parent.AddData(concept, node.Folder, node.Group, node.Depth, node.Access, node.Boundary);
         foreach (var type in node.Types) {
@@ -54,7 +58,7 @@ public class JsonDefinition : ArchitectureDefinition {
         }
     }
 
-    static void Replay(RuleBook rules, RuleNode rule) {
+    void Replay(RuleBook rules, RuleNode rule) {
         var first = rule.From[0];
         var from = rules.For(TypeOf(first.Concept), first.Depth);
         Filters(from, first);
@@ -71,28 +75,16 @@ public class JsonDefinition : ArchitectureDefinition {
         Rest(denies, rule.To);
     }
 
-    static void Rest<TSelf>(Chain<TSelf> chain, List<TermNode> terms) where TSelf : Chain<TSelf> {
+    void Rest<TSelf>(Chain<TSelf> chain, List<TermNode> terms) where TSelf : Chain<TSelf> {
         foreach (var term in terms.Skip(1)) {
             chain.And(TypeOf(term.Concept), term.Access, term.Depth, term.Boundary);
             Filters(chain, term);
         }
     }
 
-    static void Filters<TSelf>(Chain<TSelf> chain, TermNode term) where TSelf : Chain<TSelf> {
+    void Filters<TSelf>(Chain<TSelf> chain, TermNode term) where TSelf : Chain<TSelf> {
         foreach (var filter in term.Filters) {
             chain.Filter(filter.Kind, TypeOf(filter.Concept));
         }
-    }
-
-    internal static Type TypeOf(string name) {
-        var type = Type.GetType(name);
-        if (type is not null) {
-            return type;
-        }
-        var fullName = name.Split(',')[0].Trim();
-        return AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(fullName)).FirstOrDefault(t => t is not null)
-            ?? throw new JsonException(
-                $"The definition file names the type {name}, and no loaded assembly has it. "
-                + "Reference the assembly of the type, or correct the name in the file.");
     }
 }

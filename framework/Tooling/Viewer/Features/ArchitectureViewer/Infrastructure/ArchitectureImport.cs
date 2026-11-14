@@ -11,7 +11,7 @@ public static class ArchitectureImport
 
     public static Definition Read(string json, string name = DefaultName)
     {
-        JsonDefinition definition = new(DefinitionJson.Read(json));
+        JsonDefinition definition = new(DefinitionJson.Read(json), MissingTypes.StandIn);
         List<DefinitionPart> parts = [.. definition.Root.Walk()];
         Dictionary<DefinitionPart, string> partIds = parts.Select((p, i) => (p, i))
             .ToDictionary(x => x.p, x => $"p{x.i}");

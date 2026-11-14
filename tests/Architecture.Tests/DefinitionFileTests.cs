@@ -63,6 +63,21 @@ public sealed class DefinitionFileTests {
     }
 
     [Test]
+    public void A_file_with_types_that_are_not_loaded_resolves_with_stand_ins() {
+        var json = DefinitionJson.Write(DefinitionExport.Of(new LayeredDefinition()))
+            .Replace("Architecture.Tests.", "Missing.App.", StringComparison.Ordinal)
+            .Replace(", Architecture.Tests\"", ", MissingApp\"", StringComparison.Ordinal);
+        var file = DefinitionJson.Read(json);
+
+        var standIn = new JsonDefinition(file, MissingTypes.StandIn);
+
+        Assert.That(Pairs(standIn), Is.EqualTo(Pairs(FromFile(new LayeredDefinition()))));
+        Assert.That(DefinitionJson.Write(DefinitionExport.Of(standIn)), Is.EqualTo(json));
+        Assert.That(() => new JsonDefinition(file).Resolve(),
+            Throws.InstanceOf<JsonException>().With.Message.Contains("Missing.App.Ui"));
+    }
+
+    [Test]
     public void The_schema_lists_the_closed_values() {
         var schema = DefinitionJson.Schema().ToJsonString();
 
