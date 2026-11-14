@@ -71,8 +71,11 @@ public sealed class RunEngineTests {
 
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
         Assert.That(result.Lines, Has.One.StartsWith($"vsa-engine: VSA3005: ExportFiles wrote {folder}"));
-        Assert.That(new JsonDefinition(Path.Combine(folder, "definition.json")).Tree(), Is.EqualTo(new App.Host.NotesApp().Architecture.Tree()));
-        Assert.That(ArchitectureJson.Read(File.ReadAllText(Path.Combine(folder, "architecture.json"))).App.Types, Is.Not.Empty);
+        var architecture = Path.Combine(folder, DataFiles.Architecture("Vsa"));
+        var snapshot = SnapshotJson.Read(File.ReadAllText(Path.Combine(folder, DataFiles.Snapshot("Notes"))));
+        Assert.That(new JsonDefinition(architecture).Tree(), Is.EqualTo(new App.Host.NotesApp().Architecture.Tree()));
+        Assert.That(snapshot.Architecture.Name, Is.EqualTo("Vsa"));
+        Assert.That(snapshot.App.Types, Is.Not.Empty);
     }
 
     [Test]
@@ -80,7 +83,7 @@ public sealed class RunEngineTests {
         var folder = TempFolder.Create();
         await Run(export: folder);
 
-        var result = await Run(definition: Path.Combine(folder, "definition.json"));
+        var result = await Run(definition: Path.Combine(folder, DataFiles.Architecture("Vsa")));
 
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
         Assert.That(result.Lines, Has.None.Contains(": error "));

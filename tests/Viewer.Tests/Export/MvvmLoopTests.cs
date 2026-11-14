@@ -19,7 +19,7 @@ public sealed class MvvmLoopTests
     public void The_rule_break_gives_the_same_error_with_the_code_and_the_data_definition()
     {
         IReadOnlyList<string> code = MvvmApp.Errors(MvvmApp.Engine());
-        IReadOnlyList<string> data = MvvmApp.Errors(MvvmApp.Check(MvvmApp.DefinitionJson));
+        IReadOnlyList<string> data = MvvmApp.Errors(MvvmApp.Check(MvvmApp.ArchitectureJson));
 
         Assert.That(code, Has.Count.EqualTo(1));
         Assert.That(code[0], Does.Contain("error VSA2001").And.Contain(ViewUsesModel));
@@ -29,8 +29,8 @@ public sealed class MvvmLoopTests
     [Test]
     public void The_viewer_shows_the_exported_definition_and_the_rule_break()
     {
-        Definition definition = ArchitectureImport.Read(MvvmApp.DefinitionJson);
-        LayoutData app = AppGraph.Of(new ArchitectureFiles(MvvmApp.ArchitectureJson, MvvmApp.DefinitionJson));
+        Definition definition = ArchitectureImport.Read(MvvmApp.ArchitectureJson);
+        LayoutData app = AppGraph.Of(new InputFiles(MvvmApp.SnapshotJson, MvvmApp.ArchitectureJson));
 
         Assert.That(definition.Parts.Select(p => p.Layer).Distinct(),
             Is.SupersetOf(new[] { "Engine", "App", "Model", "ViewModel", "View" }));
@@ -43,7 +43,7 @@ public sealed class MvvmLoopTests
     [Test]
     public void A_rule_that_the_viewer_adds_allows_the_break()
     {
-        string edited = Edit(MvvmApp.DefinitionJson, new RuleChange(RuleOp.AddRule, View, Model, Access.Allow));
+        string edited = Edit(MvvmApp.ArchitectureJson, new RuleChange(RuleOp.AddRule, View, Model, Access.Allow));
 
         DotnetRun run = MvvmApp.Check(edited);
 
@@ -54,12 +54,12 @@ public sealed class MvvmLoopTests
     [Test]
     public void A_rule_that_the_viewer_removes_gives_a_new_error()
     {
-        Definition definition = ArchitectureImport.Read(MvvmApp.DefinitionJson);
+        Definition definition = ArchitectureImport.Read(MvvmApp.ArchitectureJson);
         Rule viewModelRule = definition.Rules
             .Single(r => r.Froms.Any(f => f.Layer == "ViewModel") && r.Tos.Any(t => t.Layer == "Model"));
         RuleChange remove = new(RuleOp.RemoveRule, ViewModel, Model, Access.Allow, viewModelRule.Id);
 
-        IReadOnlyList<string> errors = MvvmApp.Errors(MvvmApp.Check(Edit(MvvmApp.DefinitionJson, remove)));
+        IReadOnlyList<string> errors = MvvmApp.Errors(MvvmApp.Check(Edit(MvvmApp.ArchitectureJson, remove)));
 
         Assert.That(errors, Has.Count.EqualTo(3));
         Assert.That(errors, Has.One.Contains(ViewUsesModel));
@@ -70,7 +70,7 @@ public sealed class MvvmLoopTests
     [Test]
     public void An_edited_file_imports_back_and_a_second_edit_gives_the_break_again()
     {
-        string allowed = Edit(MvvmApp.DefinitionJson, new RuleChange(RuleOp.AddRule, View, Model, Access.Allow));
+        string allowed = Edit(MvvmApp.ArchitectureJson, new RuleChange(RuleOp.AddRule, View, Model, Access.Allow));
         Rule added = ArchitectureImport.Read(allowed).Rules
             .Single(r => r.Froms.Any(f => f.Layer == "View") && r.Tos.Any(t => t.Layer == "Model"));
 

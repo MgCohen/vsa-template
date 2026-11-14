@@ -1,4 +1,5 @@
 using Tests.Shared;
+using VSA.Architecture.Data;
 
 namespace Viewer.Tests.Export;
 
@@ -8,19 +9,19 @@ public static class MvvmApp
 
     public static string Folder => folder.Value;
 
-    public static string DefinitionJson => File.ReadAllText(Path.Combine(Folder, "definition.json"));
+    public static string ArchitectureJson => File.ReadAllText(Path.Combine(Folder, DataFiles.Architecture("Mvvm")));
 
-    public static string ArchitectureJson => File.ReadAllText(Path.Combine(Folder, "architecture.json"));
+    public static string SnapshotJson => File.ReadAllText(Path.Combine(Folder, DataFiles.Snapshot("MvvmApp")));
 
     public static DotnetRun Engine(params string[] arguments)
     {
         return EngineProcess.Run(EngineProcess.Metadata("MvvmRoot"), EngineProcess.Metadata("MvvmOutput"), arguments);
     }
 
-    public static DotnetRun Check(string definitionJson)
+    public static DotnetRun Check(string architectureJson)
     {
-        string file = Path.Combine(TempFolder.Create(), "definition.json");
-        File.WriteAllText(file, definitionJson);
+        string file = Path.Combine(TempFolder.Create(), DataFiles.Architecture("edited"));
+        File.WriteAllText(file, architectureJson);
         return Engine("--definition", file);
     }
 

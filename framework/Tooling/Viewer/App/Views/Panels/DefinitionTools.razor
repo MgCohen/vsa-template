@@ -2,7 +2,7 @@
 @if (Graph.Kind == GraphKind.Definition)
 {
     <div class="tools">
-        <label class="import">Import definition.json <InputFile accept=".json" OnChange="Import" /></label>
+        <label class="import">Import architecture file <InputFile accept=".json" OnChange="Import" /></label>
         <span>New rule:</span>
         <select class="draft-access" value="@Graph.RuleDraft.Access" @onchange="e => Graph.SetRuleDraft(Graph.RuleDraft with { Access = Text(e) })">
             <option value="@RuleDraft.Allow">Uses</option>

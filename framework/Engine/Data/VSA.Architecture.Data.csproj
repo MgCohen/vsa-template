@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The architecture data: definition.json (a definition as data, its export, its edits and JsonDefinition) and
-       architecture.json (the resolved app for the viewer). No engine and no ArchUnitNET (docs/architecture-data.md).
+  <!-- The architecture data: <name>.architecture.json (a definition as data, its export, its edits and JsonDefinition) and
+       <app>.snapshot.json (one app checked against an architecture). No engine and no ArchUnitNET (docs/architecture-data.md).
        Unity 6 ships System.Text.Json 8, so the netstandard2.1 target uses 8.0. The schema and the strict read need 9 or later. -->
   <ItemGroup>
     <ProjectReference Include="../Definition/VSA.Architecture.csproj" />

@@ -3,9 +3,9 @@
 {
     <div class="export">
         <div class="bar">
-            <strong>definition.json</strong>
+            <strong>@export.FileName</strong>
             <button @onclick="() => Graph.Copy(export.Json)">Copy JSON</button>
-            <a class="download" download="definition.json" href="@DataUrl(export)">Download definition.json</a>
+            <a class="download" download="@export.FileName" href="@DataUrl(export)">Download @export.FileName</a>
             <button @onclick="Graph.CloseExport">Close</button>
         </div>
         <pre class="json">@export.Json</pre>

@@ -8,9 +8,15 @@ public static class DefinitionChanges
 {
     public static string Apply(string json, Definition definition, IReadOnlyList<RuleChange> changes)
     {
+        return Export(json, definition, changes).Json;
+    }
+
+    public static ExportedArchitecture Export(string json, Definition definition, IReadOnlyList<RuleChange> changes)
+    {
         DefinitionFile source = DefinitionJson.Read(json);
         List<RuleEdit> edits = [.. changes.Select(c => EditOf(definition, c))];
-        return DefinitionJson.Write(DefinitionEdit.Apply(source, edits));
+        DefinitionFile edited = DefinitionEdit.Apply(source, edits);
+        return new ExportedArchitecture(DefinitionJson.Write(edited), DataFiles.Architecture(edited.Name));
     }
 
     private static RuleEdit EditOf(Definition definition, RuleChange change)

@@ -1,5 +1,10 @@
 {
-  "version": 4,
+  "version": 1,
+  "architecture": {
+    "name": "Vsa",
+    "source": "VSA.Architecture.Vsa.VsaDefinition, VSA.Architecture.Vsa",
+    "hash": "sha256:b76a8f697023b1fa2ddbe4c3a91a9a1fb3069097e232b2b1e53c1d38f148399f"
+  },
   "app": {
     "name": "Notes",
     "instances": [

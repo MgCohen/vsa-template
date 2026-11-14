@@ -1,3 +1,3 @@
 namespace ArchitectureViewer.Presenters.Items;
 
-public sealed record ExportText(string Json);
+public sealed record ExportText(string Json, string FileName);

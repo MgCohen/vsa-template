@@ -5,13 +5,13 @@ using VSA.Architecture.Engine;
 namespace Architecture.Tests;
 
 public sealed class ExportTests {
-    static readonly Lazy<ArchitectureFile> Bad = new(() => ArchitectureExport.Of(FixtureApps.Bad, "BadApp"));
+    static readonly Lazy<SnapshotFile> Bad = new(() => SnapshotExport.Of(FixtureApps.Bad, "BadApp"));
 
     [Test]
     public void The_export_reads_back_to_the_same_json() {
-        var json = ArchitectureJson.Write(Bad.Value);
+        var json = SnapshotJson.Write(Bad.Value);
 
-        Assert.That(ArchitectureJson.Write(ArchitectureJson.Read(json)), Is.EqualTo(json));
+        Assert.That(SnapshotJson.Write(SnapshotJson.Read(json)), Is.EqualTo(json));
     }
 
     [Test]
@@ -32,16 +32,27 @@ public sealed class ExportTests {
     }
 
     [Test]
-    public void A_file_of_another_version_fails_the_read() {
-        var json = ArchitectureJson.Write(Bad.Value with { Version = ArchitectureJson.Version + 1 });
+    public void The_snapshot_names_the_architecture_and_its_hash() {
+        var definition = FixtureApps.Bad.Definition;
 
-        Assert.That(() => ArchitectureJson.Read(json), Throws.InstanceOf<JsonException>().With.Message.Contains("Export it again"));
+        var architecture = Bad.Value.Architecture;
+
+        Assert.That(architecture.Name, Is.EqualTo(DefinitionExport.NameOf(definition)));
+        Assert.That(architecture.Source, Is.EqualTo(DefinitionExport.TypeName(definition.GetType())));
+        Assert.That(architecture.Hash, Is.EqualTo(DefinitionJson.Hash(DefinitionExport.Of(definition))).And.StartsWith("sha256:"));
     }
 
     [Test]
-    public void The_schema_describes_the_app() {
-        var properties = ArchitectureJson.Schema()["properties"]!.AsObject().Select(p => p.Key);
+    public void A_file_of_another_version_fails_the_read() {
+        var json = SnapshotJson.Write(Bad.Value with { Version = SnapshotJson.Version + 1 });
 
-        Assert.That(properties, Is.EquivalentTo(new[] { "version", "app" }));
+        Assert.That(() => SnapshotJson.Read(json), Throws.InstanceOf<JsonException>().With.Message.Contains("Export it again"));
+    }
+
+    [Test]
+    public void The_schema_describes_the_architecture_and_the_app() {
+        var properties = SnapshotJson.Schema()["properties"]!.AsObject().Select(p => p.Key);
+
+        Assert.That(properties, Is.EquivalentTo(new[] { "version", "architecture", "app" }));
     }
 }

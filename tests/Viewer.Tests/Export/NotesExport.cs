@@ -1,3 +1,5 @@
+using VSA.Architecture.Data;
+
 namespace Viewer.Tests.Export;
 
 public static class NotesExport
@@ -6,13 +8,13 @@ public static class NotesExport
 
     public static string Folder => folder.Value;
 
-    public static string File => Path.Combine(Folder, "architecture.json");
+    public static string SnapshotFile => Path.Combine(Folder, DataFiles.Snapshot("Notes"));
 
-    public static string Json => System.IO.File.ReadAllText(File);
+    public static string SnapshotJson => File.ReadAllText(SnapshotFile);
 
-    public static string DefinitionFile => Path.Combine(Folder, "definition.json");
+    public static string ArchitectureFile => Path.Combine(Folder, DataFiles.Architecture("Vsa"));
 
-    public static string DefinitionJson => System.IO.File.ReadAllText(DefinitionFile);
+    public static string ArchitectureJson => File.ReadAllText(ArchitectureFile);
 
     public static DotnetRun Engine(params string[] arguments)
     {

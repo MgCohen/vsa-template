@@ -6,12 +6,28 @@ public static class DefinitionExport {
         return new DefinitionFile(
             DefinitionJson.SchemaName,
             DefinitionJson.Version,
+            NameOf(definition),
             definition.Root.FolderName ?? "",
             new DefinitionOptions(
                 options.DefaultPermission, options.Boundary, options.UseSameConcept, options.Depth, options.Access),
             [.. definition.Root.Children.Select(PartOf)],
             [.. definition.DefinitionRules().Select(RuleOf)]);
     }
+
+    public static string NameOf(ArchitectureDefinition definition) {
+        if (definition is JsonDefinition data) {
+            return data.Data.Name;
+        }
+        var name = definition.GetType().Name;
+        return name.EndsWith("Definition", StringComparison.Ordinal) && name.Length > "Definition".Length
+            ? name.Substring(0, name.Length - "Definition".Length)
+            : name;
+    }
+
+    public static string SourceOf(ArchitectureDefinition definition) =>
+        definition is JsonDefinition data
+            ? data.FilePath.Length > 0 ? Path.GetFileName(data.FilePath) : "data"
+            : TypeName(definition.GetType());
 
     public static string TypeName(Type type) => $"{type.FullName}, {type.Assembly.GetName().Name}";
 

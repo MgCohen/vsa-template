@@ -12,8 +12,9 @@ sealed class ExportFilesHandler : CommandHandler<ExportFilesCommand, ExportFiles
         var command = envelope.Message;
         var folder = Path.GetFullPath(command.Folder);
         var summary = AppFiles.Write(command.App, folder);
-        var message = $"ExportFiles wrote {folder}: {AppFiles.DefinitionFile} ({summary.TopParts} top parts, {summary.Rules} rules), "
-            + $"{AppFiles.ArchitectureFile} ({summary.Types} types).";
+        var message = $"ExportFiles wrote {folder}: {summary.ArchitectureFile} "
+            + $"({summary.TopParts} top parts, {summary.Rules} rules), "
+            + $"{summary.SnapshotFile} ({summary.Types} types).";
         return Task.FromResult<Result<ExportFilesResult>>(
             new ExportFilesResult(folder, [new Finding(Written, FindingSeverity.Info, message)]));
     }

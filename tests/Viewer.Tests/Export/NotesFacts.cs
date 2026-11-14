@@ -6,9 +6,9 @@ namespace Viewer.Tests.Export;
 
 public static class NotesFacts
 {
-    private static readonly Lazy<JsonElement> root = new(() => JsonDocument.Parse(NotesExport.Json).RootElement);
+    private static readonly Lazy<JsonElement> root = new(() => JsonDocument.Parse(NotesExport.SnapshotJson).RootElement);
 
-    private static readonly Lazy<Definition> definition = new(() => ArchitectureImport.Read(NotesExport.DefinitionJson));
+    private static readonly Lazy<Definition> definition = new(() => ArchitectureImport.Read(NotesExport.ArchitectureJson));
 
     private static readonly Lazy<IReadOnlyList<RuleTerm>> terms = new(ReadTerms);
 

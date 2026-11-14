@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 #if NET
 using System.Text.Json.Nodes;
@@ -8,9 +10,9 @@ using System.Text.Json.Serialization;
 namespace VSA.Architecture.Data;
 
 public static class DefinitionJson {
-    public const int Version = 1;
+    public const int Version = 2;
 
-    public const string SchemaName = "architecture-definition.v1.json";
+    public const string SchemaName = "architecture-definition.v2.json";
 
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web) {
         WriteIndented = true,
@@ -33,6 +35,12 @@ public static class DefinitionJson {
     }
 
     public static string Write(DefinitionFile file) => JsonSerializer.Serialize(file, Options);
+
+    public static string Hash(DefinitionFile file) {
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(Write(file)));
+        return "sha256:" + BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+    }
 
     public static void Save(DefinitionFile file, string path) {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);

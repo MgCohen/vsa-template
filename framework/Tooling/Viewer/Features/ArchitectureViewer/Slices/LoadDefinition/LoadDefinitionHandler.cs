@@ -10,7 +10,7 @@ using VSA.Handlers.Requests;
 namespace ArchitectureViewer.Slices.LoadDefinition;
 
 internal sealed class LoadDefinitionHandler(
-    ArchitectureFiles files, ILayoutEngine engine, IEnumerable<INodeShape> shapes)
+    InputFiles files, ILayoutEngine engine, IEnumerable<INodeShape> shapes)
     : RequestHandler<LoadDefinitionRequest, LoadDefinitionResponse>
 {
     public override async Task<Result<LoadDefinitionResponse>> HandleAsync(Envelope<LoadDefinitionRequest> envelope)
@@ -18,7 +18,7 @@ internal sealed class LoadDefinitionHandler(
         Definition definition;
         try
         {
-            definition = ArchitectureImport.Read(envelope.Message.Json ?? files.DefinitionJson);
+            definition = ArchitectureImport.Read(envelope.Message.Json ?? files.Architecture);
         }
         catch (JsonException e)
         {

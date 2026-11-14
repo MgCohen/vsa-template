@@ -102,7 +102,7 @@ public sealed partial class GraphPresenter
         ExportDefinitionRequest request = new(source, definition, ruleChanges);
         Result<ExportDefinitionResponse> exported = await Bus.Send(request);
         Message = exported.Error?.Message;
-        Export = exported.IsSuccess ? new ExportText(exported.Value.Json) : null;
+        Export = exported.IsSuccess ? new ExportText(exported.Value.Json, exported.Value.FileName) : null;
         await Notify();
     }
 

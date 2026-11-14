@@ -9,7 +9,7 @@ public sealed class LoopTests
     [Test]
     public void The_exported_definition_of_Notes_checks_Notes_with_no_errors()
     {
-        DotnetRun run = NotesExport.Engine("--definition", NotesExport.DefinitionFile);
+        DotnetRun run = NotesExport.Engine("--definition", NotesExport.ArchitectureFile);
 
         Assert.That(run.ExitCode, Is.Zero, run.Output);
         Assert.That(run.Output, Does.Not.Contain(": error "));
@@ -18,11 +18,11 @@ public sealed class LoopTests
     [Test]
     public void A_definition_without_its_allow_rules_gives_errors_when_the_engine_checks_Notes()
     {
-        Definition definition = ArchitectureImport.Read(NotesExport.DefinitionJson);
+        Definition definition = ArchitectureImport.Read(NotesExport.ArchitectureJson);
         List<RuleChange> removed = [.. definition.Rules.Where(r => r.Access == Access.Allow)
             .SelectMany(r => r.Froms.SelectMany(f => r.Tos.Select(t => new RuleChange(RuleOp.RemoveRule, f, t, r.Access, r.Id))))];
-        string edited = DefinitionChanges.Apply(NotesExport.DefinitionJson, definition, removed);
-        string file = Path.Combine(TempFolder.Create(), "definition.json");
+        string edited = DefinitionChanges.Apply(NotesExport.ArchitectureJson, definition, removed);
+        string file = Path.Combine(TempFolder.Create(), "edited.architecture.json");
         File.WriteAllText(file, edited);
 
         DotnetRun run = NotesExport.Engine("--definition", file);
@@ -35,7 +35,7 @@ public sealed class LoopTests
     [Test]
     public void A_changed_access_and_an_added_rule_import_back_with_the_same_rules()
     {
-        Definition definition = ArchitectureImport.Read(NotesExport.DefinitionJson);
+        Definition definition = ArchitectureImport.Read(NotesExport.ArchitectureJson);
         Rule denied = definition.Rules.First(r => r.Access == Access.Deny && r.Froms.Count == 1 && r.Tos.Count == 1);
         Term presenters = new("Presenters", []);
         Term infrastructure = new("Infrastructure", [new Condition(Condition.InSame, "Feature")]);
@@ -45,7 +45,7 @@ public sealed class LoopTests
             new(RuleOp.AddRule, presenters, infrastructure, Access.Allow),
         ];
 
-        Definition edited = ArchitectureImport.Read(DefinitionChanges.Apply(NotesExport.DefinitionJson, definition, changes));
+        Definition edited = ArchitectureImport.Read(DefinitionChanges.Apply(NotesExport.ArchitectureJson, definition, changes));
 
         Assert.That(edited.Rules.Select(r => r.Text), Does.Not.Contain(denied.Text));
         Assert.That(edited.Rules, Has.Some.Matches<Rule>(r => r.Access == Access.Allow && r.Froms.Count == 1 && r.Tos.Count == 1

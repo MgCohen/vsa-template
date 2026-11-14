@@ -8,7 +8,7 @@ using VSA.Handlers.Requests;
 namespace ArchitectureViewer.Slices.LoadArchitecture;
 
 internal sealed class LoadArchitectureHandler(
-    ArchitectureFiles files, ILayoutEngine engine, IEnumerable<INodeShape> shapes)
+    InputFiles files, ILayoutEngine engine, IEnumerable<INodeShape> shapes)
     : RequestHandler<LoadArchitectureRequest, LoadArchitectureResponse>
 {
     public override async Task<Result<LoadArchitectureResponse>> HandleAsync(

@@ -36,7 +36,7 @@ public sealed class ViewerApp : IDisposable
         start.ArgumentList.Add("--urls");
         start.ArgumentList.Add(url);
         start.ArgumentList.Add($"--{DataFolder.InputKey}");
-        start.ArgumentList.Add(NotesExport.File);
+        start.ArgumentList.Add(NotesExport.SnapshotFile);
         start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         Process process = Process.Start(start)!;
         process.OutputDataReceived += (_, _) => { };

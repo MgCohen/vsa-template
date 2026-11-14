@@ -7,14 +7,14 @@ public sealed class AppGraph
 {
     public const int MaxRows = 3;
 
-    private readonly ArchitectureFile file;
+    private readonly SnapshotFile file;
     private readonly string defaultPermission;
     private readonly Dictionary<string, InstanceData> instances;
     private readonly Dictionary<string, List<TypeData>> typesOf;
     private readonly HashSet<string> shown;
     private readonly Dictionary<string, RowPlace> rowOfType = [];
 
-    private AppGraph(ArchitectureFile file, string defaultPermission)
+    private AppGraph(SnapshotFile file, string defaultPermission)
     {
         this.file = file;
         this.defaultPermission = defaultPermission;
@@ -24,10 +24,10 @@ public sealed class AppGraph
         shown = [.. typesOf.Keys.SelectMany(Lineage)];
     }
 
-    public static LayoutData Of(ArchitectureFiles files)
+    public static LayoutData Of(InputFiles files)
     {
-        string permission = DefinitionJson.Read(files.DefinitionJson).Options.DefaultPermission.ToString();
-        return new AppGraph(ArchitectureJson.Read(files.ArchitectureJson), permission).Layout();
+        string permission = DefinitionJson.Read(files.Architecture).Options.DefaultPermission.ToString();
+        return new AppGraph(SnapshotJson.Read(files.Snapshot), permission).Layout();
     }
 
     private static string Last(string path)

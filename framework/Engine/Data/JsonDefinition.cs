@@ -19,7 +19,7 @@ public class JsonDefinition : ArchitectureDefinition {
 
     public DefinitionFile Data => data ??= DefinitionJson.Read(File.ReadAllText(FilePath));
 
-    public string FilePath => Path.IsPathRooted(file)
+    public string FilePath => file.Length == 0 || Path.IsPathRooted(file)
         ? file
         : Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location) ?? AppContext.BaseDirectory, file);
 

@@ -39,14 +39,14 @@ public sealed class ExportTests : ViewerPageTest
     }
 
     [Test]
-    public async Task The_download_link_gives_definition_json()
+    public async Task The_download_link_gives_the_architecture_file()
     {
         await MakeChanges();
         await ExportedJson();
 
         IDownload download = await Graph.Page.RunAndWaitForDownloadAsync(() => Graph.Page.ClickAsync("a.download"));
 
-        Assert.That(download.SuggestedFilename, Is.EqualTo("definition.json"));
+        Assert.That(download.SuggestedFilename, Is.EqualTo("vsa.architecture.json"));
     }
 
     private static bool Covers(Rule rule, string edge, string access)

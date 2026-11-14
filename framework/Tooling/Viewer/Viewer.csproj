@@ -11,7 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Host/VSA.Host.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Views/VSA.Views.csproj" />
-    <!-- The viewer reads architecture.json with the shared model (docs/architecture-data.md). -->
+    <!-- The viewer reads the architecture and snapshot files with the shared model (docs/architecture-data.md). -->
     <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Data/VSA.Architecture.Data.csproj" />
   </ItemGroup>
   <Import Project="$(VsaSdkDir)Sdk.targets" />
