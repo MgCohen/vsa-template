@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
 using VSA.Handlers;
 
-namespace Steps.Handlers;
+namespace Steps.Infrastructure;
 
 public sealed class StepRunner : IRunner {
     public async Task RunAsync(Envelope envelope, Func<Envelope, Task> run) {

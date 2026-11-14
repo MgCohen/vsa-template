@@ -91,6 +91,7 @@ public class VsaDefinition : ArchitectureDefinition {
     protected override void Rules(RuleBook rules) {
         rules.For<Domain>().Uses<Domain.Shared>();
         rules.For<Infrastructure>().Uses<Domain>();
+        rules.For<Infrastructure>().Uses<Handlers>(Depth.Self).And<Contracts>(Depth.Self);
         rules.For<Presenters>().Uses<Contracts>()
             .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal);
         rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
@@ -99,8 +100,6 @@ public class VsaDefinition : ArchitectureDefinition {
             .Uses<Handlers>().And<Contracts>().And<Contracts.Commands>().And<Contracts.Events>()
             .And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
-
-        rules.For<Handlers>().Under<Plugin>().Uses<Contracts>().And<Handlers>().And<Domain.Shared>();
 
         rules.For<Plugin>().Denies<Feature>();
         rules.For<Domain>().Under<Plugin>().Denies<Domain>(Depth.Self).InOther<Plugin>();

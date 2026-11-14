@@ -3,7 +3,7 @@ using Steps.Domain.Shared;
 using VSA.Contracts;
 using VSA.Handlers;
 
-namespace Steps.Handlers;
+namespace Steps.Infrastructure;
 
 public sealed class RecordStep : AfterStep<IEngineStep> {
     public const string CouldNotRun = "VSA3000";

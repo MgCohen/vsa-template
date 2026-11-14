@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Steps.Domain.Shared;
-using Steps.Handlers;
+using Steps.Infrastructure;
 using VSA.Handlers;
 using VSA.Handlers.Commands;
 using VSA.Module;
@@ -13,6 +13,7 @@ public sealed class StepsPlugin : Plugin {
         module.Services.AddPipeline(new PipelineBuilder<IEngineStep>()
             .HandlersOf(typeof(CommandHandler<,>))
             .Runner<StepRunner>()
+            .BeforeStep<MissingInput>()
             .AfterStep<RecordStep>());
     }
 }

@@ -1,4 +1,4 @@
-namespace Steps.Handlers;
+namespace Steps.Infrastructure;
 
 static class StepNames {
     const string Suffix = "Command";

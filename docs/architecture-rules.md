@@ -47,7 +47,7 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A plugin module uses no feature module | `VSA2001` |
 | The `Domain` of a plugin module uses no `Domain` of another plugin module | `VSA2001` |
 | A module root uses the plugin modules | `VSA2001` |
-| The `Handlers/` folder of a plugin (pipeline parts) uses `Contracts`, the core `Handlers`, its `Domain.Shared` and `Handlers` | `VSA2001` |
+| `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `VSA2001` |
 | The root class of a plugin inherits `Plugin` | `VSA1014`, and the host at startup |
 
 The project references do not enforce the layers. VSA.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).

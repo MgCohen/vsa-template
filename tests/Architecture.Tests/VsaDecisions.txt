@@ -367,11 +367,11 @@ Plugin/Infrastructure -> Framework/Core [any] Deny
 Plugin/Infrastructure -> Framework/Core/Domain [any] Allow Public
 Plugin/Infrastructure -> Framework/Core/Infrastructure [any] Allow Public
 Plugin/Infrastructure -> Framework/Core/Presenters [any] Deny
-Plugin/Infrastructure -> Framework/Core/Contracts [any] Deny
+Plugin/Infrastructure -> Framework/Core/Contracts [any] Allow Public
 Plugin/Infrastructure -> Framework/Core/Contracts/Contracts.Requests [any] Deny
 Plugin/Infrastructure -> Framework/Core/Contracts/Contracts.Events [any] Deny
 Plugin/Infrastructure -> Framework/Core/Contracts/Contracts.Commands [any] Deny
-Plugin/Infrastructure -> Framework/Core/Handlers [any] Deny
+Plugin/Infrastructure -> Framework/Core/Handlers [any] Allow Public
 Plugin/Infrastructure -> Framework/Core/Handlers/Handlers.Requests [any] Deny
 Plugin/Infrastructure -> Framework/Core/Handlers/Handlers.Events [any] Deny
 Plugin/Infrastructure -> Framework/Core/Handlers/Handlers.Commands [any] Deny
@@ -387,11 +387,11 @@ Plugin/Infrastructure -> Plugin/Domain [any] Allow Public
 Plugin/Infrastructure -> Plugin/Domain/Domain.Shared [any] Allow Public
 Plugin/Infrastructure -> Plugin/Infrastructure [any] Allow Public
 Plugin/Infrastructure -> Plugin/Presenters [any] Deny
-Plugin/Infrastructure -> Plugin/Contracts [any] Deny
+Plugin/Infrastructure -> Plugin/Contracts [any] Allow Public
 Plugin/Infrastructure -> Plugin/Contracts/Contracts.Requests [any] Deny
 Plugin/Infrastructure -> Plugin/Contracts/Contracts.Events [any] Deny
 Plugin/Infrastructure -> Plugin/Contracts/Contracts.Commands [any] Deny
-Plugin/Infrastructure -> Plugin/Handlers [any] Deny
+Plugin/Infrastructure -> Plugin/Handlers [any] Allow Public
 Plugin/Infrastructure -> Plugin/Handlers/Handlers.Requests [any] Deny
 Plugin/Infrastructure -> Plugin/Handlers/Handlers.Events [any] Deny
 Plugin/Infrastructure -> Plugin/Handlers/Handlers.Commands [any] Deny
@@ -643,7 +643,7 @@ Plugin/Handlers -> Framework/Core [any] Deny
 Plugin/Handlers -> Framework/Core/Domain [any] Deny
 Plugin/Handlers -> Framework/Core/Infrastructure [any] Deny
 Plugin/Handlers -> Framework/Core/Presenters [any] Deny
-Plugin/Handlers -> Framework/Core/Contracts [any] Allow Public
+Plugin/Handlers -> Framework/Core/Contracts [any] Deny
 Plugin/Handlers -> Framework/Core/Contracts/Contracts.Requests [any] Deny
 Plugin/Handlers -> Framework/Core/Contracts/Contracts.Events [any] Deny
 Plugin/Handlers -> Framework/Core/Contracts/Contracts.Commands [any] Deny
@@ -660,10 +660,10 @@ Plugin/Handlers -> App/Views [any] Deny
 Plugin/Handlers -> Plugin [any] Deny
 Plugin/Handlers -> Plugin/Module [any] Deny
 Plugin/Handlers -> Plugin/Domain [any] Deny
-Plugin/Handlers -> Plugin/Domain/Domain.Shared [any] Allow Public
+Plugin/Handlers -> Plugin/Domain/Domain.Shared [any] Deny
 Plugin/Handlers -> Plugin/Infrastructure [any] Deny
 Plugin/Handlers -> Plugin/Presenters [any] Deny
-Plugin/Handlers -> Plugin/Contracts [any] Allow Public
+Plugin/Handlers -> Plugin/Contracts [any] Deny
 Plugin/Handlers -> Plugin/Contracts/Contracts.Requests [any] Deny
 Plugin/Handlers -> Plugin/Contracts/Contracts.Events [any] Deny
 Plugin/Handlers -> Plugin/Contracts/Contracts.Commands [any] Deny
@@ -1037,11 +1037,11 @@ Feature/Infrastructure -> Framework/Core [any] Deny
 Feature/Infrastructure -> Framework/Core/Domain [any] Allow Public
 Feature/Infrastructure -> Framework/Core/Infrastructure [any] Allow Public
 Feature/Infrastructure -> Framework/Core/Presenters [any] Deny
-Feature/Infrastructure -> Framework/Core/Contracts [any] Deny
+Feature/Infrastructure -> Framework/Core/Contracts [any] Allow Public
 Feature/Infrastructure -> Framework/Core/Contracts/Contracts.Requests [any] Deny
 Feature/Infrastructure -> Framework/Core/Contracts/Contracts.Events [any] Deny
 Feature/Infrastructure -> Framework/Core/Contracts/Contracts.Commands [any] Deny
-Feature/Infrastructure -> Framework/Core/Handlers [any] Deny
+Feature/Infrastructure -> Framework/Core/Handlers [any] Allow Public
 Feature/Infrastructure -> Framework/Core/Handlers/Handlers.Requests [any] Deny
 Feature/Infrastructure -> Framework/Core/Handlers/Handlers.Events [any] Deny
 Feature/Infrastructure -> Framework/Core/Handlers/Handlers.Commands [any] Deny
@@ -1057,11 +1057,11 @@ Feature/Infrastructure -> Plugin/Domain [any] Allow Public
 Feature/Infrastructure -> Plugin/Domain/Domain.Shared [any] Allow Public
 Feature/Infrastructure -> Plugin/Infrastructure [any] Allow Public
 Feature/Infrastructure -> Plugin/Presenters [any] Deny
-Feature/Infrastructure -> Plugin/Contracts [any] Deny
+Feature/Infrastructure -> Plugin/Contracts [any] Allow Public
 Feature/Infrastructure -> Plugin/Contracts/Contracts.Requests [any] Deny
 Feature/Infrastructure -> Plugin/Contracts/Contracts.Events [any] Deny
 Feature/Infrastructure -> Plugin/Contracts/Contracts.Commands [any] Deny
-Feature/Infrastructure -> Plugin/Handlers [any] Deny
+Feature/Infrastructure -> Plugin/Handlers [any] Allow Public
 Feature/Infrastructure -> Plugin/Handlers/Handlers.Requests [any] Deny
 Feature/Infrastructure -> Plugin/Handlers/Handlers.Events [any] Deny
 Feature/Infrastructure -> Plugin/Handlers/Handlers.Commands [any] Deny
