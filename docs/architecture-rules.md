@@ -8,11 +8,11 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 |---|---|---|---|
 | Editor and build | Build | `VSA.Sdk` (`framework/Sdk`) | `VSA0xxx` |
 | Editor and build | Analyzers | Built-in .NET analyzers + `VSA.Analyzers` (`framework/Analyzers`) | `CAxxxx`, `IDExxxx`, `VSA1xxx` |
-| Tests | Architecture | `VSA.Testing.Architecture` (architecture engine, ArchUnitNET) | `VSA2xxx` |
+| Build of the host | Architecture | `VSA.Architecture.Build` (rule engine, ArchUnitNET) | `VSA2xxx` |
 | Tests | Unit | `VSA.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `VSA.Testing.EndToEnd` | Not started |
 
-The editor and the build run the first group in each consumer project. The second group runs in a consumer test project.
+The editor and the build run the first group in each consumer project. The build of the host project runs the architecture checks. The last group runs in a consumer test project.
 
 ## Rules
 
@@ -45,6 +45,7 @@ The editor and the build run the first group in each consumer project. The secon
 | `VSA2003` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
 | `VSA2101` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
 | `VSA2102` | Architecture | Each type of the app is in a folder of a part. |
+| `VSA2103` | Architecture | A warning: a Unity project has no `Library/ScriptAssemblies/` folder, so the checks do not read the code that only Unity compiles. |
 
 `framework/Sdk/Sdk/VSA.Layers.targets` gives the project references of each layer, because VSA.Sdk cannot run C# before compile. Keep it the same as the VSA definition. No test compares the two.
 
@@ -220,11 +221,9 @@ A suppressor can hide a warning that `TreatWarningsAsErrors` makes an error, for
 
 Each layer references `VSA.Analyzers.Markers`. It is a separate package because VSA.Analyzers is private (`PrivateAssets="all"`): a DLL in it does not reach the host at runtime.
 
-## Architecture: `ArchitectureTests<TDefinition>`
+## Architecture: the rule engine
 
-The architecture engine binds each type of the app to a part of the VSA definition. Four native ArchUnitNET tests give `VSA2001`, `VSA2003`, `VSA2101` and `VSA2102`. A consumer test project references the host and `VSA.Testing.Architecture`, and it writes no test class: the build adds `ArchitectureTests` to `obj/.../VsaArchitectureTests.g.cs` (`framework/Testing/Architecture/build/`). See `architecture-engine.md` for the definition API, the binding and app rules.
-
-To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>` in the test project. `Architecture.Tests` does this, because it gives its own definitions. In this repository, `Directory.Build.targets` imports the same target for each project with a `ProjectReference` to `VSA.Testing.Architecture`.
+The rule engine binds each type of the app to a part of the VSA definition. Its checks give `VSA2001`, `VSA2003`, `VSA2101`, `VSA2102` and the warning `VSA2103`. The build hook package `VSA.Architecture.Build` on the host project runs it after each build. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules.
 
 ## Unit: `VsaUnitTest`
 
