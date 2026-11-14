@@ -2,8 +2,18 @@ using System.Text.Json;
 
 namespace VSA.Architecture.Data;
 
-public class JsonDefinition(string file) : ArchitectureDefinition {
+public class JsonDefinition : ArchitectureDefinition {
+    readonly string file;
     DefinitionFile? data;
+
+    public JsonDefinition(string file) {
+        this.file = file;
+    }
+
+    public JsonDefinition(DefinitionFile data) {
+        file = "";
+        this.data = data;
+    }
 
     public DefinitionFile Data => data ??= DefinitionJson.Read(File.ReadAllText(FilePath));
 
@@ -74,7 +84,7 @@ public class JsonDefinition(string file) : ArchitectureDefinition {
         }
     }
 
-    static Type TypeOf(string name) {
+    internal static Type TypeOf(string name) {
         var type = Type.GetType(name);
         if (type is not null) {
             return type;

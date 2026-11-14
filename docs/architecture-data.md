@@ -21,6 +21,7 @@ flowchart LR
 | App model | `framework/Engine/Data/` | `ArchitectureFile`, `ArchitectureJson` |
 | Export step | `engine/Features/Export/` | `ExportDefinition`: `--export <file>` writes `definition.json` |
 | App export | `framework/Engine/Core/Export/` | `ArchitectureExport.Of(map, name, root)` gives an `ArchitectureFile` |
+| Viewer import | `framework/Tooling/Viewer/` | `ArchitectureImport` reads `definition.json` with `JsonDefinition` and `DefinitionRules` |
 | Tests | `tests/Architecture.Tests/` | `DefinitionFileTests`, `DataConceptTests`, `ExportTests` |
 
 ## definition.json
@@ -70,5 +71,4 @@ A relative path starts at the folder of the assembly of the definition class. `J
 
 - `FolderAliases` (Unity): in the file, or in code only?
 - The data project targets `net10.0`, because the schema needs `System.Text.Json` 9. Must `JsonDefinition` run in Unity (`netstandard2.1`)?
-- Viewer v1: does it read only `definition.json`, or also `architecture.json` for the types, uses and findings?
 - The viewer edits and adds data in `definition.json`. This comes after viewer v1.

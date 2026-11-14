@@ -1,6 +1,6 @@
 # Architecture viewer
 
-The architecture viewer draws the architecture of a VSA app as a graph, and lets you edit links and rules. It is a VSA app in `framework/Tooling/Viewer/`, built against the framework source, as `samples/Notes` is. It does not ship yet. Its input is `architecture.json`, which the architecture engine exports from an app. The model of the file is `VSA.Architecture.Data` (see `architecture-data.md`).
+The architecture viewer draws the architecture of a VSA app as a graph, and lets you edit links and rules. It is a VSA app in `framework/Tooling/Viewer/`, built against the framework source, as `samples/Notes` is. It does not ship yet. Its input is two files that the architecture engine exports from an app: `definition.json` (the definition as data) and `architecture.json` (the resolved app). The model of both files is `VSA.Architecture.Data` (see `architecture-data.md`).
 
 ## Parts
 
@@ -11,7 +11,7 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 | Views | `App/Views/` | Pages, panels, graph and shape components |
 | Host | `App/Host/` | `ViewerApp` (selects `WebVsaHost`), `ViewerDefinition` (the app rules) and the fixed `Program.cs` line |
 | Static files | `wwwroot/` | `app.css`, elkjs and its interop script |
-| Default input | `Data/` | `architecture.json` of `samples/Notes`, made by `Architecture.Export` (`framework/Tooling/Export/`) |
+| Default input | `Data/` | `definition.json` and `architecture.json` of `samples/Notes`, made by `Architecture.Export` (`framework/Tooling/Export/`) |
 | Licenses | `THIRD-PARTY-NOTICES.md`, `LICENSE-EPL-2.0.md` | Z.Blazor.Diagrams (MIT), elkjs 0.9.3 (EPL-2.0) |
 | Tests | `tests/Viewer.Tests/` | Unit and browser tests |
 
@@ -31,7 +31,9 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 flowchart LR
     A[App output folder] --> X[Architecture.Export]
     X --> D[architecture.json]
+    X --> F[definition.json]
     D --> M[ArchitectureViewerModule]
+    F --> M
     M --> H[Request handlers]
     H --> E[elkjs layout]
     H --> P[GraphPresenter]
@@ -39,12 +41,12 @@ flowchart LR
     V -->|gestures| P
 ```
 
-`ArchitectureViewerModule` reads the file in the setting `Viewer:Architecture`. If the setting is empty, it reads `Data/architecture.json` from the app folder (`AppContext.BaseDirectory`). Both views run ELK on load: the App view gets its graph from the `app` section (`AppGraph`), and the Definition view from the `definition` section (`DefinitionGraph`).
+`ArchitectureViewerModule` reads the file in the setting `Viewer:Architecture`, and `definition.json` in the same folder. If the setting is empty, it reads both files from `Data/` in the app folder (`AppContext.BaseDirectory`). Both views run ELK on load: the App view gets its graph from the `app` section of `architecture.json` (`AppGraph`). The Definition view loads `definition.json` with `JsonDefinition`, resolves the pairs with `Resolve()`, and draws them (`DefinitionGraph`).
 
 ## Make the export
 
 1. Build the app, for example `dotnet build samples/Notes`.
-2. Run `dotnet run --project framework/Tooling/Export -- samples/Notes/bin/Debug/net10.0 samples/Notes out/architecture.json`.
+2. Run `dotnet run --project framework/Tooling/Export -- samples/Notes/bin/Debug/net10.0 samples/Notes out/architecture.json`. The tool also writes `out/definition.json`.
 3. Start the viewer with `--Viewer:Architecture out/architecture.json`.
 
 The arguments are the app output folder, the app root and the output file. The export loads the app with `ArchitectureMap.Load`, which finds the definition in the app output.
@@ -75,7 +77,7 @@ Version 2 adds the rule terms (`from`, `to`) and `memberAccess`. The text of a r
 | Export | `ExportImportTests` (4): the export of `samples/Notes` goes into the import | `samples/Notes` builds |
 | Browser | 23 tests in category `Browser` | Playwright Chromium (the tests install it on the first run, about 150 MB) |
 
-At the start of the run, `NotesExport` runs `Architecture.Export` on the output of `samples/Notes` and writes a temporary `architecture.json`. The test project builds `Architecture.Export` and `samples/Notes` with `ReferenceOutputAssembly="false"`, so their assemblies stay out of the test output.
+At the start of the run, `NotesExport` runs `Architecture.Export` on the output of `samples/Notes` and writes a temporary `architecture.json` and `definition.json`. The test project builds `Architecture.Export` and `samples/Notes` with `ReferenceOutputAssembly="false"`, so their assemblies stay out of the test output.
 
 The browser tests start `Viewer.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development` and `--Viewer:Architecture` set to that file. At the start of the run, `ViewerSetup` installs the Playwright Chromium if it is missing, and starts it one time. Each test opens a new browser context and page, so each test has a new Blazor circuit and new presenter state.
 

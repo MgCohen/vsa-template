@@ -61,7 +61,7 @@ public sealed class DefinitionTests : ViewerPageTest
         string added = (await Graph.Pending()).Single(id => id.StartsWith("new:", StringComparison.Ordinal));
         Assert.That(drafts, Is.EqualTo(1));
         Assert.That(await Graph.EdgeAttribute(added, "data-access"), Is.EqualTo("Conditional"));
-        Assert.That(await Graph.Labels(), Does.Contain("InOwn<Feature> pending"));
+        Assert.That(await Graph.Labels(), Does.Contain("InSame<Feature> pending"));
         Assert.That(await Graph.Changes(), Is.EqualTo("1 rule changes, 0 what-if links"));
     }
 }

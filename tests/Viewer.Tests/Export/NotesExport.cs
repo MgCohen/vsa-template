@@ -11,6 +11,9 @@ public static class NotesExport
 
     public static string Json => System.IO.File.ReadAllText(File);
 
+    public static string DefinitionJson =>
+        System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(File)!, "definition.json"));
+
     private static string Make()
     {
         string output = Path.Combine(Path.GetTempPath(), $"vsa-viewer-{Environment.ProcessId}", "architecture.json");

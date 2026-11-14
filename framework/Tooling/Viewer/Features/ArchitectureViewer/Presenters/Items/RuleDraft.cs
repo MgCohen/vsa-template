@@ -8,5 +8,5 @@ public sealed record RuleDraft(string Access, string Condition, string Layer)
 
     public static readonly RuleDraft Default = new(Allow, None, "Feature");
 
-    public static readonly IReadOnlyList<string> Conditions = [None, "InOwn", "InOther", "Under"];
+    public static readonly IReadOnlyList<string> Conditions = [None, "InSame", "InOther", "Under"];
 }

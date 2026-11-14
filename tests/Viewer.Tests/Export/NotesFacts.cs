@@ -1,4 +1,6 @@
 using System.Text.Json;
+using ArchitectureViewer.Domain.Shared;
+using ArchitectureViewer.Infrastructure;
 
 namespace Viewer.Tests.Export;
 
@@ -6,9 +8,11 @@ public static class NotesFacts
 {
     private static readonly Lazy<JsonElement> root = new(() => JsonDocument.Parse(NotesExport.Json).RootElement);
 
+    private static readonly Lazy<Definition> definition = new(() => ArchitectureImport.Read(NotesExport.DefinitionJson));
+
     private static readonly Lazy<IReadOnlyList<RuleTerm>> terms = new(ReadTerms);
 
-    public static int PartCards => root.Value.GetProperty("definition").GetProperty("parts").GetArrayLength() - 1;
+    public static int PartCards => definition.Value.Parts.Count - 1;
 
     public static int NodeEdges => root.Value.GetProperty("app").GetProperty("dependencies").EnumerateArray()
         .Select(d => new LayerPair(d.GetProperty("from").GetString(), d.GetProperty("to").GetString()))
@@ -43,22 +47,15 @@ public static class NotesFacts
 
     private static List<RuleTerm> ReadTerms()
     {
-        return [.. root.Value.GetProperty("definition").GetProperty("rules").EnumerateArray()
-            .SelectMany(r => r.GetProperty("from").EnumerateArray().SelectMany(f => r.GetProperty("to").EnumerateArray()
-                .Select(t => new RuleTerm(r.GetProperty("id").GetString()!, r.GetProperty("access").GetString()!,
-                    new LayerPair(Layer(f), Layer(t)), Filters(t)))))
+        return [.. definition.Value.Rules
+            .SelectMany(r => r.Froms.SelectMany(f => r.Tos
+                .Select(t => new RuleTerm(r.Id, r.Access, new LayerPair(f.Layer, t.Layer), Filters(t)))))
             .Where(t => t.Pair.From != t.Pair.To)];
     }
 
-    private static string? Layer(JsonElement term)
+    private static string Filters(Term term)
     {
-        return term.GetProperty("layer").GetString();
-    }
-
-    private static string Filters(JsonElement term)
-    {
-        return string.Join(", ", term.GetProperty("filters").EnumerateArray()
-            .Select(f => $"{f.GetProperty("kind").GetString()}<{f.GetProperty("layer").GetString()}>"));
+        return string.Join(", ", term.Conditions.Select(c => $"{c.Kind}<{c.Layer}>"));
     }
 
     private sealed record LayerPair(string? From, string? To);

@@ -27,7 +27,7 @@ public sealed class ExportTests : ViewerPageTest
         Assert.That(add.GetProperty("from").GetString(), Is.EqualTo("Presenters"));
         Assert.That(add.GetProperty("to").GetString(), Is.EqualTo("Infrastructure"));
         Assert.That(add.GetProperty("access").GetString(), Is.EqualTo("Uses"));
-        Assert.That(add.GetProperty("condition").GetProperty("kind").GetString(), Is.EqualTo("InOwn"));
+        Assert.That(add.GetProperty("condition").GetProperty("kind").GetString(), Is.EqualTo("InSame"));
         Assert.That(add.GetProperty("condition").GetProperty("layer").GetString(), Is.EqualTo("Feature"));
         Assert.That(whatIf.Select(w => w.GetProperty("op").GetString()), Is.EqualTo(new[] { "AddLink" }));
         Assert.That(await Code(), Is.EqualTo(expectedCode));
@@ -86,7 +86,7 @@ public sealed class ExportTests : ViewerPageTest
             $"- map.For<{From(allowed)}>().Uses<{To(allowed)}>();",
             $"- map.For<{From(denied)}>().Denies<{To(denied)}>();",
             $"+ map.For<{From(denied)}>().Uses<{To(denied)}>();",
-            "+ map.For<Presenters>().Uses<Infrastructure>().InOwn<Feature>();",
+            "+ map.For<Presenters>().Uses<Infrastructure>().InSame<Feature>();",
         ];
         await Graph.RemoveRule(allowed);
         await Graph.FlipRule(denied, "Allow");

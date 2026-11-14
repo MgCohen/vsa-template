@@ -11,7 +11,7 @@ public static class DraftTerms
 
     public static Term To(string layer, string condition, string conditionLayer)
     {
-        bool onTarget = condition is Condition.InOwn or Condition.InOther;
+        bool onTarget = condition is Condition.InSame or Condition.InOther;
         return new(layer, onTarget ? [new(condition, conditionLayer)] : []);
     }
 }

@@ -1,3 +1,3 @@
 namespace ArchitectureViewer.Infrastructure;
 
-public sealed record ArchitectureFiles(string ArchitectureJson);
+public sealed record ArchitectureFiles(string ArchitectureJson, string DefinitionJson);

@@ -18,7 +18,7 @@ internal sealed class LoadDefinitionHandler(
         Definition definition;
         try
         {
-            definition = ArchitectureImport.Read(envelope.Message.Json ?? files.ArchitectureJson);
+            definition = ArchitectureImport.Read(envelope.Message.Json ?? files.DefinitionJson);
         }
         catch (JsonException e)
         {

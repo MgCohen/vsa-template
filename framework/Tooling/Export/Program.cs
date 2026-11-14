@@ -11,7 +11,7 @@ public static class Program
     {
         if (args.Length != 3)
         {
-            Console.Error.WriteLine("Usage: Architecture.Export <app output folder> <app root> <architecture.json>");
+            Console.Error.WriteLine("Usage: Architecture.Export <app output folder> <app root> <architecture.json>. It also writes definition.json in the same folder.");
             return 1;
         }
         string bin = Path.GetFullPath(args[0]);
@@ -24,7 +24,9 @@ public static class Program
         string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(appRoot));
         string root = args[1].Replace(Path.DirectorySeparatorChar, '/');
         ArchitectureJson.Save(ArchitectureExport.Of(architecture, name, root), args[2]);
-        Console.WriteLine($"{args[2]}: {architecture.Bindings.All.Count} bindings");
+        string definitionFile = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(args[2]))!, "definition.json");
+        DefinitionJson.Save(DefinitionExport.Of(definition), definitionFile);
+        Console.WriteLine($"{args[2]}: {architecture.Bindings.All.Count} bindings; {definitionFile}");
         return 0;
     }
 }

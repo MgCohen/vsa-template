@@ -104,7 +104,7 @@ public sealed partial class GraphPage
     public async Task<int> AddConditionalRule()
     {
         await Page.SelectOptionAsync("select.draft-access", "Allow");
-        await Page.SelectOptionAsync("select.draft-condition", "InOwn");
+        await Page.SelectOptionAsync("select.draft-condition", "InSame");
         await Page.SelectOptionAsync("select.draft-layer", "Feature");
         int drafts = await DrawLink(Port("p39", "Out", ""), Port("p38", "In", ""));
         await WaitFor(Scripts.NewRuleDrawn, null);
