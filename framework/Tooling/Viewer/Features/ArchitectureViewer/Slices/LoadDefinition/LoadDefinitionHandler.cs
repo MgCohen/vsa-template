@@ -15,10 +15,11 @@ internal sealed class LoadDefinitionHandler(
 {
     public override async Task<Result<LoadDefinitionResponse>> HandleAsync(Envelope<LoadDefinitionRequest> envelope)
     {
+        string json = envelope.Message.Json ?? files.Architecture;
         Definition definition;
         try
         {
-            definition = ArchitectureImport.Read(envelope.Message.Json ?? files.Architecture);
+            definition = ArchitectureImport.Read(json);
         }
         catch (JsonException e)
         {
@@ -26,6 +27,6 @@ internal sealed class LoadDefinitionHandler(
         }
         LayoutData data = DefinitionGraph.Of(definition, []);
         LayoutData layout = await engine.Draw(data, shapes.Named(envelope.Message.Shape));
-        return new LoadDefinitionResponse(definition, data, layout);
+        return new LoadDefinitionResponse(definition, data, layout, SnapshotCheck.Warning(files.Snapshot, json));
     }
 }

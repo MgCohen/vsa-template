@@ -16,6 +16,7 @@ internal sealed class LoadArchitectureHandler(
     {
         LayoutData data = AppGraph.Of(files);
         LayoutData layout = await engine.Draw(data, shapes.Named(envelope.Message.Shape));
-        return new LoadArchitectureResponse(data, layout, true, shapes.Names());
+        string? warning = SnapshotCheck.Warning(files.Snapshot, files.Architecture);
+        return new LoadArchitectureResponse(data, layout, true, shapes.Names(), warning);
     }
 }

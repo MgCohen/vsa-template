@@ -45,6 +45,8 @@ public sealed partial class GraphPresenter : Presenter
 
     public Viewport View { get; private set; } = new(10, 10, 1);
 
+    public string? SnapshotWarning { get; private set; }
+
     public bool Editing { get; private set; }
 
     public Target Selection { get; private set; } = Target.None;
@@ -57,6 +59,7 @@ public sealed partial class GraphPresenter : Presenter
             return;
         }
         Shapes = loaded.Value.Shapes;
+        SnapshotWarning = loaded.Value.Warning;
         data = loaded.Value.Data;
         View = Viewport.Fit(loaded.Value.Layout.Size.W, loaded.Value.Layout.Size.H, Window);
         changes.Clear();

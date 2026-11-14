@@ -58,6 +58,7 @@ public sealed partial class GraphPresenter
             return;
         }
         source = json;
+        SnapshotWarning = loaded.Value.Warning;
         definition = loaded.Value.Definition;
         Layers = [.. definition.Parts.Where(p => p.Parent is not null)
             .Select(p => p.Layer).Distinct().Order(StringComparer.Ordinal)];

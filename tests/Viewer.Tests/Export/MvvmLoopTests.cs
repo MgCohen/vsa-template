@@ -1,5 +1,7 @@
 using ArchitectureViewer.Domain.Shared;
 using ArchitectureViewer.Infrastructure;
+using Tests.Shared;
+using VSA.Architecture.Data;
 
 namespace Viewer.Tests.Export;
 
@@ -78,6 +80,35 @@ public sealed class MvvmLoopTests
 
         Assert.That(MvvmApp.Errors(MvvmApp.Check(allowed)), Is.Empty);
         Assert.That(MvvmApp.Errors(MvvmApp.Check(removed)), Is.EqualTo(MvvmApp.Errors(MvvmApp.Engine())));
+    }
+
+    [Test]
+    public void The_engine_exports_a_new_snapshot_with_an_edited_file()
+    {
+        string edited = Edit(MvvmApp.ArchitectureJson, new RuleChange(RuleOp.AddRule, View, Model, Access.Allow));
+        string output = TempFolder.Create();
+
+        MvvmApp.Check(edited, "--export", output);
+
+        SnapshotFile snapshot = SnapshotJson.Read(File.ReadAllText(Path.Combine(output, DataFiles.Snapshot("MvvmApp", "Mvvm"))));
+        Assert.That(snapshot.Architecture.Name, Is.EqualTo("Mvvm"));
+        Assert.That(snapshot.Architecture.Source, Is.EqualTo(DataFiles.Architecture("edited")));
+        Assert.That(snapshot.Architecture.Hash, Is.EqualTo(DefinitionJson.Hash(DefinitionJson.Read(edited))));
+        Assert.That(snapshot.App.Findings, Is.Empty);
+        Assert.That(snapshot.App.Dependencies.Select(d => d.Access), Has.None.EqualTo(Access.Deny));
+    }
+
+    [Test]
+    public void The_viewer_warns_when_the_snapshot_is_from_another_version_of_the_architecture()
+    {
+        string edited = Edit(MvvmApp.ArchitectureJson, new RuleChange(RuleOp.AddRule, View, Model, Access.Allow));
+        string output = TempFolder.Create();
+        MvvmApp.Check(edited, "--export", output);
+        string newSnapshot = File.ReadAllText(Path.Combine(output, DataFiles.Snapshot("MvvmApp", "Mvvm")));
+
+        Assert.That(SnapshotCheck.Warning(MvvmApp.SnapshotJson, MvvmApp.ArchitectureJson), Is.Null);
+        Assert.That(SnapshotCheck.Warning(MvvmApp.SnapshotJson, edited), Does.Contain("another version of the architecture Mvvm"));
+        Assert.That(SnapshotCheck.Warning(newSnapshot, edited), Is.Null);
     }
 
     private static string Edit(string json, RuleChange change)

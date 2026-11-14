@@ -7,5 +7,6 @@ public sealed record LoadArchitectureResponse(
     LayoutData Data,
     LayoutData Layout,
     bool Fits,
-    IReadOnlyList<string> Shapes)
+    IReadOnlyList<string> Shapes,
+    string? Warning)
     : IResponse;

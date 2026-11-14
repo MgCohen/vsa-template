@@ -63,6 +63,8 @@ dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin sample
 | The viewer adds the rule View uses Model, and the engine checks with the new file | 0 errors |
 | The viewer removes the rule ViewModel uses Model, and the engine checks with the new file | 3 errors: the old one, `GreetingViewModel` uses `Greeting`, and `ViewModelBase` uses `ModelBase` |
 | The edited file is imported again, and a second edit removes the added rule | The original error again |
+| The engine checks with the edited file and exports a new snapshot | The snapshot has the hash of the edited file, no findings and no denied use |
+| The viewer compares the old snapshot with the edited file | A warning: another version of the architecture. The new snapshot gives no warning |
 
 ## The architecture file
 
@@ -111,7 +113,7 @@ A rule of a concept comes from code, so an edit of it fails with a message. A co
 
 A use names its rule by its text. An instance has `many`: true if its part is a group. The definition is only in the architecture file.
 
-The `hash` tells if a snapshot is from a given version of the architecture: `DefinitionJson.Hash(file)` of that architecture file gives the same value. The viewer reads the architecture file with the name `architecture.name`, from the folder of the snapshot.
+The `hash` tells if a snapshot is from a given version of the architecture: `DefinitionJson.Hash(file)` of that architecture file gives the same value. The viewer compares the two hashes (`SnapshotCheck`). If they are different, for example after you import an edited architecture file, the toolbar says that the App view shows the app against another version. To get a new snapshot for an edited file, run the engine with `--definition <file> --export <folder>`. The viewer reads the architecture file with the name `architecture.name`, from the folder of the snapshot.
 
 ## JsonDefinition
 

@@ -18,11 +18,11 @@ public static class MvvmApp
         return EngineProcess.Run(EngineProcess.Metadata("MvvmRoot"), EngineProcess.Metadata("MvvmOutput"), arguments);
     }
 
-    public static DotnetRun Check(string architectureJson)
+    public static DotnetRun Check(string architectureJson, params string[] arguments)
     {
         string file = Path.Combine(TempFolder.Create(), DataFiles.Architecture("edited"));
         File.WriteAllText(file, architectureJson);
-        return Engine("--definition", file);
+        return Engine(["--definition", file, .. arguments]);
     }
 
     public static IReadOnlyList<string> Errors(DotnetRun run)
