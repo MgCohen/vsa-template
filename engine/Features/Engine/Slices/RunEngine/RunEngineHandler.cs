@@ -1,5 +1,4 @@
 using Definition.Slices.LoadDefinition;
-using Hello.Slices.SayHello;
 using Report.Slices.WriteReport;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
@@ -21,6 +20,5 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHan
     async Task Run(RunEngineCommand run, CancellationToken ct) {
         var app = await commands.SendAsync(new LoadDefinitionCommand(run.Root, run.Bin, run.Skip), ct);
         await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
-        await commands.SendAsync(new SayHelloCommand(run.Root), ct);
     }
 }
