@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace VSA.Composition;
+namespace VSA.Kernel;
 
 public static class FactoryServiceCollectionExtensions {
     public static IServiceCollection AddFactory<TFactory>(

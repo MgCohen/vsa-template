@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
-using VSA.Module;
+using VSA.Kernel;
 
 namespace VSA.Handlers.Requests;
 
-static class RequestHandlerInstaller {
-    internal static void Install(IServiceCollection services, ModuleTypes types) {
+sealed class RequestHandlerInstaller : IInstaller {
+    public void Install(IServiceCollection services, AnchorTypes types) {
         EnsureOneHandlerForEachRequest(types.Implementations(typeof(RequestHandler<,>)));
         services.AddDefaultPipeline(
             PipelineKind.Requests, new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));

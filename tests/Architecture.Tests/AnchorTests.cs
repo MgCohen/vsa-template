@@ -2,13 +2,13 @@ using VSA.Architecture;
 
 namespace Architecture.Tests;
 
-public record ModuleRoot : Anchor;
+public record GroupRoot : Anchor;
 
 public sealed class AnchorTests {
     [Test]
     public void An_anchor_is_in_the_folder_of_its_parent() {
         Part? anchor = null;
-        _ = new InlineDefinition(root => anchor = root.AddGroup<Group>().Add<ModuleRoot>()).Root;
+        _ = new InlineDefinition(root => anchor = root.AddGroup<Group>().Add<GroupRoot>()).Root;
 
         Assert.That(anchor!.HasFolder, Is.False);
     }
@@ -19,7 +19,7 @@ public sealed class AnchorTests {
         Part? group = null;
         _ = new InlineDefinition(root => {
             group = root.AddGroup<Group>();
-            anchor = group.Add<ModuleRoot>();
+            anchor = group.Add<GroupRoot>();
         }).Root;
 
         Assert.That(anchor!.Path, Is.EqualTo(group!.Path));

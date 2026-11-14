@@ -3,20 +3,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VSA.Composition;
 using VSA.Handlers.Requests;
-using VSA.Module;
+using VSA.Kernel;
 using VSA.Views;
 
 namespace VSA.Host;
 
-public sealed class WebVsaHost : IVsaHost {
+public sealed class WebVsaHost : IAppHost {
     Type[] requestHandlers = [];
     Type? viewsRoot;
 
     public IHostApplicationBuilder CreateBuilder(string[] args) => WebApplication.CreateBuilder(args);
 
-    public void Install(IHostApplicationBuilder builder, ModuleTypes types) {
+    public void Install(IHostApplicationBuilder builder, AnchorTypes types) {
         requestHandlers = [.. types.Implementations(typeof(RequestHandler<,>)).Select(handler => handler.Service)];
-        viewsRoot = ViewsInstaller.FindRoot(AppScan.AssembliesThatReference(typeof(ViewsRoot).Assembly));
+        viewsRoot = ViewsInstaller.FindRoot(AnchorScan.AssembliesThatReference(typeof(ViewsRoot).Assembly));
         if (viewsRoot is not null) {
             ViewsInstaller.Install(builder.Services);
         }

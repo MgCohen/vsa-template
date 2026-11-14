@@ -2,48 +2,54 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using VSA.Module;
 
-namespace VSA.Composition;
+namespace VSA.Kernel;
 
-public sealed class VsaBuilder {
+public sealed class AppBuilder {
     readonly string[] args;
     readonly List<Action<IServiceCollection>> services = [];
-    IVsaHost? host;
-    IReadOnlyList<VSA.Module.Module>? modules;
+    IAppHost? host;
+    IReadOnlyList<Anchor>? anchors;
+    Type anchorBase = typeof(Anchor);
     IKeySource keys = new ConstraintKeys();
 
-    VsaBuilder(string[] args) {
+    AppBuilder(string[] args) {
         this.args = args;
     }
 
-    public static VsaBuilder Create(params string[] args) => new(args);
+    public static AppBuilder Create(params string[] args) => new(args);
 
-    public VsaBuilder UseHost(IVsaHost selected) {
+    public AppBuilder UseHost(IAppHost selected) {
         host = selected;
         return this;
     }
 
-    public VsaBuilder UseGenericHost() => UseHost(new GenericVsaHost());
+    public AppBuilder UseGenericHost() => UseHost(new GenericAppHost());
 
-    public VsaBuilder UseConsoleHost() => UseHost(new ConsoleVsaHost());
-
-    public VsaBuilder Modules(params VSA.Module.Module[] given) {
-        modules = given;
+    public AppBuilder ScanFor(Type baseType) {
+        if (!typeof(Anchor).IsAssignableFrom(baseType)) {
+            throw new ArgumentException($"{baseType.FullName} does not inherit Anchor. Give an anchor base type.", nameof(baseType));
+        }
+        anchorBase = baseType;
         return this;
     }
 
-    public VsaBuilder Keys(IKeySource given) {
+    public AppBuilder Anchors(params Anchor[] given) {
+        anchors = given;
+        return this;
+    }
+
+    public AppBuilder Keys(IKeySource given) {
         keys = given ?? throw new ArgumentNullException(nameof(given));
         return this;
     }
 
-    public VsaBuilder Services(Action<IServiceCollection> configure) {
+    public AppBuilder Services(Action<IServiceCollection> configure) {
         services.Add(configure);
         return this;
     }
 
-    public IVsaHost SelectedHost() => host ??= new GenericVsaHost();
+    public IAppHost SelectedHost() => host ??= new GenericAppHost();
 
     public IHost Build() {
         var selected = SelectedHost();
@@ -54,7 +60,7 @@ public sealed class VsaBuilder {
         return selected.Build(builder);
     }
 
-    internal IServiceCollection Compose(IServiceCollection services) {
+    public IServiceCollection Compose(IServiceCollection services) {
         Compose(services, ConfigurationOf(services) ?? new ConfigurationBuilder().AddCommandLine(args).Build(), Types());
         return services;
     }
@@ -62,16 +68,20 @@ public sealed class VsaBuilder {
     static IConfiguration? ConfigurationOf(IServiceCollection services) =>
         services.LastOrDefault(service => service.ServiceType == typeof(IConfiguration))?.ImplementationInstance as IConfiguration;
 
-    void Compose(IServiceCollection target, IConfiguration configuration, ModuleTypes types) {
+    void Compose(IServiceCollection target, IConfiguration configuration, AnchorTypes types) {
         target.TryAddSingleton(configuration);
         target.AddLogging();
         target.AddSingleton(types);
-        VsaArchitecture.InstallLayers(target, types);
+        foreach (var installer in AnchorScan.Installers()) {
+            installer.Install(target, types);
+        }
         foreach (var configure in services) {
             configure(target);
         }
-        VsaArchitecture.ConfigureModules(target, configuration, types);
+        foreach (var anchor in types.Anchors) {
+            anchor.Configure(new AnchorBuilder(anchor.Name, target, configuration));
+        }
     }
 
-    ModuleTypes Types() => new(modules ?? VsaArchitecture.Modules(), keys);
+    AnchorTypes Types() => new(anchors ?? AnchorScan.Anchors(anchorBase), keys);
 }

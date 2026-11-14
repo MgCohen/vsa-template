@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace VSA.Module;
+namespace VSA.Kernel;
 
 static class SettingsValidator {
     internal static List<string> Errors<TSettings>(TSettings settings, Func<TSettings, IEnumerable<string>> validate)

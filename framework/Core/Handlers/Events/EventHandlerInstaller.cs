@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
-using VSA.Module;
+using VSA.Kernel;
 
 namespace VSA.Handlers.Events;
 
-static class EventHandlerInstaller {
-    internal static void Install(IServiceCollection services, ModuleTypes types) {
+sealed class EventHandlerInstaller : IInstaller {
+    public void Install(IServiceCollection services, AnchorTypes types) {
         services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
         services.AddDefaultPipeline(
             PipelineKind.Events,

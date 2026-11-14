@@ -1,10 +1,11 @@
 using VSA.Architecture.Engine;
 using VSA.Architecture.Vsa;
+using VSA.Kernel;
 
 namespace Architecture.Tests;
 
 public sealed class UnityDiscoveryTests {
-    const string ModuleClass = "public sealed class {0} : VSA.Module.Module {{ public override void Configure(VSA.Module.ModuleBuilder module) {{ }} }}";
+    const string ModuleClass = "public sealed class {0} : VSA.Module.Module {{ public override void Configure(VSA.Kernel.AnchorBuilder module) {{ }} }}";
 
     UnityProjectFolder project = null!;
     ArchitectureMap map = null!;

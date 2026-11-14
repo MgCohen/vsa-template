@@ -22,6 +22,7 @@
        the rule engine checks each use after the build. Path is the project folder under framework/ in source mode. -->
   <ItemGroup>
     <_VsaFramework Include="VSA.Analyzers" Path="Analyzers" />
+    <_VsaFramework Include="VSA.Kernel.Analyzers" Path="Kernel/Analyzers" Condition="'$(VsaFrameworkSourceDir)' != ''" />
     <_VsaFramework Include="VSA.Analyzers.Markers" Path="Analyzers/Markers" />
     <_VsaFramework Include="VSA.Domain" Path="Core/Domain" />
     <_VsaFramework Include="VSA.Infrastructure" Path="Core/Infrastructure/Core" />
@@ -32,6 +33,7 @@
     <_VsaFramework Include="VSA.Handlers.Events" Path="Core/Handlers/Events" />
     <_VsaFramework Include="VSA.Handlers.Commands" Path="Core/Handlers/Commands" />
     <_VsaFramework Include="VSA.Presenters" Path="Core/Presenters" />
+    <_VsaFramework Include="VSA.Kernel" Path="Kernel" />
     <_VsaFramework Include="VSA.Module" Path="Core/Module" />
     <_VsaFramework Include="VSA.Composition" Path="Core/Composition" />
   </ItemGroup>
@@ -40,6 +42,7 @@
   <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
     <ProjectReference Include="@(_VsaFramework->'$(VsaFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
     <ProjectReference Update="$(VsaFrameworkSourceDir)Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Update="$(VsaFrameworkSourceDir)Kernel/Analyzers/VSA.Kernel.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- Package mode (consumers): package references. _VsaAlignVersions gives them the version of this SDK. -->

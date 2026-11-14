@@ -1,12 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
 using VSA.Contracts.Commands;
-using VSA.Module;
+using VSA.Kernel;
 
 namespace VSA.Handlers.Commands;
 
-static class CommandHandlerInstaller {
-    internal static void Install(IServiceCollection services, ModuleTypes types) {
+sealed class CommandHandlerInstaller : IInstaller {
+    public void Install(IServiceCollection services, AnchorTypes types) {
         EnsureOneHandlerForEachCommand(types.Implementations(typeof(CommandHandler<,>)));
         services.AddScoped<ICommandSender, InProcessCommandSender>();
         services.AddDefaultPipeline(

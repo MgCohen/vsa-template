@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace VSA.Module;
+namespace VSA.Kernel;
 
-static class ModuleTypeInstaller {
-    internal static void Install(IServiceCollection services, ModuleTypes types) {
+sealed class AutoRegisterInstaller : IInstaller {
+    public void Install(IServiceCollection services, AnchorTypes types) {
         foreach (var type in types.Registered()) {
             var lifetime = MarkedTypes.LifetimeOf(type);
             services.TryAdd(new ServiceDescriptor(type, type, lifetime));

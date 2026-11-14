@@ -3,14 +3,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using VSA.Handlers.Commands;
-using VSA.Module;
+using VSA.Kernel;
 
 namespace VSA.Composition;
 
-public sealed class ConsoleVsaHost : IVsaHost {
+public sealed class ConsoleVsaHost : IAppHost {
     public IHostApplicationBuilder CreateBuilder(string[] args) => Host.CreateApplicationBuilder(args);
 
-    public void Install(IHostApplicationBuilder builder, ModuleTypes types) {
+    public void Install(IHostApplicationBuilder builder, AnchorTypes types) {
         var entries = types.Implementations(typeof(CommandHandler<,>))
             .Select(handler => handler.Service.GetGenericArguments()[0])
             .Where(ConsoleEntry.IsConsoleCommand)

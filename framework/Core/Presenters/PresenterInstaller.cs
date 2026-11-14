@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
-using VSA.Module;
+using VSA.Kernel;
 
 namespace VSA.Presenters;
 
-static class PresenterInstaller {
-    internal static void Install(IServiceCollection services, ModuleTypes types) {
+sealed class PresenterInstaller : IInstaller {
+    public void Install(IServiceCollection services, AnchorTypes types) {
         var presenters = types.Implementations(typeof(Presenter));
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(

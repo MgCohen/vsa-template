@@ -15,5 +15,15 @@
     <Compile Remove="Markers/**" />
     <AdditionalFiles Include="AnalyzerReleases.Shipped.md;AnalyzerReleases.Unshipped.md" />
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <ProjectReference Include="../Kernel/Analyzers/VSA.Kernel.Analyzers.csproj" PrivateAssets="all" />
   </ItemGroup>
+  <!-- The package also holds the kernel analyzer DLL, because the VSA rules inherit its base classes. -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_VsaKernelAnalyzerInPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <Target Name="_VsaKernelAnalyzerInPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'VSA.Kernel.Analyzers'" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
 </Project>

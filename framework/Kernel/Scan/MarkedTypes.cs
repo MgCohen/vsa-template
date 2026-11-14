@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Analyzers.Markers;
 
-namespace VSA.Module;
+namespace VSA.Kernel;
 
 public static class MarkedTypes {
     public static readonly string TypeArgumentName = typeof(TypeArgumentAttribute).FullName!;

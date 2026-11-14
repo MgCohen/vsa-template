@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Analyzers/VSA.Analyzers.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Kernel/Analyzers/VSA.Kernel.Analyzers.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
     <!-- The analyzer tests compile code against these assemblies. -->
     <ProjectReference Include="$(RepoRoot)framework/Core/Handlers/Events/VSA.Handlers.Events.csproj" />

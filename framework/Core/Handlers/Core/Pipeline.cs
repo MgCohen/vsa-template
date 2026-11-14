@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
-using VSA.Contracts.Events;
 
 namespace VSA.Handlers;
 
@@ -10,7 +9,7 @@ sealed class Pipeline<TMessage> : IPipeline<TMessage>, IPipelineRun where TMessa
     readonly IServiceProvider services;
     readonly PipelineCatalog catalog;
     readonly IMessageIds ids;
-    readonly bool many = typeof(IntegrationEvent).IsAssignableFrom(typeof(TMessage));
+    readonly bool many = typeof(IBroadcastMessage).IsAssignableFrom(typeof(TMessage));
     readonly Dictionary<Type, List<Type>> handlers;
     readonly ConcurrentDictionary<Type, MessageRoute> routes = new();
 

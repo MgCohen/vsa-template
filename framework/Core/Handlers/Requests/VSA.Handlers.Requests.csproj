@@ -7,9 +7,9 @@
     <ProjectReference Include="../../Domain/VSA.Domain.csproj" />
     <ProjectReference Include="../../Contracts/Requests/VSA.Contracts.Requests.csproj" />
   </ItemGroup>
-  <!-- The installer of the layer uses ModuleTypes (VSA.Module). Private, so the module projects of this layer do not see VSA.Module. -->
+  <!-- The installer of the layer uses AnchorTypes (VSA.Kernel). Private, so the module projects of this layer do not see VSA.Kernel. -->
   <ItemGroup>
-    <ProjectReference Include="../../Module/VSA.Module.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../../../Kernel/VSA.Kernel.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="VSA.Composition" />
