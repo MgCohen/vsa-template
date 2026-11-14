@@ -1,0 +1,15 @@
+<g>
+    <rect x="@Svg.N(Group.X)" y="@Svg.N(Group.Y)" width="@Svg.N(Group.W)" height="@Svg.N(Group.H)" rx="18"
+          fill="@(Group.Depth == 0 ? "#eef0f5" : "#e7eaf1")" stroke="#d9dde6" />
+    <text x="@Svg.N(Group.X + 18)" y="@Svg.N(Group.Y + 27)" font-size="13.5" font-weight="600" fill="#1d2433">@Group.Title</text>
+    <text x="@Svg.N(Group.X + 18 + Theme.TitleWidth(Group.Title))" y="@Svg.N(Group.Y + 27)" font-size="11" fill="#7a8396">@Group.Kind</text>
+</g>
+
+@code {
+    private GroupItem? drawn;
+
+    [Parameter, EditorRequired] public GroupItem Group { get; set; } = default!;
+
+    protected override bool ShouldRender() => !ReferenceEquals(drawn, Group);
+    protected override void OnAfterRender(bool firstRender) => drawn = Group;
+}

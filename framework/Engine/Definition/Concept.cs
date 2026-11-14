@@ -1,6 +1,8 @@
 namespace VSA.Architecture;
 
 public abstract record Concept {
+    internal virtual Type Identity => GetType();
+
     public virtual string Folder => GetType().Name;
     public virtual string? GroupFolder => null;
 

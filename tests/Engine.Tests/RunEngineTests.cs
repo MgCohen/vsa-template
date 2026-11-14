@@ -1,5 +1,7 @@
 using Definition;
 using Engine.Slices.RunEngine;
+using Export;
+using VSA.Architecture.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
 using Rules;
@@ -25,7 +27,7 @@ public sealed class RunEngineTests {
         var modules = AnchorScan.InOrder(AnchorScan.Roots(typeof(VSA.Module.Module)).Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Export", "Report", "Rules" }));
     }
 
     [Test]
@@ -61,13 +63,41 @@ public sealed class RunEngineTests {
         Assert.ThrowsAsync<DirectoryNotFoundException>(() => Run(bin: bin, failFast: true));
     }
 
-    static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
+    [Test]
+    public async Task With_export_the_engine_writes_the_two_files_of_Notes() {
+        var folder = TempFolder.Create();
+
+        var result = await Run(export: folder);
+
+        Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.Lines, Has.One.StartsWith($"vsa-engine: VSA3005: ExportFiles wrote {folder}"));
+        var architecture = Path.Combine(folder, DataFiles.Architecture("Vsa"));
+        var snapshot = SnapshotJson.Read(File.ReadAllText(Path.Combine(folder, DataFiles.Snapshot("Notes", "Vsa"))));
+        Assert.That(new JsonDefinition(architecture).Tree(), Is.EqualTo(new App.Host.NotesApp().Architecture.Tree()));
+        Assert.That(snapshot.Architecture.Name, Is.EqualTo("Vsa"));
+        Assert.That(snapshot.App.Types, Is.Not.Empty);
+    }
+
+    [Test]
+    public async Task With_a_definition_file_the_engine_checks_the_app_with_the_data_definition() {
+        var folder = TempFolder.Create();
+        await Run(export: folder);
+
+        var result = await Run(definition: Path.Combine(folder, DataFiles.Architecture("Vsa")));
+
+        Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.Lines, Has.None.Contains(": error "));
+    }
+
+    static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false, string export = "",
+        string definition = "") {
         VSA.Module.Module[] modules = [
-            new StepsPlugin(), new EngineModule(), new DefinitionModule(), new RulesModule(), new ReportModule(),
+            new StepsPlugin(), new EngineModule(), new DefinitionModule(), new ExportModule(), new RulesModule(), new ReportModule(),
         ];
         using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
         await using var scope = host.Services.CreateAsyncScope();
-        var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast);
+        var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast, Export: export,
+            Definition: definition);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
         return result.Value;
     }

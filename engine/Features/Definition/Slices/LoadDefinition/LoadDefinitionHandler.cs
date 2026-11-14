@@ -1,5 +1,7 @@
 using Definition.Domain.Shared;
 using Definition.Infrastructure;
+using VSA.Architecture;
+using VSA.Architecture.Data;
 using VSA.Contracts;
 using VSA.Handlers.Commands;
 
@@ -23,7 +25,9 @@ sealed class LoadDefinitionHandler : CommandHandler<LoadDefinitionCommand, Loade
             return new Error("VSA3002", $"No assembly in {bin} has source files under the app root {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
         }
-        var definition = DefinitionFinder.Find(app);
+        ArchitectureDefinition? definition = command.DefinitionFile.Length > 0
+            ? new JsonDefinition(Path.GetFullPath(command.DefinitionFile))
+            : DefinitionFinder.Find(app);
         if (definition is null) {
             return new Error("VSA3002", "The app has no architecture definition. "
                 + "Add an app class that gives the definition (IArchitectureProvider), or a class that inherits ArchitectureDefinition.");

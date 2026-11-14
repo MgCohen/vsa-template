@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The architecture data: <name>.json (a definition as data, its export, its edits and JsonDefinition) and
+       <app>.<architecture>.json (one app checked against an architecture). No engine and no ArchUnitNET (docs/architecture-data.md).
+       Unity 6 ships System.Text.Json 8, so the netstandard2.1 target uses 8.0. The schema and the strict read need 9 or later. -->
+  <ItemGroup>
+    <ProjectReference Include="../Definition/VSA.Architecture.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+</Project>

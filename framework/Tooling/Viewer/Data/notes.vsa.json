@@ -1,0 +1,947 @@
+{
+  "$schema": "architecture-snapshot.v2.json",
+  "version": 2,
+  "architecture": {
+    "name": "Vsa",
+    "source": "VSA.Architecture.Vsa.VsaDefinition, VSA.Architecture.Vsa",
+    "hash": "sha256:b76a8f697023b1fa2ddbe4c3a91a9a1fb3069097e232b2b1e53c1d38f148399f"
+  },
+  "app": {
+    "name": "Notes",
+    "instances": [
+      {
+        "id": "p0@",
+        "layer": "(root)",
+        "many": false,
+        "parent": null,
+        "path": "",
+        "items": {}
+      },
+      {
+        "id": "p17@App",
+        "layer": "App",
+        "many": false,
+        "parent": "p0@",
+        "path": "App",
+        "items": {}
+      },
+      {
+        "id": "p18@App/Host",
+        "layer": "Host",
+        "many": false,
+        "parent": "p17@App",
+        "path": "App/Host",
+        "items": {}
+      },
+      {
+        "id": "p34@Features/Ping",
+        "layer": "Feature",
+        "many": true,
+        "parent": "p0@",
+        "path": "Features/Ping",
+        "items": {
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p35@Features/Ping",
+        "layer": "Module",
+        "many": false,
+        "parent": "p34@Features/Ping",
+        "path": "Features/Ping",
+        "items": {
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p40@Features/Ping/Slices/Ping",
+        "layer": "Slice",
+        "many": true,
+        "parent": "p34@Features/Ping",
+        "path": "Features/Ping/Slices/Ping",
+        "items": {
+          "Slice": "Ping",
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p44@Features/Ping/Slices/Ping",
+        "layer": "Handlers.Requests",
+        "many": false,
+        "parent": "p40@Features/Ping/Slices/Ping",
+        "path": "Features/Ping/Slices/Ping",
+        "items": {
+          "Slice": "Ping",
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p41@Features/Ping/Slices/Ping",
+        "layer": "Contracts.Requests",
+        "many": false,
+        "parent": "p40@Features/Ping/Slices/Ping",
+        "path": "Features/Ping/Slices/Ping",
+        "items": {
+          "Slice": "Ping",
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p34@Features/Notes",
+        "layer": "Feature",
+        "many": true,
+        "parent": "p0@",
+        "path": "Features/Notes",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p35@Features/Notes",
+        "layer": "Module",
+        "many": false,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/LogNoteCreated",
+        "layer": "Slice",
+        "many": true,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/LogNoteCreated",
+        "items": {
+          "Slice": "LogNoteCreated",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p45@Features/Notes/Slices/LogNoteCreated",
+        "layer": "Handlers.Events",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/LogNoteCreated",
+        "path": "Features/Notes/Slices/LogNoteCreated",
+        "items": {
+          "Slice": "LogNoteCreated",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/ListNotes",
+        "layer": "Slice",
+        "many": true,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/ListNotes",
+        "items": {
+          "Slice": "ListNotes",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p44@Features/Notes/Slices/ListNotes",
+        "layer": "Handlers.Requests",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/ListNotes",
+        "path": "Features/Notes/Slices/ListNotes",
+        "items": {
+          "Slice": "ListNotes",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p41@Features/Notes/Slices/ListNotes",
+        "layer": "Contracts.Requests",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/ListNotes",
+        "path": "Features/Notes/Slices/ListNotes",
+        "items": {
+          "Slice": "ListNotes",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/DeleteNote",
+        "layer": "Slice",
+        "many": true,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p44@Features/Notes/Slices/DeleteNote",
+        "layer": "Handlers.Requests",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/DeleteNote",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p41@Features/Notes/Slices/DeleteNote",
+        "layer": "Contracts.Requests",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/DeleteNote",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p42@Features/Notes/Slices/DeleteNote",
+        "layer": "Contracts.Events",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/DeleteNote",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/CreateNote",
+        "layer": "Slice",
+        "many": true,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p44@Features/Notes/Slices/CreateNote",
+        "layer": "Handlers.Requests",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/CreateNote",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p41@Features/Notes/Slices/CreateNote",
+        "layer": "Contracts.Requests",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/CreateNote",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p42@Features/Notes/Slices/CreateNote",
+        "layer": "Contracts.Events",
+        "many": false,
+        "parent": "p40@Features/Notes/Slices/CreateNote",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p39@Features/Notes/Presenters",
+        "layer": "Presenters",
+        "many": false,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Presenters",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p38@Features/Notes/Infrastructure",
+        "layer": "Infrastructure",
+        "many": false,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Infrastructure",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p36@Features/Notes/Domain",
+        "layer": "Domain",
+        "many": false,
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Domain",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p19@App/Views",
+        "layer": "Views",
+        "many": false,
+        "parent": "p17@App",
+        "path": "App/Views",
+        "items": {}
+      }
+    ],
+    "types": [
+      {
+        "id": "t0",
+        "name": "Program",
+        "fullName": "Program",
+        "instance": "p18@App/Host",
+        "file": "App/Host/Program.cs",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t1",
+        "name": "PingModule",
+        "fullName": "Ping.PingModule",
+        "instance": "p35@Features/Ping",
+        "file": "Features/Ping/PingModule.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t2",
+        "name": "PingHandler",
+        "fullName": "Ping.Slices.Ping.PingHandler",
+        "instance": "p44@Features/Ping/Slices/Ping",
+        "file": "Features/Ping/Slices/Ping/PingHandler.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t3",
+        "name": "PingRequest",
+        "fullName": "Ping.Slices.Ping.PingRequest",
+        "instance": "p41@Features/Ping/Slices/Ping",
+        "file": "Features/Ping/Slices/Ping/PingRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t4",
+        "name": "PingResponse",
+        "fullName": "Ping.Slices.Ping.PingResponse",
+        "instance": "p41@Features/Ping/Slices/Ping",
+        "file": "Features/Ping/Slices/Ping/PingResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t5",
+        "name": "NotesModule",
+        "fullName": "Notes.NotesModule",
+        "instance": "p35@Features/Notes",
+        "file": "Features/Notes/NotesModule.cs",
+        "line": 11,
+        "followsUser": false
+      },
+      {
+        "id": "t6",
+        "name": "NoteCreatedHandler",
+        "fullName": "Notes.Slices.LogNoteCreated.NoteCreatedHandler",
+        "instance": "p45@Features/Notes/Slices/LogNoteCreated",
+        "file": "Features/Notes/Slices/LogNoteCreated/NoteCreatedHandler.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t7",
+        "name": "ListNotesHandler",
+        "fullName": "Notes.Slices.ListNotes.ListNotesHandler",
+        "instance": "p44@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/ListNotesHandler.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t8",
+        "name": "ListNotesRequest",
+        "fullName": "Notes.Slices.ListNotes.ListNotesRequest",
+        "instance": "p41@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/ListNotesRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t9",
+        "name": "ListNotesResponse",
+        "fullName": "Notes.Slices.ListNotes.ListNotesResponse",
+        "instance": "p41@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/ListNotesResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t10",
+        "name": "NoteDto",
+        "fullName": "Notes.Slices.ListNotes.NoteDto",
+        "instance": "p41@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/NoteDto.cs",
+        "line": 3,
+        "followsUser": true
+      },
+      {
+        "id": "t11",
+        "name": "DeleteNoteHandler",
+        "fullName": "Notes.Slices.DeleteNote.DeleteNoteHandler",
+        "instance": "p44@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/DeleteNoteHandler.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t12",
+        "name": "DeleteNoteRequest",
+        "fullName": "Notes.Slices.DeleteNote.DeleteNoteRequest",
+        "instance": "p41@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/DeleteNoteRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t13",
+        "name": "DeleteNoteResponse",
+        "fullName": "Notes.Slices.DeleteNote.DeleteNoteResponse",
+        "instance": "p41@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/DeleteNoteResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t14",
+        "name": "NoteDeleted",
+        "fullName": "Notes.Slices.DeleteNote.NoteDeleted",
+        "instance": "p42@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/NoteDeleted.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t15",
+        "name": "CreateNoteHandler",
+        "fullName": "Notes.Slices.CreateNote.CreateNoteHandler",
+        "instance": "p44@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/CreateNoteHandler.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t16",
+        "name": "CreateNoteRequest",
+        "fullName": "Notes.Slices.CreateNote.CreateNoteRequest",
+        "instance": "p41@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/CreateNoteRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t17",
+        "name": "CreateNoteResponse",
+        "fullName": "Notes.Slices.CreateNote.CreateNoteResponse",
+        "instance": "p41@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/CreateNoteResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t18",
+        "name": "NoteCreated",
+        "fullName": "Notes.Slices.CreateNote.NoteCreated",
+        "instance": "p42@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/NoteCreated.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t19",
+        "name": "NoteItem",
+        "fullName": "Notes.Presenters.NoteItem",
+        "instance": "p39@Features/Notes/Presenters",
+        "file": "Features/Notes/Presenters/NoteItem.cs",
+        "line": 6,
+        "followsUser": false
+      },
+      {
+        "id": "t20",
+        "name": "NotesPresenter",
+        "fullName": "Notes.Presenters.NotesPresenter",
+        "instance": "p39@Features/Notes/Presenters",
+        "file": "Features/Notes/Presenters/NotesPresenter.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t21",
+        "name": "NoteStore",
+        "fullName": "Notes.Infrastructure.NoteStore",
+        "instance": "p38@Features/Notes/Infrastructure",
+        "file": "Features/Notes/Infrastructure/NoteRepository.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t22",
+        "name": "NoteRepository",
+        "fullName": "Notes.Infrastructure.NoteRepository",
+        "instance": "p38@Features/Notes/Infrastructure",
+        "file": "Features/Notes/Infrastructure/NoteRepository.cs",
+        "line": 13,
+        "followsUser": false
+      },
+      {
+        "id": "t23",
+        "name": "AuthorId",
+        "fullName": "Notes.Domain.AuthorId",
+        "instance": "p36@Features/Notes/Domain",
+        "file": "Features/Notes/Domain/AuthorId.cs",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t24",
+        "name": "Note",
+        "fullName": "Notes.Domain.Note",
+        "instance": "p36@Features/Notes/Domain",
+        "file": "Features/Notes/Domain/Note.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t25",
+        "name": "NoteId",
+        "fullName": "Notes.Domain.NoteId",
+        "instance": "p36@Features/Notes/Domain",
+        "file": "Features/Notes/Domain/NoteId.cs",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t26",
+        "name": "App",
+        "fullName": "App.Views.App",
+        "instance": "p19@App/Views",
+        "file": "App/Views/App_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t27",
+        "name": "Routes",
+        "fullName": "App.Views.Routes",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Routes_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t28",
+        "name": "_Imports",
+        "fullName": "App.Views._Imports",
+        "instance": "p19@App/Views",
+        "file": "App/Views/_Imports_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t29",
+        "name": "NoteForm",
+        "fullName": "App.Views.Panels.NoteForm",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Panels/NoteForm.razor",
+        "line": 7,
+        "followsUser": false
+      },
+      {
+        "id": "t30",
+        "name": "NoteList",
+        "fullName": "App.Views.Panels.NoteList",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Panels/NoteList.razor",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t31",
+        "name": "NotesPage",
+        "fullName": "App.Views.Pages.NotesPage",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Pages/NotesPage_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t32",
+        "name": "NotesApp",
+        "fullName": "App.Host.NotesApp",
+        "instance": "p18@App/Host",
+        "file": "App/Host/NotesApp.cs",
+        "line": 9,
+        "followsUser": false
+      }
+    ],
+    "dependencies": [
+      {
+        "from": "p44@Features/Ping/Slices/Ping",
+        "to": "p41@Features/Ping/Slices/Ping",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t2",
+            "to": "t3",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          },
+          {
+            "from": "t2",
+            "to": "t4",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          }
+        ]
+      },
+      {
+        "from": "p35@Features/Notes",
+        "to": "p38@Features/Notes/Infrastructure",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t5",
+            "to": "t21",
+            "access": "Allow",
+            "rule": "Module Under\u003CFeature\u003E uses Feature(Internal)"
+          },
+          {
+            "from": "t5",
+            "to": "t22",
+            "access": "Allow",
+            "rule": "Module Under\u003CFeature\u003E uses Feature(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p35@Features/Notes",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t5",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "Module Under\u003CFeature\u003E uses Feature(Internal)"
+          },
+          {
+            "from": "t5",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "Module Under\u003CFeature\u003E uses Feature(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p45@Features/Notes/Slices/LogNoteCreated",
+        "to": "p42@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t6",
+            "to": "t18",
+            "access": "Allow",
+            "rule": "Handlers.Requests Under\u003CFeature\u003E and Handlers.Events Under\u003CFeature\u003E and Handlers.Commands Under\u003CFeature\u003E uses Contracts.Commands(Open) and Contracts.Events(Open)"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/ListNotes",
+        "to": "p41@Features/Notes/Slices/ListNotes",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t7",
+            "to": "t8",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          },
+          {
+            "from": "t7",
+            "to": "t9",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          },
+          {
+            "from": "t7",
+            "to": "t10",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/ListNotes",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t7",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          },
+          {
+            "from": "t7",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/DeleteNote",
+        "to": "p41@Features/Notes/Slices/DeleteNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t11",
+            "to": "t12",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          },
+          {
+            "from": "t11",
+            "to": "t13",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/DeleteNote",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t11",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          },
+          {
+            "from": "t11",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/DeleteNote",
+        "to": "p42@Features/Notes/Slices/DeleteNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t11",
+            "to": "t14",
+            "access": "Allow",
+            "rule": "Handlers.Requests Under\u003CFeature\u003E and Handlers.Events Under\u003CFeature\u003E and Handlers.Commands Under\u003CFeature\u003E uses Contracts.Commands(Open) and Contracts.Events(Open)"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/CreateNote",
+        "to": "p41@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t15",
+            "to": "t16",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          },
+          {
+            "from": "t15",
+            "to": "t17",
+            "access": "Allow",
+            "rule": "Handlers.Requests uses Contracts.Requests"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/CreateNote",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t15",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          },
+          {
+            "from": "t15",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          },
+          {
+            "from": "t15",
+            "to": "t23",
+            "access": "Allow",
+            "rule": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/CreateNote",
+        "to": "p42@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t15",
+            "to": "t18",
+            "access": "Allow",
+            "rule": "Handlers.Requests Under\u003CFeature\u003E and Handlers.Events Under\u003CFeature\u003E and Handlers.Commands Under\u003CFeature\u003E uses Contracts.Commands(Open) and Contracts.Events(Open)"
+          }
+        ]
+      },
+      {
+        "from": "p39@Features/Notes/Presenters",
+        "to": "p41@Features/Notes/Slices/ListNotes",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t19",
+            "to": "t10",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          },
+          {
+            "from": "t20",
+            "to": "t8",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          },
+          {
+            "from": "t20",
+            "to": "t9",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          },
+          {
+            "from": "t20",
+            "to": "t10",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p39@Features/Notes/Presenters",
+        "to": "p41@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t20",
+            "to": "t16",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          },
+          {
+            "from": "t20",
+            "to": "t17",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p39@Features/Notes/Presenters",
+        "to": "p41@Features/Notes/Slices/DeleteNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t20",
+            "to": "t12",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          },
+          {
+            "from": "t20",
+            "to": "t13",
+            "access": "Allow",
+            "rule": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)"
+          }
+        ]
+      },
+      {
+        "from": "p38@Features/Notes/Infrastructure",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t21",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "Infrastructure uses Domain"
+          },
+          {
+            "from": "t21",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "Infrastructure uses Domain"
+          },
+          {
+            "from": "t22",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "Infrastructure uses Domain"
+          },
+          {
+            "from": "t22",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "Infrastructure uses Domain"
+          }
+        ]
+      },
+      {
+        "from": "p19@App/Views",
+        "to": "p39@Features/Notes/Presenters",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t29",
+            "to": "t20",
+            "access": "Allow",
+            "rule": "Views uses Presenters"
+          },
+          {
+            "from": "t30",
+            "to": "t20",
+            "access": "Allow",
+            "rule": "Views uses Presenters"
+          },
+          {
+            "from": "t30",
+            "to": "t19",
+            "access": "Allow",
+            "rule": "Views uses Presenters"
+          },
+          {
+            "from": "t31",
+            "to": "t20",
+            "access": "Allow",
+            "rule": "Views uses Presenters"
+          }
+        ]
+      }
+    ],
+    "findings": []
+  }
+}

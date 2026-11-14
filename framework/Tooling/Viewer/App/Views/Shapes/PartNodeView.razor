@@ -1,0 +1,34 @@
+@inherits ShapeView
+@attribute [NodeShape("Part")]
+<g class="card part" data-node="@Card.Id" opacity="@(Dimmed ? "0.35" : "1")" transform="@Svg.Format($"translate({At.X},{At.Y})")">
+    <rect x="@Svg.N(Card.X)" y="@Svg.N(Card.Y)" width="@Svg.N(Card.W)" height="@Svg.N(Card.H)" rx="8" fill="#fff"
+          stroke="@(SelectedRow is null ? "#e1e4eb" : Color)" filter="url(#card-shadow)" />
+    <g class="@(Edit ? "head grab" : "head")" @onpointerdown="e => Down(new Target(Card.Id, null), e)" @onpointerdown:stopPropagation
+       @onpointerup="e => Up(new Target(Card.Id, null), e)" @onpointerup:stopPropagation>
+        <rect x="@Svg.N(Card.X)" y="@Svg.N(Card.Y)" width="@Svg.N(Card.W)" height="@Svg.N(Card.Header)" rx="8" fill="@Color" fill-opacity="@(SelectedRow is null ? "0.08" : "0.2")" />
+        <rect x="@Svg.N(Card.X)" y="@Svg.N(Card.Y + 8)" width="4" height="@Svg.N(Card.Header - 16)" fill="@Color" />
+        <text x="@Svg.N(Card.X + 14)" y="@Svg.N(Card.Y + 27)" font-size="14" font-weight="600" fill="#1d2433">@Card.Layer</text>
+        <Badge Text="@Card.Group" Right="Card.X + Card.W - 8" Y="Card.Y + 13" />
+        @foreach (var port in Card.Ports)
+        {
+            <PortDot Card="Card" Port="port" Edit="Edit" OnDown="OnDown" OnUp="OnUp" />
+        }
+    </g>
+    @foreach (var row in Card.Rows)
+    {
+        var y = Card.Y + row.Y;
+        <g class="part-row" data-role="@row.Role" data-pending="@(row.More ? "true" : null)">
+            <circle cx="@Svg.N(Card.X + 14)" cy="@Svg.N(y + 10)" r="3" fill="@RowColor(row.Role)" />
+            <text x="@Svg.N(Card.X + 24)" y="@Svg.N(y + 14)" font-size="11.5" fill="#3b4357" font-style="@(row.More ? "italic" : "normal")">@row.Label</text>
+        </g>
+    }
+</g>
+
+@code {
+    private static string RowColor(string role) => role switch
+    {
+        "deny" => Theme.Deny,
+        "rule" => Theme.Edge,
+        _ => "#7a8396",
+    };
+}

@@ -1,0 +1,34 @@
+@inherits PresenterComponent<GraphPresenter>
+<div class="stage">
+    <svg class="canvas" tabindex="0" font-family="'IBM Plex Sans', system-ui, sans-serif"
+         @onwheel="Wheel" @onwheel:preventDefault @onkeydown="Key"
+         @onpointerdown="Down" @onpointermove="Move" @onpointerup="Up" @onpointerleave="Up">
+        <GraphDefs />
+        <rect width="100%" height="100%" fill="#f4f5f8" />
+        <g transform="@Transform">
+            @foreach (var group in Graph.Groups)
+            {
+                <GroupFrame @key="group.Id" Group="group" />
+            }
+            @foreach (var link in Graph.Links)
+            {
+                <EdgeHit @key="link.Id" Link="link" Points="Graph.PointsOf(link)" OnDown="DownOn" OnUp="UpOn" />
+            }
+            @foreach (var card in Graph.Cards)
+            {
+                <DynamicComponent @key="card.Id" Type="ShapeViews.For(Graph.Shape)" Parameters="ParametersOf(card)" />
+            }
+            <g fill="none">
+                @foreach (var link in Graph.Links)
+                {
+                    <EdgeLine @key="link.Id" Link="link" Points="Graph.PointsOf(link)" Opacity="Graph.OpacityOf(link)" />
+                }
+            </g>
+            @if (Graph.Draft is { } draft)
+            {
+                <path class="draft" d="@DraftPath(draft)" fill="none" stroke="#2b62d9" stroke-width="1.6" stroke-dasharray="4 3" pointer-events="none" />
+            }
+        </g>
+    </svg>
+    <DetailsPanel Cards="Graph.Cards" Focus="Graph.Selection" Hot="Graph.Hot" OnRemove="Graph.RemoveRule" OnFlip="Graph.FlipRule" />
+</div>

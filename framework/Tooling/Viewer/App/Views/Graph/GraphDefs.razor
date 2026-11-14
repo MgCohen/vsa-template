@@ -1,0 +1,18 @@
+<defs>
+    <marker id="arrow-allow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0L10,5L0,10z" fill="@Theme.Edge" />
+    </marker>
+    <marker id="arrow-deny" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0L10,5L0,10z" fill="@Theme.Deny" />
+    </marker>
+    <marker id="arrow-conditional" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0L10,5L0,10z" fill="@Theme.Conditional" />
+    </marker>
+    <filter id="card-shadow" x="-10%" y="-10%" width="130%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1d2433" flood-opacity="0.1" />
+    </filter>
+</defs>
+
+@code {
+    protected override bool ShouldRender() => false;
+}

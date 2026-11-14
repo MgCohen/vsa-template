@@ -1,0 +1,4 @@
+<Project>
+  <!-- The viewer projects find VSA.Sdk from source through this file, as the samples do (samples/VSA.Sdk.Dev.props). -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../samples/VSA.Sdk.Dev.props" />
+</Project>

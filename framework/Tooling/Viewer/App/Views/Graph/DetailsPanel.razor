@@ -1,0 +1,49 @@
+<div class="inspect">
+    @if (Focus.IsNone)
+    {
+        <span>Select a row, a header or a link.</span>
+    }
+    else
+    {
+        <div>
+            @if (Card is null)
+            {
+                <strong>Link</strong> <span>(@Hot.FirstOrDefault()?.Access)</span>
+            }
+            else if (Row is null)
+            {
+                <strong>@Card.Layer</strong> <span>(@Card.Group)</span> <code>@Card.Path</code>
+            }
+            else
+            {
+                <strong>@Row.Label</strong> <span>in @Card.Layer (@Card.Group)</span>
+            }
+        </div>
+        @if (Hot.Count == 0)
+        {
+            <div>No uses to other nodes.</div>
+        }
+        @foreach (var use in Hot.SelectMany(e => e.Uses))
+        {
+            <div class="use">
+                @use.From uses @use.To: <span class="@use.Access.ToLowerInvariant()">@use.Access</span>. @use.Rule@(use.Demo ? " (demo)" : "")
+                @if (use.EdgeId is { } rule)
+                {
+                    <button class="remove-rule" data-rule="@rule" @onclick="() => OnRemove.InvokeAsync(rule)">@(use.Removed ? "Restore" : "Remove")</button>
+                    <button class="flip-rule" data-rule="@rule" disabled="@use.Removed" @onclick="() => OnFlip.InvokeAsync(rule)">Flip</button>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<CardItem> Cards { get; set; } = [];
+    [Parameter, EditorRequired] public Target Focus { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<LinkItem> Hot { get; set; } = [];
+    [Parameter] public EventCallback<string> OnRemove { get; set; }
+    [Parameter] public EventCallback<string> OnFlip { get; set; }
+
+    private CardItem? Card => Cards.FirstOrDefault(c => c.Id == Focus.NodeId);
+    private RowItem? Row => Focus.RowId is null ? null : Card?.Rows.FirstOrDefault(r => r.Id == Focus.RowId);
+}

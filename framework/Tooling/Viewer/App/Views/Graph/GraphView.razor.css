@@ -1,0 +1,9 @@
+.stage { position: fixed; inset: 0; display: flex; flex-direction: column; background: #fff; }
+.canvas { flex: 1; width: 100%; min-height: 0; display: block; touch-action: none; user-select: none; cursor: grab; }
+::deep .card { cursor: pointer; }
+::deep .head.grab { cursor: move; }
+::deep .row:hover > rect:first-child { fill: #f3f6fb; }
+::deep .port { fill: #fff; stroke: #c3c9d5; stroke-width: 1; }
+.canvas:focus { outline: none; }
+::deep .port-hit { fill: #2b62d9; fill-opacity: 0.15; stroke: #2b62d9; stroke-width: 1; cursor: crosshair; }
+::deep .edge-hit { pointer-events: stroke; cursor: pointer; }

@@ -11,22 +11,24 @@ public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
 
     public TSelf And<T>(Boundary boundary, Access? access = null, Depth? depth = null) where T : Concept => And<T>(access, depth, boundary);
 
-    TSelf And<T>(Access? access, Depth? depth, Boundary? boundary) where T : Concept {
+    TSelf And<T>(Access? access, Depth? depth, Boundary? boundary) where T : Concept => And(typeof(T), access, depth, boundary);
+
+    internal TSelf And(Type concept, Access? access, Depth? depth, Boundary? boundary) {
         if (filtered) {
             runStart = Entries.Count;
         }
         filtered = false;
-        return Begin(typeof(T), depth, access, boundary);
+        return Begin(concept, depth, access, boundary);
     }
 
-    public TSelf Under<T>() where T : Concept => Filter("Under", typeof(T));
+    public TSelf Under<T>() where T : Concept => Filter(FilterKind.Under, typeof(T));
 
     internal TSelf Begin(Type concept, Depth? depth, Access? access = null, Boundary? boundary = null) {
         Entries.Add(new Entry(concept, depth, access, boundary));
         return (TSelf)this;
     }
 
-    internal TSelf Filter(string kind, Type concept) {
+    internal TSelf Filter(FilterKind kind, Type concept) {
         foreach (var entry in Entries.Skip(runStart)) {
             entry.Filters.Add(new Filter(kind, concept));
         }
