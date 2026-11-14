@@ -1,15 +1,15 @@
 # Composition: VsaBuilder and its hosts
 
-An app starts with one call on all hosts: `MyApp.Run(args)`. The app class `MyApp : VsaApp<MyApp>` uses `VsaBuilder`, and the host scan selects the host. A console app can also use `VsaBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaDefinition>` uses `VsaBuilder`, and the host scan selects the host. A console app can also use `VsaBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Entry point
 
 ```csharp
 // Web: App/Host/Program.cs
-return MyApp.Run(args);
+return new MyApp().Run(args);
 
 // Web: App/Host/MyApp.cs
-public class MyApp : VsaApp<MyApp>;
+public class MyApp : VsaApp<VsaDefinition>;
 
 // Console
 await VsaBuilder.Create(args).UseGenericHost().Build().RunAsync();
@@ -30,11 +30,11 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 
 ## The app class
 
-`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TApp>` is in VSA.Composition, a portable layer, so the same app class works on all hosts.
+`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TDefinition>` is in VSA.Composition, a portable layer, so the same app class works on all hosts. `TDefinition` is the architecture definition of the app, for example `VsaDefinition` or `EngineDefinition`.
 
 ```
-MyApp.Run(args)                       static, in VsaApp<TApp>
-└─ new MyApp().Start(args)
+new MyApp().Run(args)                 in VsaApp<TDefinition>
+└─ Start(args)
    ├─ Builder(args).Services(Services)
    ├─ SelectedHost()                  the host of the builder, else the host scan
    ├─ Build()                         IHost
@@ -47,10 +47,11 @@ MyApp.Run(args)                       static, in VsaApp<TApp>
 | `Build(string[] args)` | `Builder(args).Services(Services).Build()` | Change the build |
 | `Builder(string[] args)` | `VsaBuilder.Create(args)` | Select a host, the modules or the keys |
 | `Services(IServiceCollection)` | No registrations | Add app registrations |
-| `Rules(RuleBook)` | No rules | Add app rules after the VSA rules |
-| `Architecture` | `new VsaDefinition(Rules)` | Set the Unity folders: `UnityApp`, `UnitySource` (see `architecture-engine.md`) |
+| `Architecture` | `new TDefinition()` | Set the Unity folders: `UnityApp`, `UnitySource` (see `architecture-engine.md`) |
 
-The static members control the lifetime of the app:
+To add app rules, derive a definition from `VsaDefinition` and override `Rules` (see `architecture-engine.md`).
+
+The instance members control the lifetime of the app:
 
 | Member | Use |
 |---|---|
@@ -175,7 +176,7 @@ The markers are in `VSA.Analyzers.Markers`. The same package has the stripping m
 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
-| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Module`, `VsaApp<TApp>` |
+| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Module`, `VsaApp<TDefinition>` |
 | `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IVsaHost`, `IRunner`, and the internal `IEnvelopeFactory`, `IBeforeCall`, `IAfterCall` |
 | `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>` |
 
@@ -334,7 +335,7 @@ A simple factory resolves its services on each `Create`, from the scope that res
 
 `VSA.Composition`, `VSA.Architecture`, `VSA.Architecture.Vsa` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
 
-A Unity app calls `MyApp.Run(args)` from the `VsaHost` component of the UPM package (repo `vsa-unity`). The Unity host of that package returns from `Run`, and it calls `Stop` when the app quits or the play mode stops. An app that owns its container calls `AddVsa` and builds the container, as below. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
+A Unity app calls `new MyApp().Run(args)` from the `VsaHost` component of the UPM package (repo `vsa-unity`). The Unity host of that package returns from `Run`, and it calls `Stop` when the app quits or the play mode stops. An app that owns its container calls `AddVsa` and builds the container, as below. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
 
 ```csharp
 public sealed class AppRoot : MonoBehaviour {

@@ -7,7 +7,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | Path             | Purpose                                                              |
 |------------------|----------------------------------------------------------------------|
 | `SampleApp.csproj` | The one root project. It compiles `App/`, `Features/` and `Plugins/` |
-| `App/Host/`      | The web host. `Program.cs` calls `SampleAppApp.Run(args)`. The app class `SampleAppApp` starts the app, finds the modules and the views, and gives the app rules |
+| `App/Host/`      | The web host. `Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : VsaApp<VsaDefinition>` starts the app, finds the modules and the views, and gives the definition |
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Features/<Name>/`| One feature module: its root class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
@@ -35,7 +35,7 @@ dotnet vsa doctor                            # the tool, VSA.Sdk and the package
 dotnet test SampleApp.slnx                   # the unit tests
 ```
 
-The rule engine checks each type against the VSA definition after each build of the root project, if the root project has the package `VSA.Architecture.Build`. It gives `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To change the rules, override `Rules(RuleBook)` in `App/Host/SampleAppApp.cs`.
+The rule engine checks each type against the VSA definition after each build of the root project, if the root project has the package `VSA.Architecture.Build`. It gives `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaDefinition`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `VsaApp<TDefinition>`.
 
 The VSA packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 

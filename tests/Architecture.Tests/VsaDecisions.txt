@@ -89,7 +89,7 @@ App -> Feature/Slice/Handlers.Requests [any] Deny
 App -> Feature/Slice/Handlers.Events [any] Deny
 App -> Feature/Slice/Handlers.Commands [any] Deny
 App/Host -> Framework [any] Deny
-App/Host -> Framework/Core [any] Deny
+App/Host -> Framework/Core [any] Allow Public
 App/Host -> Framework/Core/Domain [any] Deny
 App/Host -> Framework/Core/Infrastructure [any] Deny
 App/Host -> Framework/Core/Presenters [any] Deny

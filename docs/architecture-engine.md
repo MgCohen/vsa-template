@@ -21,7 +21,7 @@ flowchart LR
 | `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
 | Engine app | `engine/` | The runner: Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
-The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TApp>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TDefinition>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -161,8 +161,8 @@ If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity pro
 `ArchitectureDefinition.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaDefinition` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it:
 
 ```csharp
-public class MyApp : VsaApp<MyApp> {
-    public override ArchitectureDefinition Architecture => new VsaDefinition(Rules) { UnityApp = "Cards", UnitySource = "Modules" };
+public class MyApp : VsaApp<VsaDefinition> {
+    public override ArchitectureDefinition Architecture => new VsaDefinition { UnityApp = "Cards", UnitySource = "Modules" };
 }
 ```
 
@@ -207,16 +207,17 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 | Fallback definition | The most derived class with no constructor parameters that inherits `ArchitectureDefinition` |
 | Unity DLLs | See "Unity projects" |
 
-The app class (`MyApp : VsaApp<MyApp>`, see `composition.md`) gives the rules for the runtime and for the checks. To change the VSA rules, override `Rules` in the app class. `VsaDefinition` applies these rules after its own rules, and a later rule wins:
+The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaDefinition` and override `Rules`. Call `base.Rules` first: a later rule wins.
 
 ```csharp
-using VSA.Architecture;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-
-public class MyApp : VsaApp<MyApp> {
-    protected override void Rules(RuleBook rules) => rules.For<Presenters>().Denies<Contracts.Events>();
+public sealed class MyDefinition : VsaDefinition {
+    protected override void Rules(RuleBook rules) {
+        base.Rules(rules);
+        rules.For<Presenters>().Denies<Contracts.Events>();
+    }
 }
+
+public class MyApp : VsaApp<MyDefinition>;
 ```
 
 ## Tests of the engine

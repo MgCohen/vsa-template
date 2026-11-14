@@ -113,7 +113,7 @@ public class VsaDefinition : ArchitectureDefinition {
         rules.For<Module>().Uses<Core>().And<Plugin>(Access.Internal);
         rules.For<Module>().Denies<Module>().Under<Plugin>();
         rules.For<Module>().Under<Feature>().Uses<Feature>(Access.Internal);
-        rules.For<Host>().Uses<Composition>();
+        rules.For<Host>().Uses<Composition>().And<Core>(Depth.Self);
         rules.For<Views>().Uses<Presenters>();
 
         appRules?.Invoke(rules);

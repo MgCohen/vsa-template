@@ -1,3 +1,3 @@
 using App.Host;
 
-return NotesApp.Run(args);
+return new NotesApp().Run(args);

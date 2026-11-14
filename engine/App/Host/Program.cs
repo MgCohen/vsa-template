@@ -1,3 +1,3 @@
 using VsaEngine;
 
-return EngineApp.Run(args);
+return new EngineApp().Run(args);
