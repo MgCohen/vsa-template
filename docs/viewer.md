@@ -2,6 +2,24 @@
 
 The architecture viewer draws the architecture of a VSA app as a graph, and lets you edit links and rules. It is a VSA app in `framework/Tooling/Viewer/`, built against the framework source, as `samples/Notes` is. It does not ship yet. Its input is two files that the architecture engine exports from an app: the architecture file (the definition as data) and the snapshot file (the resolved app). The model of both files is `VSA.Architecture.Data` (see `architecture-data.md`).
 
+## Status (2026-11-14)
+
+The data loop is stable, and the work stops here until more of the toolset is stable. PR #78 stays a draft, and only the viewer session merges it.
+
+| Done | Proof |
+|---|---|
+| One data library (`VSA.Architecture.Data`) for export, edit and import, for the engine and the viewer | `DefinitionFileTests`, `ExportTests`, `DataFilesTests` |
+| The engine exports `<architecture>.json` and `<app>.<architecture>.json`, and checks an app with an architecture file (`--definition`) | `RunEngineTests` |
+| The viewer shows both files, also with no app assembly (stand-in types) | `MvvmLoopTests`, `ExportImportTests` |
+| Rule edits in the viewer give a new architecture file, and the engine check gives the expected result | `LoopTests`, `MvvmLoopTests`, browser `ExportTests` |
+| The viewer warns when the snapshot is from another version of the architecture | `MvvmLoopTests` |
+
+To start again:
+
+1. Merge `main` into `claude/architecture-viewer` (main has new commits after 2026-11-14).
+2. Make a feature list. The first candidate is the edit of parts and options, not only rules.
+3. Get a test app that is larger than Notes, to find the problems of large apps.
+
 ## Parts
 
 | Part | Path | Contains |
@@ -125,10 +143,14 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 | `VSA.Viewer` package and `vsa view` | Ship the viewer. `vsa view` runs the engine export, then starts the viewer on it |
 | Export of what-if links | The App view links are not in the architecture file |
 | Folding | Fold groups for large apps |
+| Edit parts and options | The viewer edits only rules. Parts, folders, `OfType` and options are not editable |
+| Import button test | No browser test imports a real file with the button. The import code has tests |
 
 ## Known limits
 
-- Tested on `samples/Notes` only.
+- Tested on `samples/Notes` and the MVVM fixture (`tests/Fixtures/Architecture/MvvmApp/`) only.
+- A rule that a concept gives in its code cannot be edited. The edit fails with a message.
+- In a narrow window, the canvas does not fit all edges, and a click on the canvas can change the zoom. The Delete key works only when the canvas has focus.
 - An ELK drop puts the card about 71 px from the drop point. The order stays.
 - An exported remove stays drawn until "Discard changes".
 - The page loads the IBM Plex Sans font from Google Fonts.
@@ -138,5 +160,4 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 - In-process requests: each viewer gesture is a request with an HTTP route, so it is also a public endpoint. Add a request type that runs only in the process?
 - Views and `Domain.Shared`: views see only presenter types, so `Mapping` copies 22 records into view items. Keep this pattern, or let views see `Domain.Shared`?
 - WebAssembly: `VSA.Views` needs `Microsoft.AspNetCore.App`. If it uses `Microsoft.AspNetCore.Components` only, the viewer can also run as WebAssembly. Change it?
-- CI and the browser tests: CI runs `dotnet test VSA.slnx` on `ubuntu-latest`, and the tests install Chromium there. If Chromium needs system libraries that the image does not have, add `playwright install --with-deps chromium` to `.github/workflows/ci.yml`, or filter out the category `Browser`.
 - Folder name: `framework/Tooling/Viewer/` can change when there are more tools.
