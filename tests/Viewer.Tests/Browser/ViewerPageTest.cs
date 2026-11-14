@@ -1,13 +1,11 @@
 using Microsoft.Playwright;
-using Microsoft.Playwright.NUnit;
 
 namespace Viewer.Tests.Browser;
 
-public abstract class ViewerPageTest : PlaywrightTest
+public abstract class ViewerPageTest
 {
     private const int AppEdges = 1;
 
-    private IBrowser? browser;
     private IBrowserContext? context;
 
     protected GraphPage Graph { get; private set; } = null!;
@@ -15,8 +13,7 @@ public abstract class ViewerPageTest : PlaywrightTest
     [SetUp]
     public async Task OpenViewer()
     {
-        browser = await LaunchEdge();
-        context = await browser.NewContextAsync(new BrowserNewContextOptions
+        context = await ViewerSetup.Browser.NewContextAsync(new BrowserNewContextOptions
         {
             ViewportSize = new ViewportSize { Width = 2080, Height = 1200 },
             AcceptDownloads = true,
@@ -37,23 +34,7 @@ public abstract class ViewerPageTest : PlaywrightTest
         if (context is not null)
         {
             await context.CloseAsync();
-        }
-        if (browser is not null)
-        {
-            await browser.CloseAsync();
-        }
-    }
-
-    private async Task<IBrowser> LaunchEdge()
-    {
-        try
-        {
-            return await BrowserType.LaunchAsync(new BrowserTypeLaunchOptions { Channel = "msedge", Headless = true });
-        }
-        catch (PlaywrightException e) when (e.Message.Contains("msedge", StringComparison.Ordinal))
-        {
-            Assert.Ignore($"Microsoft Edge is not installed, so the browser tests do not run. {e.Message}");
-            throw;
+            context = null;
         }
     }
 }

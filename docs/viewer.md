@@ -73,11 +73,16 @@ Version 2 adds the rule terms (`from`, `to`) and `memberAccess`. The text of a r
 |---|---|---|
 | Unit | `SelectItemTests` (2) | Nothing |
 | Export | `ExportImportTests` (4): the export of `samples/Notes` goes into the import | `samples/Notes` builds |
-| Browser | 23 tests in category `Browser` | Microsoft Edge |
+| Browser | 23 tests in category `Browser` | Playwright Chromium (the tests install it on the first run, about 150 MB) |
 
 At the start of the run, `NotesExport` runs `Architecture.Export` on the output of `samples/Notes` and writes a temporary `architecture.json`. The test project builds `Architecture.Export` and `samples/Notes` with `ReferenceOutputAssembly="false"`, so their assemblies stay out of the test output.
 
-The browser tests start `Viewer.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development` and `--Viewer:Architecture` set to that file. They use `Microsoft.Playwright.NUnit` with the installed Edge (`Channel = "msedge"`), so no browser download is necessary. Each test opens a new page, so each test has a new Blazor circuit and new presenter state. If Edge is not installed, the browser tests are ignored.
+The browser tests start `Viewer.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development` and `--Viewer:Architecture` set to that file. At the start of the run, `ViewerSetup` installs the Playwright Chromium if it is missing, and starts it one time. Each test opens a new browser context and page, so each test has a new Blazor circuit and new presenter state.
+
+| Run of `Viewer.Tests` (100 tests, no build) | Duration |
+|---|---|
+| One browser for each test (Edge) | 3 min 58 s |
+| One Chromium for the whole run | 1 min 33 s |
 
 To run only one kind, use a filter:
 
@@ -99,8 +104,9 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 | The viewer reads the file with `VSA.Architecture.Data` | One model for each tool. The root project references it |
 | The import fails on a missing field (`RespectRequiredConstructorParameters`) | A drift between the export and the import fails the tests |
 | `IsPackable` false | `LocalFeed` packs each packable project under `framework/`. A package changes the consumer tests |
-| `Microsoft.Playwright.NUnit` 1.64.1, base class `PlaywrightTest` | Runs on Microsoft.Testing.Platform with no change. The package excludes the build assets of `Microsoft.NET.Test.Sdk` |
-| Each test launches Edge itself | The settings of `PageTest` come from a `.runsettings` file. Code sets `Channel = "msedge"` directly |
+| `Microsoft.Playwright` 1.64.1, with plain NUnit fixtures | No Playwright base class is necessary, because one `[SetUpFixture]` owns the browser |
+| Playwright Chromium, not an installed browser | Each Playwright release is tested with its own Chromium version. The same version runs on each machine and in CI. It has a fast headless shell |
+| One Chromium for the whole run, a new context for each test | A browser start for each test took about 6 s. The context keeps the tests apart |
 | 23 separate browser tests, not one long script | A long script stops at the first failure. Separate tests show each failure |
 | View code follows the repository analyzer rules | `App/Views` gets the VSA analyzer as framework code: block bodies, explicit types |
 
@@ -124,5 +130,5 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 - In-process requests: each viewer gesture is a request with an HTTP route, so it is also a public endpoint. Add a request type that runs only in the process?
 - Views and `Domain.Shared`: views see only presenter types, so `Mapping` copies 22 records into view items. Keep this pattern, or let views see `Domain.Shared`?
 - WebAssembly: `VSA.Views` needs `Microsoft.AspNetCore.App`. If it uses `Microsoft.AspNetCore.Components` only, the viewer can also run as WebAssembly. Change it?
-- CI and the browser tests: CI runs `dotnet test VSA.slnx` on `ubuntu-latest`. That image has Microsoft Edge, so the browser tests can run there (about 2.5 minutes). If they are slow or unstable on CI, filter out the category `Browser` in `.github/workflows/ci.yml`?
+- CI and the browser tests: CI runs `dotnet test VSA.slnx` on `ubuntu-latest`, and the tests install Chromium there. If Chromium needs system libraries that the image does not have, add `playwright install --with-deps chromium` to `.github/workflows/ci.yml`, or filter out the category `Browser`.
 - Folder name: `framework/Tooling/Viewer/` can change when there are more tools.

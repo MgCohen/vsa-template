@@ -68,7 +68,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
 | `tests/Architecture.Tests/` | Tests of the rule engine core, on the fixture apps in `tests/Fixtures/Architecture/` |
 | `tests/Composition.Tests/` | Tests of the composer, the installers and `AnchorBuilder`, with no ASP.NET Core |
-| `tests/Viewer.Tests/`    | Tests of the architecture viewer: unit and browser tests (category `Browser`, Playwright on Microsoft Edge) |
+| `tests/Viewer.Tests/`    | Tests of the architecture viewer: unit and browser tests (category `Browser`, Playwright Chromium, installed by the tests) |
 | `tests/Engine.Tests/`    | Tests of the rule engine app, in the test process, on `samples/Notes`     |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |
