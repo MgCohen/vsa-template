@@ -7,7 +7,7 @@ using VSA.Module;
 
 namespace VSA.Composition;
 
-sealed class ConsoleVsaHost : IVsaHost {
+public sealed class ConsoleVsaHost : IVsaHost {
     public IHostApplicationBuilder CreateBuilder(string[] args) => Host.CreateApplicationBuilder(args);
 
     public void Install(IHostApplicationBuilder builder, ModuleTypes types) {

@@ -68,6 +68,11 @@ public sealed class VsaAppTests {
     }
 
     [Test]
+    public void The_default_host_is_the_generic_host() {
+        Assert.That(new PlainApp().DefaultHost, Is.TypeOf<GenericVsaHost>());
+    }
+
+    [Test]
     public void An_app_of_the_VSA_definition_has_the_VSA_rules() {
         Assert.That(Rules(new PlainApp().Architecture), Is.EqualTo(Rules(new VsaDefinition())));
     }
@@ -117,7 +122,9 @@ public sealed class VsaAppTests {
         return found;
     }
 
-    sealed class PlainApp : VsaApp<VsaDefinition>;
+    sealed class PlainApp : VsaApp<VsaDefinition> {
+        public IVsaHost DefaultHost => Host();
+    }
 
     sealed class RulesDefinition : VsaDefinition {
         protected override void Rules(RuleBook rules) {
@@ -137,17 +144,19 @@ public sealed class VsaAppTests {
             return host.Services.GetRequiredService<ExitCode>().Value;
         }
 
-        protected override VsaBuilder Builder(string[] args) => VsaBuilder.Create(args).UseGenericHost().Modules();
+        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
 
         protected override void Services(IServiceCollection services) => services.AddSingleton(new ExitCode(7));
     }
 
     sealed class WaitingApp : VsaApp<VsaDefinition> {
-        protected override VsaBuilder Builder(string[] args) => VsaBuilder.Create(args).UseGenericHost().Modules();
+        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
     }
 
     sealed class ReturningApp : VsaApp<VsaDefinition> {
-        protected override VsaBuilder Builder(string[] args) => VsaBuilder.Create(args).UseHost(new ReturningHost()).Modules();
+        protected override IVsaHost Host() => new ReturningHost();
+
+        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
     }
 
     sealed record ExitCode(int Value);

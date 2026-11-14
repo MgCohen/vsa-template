@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VSA.Analyzers.Markers;
 using VSA.Architecture;
+using VSA.Module;
 
 namespace VSA.Composition;
 
@@ -31,7 +32,7 @@ public abstract class VsaApp<TDefinition> : IArchitectureProvider where TDefinit
     }
 
     protected virtual int Start(string[] args) {
-        var builder = Builder(args).Services(Services);
+        var builder = Builder(args);
         var host = builder.SelectedHost();
         var app = builder.Build();
         var started = new Running(host, app);
@@ -52,11 +53,20 @@ public abstract class VsaApp<TDefinition> : IArchitectureProvider where TDefinit
         }
     }
 
-    protected virtual IHost Build(string[] args) => Builder(args).Services(Services).Build();
+    protected virtual IHost Build(string[] args) => Builder(args).Build();
 
-    protected virtual VsaBuilder Builder(string[] args) => VsaBuilder.Create(args);
+    protected virtual IVsaHost Host() => new GenericVsaHost();
+
+    protected virtual IReadOnlyList<VSA.Module.Module>? Modules() => null;
+
+    protected virtual IKeySource Keys() => new ConstraintKeys();
 
     protected virtual void Services(IServiceCollection services) { }
+
+    VsaBuilder Builder(string[] args) {
+        var builder = VsaBuilder.Create(args).UseHost(Host()).Keys(Keys()).Services(Services);
+        return Modules() is { } modules ? builder.Modules([.. modules]) : builder;
+    }
 
     void Clear(Running stopped) {
         lock (gate) {

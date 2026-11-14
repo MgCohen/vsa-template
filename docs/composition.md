@@ -1,6 +1,6 @@
 # Composition: VsaBuilder and its hosts
 
-An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaDefinition>` uses `VsaBuilder`, and the host scan selects the host. A console app can also use `VsaBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaDefinition>` uses `VsaBuilder`, and its `Host()` method selects the host. A console app can also use `VsaBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Entry point
 
@@ -9,7 +9,9 @@ An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class
 return new MyApp().Run(args);
 
 // Web: App/Host/MyApp.cs
-public class MyApp : VsaApp<VsaDefinition>;
+public class MyApp : VsaApp<VsaDefinition> {
+    protected override IVsaHost Host() => new WebVsaHost();
+}
 
 // Console
 await VsaBuilder.Create(args).UseGenericHost().Build().RunAsync();
@@ -23,7 +25,7 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 | `Create(args)` | Makes the builder. `args` go to the configuration of the host |
 | `UseWebHost()` (VSA.Host) | ASP.NET Core: the HTTP API of the requests, and the views |
 | `UseGenericHost()` (VSA.Composition) | The .NET Generic Host for a console app: no ASP.NET Core |
-| No host call | The host scan selects the host (see "The host scan") |
+| No host call | `GenericVsaHost` |
 | `Modules(...)` | Optional. Gives the modules. With no call, `AppScan` finds them. Tests use it |
 | `Services(...)` | Optional. App registrations, before the modules |
 | `Build()` | Returns the standard `IHost`: `RunAsync`, `StartAsync`, `StopAsync`, `Services` |
@@ -35,8 +37,8 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 ```
 new MyApp().Run(args)                 in VsaApp<TDefinition>
 └─ Start(args)
-   ├─ Builder(args).Services(Services)
-   ├─ SelectedHost()                  the host of the builder, else the host scan
+   ├─ VsaBuilder.Create(args)         with Host(), Keys(), Services and Modules()
+   ├─ SelectedHost()                  the host of Host()
    ├─ Build()                         IHost
    └─ host.Run(app)                   web, generic: waits for the stop. Unity: returns
 ```
@@ -44,8 +46,10 @@ new MyApp().Run(args)                 in VsaApp<TDefinition>
 | Member | Default | Override to |
 |---|---|---|
 | `Start(string[] args)` | Builds the app, then the host runs it. Returns the exit code of the host | Change the run, or the exit code |
-| `Build(string[] args)` | `Builder(args).Services(Services).Build()` | Change the build |
-| `Builder(string[] args)` | `VsaBuilder.Create(args)` | Select a host, the modules or the keys |
+| `Build(string[] args)` | Builds the `IHost` from the builder steps | Change the build |
+| `Host()` | `new GenericVsaHost()` | Select the host: `WebVsaHost`, `ConsoleVsaHost`, or the Unity host |
+| `Modules()` | `null`: `AppScan` finds the modules | Give the modules, for example in a test |
+| `Keys()` | `new ConstraintKeys()` | Give the keys of the open module types |
 | `Services(IServiceCollection)` | No registrations | Add app registrations |
 | `Architecture` | `new TDefinition()` | Set the Unity folders: `UnityApp`, `UnitySource` (see `architecture-engine.md`) |
 
@@ -70,17 +74,16 @@ With no host, the app calls `AddVsa` on its own `IServiceCollection`:
 
 If `services` already has an `IConfiguration` instance, `AddVsa` uses it. Else it reads `args`.
 
-## The host scan
+## The hosts
 
-If the app selects no host, `VsaBuilder.SelectedHost()` calls `VsaHosts.Find()`. The scan works as the layer installers do: it reads the assemblies that reference VSA.Composition.
+The app selects its host in `Host()`. The hosts are public classes:
 
-| Found | Host |
-|---|---|
-| No `IVsaHost` class | `GenericVsaHost` |
-| One `IVsaHost` class with no constructor parameters | That host, for example `WebVsaHost` when VSA.Host is loaded |
-| Two or more | An error that names them. Remove one reference, or call `UseHost(...)` in `Builder` |
-
-A host package plugs in with one class that implements `IVsaHost`. The Unity host of the UPM package (repo `vsa-unity`) is such a class.
+| Host | Package | Use |
+|---|---|---|
+| `GenericVsaHost` | VSA.Composition | The default. The .NET Generic Host |
+| `ConsoleVsaHost` | VSA.Composition | A console app with one entry command (`IConsoleCommand<TResult>`) |
+| `WebVsaHost` | VSA.Host | ASP.NET Core: the HTTP API of the requests, and the views |
+| The Unity host | `vsa-unity` | A Unity app. `Run` returns |
 
 | `IVsaHost` member | Use |
 |---|---|
@@ -360,7 +363,7 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 
 - No VSA container interface. Reason: `IServiceCollection` and `IServiceProvider` are already container-neutral, and most containers read them.
 - No VContainer bridge in the framework. Reason: only a Unity app with VContainer needs it, so the app keeps it. Use the router, not a copy of the registrations.
-- No Unity code in this repository (the Unity host, `UnityLogProvider`, a view base). Reason: it needs `UnityEngine`. The UPM package (repo `vsa-unity`) keeps it, and the host scan finds its host.
+- No Unity code in this repository (the Unity host, `UnityLogProvider`, a view base). Reason: it needs `UnityEngine`. The UPM package (repo `vsa-unity`) keeps it. A Unity app returns the Unity host from `Host()`.
 - No view injector and no scene scan. Reason: a factory gives each object its services, and a Unity app often has its own container for scene objects.
 - No middleware hook on the web host. Reason: no app needs one. Add it when an app needs authentication or CORS before the routes.
 

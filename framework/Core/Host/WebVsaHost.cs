@@ -8,7 +8,7 @@ using VSA.Views;
 
 namespace VSA.Host;
 
-sealed class WebVsaHost : IVsaHost {
+public sealed class WebVsaHost : IVsaHost {
     Type[] requestHandlers = [];
     Type? viewsRoot;
 
