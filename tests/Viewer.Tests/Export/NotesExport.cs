@@ -8,7 +8,7 @@ public static class NotesExport
 
     public static string Folder => folder.Value;
 
-    public static string SnapshotFile => Path.Combine(Folder, DataFiles.Snapshot("Notes"));
+    public static string SnapshotFile => Path.Combine(Folder, DataFiles.Snapshot("Notes", "Vsa"));
 
     public static string SnapshotJson => File.ReadAllText(SnapshotFile);
 

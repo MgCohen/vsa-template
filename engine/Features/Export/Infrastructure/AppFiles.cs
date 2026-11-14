@@ -12,7 +12,7 @@ public static class AppFiles {
         DefinitionJson.Save(architecture, architectureFile);
         var map = ArchitectureMap.Load(app.Definition, app.Assemblies, app.AppRoot);
         var snapshot = SnapshotExport.Of(map, Path.GetFileName(Path.TrimEndingDirectorySeparator(app.AppRoot)));
-        var snapshotFile = Path.Combine(folder, DataFiles.Snapshot(snapshot.App.Name));
+        var snapshotFile = Path.Combine(folder, DataFiles.Snapshot(snapshot.App.Name, architecture.Name));
         SnapshotJson.Save(snapshot, snapshotFile);
         return new ExportSummary(
             Path.GetFileName(architectureFile), architecture.Parts.Count, architecture.Rules.Count,

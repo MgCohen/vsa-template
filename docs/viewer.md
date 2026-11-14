@@ -11,7 +11,7 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 | Views | `App/Views/` | Pages, panels, graph and shape components |
 | Host | `App/Host/` | `ViewerApp` (selects `WebVsaHost`), `ViewerDefinition` (the app rules) and the fixed `Program.cs` line |
 | Static files | `wwwroot/` | `app.css`, elkjs and its interop script |
-| Default input | `Data/` | `vsa.architecture.json` and `notes.snapshot.json` of `samples/Notes`, made by the engine export (`--export`) |
+| Default input | `Data/` | `vsa.json` and `notes.vsa.json` of `samples/Notes`, made by the engine export (`--export`) |
 | Licenses | `THIRD-PARTY-NOTICES.md`, `LICENSE-EPL-2.0.md` | Z.Blazor.Diagrams (MIT), elkjs 0.9.3 (EPL-2.0) |
 | Tests | `tests/Viewer.Tests/` | Unit and browser tests |
 
@@ -30,8 +30,8 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 ```mermaid
 flowchart LR
     A[App output folder] --> X[engine --export]
-    X --> D[app.snapshot.json]
-    X --> F[name.architecture.json]
+    X --> D[app.architecture.json]
+    X --> F[architecture.json]
     D --> M[ArchitectureViewerModule]
     F --> M
     M --> H[Request handlers]
@@ -46,12 +46,12 @@ flowchart LR
 ## Make the export
 
 1. Build the app, for example `dotnet build samples/Notes`.
-2. Run `dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --export out`. The engine writes `out/vsa.architecture.json` and `out/notes.snapshot.json`.
-3. Start the viewer with `--Viewer:Snapshot out/notes.snapshot.json`.
+2. Run `dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --export out`. The engine writes `out/vsa.json` and `out/notes.vsa.json`.
+3. Start the viewer with `--Viewer:Snapshot out/notes.vsa.json`.
 
 ## Export shape
 
-Both files are described in `architecture-data.md`. The snapshot file (version 1) has these sections:
+Both files are described in `architecture-data.md`. The snapshot file (version 2) has these sections:
 
 | Section | Fields |
 |---|---|
@@ -64,7 +64,7 @@ Both files are described in `architecture-data.md`. The snapshot file (version 1
 
 1. Open the Definition view.
 2. Remove a rule, flip a rule between allow and deny, or draw a new rule.
-3. Push "Export definition". The panel shows the new architecture file, with "Copy JSON" and "Download <name>.architecture.json".
+3. Push "Export definition". The panel shows the new architecture file, with "Copy JSON" and "Download <name>.json".
 4. To edit it again, import the file with "Import architecture file".
 5. To check the app with it, run the engine with `--definition <file>`.
 

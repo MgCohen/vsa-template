@@ -19,7 +19,7 @@ public static class DataFolder
 
     private static string SnapshotIn(string folder)
     {
-        string[] files = Directory.GetFiles(folder, "*" + DataFiles.SnapshotExtension);
+        string[] files = [.. Directory.GetFiles(folder, "*" + DataFiles.Extension).Where(DataFiles.IsSnapshot)];
         return files.Length == 1
             ? files[0]
             : throw new InvalidOperationException(

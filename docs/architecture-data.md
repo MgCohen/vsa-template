@@ -4,18 +4,18 @@ Two files hold the architecture data. Both models are in `VSA.Architecture.Data`
 
 | File | Name | Contents | Made by |
 |---|---|---|---|
-| Architecture file | `<architecture>.architecture.json`, for example `mvvm.architecture.json` | The architecture definition as data: name, options, part tree, rules. `JsonDefinition` loads it as a working `ArchitectureDefinition` | The engine export, or the viewer after an edit |
-| Snapshot file | `<app>.snapshot.json`, for example `notes.snapshot.json` | One app at one time, against an architecture: types, uses, findings, and the architecture that it used | Only the engine. It is output only |
+| Architecture file | `<architecture>.json`, for example `mvvm.json` | The architecture definition as data: name, options, part tree, rules. `JsonDefinition` loads it as a working `ArchitectureDefinition` | The engine export, or the viewer after an edit |
+| Snapshot file | `<app>.<architecture>.json`, for example `notes.vsa.json` | One app at one time, against an architecture: types, uses, findings, and the architecture that it used | Only the engine. It is output only |
 
-The architecture name comes from the definition class without "Definition": `MvvmDefinition` gives `Mvvm`, and `VsaDefinition` gives `Vsa`. One architecture can serve many apps, so the two files have different names. `DataFiles` gives the file names.
+The architecture name comes from the definition class without "Definition": `MvvmDefinition` gives `Mvvm`, and `VsaDefinition` gives `Vsa`. One architecture can serve many apps, so the snapshot name starts with the app and ends with the architecture. A dot in a name becomes a hyphen, and the names are lower case. A name that other tools use for their own file, for example `global` or `package`, fails. Each file also says its kind in `$schema`. `DataFiles` gives the file names.
 
 ## The loop
 
 ```mermaid
 flowchart LR
     C[C# definition] --> X[engine --export]
-    X --> D[name.architecture.json]
-    X --> A[app.snapshot.json]
+    X --> D[architecture.json]
+    X --> A[app.architecture.json]
     D --> V[viewer]
     A --> V
     V -- Export definition --> D2[architecture file, edited]
@@ -34,7 +34,7 @@ An import always gives a data-driven definition. No tool parses or writes C# cod
 
 ```bash
 dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --export out
-dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --definition out/vsa.architecture.json
+dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root samples/Notes --bin samples/Notes/bin/Debug/net10.0 --definition out/vsa.json
 ```
 
 ## Parts
@@ -104,7 +104,8 @@ A rule of a concept comes from code, so an edit of it fails with a message. A co
 
 | Field | Contains |
 |---|---|
-| `version` | `SnapshotJson.Version` (1). A reader fails on another version |
+| `$schema` | `architecture-snapshot.v2.json` |
+| `version` | `SnapshotJson.Version` (2). A reader fails on another version |
 | `architecture` | `name`: the architecture name. `source`: the definition class, or the file name for `--definition`. `hash`: `sha256` of the exported architecture file |
 | `app` | `name`, `instances`, `types`, `dependencies`, `findings` |
 
@@ -115,7 +116,7 @@ The `hash` tells if a snapshot is from a given version of the architecture: `Def
 ## JsonDefinition
 
 ```csharp
-var definition = new JsonDefinition("mvvm.architecture.json");
+var definition = new JsonDefinition("mvvm.json");
 ```
 
 A relative path starts at the folder of the assembly of the definition class. `JsonDefinition` reads the file one time.

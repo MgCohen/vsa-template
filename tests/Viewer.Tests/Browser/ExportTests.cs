@@ -46,7 +46,7 @@ public sealed class ExportTests : ViewerPageTest
 
         IDownload download = await Graph.Page.RunAndWaitForDownloadAsync(() => Graph.Page.ClickAsync("a.download"));
 
-        Assert.That(download.SuggestedFilename, Is.EqualTo("vsa.architecture.json"));
+        Assert.That(download.SuggestedFilename, Is.EqualTo("vsa.json"));
     }
 
     private static bool Covers(Rule rule, string edge, string access)

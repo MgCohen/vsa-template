@@ -9,6 +9,6 @@ public static class SnapshotExport {
             DefinitionExport.NameOf(definition),
             DefinitionExport.SourceOf(definition),
             DefinitionJson.Hash(DefinitionExport.Of(definition)));
-        return new SnapshotFile(SnapshotJson.Version, architecture, new AppExport(map).Data(app));
+        return new SnapshotFile(SnapshotJson.SchemaName, SnapshotJson.Version, architecture, new AppExport(map).Data(app));
     }
 }

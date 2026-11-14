@@ -7,7 +7,9 @@ using System.Text.Json.Schema;
 namespace VSA.Architecture.Data;
 
 public static class SnapshotJson {
-    public const int Version = 1;
+    public const int Version = 2;
+
+    public const string SchemaName = "architecture-snapshot.v2.json";
 
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web) {
         WriteIndented = true,

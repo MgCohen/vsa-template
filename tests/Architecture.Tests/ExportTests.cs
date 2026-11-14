@@ -53,6 +53,6 @@ public sealed class ExportTests {
     public void The_schema_describes_the_architecture_and_the_app() {
         var properties = SnapshotJson.Schema()["properties"]!.AsObject().Select(p => p.Key);
 
-        Assert.That(properties, Is.EquivalentTo(new[] { "version", "architecture", "app" }));
+        Assert.That(properties, Is.EquivalentTo(new[] { "$schema", "version", "architecture", "app" }));
     }
 }

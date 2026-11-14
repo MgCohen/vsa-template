@@ -72,7 +72,7 @@ public sealed class RunEngineTests {
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
         Assert.That(result.Lines, Has.One.StartsWith($"vsa-engine: VSA3005: ExportFiles wrote {folder}"));
         var architecture = Path.Combine(folder, DataFiles.Architecture("Vsa"));
-        var snapshot = SnapshotJson.Read(File.ReadAllText(Path.Combine(folder, DataFiles.Snapshot("Notes"))));
+        var snapshot = SnapshotJson.Read(File.ReadAllText(Path.Combine(folder, DataFiles.Snapshot("Notes", "Vsa"))));
         Assert.That(new JsonDefinition(architecture).Tree(), Is.EqualTo(new App.Host.NotesApp().Architecture.Tree()));
         Assert.That(snapshot.Architecture.Name, Is.EqualTo("Vsa"));
         Assert.That(snapshot.App.Types, Is.Not.Empty);

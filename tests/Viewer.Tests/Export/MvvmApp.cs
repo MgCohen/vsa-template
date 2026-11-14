@@ -11,7 +11,7 @@ public static class MvvmApp
 
     public static string ArchitectureJson => File.ReadAllText(Path.Combine(Folder, DataFiles.Architecture("Mvvm")));
 
-    public static string SnapshotJson => File.ReadAllText(Path.Combine(Folder, DataFiles.Snapshot("MvvmApp")));
+    public static string SnapshotJson => File.ReadAllText(Path.Combine(Folder, DataFiles.Snapshot("MvvmApp", "Mvvm")));
 
     public static DotnetRun Engine(params string[] arguments)
     {
