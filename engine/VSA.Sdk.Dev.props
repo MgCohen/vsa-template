@@ -1,0 +1,7 @@
+<Project>
+  <!-- Takes the place of Sdk="VSA.Sdk" inside this repository, so the engine uses the SDK files from source. -->
+  <PropertyGroup>
+    <VsaSdkDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'framework', 'Sdk', 'Sdk'))</VsaSdkDir>
+  </PropertyGroup>
+  <Import Project="$(VsaSdkDir)Sdk.props" />
+</Project>

@@ -1,0 +1,10 @@
+<Project>
+  <!-- The rule engine is a VSA app. It builds against the framework source in this repository (VSA.Sdk source mode).
+       This repository has one global.json, so this folder sets the app root of the engine projects. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'framework'))</VsaFrameworkSourceDir>
+    <VsaAppRoot>$(MSBuildThisFileDirectory)</VsaAppRoot>
+  </PropertyGroup>
+</Project>

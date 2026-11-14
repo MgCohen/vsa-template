@@ -85,6 +85,30 @@ public sealed class PipelineTests {
     }
 
     [Test]
+    public async Task A_fault_that_the_runner_catches_gives_a_failed_result() {
+        var pipeline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>)).Runner<CatchRunner>()
+            .Build(scope.ServiceProvider);
+
+        var result = await pipeline.SendAsync<int>(new FailCommand());
+
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.EqualTo(new Error("Fault", "The arena failed.")));
+        Assert.That(result.Envelope?.State, Is.EqualTo(EnvelopeState.Faulted));
+    }
+
+    sealed class CatchRunner : IRunner {
+        public async Task RunAsync(Envelope envelope, Func<Envelope, Task> run) {
+            try {
+                await run(envelope);
+            } catch (InvalidOperationException) {
+                return;
+            }
+        }
+
+        public Task StartAsync() => Task.CompletedTask;
+    }
+
+    [Test]
     public async Task Each_build_is_a_new_instance_with_its_own_queue() {
         var builder = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>)).Runner<QueuedRunner>();
         var first = builder.Build(scope.ServiceProvider);

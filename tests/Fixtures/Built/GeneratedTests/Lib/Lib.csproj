@@ -1,6 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- A small app with its own architecture definition. It is not a VSA module. -->
-  <ItemGroup>
-    <PackageReference Include="VSA.Architecture" />
-  </ItemGroup>
-</Project>

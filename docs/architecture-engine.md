@@ -1,14 +1,15 @@
 # Architecture engine
 
-The architecture tests check each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. The engine binds each type to a part and runs three native ArchUnitNET tests.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. The core library (`VSA.Architecture.Engine`) loads the app, binds each type to a part, decides each use and gives each problem as a record. The engine app (`engine/`) runs the core after each build of the host.
 
 ```mermaid
 flowchart LR
-    D[Definition: VSA.Architecture] --> B[Binder]
-    P[PDB source files] --> B
-    B --> I[Part instances]
-    I --> T[Three tests]
-    T --> M["file(line): error VSA2xxx"]
+    L[ArchitectureLoader] --> A[LoadedApp]
+    A --> B[Binder]
+    D[Definition: VSA.Architecture] --> B
+    B --> S[Bindings]
+    S --> C[RuleChecks + Decide]
+    C --> F["RuleFinding (code, severity, file, line, column, text)"]
 ```
 
 ## Projects
@@ -16,11 +17,11 @@ flowchart LR
 | Project | Path | Contains |
 |---|---|---|
 | `VSA.Architecture` | `framework/Architecture/Definition/` | The definition API. No ArchUnitNET |
-| `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | Binding, decisions, discovery, `.Check(map)` |
+| `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | The core: load, bind, decide, check |
 | `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
-| `VSA.Testing.Architecture` | `framework/Testing/Architecture/` | The test base, the build targets |
+| Engine app | `engine/` | The runner: Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
-The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TApp>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET or Mono.Cecil.
+The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TDefinition>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -145,7 +146,7 @@ The first access that is set wins:
 | Source file out of the definition root | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
-The engine reads the source file and the first line of each type from the PDB file, with Mono.Cecil.
+The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`SourceFiles`).
 
 ## Unity projects
 
@@ -160,106 +161,64 @@ If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity pro
 `ArchitectureDefinition.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaDefinition` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it:
 
 ```csharp
-public class MyApp : VsaApp<MyApp> {
-    public override ArchitectureDefinition Architecture => new VsaDefinition(Rules) { UnityApp = "Cards", UnitySource = "Modules" };
+public class MyApp : VsaApp<VsaDefinition> {
+    public override ArchitectureDefinition Architecture => new VsaDefinition { UnityApp = "Cards", UnitySource = "Modules" };
 }
 ```
 
-Discovery also reads the DLLs that Unity compiles:
+`ArchitectureLoader` also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
 
 | Step | Unity project |
 |---|---|
-| App DLLs | Also `Library/ScriptAssemblies/*.dll` with PDB sources under the app root |
-| No `Library/ScriptAssemblies/` | A warning in `ArchitectureMap.Warnings`. The test base writes it to the test output |
-| A DLL name in the test output too | The engine loads the test output DLL only |
+| App DLLs | Also `Library/ScriptAssemblies/*.dll` |
+| No `Library/ScriptAssemblies/` | The warning `VSA2103` |
+| A DLL name in the host output too | The engine loads the host output DLL only |
 | A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
 | Source file under `Library/` | Not app code (package cache, generated types) |
 
-## The four tests
+## The four checks
 
-`ArchitectureTests<TDefinition>` has the four tests. It inherits `ArchitectureTestBase<TDefinition>`, which loads the map and has no tests. `ArchitectureTests` is `ArchitectureTests<ArchitectureDefinition>`: it reads the definition of the app. Each test is one native ArchUnitNET rule:
+`RuleChecks.Of(type)` gives the findings of one type. `ArchitectureMap.Findings()` gives the findings of all app types, and the warnings of the loader.
 
-```csharp
-[TestCaseSource(nameof(PartInstances))]
-public void Uses_only_allowed_parts(PartInstance instance) {
-    Types().That().AreIn(instance).Should().NotDependOnAnyDeniedTo(instance).Check(Map);
-}
-
-[TestCaseSource(nameof(LimitedPartInstances))]
-public void Has_only_allowed_types(PartInstance instance) {
-    Types().That().Are(instance.Limited).Should().BeAssignableTo(instance.OfTypes).Check(Map);
-}
-
-[TestCaseSource(nameof(ExposureLimitedPartInstances))]
-public void Exposes_only_allowed_parts(PartInstance instance) {
-    Types().That().AreIn(instance).Should().ExposeOnlyWithinLimitsOf(instance).Check(Map);
-}
-
-[Test]
-public void Each_type_is_in_a_part() {
-    Types().That().Are(AppTypes).Should().Be(BoundTypes).Check(Map);
-}
-```
-
-| ID | Test | Failure |
+| ID | Severity | Problem |
 |---|---|---|
-| `VSA2001` | `Uses_only_allowed_parts` | A type uses a part that the rules deny |
-| `VSA2003` | `Exposes_only_allowed_parts` | A type exposes a part with more access than its rule allows |
-| `VSA2101` | `Has_only_allowed_types` | A type is not assignable to the `OfType` of its part |
-| `VSA2102` | `Each_type_is_in_a_part` | A type is in a folder that the definition does not have |
+| `VSA2001` | Error | A type uses a part that the rules deny |
+| `VSA2003` | Error | A type exposes a part with more access than its rule allows |
+| `VSA2101` | Error | A type is not assignable to the `OfType` of its part |
+| `VSA2102` | Error | A type is in a folder that the definition does not have |
+| `VSA2103` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
 
-`.Check(Map)` gives one line for each failure:
+Each finding is a `RuleFinding(Code, Severity, File, Line, Column, Text)`. `File` is the full path. The engine app writes one line for each finding:
 
 ```text
-Features/Notes/Slices/Read/ReadHandler.cs(6): error VSA2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
+C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error VSA2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
 ```
 
-## Test project of an app
+## The checks of an app
 
-The app class (`MyApp : VsaApp<MyApp>`, see `composition.md`) gives the rules for the runtime and for the tests. A test project references the host and `VSA.Testing.Architecture`. It writes no test class. The build adds this class to `obj/.../VsaArchitectureTests.g.cs`:
-
-```csharp
-namespace <RootNamespace>;
-[NUnit.Framework.TestFixture]
-public sealed class ArchitectureTests : VSA.Testing.Architecture.ArchitectureTests;
-```
-
-`[TestFixture]` keeps the reference to `nunit.framework` in the test assembly. Without it, a test project with no test of its own has no NUnit reference, and NUnit finds 0 tests. `tests/Consumer.Tests` checks this with the built fixture `tests/Fixtures/Built/GeneratedTests`.
+The build hook package `VSA.Architecture.Build` on the host project runs the engine after each build. A test project does not check the architecture. See "The rule engine" in `AGENTS.md`.
 
 | Step | Source |
 |---|---|
-| App root | `AssemblyMetadata("VsaAppRoot")` of the test assembly, else the nearest `global.json` |
-| App DLLs | Each DLL of the test output with PDB source files under the app root |
-| External DLLs | Each DLL of the test output whose name an `External` part names |
-| Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class), if it is a `TDefinition` |
-| Fallback definition | The most derived class with no constructor parameters that is or inherits `TDefinition` |
-| Not loaded | The test assembly, `VSA.Architecture`, and each DLL that references `VSA.Architecture.Engine` |
+| App root | `VsaAppRoot`, else the nearest `global.json` |
+| App DLLs | Each DLL of the host output with PDB source files under the app root |
+| External DLLs | Each DLL of the host output whose name an `External` part names |
+| Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class) |
+| Fallback definition | The most derived class with no constructor parameters that inherits `ArchitectureDefinition` |
 | Unity DLLs | See "Unity projects" |
 
-To change the VSA rules, override `Rules` in the app class. `VsaDefinition` applies these rules after its own rules, and a later rule wins:
+The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaDefinition` and override `Rules`. Call `base.Rules` first: a later rule wins.
 
 ```csharp
-using VSA.Architecture;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-
-public class MyApp : VsaApp<MyApp> {
-    protected override void Rules(RuleBook rules) => rules.For<Presenters>().Denies<Contracts.Events>();
-}
-```
-
-The generated class is sealed. To add a test of the app, write your own class that inherits `ArchitectureTestBase`. The base gives `Map`, `AppTypes` and `BoundTypes`, and it has no tests, so the four tests do not run two times. Do not inherit `ArchitectureTests`. `ArchitectureMap.Load(Type)` loads the app one time for each definition type in the test process, so the generated class and your class use the same map. `AreIn<TLayer>(Map)` and `NotDependOnAny<TLayer>(Map)` select the types of a layer. The layers are in the namespace `VSA.Architecture.Vsa`:
-
-```csharp
-public class AppRules : ArchitectureTestBase {
-    [Test]
-    public void Domain_does_not_use_Infrastructure() {
-        Types().That().AreIn<Domain>(Map).Should().NotDependOnAny<Infrastructure>(Map).Check(Map);
+public sealed class MyDefinition : VsaDefinition {
+    protected override void Rules(RuleBook rules) {
+        base.Rules(rules);
+        rules.For<Presenters>().Denies<Contracts.Events>();
     }
 }
-```
 
-To stop the generated class, set `<VsaArchitectureTests>false</VsaArchitectureTests>`.
+public class MyApp : VsaApp<MyDefinition>;
+```
 
 ## Tests of the engine
 
