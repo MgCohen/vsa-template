@@ -64,23 +64,37 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task With_export_the_engine_writes_the_definition_file_of_Notes() {
-        var file = Path.Combine(TempFolder.Create(), "definition.json");
+    public async Task With_export_the_engine_writes_the_two_files_of_Notes() {
+        var folder = TempFolder.Create();
 
-        var result = await Run(export: file);
+        var result = await Run(export: folder);
 
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
-        Assert.That(result.Lines, Has.One.StartsWith($"vsa-engine: VSA3005: ExportDefinition wrote {file}"));
-        Assert.That(new JsonDefinition(file).Tree(), Is.EqualTo(new App.Host.NotesApp().Architecture.Tree()));
+        Assert.That(result.Lines, Has.One.StartsWith($"vsa-engine: VSA3005: ExportFiles wrote {folder}"));
+        Assert.That(new JsonDefinition(Path.Combine(folder, "definition.json")).Tree(), Is.EqualTo(new App.Host.NotesApp().Architecture.Tree()));
+        Assert.That(ArchitectureJson.Read(File.ReadAllText(Path.Combine(folder, "architecture.json"))).App.Types, Is.Not.Empty);
     }
 
-    static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false, string export = "") {
+    [Test]
+    public async Task With_a_definition_file_the_engine_checks_the_app_with_the_data_definition() {
+        var folder = TempFolder.Create();
+        await Run(export: folder);
+
+        var result = await Run(definition: Path.Combine(folder, "definition.json"));
+
+        Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.Lines, Has.None.Contains(": error "));
+    }
+
+    static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false, string export = "",
+        string definition = "") {
         VSA.Module.Module[] modules = [
             new StepsPlugin(), new EngineModule(), new DefinitionModule(), new ExportModule(), new RulesModule(), new ReportModule(),
         ];
         using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
         await using var scope = host.Services.CreateAsyncScope();
-        var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast, Export: export);
+        var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast, Export: export,
+            Definition: definition);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
         return result.Value;
     }

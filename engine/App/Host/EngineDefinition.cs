@@ -15,7 +15,7 @@ public sealed class EngineDefinition : VsaDefinition {
     protected override void Rules(RuleBook rules) {
         base.Rules(rules);
         rules.For<Contracts.Commands>().And<Handlers.Commands>().And<Infrastructure>().And<Domain.Shared>().Uses<EngineLibraries>();
-        rules.For<Infrastructure>().Uses<CheckerLibraries>().And<ArchUnitLibraries>();
+        rules.For<Infrastructure>().Uses<CheckerLibraries>().And<ArchUnitLibraries>().And<DataLibraries>();
         rules.For<Handlers.Commands>().Uses<DataLibraries>();
         rules.For<Host>().Under<App>().Uses<EngineLibraries>();
     }

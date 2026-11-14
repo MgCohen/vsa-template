@@ -5,31 +5,39 @@ namespace Viewer.Tests.Export;
 
 public static class NotesExport
 {
-    private static readonly Lazy<string> file = new(Make);
+    private static readonly Lazy<string> folder = new(Make);
 
-    public static string File => file.Value;
+    public static string Folder => folder.Value;
+
+    public static string File => Path.Combine(Folder, "architecture.json");
 
     public static string Json => System.IO.File.ReadAllText(File);
 
-    public static string DefinitionJson =>
-        System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(File)!, "definition.json"));
+    public static string DefinitionFile => Path.Combine(Folder, "definition.json");
 
-    private static string Make()
+    public static string DefinitionJson => System.IO.File.ReadAllText(DefinitionFile);
+
+    public static DotnetRun Engine(params string[] arguments)
     {
-        string output = Path.Combine(Path.GetTempPath(), $"vsa-viewer-{Environment.ProcessId}", "architecture.json");
         ProcessStartInfo start = new("dotnet") { UseShellExecute = false, RedirectStandardOutput = true };
-        foreach (string argument in new[] { Metadata("ViewerExport"), Metadata("NotesOutput"), Metadata("NotesRoot") })
+        string[] app = ["exec", Metadata("Engine"), "--root", Metadata("NotesRoot"), "--bin", Metadata("NotesOutput")];
+        foreach (string argument in app.Concat(arguments))
         {
             start.ArgumentList.Add(argument);
         }
-        start.ArgumentList.Add(output);
         using Process process = Process.Start(start)!;
         string log = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
-        if (process.ExitCode != 0)
+        return new DotnetRun(process.ExitCode, log);
+    }
+
+    private static string Make()
+    {
+        string output = Path.Combine(Path.GetTempPath(), $"vsa-viewer-{Environment.ProcessId}");
+        DotnetRun run = Engine("--export", output);
+        if (run.ExitCode != 0)
         {
-            throw new InvalidOperationException(
-                $"Architecture.Export stopped with exit code {process.ExitCode}. {log}");
+            throw new InvalidOperationException($"The rule engine stopped with exit code {run.ExitCode}. {run.Output}");
         }
         return output;
     }

@@ -11,14 +11,14 @@
     <ProjectReference Include="$(RepoRoot)framework/Tooling/Viewer/Viewer.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Testing/VSA.Testing.Unit.csproj" />
   </ItemGroup>
-  <!-- The tests make the viewer input from samples/Notes with Architecture.Export at the start of the run. These two projects
-       only build: their assemblies stay out of the test output. -->
+  <!-- The tests make the viewer input from samples/Notes with the export of the rule engine at the start of the run. These two
+       projects only build: their assemblies stay out of the test output. -->
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Tooling/Export/Architecture.Export.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)samples/Notes/Notes.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
-    <AssemblyMetadata Include="ViewerExport" Value="$(RepoRoot)framework/Tooling/Export/bin/$(Configuration)/$(TargetFramework)/Architecture.Export.dll" />
+    <AssemblyMetadata Include="Engine" Value="$(RepoRoot)engine/bin/$(Configuration)/$(TargetFramework)/vsa-engine.dll" />
     <AssemblyMetadata Include="NotesOutput" Value="$(RepoRoot)samples/Notes/bin/$(Configuration)/$(TargetFramework)" />
     <AssemblyMetadata Include="NotesRoot" Value="$(RepoRoot)samples/Notes" />
   </ItemGroup>
