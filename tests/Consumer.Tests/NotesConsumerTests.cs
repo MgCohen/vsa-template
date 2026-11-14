@@ -51,9 +51,7 @@ public sealed partial class NotesConsumerTests {
             var text = File.ReadAllText(file);
             if (text.Contains("VSA.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
                 text = DevImport().Replace(text, "");
-                text = text.Insert(text.IndexOf(">
-", StringComparison.Ordinal) + 2, "  <Sdk Name=\"VSA.Sdk\" />
-");
+                text = text.Insert(text.IndexOf('>') + 1, "\n  <Sdk Name=\"VSA.Sdk\" />");
             } else if (text.Contains("VSA.Sdk.Dev.props")) {
                 text = DevImport().Replace(text, "");
                 text = text.Replace("<Project>", "<Project Sdk=\"VSA.Sdk\">");

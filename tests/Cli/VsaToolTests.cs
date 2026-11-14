@@ -64,7 +64,7 @@ public sealed class VsaToolTests {
 
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         Assert.That(Dotnet.Run(app, env, "test", "--solution", "Hello.slnx", "-c", "Release", "--no-build").EnsureSuccess().Output,
-            Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d+"));
+            Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d*"));
         await RunAndCall(app, ct, async (client, output) => {
             Assert.That(await client.GetStringAsync("/api/billing/status", ct), Does.Contain("\"status\":\"Ready\""));
             var created = await client.PostAsync("/api/billing/create-invoice", null, ct);

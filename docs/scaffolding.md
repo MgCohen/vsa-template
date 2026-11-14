@@ -44,7 +44,7 @@ framework/Tooling/Cli/Templates/
 ├─ Features/.gitkeep                                new app (keeps the empty Features/ folder)
 ├─ Plugins/SamplePlugin/**                         add plugin (root, Contracts/Commands/SamplePluginStep.cs)
 ├─ Plugins/.gitkeep                                new app (keeps the empty Plugins/ folder)
-├─ Tests/App.Tests.csproj                         new app (the architecture tests come from the package)
+├─ Tests/App.Tests.csproj                         new app
 ├─ Tests/SampleModuleStatusTests.cs                add module
 ├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
 ```
@@ -79,7 +79,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
 
-The build adds the architecture tests to `Tests/` (see [architecture-engine.md](architecture-engine.md)). The tests write no test class. They read the rules of `App/Host/<Name>App.cs`.
+The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). It reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
 
 ## One version
 

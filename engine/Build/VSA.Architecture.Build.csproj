@@ -14,8 +14,10 @@
     <None Include="build/*.targets" Pack="true" PackagePath="build/" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Only for restore: a solution builds a project that it does not list in Debug, so the pack target builds the engine. -->
-    <ProjectReference Include="../Engine.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <!-- Only for restore. A solution builds a project that it does not list in Debug, so the reference sets the
+         configuration of this build: then the reference and the pack target build the engine one time, not twice at once. -->
+    <ProjectReference Include="../Engine.csproj" ReferenceOutputAssembly="false" Private="false"
+                      SetConfiguration="Configuration=$(Configuration)" />
   </ItemGroup>
 
   <Target Name="_VsaEngineFiles" BeforeTargets="_GetPackageFiles">

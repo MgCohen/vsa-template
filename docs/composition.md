@@ -30,7 +30,7 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 
 ## The app class
 
-`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the architecture tests read its rules (see `architecture-engine.md`). `VsaApp<TApp>` is in VSA.Composition, a portable layer, so the same app class works on all hosts.
+`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TApp>` is in VSA.Composition, a portable layer, so the same app class works on all hosts.
 
 ```
 MyApp.Run(args)                       static, in VsaApp<TApp>

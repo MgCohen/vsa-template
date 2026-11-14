@@ -11,7 +11,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
 | `Features/<Name>/`| One feature module: its root class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
-| `Tests/`         | A nested project: the VSA architecture tests, and one unit test file for each module |
+| `Tests/`         | A nested project: one unit test file for each module                |
 
 The app has one root project. A module, a slice or a plugin needs no project: add only its files. A nested project (for example `Tests/`) is optional, and the root project does not compile its folder. The folders select the layers, and the rule engine checks each use against the VSA definition after the build.
 
@@ -32,10 +32,10 @@ dotnet vsa add request <Name> -m <Module>    # a request, its response and its h
 dotnet vsa add command <Name> -m <Module>    # a command, its result and its handler
 dotnet vsa add plugin <Name>                 # a plugin module with a base command
 dotnet vsa doctor                            # the tool, VSA.Sdk and the packages have one version
-dotnet test SampleApp.slnx                   # the architecture tests and the unit tests
+dotnet test SampleApp.slnx                   # the unit tests
 ```
 
-The build adds the architecture tests to `Tests/`. They check each type against the VSA definition: `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To change the rules, override `Rules(Map)` in `App/Host/SampleAppApp.cs`. To add a test of the app, write `public partial class ArchitectureTests` in `Tests/`.
+The rule engine checks each type against the VSA definition after each build of the root project, if the root project has the package `VSA.Architecture.Build`. It gives `VSA2001` (a use that the definition denies), `VSA2101` (a type that is not the type of its part) and `VSA2102` (a type in a folder that the definition does not have). To change the rules, override `Rules(RuleBook)` in `App/Host/SampleAppApp.cs`.
 
 The VSA packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 
