@@ -23,7 +23,7 @@
     <AssemblyMetadata Include="Engine" Value="$(RepoRoot)engine/bin/$(Configuration)/$(TargetFramework)/vsa-engine.dll" />
     <AssemblyMetadata Include="NotesOutput" Value="$(RepoRoot)samples/Notes/bin/$(Configuration)/$(TargetFramework)" />
     <AssemblyMetadata Include="NotesRoot" Value="$(RepoRoot)samples/Notes" />
-    <AssemblyMetadata Include="MvvmOutput" Value="$(RepoRoot)tests/Fixtures/Architecture/MvvmApp/bin/$(Configuration)/$(TargetFramework)" />
+    <AssemblyMetadata Include="MvvmOutput" Value="$(RepoRoot)tests/Fixtures/Architecture/MvvmApp/bin/$(TargetFramework)" />
     <AssemblyMetadata Include="MvvmRoot" Value="$(RepoRoot)tests/Fixtures/Architecture/MvvmApp" />
   </ItemGroup>
   <!-- The browser tests start the viewer from its own output folder, so they need the path of Viewer.dll. -->
