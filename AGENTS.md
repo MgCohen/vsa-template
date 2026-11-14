@@ -16,7 +16,7 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 | `framework/Architecture/` | The architecture engine: `Definition/` (VSA.Architecture, the definition API), `Vsa/` (VSA.Architecture.Vsa: `VsaDefinition` and the VSA layers), `Engine/` (VSA.Architecture.Engine: the rule engine core, which loads, binds, decides and checks with ArchUnitNET, and gives each finding as a record). The runtime references only `Definition/` and `Vsa/` |
 | `framework/Testing/`  | The test bases that ship: `Unit/` (NUnit, NSubstitute) |
 | `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
-| `engine/`             | The rule engine app (a VSA console app: Check, Definition, Rules, Report, and the temporary Hello plugin) and `Build/`, the build hook package VSA.Architecture.Build. See "The rule engine" below |
+| `engine/`             | The rule engine app (a VSA console app: Check, Definition, Rules, Report, and the temporary Hello plugin). Its root project `engine/Engine.csproj` makes the build hook package VSA.Architecture.Build, with `VSA.Architecture.Build.targets`. See "The rule engine" below |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
 | `docs/`               | Architecture decisions, conventions, and guides                         |
@@ -43,7 +43,7 @@ A presenter shows the events of its own module: it implements `IPresenterEvent<T
 
 The rule engine checks the architecture of an app after each build. It is a VSA console app in `engine/`: `UseConsoleHost()` sends its one entry command, `RunEngineCommand`. Its handler is the composition root, one line for each step: Definition (loads the app and its definition), Rules (checks the layer rules), then Report (writes `file(line,col): error CODE: text` lines). Only `Rules/Infrastructure/` uses ArchUnitNET, and the engine definition (`engine/App/Host/EngineDefinition.cs`) checks that. A step is a feature module with one command that inherits `EngineStep<TResult>` (plugin `engine/Plugins/Steps`). The Steps plugin also has the pipeline parts in `Handlers/`: the runner, the after step that records the findings, the validator of missing inputs and the step log. To add or remove a step, add or remove its line. The Steps pipeline collects the findings of each step. If a step throws, it records `VSA3000` and the run continues. A step with a missing input (a failed earlier step) is skipped (`VSA3004`). `--failfast true` stops the run at the first throw.
 
-An app installs it with one package on its host project: `<PackageReference Include="VSA.Architecture.Build" PrivateAssets="all" />`. Switches: `-p:VsaCheck=false`, `-p:VsaCheckMode=Warn`. A test project does not check the architecture: only the build of the host does. Run it by hand with `dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root <app root> --bin <host output>`.
+An app installs it with one package on its root project: `<PackageReference Include="VSA.Architecture.Build" PrivateAssets="all" />`. Switches: `-p:VsaCheck=false`, `-p:VsaCheckMode=Warn`. A test project does not check the architecture: only the build of the host does. Run it by hand with `dotnet engine/bin/Debug/net10.0/vsa-engine.dll --root <app root> --bin <host output>`.
 
 ## Tests
 

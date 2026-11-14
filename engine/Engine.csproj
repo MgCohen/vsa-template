@@ -1,11 +1,21 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
-  <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins. -->
+  <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins.
+       Its package is the build hook VSA.Architecture.Build: the engine in tools/, and the target that runs it after the build. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>vsa-engine</AssemblyName>
     <RootNamespace>VsaEngine</RootNamespace>
     <RollForward>Major</RollForward>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>VSA.Architecture.Build</PackageId>
+    <Description>Checks the architecture of a VSA app after each build of its root project.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <!-- A web app definition can need ASP.NET Core types when the engine makes its app class. -->
@@ -16,5 +26,13 @@
     <ProjectReference Include="$(VsaFrameworkSourceDir)Architecture/Vsa/VSA.Architecture.Vsa.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)Architecture/Engine/VSA.Architecture.Engine.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="VSA.Architecture.Build.targets" Pack="true" PackagePath="build/" />
+  </ItemGroup>
+  <Target Name="_VsaEngineFiles" BeforeTargets="_GetPackageFiles" DependsOnTargets="Build">
+    <ItemGroup>
+      <None Include="$(OutDir)**" Exclude="$(OutDir)**/*.pdb" Pack="true" PackagePath="tools/net10.0/" />
+    </ItemGroup>
+  </Target>
   <Import Project="$(VsaSdkDir)Sdk.targets" />
 </Project>

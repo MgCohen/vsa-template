@@ -19,7 +19,7 @@ flowchart LR
 | `VSA.Architecture` | `framework/Architecture/Definition/` | The definition API. No ArchUnitNET |
 | `VSA.Architecture.Engine` | `framework/Architecture/Engine/` | The core: load, bind, decide, check |
 | `VSA.Architecture.Vsa` | `framework/Architecture/Vsa/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
-| Engine app | `engine/` | The runner: Definition, Rules, Report. `engine/Build/` is the build hook package `VSA.Architecture.Build` |
+| Engine app | `engine/` | The runner: Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
 The runtime of an app references `VSA.Architecture.Vsa` through `VSA.Composition` (`VsaApp<TApp>`). So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
