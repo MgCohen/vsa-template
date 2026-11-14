@@ -1,6 +1,8 @@
 using System.Text.Json;
+#if NET
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
+#endif
 
 namespace VSA.Architecture.Data;
 
@@ -9,8 +11,10 @@ public static class ArchitectureJson {
 
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web) {
         WriteIndented = true,
+#if NET
         RespectRequiredConstructorParameters = true,
         RespectNullableAnnotations = true,
+#endif
     };
 
     public static ArchitectureFile Read(string json) {
@@ -30,5 +34,7 @@ public static class ArchitectureJson {
         File.WriteAllText(path, Write(file));
     }
 
+#if NET
     public static JsonNode Schema() => Options.GetJsonSchemaAsNode(typeof(ArchitectureFile));
+#endif
 }

@@ -1,6 +1,8 @@
 using System.Text.Json;
+#if NET
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
+#endif
 using System.Text.Json.Serialization;
 
 namespace VSA.Architecture.Data;
@@ -12,8 +14,10 @@ public static class DefinitionJson {
 
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web) {
         WriteIndented = true,
+#if NET
         RespectRequiredConstructorParameters = true,
         RespectNullableAnnotations = true,
+#endif
         Converters = { new JsonStringEnumConverter() },
     };
 
@@ -35,5 +39,7 @@ public static class DefinitionJson {
         File.WriteAllText(path, Write(file));
     }
 
+#if NET
     public static JsonNode Schema() => Options.GetJsonSchemaAsNode(typeof(DefinitionFile));
+#endif
 }
