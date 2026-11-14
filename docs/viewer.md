@@ -7,11 +7,13 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 | Part | Path | Contains |
 |---|---|---|
 | Module | `Features/ArchitectureViewer/` | Domain, Domain.Shared, Infrastructure, Presenters, 13 request slices |
-| Views | `App/Views/` (`Viewer.Views.csproj`) | Pages, panels, graph and shape components |
-| Host | `App/Host/` (`Viewer.Host.csproj`) | The fixed `Program.cs` line, `Data/` copy |
+| Root project | `Viewer.csproj` | The one project of the app. It compiles the module, the views and the host, and copies `Data/` |
+| Views | `App/Views/` | Pages, panels, graph and shape components |
+| Host | `App/Host/` | `ViewerApp` (selects `WebVsaHost`) and the fixed `Program.cs` line |
+| Static files | `wwwroot/` | `app.css`, elkjs and its interop script |
 | Sample input | `Data/` | `architecture.json`, `layout.json` of `samples/Notes` |
 | Licenses | `THIRD-PARTY-NOTICES.md`, `LICENSE-EPL-2.0.md` | Z.Blazor.Diagrams (MIT), elkjs 0.9.3 (EPL-2.0) |
-| Tests | `tests/Viewer.Tests/` | Unit, architecture and browser tests |
+| Tests | `tests/Viewer.Tests/` | Unit and browser tests |
 
 ## Stack
 
@@ -35,7 +37,7 @@ flowchart LR
     V -->|gestures| P
 ```
 
-`ArchitectureViewerModule` reads `Data/layout.json` and `Data/architecture.json` from the app folder (`AppContext.BaseDirectory`). `Viewer.Host.csproj` copies `Data/*.json` to its output.
+`ArchitectureViewerModule` reads `Data/layout.json` and `Data/architecture.json` from the app folder (`AppContext.BaseDirectory`). `Viewer.csproj` copies `Data/*.json` to its output.
 
 ## Run the viewer
 
@@ -50,7 +52,7 @@ flowchart LR
 | Architecture | Generated `ArchitectureTests` (75) on the viewer app | Nothing |
 | Browser | 23 tests in category `Browser` | Microsoft Edge |
 
-The browser tests start `App.Host.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development`. They use `Microsoft.Playwright.NUnit` with the installed Edge (`Channel = "msedge"`), so no browser download is necessary. Each test opens a new page, so each test has a new Blazor circuit and new presenter state. If Edge is not installed, the browser tests are ignored.
+The browser tests start `Viewer.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development`. They use `Microsoft.Playwright.NUnit` with the installed Edge (`Channel = "msedge"`), so no browser download is necessary. Each test opens a new page, so each test has a new Blazor circuit and new presenter state. If Edge is not installed, the browser tests are ignored.
 
 To run only one kind, use a filter:
 
@@ -64,7 +66,7 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 | Decision | Reason |
 |---|---|
 | Folder `framework/Tooling/Viewer/`, own `Directory.Build.props` and `VSA.Sdk.Dev.props` | Same in-repo form as `samples/`. `VsaAppRoot` is the viewer folder |
-| Project files `Viewer.Host.csproj` and `Viewer.Views.csproj`, assembly names `App.Host` and `App.Views` | `VSA.slnx` cannot have two `App.Host` projects in the `/framework/` folder (the templates have one) |
+| One root project `Viewer.csproj`, assembly name `Viewer` | Each app has one root project (main). The name is not `App`, so `VSA.slnx` has no name twice |
 | Sample input in `Data/`, copied to the host output | Until `vsa view` writes the export, the viewer has fixed input |
 | `IsPackable` false | `LocalFeed` packs each packable project under `framework/`. A package changes the consumer tests |
 | `Microsoft.Playwright.NUnit` 1.64.1, base class `PlaywrightTest` | Runs on Microsoft.Testing.Platform with no change. The package excludes the build assets of `Microsoft.NET.Test.Sdk` |

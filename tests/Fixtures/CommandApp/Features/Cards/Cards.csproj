@@ -1,4 +1,8 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- A separate assembly for each module, so a test can load a part of the app. The modules send commands to each other. -->
+  <ItemGroup>
+    <ProjectReference Include="../Resources/Resources.csproj" />
+  </ItemGroup>
   <Import Project="$(VsaSdkDir)Sdk.targets" />
 </Project>

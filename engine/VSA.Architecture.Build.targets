@@ -1,0 +1,36 @@
+<Project>
+  <!-- Runs the rule engine after each build of the project that has this package (the host of the app).
+       VsaCheck=false turns it off. VsaCheckMode=Warn reports each error as a warning.
+       The stamp file skips the check when no input changed. -->
+  <PropertyGroup>
+    <VsaCheck Condition="'$(VsaCheck)' == ''">true</VsaCheck>
+    <VsaCheckMode Condition="'$(VsaCheckMode)' == ''">Error</VsaCheckMode>
+    <_VsaEngine>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'vsa-engine.dll'))</_VsaEngine>
+    <_VsaDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_VsaDotnet>
+    <_VsaDotnet Condition="'$(_VsaDotnet)' == ''">dotnet</_VsaDotnet>
+  </PropertyGroup>
+
+  <Target Name="_VsaCheckInputs">
+    <PropertyGroup>
+      <_VsaCheckRoot Condition="'$(VsaAppRoot)' != ''">$(VsaAppRoot)</_VsaCheckRoot>
+      <_VsaCheckRoot Condition="'$(_VsaCheckRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'global.json'))</_VsaCheckRoot>
+      <_VsaCheckRoot>$([MSBuild]::EnsureTrailingSlash('$(_VsaCheckRoot)'))</_VsaCheckRoot>
+      <_VsaCheckStamp>$(ProjectDir)$(IntermediateOutputPath)vsa-check.$(VsaCheckMode).stamp</_VsaCheckStamp>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VsaCheckInput Include="@(IntermediateAssembly->'%(FullPath)');@(ReferenceCopyLocalPaths->'%(FullPath)');$(_VsaEngine)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="VsaCheck" AfterTargets="Build" DependsOnTargets="_VsaCheckInputs"
+          Condition="'$(VsaCheck)' == 'true' and '$(DesignTimeBuild)' != 'true'"
+          Inputs="@(_VsaCheckInput)" Outputs="$(_VsaCheckStamp)">
+    <Error Condition="!Exists('$(_VsaEngine)')" Code="VSA3003"
+           Text="The rule engine $(_VsaEngine) does not exist. Restore the VSA.Architecture.Build package again." />
+    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
+          Command="&quot;$(_VsaDotnet)&quot; exec &quot;$(_VsaEngine)&quot; --root &quot;$(_VsaCheckRoot.TrimEnd('\').TrimEnd('/'))&quot; --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --mode $(VsaCheckMode)">
+      <Output TaskParameter="ExitCode" PropertyName="_VsaCheckExit" />
+    </Exec>
+    <Touch Condition="'$(_VsaCheckExit)' == '0'" Files="$(_VsaCheckStamp)" AlwaysCreate="true" />
+  </Target>
+</Project>

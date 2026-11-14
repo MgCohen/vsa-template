@@ -19,21 +19,21 @@ public sealed class UnityDiscoveryTests {
         var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
         project.Compile("Assembly-CSharp", Path.Combine(project.Root, "Library", "ScriptAssemblies"), module, note, view, package);
         project.Compile("Game.Modules", project.Output, module, note, tasks);
-        map = ArchitectureMap.Load(typeof(VsaDefinition), project.Output, project.Root);
+        map = FixtureApps.Load(new VsaDefinition(), project.Output, project.Root);
     }
 
     [OneTimeTearDown]
     public void DeleteTheProject() => project.Dispose();
 
     [Test]
-    public void Discovery_reads_the_script_assemblies_of_Unity_and_the_dotnet_build() {
-        Assert.That(map.Assemblies.Select(a => a.GetName().Name), Is.EquivalentTo(new[] { "Assembly-CSharp", "Game.Modules" }));
-        Assert.That(map.Warnings, Is.Empty);
+    public void The_loader_reads_the_script_assemblies_of_Unity_and_the_dotnet_build() {
+        Assert.That(map.App.Files.Select(Path.GetFileNameWithoutExtension), Is.EquivalentTo(new[] { "Assembly-CSharp", "Game.Modules" }));
+        Assert.That(map.App.Warnings, Is.Empty);
     }
 
     [Test]
     public void A_type_that_Unity_and_the_dotnet_build_both_compile_is_loaded_once() {
-        var copies = map.Types.Where(t => t.FullName == "Notes.Domain.Note");
+        var copies = map.App.Types.Where(t => t.FullName == "Notes.Domain.Note");
 
         Assert.That(copies.Select(t => t.Assembly.Name.Split(',')[0]), Is.EqualTo(new[] { "Assembly-CSharp" }));
     }
@@ -42,38 +42,39 @@ public sealed class UnityDiscoveryTests {
     [TestCase("Notes.Domain.Note", "Domain", "Notes")]
     [TestCase("Tasks.TasksModule", "Module", "Tasks")]
     public void A_module_in_the_Unity_app_folder_or_the_source_folder_binds_to_its_feature(string type, string part, string feature) {
-        var binding = map.Bindings.Single(b => b.Type.FullName == type);
+        var binding = map.Bindings.All.Single(b => b.Type.FullName == type);
 
         Assert.That((binding.Part.Name, binding.Values["Feature"]), Is.EqualTo((part, feature)));
     }
 
     [Test]
     public void A_view_in_the_Unity_app_folder_binds_to_the_app_views() {
-        var binding = map.Bindings.Single(b => b.Type.FullName == "Game.Views.Board");
+        var binding = map.Bindings.All.Single(b => b.Type.FullName == "Game.Views.Board");
 
         Assert.That((binding.Part.Name, binding.Part.Parent!.Name), Is.EqualTo(("Views", "App")));
     }
 
     [Test]
     public void The_checks_read_the_uses_of_a_view_in_the_Unity_build() {
-        var board = map.Types.Single(t => t.FullName == "Game.Views.Board");
+        var board = map.App.Types.Single(t => t.FullName == "Game.Views.Board");
 
-        Assert.That(map.Findings(board), Has.Some.Contains("VSA2001"));
+        Assert.That(map.Findings(board).Select(f => f.Code), Has.Some.EqualTo("VSA2001"));
     }
 
     [Test]
     public void A_source_file_under_Library_is_not_app_code() {
-        Assert.That(map.AppTypes.Select(t => t.FullName), Has.None.EqualTo("Vendor.Tool"));
+        Assert.That(map.Bindings.AppTypes.Select(t => t.FullName), Has.None.EqualTo("Vendor.Tool"));
     }
 
     [Test]
-    public void A_Unity_project_with_no_script_assemblies_gives_a_warning() {
+    public void A_Unity_project_with_no_script_assemblies_gives_the_warning_VSA2103() {
         using var unbuilt = UnityProjectFolder.Create();
         var module = unbuilt.Write("Source/Features/Lists/ListsModule.cs", "namespace Lists; " + string.Format(ModuleClass, "ListsModule"));
         unbuilt.Compile("Unbuilt.Modules", unbuilt.Output, module);
 
-        var discovered = ArchitectureMap.Load(typeof(VsaDefinition), unbuilt.Output, unbuilt.Root);
+        var discovered = FixtureApps.Load(new VsaDefinition(), unbuilt.Output, unbuilt.Root);
 
-        Assert.That(discovered.Warnings, Has.One.Contains("has no Library/ScriptAssemblies folder"));
+        Assert.That(discovered.Findings().Where(f => f.Severity == RuleSeverity.Warning).Select(f => f.Code + ": " + f.Text),
+            Has.One.StartsWith("VSA2103: ").And.Contains("has no Library/ScriptAssemblies folder"));
     }
 }

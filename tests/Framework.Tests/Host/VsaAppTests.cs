@@ -11,63 +11,74 @@ namespace Framework.Tests.Host;
 public sealed class VsaAppTests {
     [Test]
     public void Run_makes_the_app_and_runs_its_start_steps() {
-        var exitCode = StartedApp.Run(["--name", "test"]);
+        var app = new StartedApp();
 
-        Assert.That((exitCode, StartedApp.Marker), Is.EqualTo((7, "test")));
+        var exitCode = app.Run(["--name", "test"]);
+
+        Assert.That((exitCode, app.Marker), Is.EqualTo((7, "test")));
     }
 
     [Test]
     public async Task A_waiting_host_returns_from_Run_after_Stop_and_the_app_can_run_again() {
-        await RunUntilStop();
+        var app = new WaitingApp();
+        await RunUntilStop(app);
 
-        Assert.That(await RunUntilStop(), Is.Zero);
+        Assert.That(await RunUntilStop(app), Is.Zero);
     }
 
     [Test]
     public void A_returning_host_returns_from_Run_and_Stop_stops_the_app() {
-        var exitCode = ReturningApp.Run([]);
-        var runningAfterRun = ReturningApp.IsRunning;
-        ReturningApp.Stop();
+        var app = new ReturningApp();
+        var exitCode = app.Run([]);
+        var runningAfterRun = app.IsRunning;
+        app.Stop();
 
-        Assert.That((exitCode, runningAfterRun, ReturningApp.IsRunning), Is.EqualTo((0, true, false)));
+        Assert.That((exitCode, runningAfterRun, app.IsRunning), Is.EqualTo((0, true, false)));
     }
 
     [Test]
     public void Run_after_Stop_starts_the_app_again() {
-        ReturningApp.Run([]);
-        ReturningApp.Stop();
+        var app = new ReturningApp();
+        app.Run([]);
+        app.Stop();
 
-        ReturningApp.Run([]);
-        var running = ReturningApp.IsRunning;
-        ReturningApp.Stop();
+        app.Run([]);
+        var running = app.IsRunning;
+        app.Stop();
 
         Assert.That(running, Is.True);
     }
 
     [Test]
     public void Run_of_a_running_app_is_an_error() {
-        ReturningApp.Run([]);
+        var app = new ReturningApp();
+        app.Run([]);
         try {
-            var error = Assert.Throws<InvalidOperationException>(() => ReturningApp.Run([]));
+            var error = Assert.Throws<InvalidOperationException>(() => app.Run([]));
 
-            Assert.That(error!.Message, Is.EqualTo("ReturningApp is already running. Call ReturningApp.Stop() before Run."));
+            Assert.That(error!.Message, Is.EqualTo("ReturningApp is already running. Call Stop() before Run."));
         } finally {
-            ReturningApp.Stop();
+            app.Stop();
         }
     }
 
     [Test]
     public void Stop_of_an_app_that_does_not_run_does_nothing() {
-        Assert.DoesNotThrow(ReturningApp.Stop);
+        Assert.DoesNotThrow(new ReturningApp().Stop);
     }
 
     [Test]
-    public void An_app_with_no_overrides_has_the_VSA_rules() {
+    public void The_default_host_is_the_generic_host() {
+        Assert.That(new PlainApp().DefaultHost, Is.TypeOf<GenericVsaHost>());
+    }
+
+    [Test]
+    public void An_app_of_the_VSA_definition_has_the_VSA_rules() {
         Assert.That(Rules(new PlainApp().Architecture), Is.EqualTo(Rules(new VsaDefinition())));
     }
 
     [Test]
-    public void A_Rules_override_adds_its_rules_after_the_VSA_rules() {
+    public void An_app_of_a_derived_definition_has_its_rules_after_the_VSA_rules() {
         var app = Rules(new RulesApp().Architecture);
         var vsa = Rules(new VsaDefinition());
 
@@ -82,15 +93,15 @@ public sealed class VsaAppTests {
         Assert.That(RuntimeReferences(typeof(VsaApp<>).Assembly), Has.None.StartsWith(tool));
     }
 
-    static async Task<int> RunUntilStop() {
-        var run = Task.Run(() => WaitingApp.Run([]));
+    static async Task<int> RunUntilStop(WaitingApp app) {
+        var run = Task.Run(() => app.Run([]));
         var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (!WaitingApp.IsRunning && !run.IsCompleted && DateTime.UtcNow < deadline) {
+        while (!app.IsRunning && !run.IsCompleted && DateTime.UtcNow < deadline) {
             await Task.Delay(10);
         }
-        WaitingApp.Stop();
+        app.Stop();
         Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(30))), Is.SameAs(run));
-        Assert.That(WaitingApp.IsRunning, Is.False);
+        Assert.That(app.IsRunning, Is.False);
         return await run;
     }
 
@@ -111,14 +122,21 @@ public sealed class VsaAppTests {
         return found;
     }
 
-    sealed class PlainApp : VsaApp<PlainApp>;
-
-    sealed class RulesApp : VsaApp<RulesApp> {
-        protected override void Rules(RuleBook rules) => rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
+    sealed class PlainApp : VsaApp<VsaDefinition> {
+        public IVsaHost DefaultHost => Host();
     }
 
-    sealed class StartedApp : VsaApp<StartedApp> {
-        public static string? Marker { get; private set; }
+    sealed class RulesDefinition : VsaDefinition {
+        protected override void Rules(RuleBook rules) {
+            base.Rules(rules);
+            rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
+        }
+    }
+
+    sealed class RulesApp : VsaApp<RulesDefinition>;
+
+    sealed class StartedApp : VsaApp<VsaDefinition> {
+        public string? Marker { get; private set; }
 
         protected override int Start(string[] args) {
             using var host = Build(args);
@@ -126,17 +144,19 @@ public sealed class VsaAppTests {
             return host.Services.GetRequiredService<ExitCode>().Value;
         }
 
-        protected override VsaBuilder Builder(string[] args) => VsaBuilder.Create(args).UseGenericHost().Modules();
+        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
 
         protected override void Services(IServiceCollection services) => services.AddSingleton(new ExitCode(7));
     }
 
-    sealed class WaitingApp : VsaApp<WaitingApp> {
-        protected override VsaBuilder Builder(string[] args) => VsaBuilder.Create(args).UseGenericHost().Modules();
+    sealed class WaitingApp : VsaApp<VsaDefinition> {
+        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
     }
 
-    sealed class ReturningApp : VsaApp<ReturningApp> {
-        protected override VsaBuilder Builder(string[] args) => VsaBuilder.Create(args).UseHost(new ReturningHost()).Modules();
+    sealed class ReturningApp : VsaApp<VsaDefinition> {
+        protected override IVsaHost Host() => new ReturningHost();
+
+        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
     }
 
     sealed record ExitCode(int Value);
