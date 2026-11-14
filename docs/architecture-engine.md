@@ -224,7 +224,3 @@ public class MyApp : VsaApp<MyDefinition>;
 ## Tests of the engine
 
 `tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. `BadApp` has one known problem for each rule ID.
-
-## Legacy copy
-
-`docs/legacy/architecture-tests/` has a copy of the layer map tests (`Layers.cs`, `VsaArchitectureTests`, the rule tests and their fixtures). The files do not build. They are there only to compare.
