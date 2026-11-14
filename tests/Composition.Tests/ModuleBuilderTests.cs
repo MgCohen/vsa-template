@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Module;
+using VSA.Kernel;
 
 namespace Composition.Tests;
 
@@ -26,7 +27,7 @@ public sealed class ModuleBuilderTests {
         Assert.That(error.Message, Is.EqualTo("IGreeter has no default registration to replace."));
     }
 
-    static ModuleBuilder Builder(IServiceCollection services) =>
+    static AnchorBuilder Builder(IServiceCollection services) =>
         new("Sample", services, new ConfigurationBuilder().Build());
 
     public interface IGreeter;

@@ -18,6 +18,7 @@ using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Contracts.Events;
 using VSA.Presenters;
+using VSA.Kernel;
 
 namespace Composition.Tests;
 
@@ -111,11 +112,11 @@ public sealed class HeadlessCompositionTests {
 
     [Test]
     public void Build_with_no_host_and_no_VSA_Host_selects_the_generic_host() {
-        var app = VsaBuilder.Create().Modules();
+        var app = AppBuilder.Create().Modules();
 
         using var host = app.Build();
 
-        Assert.That(app.SelectedHost().GetType().Name, Is.EqualTo("GenericVsaHost"));
+        Assert.That(app.SelectedHost().GetType().Name, Is.EqualTo("GenericAppHost"));
     }
 
     [Test]
@@ -128,6 +129,6 @@ public sealed class HeadlessCompositionTests {
         Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10))), Is.SameAs(run));
     }
 
-    static VsaBuilder App(params VSA.Module.Module[] modules) =>
-        VsaBuilder.Create().UseGenericHost().Modules(modules);
+    static AppBuilder App(params VSA.Module.Module[] modules) =>
+        AppBuilder.Create().UseGenericHost().Modules(modules);
 }

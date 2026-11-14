@@ -2,12 +2,20 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using VSA.Analyzers;
+using VSA.Kernel;
 
 namespace Rules.Tests;
 
-// The test code compiles against .NET 10 and the VSA layer assemblies. Each test runs the one VsaAnalyzer, so all rules run,
+sealed class AllRulesTest : CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
+    protected override IEnumerable<Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer> GetDiagnosticAnalyzers() =>
+        [new VsaAnalyzer(), new KernelAnalyzer()];
+}
+
+// The test code compiles against .NET 10 and the VSA layer assemblies. Each test runs VsaAnalyzer and KernelAnalyzer, so all rules run,
 // except the formatting rules. A VerifyFormatting test runs only its one rule.
 static class Analyzer {
+    public static readonly IReadOnlyList<VsaAnalyzerRule> AllRules = [.. new VsaAnalyzer().Rules, .. new KernelAnalyzer().Rules];
+
     static readonly DiagnosticDescriptor[] Formatting = [LineLengthRule.Descriptor, MethodLengthRule.Descriptor,
         FileLengthRule.Descriptor, OneTypePerFileRule.Descriptor, MemberOrderRule.Descriptor, CommentRule.Descriptor];
 
@@ -44,9 +52,9 @@ static class Analyzer {
         Verify(source, config, null, expected, formatting: rule, rulesConfig: false);
 
     static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected,
-        Action<CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier>>? configure = null, DiagnosticDescriptor? formatting = null,
+        Action<AllRulesTest>? configure = null, DiagnosticDescriptor? formatting = null,
         bool rulesConfig = true) {
-        var test = new CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
+        var test = new AllRulesTest {
             TestCode = formatting is not null ? source
                 : "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
             ReferenceAssemblies = Net10,
@@ -55,12 +63,12 @@ static class Analyzer {
             test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
         }
         Type[] layers = [typeof(VSA.Contracts.IMessage), typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
-            typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus), typeof(VSA.Module.Module)];
+            typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus), typeof(VSA.Module.Module), typeof(VSA.Kernel.Anchor)];
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }
         // A formatting test turns off each other VSA rule. Another test turns off the formatting rules.
-        var others = formatting is null ? Formatting : VsaAnalyzer.Rules.Select(r => r.Rule).Where(r => r.Id != formatting.Id);
+        var others = formatting is null ? Formatting : Analyzer.AllRules.Select(r => r.Rule).Where(r => r.Id != formatting.Id);
         var off = others.Select(r => $"dotnet_diagnostic.{r.Id}.severity = none\n");
         var globalConfig = "is_global = true\n" + string.Concat(off) + config;
         // The test config has the default global_level, so it wins over VSA.Rules.globalconfig (global_level = -1).
@@ -271,11 +279,11 @@ public sealed class VsaAnalyzerTests {
 
     [Test]
     public void Each_rule_has_a_unique_ID() =>
-        Assert.That(VsaAnalyzer.Rules.Select(r => r.Id), Is.Unique);
+        Assert.That(Analyzer.AllRules.Select(r => r.Id), Is.Unique);
 }
 
 public sealed class PluginRootRuleTests {
-    const string Configure = "public override void Configure(VSA.Module.ModuleBuilder module) { }";
+    const string Configure = "public override void Configure(VSA.Kernel.AnchorBuilder module) { }";
 
     static string In(string rootFolder) => $"build_property.VsaRootFolder = {rootFolder}\n";
 

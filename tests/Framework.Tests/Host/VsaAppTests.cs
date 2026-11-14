@@ -5,6 +5,7 @@ using VSA.Architecture.Vsa;
 using Microsoft.Extensions.Configuration;
 using Vsa = VSA.Architecture.Vsa;
 using VSA.Composition;
+using VSA.Kernel;
 
 namespace Framework.Tests.Host;
 
@@ -69,7 +70,7 @@ public sealed class VsaAppTests {
 
     [Test]
     public void The_default_host_is_the_generic_host() {
-        Assert.That(new PlainApp().DefaultHost, Is.TypeOf<GenericVsaHost>());
+        Assert.That(new PlainApp().DefaultHost, Is.TypeOf<GenericAppHost>());
     }
 
     [Test]
@@ -123,7 +124,7 @@ public sealed class VsaAppTests {
     }
 
     sealed class PlainApp : VsaApp<VsaDefinition> {
-        public IVsaHost DefaultHost => Host();
+        public IAppHost DefaultHost => Host();
     }
 
     sealed class RulesDefinition : VsaDefinition {
@@ -154,7 +155,7 @@ public sealed class VsaAppTests {
     }
 
     sealed class ReturningApp : VsaApp<VsaDefinition> {
-        protected override IVsaHost Host() => new ReturningHost();
+        protected override IAppHost Host() => new ReturningHost();
 
         protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
     }

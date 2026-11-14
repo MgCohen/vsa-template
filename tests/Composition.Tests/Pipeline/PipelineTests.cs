@@ -7,6 +7,7 @@ using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Handlers;
 using VSA.Handlers.Commands;
+using VSA.Kernel;
 
 namespace Composition.Tests.Pipeline;
 
@@ -21,7 +22,7 @@ public sealed class PipelineTests {
 
     [SetUp]
     public void StartHost() {
-        host = VsaBuilder.Create().UseGenericHost().Modules(new ArenaModule()).Build();
+        host = AppBuilder.Create().UseGenericHost().Modules(new ArenaModule()).Build();
         scope = host.Services.CreateAsyncScope();
     }
 
@@ -146,7 +147,7 @@ public sealed class PipelineTests {
 
     [Test]
     public async Task A_custom_pipeline_with_no_handler_for_the_message_falls_back() {
-        using var app = VsaBuilder.Create().UseGenericHost().Modules(new ArenaModule())
+        using var app = AppBuilder.Create().UseGenericHost().Modules(new ArenaModule())
             .Services(services => services.AddPipeline(new PipelineBuilder<StrikeCommand>()))
             .Build();
         await using var appScope = app.Services.CreateAsyncScope();

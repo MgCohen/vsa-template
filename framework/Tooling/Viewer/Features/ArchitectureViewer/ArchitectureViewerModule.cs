@@ -3,13 +3,14 @@ using ArchitectureViewer.Domain.Shapes;
 using ArchitectureViewer.Infrastructure;
 using ArchitectureViewer.Infrastructure.Elk;
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Kernel;
 using VSA.Module;
 
 namespace ArchitectureViewer;
 
 public sealed class ArchitectureViewerModule : Module
 {
-    public override void Configure(ModuleBuilder module)
+    public override void Configure(AnchorBuilder module)
     {
         module.Services.AddSingleton(_ => DataFolder.Read(AppContext.BaseDirectory));
         module.Services.AddElkLayout();

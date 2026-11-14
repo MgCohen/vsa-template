@@ -33,7 +33,7 @@ Features/Cards/
 
 ## Plugin module layout
 
-A plugin module is the base of the same layer in each module, as `framework/Core` is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`VSA1014`), and a module root inherits `Module` or `Module<TSettings>`. `vsa add plugin <Name>` writes a new one.
+A plugin module is the base of the same layer in each module, as the VSA pack (`framework/Architectures/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`VSA1014`), and a module root inherits `Module` or `Module<TSettings>`. `vsa add plugin <Name>` writes a new one.
 
 ```
 Plugins/Pipeline/

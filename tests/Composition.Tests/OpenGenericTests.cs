@@ -8,6 +8,7 @@ using VSA.Contracts.Commands;
 using VSA.Handlers;
 using VSA.Handlers.Commands;
 using VSA.Module;
+using VSA.Kernel;
 
 namespace Composition.Tests;
 
@@ -65,7 +66,7 @@ public sealed class OpenGenericTests {
 
     [Test]
     public void The_module_types_hold_one_closed_type_for_each_key_and_no_generic_definition() {
-        var types = new ModuleTypes([new MetersModule()]);
+        var types = new AnchorTypes([new MetersModule()]);
 
         var handlers = types.Implementations(typeof(CommandHandler<,>));
         var validators = types.Implementations(typeof(Validator<>));
@@ -104,7 +105,7 @@ public sealed class OpenGenericTests {
     public void The_services_give_the_module_types_with_the_closed_types() {
         using var host = App().Build();
 
-        var types = host.Services.GetRequiredService<ModuleTypes>();
+        var types = host.Services.GetRequiredService<AnchorTypes>();
 
         Assert.That(types.Implementations(typeof(CommandHandler<,>)).Select(h => h.Service),
             Does.Contain(typeof(CommandHandler<ChangeMeterCommand<Pressure>, string>)));
@@ -179,15 +180,15 @@ public sealed class OpenGenericTests {
 
     [Test]
     public void An_open_class_with_no_marker_is_not_closed_and_not_registered() {
-        var types = new ModuleTypes([new MetersModule()]);
+        var types = new AnchorTypes([new MetersModule()]);
 
         Assert.That(types.Registered().Select(t => t.Name), Has.None.EqualTo("MeterHelper`1"));
     }
 
     static Type Registered(string name) =>
-        new ModuleTypes([new MetersModule()]).Registered().First(t => t.Name == name).GetGenericTypeDefinition();
+        new AnchorTypes([new MetersModule()]).Registered().First(t => t.Name == name).GetGenericTypeDefinition();
 
-    static VsaBuilder App() => VsaBuilder.Create().UseGenericHost().Modules(new MetersModule());
+    static AppBuilder App() => AppBuilder.Create().UseGenericHost().Modules(new MetersModule());
 
     [TypeArgument]
     public interface IMarked;
