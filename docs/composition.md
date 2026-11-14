@@ -265,7 +265,6 @@ Host/                UseWebHost, WebVsaHost, HttpApi, HttpRequestBinder
 
 - `VsaArchitecture` (internal) holds the VSA choices: how to find the modules, the layer installers and their order. `VsaBuilder` calls it.
 - `IVsaHost` has 3 members: `CreateBuilder`, `Install` and `Build`. `GenericVsaHost` and `WebVsaHost` implement it.
-- Each layer project references `VSA.Module` with `PrivateAssets="all"`. So a module project of that layer does not see `VSA.Module`.
 
 ## The container
 

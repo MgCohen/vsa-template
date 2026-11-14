@@ -1,0 +1,20 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>vsa-engine</AssemblyName>
+    <RootNamespace>VsaEngine</RootNamespace>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A web app definition can need ASP.NET Core types when the engine makes its app class. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architecture/Definition/VSA.Architecture.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architecture/Vsa/VSA.Architecture.Vsa.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architecture/Engine/VSA.Architecture.Engine.csproj" />
+  </ItemGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

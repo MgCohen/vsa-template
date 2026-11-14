@@ -1,7 +1,11 @@
 <Project>
   <!-- VSA.Sdk: the .NET SDK, the VSA framework packages, the analyzers and the rule values. A project is one line: <Project Sdk="VSA.Sdk" />. -->
 
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <!-- A web app uses <Project Sdk="Microsoft.NET.Sdk.Web"> with <Sdk Name="VSA.Sdk" />. That SDK imports the .NET SDK, so VSA.Sdk does not. -->
+  <PropertyGroup Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
+    <_VsaImportsNetSdk>true</_VsaImportsNetSdk>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="'$(_VsaImportsNetSdk)' == 'true'" />
   <Import Project="$(MSBuildThisFileDirectory)VSA.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)VSA.Version.props')" />
 
   <PropertyGroup>

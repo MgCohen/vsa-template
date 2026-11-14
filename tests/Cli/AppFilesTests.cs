@@ -69,25 +69,10 @@ public sealed class AppFilesTests {
 
     [Test]
     public void AddRequestUsesTheModuleNameFromTheDisk() {
-        Write("Features/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
+        Write("Features/Billing/BillingModule.cs", "namespace Billing;");
 
         Assert.That(AddRequestCommand.Module(root, "billing"), Is.EqualTo("Billing"));
         Assert.That(() => AddRequestCommand.Module(root, "Shipping"), Throws.TypeOf<VsaException>().With.Message.Contain("does not exist"));
-    }
-
-    [Test]
-    public void AddCommandWritesTheCommandProjectsOnlyIfTheModuleHasNone() {
-        Write("Features/Billing/Billing.csproj", """<Project Sdk="VSA.Sdk" />""");
-
-        var first = AddCommandCommand.Files(root, "ChangeLimit", "Billing").Select(f => f.Path).ToList();
-        Write("Features/Billing/Projects/Billing.Contracts.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
-        Write("Features/Billing/Projects/Billing.Handlers.Commands.csproj", """<Project Sdk="VSA.Sdk" />""");
-        var second = AddCommandCommand.Files(root, "CloseLimit", "Billing").Select(f => f.Path).ToList();
-
-        Assert.That(first, Does.Contain("Features/Billing/Projects/Billing.Contracts.Commands.csproj"));
-        Assert.That(first, Does.Contain("Features/Billing/Projects/Billing.Handlers.Commands.csproj"));
-        Assert.That(second, Has.None.EndsWith(".csproj"));
-        Assert.That(second, Has.Count.EqualTo(3));
     }
 
     void Write(string path, string content) {

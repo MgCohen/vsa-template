@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- The root project of the app. It compiles the app, its modules and its views. Tests/ is a nested project. -->
+  <PropertyGroup>
+    <RootNamespace>App</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Host/VSA.Host.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Core/Views/VSA.Views.csproj" />
+  </ItemGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

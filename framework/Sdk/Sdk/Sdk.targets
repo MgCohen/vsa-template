@@ -1,5 +1,22 @@
 <Project>
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition="'$(_VsaImportsNetSdk)' == 'true'" />
+
+  <!-- An app has one root project in the app root. It compiles each file in its folder tree. A nested project is optional,
+       for example a test project or a separate assembly. The parent project does not compile the files of a nested project,
+       so no file compiles two times. The build output of each project (bin/, obj/) and the folders in VsaExcludedFolders
+       (for example Assets/ of a Unity project) are not source folders. -->
+  <PropertyGroup>
+    <VsaExcludedFolders Condition="'$(VsaExcludedFolders)' == ''">Assets;Library;Temp;Logs;UserSettings;node_modules</VsaExcludedFolders>
+    <_VsaNotSource>**/bin/**;**/obj/**;$([MSBuild]::Unescape($(VsaExcludedFolders.Replace(';', '/**;'))))/**</_VsaNotSource>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(_VsaNotSource)</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <_VsaNestedProject Include="**/*.csproj" Exclude="$(MSBuildProjectFile);$(_VsaNotSource)" />
+    <Compile Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+    <Content Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+    <None Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+    <EmbeddedResource Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+  </ItemGroup>
 
   <!-- The framework bases of all layers. The architecture definition, not the references, decides which layer uses which base:
        the rule engine checks each use after the build. Path is the project folder under framework/ in source mode. -->

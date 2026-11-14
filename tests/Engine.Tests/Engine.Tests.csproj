@@ -6,7 +6,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
-    <ProjectReference Include="$(RepoRoot)engine/App/Host/Engine.Host.csproj" />
-    <ProjectReference Include="$(RepoRoot)samples/Notes/App/Host/App.Host.csproj" />
+    <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)samples/Notes/Notes.csproj" />
   </ItemGroup>
 </Project>

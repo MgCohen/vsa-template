@@ -12,13 +12,13 @@ public sealed class BuildCheckTests {
     public void The_build_and_the_tests_run_the_rule_engine(CancellationToken ct) {
         using var workspace = Workspace.Create(Repo.Path("samples", "Notes"));
         NotesConsumerTests.UsePackages(workspace.Src);
-        AddBuildHook(workspace.Src, "App/Host/App.Host.csproj");
+        AddBuildHook(workspace.Src, "Notes.csproj");
         AddBuildHook(workspace.Src, "Tests/Notes.Tests.csproj");
 
-        var clean = workspace.Dotnet("build", "App/Host", "-nodeReuse:false").EnsureSuccess();
+        var clean = workspace.Dotnet("build", "Notes.csproj", "-nodeReuse:false").EnsureSuccess();
         Assert.That(clean.Output, Does.Contain(Summary).And.Contain("0 errors").And.Contain("HELLO: Hello from a plugin"));
 
-        var again = workspace.Dotnet("build", "App/Host", "--no-restore", "-nodeReuse:false").EnsureSuccess();
+        var again = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
         Assert.That(again.Output, Does.Not.Contain(Summary), "A build with no change runs the check again.");
 
         workspace.Dotnet("build", "Tests", "-nodeReuse:false").EnsureSuccess();
@@ -32,7 +32,7 @@ public sealed class BuildCheckTests {
             """);
         var finding = $"{probe}(2,1): error VSA2001: Probe in Host";
 
-        var build = workspace.Dotnet("build", "App/Host", "--no-restore", "-nodeReuse:false");
+        var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(build.Succeeded, Is.False, build.Output);
         Assert.That(build.Output, Does.Contain(finding));
 

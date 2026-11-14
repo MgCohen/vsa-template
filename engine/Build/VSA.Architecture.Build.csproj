@@ -15,11 +15,11 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Only for restore: a solution builds a project that it does not list in Debug, so the pack target builds the engine. -->
-    <ProjectReference Include="../App/Host/Engine.Host.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="../Engine.csproj" ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
 
   <Target Name="_VsaEngineFiles" BeforeTargets="_GetPackageFiles">
-    <MSBuild Projects="../App/Host/Engine.Host.csproj" Targets="Build;GetTargetPath" Properties="Configuration=$(Configuration)">
+    <MSBuild Projects="../Engine.csproj" Targets="Build;GetTargetPath" Properties="Configuration=$(Configuration)">
       <Output TaskParameter="TargetOutputs" ItemName="_VsaEngineDll" />
     </MSBuild>
     <PropertyGroup>
