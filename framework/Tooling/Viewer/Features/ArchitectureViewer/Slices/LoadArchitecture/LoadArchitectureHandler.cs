@@ -14,7 +14,7 @@ internal sealed class LoadArchitectureHandler(
     public override async Task<Result<LoadArchitectureResponse>> HandleAsync(
         Envelope<LoadArchitectureRequest> envelope)
     {
-        LayoutData data = AppGraph.Of(files.ArchitectureJson);
+        LayoutData data = AppGraph.Of(files);
         LayoutData layout = await engine.Draw(data, shapes.Named(envelope.Message.Shape));
         return new LoadArchitectureResponse(data, layout, true, shapes.Names());
     }

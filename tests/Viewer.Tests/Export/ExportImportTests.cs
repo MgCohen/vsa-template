@@ -36,7 +36,7 @@ public sealed class ExportImportTests
         JsonElement app = export.RootElement.GetProperty("app");
         int withTypes = app.GetProperty("types").EnumerateArray()
             .Select(t => t.GetProperty("instance").GetString()).Distinct().Count();
-        LayoutData graph = AppGraph.Of(NotesExport.Json);
+        LayoutData graph = AppGraph.Of(new ArchitectureFiles(NotesExport.Json, NotesExport.DefinitionJson));
         Assert.That(graph.Nodes, Has.Count.EqualTo(withTypes).And.Count.GreaterThan(0));
         Assert.That(graph.Edges, Is.Not.Empty);
         Assert.That(graph.Groups.Count(g => g.Parent is null), Is.EqualTo(1));

@@ -5,7 +5,7 @@ using System.Text.Json.Schema;
 namespace VSA.Architecture.Data;
 
 public static class ArchitectureJson {
-    public const int Version = 3;
+    public const int Version = 4;
 
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web) {
         WriteIndented = true,

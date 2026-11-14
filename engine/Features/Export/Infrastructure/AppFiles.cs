@@ -14,7 +14,7 @@ public static class AppFiles {
         DefinitionJson.Save(definition, Path.Combine(folder, DefinitionFile));
         var map = ArchitectureMap.Load(app.Definition, app.Assemblies, app.AppRoot);
         var name = Path.GetFileName(Path.TrimEndingDirectorySeparator(app.AppRoot));
-        var architecture = ArchitectureExport.Of(map, name, app.AppRoot.Replace(Path.DirectorySeparatorChar, '/'));
+        var architecture = ArchitectureExport.Of(map, name);
         ArchitectureJson.Save(architecture, Path.Combine(folder, ArchitectureFile));
         return new ExportSummary(definition.Parts.Count, definition.Rules.Count, architecture.App.Types.Count);
     }

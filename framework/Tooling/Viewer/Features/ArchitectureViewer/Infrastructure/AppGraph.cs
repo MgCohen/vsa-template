@@ -8,23 +8,26 @@ public sealed class AppGraph
     public const int MaxRows = 3;
 
     private readonly ArchitectureFile file;
+    private readonly string defaultPermission;
     private readonly Dictionary<string, InstanceData> instances;
     private readonly Dictionary<string, List<TypeData>> typesOf;
     private readonly HashSet<string> shown;
     private readonly Dictionary<string, RowPlace> rowOfType = [];
 
-    private AppGraph(ArchitectureFile file)
+    private AppGraph(ArchitectureFile file, string defaultPermission)
     {
         this.file = file;
+        this.defaultPermission = defaultPermission;
         instances = file.App.Instances.ToDictionary(i => i.Id);
         typesOf = file.App.Types.GroupBy(t => t.Instance)
             .ToDictionary(g => g.Key, g => g.OrderBy(t => t.Name, StringComparer.Ordinal).ToList());
         shown = [.. typesOf.Keys.SelectMany(Lineage)];
     }
 
-    public static LayoutData Of(string json)
+    public static LayoutData Of(ArchitectureFiles files)
     {
-        return new AppGraph(ArchitectureJson.Read(json)).Layout();
+        string permission = DefinitionJson.Read(files.DefinitionJson).Options.DefaultPermission.ToString();
+        return new AppGraph(ArchitectureJson.Read(files.ArchitectureJson), permission).Layout();
     }
 
     private static string Last(string path)
@@ -99,8 +102,7 @@ public sealed class AppGraph
 
     private string RuleText(string? rule)
     {
-        return rule is null ? $"no rule allows it (DefaultPermission = {file.Definition.Options.DefaultPermission})"
-            : file.Definition.Rules.First(r => r.Id == rule).Text;
+        return rule ?? $"no rule allows it (DefaultPermission = {defaultPermission})";
     }
 
     private string GroupName(InstanceData instance)
@@ -120,9 +122,9 @@ public sealed class AppGraph
         return Last(instance.Path);
     }
 
-    private bool IsMany(InstanceData instance)
+    private static bool IsMany(InstanceData instance)
     {
-        return file.Definition.Parts.First(p => p.Id == instance.Part).Many;
+        return instance.Many;
     }
 
     private sealed record RowPlace(string Node, string Row);
