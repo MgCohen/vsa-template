@@ -1,4 +1,3 @@
-// IDE0161: a block-scoped namespace.
 namespace Styled.Infrastructure
 {
     public static class BuiltInRules

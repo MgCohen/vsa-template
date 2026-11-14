@@ -43,6 +43,9 @@ public static class Dotnet {
         info.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
         info.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
         info.Environment["DOTNET_NOLOGO"] = "1";
+        // A test can set its own DOTNET_CLI_HOME. On the first run in a new home, the CLI adds <home>\.dotnet\tools to
+        // the user PATH in the registry. The test deletes the folder, but the PATH entry stays.
+        info.Environment["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"] = "0";
         foreach (var (key, value) in env ?? new Dictionary<string, string>()) {
             info.Environment[key] = value;
         }
