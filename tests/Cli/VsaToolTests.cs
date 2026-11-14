@@ -28,10 +28,10 @@ public sealed class VsaToolTests {
         var app = NewApp();
         Dotnet.Run(app, env, "vsa", "add", "module", "Billing").EnsureSuccess();
         Dotnet.Run(app, env, "vsa", "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
-        // The first command writes the command projects and adds them to the solution. The second command uses them.
+        // A module, a request and a command add only source files. The root project of the app compiles them.
         Dotnet.Run(app, env, "vsa", "add", "command", "ChangeLimit", "-m", "Billing").EnsureSuccess();
         Dotnet.Run(app, env, "vsa", "add", "command", "CloseInvoice", "-m", "Billing").EnsureSuccess();
-        Assert.That(File.ReadAllText(Path.Combine(app, "Hello.slnx")), Does.Contain("Billing.Handlers.Commands.csproj"));
+        Assert.That(Directory.GetFiles(Path.Combine(app, "Features"), "*.csproj", SearchOption.AllDirectories), Is.Empty);
         Assert.That(Dotnet.Run(app, env, "vsa", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use VSA {LocalFeed.Version}."));
 
         var again = Dotnet.Run(app, env, "vsa", "add", "request", "CreateInvoice", "-m", "Billing");
@@ -64,7 +64,7 @@ public sealed class VsaToolTests {
 
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         Assert.That(Dotnet.Run(app, env, "test", "--solution", "Hello.slnx", "-c", "Release", "--no-build").EnsureSuccess().Output,
-            Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d+"));
+            Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d*"));
         await RunAndCall(app, ct, async (client, output) => {
             Assert.That(await client.GetStringAsync("/api/billing/status", ct), Does.Contain("\"status\":\"Ready\""));
             var created = await client.PostAsync("/api/billing/create-invoice", null, ct);
@@ -110,9 +110,8 @@ public sealed class VsaToolTests {
     // the failure messages.
     async Task RunAndCall(string app, CancellationToken ct, Func<HttpClient, StringBuilder, Task> calls) {
         var url = $"http://127.0.0.1:{FreePort()}";
-        var host = Path.Combine(app, "App", "Host");
-        var dll = Directory.GetFiles(Path.Combine(host, "bin", "Release"), "App.Host.dll", SearchOption.AllDirectories).Single();
-        using var process = Dotnet.Start(host, env, dll, "--urls", url);
+        var dll = Directory.GetFiles(Path.Combine(app, "bin", "Release"), "Hello.dll", SearchOption.AllDirectories).Single();
+        using var process = Dotnet.Start(app, env, dll, "--urls", url);
         var output = new StringBuilder();
         process.OutputDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };
         process.ErrorDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };

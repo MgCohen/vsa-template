@@ -7,11 +7,13 @@ The architecture viewer draws the architecture of a VSA app as a graph, and lets
 | Part | Path | Contains |
 |---|---|---|
 | Module | `Features/ArchitectureViewer/` | Domain, Domain.Shared, Infrastructure, Presenters, 13 request slices |
-| Views | `App/Views/` (`Viewer.Views.csproj`) | Pages, panels, graph and shape components |
-| Host | `App/Host/` (`Viewer.Host.csproj`) | The fixed `Program.cs` line, `Data/` copy |
+| Root project | `Viewer.csproj` | The one project of the app. It compiles the module, the views and the host, and copies `Data/` |
+| Views | `App/Views/` | Pages, panels, graph and shape components |
+| Host | `App/Host/` | `ViewerApp` (selects `WebVsaHost`) and the fixed `Program.cs` line |
+| Static files | `wwwroot/` | `app.css`, elkjs and its interop script |
 | Sample input | `Data/` | `architecture.json`, `layout.json` of `samples/Notes` |
 | Licenses | `THIRD-PARTY-NOTICES.md`, `LICENSE-EPL-2.0.md` | Z.Blazor.Diagrams (MIT), elkjs 0.9.3 (EPL-2.0) |
-| Tests | `tests/Viewer.Tests/` | Unit, architecture and browser tests |
+| Tests | `tests/Viewer.Tests/` | Unit and browser tests |
 
 ## Stack
 
@@ -35,7 +37,7 @@ flowchart LR
     V -->|gestures| P
 ```
 
-`ArchitectureViewerModule` reads `Data/layout.json` and `Data/architecture.json` from the app folder (`AppContext.BaseDirectory`). `Viewer.Host.csproj` copies `Data/*.json` to its output.
+`ArchitectureViewerModule` reads `Data/layout.json` and `Data/architecture.json` from the app folder (`AppContext.BaseDirectory`). `Viewer.csproj` copies `Data/*.json` to its output.
 
 ## Run the viewer
 
@@ -47,10 +49,9 @@ flowchart LR
 | Kind | Tests | Needs |
 |---|---|---|
 | Unit | `SelectItemTests` (2) | Nothing |
-| Architecture | Generated `ArchitectureTests` (75) on the viewer app | Nothing |
 | Browser | 23 tests in category `Browser` | Playwright Chromium (the tests install it on the first run, about 150 MB) |
 
-The browser tests start `App.Host.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development`. At the start of the run, `ViewerSetup` installs the Playwright Chromium if it is missing, and starts it one time. Each test opens a new browser context and page, so each test has a new Blazor circuit and new presenter state.
+The browser tests start `Viewer.dll` from its output folder on a free port, with `ASPNETCORE_ENVIRONMENT=Development`. At the start of the run, `ViewerSetup` installs the Playwright Chromium if it is missing, and starts it one time. Each test opens a new browser context and page, so each test has a new Blazor circuit and new presenter state.
 
 | Run of `Viewer.Tests` (100 tests, no build) | Duration |
 |---|---|
@@ -69,14 +70,13 @@ dotnet test --project tests/Viewer.Tests -- --filter "TestCategory=Browser"
 | Decision | Reason |
 |---|---|
 | Folder `framework/Tooling/Viewer/`, own `Directory.Build.props` and `VSA.Sdk.Dev.props` | Same in-repo form as `samples/`. `VsaAppRoot` is the viewer folder |
-| Project files `Viewer.Host.csproj` and `Viewer.Views.csproj`, assembly names `App.Host` and `App.Views` | `VSA.slnx` cannot have two `App.Host` projects in the `/framework/` folder (the templates have one) |
+| One root project `Viewer.csproj`, assembly name `Viewer` | Each app has one root project (main). The name is not `App`, so `VSA.slnx` has no name twice |
 | Sample input in `Data/`, copied to the host output | Until `vsa view` writes the export, the viewer has fixed input |
 | `IsPackable` false | `LocalFeed` packs each packable project under `framework/`. A package changes the consumer tests |
 | `Microsoft.Playwright` 1.64.1, with plain NUnit fixtures | No Playwright base class is necessary, because one `[SetUpFixture]` owns the browser |
 | Playwright Chromium, not an installed browser | Each Playwright release is tested with its own Chromium version. The same version runs on each machine and in CI. It has a fast headless shell |
 | One Chromium for the whole run, a new context for each test | A browser start for each test took about 6 s. The context keeps the tests apart |
 | 23 separate browser tests, not one long script | A long script stops at the first failure. Separate tests show each failure |
-| CA1812 off in `ArchitectureViewer.Handlers.Requests` | False warning on handlers that are found by type (issue #41) |
 | View code follows the repository analyzer rules | `App/Views` gets the VSA analyzer as framework code: block bodies, explicit types |
 
 ## Follow-up work

@@ -6,11 +6,11 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, req
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | Root files, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/` | None |
-| `add module <Name>` | Layers, published domain, status request, presenter, page, unit test | Solution, with `dotnet sln add` |
+| `new app <Name>` | Root files, the root project `<Name>.csproj`, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/` | None |
+| `add module <Name>` | Module root, published domain, status request, presenter, page, unit test | None |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
-| `add command <Name> -m <Module>` | Command, result, handler. If the module has no command projects: `Contracts.Commands` and `Handlers.Commands` | Solution, with `dotnet sln add`, if the tool writes the command projects |
-| `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts.Commands` with the base command `<Name>Step<TResult>` | Solution, with `dotnet sln add` |
+| `add command <Name> -m <Module>` | Command, result, handler | None |
+| `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
 | `doctor` | None | None |
 | `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the VSA versions in `global.json` and the project files |
 
@@ -22,20 +22,21 @@ Rules for all commands:
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
-- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same assembly names.
+- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same namespace.
 - `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
-- `new app` writes a `.gitignore` for the build folders, also `bin~/` and `obj~/` of the layer projects in `Features/<Feature>/Projects/`.
+- `new app` writes a `.gitignore` for the build folders (`bin/`, `obj/`).
+- The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
 
 ## Template format A
 
 ```
 framework/Tooling/Cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
+├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
+├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
 ├─ App/Views/Pages/SampleModulePage.razor          add module
 ├─ Features/SampleModule/**                         add module
-│  ├─ Projects/SampleModule.<Layer>.csproj         add module (eight layer projects, with Domain.Shared)
-│  ├─ Projects/SampleModule.*.Commands.csproj      add command (Contracts.Commands, Handlers.Commands)
 │  ├─ Domain/Shared/SampleModuleKey.cs             add module (the published domain)
 │  ├─ Slices/GetStatus/**                          add module (the status request)
 │  ├─ Slices/SampleAction/**                       add request
@@ -43,7 +44,7 @@ framework/Tooling/Cli/Templates/
 ├─ Features/.gitkeep                                new app (keeps the empty Features/ folder)
 ├─ Plugins/SamplePlugin/**                         add plugin (root, Contracts/Commands/SamplePluginStep.cs)
 ├─ Plugins/.gitkeep                                new app (keeps the empty Plugins/ folder)
-├─ Tests/App.Tests.csproj                         new app (the architecture tests come from the package)
+├─ Tests/App.Tests.csproj                         new app
 ├─ Tests/SampleModuleStatusTests.cs                add module
 ├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
 ```
@@ -53,7 +54,7 @@ The path of a template file gives its command. The tool uses the first rule that
 | Rule | Path | Command | Replaced names |
 |---|---|---|---|
 | 1 | Contains `SampleAction` | `add request` | `SampleAction`, `SampleModule` |
-| 2 | Contains `SampleChange`, or is `Projects/SampleModule.Contracts.Commands.csproj` or `Projects/SampleModule.Handlers.Commands.csproj` | `add command` | `SampleChange`, `SampleModule` |
+| 2 | Contains `SampleChange` | `add command` | `SampleChange`, `SampleModule` |
 | 3 | Contains `SamplePlugin` | `add plugin` | `SamplePlugin` |
 | 4 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
 | 5 | Other | `new app` | `SampleApp` |
@@ -62,15 +63,14 @@ The path of a template file gives its command. The tool uses the first rule that
 
 The tool also replaces the kebab form of each name, for routes: `sample-module` becomes `billing`, and `sample-action` becomes `create-invoice`.
 
-A new module has no command projects. The first `add command` of a module writes them, and the next commands use them. Thus a module with no command has no empty projects.
-
 ## Source mode and package mode
 
 The templates build in this repository in source mode, as `samples/` does. The tool changes each `.csproj` to package mode:
 
 | Source mode (repository) | Package mode (consumer) |
 |---|---|
-| `<Import ... VSA.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="VSA.Sdk" />` |
+| `<Project>` with `<Import ... VSA.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="VSA.Sdk" />` |
+| `<Project Sdk="Microsoft.NET.Sdk.Web">` with the same imports | `<Project Sdk="Microsoft.NET.Sdk.Web">` with `<Sdk Name="VSA.Sdk" />` |
 | `<ProjectReference Include="$(VsaFrameworkSourceDir).../VSA.Host.csproj" />` | `<PackageReference Include="VSA.Host" Version="<tool version>" />` |
 
 If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
@@ -79,7 +79,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
 
-The build adds the architecture tests to `Tests/` (see [architecture-engine.md](architecture-engine.md)). The tests write no test class. They read the rules of `App/Host/<Name>App.cs`.
+The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). It reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
 
 ## One version
 

@@ -11,5 +11,6 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Meters/Meters.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/Cards/Cards.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/Resources/Resources.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/ConsoleApp/Features/Greet/Greet.csproj" />
   </ItemGroup>
 </Project>
