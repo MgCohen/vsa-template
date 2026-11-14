@@ -12,10 +12,11 @@ A Vertical Slice Architecture (VSA) template: base infrastructure, scaffolding, 
 |-----------------------|-------------------------------------------------------------------------|
 | `framework/Kernel/`   | VSA.Kernel: what each app needs to start, with no layer: `App`, `AppBuilder`, `IAppHost`, `Anchor`, `AnchorBuilder`, `IInstaller`, `AnchorScan`, the factories. `Analyzers/` (VSA.Kernel.Analyzers): the analyzer base `RuleAnalyzer` and the rules about any code. `Markers/` (VSA.Analyzers.Markers): `[ReflectionBase]`, `[AutoRegister]`, `[TypeArgument]` and the IL2CPP markers `[Preserve]`, `[RequireDerived]`, `[RequireImplementors]` |
 | `framework/Components/` | Optional blocks that an architecture takes. `Messages/`: `Contracts/` (VSA.Contracts: `IMessage`, `Envelope`, `Result`) and `Handlers/` (VSA.Handlers: the pipeline) |
-| `framework/Engine/`   | The architecture engine: `Definition/` (VSA.Architecture, the definition API: `Concept`, `Anchor`, `Part`, `RuleBook`) and `Core/` (VSA.Architecture.Engine: load, bind, decide and check with ArchUnitNET) |
+| `framework/Engine/`   | The architecture engine: `Definition/` (VSA.Architecture, the definition API: `Concept`, `Anchor`, `Part`, `RuleBook`), `Core/` (VSA.Architecture.Engine: load, bind, decide and check with ArchUnitNET, and export `architecture.json`) and `Data/` (VSA.Architecture.Data: `definition.json`, a definition as data with `JsonDefinition`, and `architecture.json`, the resolved app, see `docs/architecture-data.md`) |
 | `framework/Architectures/Vsa/` | The VSA pack: `Definition/` (VSA.Architecture.Vsa: `VsaDefinition`, `Layer`, the VSA layers), `Module/`, the layer bases (`Contracts/`, `Handlers/`, `Domain/`, `Infrastructure/`, `Presenters/`, `Views/`), `Composition/` (`VsaApp`), `Host/`, `Rules/` (VSA.Analyzers: the VSA rules) and `Testing/` (VSA.Testing.Unit) |
 | `framework/Sdk/`      | VSA.Sdk: the build setup of each project: the framework references, the analyzers, the rule values and the source folders |
-| `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`) |
+| `framework/Tooling/`  | The `vsa` tool (`Cli/`, package VSA.Cli) and its templates (`Cli/Templates/`), and `Export/` (the tool that writes `architecture.json`, does not ship) |
+| `framework/Tooling/Viewer/` | The architecture viewer: an in-repo VSA app (module `ArchitectureViewer`) with its sample input in `Data/`. Does not ship yet. See `docs/viewer.md` |
 | `engine/`             | The rule engine app (a VSA console app: Engine, Definition, Rules, Report, and the Steps plugin). Its root project `engine/Engine.csproj` makes the build hook package VSA.Architecture.Build, with `VSA.Architecture.Build.targets`. See "The rule engine" below |
 | `samples/`            | Sample apps that use the framework as a consumer does. Does not ship   |
 | `tests/`              | Tests of the framework itself, with fixtures. Does not ship            |
@@ -67,6 +68,7 @@ Run all tests with `dotnet test --solution VSA.slnx`. Run one project with `dotn
 | `tests/Cli/`             | Tests of the `vsa` tool and its templates                                 |
 | `tests/Architecture.Tests/` | Tests of the rule engine core, on the fixture apps in `tests/Fixtures/Architecture/` |
 | `tests/Composition.Tests/` | Tests of the composer, the installers and `AnchorBuilder`, with no ASP.NET Core |
+| `tests/Viewer.Tests/`    | Tests of the architecture viewer: unit and browser tests (category `Browser`, Playwright Chromium, installed by the tests) |
 | `tests/Engine.Tests/`    | Tests of the rule engine app, in the test process, on `samples/Notes`     |
 | `tests/Fixtures/`        | Small modules that tests use. They are not in `VSA.slnx`                  |
 | `tests/Shared/`          | Helpers: `Dotnet` (run the CLI), `LocalFeed` (pack), `Workspace` (consumer copy) |

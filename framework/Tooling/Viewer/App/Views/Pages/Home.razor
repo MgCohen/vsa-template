@@ -1,0 +1,18 @@
+@page "/"
+@inject GraphPresenter Graph
+
+<PageTitle>Architecture viewer</PageTitle>
+<Toolbar Presenter="Graph" />
+<DefinitionTools Presenter="Graph" />
+<GraphView Presenter="Graph" />
+<ExportPanel Presenter="Graph" />
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Graph.Load();
+        }
+    }
+}

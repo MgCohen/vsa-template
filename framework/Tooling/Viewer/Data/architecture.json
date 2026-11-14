@@ -1,0 +1,8173 @@
+{
+  "version": 3,
+  "definition": {
+    "name": "VsaDefinition",
+    "options": {
+      "defaultPermission": "Deny",
+      "boundary": "Closed",
+      "useSameLayer": true,
+      "depth": "WithChildren",
+      "access": "Public"
+    },
+    "parts": [
+      {
+        "id": "p0",
+        "layer": "(root)",
+        "parent": null,
+        "path": "",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p1",
+        "layer": "Framework",
+        "parent": "p0",
+        "path": "Framework",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p2",
+        "layer": "Core",
+        "parent": "p1",
+        "path": "Framework/Core",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p3",
+        "layer": "Domain",
+        "parent": "p2",
+        "path": "Framework/Core/Domain",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p4",
+        "layer": "Infrastructure",
+        "parent": "p2",
+        "path": "Framework/Core/Infrastructure",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p5",
+        "layer": "Presenters",
+        "parent": "p2",
+        "path": "Framework/Core/Presenters",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p6",
+        "layer": "Contracts",
+        "parent": "p2",
+        "path": "Framework/Core/Contracts",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p7",
+        "layer": "Contracts.Requests",
+        "parent": "p6",
+        "path": "Framework/Core/Contracts/Requests",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "IRoutedRequest",
+          "IResponse"
+        ]
+      },
+      {
+        "id": "p8",
+        "layer": "Contracts.Events",
+        "parent": "p6",
+        "path": "Framework/Core/Contracts/Events",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "IntegrationEvent"
+        ]
+      },
+      {
+        "id": "p9",
+        "layer": "Contracts.Commands",
+        "parent": "p6",
+        "path": "Framework/Core/Contracts/Commands",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "ICommand\u00601"
+        ]
+      },
+      {
+        "id": "p10",
+        "layer": "Handlers",
+        "parent": "p2",
+        "path": "Framework/Core/Handlers",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p11",
+        "layer": "Handlers.Requests",
+        "parent": "p10",
+        "path": "Framework/Core/Handlers/Requests",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "RequestHandler\u00602"
+        ]
+      },
+      {
+        "id": "p12",
+        "layer": "Handlers.Events",
+        "parent": "p10",
+        "path": "Framework/Core/Handlers/Events",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "IntegrationEventHandler\u00601"
+        ]
+      },
+      {
+        "id": "p13",
+        "layer": "Handlers.Commands",
+        "parent": "p10",
+        "path": "Framework/Core/Handlers/Commands",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "CommandHandler\u00602"
+        ]
+      },
+      {
+        "id": "p14",
+        "layer": "Views",
+        "parent": "p2",
+        "path": "Framework/Core/Views",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p15",
+        "layer": "Composition",
+        "parent": "p2",
+        "path": "Framework/Core/Composition",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p16",
+        "layer": "Host",
+        "parent": "p2",
+        "path": "Framework/Core/Host",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p17",
+        "layer": "App",
+        "parent": "p0",
+        "path": "App",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p18",
+        "layer": "Host",
+        "parent": "p17",
+        "path": "App/Host",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p19",
+        "layer": "Views",
+        "parent": "p17",
+        "path": "App/Views",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p20",
+        "layer": "Plugin",
+        "parent": "p0",
+        "path": "Plugins/{plugin}",
+        "many": true,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p21",
+        "layer": "Module",
+        "parent": "p20",
+        "path": "Plugins/{plugin}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "Plugin"
+        ]
+      },
+      {
+        "id": "p22",
+        "layer": "Domain",
+        "parent": "p20",
+        "path": "Plugins/{plugin}/Domain",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p23",
+        "layer": "Domain.Shared",
+        "parent": "p22",
+        "path": "Plugins/{plugin}/Domain/Shared",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p24",
+        "layer": "Infrastructure",
+        "parent": "p20",
+        "path": "Plugins/{plugin}/Infrastructure",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p25",
+        "layer": "Presenters",
+        "parent": "p20",
+        "path": "Plugins/{plugin}/Presenters",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p26",
+        "layer": "Contracts",
+        "parent": "p20",
+        "path": "Plugins/{plugin}/Contracts",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p27",
+        "layer": "Contracts.Requests",
+        "parent": "p26",
+        "path": "Plugins/{plugin}/Contracts/Requests",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "IRoutedRequest",
+          "IResponse"
+        ]
+      },
+      {
+        "id": "p28",
+        "layer": "Contracts.Events",
+        "parent": "p26",
+        "path": "Plugins/{plugin}/Contracts/Events",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "IntegrationEvent"
+        ]
+      },
+      {
+        "id": "p29",
+        "layer": "Contracts.Commands",
+        "parent": "p26",
+        "path": "Plugins/{plugin}/Contracts/Commands",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "ICommand\u00601"
+        ]
+      },
+      {
+        "id": "p30",
+        "layer": "Handlers",
+        "parent": "p20",
+        "path": "Plugins/{plugin}/Handlers",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p31",
+        "layer": "Handlers.Requests",
+        "parent": "p30",
+        "path": "Plugins/{plugin}/Handlers/Requests",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "RequestHandler\u00602"
+        ]
+      },
+      {
+        "id": "p32",
+        "layer": "Handlers.Events",
+        "parent": "p30",
+        "path": "Plugins/{plugin}/Handlers/Events",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "IntegrationEventHandler\u00601"
+        ]
+      },
+      {
+        "id": "p33",
+        "layer": "Handlers.Commands",
+        "parent": "p30",
+        "path": "Plugins/{plugin}/Handlers/Commands",
+        "many": false,
+        "hasFolder": true,
+        "ofType": [
+          "CommandHandler\u00602"
+        ]
+      },
+      {
+        "id": "p34",
+        "layer": "Feature",
+        "parent": "p0",
+        "path": "Features/{feature}",
+        "many": true,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p35",
+        "layer": "Module",
+        "parent": "p34",
+        "path": "Features/{feature}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "Module"
+        ]
+      },
+      {
+        "id": "p36",
+        "layer": "Domain",
+        "parent": "p34",
+        "path": "Features/{feature}/Domain",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p37",
+        "layer": "Domain.Shared",
+        "parent": "p36",
+        "path": "Features/{feature}/Domain/Shared",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p38",
+        "layer": "Infrastructure",
+        "parent": "p34",
+        "path": "Features/{feature}/Infrastructure",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p39",
+        "layer": "Presenters",
+        "parent": "p34",
+        "path": "Features/{feature}/Presenters",
+        "many": false,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p40",
+        "layer": "Slice",
+        "parent": "p34",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": true,
+        "hasFolder": true,
+        "ofType": []
+      },
+      {
+        "id": "p41",
+        "layer": "Contracts.Requests",
+        "parent": "p40",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "IRoutedRequest",
+          "IResponse"
+        ]
+      },
+      {
+        "id": "p42",
+        "layer": "Contracts.Events",
+        "parent": "p40",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "IntegrationEvent"
+        ]
+      },
+      {
+        "id": "p43",
+        "layer": "Contracts.Commands",
+        "parent": "p40",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "ICommand\u00601"
+        ]
+      },
+      {
+        "id": "p44",
+        "layer": "Handlers.Requests",
+        "parent": "p40",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "RequestHandler\u00602"
+        ]
+      },
+      {
+        "id": "p45",
+        "layer": "Handlers.Events",
+        "parent": "p40",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "IntegrationEventHandler\u00601"
+        ]
+      },
+      {
+        "id": "p46",
+        "layer": "Handlers.Commands",
+        "parent": "p40",
+        "path": "Features/{feature}/Slices/{slice}",
+        "many": false,
+        "hasFolder": false,
+        "ofType": [
+          "CommandHandler\u00602"
+        ]
+      }
+    ],
+    "rules": [
+      {
+        "id": "r0",
+        "text": "same concept",
+        "source": "same concept",
+        "access": "Allow",
+        "pairs": 112,
+        "from": [],
+        "to": []
+      },
+      {
+        "id": "r1",
+        "text": "Domain uses Domain.Shared",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 10,
+        "from": [
+          {
+            "layer": "Domain",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Domain.Shared",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r2",
+        "text": "Infrastructure uses Domain",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 15,
+        "from": [
+          {
+            "layer": "Infrastructure",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Domain",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r3",
+        "text": "Infrastructure uses Handlers(Self) and Contracts(Self)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 12,
+        "from": [
+          {
+            "layer": "Infrastructure",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Handlers",
+            "depth": "Self",
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts",
+            "depth": "Self",
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r4",
+        "text": "Presenters uses Contracts and Contracts.Requests(Internal) and Contracts.Events(Internal) and Domain.Shared(Internal)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 30,
+        "from": [
+          {
+            "layer": "Presenters",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Contracts",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Requests",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Events",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          },
+          {
+            "layer": "Domain.Shared",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r5",
+        "text": "Contracts.Requests and Contracts.Events and Contracts.Commands uses Contracts and Domain.Shared",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 36,
+        "from": [
+          {
+            "layer": "Contracts.Requests",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Events",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Commands",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Contracts",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Domain.Shared",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r6",
+        "text": "Handlers.Requests and Handlers.Events and Handlers.Commands uses Handlers and Contracts and Contracts.Commands and Contracts.Events and Domain(Internal) and Infrastructure(Internal)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 162,
+        "from": [
+          {
+            "layer": "Handlers.Requests",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Handlers.Events",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Handlers.Commands",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Handlers",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Commands",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Events",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Domain",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          },
+          {
+            "layer": "Infrastructure",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r7",
+        "text": "Handlers.Requests uses Contracts.Requests",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 9,
+        "from": [
+          {
+            "layer": "Handlers.Requests",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Contracts.Requests",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r8",
+        "text": "Plugin denies Feature",
+        "source": "definition",
+        "access": "Deny",
+        "pairs": 182,
+        "from": [
+          {
+            "layer": "Plugin",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Feature",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r9",
+        "text": "Domain Under\u003CPlugin\u003E denies Domain(Self) InOther\u003CPlugin\u003E",
+        "source": "definition",
+        "access": "Deny",
+        "pairs": 2,
+        "from": [
+          {
+            "layer": "Domain",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Plugin"
+              }
+            ]
+          }
+        ],
+        "to": [
+          {
+            "layer": "Domain",
+            "depth": "Self",
+            "access": null,
+            "filters": [
+              {
+                "kind": "InOther",
+                "layer": "Plugin"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "r10",
+        "text": "Feature uses Domain.Shared InOther\u003CFeature\u003E",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 13,
+        "from": [
+          {
+            "layer": "Feature",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Domain.Shared",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "InOther",
+                "layer": "Feature"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "r11",
+        "text": "Presenters Under\u003CFeature\u003E and Module Under\u003CFeature\u003E uses Domain.Shared(Internal) InOther\u003CFeature\u003E",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 2,
+        "from": [
+          {
+            "layer": "Presenters",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Feature"
+              }
+            ]
+          },
+          {
+            "layer": "Module",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Feature"
+              }
+            ]
+          }
+        ],
+        "to": [
+          {
+            "layer": "Domain.Shared",
+            "depth": null,
+            "access": "Internal",
+            "filters": [
+              {
+                "kind": "InOther",
+                "layer": "Feature"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "r12",
+        "text": "Handlers.Requests Under\u003CFeature\u003E and Handlers.Events Under\u003CFeature\u003E and Handlers.Commands Under\u003CFeature\u003E uses Contracts.Commands(Open) and Contracts.Events(Open)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 18,
+        "from": [
+          {
+            "layer": "Handlers.Requests",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Feature"
+              }
+            ]
+          },
+          {
+            "layer": "Handlers.Events",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Feature"
+              }
+            ]
+          },
+          {
+            "layer": "Handlers.Commands",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Feature"
+              }
+            ]
+          }
+        ],
+        "to": [
+          {
+            "layer": "Contracts.Commands",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Contracts.Events",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r13",
+        "text": "Module uses Core and Plugin(Internal)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 58,
+        "from": [
+          {
+            "layer": "Module",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Core",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Plugin",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r14",
+        "text": "Module denies Module Under\u003CPlugin\u003E",
+        "source": "definition",
+        "access": "Deny",
+        "pairs": 2,
+        "from": [
+          {
+            "layer": "Module",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Module",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Plugin"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "r15",
+        "text": "Module Under\u003CFeature\u003E uses Feature(Internal)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 13,
+        "from": [
+          {
+            "layer": "Module",
+            "depth": null,
+            "access": null,
+            "filters": [
+              {
+                "kind": "Under",
+                "layer": "Feature"
+              }
+            ]
+          }
+        ],
+        "to": [
+          {
+            "layer": "Feature",
+            "depth": null,
+            "access": "Internal",
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r16",
+        "text": "Host uses Composition and Core(Self)",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 4,
+        "from": [
+          {
+            "layer": "Host",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Composition",
+            "depth": null,
+            "access": null,
+            "filters": []
+          },
+          {
+            "layer": "Core",
+            "depth": "Self",
+            "access": null,
+            "filters": []
+          }
+        ]
+      },
+      {
+        "id": "r17",
+        "text": "Views uses Presenters",
+        "source": "definition",
+        "access": "Allow",
+        "pairs": 6,
+        "from": [
+          {
+            "layer": "Views",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ],
+        "to": [
+          {
+            "layer": "Presenters",
+            "depth": null,
+            "access": null,
+            "filters": []
+          }
+        ]
+      }
+    ],
+    "pairs": [
+      {
+        "from": "p1",
+        "to": "p1",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 0,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p2",
+        "to": "p2",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 1,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p3",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 2,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p3",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 3,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p3",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 4,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 5,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 6,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 7,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p5",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 8,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p5",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 9,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p5",
+        "to": "p39",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 10,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p6",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 11,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p6",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 12,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p7",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 13,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p7",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 14,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p7",
+        "to": "p41",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 15,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 16,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 17,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 18,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 19,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 20,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 21,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p10",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 22,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p10",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 23,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p11",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 24,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p31",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 25,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p44",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 26,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p12",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 27,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p32",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 28,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p45",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 29,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p13",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 30,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p33",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 31,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p46",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 32,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p14",
+        "to": "p14",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 33,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p14",
+        "to": "p19",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 34,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p15",
+        "to": "p15",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 35,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p16",
+        "to": "p16",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 36,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p16",
+        "to": "p18",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 37,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p17",
+        "to": "p17",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 38,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p18",
+        "to": "p16",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 39,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p18",
+        "to": "p18",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 40,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p19",
+        "to": "p14",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 41,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p19",
+        "to": "p19",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 42,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p20",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 43,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p21",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 44,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p35",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 45,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 46,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 47,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 48,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 49,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 50,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 51,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 52,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 53,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 54,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 55,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p39",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 56,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 57,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 58,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 59,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 60,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p41",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 61,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 62,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 63,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 64,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 65,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 66,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 67,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 68,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 69,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p11",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 70,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p31",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 71,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p44",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 72,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p12",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 73,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p32",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 74,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p45",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 75,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p13",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 76,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p33",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 77,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p46",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 78,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p34",
+        "to": "p34",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 79,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p21",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 80,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p35",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 81,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p36",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 82,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p36",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 83,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p36",
+        "to": "p36",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 84,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p37",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 85,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p37",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 86,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 87,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 88,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p38",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 89,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 90,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 91,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p39",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 92,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p40",
+        "to": "p40",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 93,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 94,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 95,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p41",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 96,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 97,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 98,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p42",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 99,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 100,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 101,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p43",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 102,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p11",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 103,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p31",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 104,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p44",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 105,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p12",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 106,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p32",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 107,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p45",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 108,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p13",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 109,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p33",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 110,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p46",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r0",
+        "order": 111,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p3",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 112,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p3",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 113,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 114,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 115,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 116,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 117,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p36",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 118,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p36",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 119,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p37",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 120,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p37",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r1",
+        "order": 121,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 122,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 123,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 124,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 125,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 126,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 127,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 128,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 129,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 130,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 131,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 132,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 133,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 134,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p36",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 135,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r2",
+        "order": 136,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 137,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 138,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 139,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 140,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 141,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 142,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 143,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p4",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 144,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 145,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 146,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 147,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r3",
+        "order": 148,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p5",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 149,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p5",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 150,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 151,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 152,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 153,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 154,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p5",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 155,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 156,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p41",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 157,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 158,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 159,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p41",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 160,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 161,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 162,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p41",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 163,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 164,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 165,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 166,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 167,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 168,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 169,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 170,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 171,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p42",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 172,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 173,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p5",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 174,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 175,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p25",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 176,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 177,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p39",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r4",
+        "order": 178,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p7",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 179,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p7",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 180,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 181,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 182,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 183,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 184,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 185,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 186,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 187,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 188,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 189,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 190,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 191,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 192,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 193,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 194,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 195,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 196,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p7",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 197,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p7",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 198,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 199,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 200,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 201,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 202,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 203,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p8",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 204,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 205,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 206,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 207,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 208,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 209,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p9",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 210,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 211,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 212,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 213,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r5",
+        "order": 214,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 215,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 216,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 217,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 218,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 219,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 220,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 221,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 222,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 223,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 224,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 225,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 226,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 227,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 228,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 229,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 230,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 231,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 232,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 233,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 234,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 235,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 236,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 237,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 238,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 239,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 240,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 241,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 242,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 243,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 244,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 245,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 246,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 247,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 248,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 249,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 250,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 251,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 252,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 253,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 254,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 255,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 256,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 257,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 258,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p43",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 259,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 260,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 261,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 262,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 263,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 264,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 265,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 266,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 267,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p43",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 268,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 269,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 270,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 271,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 272,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 273,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 274,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 275,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 276,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p43",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 277,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 278,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 279,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 280,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 281,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 282,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 283,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 284,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 285,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p42",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 286,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 287,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 288,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p12",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 289,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 290,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 291,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 292,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 293,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 294,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p42",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 295,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 296,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 297,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p13",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 298,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 299,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 300,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 301,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 302,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 303,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p42",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 304,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 305,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 306,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 307,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 308,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 309,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 310,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 311,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 312,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 313,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 314,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 315,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 316,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 317,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p36",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 318,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 319,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 320,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 321,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 322,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 323,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 324,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 325,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 326,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 327,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 328,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 329,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 330,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 331,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 332,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p36",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 333,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 334,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 335,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 336,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 337,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 338,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 339,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 340,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 341,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 342,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p36",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 343,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p37",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 344,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 345,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 346,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 347,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p36",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 348,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 349,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 350,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 351,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 352,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 353,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 354,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p31",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 355,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 356,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 357,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p38",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 358,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 359,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 360,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p12",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 361,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 362,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 363,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p32",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 364,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 365,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 366,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p45",
+        "to": "p38",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 367,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 368,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 369,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p13",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 370,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 371,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 372,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p33",
+        "to": "p38",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 373,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 374,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 375,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p46",
+        "to": "p38",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r6",
+        "order": 376,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p11",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 377,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 378,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p11",
+        "to": "p41",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 379,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 380,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 381,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p41",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 382,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 383,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 384,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p41",
+        "condition": "same Feature, same Slice",
+        "access": "Allow",
+        "rule": "r7",
+        "order": 385,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 386,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 387,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 388,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 389,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 390,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 391,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 392,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 393,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 394,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 395,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 396,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 397,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p20",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 398,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 399,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 400,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 401,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 402,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 403,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 404,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 405,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 406,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 407,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 408,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 409,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 410,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 411,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 412,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 413,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 414,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 415,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 416,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 417,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 418,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 419,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 420,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 421,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 422,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 423,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 424,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 425,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 426,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 427,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 428,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 429,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 430,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 431,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 432,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 433,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 434,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 435,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 436,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 437,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 438,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 439,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 440,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 441,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 442,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 443,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 444,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 445,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 446,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 447,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 448,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 449,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p24",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 450,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 451,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 452,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 453,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 454,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 455,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 456,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 457,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 458,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 459,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 460,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 461,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 462,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p25",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 463,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 464,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 465,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 466,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 467,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 468,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 469,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 470,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 471,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 472,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 473,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 474,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 475,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p26",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 476,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 477,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 478,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 479,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 480,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 481,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 482,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 483,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 484,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 485,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 486,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 487,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 488,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p27",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 489,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 490,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 491,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 492,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 493,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 494,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 495,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 496,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 497,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 498,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 499,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 500,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 501,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p28",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 502,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 503,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 504,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 505,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 506,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 507,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 508,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 509,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 510,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 511,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 512,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 513,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 514,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p29",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 515,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 516,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 517,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 518,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 519,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 520,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 521,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 522,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 523,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 524,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 525,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 526,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 527,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p30",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 528,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 529,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 530,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 531,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 532,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 533,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 534,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 535,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 536,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 537,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 538,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 539,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 540,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p31",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 541,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 542,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 543,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 544,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 545,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 546,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 547,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 548,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 549,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 550,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 551,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 552,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 553,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p32",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 554,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p34",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 555,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p35",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 556,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p36",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 557,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p37",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 558,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p38",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 559,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p39",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 560,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p40",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 561,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p41",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 562,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p42",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 563,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p43",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 564,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p44",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 565,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p45",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 566,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p33",
+        "to": "p46",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r8",
+        "order": 567,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p22",
+        "to": "p22",
+        "condition": "other Plugin",
+        "access": "Deny",
+        "rule": "r9",
+        "order": 568,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p23",
+        "to": "p22",
+        "condition": "other Plugin",
+        "access": "Deny",
+        "rule": "r9",
+        "order": 569,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p34",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 570,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 571,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p36",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 572,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p37",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 573,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p38",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 574,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 575,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p40",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 576,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p41",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 577,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p42",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 578,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p43",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 579,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 580,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 581,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r10",
+        "order": 582,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p39",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r11",
+        "order": 583,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p37",
+        "condition": "other Feature",
+        "access": "Allow",
+        "rule": "r11",
+        "order": 584,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p44",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 585,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 586,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 587,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 588,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 589,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 590,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 591,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 592,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p43",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 593,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 594,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 595,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p44",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 596,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 597,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 598,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p45",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 599,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 600,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 601,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p46",
+        "to": "p42",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r12",
+        "order": 602,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p2",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 603,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 604,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 605,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 606,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 607,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 608,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 609,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 610,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 611,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p11",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 612,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p12",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 613,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p13",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 614,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p14",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 615,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p15",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 616,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p16",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 617,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p2",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 618,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p3",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 619,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p4",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 620,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 621,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p6",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 622,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p7",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 623,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p8",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 624,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p9",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 625,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p10",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 626,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p11",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 627,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p12",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 628,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p13",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 629,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p14",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 630,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p15",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 631,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p16",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 632,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p21",
+        "to": "p20",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 633,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p21",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 634,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 635,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 636,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 637,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 638,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 639,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 640,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 641,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 642,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 643,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p31",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 644,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p32",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 645,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p33",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 646,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p20",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 647,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p21",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 648,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p22",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 649,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p23",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 650,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p24",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 651,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 652,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p26",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 653,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p27",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 654,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p28",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 655,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p29",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 656,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p30",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 657,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p31",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 658,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p32",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 659,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p33",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r13",
+        "order": 660,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p21",
+        "to": "p21",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r14",
+        "order": 661,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p21",
+        "condition": "always",
+        "access": "Deny",
+        "rule": "r14",
+        "order": 662,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p35",
+        "to": "p34",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 663,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p35",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 664,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p36",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 665,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p37",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 666,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p38",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 667,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p39",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 668,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p40",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 669,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p41",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 670,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p42",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 671,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p43",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 672,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p44",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 673,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p45",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 674,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p35",
+        "to": "p46",
+        "condition": "same Feature",
+        "access": "Allow",
+        "rule": "r15",
+        "order": 675,
+        "memberAccess": "Internal"
+      },
+      {
+        "from": "p16",
+        "to": "p15",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r16",
+        "order": 676,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p18",
+        "to": "p15",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r16",
+        "order": 677,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p16",
+        "to": "p2",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r16",
+        "order": 678,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p18",
+        "to": "p2",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r16",
+        "order": 679,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p14",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r17",
+        "order": 680,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p14",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r17",
+        "order": 681,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p14",
+        "to": "p39",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r17",
+        "order": 682,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p19",
+        "to": "p5",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r17",
+        "order": 683,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p19",
+        "to": "p25",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r17",
+        "order": 684,
+        "memberAccess": "Public"
+      },
+      {
+        "from": "p19",
+        "to": "p39",
+        "condition": "always",
+        "access": "Allow",
+        "rule": "r17",
+        "order": 685,
+        "memberAccess": "Public"
+      }
+    ]
+  },
+  "app": {
+    "name": "Notes",
+    "root": "samples/Notes",
+    "instances": [
+      {
+        "id": "p0@",
+        "part": "p0",
+        "layer": "(root)",
+        "parent": null,
+        "path": "",
+        "items": {}
+      },
+      {
+        "id": "p17@App",
+        "part": "p17",
+        "layer": "App",
+        "parent": "p0@",
+        "path": "App",
+        "items": {}
+      },
+      {
+        "id": "p18@App/Host",
+        "part": "p18",
+        "layer": "Host",
+        "parent": "p17@App",
+        "path": "App/Host",
+        "items": {}
+      },
+      {
+        "id": "p34@Features/Ping",
+        "part": "p34",
+        "layer": "Feature",
+        "parent": "p0@",
+        "path": "Features/Ping",
+        "items": {
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p35@Features/Ping",
+        "part": "p35",
+        "layer": "Module",
+        "parent": "p34@Features/Ping",
+        "path": "Features/Ping",
+        "items": {
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p40@Features/Ping/Slices/Ping",
+        "part": "p40",
+        "layer": "Slice",
+        "parent": "p34@Features/Ping",
+        "path": "Features/Ping/Slices/Ping",
+        "items": {
+          "Slice": "Ping",
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p44@Features/Ping/Slices/Ping",
+        "part": "p44",
+        "layer": "Handlers.Requests",
+        "parent": "p40@Features/Ping/Slices/Ping",
+        "path": "Features/Ping/Slices/Ping",
+        "items": {
+          "Slice": "Ping",
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p41@Features/Ping/Slices/Ping",
+        "part": "p41",
+        "layer": "Contracts.Requests",
+        "parent": "p40@Features/Ping/Slices/Ping",
+        "path": "Features/Ping/Slices/Ping",
+        "items": {
+          "Slice": "Ping",
+          "Feature": "Ping"
+        }
+      },
+      {
+        "id": "p34@Features/Notes",
+        "part": "p34",
+        "layer": "Feature",
+        "parent": "p0@",
+        "path": "Features/Notes",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p35@Features/Notes",
+        "part": "p35",
+        "layer": "Module",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/LogNoteCreated",
+        "part": "p40",
+        "layer": "Slice",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/LogNoteCreated",
+        "items": {
+          "Slice": "LogNoteCreated",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p45@Features/Notes/Slices/LogNoteCreated",
+        "part": "p45",
+        "layer": "Handlers.Events",
+        "parent": "p40@Features/Notes/Slices/LogNoteCreated",
+        "path": "Features/Notes/Slices/LogNoteCreated",
+        "items": {
+          "Slice": "LogNoteCreated",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/ListNotes",
+        "part": "p40",
+        "layer": "Slice",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/ListNotes",
+        "items": {
+          "Slice": "ListNotes",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p44@Features/Notes/Slices/ListNotes",
+        "part": "p44",
+        "layer": "Handlers.Requests",
+        "parent": "p40@Features/Notes/Slices/ListNotes",
+        "path": "Features/Notes/Slices/ListNotes",
+        "items": {
+          "Slice": "ListNotes",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p41@Features/Notes/Slices/ListNotes",
+        "part": "p41",
+        "layer": "Contracts.Requests",
+        "parent": "p40@Features/Notes/Slices/ListNotes",
+        "path": "Features/Notes/Slices/ListNotes",
+        "items": {
+          "Slice": "ListNotes",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/DeleteNote",
+        "part": "p40",
+        "layer": "Slice",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p44@Features/Notes/Slices/DeleteNote",
+        "part": "p44",
+        "layer": "Handlers.Requests",
+        "parent": "p40@Features/Notes/Slices/DeleteNote",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p41@Features/Notes/Slices/DeleteNote",
+        "part": "p41",
+        "layer": "Contracts.Requests",
+        "parent": "p40@Features/Notes/Slices/DeleteNote",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p42@Features/Notes/Slices/DeleteNote",
+        "part": "p42",
+        "layer": "Contracts.Events",
+        "parent": "p40@Features/Notes/Slices/DeleteNote",
+        "path": "Features/Notes/Slices/DeleteNote",
+        "items": {
+          "Slice": "DeleteNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p40@Features/Notes/Slices/CreateNote",
+        "part": "p40",
+        "layer": "Slice",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p44@Features/Notes/Slices/CreateNote",
+        "part": "p44",
+        "layer": "Handlers.Requests",
+        "parent": "p40@Features/Notes/Slices/CreateNote",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p41@Features/Notes/Slices/CreateNote",
+        "part": "p41",
+        "layer": "Contracts.Requests",
+        "parent": "p40@Features/Notes/Slices/CreateNote",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p42@Features/Notes/Slices/CreateNote",
+        "part": "p42",
+        "layer": "Contracts.Events",
+        "parent": "p40@Features/Notes/Slices/CreateNote",
+        "path": "Features/Notes/Slices/CreateNote",
+        "items": {
+          "Slice": "CreateNote",
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p39@Features/Notes/Presenters",
+        "part": "p39",
+        "layer": "Presenters",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Presenters",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p38@Features/Notes/Infrastructure",
+        "part": "p38",
+        "layer": "Infrastructure",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Infrastructure",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p36@Features/Notes/Domain",
+        "part": "p36",
+        "layer": "Domain",
+        "parent": "p34@Features/Notes",
+        "path": "Features/Notes/Domain",
+        "items": {
+          "Feature": "Notes"
+        }
+      },
+      {
+        "id": "p19@App/Views",
+        "part": "p19",
+        "layer": "Views",
+        "parent": "p17@App",
+        "path": "App/Views",
+        "items": {}
+      }
+    ],
+    "types": [
+      {
+        "id": "t0",
+        "name": "Program",
+        "fullName": "Program",
+        "instance": "p18@App/Host",
+        "file": "App/Host/Program.cs",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t1",
+        "name": "PingModule",
+        "fullName": "Ping.PingModule",
+        "instance": "p35@Features/Ping",
+        "file": "Features/Ping/PingModule.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t2",
+        "name": "PingHandler",
+        "fullName": "Ping.Slices.Ping.PingHandler",
+        "instance": "p44@Features/Ping/Slices/Ping",
+        "file": "Features/Ping/Slices/Ping/PingHandler.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t3",
+        "name": "PingRequest",
+        "fullName": "Ping.Slices.Ping.PingRequest",
+        "instance": "p41@Features/Ping/Slices/Ping",
+        "file": "Features/Ping/Slices/Ping/PingRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t4",
+        "name": "PingResponse",
+        "fullName": "Ping.Slices.Ping.PingResponse",
+        "instance": "p41@Features/Ping/Slices/Ping",
+        "file": "Features/Ping/Slices/Ping/PingResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t5",
+        "name": "NotesModule",
+        "fullName": "Notes.NotesModule",
+        "instance": "p35@Features/Notes",
+        "file": "Features/Notes/NotesModule.cs",
+        "line": 11,
+        "followsUser": false
+      },
+      {
+        "id": "t6",
+        "name": "NoteCreatedHandler",
+        "fullName": "Notes.Slices.LogNoteCreated.NoteCreatedHandler",
+        "instance": "p45@Features/Notes/Slices/LogNoteCreated",
+        "file": "Features/Notes/Slices/LogNoteCreated/NoteCreatedHandler.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t7",
+        "name": "ListNotesHandler",
+        "fullName": "Notes.Slices.ListNotes.ListNotesHandler",
+        "instance": "p44@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/ListNotesHandler.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t8",
+        "name": "ListNotesRequest",
+        "fullName": "Notes.Slices.ListNotes.ListNotesRequest",
+        "instance": "p41@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/ListNotesRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t9",
+        "name": "ListNotesResponse",
+        "fullName": "Notes.Slices.ListNotes.ListNotesResponse",
+        "instance": "p41@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/ListNotesResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t10",
+        "name": "NoteDto",
+        "fullName": "Notes.Slices.ListNotes.NoteDto",
+        "instance": "p41@Features/Notes/Slices/ListNotes",
+        "file": "Features/Notes/Slices/ListNotes/NoteDto.cs",
+        "line": 3,
+        "followsUser": true
+      },
+      {
+        "id": "t11",
+        "name": "DeleteNoteHandler",
+        "fullName": "Notes.Slices.DeleteNote.DeleteNoteHandler",
+        "instance": "p44@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/DeleteNoteHandler.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t12",
+        "name": "DeleteNoteRequest",
+        "fullName": "Notes.Slices.DeleteNote.DeleteNoteRequest",
+        "instance": "p41@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/DeleteNoteRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t13",
+        "name": "DeleteNoteResponse",
+        "fullName": "Notes.Slices.DeleteNote.DeleteNoteResponse",
+        "instance": "p41@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/DeleteNoteResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t14",
+        "name": "NoteDeleted",
+        "fullName": "Notes.Slices.DeleteNote.NoteDeleted",
+        "instance": "p42@Features/Notes/Slices/DeleteNote",
+        "file": "Features/Notes/Slices/DeleteNote/NoteDeleted.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t15",
+        "name": "CreateNoteHandler",
+        "fullName": "Notes.Slices.CreateNote.CreateNoteHandler",
+        "instance": "p44@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/CreateNoteHandler.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t16",
+        "name": "CreateNoteRequest",
+        "fullName": "Notes.Slices.CreateNote.CreateNoteRequest",
+        "instance": "p41@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/CreateNoteRequest.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t17",
+        "name": "CreateNoteResponse",
+        "fullName": "Notes.Slices.CreateNote.CreateNoteResponse",
+        "instance": "p41@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/CreateNoteResponse.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t18",
+        "name": "NoteCreated",
+        "fullName": "Notes.Slices.CreateNote.NoteCreated",
+        "instance": "p42@Features/Notes/Slices/CreateNote",
+        "file": "Features/Notes/Slices/CreateNote/NoteCreated.cs",
+        "line": 5,
+        "followsUser": false
+      },
+      {
+        "id": "t19",
+        "name": "NoteItem",
+        "fullName": "Notes.Presenters.NoteItem",
+        "instance": "p39@Features/Notes/Presenters",
+        "file": "Features/Notes/Presenters/NoteItem.cs",
+        "line": 6,
+        "followsUser": false
+      },
+      {
+        "id": "t20",
+        "name": "NotesPresenter",
+        "fullName": "Notes.Presenters.NotesPresenter",
+        "instance": "p39@Features/Notes/Presenters",
+        "file": "Features/Notes/Presenters/NotesPresenter.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t21",
+        "name": "NoteStore",
+        "fullName": "Notes.Infrastructure.NoteStore",
+        "instance": "p38@Features/Notes/Infrastructure",
+        "file": "Features/Notes/Infrastructure/NoteRepository.cs",
+        "line": 9,
+        "followsUser": false
+      },
+      {
+        "id": "t22",
+        "name": "NoteRepository",
+        "fullName": "Notes.Infrastructure.NoteRepository",
+        "instance": "p38@Features/Notes/Infrastructure",
+        "file": "Features/Notes/Infrastructure/NoteRepository.cs",
+        "line": 13,
+        "followsUser": false
+      },
+      {
+        "id": "t23",
+        "name": "AuthorId",
+        "fullName": "Notes.Domain.AuthorId",
+        "instance": "p36@Features/Notes/Domain",
+        "file": "Features/Notes/Domain/AuthorId.cs",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t24",
+        "name": "Note",
+        "fullName": "Notes.Domain.Note",
+        "instance": "p36@Features/Notes/Domain",
+        "file": "Features/Notes/Domain/Note.cs",
+        "line": 8,
+        "followsUser": false
+      },
+      {
+        "id": "t25",
+        "name": "NoteId",
+        "fullName": "Notes.Domain.NoteId",
+        "instance": "p36@Features/Notes/Domain",
+        "file": "Features/Notes/Domain/NoteId.cs",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t26",
+        "name": "App",
+        "fullName": "App.Views.App",
+        "instance": "p19@App/Views",
+        "file": "App/Views/App_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t27",
+        "name": "Routes",
+        "fullName": "App.Views.Routes",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Routes_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t28",
+        "name": "_Imports",
+        "fullName": "App.Views._Imports",
+        "instance": "p19@App/Views",
+        "file": "App/Views/_Imports_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t29",
+        "name": "NoteForm",
+        "fullName": "App.Views.Panels.NoteForm",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Panels/NoteForm.razor",
+        "line": 7,
+        "followsUser": false
+      },
+      {
+        "id": "t30",
+        "name": "NoteList",
+        "fullName": "App.Views.Panels.NoteList",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Panels/NoteList.razor",
+        "line": 3,
+        "followsUser": false
+      },
+      {
+        "id": "t31",
+        "name": "NotesPage",
+        "fullName": "App.Views.Pages.NotesPage",
+        "instance": "p19@App/Views",
+        "file": "App/Views/Pages/NotesPage_razor.g.cs",
+        "line": 1,
+        "followsUser": false
+      },
+      {
+        "id": "t32",
+        "name": "NotesApp",
+        "fullName": "App.Host.NotesApp",
+        "instance": "p18@App/Host",
+        "file": "App/Host/NotesApp.cs",
+        "line": 9,
+        "followsUser": false
+      }
+    ],
+    "dependencies": [
+      {
+        "from": "p44@Features/Ping/Slices/Ping",
+        "to": "p41@Features/Ping/Slices/Ping",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t2",
+            "to": "t3",
+            "access": "Allow",
+            "rule": "r7"
+          },
+          {
+            "from": "t2",
+            "to": "t4",
+            "access": "Allow",
+            "rule": "r7"
+          }
+        ]
+      },
+      {
+        "from": "p35@Features/Notes",
+        "to": "p38@Features/Notes/Infrastructure",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t5",
+            "to": "t21",
+            "access": "Allow",
+            "rule": "r15"
+          },
+          {
+            "from": "t5",
+            "to": "t22",
+            "access": "Allow",
+            "rule": "r15"
+          }
+        ]
+      },
+      {
+        "from": "p35@Features/Notes",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t5",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "r15"
+          },
+          {
+            "from": "t5",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "r15"
+          }
+        ]
+      },
+      {
+        "from": "p45@Features/Notes/Slices/LogNoteCreated",
+        "to": "p42@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t6",
+            "to": "t18",
+            "access": "Allow",
+            "rule": "r12"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/ListNotes",
+        "to": "p41@Features/Notes/Slices/ListNotes",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t7",
+            "to": "t8",
+            "access": "Allow",
+            "rule": "r7"
+          },
+          {
+            "from": "t7",
+            "to": "t9",
+            "access": "Allow",
+            "rule": "r7"
+          },
+          {
+            "from": "t7",
+            "to": "t10",
+            "access": "Allow",
+            "rule": "r7"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/ListNotes",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t7",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "r6"
+          },
+          {
+            "from": "t7",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "r6"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/DeleteNote",
+        "to": "p41@Features/Notes/Slices/DeleteNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t11",
+            "to": "t12",
+            "access": "Allow",
+            "rule": "r7"
+          },
+          {
+            "from": "t11",
+            "to": "t13",
+            "access": "Allow",
+            "rule": "r7"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/DeleteNote",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t11",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "r6"
+          },
+          {
+            "from": "t11",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "r6"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/DeleteNote",
+        "to": "p42@Features/Notes/Slices/DeleteNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t11",
+            "to": "t14",
+            "access": "Allow",
+            "rule": "r12"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/CreateNote",
+        "to": "p41@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t15",
+            "to": "t16",
+            "access": "Allow",
+            "rule": "r7"
+          },
+          {
+            "from": "t15",
+            "to": "t17",
+            "access": "Allow",
+            "rule": "r7"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/CreateNote",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t15",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "r6"
+          },
+          {
+            "from": "t15",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "r6"
+          },
+          {
+            "from": "t15",
+            "to": "t23",
+            "access": "Allow",
+            "rule": "r6"
+          }
+        ]
+      },
+      {
+        "from": "p44@Features/Notes/Slices/CreateNote",
+        "to": "p42@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t15",
+            "to": "t18",
+            "access": "Allow",
+            "rule": "r12"
+          }
+        ]
+      },
+      {
+        "from": "p39@Features/Notes/Presenters",
+        "to": "p41@Features/Notes/Slices/ListNotes",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t19",
+            "to": "t10",
+            "access": "Allow",
+            "rule": "r4"
+          },
+          {
+            "from": "t20",
+            "to": "t8",
+            "access": "Allow",
+            "rule": "r4"
+          },
+          {
+            "from": "t20",
+            "to": "t9",
+            "access": "Allow",
+            "rule": "r4"
+          },
+          {
+            "from": "t20",
+            "to": "t10",
+            "access": "Allow",
+            "rule": "r4"
+          }
+        ]
+      },
+      {
+        "from": "p39@Features/Notes/Presenters",
+        "to": "p41@Features/Notes/Slices/CreateNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t20",
+            "to": "t16",
+            "access": "Allow",
+            "rule": "r4"
+          },
+          {
+            "from": "t20",
+            "to": "t17",
+            "access": "Allow",
+            "rule": "r4"
+          }
+        ]
+      },
+      {
+        "from": "p39@Features/Notes/Presenters",
+        "to": "p41@Features/Notes/Slices/DeleteNote",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t20",
+            "to": "t12",
+            "access": "Allow",
+            "rule": "r4"
+          },
+          {
+            "from": "t20",
+            "to": "t13",
+            "access": "Allow",
+            "rule": "r4"
+          }
+        ]
+      },
+      {
+        "from": "p38@Features/Notes/Infrastructure",
+        "to": "p36@Features/Notes/Domain",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t21",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "r2"
+          },
+          {
+            "from": "t21",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "r2"
+          },
+          {
+            "from": "t22",
+            "to": "t24",
+            "access": "Allow",
+            "rule": "r2"
+          },
+          {
+            "from": "t22",
+            "to": "t25",
+            "access": "Allow",
+            "rule": "r2"
+          }
+        ]
+      },
+      {
+        "from": "p19@App/Views",
+        "to": "p39@Features/Notes/Presenters",
+        "access": "Allow",
+        "uses": [
+          {
+            "from": "t29",
+            "to": "t20",
+            "access": "Allow",
+            "rule": "r17"
+          },
+          {
+            "from": "t30",
+            "to": "t20",
+            "access": "Allow",
+            "rule": "r17"
+          },
+          {
+            "from": "t30",
+            "to": "t19",
+            "access": "Allow",
+            "rule": "r17"
+          },
+          {
+            "from": "t31",
+            "to": "t20",
+            "access": "Allow",
+            "rule": "r17"
+          }
+        ]
+      }
+    ],
+    "findings": []
+  }
+}

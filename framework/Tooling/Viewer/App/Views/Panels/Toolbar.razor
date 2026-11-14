@@ -1,0 +1,20 @@
+@inherits PresenterComponent<GraphPresenter>
+<div class="toolbar">
+    @foreach (var kind in GraphKind.All)
+    {
+        <button class="@(kind == Graph.Kind ? "on" : "")" @onclick="() => Graph.ShowKind(kind)">View: @kind.Name</button>
+    }
+    @foreach (var shape in Graph.Shapes)
+    {
+        <button class="@(shape == Graph.Shape ? "on" : "")" @onclick="() => Graph.UseShape(shape)">Shape: @shape</button>
+    }
+    <button class="@(Graph.Editing ? "on" : "")" @onclick="Graph.ToggleEditing">Edit: drag nodes, draw links</button>
+    <button @onclick="Graph.ResetView">Reset view</button>
+    <button @onclick="Graph.Discard">Discard changes</button>
+    <button @onclick="Graph.ExportChanges">Export changes</button>
+    <span class="changes">@Graph.RuleChangeCount rule changes, @Graph.LinkChangeCount what-if links</span>
+</div>
+
+@code {
+    private GraphPresenter Graph => Presenter;
+}

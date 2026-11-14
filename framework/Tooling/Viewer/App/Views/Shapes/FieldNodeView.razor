@@ -1,0 +1,38 @@
+@inherits ShapeView
+@attribute [NodeShape("Fields")]
+<g class="card" data-node="@Card.Id" opacity="@(Dimmed ? "0.35" : "1")" transform="@Svg.Format($"translate({At.X},{At.Y})")">
+    <rect x="@Svg.N(Card.X)" y="@Svg.N(Card.Y)" width="@Svg.N(Card.W)" height="@Svg.N(Card.H)" rx="10" fill="#fff" stroke="#e1e4eb" filter="url(#card-shadow)" />
+    <g class="@(Edit ? "head grab" : "head")" @onpointerdown="e => Down(new Target(Card.Id, null), e)" @onpointerdown:stopPropagation
+       @onpointerup="e => Up(new Target(Card.Id, null), e)" @onpointerup:stopPropagation>
+        <path d="@HeaderPath" fill="@Color" fill-opacity="@(SelectedRow == "*" ? "0.22" : "0.1")" />
+        <rect x="@Svg.N(Card.X + 10)" y="@Svg.N(Card.Y + 8)" width="@Svg.N(Theme.TagWidth(Card.Layer))" height="18" rx="4" fill="@Color" />
+        <text x="@Svg.N(Card.X + 16)" y="@Svg.N(Card.Y + 21)" font-size="10" font-weight="600" fill="#fff" letter-spacing="0.06em">@Card.Layer.ToUpperInvariant()</text>
+        <Badge Text="@Card.Group" Right="Card.X + Card.W - 8" Y="Card.Y + 8" />
+        @if (Edit)
+        {
+            @foreach (var port in Card.Ports.Where(p => p.RowId is null))
+            {
+                <PortDot Card="Card" Port="port" Edit OnDown="OnDown" OnUp="OnUp" />
+            }
+        }
+    </g>
+    @foreach (var row in Card.Rows)
+    {
+        var y = Card.Y + row.Y;
+        <g class="row" @key="row.Id" @onpointerdown="e => Down(new Target(Card.Id, row.Id), e)" @onpointerdown:stopPropagation
+           @onpointerup="e => Up(new Target(Card.Id, row.Id), e)" @onpointerup:stopPropagation>
+            <rect x="@Svg.N(Card.X + 1)" y="@Svg.N(y)" width="@Svg.N(Card.W - 2)" height="@Svg.N(row.H)" fill="@(SelectedRow == row.Id ? "#eaf1ff" : "transparent")" />
+            <line x1="@Svg.N(Card.X)" y1="@Svg.N(y)" x2="@Svg.N(Card.X + Card.W)" y2="@Svg.N(y)" stroke="#eceef3" />
+            <RowIcon Role="@(row.More ? "more" : row.Role)" X="Card.X + 12" Y="y + 8" Color="@(row.More ? "#9aa2b2" : "#3b4357")" />
+            <text x="@Svg.N(Card.X + 32)" y="@Svg.N(y + 18)" font-size="12.5" fill="@(row.More ? "#9aa2b2" : "#1d2433")">@row.Label</text>
+            @foreach (var port in Card.Ports.Where(p => p.RowId == row.Id))
+            {
+                <PortDot Card="Card" Port="port" Edit="Edit" OnDown="OnDown" OnUp="OnUp" />
+            }
+        </g>
+    }
+</g>
+
+@code {
+    private string HeaderPath => Svg.Format($"M{Card.X},{Card.Y + Card.Header}V{Card.Y + 10}a10,10 0 0 1 10,-10H{Card.X + Card.W - 10}a10,10 0 0 1 10,10V{Card.Y + Card.Header}Z");
+}

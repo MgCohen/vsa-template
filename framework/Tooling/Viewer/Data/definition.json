@@ -1,0 +1,1083 @@
+{
+  "$schema": "architecture-definition.v1.json",
+  "version": 1,
+  "root": "",
+  "options": {
+    "defaultPermission": "Deny",
+    "boundary": "Closed",
+    "useSameConcept": true,
+    "depth": "WithChildren",
+    "access": "Public"
+  },
+  "parts": [
+    {
+      "concept": "VSA.Architecture.Vsa.Framework, VSA.Architecture.Vsa",
+      "group": false,
+      "folder": "Framework",
+      "depth": null,
+      "access": null,
+      "boundary": null,
+      "types": [],
+      "children": [
+        {
+          "concept": "VSA.Architecture.Vsa.Core, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Core",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": [
+            {
+              "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Domain",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Infrastructure, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Infrastructure",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Presenters, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Presenters",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Contracts",
+              "depth": "Self",
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": [
+                {
+                  "concept": "VSA.Architecture.Vsa.Contracts\u002BRequests, VSA.Architecture.Vsa",
+                  "group": false,
+                  "folder": "Requests",
+                  "depth": null,
+                  "access": null,
+                  "boundary": null,
+                  "types": [
+                    "VSA.Contracts.Requests.IRoutedRequest, VSA.Contracts.Requests",
+                    "VSA.Contracts.Requests.IResponse, VSA.Contracts.Requests"
+                  ],
+                  "children": []
+                },
+                {
+                  "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+                  "group": false,
+                  "folder": "Events",
+                  "depth": null,
+                  "access": null,
+                  "boundary": null,
+                  "types": [
+                    "VSA.Contracts.Events.IntegrationEvent, VSA.Contracts.Events"
+                  ],
+                  "children": []
+                },
+                {
+                  "concept": "VSA.Architecture.Vsa.Contracts\u002BCommands, VSA.Architecture.Vsa",
+                  "group": false,
+                  "folder": "Commands",
+                  "depth": null,
+                  "access": null,
+                  "boundary": null,
+                  "types": [
+                    "VSA.Contracts.Commands.ICommand\u00601, VSA.Contracts.Commands"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Handlers",
+              "depth": "Self",
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": [
+                {
+                  "concept": "VSA.Architecture.Vsa.Handlers\u002BRequests, VSA.Architecture.Vsa",
+                  "group": false,
+                  "folder": "Requests",
+                  "depth": null,
+                  "access": null,
+                  "boundary": null,
+                  "types": [
+                    "VSA.Handlers.Requests.RequestHandler\u00602, VSA.Handlers.Requests"
+                  ],
+                  "children": []
+                },
+                {
+                  "concept": "VSA.Architecture.Vsa.Handlers\u002BEvents, VSA.Architecture.Vsa",
+                  "group": false,
+                  "folder": "Events",
+                  "depth": null,
+                  "access": null,
+                  "boundary": null,
+                  "types": [
+                    "VSA.Handlers.Events.IntegrationEventHandler\u00601, VSA.Handlers.Events"
+                  ],
+                  "children": []
+                },
+                {
+                  "concept": "VSA.Architecture.Vsa.Handlers\u002BCommands, VSA.Architecture.Vsa",
+                  "group": false,
+                  "folder": "Commands",
+                  "depth": null,
+                  "access": null,
+                  "boundary": null,
+                  "types": [
+                    "VSA.Handlers.Commands.CommandHandler\u00602, VSA.Handlers.Commands"
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Views, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Views",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Composition, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Composition",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Host, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Host",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "VSA.Architecture.Vsa.App, VSA.Architecture.Vsa",
+      "group": false,
+      "folder": "App",
+      "depth": null,
+      "access": null,
+      "boundary": null,
+      "types": [],
+      "children": [
+        {
+          "concept": "VSA.Architecture.Vsa.Host, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Host",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Views, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Views",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": []
+        }
+      ]
+    },
+    {
+      "concept": "VSA.Architecture.Vsa.Plugin, VSA.Architecture.Vsa",
+      "group": true,
+      "folder": "Plugins",
+      "depth": null,
+      "access": null,
+      "boundary": "Open",
+      "types": [],
+      "children": [
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": null,
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [
+            "VSA.Module.Plugin, VSA.Module"
+          ],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Domain",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": [
+            {
+              "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Shared",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            }
+          ]
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Infrastructure, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Infrastructure",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Presenters, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Presenters",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Contracts",
+          "depth": "Self",
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": [
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts\u002BRequests, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Requests",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Contracts.Requests.IRoutedRequest, VSA.Contracts.Requests",
+                "VSA.Contracts.Requests.IResponse, VSA.Contracts.Requests"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Events",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Contracts.Events.IntegrationEvent, VSA.Contracts.Events"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts\u002BCommands, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Commands",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Contracts.Commands.ICommand\u00601, VSA.Contracts.Commands"
+              ],
+              "children": []
+            }
+          ]
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Handlers",
+          "depth": "Self",
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": [
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers\u002BRequests, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Requests",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Handlers.Requests.RequestHandler\u00602, VSA.Handlers.Requests"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers\u002BEvents, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Events",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Handlers.Events.IntegrationEventHandler\u00601, VSA.Handlers.Events"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers\u002BCommands, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Commands",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Handlers.Commands.CommandHandler\u00602, VSA.Handlers.Commands"
+              ],
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa",
+      "group": true,
+      "folder": "Features",
+      "depth": null,
+      "access": null,
+      "boundary": null,
+      "types": [],
+      "children": [
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": null,
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [
+            "VSA.Module.Module, VSA.Module"
+          ],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Domain",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": [
+            {
+              "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": "Shared",
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [],
+              "children": []
+            }
+          ]
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Infrastructure, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Infrastructure",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Presenters, VSA.Architecture.Vsa",
+          "group": false,
+          "folder": "Presenters",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Slice, VSA.Architecture.Vsa",
+          "group": true,
+          "folder": "Slices",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "types": [],
+          "children": [
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts\u002BRequests, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": null,
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Contracts.Requests.IRoutedRequest, VSA.Contracts.Requests",
+                "VSA.Contracts.Requests.IResponse, VSA.Contracts.Requests"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": null,
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Contracts.Events.IntegrationEvent, VSA.Contracts.Events"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Contracts\u002BCommands, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": null,
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Contracts.Commands.ICommand\u00601, VSA.Contracts.Commands"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers\u002BRequests, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": null,
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Handlers.Requests.RequestHandler\u00602, VSA.Handlers.Requests"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers\u002BEvents, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": null,
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Handlers.Events.IntegrationEventHandler\u00601, VSA.Handlers.Events"
+              ],
+              "children": []
+            },
+            {
+              "concept": "VSA.Architecture.Vsa.Handlers\u002BCommands, VSA.Architecture.Vsa",
+              "group": false,
+              "folder": null,
+              "depth": null,
+              "access": null,
+              "boundary": null,
+              "types": [
+                "VSA.Handlers.Commands.CommandHandler\u00602, VSA.Handlers.Commands"
+              ],
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Infrastructure, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Infrastructure, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers, VSA.Architecture.Vsa",
+          "depth": "Self",
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts, VSA.Architecture.Vsa",
+          "depth": "Self",
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Presenters, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BRequests, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BRequests, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BCommands, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BRequests, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BEvents, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BCommands, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BCommands, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Infrastructure, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BRequests, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BRequests, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Plugin, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Denies",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Plugin, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ],
+      "verb": "Denies",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain, VSA.Architecture.Vsa",
+          "depth": "Self",
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "InOther",
+              "concept": "VSA.Architecture.Vsa.Plugin, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "InOther",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Presenters, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Domain\u002BShared, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "InOther",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BRequests, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BEvents, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Handlers\u002BCommands, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BCommands, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": "Open",
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Contracts\u002BEvents, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": "Open",
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Core, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Plugin, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Denies",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Plugin, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Module, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": [
+            {
+              "kind": "Under",
+              "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa"
+            }
+          ]
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Feature, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": "Internal",
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Host, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Composition, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        },
+        {
+          "concept": "VSA.Architecture.Vsa.Core, VSA.Architecture.Vsa",
+          "depth": "Self",
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "concept": "VSA.Architecture.Vsa.Views, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ],
+      "verb": "Uses",
+      "to": [
+        {
+          "concept": "VSA.Architecture.Vsa.Presenters, VSA.Architecture.Vsa",
+          "depth": null,
+          "access": null,
+          "boundary": null,
+          "filters": []
+        }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@ public abstract partial class ArchitectureDefinition {
             if (root is not null) {
                 return root;
             }
-            root = new Root(rootPath);
+            root = new Root(RootPath);
             Define(root);
             CheckShared(root);
             return root;
@@ -36,8 +36,8 @@ public abstract partial class ArchitectureDefinition {
         AddSameConcept(all);
 
         var book = new RuleBook(Root);
-        foreach (var concept in Parts().Select(p => p.Concept!).GroupBy(l => l.GetType()).Select(g => g.First())) {
-            concept.Rules(new ConceptRules(concept.GetType(), book.Rules));
+        foreach (var concept in Parts().Select(p => p.Concept!).GroupBy(l => l.Identity).Select(g => g.First())) {
+            concept.Rules(new ConceptRules(concept.Identity, book.Rules));
         }
         Rules(book);
 
@@ -47,6 +47,8 @@ public abstract partial class ArchitectureDefinition {
         FindConflicts(all);
         return pairs = all;
     }
+
+    protected virtual string RootPath => rootPath;
 
     public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
 
@@ -86,19 +88,19 @@ public abstract partial class ArchitectureDefinition {
         var parts = new List<string>();
         foreach (var filter in entry.Filters) {
             switch (filter.Kind) {
-                case "Under":
+                case FilterKind.Under:
                     if (!to.Under(filter.Target)) {
                         return null;
                     }
                     break;
-                case "InSame":
+                case FilterKind.InSame:
                     var own = to.Groups.FirstOrDefault(i => i.Is(filter.Target));
                     if (own is null || !own.Holds(from)) {
                         return null;
                     }
                     parts.Add($"same {own.Name}");
                     break;
-                case "InOther":
+                case FilterKind.InOther:
                     var other = to.Groups.FirstOrDefault(i => i.Is(filter.Target));
                     if (other is null || !other.Parent!.Holds(from)) {
                         return null;
@@ -126,7 +128,7 @@ public abstract partial class ArchitectureDefinition {
         }
         var count = 0;
         foreach (var from in Parts()) {
-            foreach (var to in Parts().Where(t => t.Concept!.GetType() == from.Concept!.GetType())) {
+            foreach (var to in Parts().Where(t => t.Concept!.Identity == from.Concept!.Identity)) {
                 all.Add(new PartRule(from, to, ApplyBoundaries(from, to, "always", null), Permission.Allow, "same concept", "same concept", to.Access ?? Options.Access));
                 count++;
             }
@@ -173,7 +175,7 @@ public abstract partial class ArchitectureDefinition {
         }
         var terms = condition == "always" ? new List<string>() : [.. condition.Split(", ")];
         foreach (var group in to.Groups.Reverse()) {
-            if (entry?.Filters.Any(f => f.Kind == "InOther" && group.Is(f.Target)) == true) {
+            if (entry?.Filters.Any(f => f.Kind == FilterKind.InOther && group.Is(f.Target)) == true) {
                 break;
             }
             if ((group.Boundary ?? Options.Boundary) == Boundary.Closed && from.Groups.Contains(group) && !terms.Contains($"same {group.Name}")) {
@@ -187,7 +189,7 @@ public abstract partial class ArchitectureDefinition {
         foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts().Any(p => p.Is(t)))) {
             throw new InvalidOperationException($"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
         }
-        foreach (var filter in entry.Filters.Where(f => f.Kind != "Under" && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
+        foreach (var filter in entry.Filters.Where(f => f.Kind != FilterKind.Under && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
             throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a concept that AddGroup adds.");
         }
     }

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <!-- The root project of the viewer app. It compiles the app, its module and its views. -->
+  <PropertyGroup>
+    <RootNamespace>App</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The sample input of the viewer (docs/viewer.md). The module reads it from Data/ next to the app. -->
+    <Content Update="Data/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Host/VSA.Host.csproj" />
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Views/VSA.Views.csproj" />
+    <!-- The viewer reads architecture.json with the shared model (docs/architecture-data.md). -->
+    <ProjectReference Include="$(VsaFrameworkSourceDir)Engine/Data/VSA.Architecture.Data.csproj" />
+  </ItemGroup>
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

@@ -4,6 +4,7 @@
        The engine app (engine/) runs it. It has no test framework. -->
   <ItemGroup>
     <ProjectReference Include="../Definition/VSA.Architecture.csproj" />
+    <ProjectReference Include="../Data/VSA.Architecture.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="TngTech.ArchUnitNET" />

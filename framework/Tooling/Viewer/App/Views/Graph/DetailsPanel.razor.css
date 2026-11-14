@@ -1,0 +1,6 @@
+.inspect { font-size: 13px; color: #66676b; padding: 8px 12px; border-top: 1px solid #d4d3cc; min-height: 38px; max-height: 30vh; overflow: auto; }
+.inspect strong { color: #1c1d1f; }
+.inspect code { font: 12px ui-monospace, monospace; }
+.inspect .deny { color: #c4372f; }
+.inspect .unchecked { color: #6b7385; font-style: italic; }
+.inspect button { font-size: 11px; margin-left: 6px; padding: 1px 6px; }

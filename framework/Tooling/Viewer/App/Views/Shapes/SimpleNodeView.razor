@@ -1,0 +1,17 @@
+@inherits ShapeView
+@attribute [NodeShape("Simple")]
+<g class="card" data-node="@Card.Id" opacity="@(Dimmed ? "0.35" : "1")" transform="@Svg.Format($"translate({At.X},{At.Y})")">
+    <rect x="@Svg.N(Card.X)" y="@Svg.N(Card.Y)" width="@Svg.N(Card.W)" height="@Svg.N(Card.H)" rx="10" fill="#fff"
+          stroke="@(SelectedRow is null ? "#e1e4eb" : Color)" filter="url(#card-shadow)" />
+    <g class="@(Edit ? "head grab" : "head")" @onpointerdown="e => Down(new Target(Card.Id, null), e)" @onpointerdown:stopPropagation
+       @onpointerup="e => Up(new Target(Card.Id, null), e)" @onpointerup:stopPropagation>
+        <rect x="@Svg.N(Card.X)" y="@Svg.N(Card.Y)" width="@Svg.N(Card.W)" height="@Svg.N(Card.H)" rx="10" fill="@Color" fill-opacity="@(SelectedRow is null ? "0.06" : "0.18")" />
+        <rect x="@Svg.N(Card.X + 10)" y="@Svg.N(Card.Y + 9)" width="@Svg.N(Theme.TagWidth(Card.Layer))" height="18" rx="4" fill="@Color" />
+        <text x="@Svg.N(Card.X + 16)" y="@Svg.N(Card.Y + 22)" font-size="10" font-weight="600" fill="#fff" letter-spacing="0.06em">@Card.Layer.ToUpperInvariant()</text>
+        <text x="@Svg.N(Card.X + 12)" y="@Svg.N(Card.Y + 46)" font-size="13" font-weight="600" fill="#1d2433">@Card.Group</text>
+        @foreach (var port in Card.Ports)
+        {
+            <PortDot Card="Card" Port="port" Edit="Edit" OnDown="OnDown" OnUp="OnUp" />
+        }
+    </g>
+</g>

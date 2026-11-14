@@ -3,5 +3,6 @@ using VSA.Contracts.Commands;
 
 namespace Engine.Slices.RunEngine;
 
-public sealed record RunEngineCommand(string Root, string Bin, string Mode = "Error", string Skip = "", bool FailFast = false)
+public sealed record RunEngineCommand(string Root, string Bin, string Mode = "Error", string Skip = "", bool FailFast = false,
+    string Export = "")
     : IConsoleCommand<ReportResult>;

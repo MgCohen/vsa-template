@@ -1,0 +1,6 @@
+.export { position: fixed; top: 84px; right: 14px; bottom: 70px; width: 620px; z-index: 3; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 1px solid #d4d3cc; border-radius: 8px; padding: 10px; font: 12px "IBM Plex Sans", system-ui, sans-serif; box-shadow: 0 4px 16px rgba(29, 36, 51, 0.12); }
+.export .bar { display: flex; gap: 8px; align-items: center; }
+.export button, .export .download { font: inherit; color: #1c1d1f; border: 1px solid #d4d3cc; border-radius: 6px; background: #fff; padding: 2px 8px; cursor: pointer; text-decoration: none; }
+.export pre { margin: 0; padding: 8px; background: #f4f5f8; border-radius: 6px; overflow: auto; font: 11.5px ui-monospace, monospace; white-space: pre; }
+.export .json { flex: 3; }
+.export .code { flex: 1; }

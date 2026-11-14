@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The architecture data: definition.json (a definition as data, its export and JsonDefinition) and
+       architecture.json (the resolved app for the viewer). No engine and no ArchUnitNET (docs/architecture-data.md). -->
+  <ItemGroup>
+    <ProjectReference Include="../Definition/VSA.Architecture.csproj" />
+  </ItemGroup>
+</Project>

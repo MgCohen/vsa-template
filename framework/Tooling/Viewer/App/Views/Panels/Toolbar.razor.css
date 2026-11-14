@@ -1,0 +1,4 @@
+.toolbar { position: fixed; top: 10px; right: 14px; z-index: 2; display: flex; gap: 6px; }
+.toolbar button { font: 12px "IBM Plex Sans", system-ui, sans-serif; color: #1c1d1f; background: #fff; border: 1px solid #d4d3cc; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.toolbar button.on { background: #2b62d9; border-color: #2b62d9; color: #fff; }
+.toolbar .changes { font: 12px "IBM Plex Sans", system-ui, sans-serif; color: #66676b; align-self: center; }
