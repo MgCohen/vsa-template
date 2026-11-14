@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The VSA architecture definition: the VSA layers and rules. It uses only the definition API, so the runtime of an app
+       can reference it (VsaApp in VSA.Host). It has no test framework, no ArchUnitNET and no Mono.Cecil. -->
+  <ItemGroup>
+    <ProjectReference Include="../../../Engine/Definition/VSA.Architecture.csproj" />
+    <ProjectReference Include="../Module/VSA.Module.csproj" />
+    <ProjectReference Include="../Contracts/Requests/VSA.Contracts.Requests.csproj" />
+    <ProjectReference Include="../Contracts/Events/VSA.Contracts.Events.csproj" />
+    <ProjectReference Include="../Contracts/Commands/VSA.Contracts.Commands.csproj" />
+    <ProjectReference Include="../Handlers/Requests/VSA.Handlers.Requests.csproj" />
+    <ProjectReference Include="../Handlers/Events/VSA.Handlers.Events.csproj" />
+    <ProjectReference Include="../Handlers/Commands/VSA.Handlers.Commands.csproj" />
+  </ItemGroup>
+</Project>

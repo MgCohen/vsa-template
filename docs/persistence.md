@@ -1,6 +1,6 @@
 # Persistence
 
-VSA has one persistence port, `IRepository<T, TId>` (`framework/Core/Infrastructure/Core/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
+VSA has one persistence port, `IRepository<T, TId>` (`framework/Architectures/Vsa/Infrastructure/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
 
 ## The port
 
@@ -17,7 +17,7 @@ VSA has one persistence port, `IRepository<T, TId>` (`framework/Core/Infrastruct
 
 ```csharp
 public sealed class NotesModule : Module {
-    public override void Configure(ModuleBuilder module) {
+    public override void Configure(AnchorBuilder module) {
         module.Services.AddSingleton<NoteStore>();
         module.Services.AddScoped<IRepository<Note, NoteId>, NoteRepository>();
     }

@@ -9,6 +9,7 @@ using Tests.Shared;
 using VSA.Composition;
 using VSA.Contracts.Commands;
 using VSA.Module;
+using VSA.Kernel;
 
 namespace Engine.Tests;
 
@@ -21,7 +22,8 @@ public sealed class RunEngineTests {
     public void The_scan_finds_each_module_of_the_one_engine_assembly() {
         var engine = typeof(StepsPlugin).Assembly;
 
-        var modules = AppScan.ModuleRoots().Where(root => root.Assembly == engine).Select(root => root.Name);
+        var modules = AnchorScan.InOrder(AnchorScan.Roots(typeof(VSA.Module.Module)).Where(root => root.Assembly == engine).Select(root => root.Create()))
+            .Select(module => module.Name);
 
         Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules" }));
     }
@@ -63,7 +65,7 @@ public sealed class RunEngineTests {
         VSA.Module.Module[] modules = [
             new StepsPlugin(), new EngineModule(), new DefinitionModule(), new RulesModule(), new ReportModule(),
         ];
-        using var host = VsaBuilder.Create().Modules(modules).UseGenericHost().Build();
+        using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
         await using var scope = host.Services.CreateAsyncScope();
         var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);

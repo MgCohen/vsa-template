@@ -1,6 +1,6 @@
-# Composition: VsaBuilder and its hosts
+# Composition: the kernel, the app builder and the hosts
 
-An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaDefinition>` uses `VsaBuilder`, and its `Host()` method selects the host. A console app can also use `VsaBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaDefinition>` uses `AppBuilder` (VSA.Kernel), and its `Host()` method selects the host. A console app can also use `AppBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Entry point
 
@@ -10,11 +10,11 @@ return new MyApp().Run(args);
 
 // Web: App/Host/MyApp.cs
 public class MyApp : VsaApp<VsaDefinition> {
-    protected override IVsaHost Host() => new WebVsaHost();
+    protected override IAppHost Host() => new WebVsaHost();
 }
 
 // Console
-await VsaBuilder.Create(args).UseGenericHost().Build().RunAsync();
+await AppBuilder.Create(args).ScanFor(typeof(Module)).UseGenericHost().Build().RunAsync();
 
 // Unity, or any app that owns its own start: no host
 var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
@@ -24,20 +24,21 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 |---|---|
 | `Create(args)` | Makes the builder. `args` go to the configuration of the host |
 | `UseWebHost()` (VSA.Host) | ASP.NET Core: the HTTP API of the requests, and the views |
-| `UseGenericHost()` (VSA.Composition) | The .NET Generic Host for a console app: no ASP.NET Core |
-| No host call | `GenericVsaHost` |
-| `Modules(...)` | Optional. Gives the modules. With no call, `AppScan` finds them. Tests use it |
+| `UseGenericHost()` (VSA.Kernel) | The .NET Generic Host for a console app: no ASP.NET Core |
+| No host call | `GenericAppHost` |
+| `ScanFor(type)` | The anchor base that the scan finds. Default: `Anchor`. VSA: `Module` |
+| `Anchors(...)`, `Modules(...)` | Optional. Gives the anchors. With no call, `AnchorScan` finds them. Tests use it |
 | `Services(...)` | Optional. App registrations, before the modules |
 | `Build()` | Returns the standard `IHost`: `RunAsync`, `StartAsync`, `StopAsync`, `Services` |
 
 ## The app class
 
-`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TDefinition>` is in VSA.Composition, a portable layer, so the same app class works on all hosts. `TDefinition` is the architecture definition of the app, for example `VsaDefinition` or `EngineDefinition`.
+`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TDefinition>` (VSA.Composition) inherits `App` (VSA.Kernel). Both are portable, so the same app class works on all hosts. `App` has the run, the host and the builder steps. `VsaApp` adds the definition (`Architecture`), `Modules()` and the scan for `Module`. `TDefinition` is the architecture definition of the app, for example `VsaDefinition` or `EngineDefinition`.
 
 ```
-new MyApp().Run(args)                 in VsaApp<TDefinition>
+new MyApp().Run(args)                 in App
 └─ Start(args)
-   ├─ VsaBuilder.Create(args)         with Host(), Keys(), Services and Modules()
+   ├─ AppBuilder.Create(args)         with Host(), Keys(), Services, then Configure(builder): Modules() or ScanFor(Module)
    ├─ SelectedHost()                  the host of Host()
    ├─ Build()                         IHost
    └─ host.Run(app)                   web, generic: waits for the stop. Unity: returns
@@ -47,8 +48,8 @@ new MyApp().Run(args)                 in VsaApp<TDefinition>
 |---|---|---|
 | `Start(string[] args)` | Builds the app, then the host runs it. Returns the exit code of the host | Change the run, or the exit code |
 | `Build(string[] args)` | Builds the `IHost` from the builder steps | Change the build |
-| `Host()` | `new GenericVsaHost()` | Select the host: `WebVsaHost`, `ConsoleVsaHost`, or the Unity host |
-| `Modules()` | `null`: `AppScan` finds the modules | Give the modules, for example in a test |
+| `Host()` | `new GenericAppHost()` | Select the host: `WebVsaHost`, `ConsoleVsaHost`, or the Unity host |
+| `Modules()` | `null`: `AnchorScan` finds the modules | Give the modules, for example in a test |
 | `Keys()` | `new ConstraintKeys()` | Give the keys of the open module types |
 | `Services(IServiceCollection)` | No registrations | Add app registrations |
 | `Architecture` | `new TDefinition()` | Set the Unity folders: `UnityApp`, `UnitySource` (see `architecture-engine.md`) |
@@ -69,7 +70,7 @@ With no host, the app calls `AddVsa` on its own `IServiceCollection`:
 
 | Call | Use |
 |---|---|
-| `services.AddVsa(args)` | Adds the VSA registrations to `services`. `AppScan` finds the modules |
+| `services.AddVsa(args)` | Adds the VSA registrations to `services`. `AnchorScan` finds the modules |
 | `services.AddVsa(args, vsa => ...)` | The same, with the builder steps `Modules(...)` and `Services(...)` |
 
 If `services` already has an `IConfiguration` instance, `AddVsa` uses it. Else it reads `args`.
@@ -80,12 +81,12 @@ The app selects its host in `Host()`. The hosts are public classes:
 
 | Host | Package | Use |
 |---|---|---|
-| `GenericVsaHost` | VSA.Composition | The default. The .NET Generic Host |
+| `GenericAppHost` | VSA.Kernel | The default. The .NET Generic Host |
 | `ConsoleVsaHost` | VSA.Composition | A console app with one entry command (`IConsoleCommand<TResult>`) |
 | `WebVsaHost` | VSA.Host | ASP.NET Core: the HTTP API of the requests, and the views |
 | The Unity host | `vsa-unity` | A Unity app. `Run` returns |
 
-| `IVsaHost` member | Use |
+| `IAppHost` member | Use |
 |---|---|
 | `CreateBuilder`, `Install`, `Build` | Make the `IHost` |
 | `Run(IHost app)` | Starts the app. The host selects if it waits for the stop or returns |
@@ -94,19 +95,19 @@ The app selects its host in `Host()`. The hosts are public classes:
 ## What Build does
 
 ```
-VsaBuilder.Build()
+AppBuilder.Build()
 ├─ host.CreateBuilder(args)        WebApplicationBuilder, or HostApplicationBuilder
-├─ AppScan.Modules()               only if the app gave no modules
+├─ AnchorScan.Anchors(base)        only if the app gave no anchors
 ├─ host.Install                    web: the request handlers to map, views
 ├─ Compose (the same as AddVsa)
 │  ├─ IConfiguration, AddLogging   only if the host did not add them
-│  ├─ VSA layer installers         events, commands, requests, in-process bus, presenters, module types
+│  ├─ AnchorScan.Installers()      each IInstaller: auto-register, pipeline, events, commands, requests, bus, presenters
 │  ├─ Services(...) callbacks      app registrations
-│  └─ Module.Configure             each module, last
+│  └─ Anchor.Configure             each anchor (module), last
 └─ host.Build                      web: Build, map one route for each request, map the views
 ```
 
-`Module.Configure` runs last, because a module can replace a default with `ModuleBuilder.Replace`. The order is inside `Compose` (internal), so an app cannot change it. `Build()` and `AddVsa` give the same VSA registrations.
+`Anchor.Configure` runs last, because a module can replace a default with `AnchorBuilder.Replace`. The order is inside `Compose`, so an app cannot change it. The installers have no order: each one adds its own services, and a test runs them in reverse order with the same result. `Build()` and `AddVsa` give the same VSA registrations.
 
 ## Definitions and transports
 
@@ -137,9 +138,9 @@ public interface IRoutedRequest {
 }
 ```
 
-## AppScan finds the parts of the app
+## AnchorScan finds the parts of the app
 
-`AppScan` reads 2 sources and keeps each assembly that references a given assembly:
+`AnchorScan` (VSA.Kernel) reads 2 sources and keeps each loaded assembly that references a given assembly:
 
 | Source | Finds |
 |---|---|
@@ -149,23 +150,25 @@ public interface IRoutedRequest {
 - The scan reads the metadata of a file with `System.Reflection.Metadata`. It loads only the files that reference the assembly.
 - A file that the runtime cannot load by name (not in `deps.json`) is not part of the app. The scan ignores it.
 - Each source finds nothing where it does not apply, so the scan has no Unity case.
+- The scan keeps each loaded copy of an assembly. A copy in a different load context (for example the app that the rule engine checks) has other types, so the type checks drop it.
 
 | Part | Scan for | Rule |
 |---|---|---|
-| Module root | A reference to `VSA.Module`, and the `VsaModule` metadata | One class that inherits `Module` (`ModuleRoot.CreateModule`) |
+| Anchor root | A reference to the assembly of the anchor base (`VSA.Module` for `Module`) | One class that inherits the base in each namespace (`AnchorRoot.Create`) |
+| Installer | A reference to `VSA.Kernel` | Each class that implements `IInstaller` |
 | Views root | A reference to `VSA.Views` | One component that inherits `ViewsRoot` |
 
-The module roots are in order: the plugin modules first, then by name. If the app has a views root, the views run in that process. Two views roots stop the build.
+The anchors are in order of `Anchor.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
 
 ## One discovery path
 
-`ModuleTypes` finds the types of the modules one time. Each installer reads the same result. It reads the root assembly and each layer assembly of a module, so a module that is one assembly (for example one Unity `.asmdef`) also works. Each send goes through a pipeline (`docs/handler-pipeline.md`).
+`AnchorTypes` finds the types of the anchors one time. Each installer reads the same result. It reads the root assembly and each layer assembly of a module, so a module that is one assembly (for example one Unity `.asmdef`) also works. Each send goes through a pipeline (`docs/handler-pipeline.md`).
 
 ```text
-ModuleTypes.Registered()
+AnchorTypes.Registered()
 ├─ each concrete class with [AutoRegister]     closed class: as it is
 │  (on the class, a base class or an interface) open class: closed for each type argument
-└─ ModuleTypeInstaller                         registers each type and each marked base
+└─ AutoRegisterInstaller                       registers each type and each marked base
    Command, request, event, presenter installers  add only the sender, the pipeline and the checks
 ```
 
@@ -179,11 +182,11 @@ The markers are in `VSA.Analyzers.Markers`. The same package has the stripping m
 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
-| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Module`, `VsaApp<TDefinition>` |
-| `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IVsaHost`, `IRunner`, and the internal `IEnvelopeFactory`, `IBeforeCall`, `IAfterCall` |
+| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Anchor`, `Module`, `App`, `VsaApp<TDefinition>` |
+| `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IAppHost`, `IInstaller`, `IRunner`, and the internal `IEnvelopeFactory`, `IBeforeCall`, `IAfterCall` |
 | `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>` |
 
-The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so VSA.Module uses the markers assembly in code.
+The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so VSA.Kernel uses the markers assembly in code.
 
 An IL2CPP player with stripping High also needs a `link.xml` that keeps the markers assembly. Without it, the linker removes `[AutoRegister]` from the bases, and the scan finds no handlers. The UPM package must ship this file:
 
@@ -224,12 +227,12 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 | No type argument fits | The open class gets no closed type. A send of that command fails with "has no handler". |
 | Owner | An installer can register a class first, for example a presenter with a factory. The installer step does not replace it. |
 
-`ModuleTypes` is a singleton service. `Implementations(typeof(TBase))` gives the registered types that derive from `TBase`, with that base as the service. A plugin reads its own types with it.
+`AnchorTypes` is a singleton service. `Implementations(typeof(TBase))` gives the registered types that derive from `TBase`, with that base as the service. A plugin reads its own types with it.
 
 The type argument source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, give the app another source:
 
 ```csharp
-await VsaBuilder.Create(args).Keys(new GeneratedKeys()).UseWebHost().Build().RunAsync();
+await AppBuilder.Create(args).ScanFor(typeof(Module)).Keys(new GeneratedKeys()).UseWebHost().Build().RunAsync();
 ```
 
 ### Checks
@@ -256,22 +259,26 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 ## Projects
 
 ```
-Module/              Module, Plugin, ModuleBuilder, ModuleRoot, ModuleTypes, ModuleTypeInstaller, AppScan, IKeySource, ConstraintKeys, MarkedTypes
-Handlers/Core/       PipelineBuilder, Pipelines, the runners, Validator, Before, After, PipelineInstaller
-Handlers/Events/     EventHandlerInstaller, InProcessEventPublisher
-Handlers/Commands/   CommandHandlerInstaller, InProcessCommandSender
-Handlers/Requests/   RequestHandler, RequestHandlerInstaller
-Presenters/          PresenterInstaller
-Views/               ViewsRoot, ViewsInstaller
-Composition/         VsaApp, VsaBuilder, VsaArchitecture, InProcessBus
-  Hosts/             IVsaHost, GenericVsaHost
-  Hosts/Console/     ConsoleVsaHost, ConsoleEntry, ConsoleExit
-  Factories/         IFactory, AddFactory
-Host/                UseWebHost, WebVsaHost, HttpApi, HttpRequestBinder
+framework/Kernel/                      App, AppBuilder, Anchor, AnchorBuilder, IInstaller, AutoRegisterInstaller
+  Hosting/                             IAppHost, GenericAppHost
+  Scan/                                AnchorScan, AnchorRoot, AnchorTypes, IKeySource, ConstraintKeys, MarkedTypes
+  Factories/                           IFactory, AddFactory
+framework/Components/Messages/
+  Handlers/                            PipelineBuilder, Pipelines, the runners, Validator, Before, After, PipelineInstaller
+framework/Architectures/Vsa/
+  Module/                              Module, Plugin, Module<TSettings>, Plugin<TSettings>
+  Handlers/Events/                     EventHandlerInstaller, InProcessEventPublisher
+  Handlers/Commands/                   CommandHandlerInstaller, InProcessCommandSender
+  Handlers/Requests/                   RequestHandler, RequestHandlerInstaller
+  Presenters/                          PresenterInstaller
+  Views/                               ViewsRoot, ViewsInstaller
+  Composition/                         VsaApp, the Modules and UseConsoleHost extensions, BusInstaller, InProcessBus
+    Hosts/Console/                     ConsoleVsaHost, ConsoleEntry, ConsoleExit
+  Host/                                UseWebHost, WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
-- `VsaArchitecture` (internal) holds the VSA choices: how to find the modules, the layer installers and their order. `VsaBuilder` calls it.
-- `IVsaHost` has 3 members: `CreateBuilder`, `Install` and `Build`. `GenericVsaHost` and `WebVsaHost` implement it.
+- The kernel knows no layer. Each layer project has one `IInstaller`, and the kernel finds it with `AnchorScan.Installers()`.
+- `IAppHost` has 3 members to make the `IHost`: `CreateBuilder`, `Install` and `Build`. `GenericAppHost`, `ConsoleVsaHost` and `WebVsaHost` implement it.
 
 ## The container
 
@@ -326,7 +333,7 @@ A simple factory resolves its services on each `Create`, from the scope that res
 
 ## Module settings
 
-`Module<TSettings>` binds `Modules:{Name}` to `TSettings` and checks it. Then it registers the instance as a singleton. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
+`Module<TSettings>` binds `{Section}:{Name}` to `TSettings` and checks it. The section of a module is `Modules` (`Anchor.Section`). Then it registers the instance as a singleton. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
 
 ## What each host gives
 
@@ -339,7 +346,7 @@ A simple factory resolves its services on each `Create`, from the scope that res
 
 ## Unity target
 
-`VSA.Composition`, `VSA.Architecture`, `VSA.Architecture.Vsa` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
+`VSA.Kernel`, `VSA.Composition`, `VSA.Architecture`, `VSA.Architecture.Vsa` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
 
 A Unity app calls `new MyApp().Run(args)` from the `VsaHost` component of the UPM package (repo `vsa-unity`). The Unity host of that package returns from `Run`, and it calls `Stop` when the app quits or the play mode stops. An app that owns its container calls `AddVsa` and builds the container, as below. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
 
@@ -373,7 +380,6 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 ## Open questions
 
 - Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
-- Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppScan` can read that list first.
-- IL2CPP check: the Unity check runs on Mono only. Run `AppScan` and `AddVsa` in an IL2CPP player build of `vsa-consumer-unity`.
-- Hosting DLLs in Unity: VSA.Composition references `Microsoft.Extensions.Hosting` for `GenericVsaHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.
-- Architecture definition: `VsaBuilder.Create(definition, args)` can make `VsaArchitecture` public, for other architectures.
+- Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AnchorScan` can read that list first.
+- IL2CPP check: the Unity check runs on Mono only. Run `AnchorScan` and `AddVsa` in an IL2CPP player build of `vsa-consumer-unity`.
+- Hosting DLLs in Unity: VSA.Kernel references `Microsoft.Extensions.Hosting` for `GenericAppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.

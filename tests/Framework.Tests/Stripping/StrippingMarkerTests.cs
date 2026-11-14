@@ -7,6 +7,7 @@ using VSA.Handlers.Events;
 using VSA.Handlers.Requests;
 using VSA.Module;
 using VSA.Presenters;
+using VSA.Kernel;
 
 namespace Framework.Tests.Stripping;
 
@@ -36,7 +37,7 @@ public sealed class StrippingMarkerTests {
 
     [TestCase(typeof(IAutoRegister))]
     [TestCase(typeof(ITypeArgument))]
-    [TestCase(typeof(IVsaHost))]
+    [TestCase(typeof(IAppHost))]
     [TestCase(typeof(IRunner))]
     public void An_interface_that_the_scan_reads_keeps_its_implementors(Type scannedInterface) {
         Assert.That(scannedInterface.IsDefined(typeof(RequireImplementorsAttribute), inherit: false), Is.True);
