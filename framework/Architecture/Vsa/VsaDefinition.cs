@@ -100,6 +100,8 @@ public class VsaDefinition : ArchitectureDefinition {
             .And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
 
+        rules.For<Handlers>().Under<Plugin>().Uses<Contracts>().And<Handlers>().And<Domain.Shared>();
+
         rules.For<Plugin>().Denies<Feature>();
         rules.For<Domain>().Under<Plugin>().Denies<Domain>(Depth.Self).InOther<Plugin>();
 

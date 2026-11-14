@@ -3,7 +3,7 @@ using Steps.Domain.Shared;
 using VSA.Contracts;
 using VSA.Handlers;
 
-namespace Engine.Slices.RunEngine;
+namespace Steps.Handlers;
 
 public sealed class MissingInput : Validator<IEngineStep> {
     public const string Code = "VSA3004";

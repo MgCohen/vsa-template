@@ -1,6 +1,6 @@
 using Steps.Domain.Shared;
 
-namespace Engine.Slices.RunEngine;
+namespace Steps.Handlers;
 
 public sealed class StepLog {
     readonly List<Finding> findings = [];

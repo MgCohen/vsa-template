@@ -643,7 +643,7 @@ Plugin/Handlers -> Framework/Core [any] Deny
 Plugin/Handlers -> Framework/Core/Domain [any] Deny
 Plugin/Handlers -> Framework/Core/Infrastructure [any] Deny
 Plugin/Handlers -> Framework/Core/Presenters [any] Deny
-Plugin/Handlers -> Framework/Core/Contracts [any] Deny
+Plugin/Handlers -> Framework/Core/Contracts [any] Allow Public
 Plugin/Handlers -> Framework/Core/Contracts/Contracts.Requests [any] Deny
 Plugin/Handlers -> Framework/Core/Contracts/Contracts.Events [any] Deny
 Plugin/Handlers -> Framework/Core/Contracts/Contracts.Commands [any] Deny
@@ -660,10 +660,10 @@ Plugin/Handlers -> App/Views [any] Deny
 Plugin/Handlers -> Plugin [any] Deny
 Plugin/Handlers -> Plugin/Module [any] Deny
 Plugin/Handlers -> Plugin/Domain [any] Deny
-Plugin/Handlers -> Plugin/Domain/Domain.Shared [any] Deny
+Plugin/Handlers -> Plugin/Domain/Domain.Shared [any] Allow Public
 Plugin/Handlers -> Plugin/Infrastructure [any] Deny
 Plugin/Handlers -> Plugin/Presenters [any] Deny
-Plugin/Handlers -> Plugin/Contracts [any] Deny
+Plugin/Handlers -> Plugin/Contracts [any] Allow Public
 Plugin/Handlers -> Plugin/Contracts/Contracts.Requests [any] Deny
 Plugin/Handlers -> Plugin/Contracts/Contracts.Events [any] Deny
 Plugin/Handlers -> Plugin/Contracts/Contracts.Commands [any] Deny
