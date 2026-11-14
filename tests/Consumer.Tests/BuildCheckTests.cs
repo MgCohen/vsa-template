@@ -20,11 +20,13 @@ public sealed class BuildCheckTests {
 
         var probe = Path.Combine(workspace.Src, "App", "Host", "Probe.cs");
         File.WriteAllText(probe, """
+            namespace App.Host;
+
             public static class Probe {
                 public static Notes.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
             }
             """);
-        var finding = $"{probe}(2,1): error VSA2001: Probe in Host";
+        var finding = $"{probe}(4,1): error VSA2001: Probe in Host";
 
         var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(build.Succeeded, Is.False, build.Output);
