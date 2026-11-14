@@ -49,5 +49,5 @@ sealed class DefinitionExport {
 
     static TermData TermOf(Entry entry) => new(
         Concept.Display(entry.Target), entry.Depth?.ToString(), entry.Access?.ToString(),
-        [.. entry.Filters.Select(f => new FilterData(f.Kind, Concept.Display(f.Target)))]);
+        [.. entry.Filters.Select(f => new FilterData(f.Kind.ToString(), Concept.Display(f.Target)))]);
 }

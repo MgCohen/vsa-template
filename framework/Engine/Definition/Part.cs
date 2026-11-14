@@ -24,7 +24,7 @@ public class Part {
     public bool IsExternal => Assembly is not null;
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
-    public string Name => Concept is null ? "(root)" : Concept.Display(Concept.GetType());
+    public string Name => Concept is null ? "(root)" : Concept.Display(Concept.Identity);
     public Depth? Depth => depth;
     public Access? Access => access;
     public Boundary? Boundary => boundary;
@@ -44,15 +44,14 @@ public class Part {
     }
 
 
-    public Part Add<T>() where T : Concept, new() {
-        var concept = new T();
-        return Attach(new Part(concept, concept is Anchor ? null : concept.Folder, this));
-    }
+    public Part Add<T>() where T : Concept, new() => Add(new T());
 
-    public Part AddGroup<T>(string? folder = null) where T : Concept, new() {
-        var concept = new T();
-        return Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true));
-    }
+    public Part Add(Concept concept) => Attach(new Part(concept, concept is Anchor ? null : concept.Folder, this));
+
+    public Part AddGroup<T>(string? folder = null) where T : Concept, new() => AddGroup(new T(), folder);
+
+    public Part AddGroup(Concept concept, string? folder = null) =>
+        Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true));
 
     public Part AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() {
         var part = AddGroup<T>(folder);
@@ -84,7 +83,7 @@ public class Part {
 
     public IEnumerable<Part> SelfAndAncestors() => new[] { this }.Concat(Ancestors());
 
-    public bool Is(Type concept) => Concept?.GetType() == concept;
+    public bool Is(Type concept) => Concept?.Identity == concept;
 
     internal IEnumerable<Part> Ancestors() {
         for (var p = Parent; p is not null; p = p.Parent) {

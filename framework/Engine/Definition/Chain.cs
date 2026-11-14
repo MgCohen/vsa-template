@@ -19,14 +19,14 @@ public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
         return Begin(typeof(T), depth, access, boundary);
     }
 
-    public TSelf Under<T>() where T : Concept => Filter("Under", typeof(T));
+    public TSelf Under<T>() where T : Concept => Filter(FilterKind.Under, typeof(T));
 
     internal TSelf Begin(Type concept, Depth? depth, Access? access = null, Boundary? boundary = null) {
         Entries.Add(new Entry(concept, depth, access, boundary));
         return (TSelf)this;
     }
 
-    internal TSelf Filter(string kind, Type concept) {
+    internal TSelf Filter(FilterKind kind, Type concept) {
         foreach (var entry in Entries.Skip(runStart)) {
             entry.Filters.Add(new Filter(kind, concept));
         }

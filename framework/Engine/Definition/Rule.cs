@@ -11,9 +11,9 @@ public abstract class Rule<TSelf> : Chain<TSelf>, IRuleEntries where TSelf : Rul
     string IRuleEntries.Source => Source;
     string IRuleEntries.Text => ToString();
 
-    public TSelf InSame<T>() where T : Concept => Filter("InSame", typeof(T));
+    public TSelf InSame<T>() where T : Concept => Filter(FilterKind.InSame, typeof(T));
 
-    public TSelf InOther<T>() where T : Concept => Filter("InOther", typeof(T));
+    public TSelf InOther<T>() where T : Concept => Filter(FilterKind.InOther, typeof(T));
 
     public override string ToString() =>
         $"{string.Join(" and ", From)} {(Permission == Permission.Allow ? "uses" : "denies")} {string.Join(" and ", Entries)}";
