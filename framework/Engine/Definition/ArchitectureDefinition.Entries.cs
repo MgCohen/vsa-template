@@ -9,4 +9,10 @@ public abstract partial class ArchitectureDefinition {
         Rules(book);
         return book.Rules;
     }
+
+    internal IReadOnlyList<IRuleEntries> DefinitionRules() {
+        var book = new RuleBook(Root);
+        Rules(book);
+        return book.Rules;
+    }
 }

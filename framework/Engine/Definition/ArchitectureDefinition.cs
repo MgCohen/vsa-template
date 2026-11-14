@@ -19,7 +19,7 @@ public abstract partial class ArchitectureDefinition {
             if (root is not null) {
                 return root;
             }
-            root = new Root(rootPath);
+            root = new Root(RootPath);
             Define(root);
             CheckShared(root);
             return root;
@@ -47,6 +47,8 @@ public abstract partial class ArchitectureDefinition {
         FindConflicts(all);
         return pairs = all;
     }
+
+    protected virtual string RootPath => rootPath;
 
     public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
 

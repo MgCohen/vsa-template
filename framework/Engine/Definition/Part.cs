@@ -19,6 +19,7 @@ public class Part {
     public Part? Parent { get; }
     public bool IsGroup { get; }
     public bool HasFolder => folder is not null;
+    internal string? FolderName => folder;
     public string? Assembly => Concept is External external ? external.Assembly
         : Parent?.Assembly is { } parent ? $"{parent}.{folder}" : null;
     public bool IsExternal => Assembly is not null;
@@ -94,6 +95,16 @@ public class Part {
     internal bool Under(Type concept) => SelfAndAncestors().Any(a => a.Is(concept));
 
     internal bool Holds(Part other) => other.SelfAndAncestors().Contains(this);
+
+    internal Part AddData(Concept concept, string? folder, bool group, Depth? depth, Access? access, Boundary? boundary) {
+        var child = new Part(concept, folder, this, group);
+        Block(child);
+        child.depth = depth;
+        child.access = access;
+        child.boundary = boundary;
+        children.Add(child);
+        return child;
+    }
 
     Part Attach(Part child) {
         Block(child);

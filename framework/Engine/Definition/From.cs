@@ -19,6 +19,12 @@ public sealed class From : Chain<From> {
 
     public Denies Denies<T>(Depth? depth = null) where T : Concept => Start(new Denies(), typeof(T), depth, null, Permission.Deny);
 
+    internal Uses Uses(Type to, Access? access, Depth? depth, Boundary? boundary) =>
+        Start(new Uses(), to, depth, access, Permission.Allow, boundary);
+
+    internal Denies Denies(Type to, Access? access, Depth? depth, Boundary? boundary) =>
+        Start(new Denies(), to, depth, access, Permission.Deny, boundary);
+
     TRule Start<TRule>(TRule rule, Type to, Depth? depth, Access? access, Permission permission, Boundary? boundary = null) where TRule : Rule<TRule> {
         rule.Permission = permission;
         rule.From = Entries;

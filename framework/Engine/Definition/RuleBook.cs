@@ -8,11 +8,13 @@ public sealed class RuleBook {
         this.root = root;
     }
 
-    public From For<T>(Depth? depth = null) where T : Concept {
-        if (!root.Walk().Any(p => p.Is(typeof(T)))) {
+    public From For<T>(Depth? depth = null) where T : Concept => For(typeof(T), depth);
+
+    internal From For(Type concept, Depth? depth) {
+        if (!root.Walk().Any(p => p.Is(concept))) {
             throw new InvalidOperationException(
-                $"Rules: For<{Concept.Display(typeof(T))}>() names a concept that the definition does not have. Add it in Define, or remove the rule.");
+                $"Rules: For<{Concept.Display(concept)}>() names a concept that the definition does not have. Add it in Define, or remove the rule.");
         }
-        return new From(typeof(T), depth, "definition", Rules);
+        return new From(concept, depth, "definition", Rules);
     }
 }
