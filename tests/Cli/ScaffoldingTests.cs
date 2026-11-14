@@ -62,12 +62,8 @@ public sealed class ScaffoldingTests {
             Plugin = Templates.Kind.Plugin;
         (string, Templates.Kind)[] expected = [
             ("AGENTS.md.template", App),
-            ("App/Host/App.Host.csproj", App),
             ("App/Host/Program.cs", App),
-            ("App/Host/Properties/launchSettings.json", App),
             ("App/Host/SampleAppApp.cs", App),
-            ("App/Host/appsettings.json", App),
-            ("App/Views/App.Views.csproj", App),
             ("App/Views/App.razor", App),
             ("App/Views/Pages/Home.razor", App),
             ("App/Views/Pages/SampleModulePage.razor", Module),
@@ -76,17 +72,6 @@ public sealed class ScaffoldingTests {
             ("Features/.gitkeep", App),
             ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
             ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
-            ("Features/SampleModule/Projects/SampleModule.Contracts.Commands.csproj", Command),
-            ("Features/SampleModule/Projects/SampleModule.Contracts.Events.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Contracts.Requests.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Domain.Shared.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Domain.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Handlers.Commands.csproj", Command),
-            ("Features/SampleModule/Projects/SampleModule.Handlers.Events.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Handlers.Requests.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Infrastructure.csproj", Module),
-            ("Features/SampleModule/Projects/SampleModule.Presenters.csproj", Module),
-            ("Features/SampleModule/SampleModule.csproj", Module),
             ("Features/SampleModule/SampleModuleModule.cs", Module),
             ("Features/SampleModule/Slices/GetStatus/GetStatusHandler.cs", Module),
             ("Features/SampleModule/Slices/GetStatus/GetStatusRequest.cs", Module),
@@ -99,11 +84,12 @@ public sealed class ScaffoldingTests {
             ("Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
             ("Plugins/.gitkeep", App),
             ("Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
-            ("Plugins/SamplePlugin/Projects/SamplePlugin.Contracts.Commands.csproj", Plugin),
-            ("Plugins/SamplePlugin/SamplePlugin.csproj", Plugin),
             ("Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),
+            ("Properties/launchSettings.json", App),
+            ("SampleApp.csproj", App),
             ("Tests/App.Tests.csproj", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
+            ("appsettings.json", App),
         ];
 
         Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
@@ -133,13 +119,23 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Does.Contain("App/Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("return HelloApp.Run(args);"));
-        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : VsaApp<HelloApp>;"));
+        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
+        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : VsaApp<VsaDefinition> {"));
     }
 
     [Test]
-    public void NewAppIgnoresTheBuildFoldersOfTheLayerProjects() {
-        Assert.That(NewAppCommand.GitIgnore.Split('\n', StringSplitOptions.TrimEntries), Does.Contain("bin~/").And.Contain("obj~/"));
+    public void NewAppIgnoresTheBuildFolders() {
+        Assert.That(NewAppCommand.GitIgnore.Split('\n', StringSplitOptions.TrimEntries), Does.Contain("bin/").And.Contain("obj/"));
+    }
+
+    [Test]
+    public void NewAppHasOneRootProjectWithTheWebSdkAndVsaSdk() {
+        var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
+        var projects = files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Path).Order(StringComparer.Ordinal);
+
+        Assert.That(projects, Is.EqualTo(["Hello.csproj", "Tests/App.Tests.csproj"]));
+        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
+            Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"VSA.Sdk\" />\n").And.Not.Contain("Sdk.targets"));
     }
 
     [Test]
@@ -186,28 +182,18 @@ public sealed class ScaffoldingTests {
     public void AppProjectsUsePackagesWithTheToolVersion() {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
-        Assert.That(files.Single(f => f.Path == "App/Host/App.Host.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.Host\" Version=\"{Version}\" />"));
-        Assert.That(files.Single(f => f.Path == "App/Views/App.Views.csproj").Content, Does.Contain($"<PackageReference Include=\"VSA.Views\" Version=\"{Version}\" />"));
+        var root = files.Single(f => f.Path == "Hello.csproj").Content;
+        Assert.That(root, Does.Contain($"<PackageReference Include=\"VSA.Host\" Version=\"{Version}\" />"));
+        Assert.That(root, Does.Contain($"<PackageReference Include=\"VSA.Views\" Version=\"{Version}\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Vsa"));
     }
 
     [Test]
-    public void NewModuleHasAllLayersAndAPage() {
+    public void NewModuleHasNoProjectAndAPage() {
         var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory" }, Version);
-        var projects = files.Where(f => f.Path.EndsWith(".csproj")).ToList();
 
-        Assert.That(
-            projects.Select(p => p.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Features/OrderHistory/OrderHistory.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Contracts.Events.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Contracts.Requests.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Domain.Shared.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Domain.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Handlers.Events.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Handlers.Requests.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Infrastructure.csproj",
-                        "Features/OrderHistory/Projects/OrderHistory.Presenters.csproj"]));
-        Assert.That(projects.Select(p => p.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
+        Assert.That(files.Select(f => f.Path), Has.None.EndsWith(".csproj"));
+        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace OrderHistory;"));
         Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
         Assert.That(files.Single(f => f.Path == "Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace OrderHistory.Domain.Shared;"));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
@@ -228,18 +214,15 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
-    public void NewCommandHasCommandResultHandlerAndTheCommandProjects() {
+    public void NewCommandHasCommandResultAndHandler() {
         var names = new Dictionary<string, string> { [Templates.Command] = "ChangeLimit", [Templates.Module] = "Billing" };
         var files = Templates.Files(Templates.Kind.Command, names, Version);
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Features/Billing/Projects/Billing.Contracts.Commands.csproj",
-                        "Features/Billing/Projects/Billing.Handlers.Commands.csproj",
-                        "Features/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
+            Is.EqualTo(["Features/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
                         "Features/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
                         "Features/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
-        Assert.That(files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Content), Has.All.EqualTo("<Project Sdk=\"VSA.Sdk\" />\n"));
         Assert.That(files.Single(f => f.Path.EndsWith("ChangeLimitCommand.cs")).Content, Does.Contain("ChangeLimitCommand : ICommand<ChangeLimitResult>"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }

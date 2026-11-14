@@ -7,8 +7,4 @@
     <!-- The viewer is one app. This repository has one global.json, so the viewer sets its own app root. -->
     <VsaAppRoot>$(MSBuildThisFileDirectory)</VsaAppRoot>
   </PropertyGroup>
-  <!-- The viewer reads architecture.json with the shared model. Temporary: issue #89 replaces VsaAppReference. -->
-  <ItemGroup>
-    <VsaAppReference Include="VSA.Architecture.Data" Layer="Infrastructure" Path="Architecture/Data" />
-  </ItemGroup>
 </Project>

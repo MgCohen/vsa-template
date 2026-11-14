@@ -6,7 +6,7 @@ namespace ArchitectureViewer.Infrastructure.Elk;
 
 public sealed class ElkLayout(IJSRuntime js) : ILayoutEngine, IAsyncDisposable
 {
-    public const string Script = "./_content/ArchitectureViewer.Infrastructure/elk-interop.js";
+    public const string Script = "./elk-interop.js";
 
     private IJSObjectReference? elk;
 

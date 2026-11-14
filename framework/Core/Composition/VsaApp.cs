@@ -2,45 +2,45 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VSA.Analyzers.Markers;
 using VSA.Architecture;
-using VSA.Architecture.Vsa;
+using VSA.Module;
 
 namespace VSA.Composition;
 
 [RequireDerived]
-public abstract class VsaApp<TApp> : IArchitectureProvider where TApp : VsaApp<TApp>, new() {
-    static readonly object Gate = new();
-    static Running? running;
+public abstract class VsaApp<TDefinition> : IArchitectureProvider where TDefinition : ArchitectureDefinition, new() {
+    readonly object gate = new();
+    Running? running;
 
-    public virtual ArchitectureDefinition Architecture => new VsaDefinition(Rules);
+    public virtual ArchitectureDefinition Architecture => new TDefinition();
 
-    public static bool IsRunning {
+    public bool IsRunning {
         get {
-            lock (Gate) {
+            lock (gate) {
                 return running is not null;
             }
         }
     }
 
-    public static int Run(string[] args) => new TApp().Start(args);
+    public int Run(string[] args) => Start(args);
 
-    public static void Stop() {
+    public void Stop() {
         Running? stopped;
-        lock (Gate) {
+        lock (gate) {
             stopped = running;
         }
         stopped?.Host.Stop(stopped.App);
     }
 
     protected virtual int Start(string[] args) {
-        var builder = Builder(args).Services(Services);
+        var builder = Builder(args);
         var host = builder.SelectedHost();
         var app = builder.Build();
         var started = new Running(host, app);
-        lock (Gate) {
+        lock (gate) {
             if (running is not null) {
                 app.Dispose();
                 throw new InvalidOperationException(
-                    $"{typeof(TApp).Name} is already running. Call {typeof(TApp).Name}.Stop() before Run.");
+                    $"{GetType().Name} is already running. Call Stop() before Run.");
             }
             running = started;
         }
@@ -53,16 +53,23 @@ public abstract class VsaApp<TApp> : IArchitectureProvider where TApp : VsaApp<T
         }
     }
 
-    protected virtual IHost Build(string[] args) => Builder(args).Services(Services).Build();
+    protected virtual IHost Build(string[] args) => Builder(args).Build();
 
-    protected virtual VsaBuilder Builder(string[] args) => VsaBuilder.Create(args);
+    protected virtual IVsaHost Host() => new GenericVsaHost();
+
+    protected virtual IReadOnlyList<VSA.Module.Module>? Modules() => null;
+
+    protected virtual IKeySource Keys() => new ConstraintKeys();
 
     protected virtual void Services(IServiceCollection services) { }
 
-    protected virtual void Rules(RuleBook rules) { }
+    VsaBuilder Builder(string[] args) {
+        var builder = VsaBuilder.Create(args).UseHost(Host()).Keys(Keys()).Services(Services);
+        return Modules() is { } modules ? builder.Modules([.. modules]) : builder;
+    }
 
-    static void Clear(Running stopped) {
-        lock (Gate) {
+    void Clear(Running stopped) {
+        lock (gate) {
             if (running == stopped) {
                 running = null;
             }

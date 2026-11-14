@@ -5,7 +5,7 @@ using VSA.Architecture.Engine;
 namespace Architecture.Tests;
 
 public sealed class ExportTests {
-    static readonly Lazy<ArchitectureFile> Bad = new(() => ArchitectureExport.Of(BadApp.App, "BadApp", "BadApp"));
+    static readonly Lazy<ArchitectureFile> Bad = new(() => ArchitectureExport.Of(FixtureApps.Bad, "BadApp", "BadApp"));
 
     [Test]
     public void The_export_reads_back_to_the_same_json() {
@@ -16,7 +16,7 @@ public sealed class ExportTests {
 
     [Test]
     public void The_export_has_the_options_of_the_definition() {
-        var options = BadApp.App.Definition.Options;
+        var options = FixtureApps.Bad.Definition.Options;
 
         Assert.That(Bad.Value.Definition.Options, Is.EqualTo(new OptionsData(options.DefaultPermission.ToString(),
             options.Boundary.ToString(), options.UseSameLayer, options.Depth.ToString(), options.Access.ToString())));

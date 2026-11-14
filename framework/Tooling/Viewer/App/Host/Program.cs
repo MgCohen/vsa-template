@@ -1,1 +1,3 @@
-return ViewerApp.Run(args);
+using App.Host;
+
+return new ViewerApp().Run(args);

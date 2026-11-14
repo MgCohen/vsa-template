@@ -26,6 +26,8 @@ public sealed class VsaBuilder {
 
     public VsaBuilder UseGenericHost() => UseHost(new GenericVsaHost());
 
+    public VsaBuilder UseConsoleHost() => UseHost(new ConsoleVsaHost());
+
     public VsaBuilder Modules(params VSA.Module.Module[] given) {
         modules = given;
         return this;
@@ -41,7 +43,7 @@ public sealed class VsaBuilder {
         return this;
     }
 
-    public IVsaHost SelectedHost() => host ??= VsaHosts.Find();
+    public IVsaHost SelectedHost() => host ??= new GenericVsaHost();
 
     public IHost Build() {
         var selected = SelectedHost();

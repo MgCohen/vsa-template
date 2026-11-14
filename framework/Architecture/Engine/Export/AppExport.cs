@@ -1,17 +1,15 @@
-using System.Globalization;
 using ArchUnitNET.Domain;
 using VSA.Architecture.Data;
 
 namespace VSA.Architecture.Engine;
 
 sealed class AppExport(ArchitectureMap architecture, DefinitionExport definition) {
-    const string Error = ": error ";
 
     readonly Dictionary<string, InstanceData> instances = [];
     readonly Dictionary<Binding, TypeData> types = [];
 
     public AppData Data(string name, string root) {
-        List<Binding> bindings = [.. architecture.Bindings.Where(b => !b.External)];
+        List<Binding> bindings = [.. architecture.Bindings.All.Where(b => !b.External)];
         foreach (var binding in bindings) {
             types[binding] = TypeOf(binding);
         }
@@ -54,18 +52,10 @@ sealed class AppExport(ArchitectureMap architecture, DefinitionExport definition
     }
 
     string Relative(string file) {
-        var relative = Path.IsPathRooted(file) ? Path.GetRelativePath(architecture.AppRoot, file) : file;
+        var relative = Path.IsPathRooted(file) ? Path.GetRelativePath(architecture.App.AppRoot, file) : file;
         return relative.Replace(Path.DirectorySeparatorChar, '/');
     }
 
-    static FindingData FindingOf(string text, string typeId) {
-        var error = text.IndexOf(Error, StringComparison.Ordinal);
-        var location = text[..error];
-        var rest = text[(error + Error.Length)..];
-        var colon = rest.IndexOf(':', StringComparison.Ordinal);
-        var open = location.LastIndexOf('(');
-        var file = open < 0 ? location : location[..open];
-        var line = open < 0 ? 0 : int.Parse(location[(open + 1)..^1], CultureInfo.InvariantCulture);
-        return new FindingData(rest[..colon], file, line, rest[(colon + 2)..], typeId);
-    }
+    FindingData FindingOf(RuleFinding finding, string typeId) =>
+        new(finding.Code, finding.File is null ? "" : Relative(finding.File), finding.Line, finding.Text, typeId);
 }

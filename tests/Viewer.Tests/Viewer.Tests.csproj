@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the architecture viewer (framework/Tooling/Viewer): a unit test, the VSA architecture tests of the viewer app,
+  <!-- Tests of the architecture viewer (framework/Tooling/Viewer): a unit test
        and browser tests that start the viewer and drive Microsoft Edge with Playwright (docs/viewer.md). -->
   <PropertyGroup>
     <VsaAppRoot>$(RepoRoot)framework/Tooling/Viewer/</VsaAppRoot>
@@ -8,25 +8,24 @@
     <PackageReference Include="Microsoft.Playwright.NUnit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Tooling/Viewer/App/Host/Viewer.Host.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Testing/Architecture/VSA.Testing.Architecture.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Tooling/Viewer/Viewer.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Testing/Unit/VSA.Testing.Unit.csproj" />
   </ItemGroup>
   <!-- The tests make the viewer input from samples/Notes with Architecture.Export at the start of the run. These two projects
-       only build: their assemblies stay out of the test output, so the viewer architecture tests do not see them. -->
+       only build: their assemblies stay out of the test output. -->
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Tooling/Export/Architecture.Export.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="$(RepoRoot)samples/Notes/App/Host/App.Host.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)samples/Notes/Notes.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyMetadata Include="ViewerExport" Value="$(RepoRoot)framework/Tooling/Export/bin/$(Configuration)/$(TargetFramework)/Architecture.Export.dll" />
-    <AssemblyMetadata Include="NotesOutput" Value="$(RepoRoot)samples/Notes/App/Host/bin/$(Configuration)/$(TargetFramework)" />
+    <AssemblyMetadata Include="NotesOutput" Value="$(RepoRoot)samples/Notes/bin/$(Configuration)/$(TargetFramework)" />
     <AssemblyMetadata Include="NotesRoot" Value="$(RepoRoot)samples/Notes" />
   </ItemGroup>
-  <!-- The browser tests start the viewer from its own output folder, so they need the path of App.Host.dll. -->
+  <!-- The browser tests start the viewer from its own output folder, so they need the path of Viewer.dll. -->
   <Target Name="AddViewerHostPath" AfterTargets="ResolveAssemblyReferences" BeforeTargets="GetAssemblyAttributes">
     <ItemGroup>
-      <_ViewerHost Include="@(ReferencePath)" Condition="'%(Filename)' == 'App.Host'" />
+      <_ViewerHost Include="@(ReferencePath)" Condition="'%(Filename)' == 'Viewer'" />
       <AssemblyMetadata Include="ViewerHost" Value="@(_ViewerHost->'%(FullPath)')" />
     </ItemGroup>
   </Target>
