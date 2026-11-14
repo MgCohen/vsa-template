@@ -1,6 +1,5 @@
 using Definition;
 using Engine.Slices.RunEngine;
-using Hello;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
 using Rules;
@@ -14,7 +13,6 @@ using VSA.Module;
 namespace Engine.Tests;
 
 public sealed class RunEngineTests {
-    const string Hello = "vsa-engine: HELLO: Hello from a plugin";
     const string RulesSkipped =
         "vsa-engine: VSA3004: CheckRules skipped: App is missing, because an earlier step failed.";
     static readonly string Notes = Repo.Path("samples", "Notes");
@@ -25,7 +23,7 @@ public sealed class RunEngineTests {
 
         var modules = AppScan.ModuleRoots().Where(root => root.Assembly == engine).Select(root => root.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Hello", "Report", "Rules" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules" }));
     }
 
     [Test]
@@ -37,20 +35,12 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task The_Hello_plugin_adds_its_line() {
-        var result = await Run();
-
-        Assert.That(result.Lines, Has.One.EqualTo(Hello));
-    }
-
-    [Test]
-    public async Task A_step_that_fails_skips_the_steps_that_use_its_output_and_the_others_run() {
+    public async Task A_step_that_fails_skips_the_steps_that_use_its_output() {
         var result = await Run(root: Path.Combine(Notes, "Features", "Missing"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Lines, Has.One.Contains("error VSA3002"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
-        Assert.That(result.Lines, Has.One.EqualTo(Hello));
     }
 
     [Test]
@@ -60,7 +50,6 @@ public sealed class RunEngineTests {
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Lines, Has.One.StartsWith("vsa-engine: error VSA3000: LoadDefinition could not run: "));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
-        Assert.That(result.Lines, Has.One.EqualTo(Hello));
     }
 
     [Test]
@@ -72,8 +61,7 @@ public sealed class RunEngineTests {
 
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
         VSA.Module.Module[] modules = [
-            new StepsPlugin(), new EngineModule(), new DefinitionModule(),
-            new RulesModule(), new ReportModule(), new HelloModule(),
+            new StepsPlugin(), new EngineModule(), new DefinitionModule(), new RulesModule(), new ReportModule(),
         ];
         using var host = VsaBuilder.Create().Modules(modules).UseGenericHost().Build();
         await using var scope = host.Services.CreateAsyncScope();
