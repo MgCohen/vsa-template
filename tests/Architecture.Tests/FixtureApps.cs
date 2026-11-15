@@ -2,19 +2,19 @@ using System.Runtime.CompilerServices;
 using VSA.Architecture;
 using VSA.Architecture.Engine;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 static class FixtureApps {
     public static readonly string Root = FixtureRoot();
 
-    static readonly Lazy<ArchitectureMap> GoodMap = new(() => Load(new GoodDefinition(), AppContext.BaseDirectory, Root));
-    static readonly Lazy<ArchitectureMap> BadMap = new(() => Load(new BadDefinition(), AppContext.BaseDirectory, Root));
+    static readonly Lazy<ArchitectureMap> GoodMap = new(() => Load(new GoodArchitecture(), AppContext.BaseDirectory, Root));
+    static readonly Lazy<ArchitectureMap> BadMap = new(() => Load(new BadArchitecture(), AppContext.BaseDirectory, Root));
 
     public static ArchitectureMap Good => GoodMap.Value;
 
     public static ArchitectureMap Bad => BadMap.Value;
 
-    public static ArchitectureMap Load(ArchitectureDefinition definition, string bin, string appRoot) {
+    public static ArchitectureMap Load(Architecture definition, string bin, string appRoot) {
         var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         var dlls = Directory.GetFiles(bin, "*.dll")
             .Where(dll => SourceFiles.HasSourceUnder(dll, appRoot) || IsExternal(Path.GetFileNameWithoutExtension(dll), externals));

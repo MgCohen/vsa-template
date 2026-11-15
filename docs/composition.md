@@ -1,6 +1,6 @@
 # Composition: the kernel, the app builder and the hosts
 
-An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaDefinition>` uses `AppBuilder` (VSA.Kernel), and its `Host()` method selects the host. A console app can also use `AppBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class `MyApp : VsaApp<VsaArchitecture>` uses `AppBuilder` (VSA.Kernel), and its `Host()` method selects the host. A console app can also use `AppBuilder.Create(args)`, then `Build()`. An app that builds its own container calls `services.AddVsa(args)`. All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Entry point
 
@@ -9,7 +9,7 @@ An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class
 return new MyApp().Run(args);
 
 // Web: App/Host/MyApp.cs
-public class MyApp : VsaApp<VsaDefinition> {
+public class MyApp : VsaApp<VsaArchitecture> {
     protected override IAppHost Host() => new WebVsaHost();
 }
 
@@ -33,7 +33,7 @@ var services = new ServiceCollection().AddVsa(args).BuildServiceProvider();
 
 ## The app class
 
-`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TDefinition>` (VSA.Composition) inherits `App` (VSA.Kernel). Both are portable, so the same app class works on all hosts. `App` has the run, the host and the builder steps. `VsaApp` adds the definition (`Architecture`), `Modules()` and the scan for `Module`. `TDefinition` is the architecture definition of the app, for example `VsaDefinition` or `EngineDefinition`.
+`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its rules (see `architecture-engine.md`). `VsaApp<TDefinition>` (VSA.Composition) inherits `App` (VSA.Kernel). Both are portable, so the same app class works on all hosts. `App` has the run, the host and the builder steps. `VsaApp` adds the definition (`Architecture`), `Modules()` and the scan for `Module`. `TDefinition` is the architecture definition of the app, for example `VsaArchitecture` or `EngineArchitecture`.
 
 ```
 new MyApp().Run(args)                 in App
@@ -54,7 +54,7 @@ new MyApp().Run(args)                 in App
 | `Services(IServiceCollection)` | No registrations | Add app registrations |
 | `Architecture` | `new TDefinition()` | Set the Unity folders: `UnityApp`, `UnitySource` (see `architecture-engine.md`) |
 
-To add app rules, derive a definition from `VsaDefinition` and override `Rules` (see `architecture-engine.md`).
+To add app rules, derive a definition from `VsaArchitecture` and override `Rules` (see `architecture-engine.md`).
 
 The instance members control the lifetime of the app:
 

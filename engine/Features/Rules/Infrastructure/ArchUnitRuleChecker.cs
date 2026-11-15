@@ -5,7 +5,7 @@ using VSA.Architecture.Engine;
 namespace Rules.Infrastructure;
 
 public static class ArchUnitRuleChecker {
-    public static RuleCheck Check(ArchitectureDefinition definition, IReadOnlyList<Assembly> assemblies, string appRoot) {
+    public static RuleCheck Check(Architecture definition, IReadOnlyList<Assembly> assemblies, string appRoot) {
         var map = ArchitectureMap.Load(definition, assemblies, appRoot);
         return new RuleCheck([.. map.Findings().Select(ToFinding)], map.Bindings.AppTypes.Count);
     }

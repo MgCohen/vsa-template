@@ -1,5 +1,5 @@
-using VSA.Contracts.Requests;
+namespace SampleApp.Features.SampleModule.Slices.GetStatus;
 
-namespace SampleModule.Slices.GetStatus;
+using VSA.Contracts.Requests;
 
 public sealed record GetStatusResponse(string Module, string Status) : IResponse;

@@ -96,14 +96,45 @@ public sealed class VsaToolTests {
             Assert.That(await client.GetStringAsync("/", ct), Does.Contain("<h1>Hello</h1>")));
     }
 
-    // vsa new app Hello, with the packed tool from the local feed. Returns the folder of the app.
-    string NewApp() {
+    [Test]
+    [CancelAfter(600_000)]
+    public void ADefinitionInTheAppNamesEachLayerWithNoFullName() {
+        var app = NewApp("Shop");
+        File.WriteAllText(Path.Combine(app, "App", "Host", "ShopArchitecture.cs"), """
+            namespace Shop.App.Host;
+
+            using VSA.Architecture;
+            using VSA.Architecture.Vsa;
+
+            public sealed class ShopArchitecture : VsaArchitecture {
+                protected override void Rules(RuleBook rules) {
+                    base.Rules(rules);
+                    rules.For<App>().Uses<Framework>();
+                    rules.For<Host>().Uses<Composition>().And<Kernel>();
+                    rules.For<Views>().Uses<Presenters>();
+                    rules.For<Feature>().And<Plugin>().Uses<Kernel>();
+                    rules.For<Module>().Uses<Domain>().And<Domain.Shared>();
+                    rules.For<Slice>().Uses<Domain.Shared>();
+                    rules.For<Infrastructure>().Uses<Domain>();
+                    rules.For<Handlers>().Uses<Contracts>();
+                    rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
+                    rules.For<Handlers.Events>().Uses<Contracts.Events>();
+                    rules.For<Handlers.Commands>().Uses<Contracts.Commands>();
+                }
+            }
+            """);
+
+        Dotnet.Run(app, env, "build", "Shop.slnx", "-nodeReuse:false").EnsureSuccess();
+    }
+
+    // vsa new app <name>, with the packed tool from the local feed. Returns the folder of the app.
+    string NewApp(string name = "Hello") {
         // The global packages folder of the user is also a feed, so restore does not download each package again.
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
         Dotnet.Run(root, env, "tool", "exec", $"VSA.Cli@{LocalFeed.Version}", "--add-source", LocalFeed.Path, "-y", "--",
-            "new", "app", "Hello", "--source", LocalFeed.Path, "--source", globalPackages).EnsureSuccess();
-        return Path.Combine(root, "Hello");
+            "new", "app", name, "--source", LocalFeed.Path, "--source", globalPackages).EnsureSuccess();
+        return Path.Combine(root, name);
     }
 
     // Starts the built app on a free port, waits until "/" answers, then calls the app. The output of the app is for

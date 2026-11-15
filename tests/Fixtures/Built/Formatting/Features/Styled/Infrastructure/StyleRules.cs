@@ -1,7 +1,7 @@
-namespace Styled.Infrastructure;
-
-// IDE0065: a using directive inside the namespace.
+// IDE0065: a using directive outside the namespace.
 using System;
+
+namespace Styled.Infrastructure;
 
 // IDE1006: an interface name without the I prefix.
 internal interface Clock

@@ -28,11 +28,11 @@ The kernel and the engine do not reference each other. Only an architecture pack
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Concept`, `record Anchor : Concept` | `class Anchor`, `AnchorBuilder`, `IInstaller` |
-| VSA | `record Layer : Concept`, the VSA layers, `record Module : Anchor` | `class Module : Anchor`, `class Plugin : Module` |
+| Generic | `Architecture`, `Concept`, `record Module : Concept` | `class Anchor`, `AnchorBuilder`, `IInstaller` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers | `class Module : Anchor`, `class Plugin : Module` |
 
 - The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<VSA.Module.Module>()`. Where two types have the same name, write the full name of the runtime class.
-- A definition `Anchor` is in the folder of its parent: it is the root part of a group instance.
+- A definition `Module` is in the folder of its parent: it is the root part of a group instance.
 - A runtime `Anchor` has `Name`, `Order`, `Section` and `Configure(AnchorBuilder)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`.
 
 ## How the kernel starts an app

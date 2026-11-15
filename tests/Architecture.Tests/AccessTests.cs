@@ -1,6 +1,6 @@
 using VSA.Architecture;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public record OpenTarget : Concept;
 
@@ -10,11 +10,11 @@ public record ClosedTarget : Concept {
     }
 }
 
-public sealed class AccessDefinition<TTarget>(Access options, Access? method) : ArchitectureDefinition where TTarget : Concept, new() {
+public sealed class AccessArchitecture<TTarget>(Access options, Access? method) : Architecture where TTarget : Concept, new() {
     public Access UserAccess => Resolve().Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
 
-    protected override void Configure(Options configured) {
-        configured.Access = options;
+    protected override void Configure(Options defaults) {
+        defaults.Access = options;
     }
 
     protected override void Define(Root root) {
@@ -48,7 +48,7 @@ public sealed class AccessTests {
 
     [Test]
     public void With_no_other_access_the_options_decide() {
-        Assert.That(new AccessDefinition<OpenTarget>(Access.Internal, null).UserAccess, Is.EqualTo(Access.Internal));
+        Assert.That(new AccessArchitecture<OpenTarget>(Access.Internal, null).UserAccess, Is.EqualTo(Access.Internal));
     }
 
     [Test]
@@ -58,11 +58,11 @@ public sealed class AccessTests {
 
     [Test]
     public void The_layer_body_wins_over_the_options() {
-        Assert.That(new AccessDefinition<ClosedTarget>(Access.Public, null).UserAccess, Is.EqualTo(Access.Private));
+        Assert.That(new AccessArchitecture<ClosedTarget>(Access.Public, null).UserAccess, Is.EqualTo(Access.Private));
     }
 
     [Test]
     public void The_method_parameter_wins_over_the_layer_body() {
-        Assert.That(new AccessDefinition<ClosedTarget>(Access.Public, Access.Internal).UserAccess, Is.EqualTo(Access.Internal));
+        Assert.That(new AccessArchitecture<ClosedTarget>(Access.Public, Access.Internal).UserAccess, Is.EqualTo(Access.Internal));
     }
 }

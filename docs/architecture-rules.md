@@ -1,6 +1,6 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Architectures/Vsa/Definition/VsaDefinition.cs`, see `architecture-engine.md`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Architectures/Vsa/Definition/VsaArchitecture.cs`, see `architecture-engine.md`).
 
 ## Levels
 
@@ -109,7 +109,7 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `IDE0040` | Access modifier on each member, except in an interface | `dotnet_style_require_accessibility_modifiers` |
 | `IDE0055` | One statement on each line | `csharp_preserve_single_line_statements` |
 | `IDE2002` | No blank line between two closing braces | `csharp_style_allow_blank_lines_between_consecutive_braces_experimental` |
-| `IDE0065` | `using` outside the namespace | `csharp_using_directive_placement` |
+| `IDE0065` | `using` inside the namespace | `csharp_using_directive_placement` |
 | `IDE0036` | Modifiers in the default order | `csharp_preferred_modifier_order` |
 | `IDE0049` | `int`, not `Int32` (editor only) | `dotnet_style_predefined_type_*` |
 | `IDE0054` | `x += 1`, not `x = x + 1` | `dotnet_style_prefer_compound_assignment` |
@@ -220,6 +220,6 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/VSA.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `VsaAnalyzerRule`. Use the next free `VSA1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
-3. Else change the rules of the VSA definition (`framework/Architectures/Vsa/Definition/VsaDefinition.cs`).
+3. Else change the rules of the VSA definition (`framework/Architectures/Vsa/Definition/VsaArchitecture.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

@@ -1,7 +1,7 @@
-using SampleModule.Slices.GetStatus;
-using VSA.Testing.Unit;
+namespace SampleApp.Tests;
 
-namespace App.Tests;
+using SampleApp.Features.SampleModule.Slices.GetStatus;
+using VSA.Testing.Unit;
 
 // A unit test of one slice: the request goes to its handler, with the default fakes.
 public sealed class SampleModuleStatusTests : VsaUnitTest {

@@ -20,10 +20,10 @@ public sealed class BuildCheckTests {
 
         var probe = Path.Combine(workspace.Src, "App", "Host", "Probe.cs");
         File.WriteAllText(probe, """
-            namespace App.Host;
+            namespace Notes.App.Host;
 
             public static class Probe {
-                public static Notes.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
+                public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
             }
             """);
         var finding = $"{probe}(4,1): error VSA2001: Probe in Host";

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 sealed class UnityProjectFolder : IDisposable {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";

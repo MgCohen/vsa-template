@@ -1,7 +1,7 @@
+namespace SampleApp.Features.SampleModule;
+
 using VSA.Module;
 using VSA.Kernel;
-
-namespace SampleModule;
 
 // The root of the SampleModule module. The host finds it and calls Configure at start-up.
 // When Domain has an aggregate, register its IRepository here, for example:

@@ -5,8 +5,8 @@ using VSA.Kernel;
 namespace VSA.Composition;
 
 [RequireDerived]
-public abstract class VsaApp<TDefinition> : App, IArchitectureProvider where TDefinition : ArchitectureDefinition, new() {
-    public virtual ArchitectureDefinition Architecture => new TDefinition();
+public abstract class VsaApp<TDefinition> : App, IArchitectureProvider where TDefinition : VSA.Architecture.Architecture, new() {
+    public virtual VSA.Architecture.Architecture Architecture => new TDefinition();
 
     protected virtual IReadOnlyList<VSA.Module.Module>? Modules() => null;
 

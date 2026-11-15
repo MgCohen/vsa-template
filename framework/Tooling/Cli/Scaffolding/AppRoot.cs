@@ -13,4 +13,11 @@ static class AppRoot {
         throw new VsaException("This folder is not in a VSA app. "
             + "Run the command in the app folder, or make an app with 'vsa new app <Name>'.");
     }
+
+    public static string Name(string root) {
+        var projects = Directory.GetFiles(root, "*.csproj");
+        return projects.Length == 1
+            ? Path.GetFileNameWithoutExtension(projects[0])
+            : throw new VsaException($"The app root {root} has {projects.Length} .csproj files. Keep one root project of the app in this folder.");
+    }
 }

@@ -2,7 +2,7 @@ using ArchUnitNET.Domain;
 
 namespace VSA.Architecture.Engine;
 
-public sealed class RuleChecks(ArchitectureDefinition definition, Bindings bindings, string appRoot) {
+public sealed class RuleChecks(Architecture definition, Bindings bindings, string appRoot) {
     public IReadOnlyList<RuleFinding> Of(IType type) {
         if (bindings.Of(type) is not { External: false } from) {
             return bindings.IsUnmapped(type) ? [Unmapped(type)] : [];

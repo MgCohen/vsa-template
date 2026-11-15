@@ -1,6 +1,6 @@
-using VSA.Contracts.Requests;
+namespace Notes.Features.Ping.Slices.Ping;
 
-namespace Ping.Slices.Ping;
+using VSA.Contracts.Requests;
 
 public sealed record PingRequest : IRequest<PingResponse> {
     public static HttpMethod Method => HttpMethod.Get;
