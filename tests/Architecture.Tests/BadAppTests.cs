@@ -1,3 +1,4 @@
+using ArchUnitNET.Domain;
 using VSA.Architecture.Engine;
 
 namespace Architecture.Tests;
@@ -14,7 +15,7 @@ public sealed class BadAppTests {
 
     [Test]
     public void The_bad_app_has_only_the_known_findings() {
-        Assert.That(AllFindings.Value, Has.Count.EqualTo(12), Lines(null));
+        Assert.That(AllFindings.Value, Has.Count.EqualTo(14), Lines(null));
     }
 
     [Test]
@@ -56,13 +57,48 @@ public sealed class BadAppTests {
     }
 
     [Test]
+    public void A_use_inside_compiler_generated_code_gives_VSA2001_on_the_declaring_type() {
+        Assert.That(UseFailures, Does.Contain(
+            "error VSA2001: ArchiveInvoiceHandler in Handlers.Requests "
+            + $"({Notes}/Slices/ArchiveInvoice) uses Invoice in Domain ({Billing}/Domain): "
+            + "no rule allows it (DefaultPermission = Deny)."));
+    }
+
+    [TestCase("InAsyncMethod")]
+    [TestCase("InLambda")]
+    [TestCase("InClosure")]
+    [TestCase("InLocalFunction")]
+    [TestCase("InIterator")]
+    public void The_loader_gives_a_use_inside_compiler_generated_code_to_the_declaring_method(string method) {
+        var handler = FixtureApps.Bad.App.Types.Single(t => t.Name == "ArchiveInvoiceHandler");
+        var uses = handler.Members.OfType<MethodMember>()
+            .Single(m => m.Name.StartsWith(method + "(", StringComparison.Ordinal))
+            .MemberDependencies.Select(d => d.Target.Name);
+
+        Assert.That(uses, Does.Contain("Invoice"));
+    }
+
+    [Test]
+    public void The_loader_gives_no_compiler_generated_type() {
+        Assert.That(FixtureApps.Bad.App.Types.Select(t => t.FullName), Has.None.Contains("<"));
+    }
+
+    [Test]
+    public void A_type_in_a_folder_whose_name_starts_with_bin_is_checked() {
+        Assert.That(UseFailures, Does.Contain(
+            $"{Billing}/Domain/binders/Money.cs(3): error VSA2001: Money in Domain ({Billing}/Domain) "
+            + "uses IEntity in KitLayer (Kit.dll): "
+            + "the rule \"Domain denies KitLayer\" denies it."));
+    }
+
+    [Test]
     public void An_event_of_another_feature_is_allowed() {
         Assert.That(UseFailures, Does.Not.Contain("InvoiceCreatedHandler in"));
     }
 
     [Test]
     public void The_bad_app_has_only_the_known_use_failures() {
-        Assert.That(UseFailures.Split(Environment.NewLine), Has.Length.EqualTo(4), UseFailures);
+        Assert.That(UseFailures.Split(Environment.NewLine), Has.Length.EqualTo(6), UseFailures);
     }
 
     [Test]
