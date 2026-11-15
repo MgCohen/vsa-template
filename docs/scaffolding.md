@@ -1,6 +1,6 @@
 # Scaffolding: the vsa tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code (`dotnet run solution.cs` makes `VSA.slnx`). The tool, VSA.Sdk and the VSA.* packages have one version, `vsa doctor` finds a mismatch, and `vsa update` moves all to the latest version.
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code (`dotnet run solution.cs` makes `VSA.slnx`). The tool, VSA.Sdk and the VSA.* packages have one version. The rule engine checks it on each build (`VSA3001`), `vsa doctor` runs the same check, and `vsa update` moves all to the latest version.
 
 ## Commands
 
@@ -126,14 +126,16 @@ The rule engine checks the architecture after each build of the host (see [archi
 
 ## One version
 
-`new app` writes the version of the tool to these files. `vsa doctor` reads them and fails if two versions are different. `vsa update` writes one version to all of them.
+`new app` writes the version of the tool to these files. `vsa doctor` runs the version check of the rule engine (`VersionCheck`, see "One version" in [architecture-engine.md](architecture-engine.md)) with the version of the running tool. It fails if a slot has a different version. `vsa update` writes one version to all of them, and checks nothing.
 
 | File | Item |
 |---|---|
 | The running tool | `VSA.Cli` |
 | `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
 | `global.json` | `msbuild-sdks` → `VSA.Sdk` |
-| Each `.csproj` and `Directory.*.props` | Each `VSA.Sdk` pin (`Sdk="VSA.Sdk/1.0.0"`, `<Sdk Name="VSA.Sdk" Version="1.0.0" />`) and each `VSA.*` package reference. A reference with no version uses its `PackageVersion` |
+| Each `.csproj` and `Directory.*.props` | Each `VSA.Sdk` pin (`Sdk="VSA.Sdk/1.0.0"`, `<Sdk Name="VSA.Sdk" Version="1.0.0" />`) and each `VSA.*` package reference, also `VSA.Architecture.Build`. A reference with no version uses its `PackageVersion` |
+
+A missing tool manifest gives no slot, so `vsa doctor` does not fail for it. `vsa update` needs one tool manifest.
 
 ## Update
 

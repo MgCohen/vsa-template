@@ -13,6 +13,9 @@
     <InternalsVisibleTo Include="Cli.Tests" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../../Engine/Versions/VSA.Architecture.Versions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
                       LogicalName="Templates/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

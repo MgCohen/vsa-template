@@ -6,6 +6,7 @@ using Steps.Infrastructure;
 using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Handlers.Commands;
+using Versions.Slices.CheckVersions;
 
 namespace Engine.Slices.RunEngine;
 
@@ -18,7 +19,8 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHan
     }
 
     async Task Run(RunEngineCommand run, CancellationToken ct) {
-        var app = await commands.SendAsync(new LoadDefinitionCommand(run.Root, run.Bin, run.Skip), ct);
+        var version = await commands.SendAsync(new CheckVersionsCommand(run.Root, run.Bin), ct);
+        var app = await commands.SendAsync(new LoadDefinitionCommand(run.Root, run.Bin, run.Skip, version.Value), ct);
         await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
     }
 }

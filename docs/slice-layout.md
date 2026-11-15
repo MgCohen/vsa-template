@@ -81,7 +81,7 @@ A web root project uses the Web SDK first, then VSA.Sdk:
 </Project>
 ```
 
-A `VSA.*` package with no version gets the version of VSA.Sdk. The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+A `VSA.*` package that VSA.Sdk does not add, for example `VSA.Host`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of VSA.Sdk: the rule engine checks it (`VSA3001`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Host/`) has its own project in the module folder. It then references the other modules that it uses.
 
