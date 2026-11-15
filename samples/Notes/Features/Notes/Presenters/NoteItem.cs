@@ -1,6 +1,6 @@
-using Notes.Slices.ListNotes;
+namespace Notes.Features.Notes.Presenters;
 
-namespace Notes.Presenters;
+using global::Notes.Features.Notes.Slices.ListNotes;
 
 // The view model of one note. Views see this type, not the DTO.
 public sealed record NoteItem(Guid Id, string Title) {

@@ -3,12 +3,12 @@ using System.Runtime.CompilerServices;
 namespace VSA.Architecture.Engine;
 
 public static class Decide {
-    static readonly ConditionalWeakTable<ArchitectureDefinition, ILookup<PartPair, PartRule>> RulesByParts = [];
+    static readonly ConditionalWeakTable<Architecture, ILookup<PartPair, PartRule>> RulesByParts = [];
 
-    public static Decision For(ArchitectureDefinition definition, Binding from, Binding to) =>
+    public static Decision For(Architecture definition, Binding from, Binding to) =>
         For(definition, from.Part, from.Values, to.Part, to.Values);
 
-    public static Decision For(ArchitectureDefinition definition,
+    public static Decision For(Architecture definition,
         Part fromPart, IReadOnlyDictionary<string, string> fromValues, Part toPart, IReadOnlyDictionary<string, string> toValues) {
         var rules = RulesByParts.GetValue(definition, d => d.Resolve().ToLookup(r => new PartPair(r.From, r.To)));
         PartRule? winner = null;

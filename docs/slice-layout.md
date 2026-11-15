@@ -27,7 +27,7 @@ Features/Cards/
 ```
 
 - A module has only the layer folders that it needs. Ping has only `Slices/`.
-- All files of one slice have one namespace, for example `Notes.Slices.CreateNote`.
+- All files of one slice have one namespace, for example `Notes.Features.Notes.Slices.CreateNote`. Each namespace starts with the app name and follows the folders.
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses.
 
@@ -109,13 +109,13 @@ public sealed record Cost(string Resource, int Amount);
 
 | Name | What it is | Who uses it | List |
 |---|---|---|---|
-| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | The definition (`VsaDefinition`) |
+| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | The definition (`VsaArchitecture`) |
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
 | `Domain/Shared/` | The published domain of one module | Other modules (table above) | None |
 
 "Shared" is the name of two things in one module: `Slices/Shared/` and `Domain/Shared/`. A base of the whole app is a plugin module, not a Shared one.
 
-The namespace of the published domain is `<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
+The namespace of the published domain is `<App>.Features.<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
 
 ## Commands
 

@@ -1,14 +1,12 @@
 using Kit;
 using VSA.Architecture;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public record KitLayer : External {
     public override string Folder => "Kit";
     public override string Assembly => "Kit";
 }
-
-public record Module : Anchor;
 
 public record Feature : Concept {
     public override string GroupFolder => "Features";
@@ -54,7 +52,7 @@ public record Handlers : Concept {
     }
 }
 
-public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app) {
+public abstract class FixtureArchitecture(string app) : Architecture(app) {
     protected override void Configure(Options options) {
         options.DefaultPermission = Permission.Deny;
         options.Boundary = Boundary.Closed;
@@ -83,6 +81,6 @@ public abstract class FixtureDefinition(string app) : ArchitectureDefinition(app
     }
 }
 
-public sealed class GoodDefinition() : FixtureDefinition("GoodApp");
+public sealed class GoodArchitecture() : FixtureArchitecture("GoodApp");
 
-public sealed class BadDefinition() : FixtureDefinition("BadApp");
+public sealed class BadArchitecture() : FixtureArchitecture("BadApp");

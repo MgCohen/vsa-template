@@ -1,10 +1,10 @@
-using Notes.Slices.CreateNote;
-using Notes.Slices.DeleteNote;
-using Notes.Slices.ListNotes;
+namespace Notes.Features.Notes.Presenters;
+
+using global::Notes.Features.Notes.Slices.CreateNote;
+using global::Notes.Features.Notes.Slices.DeleteNote;
+using global::Notes.Features.Notes.Slices.ListNotes;
 using VSA.Contracts;
 using VSA.Presenters;
-
-namespace Notes.Presenters;
 
 public sealed class NotesPresenter(IBus bus) : Presenter(bus) {
     // The sample has no sign-in, so all notes have the same author.

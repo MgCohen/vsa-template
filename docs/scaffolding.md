@@ -23,7 +23,7 @@ Rules for all commands:
 - An option that takes one value stops the command if you give it two times, for example `-m A -m B`.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
-- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same namespace.
+- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
 - `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
 - `new app` writes a `.gitignore` for the build folders and the local files (`bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.

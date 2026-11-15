@@ -1,5 +1,5 @@
-using VSA.Contracts.Requests;
+namespace Notes.Features.Notes.Slices.DeleteNote;
 
-namespace Notes.Slices.DeleteNote;
+using VSA.Contracts.Requests;
 
 public sealed record DeleteNoteResponse(Guid Id) : IResponse;

@@ -1,11 +1,11 @@
+namespace Notes.Features.Notes;
+
 using Microsoft.Extensions.DependencyInjection;
-using Notes.Domain;
-using Notes.Infrastructure;
+using global::Notes.Features.Notes.Domain;
+using global::Notes.Features.Notes.Infrastructure;
 using VSA.Infrastructure;
 using VSA.Module;
 using VSA.Kernel;
-
-namespace Notes;
 
 public sealed class NotesModule : Module {
     public override void Configure(AnchorBuilder module) {

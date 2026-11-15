@@ -1,10 +1,10 @@
 using VSA.Architecture;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public record Package : Concept;
 
-public sealed class SameConceptDefinition(bool useSameConcept) : ArchitectureDefinition {
+public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture {
     public Permission Decision(string fromPath, string toPath) =>
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
@@ -25,34 +25,34 @@ public sealed class SameConceptDefinition(bool useSameConcept) : ArchitectureDef
 public sealed class SameConceptTests {
     [Test]
     public void A_part_uses_the_other_parts_of_its_layer_when_the_option_allows_it() {
-        var definition = new SameConceptDefinition(true);
+        var definition = new SameConceptArchitecture(true);
 
         Assert.That(definition.Decision("Package/{package}/Target", "Target"), Is.EqualTo(Permission.Allow));
     }
 
     [Test]
     public void A_part_does_not_use_the_other_parts_of_its_layer_by_default() {
-        var definition = new SameConceptDefinition(false);
+        var definition = new SameConceptArchitecture(false);
 
         Assert.That(definition.Decision("Package/{package}/Target", "Target"), Is.EqualTo(Permission.Deny));
     }
 
     [Test]
     public void A_rule_overrides_the_same_layer_option() {
-        var definition = new DenyingSameLayerDefinition();
+        var definition = new DenyingSameLayerArchitecture();
 
         Assert.That(definition.Decision("Package/{package}/Target", "Target"), Is.EqualTo(Permission.Deny));
     }
 
     [Test]
     public void The_same_layer_option_allows_no_other_layer() {
-        var definition = new SameConceptDefinition(true);
+        var definition = new SameConceptArchitecture(true);
 
         Assert.That(definition.Decision("Package/{package}/Target", "Package/{package}/User"), Is.EqualTo(Permission.Deny));
     }
 }
 
-public sealed class DenyingSameLayerDefinition : ArchitectureDefinition {
+public sealed class DenyingSameLayerArchitecture : Architecture {
     public Permission Decision(string fromPath, string toPath) =>
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 

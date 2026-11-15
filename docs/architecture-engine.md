@@ -18,27 +18,26 @@ flowchart LR
 |---|---|---|
 | `VSA.Architecture` | `framework/Engine/Definition/` | The definition API. No ArchUnitNET |
 | `VSA.Architecture.Engine` | `framework/Engine/Core/` | The core: load, bind, decide, check |
-| `VSA.Architecture.Vsa` | `framework/Architectures/Vsa/Definition/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
+| `VSA.Architecture.Vsa` | `framework/Architectures/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | Engine app | `engine/` | The runner: Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
 The runtime of an app references `VSA.Architecture` through `VSA.Composition` (`VsaApp<TDefinition>`), and VSA.Sdk gives each project `VSA.Architecture.Vsa`. So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
-A concept is a record that inherits `Concept`. A definition adds the concepts to a tree in `Define`, and gives the rules in `Rules`. VSA calls its concepts layers: each VSA layer inherits `Layer : Concept`. An `Anchor` is the concept of the root part of a group instance: it is in the folder of its parent, as the VSA `Module` is the root of each feature.
+A concept is a record that inherits `Concept`. A definition is a class that inherits `Architecture`. It adds the concepts to a tree in `Define`, and gives the rules in `Rules`. VSA calls its concepts layers: each VSA layer inherits `Layer : Concept`. A `Module` is the concept of the root part of a group instance: it is in the folder of its parent, for example the root class of each feature.
 
 ```csharp
 public record Feature : Layer { public override string GroupFolder => "Features"; }
-public record Module : Anchor;
-public record Core : External { public override string Assembly => "VSA"; }
+public record Kernel : External { public override string Assembly => "VSA"; }
 
-public class VsaDefinition : ArchitectureDefinition {
-    protected override void Configure(Options options) => options.DefaultPermission = Permission.Deny;
+public class VsaArchitecture : Architecture {
+    protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
 
     protected override void Define(Root root) {
-        root.Add<Framework>().Add<Core>();
+        root.Add<Framework>().Add<Kernel>();
         var feature = root.AddGroup<Feature>();
-        feature.Add<Module>().InParentFolder().OfType<VSA.Module.Module>();
+        feature.Add<Module>().OfType<VSA.Module.Module>();
         feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
     }
 
@@ -51,8 +50,9 @@ public class VsaDefinition : ArchitectureDefinition {
 
 | Call | Effect |
 |---|---|
-| `Add<T>()`, `And<T>()` | A part in the folder of the layer, or a sibling part |
-| `AddGroup<T>()` | A group: one part instance for each subfolder |
+| `Add<T>()` | A part in the folder of the layer. It returns the `Part` |
+| `And<T>()` | A sibling part. It returns a `PartGroup`: the next call applies to each part in it |
+| `AddGroup<T>()` | A group: one part instance for each subfolder. It returns a `PartGroup` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>()` | Each type of the part must be assignable to `T` |
 | `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
@@ -60,7 +60,7 @@ public class VsaDefinition : ArchitectureDefinition {
 
 `Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth` and `Access`.
 
-`options.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
+`defaults.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
@@ -70,19 +70,19 @@ A closed group keeps its instances apart: an allow rule reaches a part in anothe
 
 1. The parameter of the rule call: `Uses<Contracts.Commands>(Boundary.Open)` crosses each closed group.
 2. The parameter of the group: `root.AddGroup<Plugin>(Boundary.Open)`.
-3. `options.Boundary`. Its default is `Boundary.Open`.
+3. `defaults.Boundary`. Its default is `Boundary.Open`.
 
-In the example, the first rule reaches the Domain of the own feature, of Core and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Boundary does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
+In the example, the first rule reaches the Domain of the own feature, of Kernel and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Boundary does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
 
 ```csharp
-options.Boundary = Boundary.Closed;
+defaults.Boundary = Boundary.Closed;
 rules.For<Infrastructure>().Uses<Domain>();
 rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 ```
 
 ## External parts
 
-An `External` part binds the types of a DLL by its name, not by its folder. `Core` binds `VSA.dll` and each `VSA.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `VSA.Contracts.Requests`. The types of an external DLL are rule targets: a rule can deny them.
+An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `VSA.dll` and each `VSA.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `VSA.Contracts.Requests`. The types of an external DLL are rule targets: a rule can deny them.
 
 The definition stops at these errors:
 
@@ -99,8 +99,8 @@ The definition stops at these errors:
 `Depth.Self` gives the part only. `Depth.WithChildren` gives the part and all its child parts. The first value that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Contracts>(Depth.WithChildren)`.
-2. The layer body, for example `options.Depth = Depth.Self` in `Configure(ConceptOptions)` of the layer.
-3. `options.Depth`.
+2. The layer body, for example `defaults.Depth = Depth.Self` in `Configure(ConceptOptions)` of the layer.
+3. `defaults.Depth`.
 
 ## Permission and access
 
@@ -132,8 +132,8 @@ An interface of the app or of .NET is not of an `External` part, so it counts. F
 The first access that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.
-2. The layer body, for example `options.Access = Access.Private` in `Configure(ConceptOptions)` of the layer.
-3. `options.Access`. Its default is `Access.Public`, so a rule with no access allows use and exposure.
+2. The layer body, for example `defaults.Access = Access.Private` in `Configure(ConceptOptions)` of the layer.
+3. `defaults.Access`. Its default is `Access.Public`, so a rule with no access allows use and exposure.
 
 ## Binding
 
@@ -141,7 +141,7 @@ The first access that is set wins:
 |---|---|
 | In a DLL that an `External` part names | That part. The longest name wins |
 | Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
-| Source file only in `obj/` or `bin/` | The project folder of the file |
+| Source file only in `obj/` or `bin/` | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
 | Source file in no part folder | None: `VSA2102` |
 | Source file out of the definition root | Not checked |
@@ -159,12 +159,17 @@ If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity pro
 | `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
 | `<UnitySource>/` (default `Source`) | The root | `Features/`, `Plugins/` of the .NET projects |
 
-`ArchitectureDefinition.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaDefinition` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it:
+`Architecture.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
 
 ```csharp
-public class MyApp : VsaApp<VsaDefinition> {
-    public override ArchitectureDefinition Architecture => new VsaDefinition { UnityApp = "Cards", UnitySource = "Modules" };
+public sealed class CardsArchitecture : VsaArchitecture {
+    public CardsArchitecture() {
+        UnityApp = "Cards";
+        UnitySource = "Modules";
+    }
 }
+
+public class MyApp : VsaApp<CardsArchitecture>;
 ```
 
 `ArchitectureLoader` also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
@@ -205,20 +210,20 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class) |
-| Fallback definition | The most derived class with no constructor parameters that inherits `ArchitectureDefinition` |
+| Fallback definition | The most derived class with no constructor parameters that inherits `Architecture` |
 | Unity DLLs | See "Unity projects" |
 
-The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaDefinition` and override `Rules`. Call `base.Rules` first: a later rule wins.
+The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Call `base.Rules` first: a later rule wins.
 
 ```csharp
-public sealed class MyDefinition : VsaDefinition {
+public sealed class MyArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
         base.Rules(rules);
         rules.For<Presenters>().Denies<Contracts.Events>();
     }
 }
 
-public class MyApp : VsaApp<MyDefinition>;
+public class MyApp : VsaApp<MyArchitecture>;
 ```
 
 ## Tests of the engine

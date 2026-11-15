@@ -1,10 +1,10 @@
 using VSA.Architecture;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public enum CrossRule { Plain, Open, InOther }
 
-public sealed class BoundaryDefinition(Boundary options, Boundary? group, CrossRule rule) : ArchitectureDefinition {
+public sealed class BoundaryArchitecture(Boundary options, Boundary? group, CrossRule rule) : Architecture {
     public Permission Decide(string fromPackage, string toPackage) {
         var user = Parts().Single(p => p.Is(typeof(User)));
         var target = Parts().Single(p => p.Is(typeof(Target)));
@@ -47,14 +47,14 @@ public sealed class BoundaryTests {
     [TestCase(Boundary.Closed, null, CrossRule.InOther, Permission.Allow)]
     public void A_rule_reaches_another_group_instance_only_when_the_group_is_open_or_the_rule_crosses_it(
         Boundary options, Boundary? group, CrossRule rule, Permission expected) {
-        var definition = new BoundaryDefinition(options, group, rule);
+        var definition = new BoundaryArchitecture(options, group, rule);
 
         Assert.That(definition.Decide("a", "b"), Is.EqualTo(expected));
     }
 
     [Test]
     public void A_closed_group_instance_uses_its_own_parts() {
-        var definition = new BoundaryDefinition(Boundary.Closed, null, CrossRule.Plain);
+        var definition = new BoundaryArchitecture(Boundary.Closed, null, CrossRule.Plain);
 
         Assert.That(definition.Decide("a", "a"), Is.EqualTo(Permission.Allow));
     }

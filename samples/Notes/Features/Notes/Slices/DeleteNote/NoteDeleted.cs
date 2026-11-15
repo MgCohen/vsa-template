@@ -1,5 +1,5 @@
-using VSA.Contracts.Events;
+namespace Notes.Features.Notes.Slices.DeleteNote;
 
-namespace Notes.Slices.DeleteNote;
+using VSA.Contracts.Events;
 
 public sealed record NoteDeleted(Guid NoteId) : IntegrationEvent;

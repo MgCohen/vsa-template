@@ -1,7 +1,7 @@
 using ArchUnitNET.Domain;
 using VSA.Architecture.Engine;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class BadAppTests {
     const string Billing = "BadApp/Features/Billing";

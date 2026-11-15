@@ -1,5 +1,5 @@
-using VSA.Contracts.Events;
+namespace Notes.Features.Notes.Slices.CreateNote;
 
-namespace Notes.Slices.CreateNote;
+using VSA.Contracts.Events;
 
 public sealed record NoteCreated(Guid NoteId, Guid AuthorId, string Title) : IntegrationEvent;

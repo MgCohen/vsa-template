@@ -2,16 +2,10 @@ using VSA.Architecture;
 
 namespace VSA.Architecture.Vsa;
 
-public class VsaDefinition : ArchitectureDefinition {
-    readonly Action<RuleBook>? appRules;
+public class VsaArchitecture : Architecture {
+    public VsaArchitecture() { }
 
-    public VsaDefinition() { }
-
-    public VsaDefinition(Action<RuleBook> appRules) {
-        this.appRules = appRules;
-    }
-
-    protected VsaDefinition(string root) : base(root) { }
+    protected VsaArchitecture(string root) : base(root) { }
 
     public const string DefaultUnitySource = "Source";
 
@@ -51,23 +45,22 @@ public class VsaDefinition : ArchitectureDefinition {
             1 => found[0],
             _ => throw new InvalidOperationException(
                 $"The Unity project has {found.Count} app folders in Assets: {string.Join(", ", found)}. "
-                + "Set UnityApp in the definition of the app: override Architecture in the app class "
-                + "and return new VsaDefinition(Rules) { UnityApp = \"<name>\" }."),
+                + "Set UnityApp in the definition of the app: derive a class from VsaArchitecture and set UnityApp."),
         };
     }
 
-    protected override void Configure(Options options) {
-        options.UseSameConcept = true;
-        options.Boundary = Boundary.Closed;
+    protected override void Configure(Options defaults) {
+        defaults.UseSameConcept = true;
+        defaults.Boundary = Boundary.Closed;
     }
 
     protected override void Define(Root root) {
-        var core = root.Add<Framework>().Add<Core>();
-        core.Add<Domain>().And<Infrastructure>().And<Presenters>();
-        core.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
-        core.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
-        core.Add<Views>();
-        core.Add<Composition>().And<Host>();
+        var kernel = root.Add<Framework>().Add<Kernel>();
+        kernel.Add<Domain>().And<Infrastructure>().And<Presenters>();
+        kernel.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+        kernel.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
+        kernel.Add<Views>();
+        kernel.Add<Composition>().And<Host>();
 
         root.Add<App>().Add<Host>().And<Views>();
 
@@ -109,12 +102,10 @@ public class VsaDefinition : ArchitectureDefinition {
         rules.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>().Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-        rules.For<Module>().Uses<Core>().And<Plugin>(Access.Internal);
+        rules.For<Module>().Uses<Kernel>().And<Plugin>(Access.Internal);
         rules.For<Module>().Denies<Module>().Under<Plugin>();
         rules.For<Module>().Under<Feature>().Uses<Feature>(Access.Internal);
-        rules.For<Host>().Uses<Composition>().And<Core>(Depth.Self);
+        rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self);
         rules.For<Views>().Uses<Presenters>();
-
-        appRules?.Invoke(rules);
     }
 }

@@ -1,6 +1,6 @@
-using VSA.Contracts.Requests;
+namespace SampleApp.Features.SampleModule.Slices.SampleAction;
 
-namespace SampleModule.Slices.SampleAction;
+using VSA.Contracts.Requests;
 
 // Add the input of the request as record parameters.
 public sealed record SampleActionRequest : IRequest<SampleActionResponse> {

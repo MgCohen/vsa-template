@@ -3,7 +3,7 @@ using VSA.Architecture.Vsa;
 
 namespace VsaEngine;
 
-public sealed class EngineDefinition : VsaDefinition {
+public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Define(Root root) {
         base.Define(root);
         root.Add<EngineLibraries>();

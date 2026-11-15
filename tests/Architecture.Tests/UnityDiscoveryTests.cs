@@ -2,7 +2,7 @@ using VSA.Architecture.Engine;
 using VSA.Architecture.Vsa;
 using VSA.Kernel;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class UnityDiscoveryTests {
     const string ModuleClass = "public sealed class {0} : VSA.Module.Module {{ public override void Configure(VSA.Kernel.AnchorBuilder module) {{ }} }}";
@@ -20,7 +20,7 @@ public sealed class UnityDiscoveryTests {
         var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
         project.Compile("Assembly-CSharp", Path.Combine(project.Root, "Library", "ScriptAssemblies"), module, note, view, package);
         project.Compile("Game.Modules", project.Output, module, note, tasks);
-        map = FixtureApps.Load(new VsaDefinition(), project.Output, project.Root);
+        map = FixtureApps.Load(new VsaArchitecture(), project.Output, project.Root);
     }
 
     [OneTimeTearDown]
@@ -73,7 +73,7 @@ public sealed class UnityDiscoveryTests {
         var module = unbuilt.Write("Source/Features/Lists/ListsModule.cs", "namespace Lists; " + string.Format(ModuleClass, "ListsModule"));
         unbuilt.Compile("Unbuilt.Modules", unbuilt.Output, module);
 
-        var discovered = FixtureApps.Load(new VsaDefinition(), unbuilt.Output, unbuilt.Root);
+        var discovered = FixtureApps.Load(new VsaArchitecture(), unbuilt.Output, unbuilt.Root);
 
         Assert.That(discovered.Findings().Where(f => f.Severity == RuleSeverity.Warning).Select(f => f.Code + ": " + f.Text),
             Has.One.StartsWith("VSA2103: ").And.Contains("has no Library/ScriptAssemblies folder"));

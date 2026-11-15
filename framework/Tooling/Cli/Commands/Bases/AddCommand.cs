@@ -28,6 +28,7 @@ abstract class AddCommand : AppCommand {
         var name = input.Name;
         CheckFree(root, name);
         var names = new Dictionary<string, string>(TemplateNames(root, name, input));
+        names[Templates.App] = AppRoot.Name(root);
         Console.WriteLine(Heading(name, names));
         FileWriter.WriteAllOrNone(root, Templates.Files(Kind, names, ToolVersion.Current));
         if (NextStep(name) is string next) {

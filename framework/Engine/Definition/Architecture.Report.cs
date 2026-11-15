@@ -2,7 +2,7 @@ using System.Text;
 
 namespace VSA.Architecture;
 
-public abstract partial class ArchitectureDefinition {
+public abstract partial class Architecture {
     public string Report() {
         Resolve();
         var text = new StringBuilder($"Options: DefaultPermission = {Options.DefaultPermission}\n\n");

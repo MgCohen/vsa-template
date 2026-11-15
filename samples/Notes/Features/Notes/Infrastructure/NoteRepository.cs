@@ -1,8 +1,8 @@
-using System.Collections.Concurrent;
-using Notes.Domain;
-using VSA.Infrastructure;
+namespace Notes.Features.Notes.Infrastructure;
 
-namespace Notes.Infrastructure;
+using System.Collections.Concurrent;
+using global::Notes.Features.Notes.Domain;
+using VSA.Infrastructure;
 
 // The saved notes of the app. The sample has no database, so the notes stay in memory while the app runs.
 public sealed class NoteStore {

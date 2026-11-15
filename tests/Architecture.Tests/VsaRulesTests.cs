@@ -2,10 +2,10 @@ using VSA.Architecture;
 using VSA.Architecture.Engine;
 using VSA.Architecture.Vsa;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class VsaRulesTests {
-    static readonly VsaDefinition Definition = new();
+    static readonly VsaArchitecture Definition = new();
 
     [TestCase("Handlers.Requests", "Contracts.Commands", Permission.Allow)]
     [TestCase("Handlers.Events", "Contracts.Commands", Permission.Allow)]
@@ -21,9 +21,9 @@ public sealed class VsaRulesTests {
         Assert.That(Decide(user, target).Permission, Is.EqualTo(expected));
     }
 
-    [TestCase("Core", "Composition", Permission.Allow)]
-    [TestCase("Core", "Host", Permission.Allow)]
-    [TestCase("Core", "Domain", Permission.Deny)]
+    [TestCase("Kernel", "Composition", Permission.Allow)]
+    [TestCase("Kernel", "Host", Permission.Allow)]
+    [TestCase("Kernel", "Domain", Permission.Deny)]
     [TestCase("Feature", "Module", Permission.Deny)]
     [TestCase("Plugin", "Module", Permission.Deny)]
     public void The_app_host_uses_only_the_framework_entry(string group, string to, Permission expected) {
@@ -33,7 +33,7 @@ public sealed class VsaRulesTests {
     [TestCase("Presenters", "Feature", "Domain.Shared", "A")]
     [TestCase("Presenters", "Feature", "Domain.Shared", "B")]
     [TestCase("Presenters", "Plugin", "Domain.Shared", "A")]
-    [TestCase("Presenters", "Core", "Contracts.Events", "A")]
+    [TestCase("Presenters", "Kernel", "Contracts.Events", "A")]
     [TestCase("Module", "Feature", "Domain.Shared", "B")]
     [TestCase("Module", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
@@ -44,9 +44,17 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var (permission, pair) = Decide(Place("Feature", "Module"), Place("Core", "Domain"));
+        var (permission, pair) = Decide(Place("Feature", "Module"), Place("Kernel", "Domain"));
 
         Assert.That((permission, pair?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
+    }
+
+    [Test]
+    public void Code_outside_the_VSA_namespaces_names_the_kernel_with_no_full_name() {
+        var kernel = Definition.Parts().Single(p => p.Is(typeof(Kernel)));
+
+        Assert.That(kernel.Parent!.Name, Is.EqualTo("Framework"));
+        Assert.That(kernel.Assembly, Is.EqualTo("VSA"));
     }
 
     static Decision Decide(PartPlace from, PartPlace to) =>

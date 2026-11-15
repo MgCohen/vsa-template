@@ -2,7 +2,7 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
   <!-- The root project of the app. It compiles the app, its modules and its views. Tests/ is a nested project. -->
   <PropertyGroup>
-    <RootNamespace>App</RootNamespace>
+    <RootNamespace>Notes</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(VsaFrameworkSourceDir)Architectures/Vsa/Host/VSA.Host.csproj" />

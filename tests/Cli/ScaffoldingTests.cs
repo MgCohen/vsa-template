@@ -126,7 +126,9 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
         Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
-        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : VsaApp<VsaDefinition> {"));
+        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : VsaApp<VsaArchitecture> {"));
+        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("namespace Hello.App.Host;"));
+        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("using Hello.App.Host;"));
     }
 
     [Test]
@@ -192,10 +194,10 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewModuleHasAUnitTest() {
-        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "Billing" }, Version);
+        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "Billing", [Templates.App] = "Shop" }, Version);
         var test = files.Single(f => f.Path == "Tests/BillingStatusTests.cs").Content;
 
-        Assert.That(test, Does.Contain("using Billing.Slices.GetStatus;"));
+        Assert.That(test, Does.Contain("using Shop.Features.Billing.Slices.GetStatus;"));
         Assert.That(test, Does.Contain("new GetStatusResponse(\"Billing\", \"Ready\")"));
     }
 
@@ -211,18 +213,18 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewModuleHasNoProjectAndAPage() {
-        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory" }, Version);
+        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory", [Templates.App] = "Shop" }, Version);
 
         Assert.That(files.Select(f => f.Path), Has.None.EndsWith(".csproj"));
-        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace OrderHistory;"));
+        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory;"));
         Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
-        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace OrderHistory.Domain.Shared;"));
+        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory.Domain.Shared;"));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
     }
 
     [Test]
     public void NewRequestHasRequestResponseAndHandler() {
-        var names = new Dictionary<string, string> { [Templates.Request] = "CreateInvoice", [Templates.Module] = "Billing" };
+        var names = new Dictionary<string, string> { [Templates.Request] = "CreateInvoice", [Templates.Module] = "Billing", [Templates.App] = "Shop" };
         var files = Templates.Files(Templates.Kind.Request, names, Version);
 
         Assert.That(
@@ -231,12 +233,13 @@ public sealed class ScaffoldingTests {
                         "Features/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
                         "Features/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
         Assert.That(string.Concat(files.Select(f => f.Content)), Does.Contain("\"/api/billing/create-invoice\""));
+        Assert.That(files.Select(f => f.Content), Has.All.Contain("namespace Shop.Features.Billing.Slices.CreateInvoice;"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }
 
     [Test]
     public void NewCommandHasCommandResultAndHandler() {
-        var names = new Dictionary<string, string> { [Templates.Command] = "ChangeLimit", [Templates.Module] = "Billing" };
+        var names = new Dictionary<string, string> { [Templates.Command] = "ChangeLimit", [Templates.Module] = "Billing", [Templates.App] = "Shop" };
         var files = Templates.Files(Templates.Kind.Command, names, Version);
 
         Assert.That(
@@ -245,6 +248,7 @@ public sealed class ScaffoldingTests {
                         "Features/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
                         "Features/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
         Assert.That(files.Single(f => f.Path.EndsWith("ChangeLimitCommand.cs")).Content, Does.Contain("ChangeLimitCommand : ICommand<ChangeLimitResult>"));
+        Assert.That(files.Select(f => f.Content), Has.All.Contain("namespace Shop.Features.Billing.Slices.ChangeLimit;"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }
 

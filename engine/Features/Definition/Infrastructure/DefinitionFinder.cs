@@ -4,7 +4,7 @@ using VSA.Architecture;
 namespace Definition.Infrastructure;
 
 public static class DefinitionFinder {
-    public static ArchitectureDefinition? Find(IReadOnlyList<Assembly> app) {
+    public static Architecture? Find(IReadOnlyList<Assembly> app) {
         var types = app.SelectMany(TypesOf)
             .Where(t => t is { IsAbstract: false, ContainsGenericParameters: false } && t.GetConstructor(Type.EmptyTypes) is not null)
             .ToList();
@@ -16,10 +16,10 @@ public static class DefinitionFinder {
         if (providers.Count == 1) {
             return ((IArchitectureProvider)Activator.CreateInstance(providers[0])!).Architecture;
         }
-        var definitions = Leaves(types.Where(typeof(ArchitectureDefinition).IsAssignableFrom).ToList());
+        var definitions = Leaves(types.Where(typeof(Architecture).IsAssignableFrom).ToList());
         return definitions.Count switch {
             0 => null,
-            1 => (ArchitectureDefinition)Activator.CreateInstance(definitions[0])!,
+            1 => (Architecture)Activator.CreateInstance(definitions[0])!,
             _ => throw new InvalidOperationException(
                 $"More than one architecture definition: {Names(definitions)}. Keep one, or make one inherit the other."),
         };

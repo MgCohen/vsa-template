@@ -1,8 +1,8 @@
-using Notes.Domain;
-using Notes.Slices.DeleteNote;
-using VSA.Testing.Unit;
-
 namespace Notes.Tests;
+
+using Notes.Features.Notes.Domain;
+using Notes.Features.Notes.Slices.DeleteNote;
+using VSA.Testing.Unit;
 
 // A handler that reads: With puts a note in the repository before the test acts.
 public sealed class DeleteNoteTests : VsaUnitTest {

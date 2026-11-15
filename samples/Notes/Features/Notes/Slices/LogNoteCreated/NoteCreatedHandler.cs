@@ -1,9 +1,9 @@
+namespace Notes.Features.Notes.Slices.LogNoteCreated;
+
 using Microsoft.Extensions.Logging;
-using Notes.Slices.CreateNote;
+using global::Notes.Features.Notes.Slices.CreateNote;
 using VSA.Contracts;
 using VSA.Handlers.Events;
-
-namespace Notes.Slices.LogNoteCreated;
 
 sealed partial class NoteCreatedHandler(ILogger<NoteCreatedHandler> logger) : IntegrationEventHandler<NoteCreated> {
     public override Task<Result<Unit>> HandleAsync(Envelope<NoteCreated> envelope) {

@@ -1,6 +1,6 @@
-using VSA.Domain;
+namespace Notes.Features.Notes.Domain;
 
-namespace Notes.Domain;
+using VSA.Domain;
 
 public sealed class Note : Entity<NoteId> {
     public const int MaxTitleLength = 200;

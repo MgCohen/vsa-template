@@ -10,7 +10,7 @@ public sealed class Binder {
     readonly IReadOnlyDictionary<string, Source> sources;
     readonly string appRoot;
 
-    Binder(ArchitectureDefinition definition, IReadOnlyDictionary<string, Source> sources, string appRoot) {
+    Binder(Architecture definition, IReadOnlyDictionary<string, Source> sources, string appRoot) {
         folderParts = [.. definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
         externalParts = [.. definition.Parts().Where(p => p.IsExternal)];
         rootPath = definition.Root.Path;
@@ -19,7 +19,7 @@ public sealed class Binder {
         this.appRoot = appRoot;
     }
 
-    public static Bindings Bind(ArchitectureDefinition definition, LoadedApp app) {
+    public static Bindings Bind(Architecture definition, LoadedApp app) {
         var binder = new Binder(definition, app.Sources, app.AppRoot);
         var places = app.Types.Select(binder.Place).ToList();
         return new Bindings(

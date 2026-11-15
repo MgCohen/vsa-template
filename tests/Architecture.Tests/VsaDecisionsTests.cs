@@ -2,10 +2,10 @@ using System.Runtime.CompilerServices;
 using VSA.Architecture;
 using VSA.Architecture.Vsa;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class VsaDecisionsTests {
-    static readonly VsaDefinition Definition = new();
+    static readonly VsaArchitecture Definition = new();
 
     [Test]
     public void The_decision_of_each_pair_of_parts_is_the_same_as_the_baseline() {
@@ -21,7 +21,7 @@ public sealed class VsaDecisionsTests {
             + "If the change is correct, copy the .actual.txt file over the baseline.");
     }
 
-    static IEnumerable<string> Decisions(ArchitectureDefinition definition) {
+    static IEnumerable<string> Decisions(Architecture definition) {
         var parts = definition.Parts().ToList();
         foreach (var from in parts.Where(p => !p.IsExternal)) {
             var fromValues = from.Groups.ToDictionary(i => i.Name, _ => "a");
@@ -55,7 +55,7 @@ public sealed class VsaDecisionsTests {
     static string Describe(Dictionary<string, string> from, Dictionary<string, string> to) =>
         string.Join(" ", to.Select(i => from.TryGetValue(i.Key, out var value) ? $"{(value == i.Value ? "same" : "other")} {i.Key}" : $"{i.Key} {i.Value}"));
 
-    static string Decide(ArchitectureDefinition definition, Part from, Dictionary<string, string> fromValues, Part to, Dictionary<string, string> toValues) {
+    static string Decide(Architecture definition, Part from, Dictionary<string, string> fromValues, Part to, Dictionary<string, string> toValues) {
         var (permission, pair) = VSA.Architecture.Engine.Decide.For(definition, from, fromValues, to, toValues);
         return permission == Permission.Allow ? $"Allow {pair?.Access.ToString() ?? "(default)"}" : "Deny";
     }

@@ -1,12 +1,12 @@
+namespace Notes.Tests;
+
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Notes.Domain;
-using Notes.Slices.CreateNote;
+using Notes.Features.Notes.Domain;
+using Notes.Features.Notes.Slices.CreateNote;
 using VSA.Contracts.Events;
 using VSA.Testing.Unit;
-
-namespace Notes.Tests;
 
 // A unit test of one slice: the request goes to its handler, with the default fakes.
 public sealed class CreateNoteTests : VsaUnitTest {

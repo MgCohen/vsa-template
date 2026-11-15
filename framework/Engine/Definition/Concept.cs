@@ -4,7 +4,7 @@ public abstract record Concept {
     public virtual string Folder => GetType().Name;
     public virtual string? GroupFolder => null;
 
-    protected internal virtual void Configure(ConceptOptions options) { }
+    protected internal virtual void Configure(ConceptOptions defaults) { }
 
     protected internal virtual void Define(Part part) { }
 

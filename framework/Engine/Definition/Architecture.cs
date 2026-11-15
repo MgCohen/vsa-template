@@ -1,6 +1,6 @@
 namespace VSA.Architecture;
 
-public abstract partial class ArchitectureDefinition {
+public abstract partial class Architecture {
     readonly string rootPath;
     readonly List<string> conflicts = [];
     readonly List<RuleSummary> summary = [];
@@ -8,7 +8,7 @@ public abstract partial class ArchitectureDefinition {
     Options? options;
     List<PartRule>? pairs;
 
-    protected ArchitectureDefinition(string rootPath = "") {
+    protected Architecture(string rootPath = "") {
         this.rootPath = rootPath;
     }
 
@@ -50,7 +50,7 @@ public abstract partial class ArchitectureDefinition {
 
     public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
 
-    protected virtual void Configure(Options options) { }
+    protected virtual void Configure(Options defaults) { }
 
     protected abstract void Define(Root root);
 

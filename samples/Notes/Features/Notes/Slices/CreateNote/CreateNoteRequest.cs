@@ -1,6 +1,6 @@
-using VSA.Contracts.Requests;
+namespace Notes.Features.Notes.Slices.CreateNote;
 
-namespace Notes.Slices.CreateNote;
+using VSA.Contracts.Requests;
 
 public sealed record CreateNoteRequest(Guid AuthorId, string Title) : IRequest<CreateNoteResponse> {
     public static HttpMethod Method => HttpMethod.Post;

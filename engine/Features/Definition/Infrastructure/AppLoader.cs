@@ -7,7 +7,7 @@ using VSA.Architecture;
 namespace Definition.Infrastructure;
 
 public sealed class AppLoader : AssemblyLoadContext {
-    static readonly HashSet<string> Shared = SharedClosure(typeof(ArchitectureDefinition).Assembly);
+    static readonly HashSet<string> Shared = SharedClosure(typeof(Architecture).Assembly);
     readonly string bin;
     readonly AssemblyDependencyResolver? resolver;
 
