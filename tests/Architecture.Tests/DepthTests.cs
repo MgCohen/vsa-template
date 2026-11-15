@@ -7,14 +7,14 @@ public record User : Concept;
 public record Target : Concept;
 
 public record OnlyTarget : Concept {
-    protected override void Configure(ConceptOptions options) {
-        options.Depth = Depth.Self;
+    protected override void Configure(Options defaults) {
+        defaults.Depth = Depth.Self;
     }
 }
 
 public record WideTarget : Concept {
-    protected override void Configure(ConceptOptions options) {
-        options.Depth = Depth.WithChildren;
+    protected override void Configure(Options defaults) {
+        defaults.Depth = Depth.WithChildren;
     }
 }
 

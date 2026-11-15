@@ -79,12 +79,8 @@ static class Exposures {
         new[] { type }.Concat(arguments.SelectMany(argument => Flatten(argument.Type, argument.GenericArguments)));
 
     static Access AccessOf(Visibility visibility) => visibility switch {
-        Visibility.Public => Access.Public,
-        Visibility.ProtectedInternal => Access.ProtectedInternal,
-        Visibility.Internal => Access.Internal,
-        Visibility.Protected => Access.Protected,
-        Visibility.PrivateProtected => Access.PrivateProtected,
-        _ => Access.Private,
+        Visibility.Public or Visibility.ProtectedInternal or Visibility.Protected => Access.Public,
+        _ => Access.Internal,
     };
 
     sealed record ImplementedInterface(IType Type, IReadOnlyDictionary<string, GenericArgument> Arguments);

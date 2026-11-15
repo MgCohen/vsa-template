@@ -1,28 +1,23 @@
 namespace VSA.Architecture;
 
 public sealed class From : Chain<From> {
-    readonly List<IRuleEntries> rules;
-    readonly string source;
+    readonly List<Rule> rules;
 
-    internal From(Type concept, Depth? depth, string source, List<IRuleEntries> rules) {
-        this.source = source;
+    internal From(Type concept, Depth? depth, List<Rule> rules) {
         this.rules = rules;
         Begin(concept, depth);
     }
 
-    public Uses Uses<T>(Depth? depth = null) where T : Concept => Uses<T>(null, depth);
+    public Rule Uses<T>(Depth? depth = null) where T : Concept => Start(typeof(T), Permission.Allow, depth, null, null);
 
-    public Uses Uses<T>(Access? access, Depth? depth = null) where T : Concept => Start(new Uses(), typeof(T), depth, access, Permission.Allow);
+    public Rule Uses<T>(Access? access) where T : Concept => Start(typeof(T), Permission.Allow, null, access, null);
 
-    public Uses Uses<T>(Boundary boundary, Access? access = null, Depth? depth = null) where T : Concept =>
-        Start(new Uses(), typeof(T), depth, access, Permission.Allow, boundary);
+    public Rule Uses<T>(Boundary boundary) where T : Concept => Start(typeof(T), Permission.Allow, null, null, boundary);
 
-    public Denies Denies<T>(Depth? depth = null) where T : Concept => Start(new Denies(), typeof(T), depth, null, Permission.Deny);
+    public Rule Denies<T>(Depth? depth = null) where T : Concept => Start(typeof(T), Permission.Deny, depth, null, null);
 
-    TRule Start<TRule>(TRule rule, Type to, Depth? depth, Access? access, Permission permission, Boundary? boundary = null) where TRule : Rule<TRule> {
-        rule.Permission = permission;
-        rule.From = Entries;
-        rule.Source = source;
+    Rule Start(Type to, Permission permission, Depth? depth, Access? access, Boundary? boundary) {
+        var rule = new Rule { Permission = permission, From = Entries };
         rule.Begin(to, depth, access, boundary);
         rules.Add(rule);
         return rule;

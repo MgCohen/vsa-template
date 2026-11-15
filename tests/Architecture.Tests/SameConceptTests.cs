@@ -6,7 +6,7 @@ public record Package : Concept;
 
 public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture {
     public Permission Decision(string fromPath, string toPath) =>
-        Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
+        Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission!.Value;
 
     protected override void Configure(Options defaults) {
         defaults.UseSameConcept = useSameConcept;
@@ -54,7 +54,7 @@ public sealed class SameConceptTests {
 
 public sealed class DenyingSameLayerArchitecture : Architecture {
     public Permission Decision(string fromPath, string toPath) =>
-        Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
+        Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission!.Value;
 
     protected override void Configure(Options defaults) {
         defaults.UseSameConcept = true;

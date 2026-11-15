@@ -56,10 +56,20 @@ public class VsaArchitecture : Architecture {
 | `AddGroup<T>()` | A group: one part instance for each subfolder. It returns a `PartGroup` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>()` | Each type of the part must be assignable to `T` |
-| `Uses<T>()`, `Denies<T>()` | A rule. A later rule wins |
+| `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth` and `Access`.
+`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth` and `Access`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call or the group parameter), the concept, the architecture, then `Options.BuiltIn`.
+
+| Field | `Options.BuiltIn` | Set by |
+|---|---|---|
+| `DefaultPermission` | `Deny` | The architecture only |
+| `UseSameConcept` | `false` | The architecture only |
+| `Boundary` | `Open` | The architecture, a concept, a group |
+| `Depth` | `WithChildren` | The architecture, a concept, a rule call |
+| `Access` | `Public` | The architecture, a concept, a rule call |
+
+A concept sets its values in `Configure(Options defaults)`. If a concept sets `DefaultPermission` or `UseSameConcept`, the definition stops: "Only the architecture sets <name>. Move it to Configure of the architecture."
 
 `defaults.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
@@ -71,7 +81,8 @@ A closed group keeps its instances apart: an allow rule reaches a part in anothe
 
 1. The parameter of the rule call: `Uses<Contracts.Commands>(Boundary.Open)` crosses each closed group.
 2. The parameter of the group: `root.AddGroup<Plugin>(Boundary.Open)`.
-3. `defaults.Boundary`. Its default is `Boundary.Open`.
+3. The concept body, for example `defaults.Boundary = Boundary.Closed` in `Configure(Options)` of the concept.
+4. `defaults.Boundary` of the architecture. Its default is `Boundary.Open`.
 
 In the example, the first rule reaches the Domain of the own feature, of Kernel and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Boundary does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
 
@@ -85,14 +96,14 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `VSA.dll` and each `VSA.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `VSA.Contracts.Requests`. The types of an external DLL are rule targets: a rule can deny them.
 
-The definition stops at these errors:
+The definition stops at these shapes. The first four give one error, because a DLL name has no group segment, and the child of an external gets its DLL name from its parent:
 
 | Definition | Error |
 |---|---|
-| `AddGroup<External>()` | A DLL is not a group of folders |
-| An external under a group | A DLL has no copy for each group instance |
-| An external under an external | The child gets its DLL name from its parent |
-| `AddGroup` under an external | DLL names have no instance segment |
+| `AddGroup<External>()` | `AddGroup<Lib>() makes a group of an external.` |
+| An external under a group | `Add<Lib>() is under the group Group.` |
+| An external under an external | `Add<OtherLib>() is under the external Lib.` |
+| `AddGroup` under an external | `AddGroup<Child>() is under the external Lib.` |
 | `InParentFolder()` on an external part | Its name is a DLL name segment |
 
 ## Depth
@@ -100,8 +111,8 @@ The definition stops at these errors:
 `Depth.Self` gives the part only. `Depth.WithChildren` gives the part and all its child parts. The first value that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Contracts>(Depth.WithChildren)`.
-2. The layer body, for example `defaults.Depth = Depth.Self` in `Configure(ConceptOptions)` of the layer.
-3. `defaults.Depth`.
+2. The layer body, for example `defaults.Depth = Depth.Self` in `Configure(Options)` of the layer.
+3. `defaults.Depth` of the architecture. Its default is `Depth.WithChildren`.
 
 ## Permission and access
 
@@ -110,7 +121,7 @@ A rule has two values:
 | Value | Enum | Values | Question |
 |---|---|---|---|
 | Permission | `Permission` | `Allow`, `Deny` | May this part use that part? |
-| Access | `Access` | `Private`, `PrivateProtected`, `Protected`, `Internal`, `ProtectedInternal`, `Public` | How visible may the use be? |
+| Access | `Access` | `Internal`, `Public` | How visible may the use be? |
 
 `Uses<T>()` allows the use. `Denies<T>()` denies it. An access limits an allowed use:
 
@@ -119,7 +130,7 @@ rules.For<Contracts.Requests>().Uses<Domain.Shared>();               // use and 
 rules.For<Handlers.Requests>().Uses<Domain>(Access.Internal);        // use, but do not expose outside the assembly
 ```
 
-A type exposes a part when a type of that part is in its signature: a base type, an interface, or the type of a member (a method return or parameter, a property, a field), with their generic arguments. The access of a member is the narrowest of the member and its type. The order is partial: `Protected` and `Internal` are not comparable, so `Protected` is not within `Internal`.
+A type exposes a part when a type of that part is in its signature: a base type, an interface, or the type of a member (a method return or parameter, a property, a field), with their generic arguments. The access of a member is the narrowest of the member and its type. `Internal` is within `Public`. The check maps each visibility to one of the two values: `public`, `protected internal` and `protected` are `Public`, because code outside the assembly can see them. `internal`, `private protected` and `private` are `Internal`.
 
 The framework can require a public exposure, so the check ignores two exposures:
 
@@ -133,8 +144,8 @@ An interface of the app or of .NET is not of an `External` part, so it counts. F
 The first access that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.
-2. The layer body, for example `defaults.Access = Access.Private` in `Configure(ConceptOptions)` of the layer.
-3. `defaults.Access`. Its default is `Access.Public`, so a rule with no access allows use and exposure.
+2. The layer body, for example `defaults.Access = Access.Internal` in `Configure(Options)` of the layer.
+3. `defaults.Access` of the architecture. Its default is `Access.Public`, so a rule with no access allows use and exposure.
 
 ## Binding
 
@@ -160,7 +171,7 @@ If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity pro
 | `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
 | `<UnitySource>/` (default `Source`) | The root | `Features/`, `Plugins/` of the .NET projects |
 
-`Architecture.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
+`Architecture.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
 
 ```csharp
 public sealed class CardsArchitecture : VsaArchitecture {
