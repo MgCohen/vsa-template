@@ -1,6 +1,6 @@
-using Umpire.Messages.Contracts;
-
 namespace Umpire.Messages.Handlers;
+
+using Umpire.Messages.Contracts;
 
 static class CurrentEnvelope {
     static readonly AsyncLocal<Envelope?> current = new();

@@ -1,6 +1,6 @@
-using Umpire.Messages.Contracts;
-
 namespace Umpire.Vsa.Contracts.Requests;
+
+using Umpire.Messages.Contracts;
 
 public interface IRequest : IMessage {
 #if NET

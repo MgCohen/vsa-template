@@ -1,9 +1,9 @@
+namespace LoadApp.Infrastructure;
+
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.Loader;
 using Umpire.Architecture;
-
-namespace LoadApp.Infrastructure;
 
 public sealed class AppLoader : AssemblyLoadContext {
     static readonly HashSet<string> Shared = SharedClosure(typeof(Architecture).Assembly);

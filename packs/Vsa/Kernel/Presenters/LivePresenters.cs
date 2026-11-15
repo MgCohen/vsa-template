@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Presenters;
+
 using Microsoft.Extensions.Logging;
 using Umpire.Vsa.Contracts.Events;
-
-namespace Umpire.Vsa.Presenters;
 
 // The presenters that exist now, for the whole app. PresenterInstaller adds each presenter when the services make it,
 // and the scope removes it when it ends. A view is not needed.

@@ -1,8 +1,8 @@
+namespace BuiltApp.Infrastructure;
+
 using ArchUnitNET.Domain;
 using ArchUnitNET.Domain.Dependencies;
 using Umpire.Architecture;
-
-namespace BuiltApp.Infrastructure;
 
 sealed record Exposure(IType Target, Access Access, string Member);
 

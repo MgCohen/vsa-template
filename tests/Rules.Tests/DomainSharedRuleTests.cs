@@ -1,6 +1,6 @@
-using Umpire.Vsa.Analyzers;
-
 namespace Rules.Tests;
+
+using Umpire.Vsa.Analyzers;
 
 // The rules of a Domain.Shared project: UMP1005, UMP1006 and UMP1007. The test code is in Cards.Domain.Shared,
 // so all three rules check each type.

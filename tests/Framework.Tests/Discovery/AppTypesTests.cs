@@ -1,10 +1,10 @@
+namespace Framework.Tests.Discovery;
+
 using Bare;
 using Shelf;
 using Toolbox;
 using Twin;
 using Umpire.Kernel;
-
-namespace Framework.Tests.Discovery;
 
 public sealed class AppTypesTests {
     [Test]

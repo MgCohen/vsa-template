@@ -1,11 +1,11 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1012: the members of a type are in order: first by kind, then by access, then static before instance.
 // The diagnostic marks each member that comes after a member of a later group. An explicit interface implementation is public.

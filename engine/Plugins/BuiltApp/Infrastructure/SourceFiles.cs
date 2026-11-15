@@ -1,6 +1,6 @@
-using Umpire.Architecture;
-
 namespace BuiltApp.Infrastructure;
+
+using Umpire.Architecture;
 
 static class SourceFiles {
     public static Dictionary<string, Source> Read(IEnumerable<string> dlls) {

@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1003: a contracts project holds only contracts. In <Module>.Contracts.Requests, <Module>.Contracts.Commands and
 // <Module>.Contracts.Events, each public type is a request, a response, a command, an event, or a type that one of

@@ -1,9 +1,9 @@
+namespace BuiltApp.Infrastructure;
+
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using Umpire.Architecture;
-
-namespace BuiltApp.Infrastructure;
 
 sealed class SymbolReader : IDisposable {
     static readonly Guid TypeDefinitionDocuments = new("932E74BC-DBA9-4478-8D46-0F32A7BAB3D3");

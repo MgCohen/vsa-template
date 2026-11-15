@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1014: the root class of a plugin module (UmpireRootFolder = Plugins) inherits Plugin, and the root class of a module
 // (UmpireRootFolder = Features) does not. The host configures the plugin modules first, and the name of the base says which one it is.

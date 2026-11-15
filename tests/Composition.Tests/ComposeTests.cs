@@ -1,3 +1,5 @@
+namespace Composition.Tests;
+
 using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
@@ -12,8 +14,6 @@ using Signals.Presenters;
 using Signals.Slices.Ring;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
-
-namespace Composition.Tests;
 
 public sealed class ComposeTests {
     [Test]

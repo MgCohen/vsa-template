@@ -1,6 +1,6 @@
-using System.Text.RegularExpressions;
-
 namespace Umpire.Cli.Scaffolding;
+
+using System.Text.RegularExpressions;
 
 static partial class Templates {
     public const string App = "SampleApp";

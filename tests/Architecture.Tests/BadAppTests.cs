@@ -1,7 +1,7 @@
+namespace EngineCore.Tests;
+
 using ArchUnitNET.Domain;
 using Steps.Domain.Shared;
-
-namespace EngineCore.Tests;
 
 public sealed class BadAppTests {
     const string Billing = "BadApp/Features/Billing";

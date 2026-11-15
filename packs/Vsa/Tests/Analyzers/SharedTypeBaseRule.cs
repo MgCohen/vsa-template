@@ -1,11 +1,11 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1007: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
 // and each interface in the base list of a type. A permitted base is in a .Domain.Shared assembly (this project or

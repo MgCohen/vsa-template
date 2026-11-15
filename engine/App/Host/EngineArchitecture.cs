@@ -1,7 +1,7 @@
+namespace UmpireEngine;
+
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
-
-namespace UmpireEngine;
 
 public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Define(Root root) {

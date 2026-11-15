@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Presenters;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
-
-namespace Umpire.Vsa.Presenters;
 
 // An interface: in process (default), HTTP (views in a separate app), and a fake in tests.
 // Send gives the result of the request: the response, or the Error of the handler.

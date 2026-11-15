@@ -1,7 +1,7 @@
+namespace Meters.Slices.ChangeMeter;
+
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Meters.Slices.ChangeMeter;
 
 sealed class ChangeMeterValidator<T> : Validator<ChangeMeterCommand<T>> where T : struct {
     public override Error? Validate(IEnvelope<ChangeMeterCommand<T>> envelope) =>

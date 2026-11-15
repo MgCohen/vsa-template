@@ -1,9 +1,9 @@
+namespace BuiltApp.Infrastructure;
+
 using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
 using Steps.Domain.Shared;
 using Umpire.Architecture;
-
-namespace BuiltApp.Infrastructure;
 
 public static class AppReader {
     public static LoadedApp Read(IEnumerable<string> dlls, string appRoot, ResolvedArchitecture architecture) {

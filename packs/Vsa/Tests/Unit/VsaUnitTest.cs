@@ -1,3 +1,5 @@
+namespace Umpire.Vsa.Testing.Unit;
+
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
@@ -11,8 +13,6 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Requests;
 using Umpire.Vsa.Infrastructure;
-
-namespace Umpire.Vsa.Testing.Unit;
 
 // The NUnit base of a unit test: it runs a request handler or a command handler without HTTP and without a database.
 // Before each test, the base makes new services with the default fakes and calls Configure.

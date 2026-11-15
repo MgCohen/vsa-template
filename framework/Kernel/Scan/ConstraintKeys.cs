@@ -1,6 +1,6 @@
-using System.Reflection;
-
 namespace Umpire.Kernel;
+
+using System.Reflection;
 
 public sealed class ConstraintKeys : IKeySource {
     public IEnumerable<Type> KeysFor(Type genericParameter, IReadOnlyList<Type> candidates) {

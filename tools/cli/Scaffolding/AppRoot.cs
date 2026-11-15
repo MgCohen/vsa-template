@@ -1,6 +1,6 @@
-using Umpire.Engine.Versions;
-
 namespace Umpire.Cli.Scaffolding;
+
+using Umpire.Engine.Versions;
 
 static class AppRoot {
     public static string Find() {

@@ -1,7 +1,7 @@
+namespace Umpire.Messages.Handlers;
+
 using System.Collections.Concurrent;
 using Umpire.Messages.Contracts;
-
-namespace Umpire.Messages.Handlers;
 
 public sealed class Pipelines {
     readonly IServiceProvider root;

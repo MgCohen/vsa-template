@@ -1,8 +1,8 @@
+namespace EngineCore.Tests;
+
 using ArchUnitNET.Loader;
 using Umpire.Architecture;
 using BuiltApp.Infrastructure;
-
-namespace EngineCore.Tests;
 
 public record OpenTarget : Concept;
 

@@ -1,6 +1,6 @@
-using Umpire.Kernel;
-
 namespace Umpire.Messages.Handlers;
+
+using Umpire.Kernel;
 
 sealed class PipelineCatalog {
     internal PipelineCatalog(AppTypes? types) {

@@ -1,8 +1,8 @@
+namespace Umpire.Messages.Handlers;
+
 using System.Reflection;
 using Umpire.Markers;
 using Umpire.Messages.Contracts;
-
-namespace Umpire.Messages.Handlers;
 
 sealed class MessageRoute {
     internal MessageRoute(Type message, IReadOnlyList<Type> handlers, bool many) {

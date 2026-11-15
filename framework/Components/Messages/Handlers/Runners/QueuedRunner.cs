@@ -1,6 +1,6 @@
-using Umpire.Messages.Contracts;
-
 namespace Umpire.Messages.Handlers;
+
+using Umpire.Messages.Contracts;
 
 public sealed class QueuedRunner : IRunner {
     readonly RunQueue queue = new();

@@ -1,10 +1,10 @@
+namespace Baseline.Slices.ApplyBaseline;
+
 using Baseline.Domain;
 using Baseline.Infrastructure;
 using Steps.Domain.Shared;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Baseline.Slices.ApplyBaseline;
 
 sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBaselineResult> {
     public const string StaleEntry = "UMP3005";

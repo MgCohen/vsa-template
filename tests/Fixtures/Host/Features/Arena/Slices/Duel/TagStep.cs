@@ -1,7 +1,7 @@
+namespace Arena.Slices.Duel;
+
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Arena.Slices.Duel;
 
 public sealed class TagStep : BeforeStep {
     public override Task<object> BeforeAsync(Envelope envelope) {

@@ -1,10 +1,10 @@
+namespace EngineCore.Tests;
+
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
-
-namespace EngineCore.Tests;
 
 sealed class UnityProjectFolder : IDisposable {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";

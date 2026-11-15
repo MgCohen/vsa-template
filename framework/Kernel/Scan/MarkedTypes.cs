@@ -1,8 +1,8 @@
+namespace Umpire.Kernel;
+
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Markers;
-
-namespace Umpire.Kernel;
 
 public static class MarkedTypes {
     public static readonly string TypeArgumentName = typeof(TypeArgumentAttribute).FullName!;

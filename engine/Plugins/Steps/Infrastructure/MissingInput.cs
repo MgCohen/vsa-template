@@ -1,9 +1,9 @@
+namespace Steps.Infrastructure;
+
 using System.Reflection;
 using Steps.Domain.Shared;
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Steps.Infrastructure;
 
 public sealed class MissingInput : BeforeStep<IEngineStep> {
     public const string Code = "UMP3004";

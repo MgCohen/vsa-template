@@ -1,7 +1,7 @@
+namespace EngineCore.Tests;
+
 using Kit;
 using Umpire.Architecture;
-
-namespace EngineCore.Tests;
 
 public record KitLayer : External {
     public override string Folder => "Kit";

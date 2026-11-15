@@ -1,7 +1,7 @@
+namespace Umpire.Messages.Handlers;
+
 using Umpire.Markers;
 using Umpire.Messages.Contracts;
-
-namespace Umpire.Messages.Handlers;
 
 [RequireDerived]
 [Preserve]

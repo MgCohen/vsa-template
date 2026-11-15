@@ -1,6 +1,6 @@
-using System.Diagnostics;
-
 namespace Umpire.Cli.Scaffolding;
+
+using System.Diagnostics;
 
 static class Dotnet {
     public static DotnetRun Run(string folder, params string[] args) {

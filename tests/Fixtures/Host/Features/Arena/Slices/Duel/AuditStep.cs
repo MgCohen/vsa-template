@@ -1,7 +1,7 @@
+namespace Arena.Slices.Duel;
+
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Arena.Slices.Duel;
 
 public sealed class AuditStep(ArenaLog log) : AfterStep<ArenaMove> {
     public override Task AfterAsync(IEnvelope<ArenaMove> envelope) {

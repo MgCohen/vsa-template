@@ -1,7 +1,7 @@
+namespace Rules.Slices.CheckRules;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Rules.Slices.CheckRules;
 
 sealed class CheckRulesHandler : CommandHandler<CheckRulesCommand, CheckRulesResult> {
     public override Task<Result<CheckRulesResult>> HandleAsync(Envelope<CheckRulesCommand> envelope) {

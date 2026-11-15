@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1002: event handlers do not send requests. An event handler reacts to a fact. It does not use a request type
 // or IBus. Umpire.Sdk gives the Handlers/Events layer no reference to Contracts/Requests, so this rule catches the rest.

@@ -1,10 +1,10 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1011: a file has one top-level type. Nested types are not top-level types.
 // The diagnostic marks each top-level type after the first.

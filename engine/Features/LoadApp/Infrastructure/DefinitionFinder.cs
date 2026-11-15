@@ -1,8 +1,8 @@
+namespace LoadApp.Infrastructure;
+
 using System.Reflection;
 using Umpire.Architecture;
 using Umpire.Kernel;
-
-namespace LoadApp.Infrastructure;
 
 public static class DefinitionFinder {
     const string AppClass = $"{nameof(Umpire)}.{nameof(Umpire.Kernel)}.{nameof(App)}";

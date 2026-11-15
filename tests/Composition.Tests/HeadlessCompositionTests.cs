@@ -1,3 +1,5 @@
+namespace Composition.Tests;
+
 using Answers;
 using Answers.Slices.Answer;
 using Answers.Slices.GetItem;
@@ -19,8 +21,6 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Presenters;
 using Umpire.Kernel;
-
-namespace Composition.Tests;
 
 public sealed class HeadlessCompositionTests {
     [Test]

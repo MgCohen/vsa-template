@@ -1,11 +1,11 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // The base of each analyzer DLL. It runs each UmpireAnalyzerRule of the assembly of the derived class,
 // so each DLL has one analyzer class that inherits RuleAnalyzer.

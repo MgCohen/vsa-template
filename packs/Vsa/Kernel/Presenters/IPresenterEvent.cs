@@ -1,6 +1,6 @@
-using Umpire.Vsa.Contracts.Events;
-
 namespace Umpire.Vsa.Presenters;
+
+using Umpire.Vsa.Contracts.Events;
 
 // A presenter that shows an event of a module. Implement it once for each event type.
 // LivePresenters calls OnEventAsync, one event at a time for each presenter, then the presenter raises Changed.

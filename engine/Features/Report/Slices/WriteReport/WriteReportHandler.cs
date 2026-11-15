@@ -1,10 +1,10 @@
+namespace Report.Slices.WriteReport;
+
 using System.Diagnostics;
 using Report.Domain.Shared;
 using Steps.Domain.Shared;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Report.Slices.WriteReport;
 
 sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResult> {
     const string Origin = "umpire-engine";

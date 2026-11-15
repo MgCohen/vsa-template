@@ -1,7 +1,7 @@
+namespace Umpire.Engine.Versions;
+
 using System.Diagnostics;
 using System.Reflection;
-
-namespace Umpire.Engine.Versions;
 
 public static class PackageVersion {
     public static string Of(Assembly assembly) =>

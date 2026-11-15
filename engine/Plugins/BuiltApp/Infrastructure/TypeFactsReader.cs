@@ -1,7 +1,7 @@
+namespace BuiltApp.Infrastructure;
+
 using ArchUnitNET.Domain;
 using Umpire.Architecture;
-
-namespace BuiltApp.Infrastructure;
 
 static class TypeFactsReader {
     public static IReadOnlyList<TypeFacts> Read(

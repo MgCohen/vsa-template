@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Handlers.Events;
+
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Messages.Handlers;
-
-namespace Umpire.Vsa.Handlers.Events;
 
 sealed class InProcessEventPublisher(IServiceProvider provider) : IIntegrationEventPublisher {
     public async Task<Result<Unit>> PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct)

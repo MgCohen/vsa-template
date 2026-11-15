@@ -1,10 +1,10 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class ReflectionBaseSuppressor : DiagnosticSuppressor {

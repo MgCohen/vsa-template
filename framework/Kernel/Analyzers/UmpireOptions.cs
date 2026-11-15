@@ -1,8 +1,8 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // The options of one rule in one file. A rule key wins over a global key: umpire.UMP1001.check_responses, then umpire.check_responses.
 // No getter has a default: the values are in Umpire.Rules.globalconfig. A getter gives null if the value of this file is not valid,

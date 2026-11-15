@@ -1,3 +1,5 @@
+namespace Framework.Tests.Handlers;
+
 using System.Net;
 using System.Net.Http.Json;
 using Answers;
@@ -8,8 +10,6 @@ using Framework.Tests.Host;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
 using ProblemDetails = Microsoft.AspNetCore.Mvc.ProblemDetails;
-
-namespace Framework.Tests.Handlers;
 
 public sealed class HttpApiTests {
     IHost app = null!;

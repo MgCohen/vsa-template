@@ -1,9 +1,9 @@
+namespace Steps.Infrastructure;
+
 using Microsoft.Extensions.DependencyInjection;
 using Steps.Domain.Shared;
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Steps.Infrastructure;
 
 public sealed class RecordStep : AfterStep<IEngineStep> {
     public const string CouldNotRun = "UMP3000";

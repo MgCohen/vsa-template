@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Composition;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Handlers.Requests;
 using Umpire.Vsa.Presenters;
-
-namespace Umpire.Vsa.Composition;
 
 sealed class InProcessBus(IServiceProvider provider) : IBus {
     public Task<Result<TResponse>> Send<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)

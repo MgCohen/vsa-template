@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // The test of the Domain.Shared rules (UMP1005, UMP1006, UMP1007). A <Module>.Domain.Shared project is the published
 // domain of a module: the keys, ids and components that other modules read.

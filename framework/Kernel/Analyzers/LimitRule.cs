@@ -1,8 +1,8 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // The base of a rule that sets a maximum, for example the number of characters in a line.
 // The limit is the option max in Umpire.Rules.globalconfig: umpire.<rule ID>.max = <number>.

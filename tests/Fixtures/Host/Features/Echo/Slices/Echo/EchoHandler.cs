@@ -1,7 +1,7 @@
+namespace Echo.Slices.Echo;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Echo.Slices.Echo;
 
 sealed class EchoHandler : CommandHandler<EchoCommand, string> {
     public override Task<Result<string>> HandleAsync(Envelope<EchoCommand> envelope) =>

@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Views;
+
 using Microsoft.AspNetCore.Components;
 using Umpire.Vsa.Presenters;
-
-namespace Umpire.Vsa.Views;
 
 // A component that shows one presenter: the page gives it as the Presenter parameter.
 // For a component that shows more than one presenter, inherit PresenterWatcher and call Watch.

@@ -1,8 +1,8 @@
+namespace BadApp.Billing.Presenters;
+
 using BadApp.Billing.Domain;
 using BadApp.Billing.Slices.CreateInvoice;
 using Kit;
-
-namespace BadApp.Billing.Presenters;
 
 public sealed class BellPresenter : IPresenterEvent<InvoiceCreated>, IBellSource, IEquatable<Invoice> {
     internal InvoiceCreated? Last { get; private set; }

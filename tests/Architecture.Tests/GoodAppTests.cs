@@ -1,9 +1,9 @@
+namespace EngineCore.Tests;
+
 using Kit;
 using Umpire.Architecture;
 using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
-
-namespace EngineCore.Tests;
 
 public sealed class GoodAppTests {
     static ArchitectureCheck Map => FixtureApps.Good;

@@ -1,7 +1,7 @@
+namespace Composition.Tests;
+
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernel;
-
-namespace Composition.Tests;
 
 public sealed class FactoryTests {
     public sealed record Greeting(string Text);

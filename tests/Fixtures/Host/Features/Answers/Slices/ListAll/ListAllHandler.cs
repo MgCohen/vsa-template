@@ -1,7 +1,7 @@
+namespace Answers.Slices.ListAll;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Requests;
-
-namespace Answers.Slices.ListAll;
 
 sealed class ListAllHandler : RequestHandler<ListAllRequest, ListAllResponse> {
     public override Task<Result<ListAllResponse>> HandleAsync(Envelope<ListAllRequest> envelope) =>

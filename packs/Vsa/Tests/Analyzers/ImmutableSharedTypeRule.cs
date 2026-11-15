@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1005: the types of a <Module>.Domain.Shared project are immutable. Other modules read these values,
 // so a value does not change after it is made. A property has no set accessor (init is permitted).

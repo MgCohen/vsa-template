@@ -1,7 +1,7 @@
+namespace EngineCore.Tests;
+
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
-
-namespace EngineCore.Tests;
 
 public sealed class VsaRulesTests {
     static readonly VsaArchitecture Definition = new();

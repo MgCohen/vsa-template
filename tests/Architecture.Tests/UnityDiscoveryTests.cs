@@ -1,9 +1,9 @@
+namespace EngineCore.Tests;
+
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
 using Umpire.Vsa.Definition;
 using Umpire.Kernel;
-
-namespace EngineCore.Tests;
 
 public sealed class UnityDiscoveryTests {
     const string ModuleClass = "public sealed class {0} : Umpire.Kernel.Module {{ public override void Configure("

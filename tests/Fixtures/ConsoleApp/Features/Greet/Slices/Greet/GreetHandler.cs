@@ -1,7 +1,7 @@
+namespace Greet.Slices.Greet;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Greet.Slices.Greet;
 
 sealed class GreetHandler : CommandHandler<GreetCommand, GreetResult> {
     public override Task<Result<GreetResult>> HandleAsync(Envelope<GreetCommand> envelope) {

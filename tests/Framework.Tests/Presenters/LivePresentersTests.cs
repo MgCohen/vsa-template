@@ -1,8 +1,8 @@
+namespace Framework.Tests.Presenters;
+
 using Microsoft.Extensions.Logging.Abstractions;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Presenters;
-
-namespace Framework.Tests.Presenters;
 
 public sealed class LivePresentersTests {
     readonly LivePresenters live = new(NullLogger<LivePresenters>.Instance);

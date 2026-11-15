@@ -1,10 +1,10 @@
+namespace EngineCore.Tests;
+
 using System.Runtime.CompilerServices;
 using Umpire.Architecture;
 using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
-
-namespace EngineCore.Tests;
 
 static class FixtureApps {
     public static readonly string Root = FixtureRoot();

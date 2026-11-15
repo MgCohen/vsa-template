@@ -1,8 +1,8 @@
+namespace Umpire.Cli.Commands;
+
 using Umpire.Engine.Versions;
 using Umpire.Cli.Commands.Bases;
 using Umpire.Cli.Scaffolding;
-
-namespace Umpire.Cli.Commands;
 
 sealed class UpdateCommand : AppCommand {
     const string AddTool = "Add it with 'dotnet tool install umpire.cli --local'.";

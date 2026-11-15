@@ -1,8 +1,8 @@
+namespace Umpire.Messages.Handlers;
+
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
-
-namespace Umpire.Messages.Handlers;
 
 public sealed class Pipeline<TMessage> : IPipelineRun where TMessage : class {
     readonly PipelineDefinition definition;

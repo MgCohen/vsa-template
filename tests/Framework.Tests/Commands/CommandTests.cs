@@ -1,3 +1,5 @@
+namespace Framework.Tests.Commands;
+
 using System.Net.Http.Json;
 using Battle;
 using Battle.Slices.PlayCard;
@@ -12,8 +14,6 @@ using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
-
-namespace Framework.Tests.Commands;
 
 // The host registers ICommandSender and the one handler of each command (tests/Fixtures/CommandApp).
 // Battle PlayCard sends PayCost to Cards. Cards sends ChangeResource to Resources. Each mana pool starts at 10.

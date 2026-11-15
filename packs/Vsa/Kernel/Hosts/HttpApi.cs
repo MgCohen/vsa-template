@@ -1,3 +1,5 @@
+namespace Umpire.Vsa.Hosts.Web;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
@@ -7,8 +9,6 @@ using System.Reflection;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Handlers.Requests;
-
-namespace Umpire.Vsa.Hosts.Web;
 
 static class HttpApi {
     internal static void Map(WebApplication app, IEnumerable<Type> handlerServices) {

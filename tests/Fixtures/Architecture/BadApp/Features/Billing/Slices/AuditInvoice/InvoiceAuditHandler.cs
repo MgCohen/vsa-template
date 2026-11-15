@@ -1,6 +1,6 @@
-using BadApp.Billing.Slices.CreateInvoice;
-
 namespace BadApp.Billing.Slices.AuditInvoice;
+
+using BadApp.Billing.Slices.CreateInvoice;
 
 public sealed class InvoiceAuditHandler : Kit.IEventHandler {
     public static string Handle(InvoiceCreated created) {

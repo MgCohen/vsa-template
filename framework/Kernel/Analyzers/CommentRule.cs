@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
-
-namespace Umpire.Vsa.Analyzers;
 
 public sealed class CommentRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(

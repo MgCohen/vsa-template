@@ -1,6 +1,6 @@
-using Umpire.Messages.Contracts;
-
 namespace Umpire.Vsa.Contracts.Commands;
+
+using Umpire.Messages.Contracts;
 
 // A command goes from one module to another in the same process. It has one handler and one result.
 // The result is a type of the same slice. Umpire.Sdk puts it in Contracts.Commands, because the command uses it.

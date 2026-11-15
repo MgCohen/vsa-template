@@ -1,3 +1,5 @@
+namespace Composition.Tests;
+
 using Meters;
 using Meters.Domain.Shared;
 using Meters.Slices.ChangeMeter;
@@ -8,8 +10,6 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Kernel;
-
-namespace Composition.Tests;
 
 public sealed class OpenGenericTests {
     [Test]

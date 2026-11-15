@@ -1,6 +1,6 @@
-using System;
-
 namespace Umpire.Vsa.Analyzers;
+
+using System;
 
 // One option that a rule needs. The value is only in Umpire.Rules.globalconfig, or in a consumer .editorconfig: no rule has a default.
 // VsaAnalyzer checks each option at the start of a compilation. If the option is missing or not valid, it reports UMP1000,

@@ -1,11 +1,11 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Concurrent;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1006: the types of a <Module>.Domain.Shared project hold only data. The logic stays in the module that owns it.
 // A type has no ordinary method, no operator or conversion written by hand, and no constructor with a body.

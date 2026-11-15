@@ -1,8 +1,8 @@
+namespace Steps.Infrastructure;
+
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Steps.Infrastructure;
 
 public sealed class StepRunner : IRunner {
     public async Task RunAsync(Envelope envelope, Func<Envelope, Task> run) {

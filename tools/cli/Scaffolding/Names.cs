@@ -1,7 +1,7 @@
+namespace Umpire.Cli.Scaffolding;
+
 using System.Text;
 using System.Text.RegularExpressions;
-
-namespace Umpire.Cli.Scaffolding;
 
 static partial class Names {
     static readonly string[] NamesThatBreakTheBuild =

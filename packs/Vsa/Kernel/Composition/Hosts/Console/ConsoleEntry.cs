@@ -1,3 +1,5 @@
+namespace Umpire.Vsa.Composition;
+
 using System.Globalization;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
@@ -5,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
-
-namespace Umpire.Vsa.Composition;
 
 sealed class ConsoleEntry(
     Type command,

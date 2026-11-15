@@ -1,7 +1,7 @@
+namespace Engine.Slices.RunEngine;
+
 using Report.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
-
-namespace Engine.Slices.RunEngine;
 
 public sealed record RunEngineCommand(
     string Root,

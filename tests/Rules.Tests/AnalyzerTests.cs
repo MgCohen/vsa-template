@@ -1,10 +1,10 @@
+namespace Rules.Tests;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Umpire.Vsa.Analyzers;
 using Umpire.Kernel;
-
-namespace Rules.Tests;
 
 sealed class AllRulesTest : CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
     protected override IEnumerable<Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer> GetDiagnosticAnalyzers() =>

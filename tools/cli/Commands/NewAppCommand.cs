@@ -1,7 +1,7 @@
+namespace Umpire.Cli.Commands;
+
 using Umpire.Cli.Commands.Bases;
 using Umpire.Cli.Scaffolding;
-
-namespace Umpire.Cli.Commands;
 
 sealed class NewAppCommand : ToolCommand {
     static readonly CommandOption Source = new(["--source"], "feed", Many: true);

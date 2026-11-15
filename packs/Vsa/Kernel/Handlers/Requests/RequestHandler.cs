@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Handlers.Requests;
+
 using Umpire.Markers;
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Contracts.Requests;
-
-namespace Umpire.Vsa.Handlers.Requests;
 
 [AutoRegister]
 [RequireDerived]

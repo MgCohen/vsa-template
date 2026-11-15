@@ -1,7 +1,7 @@
+namespace Arena.Slices.Duel;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Arena.Slices.Duel;
 
 sealed class StrikeHandler(ArenaLog log) : CommandHandler<StrikeCommand, int> {
     public override Task<Result<int>> HandleAsync(Envelope<StrikeCommand> envelope) {

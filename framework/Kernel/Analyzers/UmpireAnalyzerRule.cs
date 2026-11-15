@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // The base of each VSA analyzer rule. A rule gives one constant descriptor and registers its actions.
 // VsaAnalyzer finds each rule of this assembly, so a new rule is one new class. No list of rules changes.

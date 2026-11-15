@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Umpire.Kernel;
+
+using System.ComponentModel.DataAnnotations;
 
 static class SettingsValidator {
     internal static List<string> Errors<TSettings>(TSettings settings, Func<TSettings, IEnumerable<string>> validate)

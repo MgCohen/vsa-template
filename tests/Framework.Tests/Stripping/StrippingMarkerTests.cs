@@ -1,3 +1,5 @@
+namespace Framework.Tests.Stripping;
+
 using System.Reflection;
 using Umpire.Markers;
 using Umpire.Messages.Handlers;
@@ -6,8 +8,6 @@ using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Handlers.Requests;
 using Umpire.Vsa.Presenters;
 using Umpire.Kernel;
-
-namespace Framework.Tests.Stripping;
 
 public sealed class StrippingMarkerTests {
     [TestCase(typeof(PreserveAttribute), "PreserveAttribute", AttributeTargets.All)]

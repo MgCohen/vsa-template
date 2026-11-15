@@ -1,7 +1,7 @@
+namespace Arena.Slices.Duel;
+
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
-
-namespace Arena.Slices.Duel;
 
 sealed class StrikeValidator : Validator<StrikeCommand> {
     public override Error? Validate(IEnvelope<StrikeCommand> envelope) =>

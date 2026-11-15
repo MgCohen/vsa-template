@@ -1,6 +1,6 @@
-using Umpire.Cli.Scaffolding;
-
 namespace Umpire.Cli.Commands;
+
+using Umpire.Cli.Scaffolding;
 
 sealed record SliceKind(
     string Noun,

@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1004: presenters do not publish events, and do not send events to the views (the observer, LivePresenters). The layer map gives presenters the event types, so that they can
 // show them (IPresenterEvent). A change of state is a request, and its handler publishes the event.

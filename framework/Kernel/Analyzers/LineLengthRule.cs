@@ -1,8 +1,8 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1008: a line has at most max characters. The diagnostic marks the characters after the limit.
 // Option: umpire.UMP1008.max, in Umpire.Rules.globalconfig.

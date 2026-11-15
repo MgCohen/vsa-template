@@ -1,7 +1,7 @@
+namespace Rules.Slices.CheckRules;
+
 using Steps.Domain.Shared;
 using Umpire.Architecture;
-
-namespace Rules.Slices.CheckRules;
 
 sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
     public IReadOnlyList<Finding> Of(Binding from) =>

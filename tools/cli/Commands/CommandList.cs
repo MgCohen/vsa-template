@@ -1,6 +1,6 @@
-using Umpire.Cli.Commands.Bases;
-
 namespace Umpire.Cli.Commands;
+
+using Umpire.Cli.Commands.Bases;
 
 static class CommandList {
     const string VersionUsage = "umpire --version";

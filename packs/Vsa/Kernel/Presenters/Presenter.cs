@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Presenters;
+
 using Umpire.Markers;
 using Umpire.Messages.Contracts;
-
-namespace Umpire.Vsa.Presenters;
 
 // The interface between the views and one module. Two directions:
 //   top down:  a view calls a method, the presenter sends a request with IBus (Run).

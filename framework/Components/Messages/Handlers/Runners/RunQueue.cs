@@ -1,6 +1,6 @@
-using Umpire.Messages.Contracts;
-
 namespace Umpire.Messages.Handlers;
+
+using Umpire.Messages.Contracts;
 
 sealed class RunQueue {
     readonly object gate = new();

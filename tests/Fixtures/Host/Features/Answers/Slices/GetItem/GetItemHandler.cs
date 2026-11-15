@@ -1,7 +1,7 @@
+namespace Answers.Slices.GetItem;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Requests;
-
-namespace Answers.Slices.GetItem;
 
 sealed class GetItemHandler : RequestHandler<GetItemRequest, GetItemResponse> {
     public override Task<Result<GetItemResponse>> HandleAsync(Envelope<GetItemRequest> envelope) =>

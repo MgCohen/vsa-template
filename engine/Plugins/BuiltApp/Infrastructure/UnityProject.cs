@@ -1,6 +1,6 @@
-using Steps.Domain.Shared;
-
 namespace BuiltApp.Infrastructure;
+
+using Steps.Domain.Shared;
 
 static class UnityProject {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";

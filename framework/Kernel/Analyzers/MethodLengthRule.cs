@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1009: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
 // The rule checks methods, constructors, finalizers, operators, accessors and local functions.

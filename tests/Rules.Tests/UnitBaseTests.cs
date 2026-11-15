@@ -1,10 +1,10 @@
+namespace Rules.Tests;
+
 using Good.Slices.GetItem;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Testing.Unit;
-
-namespace Rules.Tests;
 
 // The unit test base on the Good fixture: it finds the handler of a request in the module and runs it.
 public sealed class UnitBaseTests : VsaUnitTest {

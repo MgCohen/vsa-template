@@ -1,8 +1,8 @@
+namespace EngineCore.Tests;
+
 using LayeredApp.Ui;
 using Umpire.Architecture;
 using Rules.Slices.CheckRules;
-
-namespace EngineCore.Tests;
 
 public record Ui : Concept;
 

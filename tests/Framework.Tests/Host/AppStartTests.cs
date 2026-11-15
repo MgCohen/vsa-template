@@ -1,3 +1,5 @@
+namespace Framework.Tests.Host;
+
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -8,8 +10,6 @@ using Answers.Slices.GetItem;
 using Answers.Slices.ListAll;
 using Shelf;
 using Microsoft.Extensions.Hosting;
-
-namespace Framework.Tests.Host;
 
 public sealed class AppStartTests {
     [Test]

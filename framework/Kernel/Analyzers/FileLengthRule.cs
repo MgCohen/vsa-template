@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 // UMP1010: a file has at most max lines. The diagnostic marks the first line after the limit.
 // Option: umpire.UMP1010.max, in Umpire.Rules.globalconfig.

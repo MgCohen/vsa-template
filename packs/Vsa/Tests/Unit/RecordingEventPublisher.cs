@@ -1,7 +1,7 @@
+namespace Umpire.Vsa.Testing.Unit;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Events;
-
-namespace Umpire.Vsa.Testing.Unit;
 
 public sealed class RecordingEventPublisher : IIntegrationEventPublisher {
     readonly List<IntegrationEvent> published = [];

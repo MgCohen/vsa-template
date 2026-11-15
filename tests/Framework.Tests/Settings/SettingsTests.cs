@@ -1,10 +1,10 @@
+namespace Framework.Tests.Settings;
+
 using System.ComponentModel.DataAnnotations;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernel;
-
-namespace Framework.Tests.Settings;
 
 public sealed class SettingsTests {
     [Test]

@@ -1,8 +1,8 @@
+namespace Arena.Slices.Duel;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
-
-namespace Arena.Slices.Duel;
 
 sealed class ComboHandler(ICommandSender commands, ArenaLog log) : CommandHandler<ComboCommand, int> {
     public override async Task<Result<int>> HandleAsync(Envelope<ComboCommand> envelope) {

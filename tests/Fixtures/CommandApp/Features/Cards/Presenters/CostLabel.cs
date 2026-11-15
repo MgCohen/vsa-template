@@ -1,8 +1,8 @@
+namespace Cards.Presenters;
+
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Resources.Domain.Shared;
-
-namespace Cards.Presenters;
 
 // A presenter type: it reads the own published domain, the published domain of Resources, and an event of its own module.
 public static class CostLabel {

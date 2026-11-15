@@ -1,6 +1,6 @@
-using System.Xml.Linq;
-
 namespace Umpire.Cli.Scaffolding;
+
+using System.Xml.Linq;
 
 static class NugetConfig {
     public const string FileName = "nuget.config";

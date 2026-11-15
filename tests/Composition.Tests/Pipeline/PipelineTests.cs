@@ -1,3 +1,5 @@
+namespace Composition.Tests.Pipeline;
+
 using Arena;
 using Answers.Slices.Answer;
 using Arena.Slices.Duel;
@@ -10,8 +12,6 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
 using Umpire.Kernel;
-
-namespace Composition.Tests.Pipeline;
 
 public sealed class PipelineTests {
     IHost host = null!;

@@ -1,11 +1,11 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
-
-namespace Umpire.Vsa.Analyzers;
 
 // The base of a rule that forbids some types in the classes that inherit one base class.
 // It checks fields, properties, parameters (also of a primary constructor), object creations, calls and locals.

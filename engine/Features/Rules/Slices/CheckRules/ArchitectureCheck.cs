@@ -1,8 +1,8 @@
+namespace Rules.Slices.CheckRules;
+
 using BuiltApp.Infrastructure;
 using Steps.Domain.Shared;
 using Umpire.Architecture;
-
-namespace Rules.Slices.CheckRules;
 
 sealed class ArchitectureCheck {
     readonly RuleChecks checks;

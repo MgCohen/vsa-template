@@ -1,9 +1,9 @@
+namespace Composition.Tests;
+
 using Greet;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Vsa.Composition;
 using Umpire.Kernel;
-
-namespace Composition.Tests;
 
 [NonParallelizable]
 public sealed class ConsoleHostTests {

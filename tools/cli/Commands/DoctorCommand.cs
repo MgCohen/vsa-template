@@ -1,7 +1,7 @@
+namespace Umpire.Cli.Commands;
+
 using Umpire.Engine.Versions;
 using Umpire.Cli.Commands.Bases;
-
-namespace Umpire.Cli.Commands;
 
 sealed class DoctorCommand : AppCommand {
     public override IReadOnlyList<string> Words => ["doctor"];

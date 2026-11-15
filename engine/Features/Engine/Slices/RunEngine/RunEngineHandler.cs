@@ -1,3 +1,5 @@
+namespace Engine.Slices.RunEngine;
+
 using Baseline.Slices.ApplyBaseline;
 using LoadApp.Slices.LoadApp;
 using Report.Domain.Shared;
@@ -9,8 +11,6 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
 using Versions.Slices.CheckVersions;
-
-namespace Engine.Slices.RunEngine;
 
 sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHandler<RunEngineCommand, ReportResult> {
     public override async Task<Result<ReportResult>> HandleAsync(Envelope<RunEngineCommand> envelope) {

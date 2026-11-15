@@ -1,7 +1,7 @@
+namespace Signals.Slices.Ring;
+
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Events;
-
-namespace Signals.Slices.Ring;
 
 sealed class RangHandler(RingLog log) : IntegrationEventHandler<Rang> {
     public override Task<Result<Unit>> HandleAsync(Envelope<Rang> envelope) {

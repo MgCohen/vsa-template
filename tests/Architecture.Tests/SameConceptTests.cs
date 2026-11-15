@@ -1,6 +1,6 @@
-using Umpire.Architecture;
-
 namespace EngineCore.Tests;
+
+using Umpire.Architecture;
 
 public record Package : Concept;
 

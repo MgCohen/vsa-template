@@ -1,8 +1,8 @@
+namespace Tests.Shared;
+
 using System.Diagnostics;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
-
-namespace Tests.Shared;
 
 // A copy of a folder in a short temporary folder, prepared as a consumer of the local feed.
 // global.json names the Umpire.Sdk version, and restore uses its own NuGet cache.

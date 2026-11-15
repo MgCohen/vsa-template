@@ -1,9 +1,9 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-
-namespace Umpire.Vsa.Analyzers;
 
 public sealed class HookNameRule() : UmpireAnalyzerRule(Descriptor) {
     const string Suffix = "Hook";

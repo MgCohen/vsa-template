@@ -1,7 +1,7 @@
+namespace Tests.Shared;
+
 using System.Diagnostics;
 using System.Text;
-
-namespace Tests.Shared;
 
 public sealed record DotnetResult(string Command, int ExitCode, string Output) {
     public bool Succeeded => ExitCode == 0;

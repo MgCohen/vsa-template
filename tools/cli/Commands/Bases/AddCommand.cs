@@ -1,6 +1,6 @@
-using Umpire.Cli.Scaffolding;
-
 namespace Umpire.Cli.Commands.Bases;
+
+using Umpire.Cli.Scaffolding;
 
 abstract class AddCommand : AppCommand {
     public override bool TakesName => true;

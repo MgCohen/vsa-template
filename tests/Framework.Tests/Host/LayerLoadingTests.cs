@@ -1,7 +1,7 @@
+namespace Framework.Tests.Host;
+
 using Shelf;
 using Shelf.Presenters;
-
-namespace Framework.Tests.Host;
 
 public sealed class LayerLoadingTests {
     [Test]
