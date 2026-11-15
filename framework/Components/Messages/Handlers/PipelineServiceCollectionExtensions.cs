@@ -1,9 +1,17 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using VSA.Kernel;
 
 namespace VSA.Handlers;
 
 public static class PipelineServiceCollectionExtensions {
+    public static IServiceCollection AddPipelines(this IServiceCollection services, AppTypes types) {
+        services.AddSingleton(new PipelineCatalog(types));
+        services.TryAddSingleton<IMessageIds, SequentialMessageIds>();
+        services.TryAddSingleton(provider => new Pipelines(provider, provider.GetServices<PipelineRegistration>()));
+        return services;
+    }
+
     public static IServiceCollection AddPipeline<TMessage>(
         this IServiceCollection services, IPipelineBuilder<TMessage> builder) where TMessage : class {
         if (services.Any(d => d.ImplementationInstance is PipelineRegistration { Kind: null } r

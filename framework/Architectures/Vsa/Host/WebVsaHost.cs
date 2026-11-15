@@ -1,3 +1,5 @@
+namespace VSA.Host;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,23 +8,22 @@ using VSA.Handlers.Requests;
 using VSA.Kernel;
 using VSA.Views;
 
-namespace VSA.Host;
-
-public sealed class WebVsaHost : IAppHost {
+public sealed class WebVsaHost : VsaHost {
     Type[] requestHandlers = [];
     Type? viewsRoot;
 
-    public IHostApplicationBuilder CreateBuilder(string[] args) => WebApplication.CreateBuilder(args);
+    protected override IHostApplicationBuilder CreateBuilder(string[] args) => WebApplication.CreateBuilder(args);
 
-    public void Install(IHostApplicationBuilder builder, AnchorTypes types) {
+    protected override void Install(IServiceCollection services, AppTypes types) {
+        base.Install(services, types);
         requestHandlers = [.. types.Implementations(typeof(RequestHandler<,>)).Select(handler => handler.Service)];
-        viewsRoot = ViewsInstaller.FindRoot(AnchorScan.AssembliesThatReference(typeof(ViewsRoot).Assembly));
+        viewsRoot = ViewsInstaller.FindRoot(AppTypes.AssembliesThatReference(typeof(ViewsRoot).Assembly));
         if (viewsRoot is not null) {
-            ViewsInstaller.Install(builder.Services);
+            ViewsInstaller.Install(services);
         }
     }
 
-    public IHost Build(IHostApplicationBuilder builder) {
+    protected override IHost Build(IHostApplicationBuilder builder) {
         var app = ((WebApplicationBuilder)builder).Build();
         HttpApi.Map(app, requestHandlers);
         if (viewsRoot is not null) {
@@ -30,11 +31,4 @@ public sealed class WebVsaHost : IAppHost {
         }
         return app;
     }
-
-    public int Run(IHost app) {
-        app.Run();
-        return 0;
-    }
-
-    public void Stop(IHost app) => app.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
 }

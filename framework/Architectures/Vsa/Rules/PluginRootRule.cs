@@ -19,8 +19,8 @@ public sealed class PluginRootRule() : VsaAnalyzerRule(Descriptor) {
         if (!options.TryGetValue("build_property.VsaRootFolder", out var root) || root is not ("Plugins" or "Features")) {
             return;
         }
-        var module = start.Compilation.GetTypeByMetadataName("VSA.Module.Module");
-        var plugin = start.Compilation.GetTypeByMetadataName("VSA.Module.Plugin");
+        var module = start.Compilation.GetTypeByMetadataName("VSA.Kernel.Module");
+        var plugin = start.Compilation.GetTypeByMetadataName("VSA.Composition.Plugin");
         if (module is null || plugin is null) {
             return;
         }

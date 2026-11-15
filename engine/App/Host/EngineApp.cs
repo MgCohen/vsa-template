@@ -1,8 +1,7 @@
+namespace VsaEngine;
+
+using VSA.Architecture.Vsa;
 using VSA.Composition;
 using VSA.Kernel;
 
-namespace VsaEngine;
-
-public class EngineApp : VsaApp<EngineArchitecture> {
-    protected override IAppHost Host() => new ConsoleVsaHost();
-}
+public class EngineApp : App<Vsa<EngineArchitecture, ConsoleVsaHost>>;

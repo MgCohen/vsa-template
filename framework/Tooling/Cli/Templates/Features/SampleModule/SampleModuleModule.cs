@@ -1,12 +1,12 @@
 namespace SampleApp.Features.SampleModule;
 
-using VSA.Module;
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Kernel;
 
 // The root of the SampleModule module. The host finds it and calls Configure at start-up.
 // When Domain has an aggregate, register its IRepository here, for example:
-//   module.Services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();
+//   services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();
 public sealed class SampleModuleModule : Module {
-    public override void Configure(AnchorBuilder module) {
+    public override void Configure(IServiceCollection services) {
     }
 }

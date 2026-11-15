@@ -1,4 +1,5 @@
 using Greet;
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Composition;
 using VSA.Kernel;
 
@@ -24,22 +25,17 @@ public sealed class ConsoleHostTests {
 
     [Test]
     public void An_app_with_no_entry_command_stops_the_build() {
-        var builder = AppBuilder.Create().Modules(new EchoModuleStub()).UseConsoleHost();
+        var app = new TestApp<ConsoleVsaHost>(new EchoModuleStub());
 
-        var error = Assert.Throws<InvalidOperationException>(() => builder.Build());
+        var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
         Assert.That(error.Message, Does.StartWith("The console host found no entry command."));
     }
 
-    static int Run(params string[] args) {
-        var builder = AppBuilder.Create(args).Modules(new GreetModule()).UseConsoleHost();
-        var host = builder.SelectedHost();
-        using var app = builder.Build();
-        return host.Run(app);
-    }
+    static int Run(params string[] args) => new TestApp<ConsoleVsaHost>(new GreetModule()).Run(args);
 
-    sealed class EchoModuleStub : VSA.Module.Module {
-        public override void Configure(AnchorBuilder module) {
+    sealed class EchoModuleStub : Module {
+        public override void Configure(IServiceCollection services) {
         }
     }
 }

@@ -5,6 +5,4 @@ using VSA.Composition;
 using VSA.Host;
 using VSA.Kernel;
 
-public class SampleAppApp : VsaApp<VsaArchitecture> {
-    protected override IAppHost Host() => new WebVsaHost();
-}
+public class SampleAppApp : App<Vsa<WebVsaHost>>;

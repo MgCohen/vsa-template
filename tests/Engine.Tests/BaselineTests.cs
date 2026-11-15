@@ -8,8 +8,6 @@ using Steps.Domain.Shared;
 using Tests.Shared;
 using VSA.Contracts;
 using VSA.Contracts.Commands;
-using VSA.Kernel;
-using VSA.Composition;
 
 namespace Engine.Tests;
 
@@ -159,8 +157,7 @@ public sealed class BaselineTests {
     }
 
     static async Task<Result<T>> Send<T>(ICommand<T> command) {
-        VSA.Module.Module[] modules = [new StepsPlugin(), new BaselineModule(), new ReportModule()];
-        using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
+        using var host = new EngineTestApp(new StepsPlugin(), new BaselineModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
     }

@@ -31,14 +31,14 @@ public class VsaArchitecture : Architecture {
         root.Add<App>().Add<Host>().And<Views>();
 
         var plugin = root.AddGroup<Plugin>(Boundary.Open);
-        plugin.Add<Module>().OfType<VSA.Module.Plugin>();
+        plugin.Add<Module>().OfType<VSA.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
         plugin.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
         plugin.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
 
         var feature = root.AddGroup<Feature>();
-        feature.Add<Module>().OfType<VSA.Module.Module>();
+        feature.Add<Module>().OfType<VSA.Kernel.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();
         feature.AddGroup<Slice>()

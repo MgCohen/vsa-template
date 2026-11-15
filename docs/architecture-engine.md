@@ -22,7 +22,7 @@ flowchart LR
 | `VSA.Architecture.Versions` | `framework/Engine/Versions/` | The version check (`VSA3001`). The engine app and the `vsa` tool bundle it |
 | Engine app | `engine/` | The runner: Versions, Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
-The runtime of an app references `VSA.Architecture` through `VSA.Composition` (`VsaApp<TDefinition>`), and VSA.Sdk gives each project `VSA.Architecture.Vsa`. So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app references `VSA.Architecture` through `VSA.Kernel` (`Pack.Architecture`), and VSA.Sdk gives each project `VSA.Architecture.Vsa`. So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -38,7 +38,7 @@ public class VsaArchitecture : Architecture {
     protected override void Define(Root root) {
         root.Add<Framework>().Add<Kernel>();
         var feature = root.AddGroup<Feature>();
-        feature.Add<Module>().OfType<VSA.Module.Module>();
+        feature.Add<Module>().OfType<VSA.Kernel.Module>();
         feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
     }
 
@@ -181,7 +181,7 @@ public sealed class CardsArchitecture : VsaArchitecture {
     }
 }
 
-public class MyApp : VsaApp<CardsArchitecture>;
+public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 ```
 
 `ArchitectureLoader` also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
@@ -222,9 +222,20 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 | Versions | Each VSA version slot of the app root and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
-| Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class) |
-| Fallback definition | The most derived class with no constructor parameters that inherits `Architecture` |
+| Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine errors" |
 | Unity DLLs | See "Unity projects" |
+
+### Engine errors
+
+| ID | Problem |
+|---|---|
+| `VSA3000` | A step throws an exception. The run continues |
+| `VSA3001` | A VSA version is not the engine version (see "One version") |
+| `VSA3002` | No DLL of the host output has source files under the app root |
+| `VSA3003` | The app has no app class |
+| `VSA3004` | A step is skipped, because an earlier step failed |
+| `VSA3005` | The app has more than one most derived app class |
+| `VSA3006` | An app class has no public constructor with no parameters |
 
 ## One version
 
@@ -247,7 +258,7 @@ A file that does not exist gives no slot. The JSON files can have comments and t
 
 `vsa update` changes only the version text of `global.json`, so the file keeps its comments, BOM and line endings. A project file keeps its BOM and its line endings.
 
-The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Call `base.Rules` first: a later rule wins.
+The app class (`MyApp : App<Vsa<TArchitecture, THost>>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Call `base.Rules` first: a later rule wins.
 
 ```csharp
 public sealed class MyArchitecture : VsaArchitecture {
@@ -257,7 +268,7 @@ public sealed class MyArchitecture : VsaArchitecture {
     }
 }
 
-public class MyApp : VsaApp<MyArchitecture>;
+public class MyApp : App<Vsa<MyArchitecture, WebVsaHost>>;
 ```
 
 ## Baseline

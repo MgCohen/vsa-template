@@ -31,9 +31,9 @@ VSA has no `AggregateRoot<TId>`. It was a base for EF Core, and EF Core is not i
 
 ```csharp
 public sealed class NotebookModule : Module {
-    public override void Configure(AnchorBuilder module) {
-        module.Services.AddSingleton<NoteStore>();
-        module.Services.AddScoped<IRepository<Note, NoteId>, NoteRepository>();
+    public override void Configure(IServiceCollection services) {
+        services.AddSingleton<NoteStore>();
+        services.AddScoped<IRepository<Note, NoteId>, NoteRepository>();
     }
 }
 ```

@@ -3,7 +3,7 @@ using VSA.Kernel;
 namespace VSA.Handlers;
 
 sealed class PipelineCatalog {
-    internal PipelineCatalog(AnchorTypes? types) {
+    internal PipelineCatalog(AppTypes? types) {
         Types = types;
         Validators = Scan(typeof(Validator<>));
         Befores = Scan(typeof(Before<>));
@@ -11,7 +11,7 @@ sealed class PipelineCatalog {
     }
 
     internal static PipelineCatalog Empty { get; } = new(null);
-    internal AnchorTypes? Types { get; }
+    internal AppTypes? Types { get; }
     internal IReadOnlyList<(Type Message, Type Implementation)> Validators { get; }
     internal IReadOnlyList<(Type Message, Type Implementation)> Befores { get; }
     internal IReadOnlyList<(Type Message, Type Implementation)> Afters { get; }

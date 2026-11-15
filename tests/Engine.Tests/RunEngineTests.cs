@@ -1,5 +1,6 @@
 using Baseline;
 using Definition;
+using Definition.Infrastructure;
 using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
@@ -8,10 +9,9 @@ using Steps;
 using Steps.Domain.Shared;
 using Versions;
 using Tests.Shared;
-using VSA.Composition;
 using VSA.Contracts.Commands;
-using VSA.Module;
 using VSA.Kernel;
+using VsaEngine;
 
 namespace Engine.Tests;
 
@@ -24,10 +24,26 @@ public sealed class RunEngineTests {
     public void The_scan_finds_each_module_of_the_one_engine_assembly() {
         var engine = typeof(StepsPlugin).Assembly;
 
-        var modules = AnchorScan.InOrder(AnchorScan.Roots(typeof(VSA.Module.Module)).Where(root => root.Assembly == engine).Select(root => root.Create()))
+        var modules = AppTypes.InOrder(AppTypes.Roots().Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
         Assert.That(modules, Is.EqualTo(new[] { "Steps", "Baseline", "Definition", "Engine", "Report", "Rules", "Versions" }));
+    }
+
+    [Test]
+    public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
+        var classes = DefinitionFinder.Find([typeof(EngineApp).Assembly]);
+
+        Assert.That(classes.Usable, Is.EqualTo(new[] { typeof(EngineApp) }));
+        Assert.That(DefinitionFinder.ArchitectureOf(classes.Usable[0]), Is.TypeOf<EngineArchitecture>());
+    }
+
+    [Test]
+    public void Assemblies_with_no_app_class_give_no_architecture() {
+        var classes = DefinitionFinder.Find([typeof(Repo).Assembly]);
+
+        Assert.That(classes.Usable, Is.Empty);
+        Assert.That(classes.NoConstructor, Is.Empty);
     }
 
     [Test]
@@ -64,6 +80,35 @@ public sealed class RunEngineTests {
     }
 
     [Test]
+    public async Task An_app_with_two_app_classes_gives_VSA3005_with_both_names() {
+        var result = await Run(root: Repo.Path("tests", "Fixtures", "TwoApps"));
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error VSA3005: The app has more than one app class: "
+            + "TwoApps.App.Host.FirstApp, TwoApps.App.Host.SecondApp."));
+        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+    }
+
+    [Test]
+    public async Task An_app_class_with_no_empty_constructor_gives_VSA3006_with_its_name() {
+        var result = await Run(root: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error VSA3006: The app class NoConstructorApp.App.Host.NamedApp "
+            + "has no public constructor with no parameters"));
+        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+    }
+
+    [Test]
+    public async Task An_app_with_no_app_class_gives_VSA3003() {
+        var result = await Run(root: Repo.Path("tests", "Shared"));
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error VSA3003: The app has no app class."));
+        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+    }
+
+    [Test]
     public async Task A_step_that_throws_gives_one_error_and_the_run_continues() {
         var result = await Run(bin: Path.Combine(Notes, "missing-bin"));
 
@@ -80,11 +125,9 @@ public sealed class RunEngineTests {
     }
 
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
-        VSA.Module.Module[] modules = [
+        using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
-            new BaselineModule(), new ReportModule(),
-        ];
-        using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
+            new BaselineModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);

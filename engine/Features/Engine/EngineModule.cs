@@ -1,9 +1,9 @@
-using VSA.Module;
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Kernel;
 
 namespace Engine;
 
 public sealed class EngineModule : Module {
-    public override void Configure(AnchorBuilder module) {
+    public override void Configure(IServiceCollection services) {
     }
 }

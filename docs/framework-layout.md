@@ -17,37 +17,41 @@ flowchart BT
     Vsa --> Messages["Components/Messages"]
     Vsa --> Definition["Engine/Definition"]
     Messages -. private .-> Kernel
+    Kernel --> Definition
     Core["Engine/Core"] --> Definition
 ```
 
 `Engine/Versions` (`VSA.Architecture.Versions`) has no VSA reference. The engine app and the `vsa` tool bundle it for the version check.
 
-The kernel and the engine do not reference each other. Only an architecture pack uses both.
+The kernel references the definition API (`VSA.Architecture`), because a `Pack` gives the `Architecture` of the app. The definition API is portable and has no ArchUnitNET. The engine core (`Engine/Core`) does not reference the kernel.
 
 ## Two kinds of type
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Architecture`, `Concept`, `record Module : Concept` | `class Anchor`, `AnchorBuilder`, `IInstaller` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers | `class Module : Anchor`, `class Plugin : Module` |
+| Generic | `Architecture`, `Concept`, `record Module : Concept` | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers | `Vsa<THost>`, `VsaHost`, `class Plugin : Module`, `WebVsaHost`, `ConsoleVsaHost` |
 
-- The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<VSA.Module.Module>()`. Where two types have the same name, write the full name of the runtime class.
+- The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<VSA.Kernel.Module>()`. Where two types have the same name, write the full name of the runtime class.
 - A definition `Module` is in the folder of its parent: it is the root part of a group instance.
-- A runtime `Anchor` has `Name`, `Order`, `Section` and `Configure(AnchorBuilder)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`.
+- A runtime `Module` has `Name`, `Order`, `Section` and `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
 
 ## How the kernel starts an app
 
 ```
 App.Run(args)                             VSA.Kernel
-├─ AppBuilder: Host(), Keys(), Services(), Configure(builder)
-│                                         VsaApp: Modules() or ScanFor(typeof(Module))
-├─ AnchorScan.Anchors(base)               the root classes of the app, in order
-├─ AnchorScan.Installers()                each IInstaller in the assemblies that reference VSA.Kernel
-├─ Services(...)
-└─ Anchor.Configure                       each anchor, last
+├─ Pack.CreateHost()                      a new AppHost for each run
+└─ AppHost.Create(args, app)
+   ├─ CreateBuilder(args)                 open: the generic host, or the web host
+   ├─ Compose(services, app)              fixed
+   │  ├─ core                             IConfiguration, logging, AppTypes, auto-register
+   │  ├─ Install(services, types)         open: VsaHost adds each VSA layer
+   │  ├─ Module.Configure                 each module, in Order, then by name
+   │  └─ app.ConfigureServices            last
+   └─ Build(builder)                      open
 ```
 
-The installers have no order. A test runs them in reverse order with the same result.
+See `composition.md` for each step.
 
 ## Second architecture
 

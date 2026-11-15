@@ -14,8 +14,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Markers/VSA.Analyzers.Markers.csproj" />
+    <ProjectReference Include="../Engine/Definition/VSA.Architecture.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="VSA.Module" />
+    <InternalsVisibleTo Include="VSA.Composition" />
   </ItemGroup>
 </Project>
