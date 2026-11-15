@@ -123,16 +123,22 @@ Presenter → IBus.Send(request) → InProcessBus → RequestHandler<,>       ev
 API client → HTTP → route of the request → RequestHandler<,>            web host
 ```
 
-A request gives its `Method` and `Route` as static members. Only the HTTP API reads them. On `netstandard2.1`, `IRoutedRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
+A request is a message (`IMessage`), as a command is. It goes to its handler in process (`IBus`), or over HTTP on the web host. Each request gives its `Method` and `Route` as static members on the type itself. Only the HTTP API reads them, to map the route. On `netstandard2.1`, `IRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
 
 ```csharp
-public interface IRoutedRequest {
+public interface IRequest : IMessage {
 #if NET
     static abstract HttpMethod Method { get; }
     static abstract string Route { get; }
 #endif
 }
+
+public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 ```
+
+- `IRequest` is an interface, because only an interface can make each request give the static members.
+- On `net10.0`, an interface with static abstract members cannot be a type argument (CS8920). Name it with `typeof(IRequest)`, for example in the definition.
+- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IBus` require it, so the compiler finds a response with no marker. VSA.Sdk also uses it to find the contract files of a slice.
 
 ## AppTypes finds the parts of the app
 

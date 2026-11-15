@@ -18,7 +18,7 @@ public sealed class EventHandlerRequestRule() : ForbiddenUseRule(Descriptor) {
         compilation.GetTypeByMetadataName("VSA.Handlers.Events.IntegrationEventHandler`1");
 
     protected override IEnumerable<INamedTypeSymbol?> ForbiddenTypes(Compilation compilation) => [
-        compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRoutedRequest"),
+        compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest"),
         compilation.GetTypeByMetadataName("VSA.Presenters.IBus"),
     ];
 }
