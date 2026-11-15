@@ -3,8 +3,8 @@ namespace Notes.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using Notes.Features.Notes.Domain;
-using Notes.Features.Notes.Slices.CreateNote;
+using Notes.Features.Notebook.Domain;
+using Notes.Features.Notebook.Slices.CreateNote;
 using VSA.Contracts.Events;
 using VSA.Testing.Unit;
 

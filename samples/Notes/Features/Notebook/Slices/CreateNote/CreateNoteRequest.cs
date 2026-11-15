@@ -1,4 +1,4 @@
-namespace Notes.Features.Notes.Slices.CreateNote;
+namespace Notes.Features.Notebook.Slices.CreateNote;
 
 using VSA.Contracts.Requests;
 

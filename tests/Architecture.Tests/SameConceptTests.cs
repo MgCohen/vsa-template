@@ -8,8 +8,8 @@ public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture 
     public Permission Decision(string fromPath, string toPath) =>
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
-    protected override void Configure(Options configured) {
-        configured.UseSameConcept = useSameConcept;
+    protected override void Configure(Options defaults) {
+        defaults.UseSameConcept = useSameConcept;
     }
 
     protected override void Define(Root root) {
@@ -56,8 +56,8 @@ public sealed class DenyingSameLayerArchitecture : Architecture {
     public Permission Decision(string fromPath, string toPath) =>
         Resolve().LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? Options.DefaultPermission;
 
-    protected override void Configure(Options configured) {
-        configured.UseSameConcept = true;
+    protected override void Configure(Options defaults) {
+        defaults.UseSameConcept = true;
     }
 
     protected override void Define(Root root) {

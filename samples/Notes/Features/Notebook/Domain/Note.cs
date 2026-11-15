@@ -1,4 +1,4 @@
-namespace Notes.Features.Notes.Domain;
+namespace Notes.Features.Notebook.Domain;
 
 using VSA.Domain;
 

@@ -78,16 +78,24 @@ public sealed class CommandTests {
         Assert.That(() => RunOutsideAnApp(["add", "request", "CreateInvoice"]),
             Throws.TypeOf<VsaException>().With.Message.Contain("not in a VSA app"));
 
-    static int RunOutsideAnApp(string[] args) => RunInFolder(args, isApp: false);
+    [TestCase("module", "module")]
+    [TestCase("plugin", "plugin module")]
+    public void AModuleWithTheAppNameStops(string kind, string noun) =>
+        Assert.That(() => RunInAnApp(["add", kind, "Shop"], app: "Shop"),
+            Throws.TypeOf<VsaException>().With.Message.Contain($"The {noun} name Shop is the name of the app.")
+                .And.Message.Contain("CS0234"));
 
-    static int RunInAnApp(string[] args) => RunInFolder(args, isApp: true);
+    static int RunOutsideAnApp(string[] args) => RunInFolder(args, app: null);
 
-    static int RunInFolder(string[] args, bool isApp) {
+    static int RunInAnApp(string[] args, string app = "Hello") => RunInFolder(args, app);
+
+    static int RunInFolder(string[] args, string? app) {
         var folder = TempFolder.Create();
         var current = Environment.CurrentDirectory;
         try {
-            if (isApp) {
+            if (app is not null) {
                 File.WriteAllText(Path.Combine(folder, "global.json"), $$"""{ "msbuild-sdks": { "VSA.Sdk": "{{ToolVersion.Current}}" } }""");
+                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), "<Project Sdk=\"VSA.Sdk\" />");
             }
             Environment.CurrentDirectory = folder;
             return CommandList.Run(args);

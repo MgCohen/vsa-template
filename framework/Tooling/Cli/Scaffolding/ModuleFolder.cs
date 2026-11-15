@@ -20,6 +20,10 @@ static class ModuleFolder {
     }
 
     public static void EnsureFree(string root, string name, ModuleKind kind) {
+        if (name == AppRoot.Name(root)) {
+            throw new VsaException($"The {Noun(kind)} name {name} is the name of the app. "
+                + "A module with the app name makes usings that do not compile (CS0234). Use a different name.");
+        }
         var own = kind == ModuleKind.Module ? Modules : Plugins;
         var other = kind == ModuleKind.Module ? Plugins : Modules;
         if (Directory.Exists(Path.Combine(root, own, name))) {

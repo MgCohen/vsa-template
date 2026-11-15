@@ -1,12 +1,12 @@
-namespace Notes.Features.Notes.Presenters;
+namespace Notes.Features.Notebook.Presenters;
 
-using global::Notes.Features.Notes.Slices.CreateNote;
-using global::Notes.Features.Notes.Slices.DeleteNote;
-using global::Notes.Features.Notes.Slices.ListNotes;
+using Notes.Features.Notebook.Slices.CreateNote;
+using Notes.Features.Notebook.Slices.DeleteNote;
+using Notes.Features.Notebook.Slices.ListNotes;
 using VSA.Contracts;
 using VSA.Presenters;
 
-public sealed class NotesPresenter(IBus bus) : Presenter(bus) {
+public sealed class NotebookPresenter(IBus bus) : Presenter(bus) {
     // The sample has no sign-in, so all notes have the same author.
     static readonly Guid SampleAuthor = new("00000000-0000-0000-0000-000000000001");
 

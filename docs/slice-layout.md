@@ -5,8 +5,8 @@ A feature module (`Features/<Feature>/`) keeps each slice in one flat folder, `S
 ## Layout
 
 ```
-Features/Notes/
-├─ NotesModule.cs, NotesSettings.cs                   module root
+Features/Notebook/
+├─ NotebookModule.cs, NotebookSettings.cs             module root
 ├─ Domain/  Infrastructure/  Presenters/
 └─ Slices/
    ├─ CreateNote/       CreateNoteRequest.cs, CreateNoteResponse.cs, NoteCreated.cs, CreateNoteHandler.cs
@@ -27,7 +27,7 @@ Features/Cards/
 ```
 
 - A module has only the layer folders that it needs. Ping has only `Slices/`.
-- All files of one slice have one namespace, for example `Notes.Features.Notes.Slices.CreateNote`. Each namespace starts with the app name and follows the folders.
+- All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name and follows the folders.
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses.
 
@@ -58,7 +58,7 @@ An app has one root project in the app root, the root of the definition. It comp
 samples/Notes/
 ├─ Notes.csproj                 root project: App/, Features/, Plugins/
 ├─ App/Host/  App/Views/
-├─ Features/Notes/  Features/Ping/
+├─ Features/Notebook/  Features/Ping/
 └─ Tests/Notes.Tests.csproj     nested project: the root project does not compile Tests/
 ```
 
@@ -85,7 +85,7 @@ A `VSA.*` package that VSA.Sdk does not add, for example `VSA.Host`, gives its v
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Host/`) has its own project in the module folder. It then references the other modules that it uses.
 
-The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notes`. One assembly can have many modules.
+The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notebook`. One assembly can have many modules.
 
 `IResponse` is a marker interface. `IRequest`, `RequestHandler`, `IBus.Send` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
 

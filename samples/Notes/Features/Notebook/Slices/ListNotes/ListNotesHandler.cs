@@ -1,6 +1,6 @@
-namespace Notes.Features.Notes.Slices.ListNotes;
+namespace Notes.Features.Notebook.Slices.ListNotes;
 
-using global::Notes.Features.Notes.Domain;
+using Notes.Features.Notebook.Domain;
 using VSA.Contracts;
 using VSA.Handlers.Requests;
 using VSA.Infrastructure;

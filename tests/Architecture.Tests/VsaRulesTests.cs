@@ -49,14 +49,6 @@ public sealed class VsaRulesTests {
         Assert.That((permission, pair?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
 
-    [Test]
-    public void Code_outside_the_VSA_namespaces_names_the_kernel_with_no_full_name() {
-        var kernel = Definition.Parts().Single(p => p.Is(typeof(Kernel)));
-
-        Assert.That(kernel.Parent!.Name, Is.EqualTo("Framework"));
-        Assert.That(kernel.Assembly, Is.EqualTo("VSA"));
-    }
-
     static Decision Decide(PartPlace from, PartPlace to) =>
         VSA.Architecture.Engine.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
 

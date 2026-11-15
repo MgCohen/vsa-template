@@ -13,8 +13,8 @@ public record ClosedTarget : Concept {
 public sealed class AccessArchitecture<TTarget>(Access options, Access? method) : Architecture where TTarget : Concept, new() {
     public Access UserAccess => Resolve().Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
 
-    protected override void Configure(Options configured) {
-        configured.Access = options;
+    protected override void Configure(Options defaults) {
+        defaults.Access = options;
     }
 
     protected override void Define(Root root) {

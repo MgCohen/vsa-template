@@ -13,8 +13,8 @@ public sealed class BoundaryArchitecture(Boundary options, Boundary? group, Cros
             target, new Dictionary<string, string> { ["Package"] = toPackage }).Permission;
     }
 
-    protected override void Configure(Options configured) {
-        configured.Boundary = options;
+    protected override void Configure(Options defaults) {
+        defaults.Boundary = options;
     }
 
     protected override void Define(Root root) {

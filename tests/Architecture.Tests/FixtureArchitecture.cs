@@ -53,9 +53,9 @@ public record Handlers : Concept {
 }
 
 public abstract class FixtureArchitecture(string app) : Architecture(app) {
-    protected override void Configure(Options options) {
-        options.DefaultPermission = Permission.Deny;
-        options.Boundary = Boundary.Closed;
+    protected override void Configure(Options defaults) {
+        defaults.DefaultPermission = Permission.Deny;
+        defaults.Boundary = Boundary.Closed;
     }
 
     protected override void Define(Root root) {

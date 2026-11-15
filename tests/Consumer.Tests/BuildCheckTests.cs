@@ -23,7 +23,7 @@ public sealed class BuildCheckTests {
             namespace Notes.App.Host;
 
             public static class Probe {
-                public static Notes.Features.Notes.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
+                public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
             }
             """);
         var finding = $"{probe}(4,1): error VSA2001: Probe in Host";

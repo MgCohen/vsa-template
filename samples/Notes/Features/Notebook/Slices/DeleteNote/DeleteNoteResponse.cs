@@ -1,4 +1,4 @@
-namespace Notes.Features.Notes.Slices.DeleteNote;
+namespace Notes.Features.Notebook.Slices.DeleteNote;
 
 using VSA.Contracts.Requests;
 

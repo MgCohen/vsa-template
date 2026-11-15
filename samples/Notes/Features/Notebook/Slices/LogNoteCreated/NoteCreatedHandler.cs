@@ -1,7 +1,7 @@
-namespace Notes.Features.Notes.Slices.LogNoteCreated;
+namespace Notes.Features.Notebook.Slices.LogNoteCreated;
 
 using Microsoft.Extensions.Logging;
-using global::Notes.Features.Notes.Slices.CreateNote;
+using Notes.Features.Notebook.Slices.CreateNote;
 using VSA.Contracts;
 using VSA.Handlers.Events;
 
