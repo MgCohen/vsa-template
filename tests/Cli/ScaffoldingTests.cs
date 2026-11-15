@@ -9,6 +9,7 @@ namespace Cli.Tests;
 // The template engine, the name checks and the file writer, in this process.
 public sealed class ScaffoldingTests {
     const string Version = "9.9.9";
+    const string GitHubFeed = "https://nuget.pkg.github.com/MgCohen/index.json";
 
     [TestCase("Billing")]
     [TestCase("OrderHistory2")]
@@ -41,13 +42,13 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void RequestNamesCannotEndWithRequest() =>
-        Assert.That(() => Names.Check("CreateInvoiceRequest", "request"), Throws.TypeOf<VsaException>().With.Message.Contain("CreateInvoice"));
+        Assert.That(() => Names.Check("CreateInvoiceRequest", "request", SliceKind.Request.Suffixes), Throws.TypeOf<VsaException>().With.Message.Contain("CreateInvoice"));
 
     [TestCase("ChangeLimitCommand")]
     [TestCase("ChangeLimitResult")]
     [TestCase("ChangeLimitHandler")]
     public void CommandNamesCannotEndWithASuffix(string name) =>
-        Assert.That(() => Names.Check(name, "command"), Throws.TypeOf<VsaException>().With.Message.Contain("ChangeLimit"));
+        Assert.That(() => Names.Check(name, "command", SliceKind.Command.Suffixes), Throws.TypeOf<VsaException>().With.Message.Contain("ChangeLimit"));
 
     [TestCase("Billing", "billing")]
     [TestCase("CreateInvoice", "create-invoice")]
@@ -61,6 +62,7 @@ public sealed class ScaffoldingTests {
         const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command,
             Plugin = Templates.Kind.Plugin;
         (string, Templates.Kind)[] expected = [
+            (".gitignore.template", App),
             ("AGENTS.md.template", App),
             ("App/Host/Program.cs", App),
             ("App/Host/SampleAppApp.cs", App),
@@ -87,9 +89,13 @@ public sealed class ScaffoldingTests {
             ("Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),
             ("Properties/launchSettings.json", App),
             ("SampleApp.csproj", App),
+            ("SampleApp.slnx.template", App),
             ("Tests/App.Tests.csproj", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
             ("appsettings.json", App),
+            ("dotnet-tools.json.template", App),
+            ("global.json.template", App),
+            ("nuget.config.template", App),
         ];
 
         Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
@@ -124,8 +130,20 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
-    public void NewAppIgnoresTheBuildFolders() {
-        Assert.That(NewAppCommand.GitIgnore.Split('\n', StringSplitOptions.TrimEntries), Does.Contain("bin/").And.Contain("obj/"));
+    public void NewAppIgnoresTheBuildAndLocalFolders() {
+        var gitIgnore = NewApp("Hello").Single(f => f.Path == ".gitignore").Content;
+
+        Assert.That(gitIgnore.Split('\n', StringSplitOptions.TrimEntries), Is.SupersetOf(new[] { "bin/", "obj/", "TestResults/", "*.user", ".vs/" }));
+    }
+
+    [Test]
+    public void NewAppWritesTheToolVersionToTheRootFiles() {
+        var files = NewApp("Hello");
+
+        Assert.That(files.Single(f => f.Path == "global.json").Content, Does.Contain($"\"VSA.Sdk\": \"{Version}\""));
+        Assert.That(files.Single(f => f.Path == "dotnet-tools.json").Content, Does.Contain($"\"version\": \"{Version}\""));
+        Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
+        Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
     }
 
     [Test]
@@ -140,18 +158,21 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewAppGetsTheVsaPackagesFromGitHubByDefault() {
-        var config = NewAppCommand.NugetConfig([]);
+        var config = NewApp("Hello").Single(f => f.Path == NugetConfig.FileName).Content;
 
-        Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{NewAppCommand.GitHubFeed}\" />"));
+        Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{GitHubFeed}\" />"));
         Assert.That(config, Does.Contain("<add key=\"ClearTextPassword\" value=\"%GITHUB_TOKEN%\" />"));
     }
 
     [Test]
-    public void ASourceReplacesTheGitHubFeed() {
-        var config = NewAppCommand.NugetConfig(["feed"]);
+    public void EachSourceReplacesTheGitHubFeed() {
+        var config = NewApp("Hello", "feed", "other").Single(f => f.Path == NugetConfig.FileName).Content;
 
+        Assert.That(config, Does.StartWith("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>"));
         Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{Path.GetFullPath("feed")}\" />"));
-        Assert.That(config, Does.Not.Contain(NewAppCommand.GitHubFeed));
+        Assert.That(config, Does.Contain($"<add key=\"vsa2\" value=\"{Path.GetFullPath("other")}\" />"));
+        Assert.That(config, Does.Contain("<add key=\"nuget.org\" value=\"https://api.nuget.org/v3/index.json\" />"));
+        Assert.That(config, Does.Not.Contain(GitHubFeed));
         Assert.That(config, Does.Not.Contain("packageSourceCredentials"));
     }
 
@@ -233,7 +254,7 @@ public sealed class ScaffoldingTests {
         try {
             File.WriteAllText(Path.Combine(root, "b.txt"), "mine");
 
-            Assert.That(() => FileWriter.Write(root, [("a.txt", "new"), ("b.txt", "new")]),
+            Assert.That(() => FileWriter.WriteAllOrNone(root, [new TemplateFile("a.txt", "new"), new TemplateFile("b.txt", "new")]),
                 Throws.TypeOf<VsaException>().With.Message.Contain("b.txt"));
 
             Assert.That(File.ReadAllText(Path.Combine(root, "b.txt")), Is.EqualTo("mine"));
@@ -242,4 +263,14 @@ public sealed class ScaffoldingTests {
             TempFolder.Delete(root);
         }
     }
+
+    [Test]
+    public void ARequestAndACommandShareOneSliceCommand() {
+        var slices = CommandList.All.OfType<AddSliceCommand>().ToList();
+
+        Assert.That(slices.Select(c => c.Usage), Is.EqualTo(new[] { "vsa add request <Name> -m <Module>", "vsa add command <Name> -m <Module>" }));
+        Assert.That(slices.Select(c => c.SliceKind), Is.EqualTo(SliceKind.All));
+    }
+
+    static IReadOnlyList<TemplateFile> NewApp(string name, params string[] sources) => NewAppCommand.Files(name, sources, Version);
 }

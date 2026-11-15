@@ -1,0 +1,34 @@
+using VSA.Cli.Commands.Bases;
+using VSA.Cli.Scaffolding;
+
+namespace VSA.Cli.Commands;
+
+sealed class AddSliceCommand(SliceKind kind) : AddCommand {
+    static readonly CommandOption Module = new(["-m", "--module"], "Module", Required: true);
+
+    public SliceKind SliceKind => kind;
+
+    public override IReadOnlyList<string> Words => ["add", kind.Noun];
+
+    public override string Summary => $"Adds {kind.Parts}.";
+
+    public override IReadOnlyList<CommandOption> Options => [Module];
+
+    protected override string Noun => kind.Noun;
+
+    protected override Templates.Kind Kind => kind.Template;
+
+    protected override IReadOnlyList<string> ForbiddenSuffixes => kind.Suffixes;
+
+    protected override IReadOnlyDictionary<string, string> TemplateNames(
+        string root,
+        string name,
+        CommandInput input) =>
+        new Dictionary<string, string> {
+            [kind.SampleName] = name,
+            [Templates.Module] = ModuleFolder.Find(root, input.Single(Module)!),
+        };
+
+    protected override string Heading(string name, IReadOnlyDictionary<string, string> names) =>
+        $"Adding the {kind.Noun} {name} to the module {names[Templates.Module]}:";
+}

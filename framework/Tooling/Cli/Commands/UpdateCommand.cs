@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml;
 using System.Xml.Linq;
+using VSA.Cli.Commands.Bases;
 using VSA.Cli.Scaffolding;
 
 namespace VSA.Cli.Commands;
@@ -10,9 +11,17 @@ namespace VSA.Cli.Commands;
 // vsa update [--version <version>]: moves the app to one VSA version. First 'dotnet tool update' changes the tool manifest
 // to the latest version on the feeds of the app (or to <version>). Then the tool writes that version to global.json and to
 // each VSA.Sdk pin and VSA.* package in the project files: the places that vsa doctor reads.
-static class UpdateCommand {
-    public static int Run(string? version) {
-        var root = AppRoot.Find();
+sealed class UpdateCommand : AppCommand {
+    static readonly CommandOption Version = new(["--version"], "version");
+
+    public override IReadOnlyList<string> Words => ["update"];
+
+    public override string Summary => "Moves the tool, VSA.Sdk and the packages to the latest version, or to <version>.";
+
+    public override IReadOnlyList<CommandOption> Options => [Version];
+
+    protected override int Run(string root, CommandInput input) {
+        var version = input.Single(Version);
         var manifests = DoctorCommand.ToolManifests(root);
         if (manifests is not [var manifest]) {
             throw new VsaException(manifests is []

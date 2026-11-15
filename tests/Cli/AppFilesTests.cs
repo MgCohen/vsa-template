@@ -1,10 +1,10 @@
 using Tests.Shared;
 using VSA.Cli;
 using VSA.Cli.Commands;
+using VSA.Cli.Scaffolding;
 
 namespace Cli.Tests;
 
-// The commands that read the files of an app: doctor, the module lookup of add request, and the projects of add command. Each test writes a small app.
 public sealed class AppFilesTests {
     static readonly string V = ToolVersion.Current;
     string root = "";
@@ -71,8 +71,8 @@ public sealed class AppFilesTests {
     public void AddRequestUsesTheModuleNameFromTheDisk() {
         Write("Features/Billing/BillingModule.cs", "namespace Billing;");
 
-        Assert.That(AddRequestCommand.Module(root, "billing"), Is.EqualTo("Billing"));
-        Assert.That(() => AddRequestCommand.Module(root, "Shipping"), Throws.TypeOf<VsaException>().With.Message.Contain("does not exist"));
+        Assert.That(ModuleFolder.Find(root, "billing"), Is.EqualTo("Billing"));
+        Assert.That(() => ModuleFolder.Find(root, "Shipping"), Throws.TypeOf<VsaException>().With.Message.Contain("does not exist"));
     }
 
     void Write(string path, string content) {
