@@ -1,14 +1,19 @@
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using VSA.Cli.Commands.Bases;
 using VSA.Cli.Scaffolding;
 
 namespace VSA.Cli.Commands;
 
 // vsa doctor: the tool, VSA.Sdk and the VSA.* packages ship together, so the app must use one version of all.
 // It reads the running tool, the tool manifests, global.json, each VSA.Sdk pin and each VSA.* package reference.
-static class DoctorCommand {
-    public static int Run() {
-        var found = Versions(AppRoot.Find());
+sealed class DoctorCommand : AppCommand {
+    public override IReadOnlyList<string> Words => ["doctor"];
+
+    public override string Summary => "Makes sure that the tool, VSA.Sdk and the packages have one version.";
+
+    protected override int Run(string root, CommandInput input) {
+        var found = Versions(root);
 
         var width = found.Max(f => f.Where.Length);
         foreach (var (where, what, version) in found) {

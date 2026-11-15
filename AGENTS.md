@@ -130,11 +130,11 @@ Fifteen framework projects also target `netstandard2.1`, for Unity: VSA.Domain, 
 
 ## Scaffolding: the vsa tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules and requests. It writes only new files: it does not write over a file, and it does not edit a file. The one exception is `vsa update`: it changes only the VSA versions.
+The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, requests and commands. It writes only new files: it does not write over a file, and it does not edit a file. The one exception is `vsa update`: it changes only the VSA versions. Each command is a class in `framework/Tooling/Cli/Commands/` that inherits one base in `Commands/Bases/` (`ToolCommand`, `AppCommand` or `AddCommand`). See "Add a command" in `docs/scaffolding.md`.
 
 ```bash
 dotnet tool exec VSA.Cli new app <Name>          # global.json, nuget.config, .gitignore, dotnet-tools.json, <Name>.slnx, AGENTS.md, <Name>.csproj, App/, Features/, Plugins/, Tests/
-dotnet vsa add module <Name>                     # the module root, a status request, a presenter and a page
+dotnet vsa add module <Name>                     # the module root, the published domain key, a status request, a presenter, a page and a unit test
 dotnet vsa add request <Name> -m <Module>        # the request, the response and the handler
 dotnet vsa add command <Name> -m <Module>        # the command, the result and the handler
 dotnet vsa add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands

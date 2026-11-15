@@ -20,12 +20,49 @@ Rules for all commands:
 - A name cannot contain a template name (`SampleApp`, `SampleModule`, `SampleAction`, `SampleChange`, `SamplePlugin`).
 - A request name cannot end with `Request`, `Response` or `Handler`. A command name cannot end with `Command`, `Result` or `Handler`.
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
+- An option that takes one value stops the command if you give it two times, for example `-m A -m B`.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same namespace.
 - `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
-- `new app` writes a `.gitignore` for the build folders (`bin/`, `obj/`).
+- `new app` writes a `.gitignore` for the build folders and the local files (`bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
+
+## Add a command
+
+Each command of the tool is one class in `framework/Tooling/Cli/Commands/`. It inherits one base from `Commands/Bases/`, and it has one entry in `CommandList.All`. The help text comes from that list.
+
+```
+ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(CommandInput)
+├─ NewAppCommand                 vsa new app <Name> [--source <feed>]
+└─ AppCommand                    finds the app root, then Run(root, CommandInput)
+   ├─ DoctorCommand              vsa doctor
+   ├─ UpdateCommand              vsa update [--version <version>]
+   └─ AddCommand                 checks the name, writes the template files of one Templates.Kind
+      ├─ AddModuleCommand        vsa add module <Name>
+      ├─ AddPluginCommand        vsa add plugin <Name>
+      └─ AddSliceCommand         one class, one instance for each SliceKind:
+                                   SliceKind.Request  vsa add request <Name> -m <Module>
+                                   SliceKind.Command  vsa add command <Name> -m <Module>
+```
+
+| You want | Inherit | You write |
+|---|---|---|
+| A command outside an app | `ToolCommand` | `Words`, `Summary`, `Run` |
+| A command in an app | `AppCommand` | `Words`, `Summary`, `Run(root, input)` |
+| A command that writes template files | `AddCommand` | `Noun`, `Kind`, `OwnNames`, `Heading`. Optional: `ForbiddenSuffixes`, `CheckFree`, `NextStep` |
+| A slice kind with the shape of a request or a command | No class | A new `SliceKind` value in `SliceKind.All` |
+
+To add a command:
+
+1. Write the class in `Commands/`. Inherit the base from the table.
+2. Give its options as `CommandOption` values. `Required` makes the option necessary. `Many` accepts more than one value.
+3. Read the input with `input.Name`, `input.Single(option)` or `input.All(option)`.
+4. For an error for the user, throw `VsaException`. The tool shows the message and stops with exit code 1.
+5. Add the command to `CommandList.All`.
+6. Add a test in `tests/Cli`. `CommandTests` makes sure that each command inherits one base and is in the list.
+
+`AddCommand` makes the template names in one place, `TemplateNames`. It starts from `OwnNames` of the command.
 
 ## Template format A
 
@@ -33,6 +70,10 @@ Rules for all commands:
 framework/Tooling/Cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
+├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
+├─ global.json.template, dotnet-tools.json.template   new app (the version token {{VsaVersion}})
+├─ nuget.config.template             new app (each --source replaces the vsa feed and removes the credentials)
+├─ .gitignore.template               new app
 ├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
 ├─ App/Views/Pages/SampleModulePage.razor          add module
@@ -62,6 +103,8 @@ The path of a template file gives its command. The tool uses the first rule that
 `ScaffoldingTests.EachTemplateFileHasOneCommand` lists each template file with its command. If you add a template file, add it to this test.
 
 The tool also replaces the kebab form of each name, for routes: `sample-module` becomes `billing`, and `sample-action` becomes `create-invoice`.
+
+The suffix `.template` keeps a file inactive in this repository, for example a `global.json` that would change the SDK of the template build. The tool removes the suffix. In each template file, the tool replaces `{{VsaVersion}}` with its own version.
 
 ## Source mode and package mode
 

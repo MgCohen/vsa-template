@@ -1,24 +1,24 @@
+using VSA.Cli.Commands.Bases;
 using VSA.Cli.Scaffolding;
 
 namespace VSA.Cli.Commands;
 
-// vsa add module <Name>: all layers, a status request with its handler, a presenter and a page.
-// The root project of the app compiles the new folder, so the tool does not edit an existing file.
-static class AddModuleCommand {
-    public static int Run(string name) {
-        Names.Check(name, "module");
-        var root = AppRoot.Find();
-        if (Directory.Exists(Path.Combine(root, "Features", name))) {
-            throw new VsaException($"The module {name} exists: Features/{name}");
-        }
-        // A module and a plugin module with the same name have the same namespace.
-        if (Directory.Exists(Path.Combine(root, "Plugins", name))) {
-            throw new VsaException($"The plugin module {name} exists: Plugins/{name}. Use a different name for the module.");
-        }
-        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = name }, ToolVersion.Current);
-        Console.WriteLine($"Adding the module {name}:");
-        FileWriter.Write(root, files);
-        Console.WriteLine($"The page of the module is /{Names.Kebab(name)}.");
-        return 0;
-    }
+sealed class AddModuleCommand : AddCommand {
+    public override IReadOnlyList<string> Words => ["add", "module"];
+
+    public override string Summary => "Adds a module with all layers and a starter page.";
+
+    protected override string Noun => "module";
+
+    protected override Templates.Kind Kind => Templates.Kind.Module;
+
+    protected override void CheckFree(string root, string name) => ModuleFolder.EnsureFree(root, name);
+
+    protected override IReadOnlyDictionary<string, string> OwnNames(string root, string name, CommandInput input) =>
+        new Dictionary<string, string> { [Templates.Module] = name };
+
+    protected override string Heading(string name, IReadOnlyDictionary<string, string> names) =>
+        $"Adding the module {name}:";
+
+    protected override string NextStep(string name) => $"The page of the module is /{Names.Kebab(name)}.";
 }
