@@ -1,6 +1,7 @@
-namespace VSA.Kernel;
+namespace VSA.Composition;
 
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Kernel;
 
 public abstract class Plugin<TSettings> : Plugin where TSettings : class, new() {
     public sealed override void Configure(IServiceCollection services) =>

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using VSA.Architecture.Vsa;
 using VSA.Composition;
 using VSA.Host;
 using VSA.Kernel;

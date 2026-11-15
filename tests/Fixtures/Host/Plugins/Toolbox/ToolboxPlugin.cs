@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using VSA.Composition;
 using VSA.Kernel;
 
 namespace Toolbox;

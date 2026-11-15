@@ -1,6 +1,6 @@
-namespace VSA.Composition;
+namespace VSA.Architecture.Vsa;
 
-using VSA.Architecture.Vsa;
+using VSA.Composition;
 using VSA.Kernel;
 
 public class Vsa<TArchitecture, THost> : Pack<TArchitecture, THost>

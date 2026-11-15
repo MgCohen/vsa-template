@@ -29,8 +29,8 @@ The kernel references the definition API (`VSA.Architecture`), because a `Pack` 
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Architecture`, `Concept`, `record Module : Concept` | `App`, `Pack`, `AppHost`, `class Module`, `class Plugin : Module`, `AppTypes` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers | `Vsa<THost>`, `VsaHost`, `WebVsaHost`, `ConsoleVsaHost` |
+| Generic | `Architecture`, `Concept`, `record Module : Concept` | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers | `Vsa<THost>`, `VsaHost`, `class Plugin : Module`, `WebVsaHost`, `ConsoleVsaHost` |
 
 - The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<VSA.Kernel.Module>()`. Where two types have the same name, write the full name of the runtime class.
 - A definition `Module` is in the folder of its parent: it is the root part of a group instance.

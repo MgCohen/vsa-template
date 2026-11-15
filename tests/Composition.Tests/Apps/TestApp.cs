@@ -2,6 +2,7 @@ namespace Composition.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using VSA.Architecture.Vsa;
 using VSA.Composition;
 using VSA.Kernel;
 

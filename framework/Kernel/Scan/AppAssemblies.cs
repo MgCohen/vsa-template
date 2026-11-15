@@ -5,6 +5,24 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
 static class AppAssemblies {
+    internal static IReadOnlyList<Assembly> OfModules() {
+        var found = new List<Assembly>();
+        var seen = new HashSet<Assembly>();
+        var bases = new Queue<Assembly>([typeof(Module).Assembly]);
+        while (bases.TryDequeue(out var moduleBase)) {
+            if (!seen.Add(moduleBase)) {
+                continue;
+            }
+            foreach (var assembly in ThatReference(moduleBase)) {
+                Add(found, assembly);
+                if (DefinesModuleBase(assembly)) {
+                    bases.Enqueue(assembly);
+                }
+            }
+        }
+        return found;
+    }
+
     internal static IReadOnlyList<Assembly> ThatReference(Assembly referenced) {
         var name = referenced.GetName().Name!;
         var found = new List<Assembly>();
@@ -20,6 +38,9 @@ static class AppAssemblies {
         }
         return found;
     }
+
+    static bool DefinesModuleBase(Assembly assembly) =>
+        AppTypes.Types(assembly).Any(t => t is { IsClass: true, IsAbstract: true } && t.IsSubclassOf(typeof(Module)));
 
     static void Add(List<Assembly> found, Assembly assembly) {
         if (!found.Contains(assembly)) {

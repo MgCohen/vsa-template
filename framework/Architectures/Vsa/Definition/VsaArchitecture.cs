@@ -31,7 +31,7 @@ public class VsaArchitecture : Architecture {
         root.Add<App>().Add<Host>().And<Views>();
 
         var plugin = root.AddGroup<Plugin>(Boundary.Open);
-        plugin.Add<Module>().OfType<VSA.Kernel.Plugin>();
+        plugin.Add<Module>().OfType<VSA.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
         plugin.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();

@@ -16,7 +16,7 @@ public sealed class AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
 
     public static IReadOnlyList<Module> FindModules() => InOrder(Roots().Select(root => root.Create()));
 
-    public static IReadOnlyList<ModuleRoot> Roots() => [.. AppAssemblies.ThatReference(typeof(Module).Assembly)
+    public static IReadOnlyList<ModuleRoot> Roots() => [.. AppAssemblies.OfModules()
         .SelectMany(ModuleRoot.In)
         .OrderBy(root => root.Name, StringComparer.Ordinal)];
 

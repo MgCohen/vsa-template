@@ -6,6 +6,7 @@ using Report;
 using Rules;
 using Steps;
 using Steps.Domain.Shared;
+using VSA.Architecture.Vsa;
 using Versions;
 using Tests.Shared;
 using VSA.Composition;

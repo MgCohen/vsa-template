@@ -63,7 +63,7 @@ static class Analyzer {
             test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
         }
         Type[] layers = [typeof(VSA.Contracts.IMessage), typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
-            typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus), typeof(VSA.Kernel.Module),
+            typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus), typeof(VSA.Kernel.Module), typeof(VSA.Composition.Plugin),
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection)];
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
@@ -291,7 +291,7 @@ public sealed class PluginRootRuleTests {
 
     [Test]
     public Task Plugin_root_that_inherits_Plugin_passes() => Analyzer.VerifyIn("Game", $$"""
-        public sealed class GamePlugin : VSA.Kernel.Plugin { {{Configure}} }
+        public sealed class GamePlugin : VSA.Composition.Plugin { {{Configure}} }
         """, In("Plugins"));
 
     [Test]
@@ -307,12 +307,12 @@ public sealed class PluginRootRuleTests {
 
     [Test]
     public Task Module_root_that_inherits_Plugin_fails() => Analyzer.VerifyIn("Shop", $$"""
-        public sealed class {|#0:ShopPlugin|} : VSA.Kernel.Plugin { {{Configure}} }
+        public sealed class {|#0:ShopPlugin|} : VSA.Composition.Plugin { {{Configure}} }
         """, In("Features"),
         Analyzer.Diagnostic(PluginRootRule.Descriptor, 0, "ShopPlugin", "module", "Shop", "Plugin", "Module or Module<TSettings>, or move the module to Plugins/"));
 
     [Test]
     public Task Code_out_of_a_root_folder_passes() => Analyzer.Verify($$"""
-        public sealed class ToolPlugin : VSA.Kernel.Plugin { {{Configure}} }
+        public sealed class ToolPlugin : VSA.Composition.Plugin { {{Configure}} }
         """);
 }

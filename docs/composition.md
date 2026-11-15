@@ -27,7 +27,7 @@ public class ToolApp : App<Vsa<ToolArchitecture, ConsoleVsaHost>>;
 new Vsa<UnityVsaHost>().CreateHost().Compose(services, app);
 ```
 
-The app class file imports `VSA.Kernel` (`App`) and `VSA.Composition` (`Vsa<THost>`). Do not import `VSA.Architecture.Vsa` in it: that namespace has the concept record `App`, and `App<…>` becomes ambiguous (CS0104).
+The app class file imports `VSA.Kernel` (`App<TPack>`), `VSA.Architecture.Vsa` (`Vsa<THost>`) and the namespace of the host. `VSA.Architecture.Vsa` also has the concept record `App`. `App<…>` is not ambiguous, because the record has no type parameter. A use of `App` with no type argument in the same file is ambiguous (CS0104).
 
 ## The kernel types
 
@@ -38,10 +38,9 @@ The app class file imports `VSA.Kernel` (`App`) and `VSA.Composition` (`Vsa<THos
 | `Pack`, `Pack<TArchitecture, THost>` | VSA.Kernel | Gives `Architecture` and `CreateHost()` |
 | `AppHost` | VSA.Kernel | The composition root: `Create`, `Compose`, `Run`, `Stop` |
 | `Module`, `Module<TSettings>` | VSA.Kernel | The root class of a module. `Order` 1 |
-| `Plugin`, `Plugin<TSettings>` | VSA.Kernel | The root class of a plugin module. `Order` 0 |
 | `AppTypes` | VSA.Kernel | The one type source: the modules and their types |
 
-The VSA pack adds `Vsa<THost>` (the VSA rules), `Vsa<TArchitecture, THost>` (the rules of the app) and `VsaHost`, in VSA.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
+The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in VSA.Architecture.Vsa, and `VsaHost`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in VSA.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
 
 ## The app class
 
@@ -152,7 +151,7 @@ public interface IRoutedRequest {
 
 | Part | Scan for | Rule |
 |---|---|---|
-| Module root | A reference to `VSA.Kernel` | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
+| Module root | A reference to `VSA.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `VSA.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
 | Views root | A reference to `VSA.Views` | One component that inherits `ViewsRoot` |
 
 The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
@@ -262,7 +261,6 @@ framework/Kernel/                      VSA.Kernel
   App, App<TPack>, IApp                the lifetime of the app
   Pack, Pack<TArchitecture, THost>     the architecture and the host of the app
   Module, Module<TSettings>            the root class of a module
-  Plugin, Plugin<TSettings>            the root class of a plugin module
   ServiceCollectionExtensions          Replace<TService, TImplementation>
   Hosting/                             AppHost, the core step (AutoRegistration, ComposedConfiguration)
   Scan/                                AppTypes, ModuleRoot, Registration, IKeySource, ConstraintKeys, MarkedTypes
@@ -271,13 +269,13 @@ framework/Engine/Definition/           VSA.Architecture: Architecture (the kerne
 framework/Components/Messages/
   Handlers/                            PipelineBuilder, Pipelines, the runners, Validator, Before, After, AddPipelines
 framework/Architectures/Vsa/
-  Definition/                          VSA.Architecture.Vsa: VsaArchitecture and the VSA layers
+  Definition/                          VSA.Architecture.Vsa: VsaArchitecture, the VSA layers, Vsa<THost>, Vsa<TArchitecture, THost>
   Handlers/Events/                     AddEventHandlers, InProcessEventPublisher
   Handlers/Commands/                   AddCommandHandlers, InProcessCommandSender
   Handlers/Requests/                   RequestHandler, AddRequestHandlers
   Presenters/                          AddPresenters
   Views/                               ViewsRoot, ViewsInstaller
-  Composition/                         VSA.Composition: Vsa<THost>, Vsa<TArchitecture, THost>, VsaHost, InProcessBus
+  Composition/                         VSA.Composition: VsaHost, Plugin, Plugin<TSettings>, InProcessBus
     Hosts/Console/                     ConsoleVsaHost, ConsoleEntry, ConsoleExit
   Host/                                VSA.Host: WebVsaHost, HttpApi, HttpRequestBinder
 ```
@@ -286,15 +284,14 @@ framework/Architectures/Vsa/
 flowchart BT
     Kernel["VSA.Kernel"] --> Definition["VSA.Architecture"]
     Layers["VSA.Handlers.*, VSA.Presenters"] -. private .-> Kernel
-    VsaDefinition["VSA.Architecture.Vsa"] --> Kernel
-    VsaDefinition --> Layers
-    Composition["VSA.Composition"] --> VsaDefinition
+    Composition["VSA.Composition"] --> Kernel
     Composition --> Layers
+    VsaDefinition["VSA.Architecture.Vsa"] --> Composition
     Host["VSA.Host"] --> Composition
 ```
 
 - The kernel knows no layer. `VsaHost.Install` calls each layer registration by a direct call, in a fixed order.
-- `VSA.Architecture.Vsa` references the kernel, because its definition names `Module` and `Plugin` with `OfType`. `VSA.Composition` references `VSA.Architecture.Vsa`, because `Vsa<THost>` uses `VsaArchitecture`.
+- `VSA.Architecture.Vsa` references `VSA.Composition`, because its definition names `Module` and `Plugin` with `OfType`, and `Vsa<THost>` uses `VsaHost`. `VSA.Composition` does not reference `VSA.Architecture.Vsa`.
 
 ## The container
 

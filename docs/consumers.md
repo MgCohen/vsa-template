@@ -78,12 +78,12 @@ VSA.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer compiler 
 | Contracts, events | `VSA.Contracts.Events` | Yes |
 | Handlers, events | `VSA.Handlers.Events` | Yes |
 | Infrastructure | `VSA.Infrastructure` | Yes |
-| Kernel (`App`, `Pack`, `AppHost`, `Module`, `Plugin`) | `VSA.Kernel` | Yes |
-| Composition | `VSA.Composition` | Yes, without presenters. `VsaHost` and `Vsa<THost>` are here |
+| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `VSA.Kernel` | Yes |
+| Composition | `VSA.Composition` | Yes, without presenters. `VsaHost` and `Plugin` are here |
 | Contracts, requests | `VSA.Contracts.Requests` | Yes. The route members are only on `net10.0` |
 | Handlers, requests | `VSA.Handlers.Requests` | Yes |
 | Presenters | `VSA.Presenters` | Yes |
-| Architecture definition | `VSA.Architecture`, `VSA.Architecture.Vsa` | Yes. `Pack` and `Vsa<THost>` need them |
+| Architecture definition | `VSA.Architecture`, `VSA.Architecture.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
 | Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
 The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`). They target `net10.0` and `netstandard2.1`.

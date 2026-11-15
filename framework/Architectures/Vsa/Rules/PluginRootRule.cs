@@ -20,7 +20,7 @@ public sealed class PluginRootRule() : VsaAnalyzerRule(Descriptor) {
             return;
         }
         var module = start.Compilation.GetTypeByMetadataName("VSA.Kernel.Module");
-        var plugin = start.Compilation.GetTypeByMetadataName("VSA.Kernel.Plugin");
+        var plugin = start.Compilation.GetTypeByMetadataName("VSA.Composition.Plugin");
         if (module is null || plugin is null) {
             return;
         }
