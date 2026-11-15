@@ -1,3 +1,4 @@
+using Tests.Shared;
 using VSA.Cli;
 using VSA.Cli.Commands;
 using VSA.Cli.Commands.Bases;
@@ -40,7 +41,7 @@ public sealed class CommandTests {
 
     [Test]
     public void ARequiredOptionIsChecked() =>
-        Assert.That(() => CommandList.Run(["add", "command", "ChangeLimit"]),
+        Assert.That(() => RunInAnApp(["add", "command", "ChangeLimit"]),
             Throws.TypeOf<VsaException>().With.Message.Contain("Give the module: vsa add command <Name> -m <Module>"));
 
     [Test]
@@ -64,5 +65,35 @@ public sealed class CommandTests {
 
         Assert.That(input.Name, Is.EqualTo("Hello"));
         Assert.That(input.All(new NewAppCommand().Options[0]), Is.EqualTo(new[] { "a", "b" }));
+    }
+
+    [TestCase("add", "module", "bad")]
+    [TestCase("add", "request", "bad")]
+    [TestCase("add", "command", "bad", "-m", "Billing")]
+    public void AnInvalidNameStopsBeforeTheAppRootAndTheOptions(params string[] args) =>
+        Assert.That(() => RunOutsideAnApp(args), Throws.TypeOf<VsaException>().With.Message.Contain("is not valid"));
+
+    [Test]
+    public void AValidNameOutsideAnAppStopsAtTheAppRoot() =>
+        Assert.That(() => RunOutsideAnApp(["add", "request", "CreateInvoice"]),
+            Throws.TypeOf<VsaException>().With.Message.Contain("not in a VSA app"));
+
+    static int RunOutsideAnApp(string[] args) => RunInFolder(args, isApp: false);
+
+    static int RunInAnApp(string[] args) => RunInFolder(args, isApp: true);
+
+    static int RunInFolder(string[] args, bool isApp) {
+        var folder = TempFolder.Create();
+        var current = Environment.CurrentDirectory;
+        try {
+            if (isApp) {
+                File.WriteAllText(Path.Combine(folder, "global.json"), $$"""{ "msbuild-sdks": { "VSA.Sdk": "{{ToolVersion.Current}}" } }""");
+            }
+            Environment.CurrentDirectory = folder;
+            return CommandList.Run(args);
+        } finally {
+            Environment.CurrentDirectory = current;
+            TempFolder.Delete(folder);
+        }
     }
 }

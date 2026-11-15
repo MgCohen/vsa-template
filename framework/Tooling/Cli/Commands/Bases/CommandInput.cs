@@ -1,10 +1,12 @@
 namespace VSA.Cli.Commands.Bases;
 
 sealed class CommandInput {
+    readonly ToolCommand command;
     readonly string? name;
     readonly Dictionary<CommandOption, List<string>> values;
 
-    CommandInput(string? name, Dictionary<CommandOption, List<string>> values) {
+    CommandInput(ToolCommand command, string? name, Dictionary<CommandOption, List<string>> values) {
+        this.command = command;
         this.name = name;
         this.values = values;
     }
@@ -35,11 +37,14 @@ sealed class CommandInput {
             list.Add(args[next + 1]);
             next += 2;
         }
+        return new CommandInput(command, name, values);
+    }
+
+    public void EnsureRequiredOptions() {
         var missing = command.Options.FirstOrDefault(o => o.Required && !values.ContainsKey(o));
         if (missing is not null) {
             throw new VsaException($"Give the {missing.Value.ToLowerInvariant()}: {command.Usage}");
         }
-        return new CommandInput(name, values);
     }
 
     public IReadOnlyList<string> All(CommandOption option) => values.TryGetValue(option, out var found) ? found : [];

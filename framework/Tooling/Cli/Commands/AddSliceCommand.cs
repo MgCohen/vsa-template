@@ -20,7 +20,10 @@ sealed class AddSliceCommand(SliceKind kind) : AddCommand {
 
     protected override IReadOnlyList<string> ForbiddenSuffixes => kind.Suffixes;
 
-    protected override IReadOnlyDictionary<string, string> OwnNames(string root, string name, CommandInput input) =>
+    protected override IReadOnlyDictionary<string, string> TemplateNames(
+        string root,
+        string name,
+        CommandInput input) =>
         new Dictionary<string, string> {
             [kind.SampleName] = name,
             [Templates.Module] = ModuleFolder.Find(root, input.Single(Module)!),

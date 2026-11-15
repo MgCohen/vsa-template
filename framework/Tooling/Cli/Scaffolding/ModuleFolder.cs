@@ -19,12 +19,17 @@ static class ModuleFolder {
         return Names.Check(folderNameOnDisk, "module");
     }
 
-    public static void EnsureFree(string root, string name) {
-        if (Directory.Exists(Path.Combine(root, Modules, name))) {
-            throw new VsaException($"The module {name} exists: {Modules}/{name}. {SameNamespace}");
+    public static void EnsureFree(string root, string name, ModuleKind kind) {
+        var own = kind == ModuleKind.Module ? Modules : Plugins;
+        var other = kind == ModuleKind.Module ? Plugins : Modules;
+        if (Directory.Exists(Path.Combine(root, own, name))) {
+            throw new VsaException($"The {Noun(kind)} {name} exists: {own}/{name}. Use a different name.");
         }
-        if (Directory.Exists(Path.Combine(root, Plugins, name))) {
-            throw new VsaException($"The plugin module {name} exists: {Plugins}/{name}. {SameNamespace}");
+        if (Directory.Exists(Path.Combine(root, other, name))) {
+            var otherKind = kind == ModuleKind.Module ? ModuleKind.Plugin : ModuleKind.Module;
+            throw new VsaException($"The {Noun(otherKind)} {name} exists: {other}/{name}. {SameNamespace}");
         }
     }
+
+    static string Noun(ModuleKind kind) => kind == ModuleKind.Module ? "module" : "plugin module";
 }

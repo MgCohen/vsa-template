@@ -5,7 +5,6 @@ using VSA.Cli.Scaffolding;
 
 namespace Cli.Tests;
 
-// The commands that read the files of an app: doctor, the module lookup of add request, and the projects of add command. Each test writes a small app.
 public sealed class AppFilesTests {
     static readonly string V = ToolVersion.Current;
     string root = "";

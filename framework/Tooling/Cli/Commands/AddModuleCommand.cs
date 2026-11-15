@@ -12,9 +12,13 @@ sealed class AddModuleCommand : AddCommand {
 
     protected override Templates.Kind Kind => Templates.Kind.Module;
 
-    protected override void CheckFree(string root, string name) => ModuleFolder.EnsureFree(root, name);
+    protected override void CheckFree(string root, string name) =>
+        ModuleFolder.EnsureFree(root, name, ModuleKind.Module);
 
-    protected override IReadOnlyDictionary<string, string> OwnNames(string root, string name, CommandInput input) =>
+    protected override IReadOnlyDictionary<string, string> TemplateNames(
+        string root,
+        string name,
+        CommandInput input) =>
         new Dictionary<string, string> { [Templates.Module] = name };
 
     protected override string Heading(string name, IReadOnlyDictionary<string, string> names) =>

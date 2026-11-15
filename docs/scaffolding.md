@@ -50,7 +50,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
 |---|---|---|
 | A command outside an app | `ToolCommand` | `Words`, `Summary`, `Run` |
 | A command in an app | `AppCommand` | `Words`, `Summary`, `Run(root, input)` |
-| A command that writes template files | `AddCommand` | `Noun`, `Kind`, `OwnNames`, `Heading`. Optional: `ForbiddenSuffixes`, `CheckFree`, `NextStep` |
+| A command that writes template files | `AddCommand` | `Noun`, `Kind`, `TemplateNames`, `Heading`. Optional: `ForbiddenSuffixes`, `CheckFree`, `NextStep` |
 | A slice kind with the shape of a request or a command | No class | A new `SliceKind` value in `SliceKind.All` |
 
 To add a command:
@@ -62,7 +62,7 @@ To add a command:
 5. Add the command to `CommandList.All`.
 6. Add a test in `tests/Cli`. `CommandTests` makes sure that each command inherits one base and is in the list.
 
-`AddCommand` makes the template names in one place, `TemplateNames`. It starts from `OwnNames` of the command.
+An `AppCommand` checks the input in this order: the name, then the app root, then the required options. `AddCommand.Run` makes the template names in one place, from `TemplateNames` of the command.
 
 ## Template format A
 

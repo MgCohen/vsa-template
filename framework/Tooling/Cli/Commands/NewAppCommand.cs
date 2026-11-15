@@ -17,6 +17,7 @@ sealed class NewAppCommand : ToolCommand {
 
     public override int Run(CommandInput input) {
         var name = Names.Check(input.Name, "app");
+        input.EnsureRequiredOptions();
         var root = Path.GetFullPath(name);
         var version = ToolVersion.Current;
         var files = Files(name, input.All(Source), version);
