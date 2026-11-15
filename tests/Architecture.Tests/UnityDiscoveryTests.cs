@@ -5,7 +5,8 @@ using VSA.Kernel;
 namespace EngineCore.Tests;
 
 public sealed class UnityDiscoveryTests {
-    const string ModuleClass = "public sealed class {0} : VSA.Module.Module {{ public override void Configure(VSA.Kernel.AnchorBuilder module) {{ }} }}";
+    const string ModuleClass = "public sealed class {0} : VSA.Kernel.Module {{ public override void Configure("
+        + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
     UnityProjectFolder project = null!;
     ArchitectureMap map = null!;

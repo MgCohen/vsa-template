@@ -1,9 +1,9 @@
-using VSA.Module;
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Kernel;
 
 namespace Meters;
 
 public sealed class MetersModule : Module {
-    public override void Configure(AnchorBuilder module) {
+    public override void Configure(IServiceCollection services) {
     }
 }

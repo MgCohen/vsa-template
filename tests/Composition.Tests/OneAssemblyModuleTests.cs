@@ -1,7 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Handlers.Commands;
-using VSA.Module;
 using VSA.Kernel;
 
 namespace Composition.Tests;
@@ -9,15 +9,15 @@ namespace Composition.Tests;
 public sealed class OneAssemblyModuleTests {
     [Test]
     public void The_scan_reads_the_handlers_in_the_root_assembly_of_a_module() {
-        var types = new AnchorTypes([new OneAssemblyModule()]);
+        var types = new AppTypes([new OneAssemblyModule()]);
 
         var handlers = types.Implementations(typeof(CommandHandler<,>)).Select(found => found.Implementation);
 
         Assert.That(handlers, Does.Contain(typeof(OneAssemblyHandler)));
     }
 
-    public sealed class OneAssemblyModule : VSA.Module.Module {
-        public override void Configure(AnchorBuilder module) {
+    public sealed class OneAssemblyModule : Module {
+        public override void Configure(IServiceCollection services) {
         }
     }
 

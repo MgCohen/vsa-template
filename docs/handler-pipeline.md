@@ -80,9 +80,9 @@ A pipeline names types only: the message base, the handlers, the runner and the 
 
 ```csharp
 public sealed class ArenaModule : Module {
-    public override void Configure(AnchorBuilder module) {
-        module.Services.AddSingleton<ArenaLog>();
-        module.Services.AddPipeline(new PipelineBuilder<ArenaMove>()
+    public override void Configure(IServiceCollection services) {
+        services.AddSingleton<ArenaLog>();
+        services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))
             .Runner<StackRunner>()
             .BeforeStep<TagStep>()
@@ -108,9 +108,9 @@ A send goes to the most specific pipeline whose message base matches the message
 | Project | Types |
 |---|---|
 | VSA.Contracts | `Envelope`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
-| VSA.Handlers | `PipelineBuilder<T>`, `IPipeline<T>`, `Pipelines`, `IHandler<T>`, `IRunner` and the runners, `Validator<T>`, `Before<T>`, `After<T>`, `BeforeStep<T>`, `AfterStep<T>`, `IMessageIds`, `PipelineInstaller` |
+| VSA.Handlers | `PipelineBuilder<T>`, `IPipeline<T>`, `Pipelines`, `IHandler<T>`, `IRunner` and the runners, `Validator<T>`, `Before<T>`, `After<T>`, `BeforeStep<T>`, `AfterStep<T>`, `IMessageIds`, `AddPipelines` |
 | VSA.Handlers.Commands, .Events, .Requests | The handler bases, the senders, and the default pipeline of each kind |
 
-`PipelineInstaller` runs before the handler installers. It finds the validators and the Before and After events of the modules, and registers `Pipelines` and `IMessageIds`. All these projects also target `netstandard2.1`, for Unity.
+`VsaHost.Install` calls `AddPipelines` before the handler registrations. It finds the validators and the Before and After events of the modules, and registers `Pipelines` and `IMessageIds`. All these projects also target `netstandard2.1`, for Unity.
 
 Later, on the same envelope: typed metadata (`Envelope<TMessage, TMeta>`), limits on depth and loops, queries over the call chain, subscriptions at run time, and runs that suspend and resume.

@@ -20,8 +20,8 @@ sealed class LoadDefinitionHandler : CommandHandler<LoadDefinitionCommand, AppIn
         }
         var definition = DefinitionFinder.Find(app);
         if (definition is null) {
-            return new Error("VSA3002", "The app has no architecture definition. "
-                + "Add an app class that gives the definition (IArchitectureProvider), or a class that inherits Architecture.");
+            return new Error("VSA3003", "The app has no app class. "
+                + "Add one class that inherits App<TPack>, for example App<Vsa<WebVsaHost>>.");
         }
         var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         return new AppInput(definition, [.. app.Concat(loader.ExternalAssemblies(externals))], root);

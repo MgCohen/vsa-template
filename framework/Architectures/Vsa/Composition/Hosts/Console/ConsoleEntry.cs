@@ -23,11 +23,11 @@ sealed class ConsoleEntry(
             var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
             var send = typeof(ICommandSender).GetMethod(nameof(ICommandSender.SendAsync))!.MakeGenericMethod(ResultOf(command)!);
             var task = (Task)send.Invoke(sender, [message, cancellationToken])!;
-            await task;
+            await task.ConfigureAwait(false);
             exit.Code = ExitCodeOf(task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task)!);
         } catch (Exception e) when (e is not OperationCanceledException) {
             var reason = (e as TargetInvocationException)?.InnerException?.Message ?? e.Message;
-            await Console.Error.WriteLineAsync($"{command.Name} failed: {reason}");
+            await Console.Error.WriteLineAsync($"{command.Name} failed: {reason}").ConfigureAwait(false);
             exit.Code = 1;
         } finally {
             lifetime.StopApplication();

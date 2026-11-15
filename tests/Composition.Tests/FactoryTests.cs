@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
 using VSA.Kernel;
 
 namespace Composition.Tests;
@@ -11,54 +10,12 @@ public sealed class FactoryTests {
         public string Value { get; set; } = "Ada";
     }
 
-    public sealed class Punctuation {
-        public string Mark { get; } = "!";
-    }
-
-    public sealed class GreetingFactory(Name name) : IFactory<Greeting>, IFactory<string, Greeting> {
-        public Greeting Create() => new($"Hello {name.Value}");
-
-        public Greeting Create(string greeting) => new($"{greeting} {name.Value}");
-    }
-
-    public sealed class NoFactory;
-
-    [Test]
-    public void A_custom_factory_gets_its_services_from_its_constructor() {
-        using var provider = new ServiceCollection().AddSingleton<Name>().AddFactory<GreetingFactory>().BuildServiceProvider();
-
-        Assert.That(provider.GetRequiredService<IFactory<Greeting>>().Create(), Is.EqualTo(new Greeting("Hello Ada")));
-    }
-
-    [Test]
-    public void A_custom_factory_is_registered_as_each_factory_interface_that_it_implements() {
-        using var provider = new ServiceCollection().AddSingleton<Name>().AddFactory<GreetingFactory>().BuildServiceProvider();
-
-        Assert.That(provider.GetRequiredService<IFactory<string, Greeting>>().Create("Hi"), Is.EqualTo(new Greeting("Hi Ada")));
-    }
-
-    [Test]
-    public void A_type_with_no_factory_interface_is_not_a_factory() {
-        var error = Assert.Throws<ArgumentException>(() => new ServiceCollection().AddFactory<NoFactory>());
-
-        Assert.That(error!.Message, Does.Contain("implements no factory interface"));
-    }
-
     [Test]
     public void A_simple_factory_gives_one_service_to_the_function() {
         using var provider = new ServiceCollection().AddSingleton<Name>()
             .AddFactory<Greeting, Name>(name => new Greeting($"Hello {name.Value}")).BuildServiceProvider();
 
         Assert.That(provider.GetRequiredService<IFactory<Greeting>>().Create(), Is.EqualTo(new Greeting("Hello Ada")));
-    }
-
-    [Test]
-    public void A_simple_factory_gives_two_services_to_the_function() {
-        using var provider = new ServiceCollection().AddSingleton<Name>().AddSingleton<Punctuation>()
-            .AddFactory<Greeting, Name, Punctuation>((name, punctuation) => new Greeting($"Hello {name.Value}{punctuation.Mark}"))
-            .BuildServiceProvider();
-
-        Assert.That(provider.GetRequiredService<IFactory<Greeting>>().Create(), Is.EqualTo(new Greeting("Hello Ada!")));
     }
 
     [Test]

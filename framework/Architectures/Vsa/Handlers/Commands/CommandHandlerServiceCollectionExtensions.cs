@@ -1,19 +1,20 @@
+namespace VSA.Handlers.Commands;
+
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Kernel;
 
-namespace VSA.Handlers.Commands;
-
-sealed class CommandHandlerInstaller : IInstaller {
-    public void Install(IServiceCollection services, AnchorTypes types) {
+public static class CommandHandlerServiceCollectionExtensions {
+    public static IServiceCollection AddCommandHandlers(this IServiceCollection services, AppTypes types) {
         EnsureOneHandlerForEachCommand(types.Implementations(typeof(CommandHandler<,>)));
         services.AddScoped<ICommandSender, InProcessCommandSender>();
         services.AddDefaultPipeline(
             PipelineKind.Commands, new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>)));
+        return services;
     }
 
-    static void EnsureOneHandlerForEachCommand(IReadOnlyList<(Type Service, Type Implementation)> handlers) {
+    static void EnsureOneHandlerForEachCommand(IReadOnlyList<Registration> handlers) {
         foreach (var command in handlers.GroupBy(h => h.Service).Where(g => g.Count() > 1)) {
             var names = command.Select(h => h.Implementation.FullName).ToArray();
             throw new InvalidOperationException(

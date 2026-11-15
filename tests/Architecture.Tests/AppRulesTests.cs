@@ -12,24 +12,22 @@ public sealed class RulesArchitecture : VsaArchitecture {
     }
 }
 
-public sealed class RulesApp : IArchitectureProvider {
-    public Architecture Architecture => new RulesArchitecture();
-}
-
 public sealed class AppRulesTests {
     static readonly Dictionary<string, string> NotesSlice = new() { ["Feature"] = "Notes", ["Slice"] = "CreateNote" };
 
     [Test]
     public void The_VSA_rules_allow_a_use_that_the_app_rule_denies() {
         Assert.That(PresentersUseEvents(new VsaArchitecture()), Is.EqualTo(Permission.Allow));
-        Assert.That(PresentersUseEvents(new RulesApp().Architecture), Is.EqualTo(Permission.Deny));
+        Assert.That(PresentersUseEvents(new RulesArchitecture()), Is.EqualTo(Permission.Deny));
     }
 
     [Test]
     public void The_app_rules_come_after_the_VSA_rules() {
-        var last = new RulesApp().Architecture.Resolve()[^1];
+        var last = new RulesArchitecture().Resolve()[^1];
 
-        Assert.That((last.From.Name, last.To.Name, last.Permission), Is.EqualTo(("Presenters", "Contracts.Events", Permission.Deny)));
+        Assert.That(last.From.Name, Is.EqualTo("Presenters"));
+        Assert.That(last.To.Name, Is.EqualTo("Contracts.Events"));
+        Assert.That(last.Permission, Is.EqualTo(Permission.Deny));
     }
 
     static Permission PresentersUseEvents(Architecture definition) {

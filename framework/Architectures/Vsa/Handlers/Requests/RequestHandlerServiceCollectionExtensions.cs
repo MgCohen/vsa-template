@@ -1,17 +1,18 @@
+namespace VSA.Handlers.Requests;
+
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts;
 using VSA.Kernel;
 
-namespace VSA.Handlers.Requests;
-
-sealed class RequestHandlerInstaller : IInstaller {
-    public void Install(IServiceCollection services, AnchorTypes types) {
+public static class RequestHandlerServiceCollectionExtensions {
+    public static IServiceCollection AddRequestHandlers(this IServiceCollection services, AppTypes types) {
         EnsureOneHandlerForEachRequest(types.Implementations(typeof(RequestHandler<,>)));
         services.AddDefaultPipeline(
             PipelineKind.Requests, new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));
+        return services;
     }
 
-    static void EnsureOneHandlerForEachRequest(IReadOnlyList<(Type Service, Type Implementation)> handlers) {
+    static void EnsureOneHandlerForEachRequest(IReadOnlyList<Registration> handlers) {
         foreach (var request in handlers.GroupBy(h => h.Service).Where(g => g.Count() > 1)) {
             var names = request.Select(h => h.Implementation.FullName).ToArray();
             throw new InvalidOperationException(

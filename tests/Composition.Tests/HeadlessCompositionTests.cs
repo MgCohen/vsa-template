@@ -102,21 +102,12 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public void A_module_registration_wins_over_app_services() {
+    public void The_app_services_win_over_a_module_registration() {
         var appRingLog = new RingLog();
 
-        using var host = App(new SignalsModule()).Services(services => services.AddSingleton(appRingLog)).Build();
+        using var host = App(new SignalsModule()).With(services => services.AddSingleton(appRingLog)).Build();
 
-        Assert.That(host.Services.GetRequiredService<RingLog>(), Is.Not.SameAs(appRingLog));
-    }
-
-    [Test]
-    public void Build_with_no_host_and_no_VSA_Host_selects_the_generic_host() {
-        var app = AppBuilder.Create().Modules();
-
-        using var host = app.Build();
-
-        Assert.That(app.SelectedHost().GetType().Name, Is.EqualTo("GenericAppHost"));
+        Assert.That(host.Services.GetRequiredService<RingLog>(), Is.SameAs(appRingLog));
     }
 
     [Test]
@@ -129,6 +120,5 @@ public sealed class HeadlessCompositionTests {
         Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10))), Is.SameAs(run));
     }
 
-    static AppBuilder App(params VSA.Module.Module[] modules) =>
-        AppBuilder.Create().UseGenericHost().Modules(modules);
+    static TestApp App(params Module[] modules) => new(modules);
 }

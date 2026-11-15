@@ -1,22 +1,25 @@
+namespace Framework.Tests.Host;
+
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Architecture;
 using VSA.Architecture.Vsa;
-using Microsoft.Extensions.Configuration;
-using Vsa = VSA.Architecture.Vsa;
 using VSA.Composition;
+using VSA.Host;
 using VSA.Kernel;
+using Concepts = VSA.Architecture.Vsa;
 
-namespace Framework.Tests.Host;
-
-public sealed class VsaAppTests {
+public sealed class AppTests {
     [Test]
-    public void Run_makes_the_app_and_runs_its_start_steps() {
-        var app = new StartedApp();
+    public void Run_composes_the_app_and_calls_OnStart_with_the_services() {
+        var app = new ReturningApp();
 
         var exitCode = app.Run(["--name", "test"]);
+        app.Stop();
 
-        Assert.That((exitCode, app.Marker), Is.EqualTo((7, "test")));
+        Assert.That(exitCode, Is.Zero);
+        Assert.That(app.Marker, Is.EqualTo("test"));
     }
 
     [Test]
@@ -30,11 +33,23 @@ public sealed class VsaAppTests {
     [Test]
     public void A_returning_host_returns_from_Run_and_Stop_stops_the_app() {
         var app = new ReturningApp();
-        var exitCode = app.Run([]);
+        app.Run([]);
         var runningAfterRun = app.IsRunning;
         app.Stop();
 
-        Assert.That((exitCode, runningAfterRun, app.IsRunning), Is.EqualTo((0, true, false)));
+        Assert.That(runningAfterRun, Is.True);
+        Assert.That(app.IsRunning, Is.False);
+        Assert.That(app.Services, Is.Null);
+    }
+
+    [Test]
+    public void OnStop_runs_when_the_host_stops() {
+        var app = new ReturningApp();
+        app.Run([]);
+
+        app.Stop();
+
+        Assert.That(app.Stops, Is.EqualTo(1));
     }
 
     [Test]
@@ -48,6 +63,7 @@ public sealed class VsaAppTests {
         app.Stop();
 
         Assert.That(running, Is.True);
+        Assert.That(app.Stops, Is.EqualTo(2));
     }
 
     [Test]
@@ -69,29 +85,34 @@ public sealed class VsaAppTests {
     }
 
     [Test]
-    public void The_default_host_is_the_generic_host() {
-        Assert.That(new PlainApp().DefaultHost, Is.TypeOf<GenericAppHost>());
+    public void The_pack_gives_a_new_host_of_its_host_type_on_each_call() {
+        var pack = new WebApp().Pack;
+
+        var first = pack.CreateHost();
+
+        Assert.That(first, Is.TypeOf<WebVsaHost>());
+        Assert.That(pack.CreateHost(), Is.Not.SameAs(first));
     }
 
     [Test]
-    public void An_app_of_the_VSA_definition_has_the_VSA_rules() {
-        Assert.That(Rules(new PlainApp().Architecture), Is.EqualTo(Rules(new VsaArchitecture())));
+    public void An_app_of_the_VSA_pack_has_the_VSA_rules() {
+        Assert.That(Rules(new WebApp().Pack.Architecture), Is.EqualTo(Rules(new VsaArchitecture())));
     }
 
     [Test]
-    public void An_app_of_a_derived_definition_has_its_rules_after_the_VSA_rules() {
-        var app = Rules(new RulesApp().Architecture);
+    public void An_app_of_a_derived_architecture_has_its_rules_after_the_VSA_rules() {
+        var app = Rules(new RulesApp().Pack.Architecture);
         var vsa = Rules(new VsaArchitecture());
 
         Assert.That(app.Take(vsa.Count), Is.EqualTo(vsa));
-        Assert.That(app[^1], Is.EqualTo(("Presenters", "Contracts.Events", Permission.Deny)));
+        Assert.That(app[^1], Is.EqualTo(new Rule("Presenters", "Contracts.Events", Permission.Deny)));
     }
 
     [TestCase("ArchUnitNET")]
     [TestCase("Mono.Cecil")]
     [TestCase("nunit.framework")]
     public void The_runtime_of_an_app_does_not_reference_the_test_tools(string tool) {
-        Assert.That(RuntimeReferences(typeof(VsaApp<>).Assembly), Has.None.StartsWith(tool));
+        Assert.That(RuntimeReferences(typeof(Vsa<>).Assembly), Has.None.StartsWith(tool));
     }
 
     static async Task<int> RunUntilStop(WaitingApp app) {
@@ -106,8 +127,8 @@ public sealed class VsaAppTests {
         return await run;
     }
 
-    static List<(string From, string To, Permission Permission)> Rules(Architecture definition) =>
-        definition.Resolve().Select(p => (p.From.Name, p.To.Name, p.Permission)).ToList();
+    static List<Rule> Rules(Architecture definition) =>
+        [.. definition.Resolve().Select(p => new Rule(p.From.Name, p.To.Name, p.Permission))];
 
     static HashSet<string> RuntimeReferences(Assembly start) {
         var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -123,42 +144,32 @@ public sealed class VsaAppTests {
         return found;
     }
 
-    sealed class PlainApp : VsaApp<VsaArchitecture> {
-        public IAppHost DefaultHost => Host();
-    }
+    sealed record Rule(string From, string To, Permission Permission);
+
+    sealed class WebApp : App<Vsa<WebVsaHost>>;
 
     sealed class RulesArchitecture : VsaArchitecture {
         protected override void Rules(RuleBook rules) {
             base.Rules(rules);
-            rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
+            rules.For<Concepts.Presenters>().Denies<Concepts.Contracts.Events>();
         }
     }
 
-    sealed class RulesApp : VsaApp<RulesArchitecture>;
+    sealed class RulesApp : App<Vsa<RulesArchitecture, WebVsaHost>>;
 
-    sealed class StartedApp : VsaApp<VsaArchitecture> {
+    sealed class WaitingApp : App<Vsa<VsaHost>> {
+        protected override IReadOnlyList<VSA.Kernel.Module> Modules() => [];
+    }
+
+    sealed class ReturningApp : App<Vsa<ReturningHost>> {
         public string? Marker { get; private set; }
 
-        protected override int Start(string[] args) {
-            using var host = Build(args);
-            Marker = host.Services.GetRequiredService<IConfiguration>()["name"];
-            return host.Services.GetRequiredService<ExitCode>().Value;
-        }
+        public int Stops { get; private set; }
 
-        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
+        protected override IReadOnlyList<VSA.Kernel.Module> Modules() => [];
 
-        protected override void Services(IServiceCollection services) => services.AddSingleton(new ExitCode(7));
+        protected override void OnStart() => Marker = Services!.GetRequiredService<IConfiguration>()["name"];
+
+        protected override void OnStop() => Stops++;
     }
-
-    sealed class WaitingApp : VsaApp<VsaArchitecture> {
-        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
-    }
-
-    sealed class ReturningApp : VsaApp<VsaArchitecture> {
-        protected override IAppHost Host() => new ReturningHost();
-
-        protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
-    }
-
-    sealed record ExitCode(int Value);
 }

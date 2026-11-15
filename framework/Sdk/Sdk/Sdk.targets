@@ -34,7 +34,6 @@
     <_VsaFramework Include="VSA.Handlers.Commands" Path="Architectures/Vsa/Handlers/Commands" />
     <_VsaFramework Include="VSA.Presenters" Path="Architectures/Vsa/Presenters" />
     <_VsaFramework Include="VSA.Kernel" Path="Kernel" />
-    <_VsaFramework Include="VSA.Module" Path="Architectures/Vsa/Module" />
     <_VsaFramework Include="VSA.Composition" Path="Architectures/Vsa/Composition" />
     <_VsaFramework Include="VSA.Architecture.Vsa" Path="Architectures/Vsa/Definition" />
   </ItemGroup>

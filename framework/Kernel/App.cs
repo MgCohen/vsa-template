@@ -1,13 +1,15 @@
+namespace VSA.Kernel;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VSA.Analyzers.Markers;
 
-namespace VSA.Kernel;
-
 [RequireDerived]
-public abstract class App {
+public abstract class App : IApp {
     readonly object gate = new();
     Running? running;
+
+    public abstract Pack Pack { get; }
 
     public bool IsRunning {
         get {
@@ -17,20 +19,17 @@ public abstract class App {
         }
     }
 
-    public int Run(string[] args) => Start(args);
-
-    public void Stop() {
-        Running? stopped;
-        lock (gate) {
-            stopped = running;
+    public IServiceProvider? Services {
+        get {
+            lock (gate) {
+                return running?.App.Services;
+            }
         }
-        stopped?.Host.Stop(stopped.App);
     }
 
-    protected virtual int Start(string[] args) {
-        var builder = Builder(args);
-        var host = builder.SelectedHost();
-        var app = builder.Build();
+    public int Run(string[] args) {
+        var host = Pack.CreateHost();
+        var app = host.Create(args, this);
         var started = new Running(host, app);
         lock (gate) {
             if (running is not null) {
@@ -40,8 +39,9 @@ public abstract class App {
             }
             running = started;
         }
-        app.Services.GetService<IHostApplicationLifetime>()?.ApplicationStopped.Register(() => Clear(started));
+        app.Services.GetService<IHostApplicationLifetime>()?.ApplicationStopped.Register(() => Stopped(started));
         try {
+            OnStart();
             return host.Run(app);
         } catch {
             Clear(started);
@@ -49,17 +49,34 @@ public abstract class App {
         }
     }
 
-    protected virtual IHost Build(string[] args) => Builder(args).Build();
+    public void Stop() {
+        Running? stopped;
+        lock (gate) {
+            stopped = running;
+        }
+        stopped?.Host.Stop(stopped.App);
+    }
 
-    protected virtual IAppHost Host() => new GenericAppHost();
+    protected internal virtual void ConfigureServices(IServiceCollection services) {
+    }
 
-    protected virtual IKeySource Keys() => new ConstraintKeys();
+    protected internal virtual IKeySource Keys() => new ConstraintKeys();
 
-    protected virtual void Services(IServiceCollection services) { }
+    protected internal virtual IReadOnlyList<Module>? Modules() => null;
 
-    protected virtual AppBuilder Configure(AppBuilder builder) => builder;
+    protected virtual void OnStart() {
+    }
 
-    AppBuilder Builder(string[] args) => Configure(AppBuilder.Create(args).UseHost(Host()).Keys(Keys()).Services(Services));
+    protected virtual void OnStop() {
+    }
+
+    void Stopped(Running stopped) {
+        try {
+            OnStop();
+        } finally {
+            Clear(stopped);
+        }
+    }
 
     void Clear(Running stopped) {
         lock (gate) {
@@ -69,5 +86,5 @@ public abstract class App {
         }
     }
 
-    sealed record Running(IAppHost Host, IHost App);
+    sealed record Running(AppHost Host, IHost App);
 }

@@ -1,8 +1,8 @@
-using VSA.Module;
+using Microsoft.Extensions.DependencyInjection;
 using VSA.Kernel;
 
 namespace Good;
 
 public sealed class GoodModule : Module {
-    public override void Configure(AnchorBuilder module) { }
+    public override void Configure(IServiceCollection services) { }
 }

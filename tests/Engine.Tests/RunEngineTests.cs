@@ -1,4 +1,5 @@
 using Definition;
+using Definition.Infrastructure;
 using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
@@ -9,8 +10,8 @@ using Versions;
 using Tests.Shared;
 using VSA.Composition;
 using VSA.Contracts.Commands;
-using VSA.Module;
 using VSA.Kernel;
+using VsaEngine;
 
 namespace Engine.Tests;
 
@@ -23,10 +24,22 @@ public sealed class RunEngineTests {
     public void The_scan_finds_each_module_of_the_one_engine_assembly() {
         var engine = typeof(StepsPlugin).Assembly;
 
-        var modules = AnchorScan.InOrder(AnchorScan.Roots(typeof(VSA.Module.Module)).Where(root => root.Assembly == engine).Select(root => root.Create()))
+        var modules = AppTypes.InOrder(AppTypes.Roots().Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
         Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules", "Versions" }));
+    }
+
+    [Test]
+    public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
+        var architecture = DefinitionFinder.Find([typeof(EngineApp).Assembly]);
+
+        Assert.That(architecture, Is.TypeOf<EngineArchitecture>());
+    }
+
+    [Test]
+    public void Assemblies_with_no_app_class_give_no_architecture() {
+        Assert.That(DefinitionFinder.Find([typeof(Repo).Assembly]), Is.Null);
     }
 
     [Test]
@@ -63,6 +76,15 @@ public sealed class RunEngineTests {
     }
 
     [Test]
+    public async Task An_app_with_no_app_class_gives_VSA3003() {
+        var result = await Run(root: Repo.Path("tests", "Shared"));
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error VSA3003: The app has no app class."));
+        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+    }
+
+    [Test]
     public async Task A_step_that_throws_gives_one_error_and_the_run_continues() {
         var result = await Run(bin: Path.Combine(Notes, "missing-bin"));
 
@@ -79,14 +101,19 @@ public sealed class RunEngineTests {
     }
 
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
-        VSA.Module.Module[] modules = [
-            new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
-            new ReportModule(),
-        ];
-        using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
+        using var host = new EngineTestApp().Build();
         await using var scope = host.Services.CreateAsyncScope();
         var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
         return result.Value;
+    }
+
+    sealed class EngineTestApp : App<Vsa<VsaHost>> {
+        public Microsoft.Extensions.Hosting.IHost Build() => Pack.CreateHost().Create([], this);
+
+        protected override IReadOnlyList<Module> Modules() => [
+            new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
+            new ReportModule(),
+        ];
     }
 }

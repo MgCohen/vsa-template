@@ -1,17 +1,15 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using VSA.Module;
-using VSA.Kernel;
-
 namespace Composition.Tests;
 
-public sealed class ModuleBuilderTests {
+using Microsoft.Extensions.DependencyInjection;
+using VSA.Kernel;
+
+public sealed class ReplaceTests {
     [Test]
-    public void Replace_in_a_module_keeps_the_lifetime_and_removes_the_default() {
+    public void Replace_keeps_the_lifetime_and_removes_the_default() {
         var services = new ServiceCollection();
         services.AddScoped<IGreeter, EnglishGreeter>();
 
-        Builder(services).Replace<IGreeter, FrenchGreeter>();
+        services.Replace<IGreeter, FrenchGreeter>();
 
         var greeter = services.Single(s => s.ServiceType == typeof(IGreeter));
         Assert.That(greeter.ImplementationType, Is.EqualTo(typeof(FrenchGreeter)));
@@ -20,15 +18,12 @@ public sealed class ModuleBuilderTests {
 
     [Test]
     public void Replace_with_no_default_is_an_error() {
-        var module = Builder(new ServiceCollection());
+        var services = new ServiceCollection();
 
-        var error = Assert.Throws<InvalidOperationException>(() => module.Replace<IGreeter, FrenchGreeter>());
+        var error = Assert.Throws<InvalidOperationException>(() => services.Replace<IGreeter, FrenchGreeter>());
 
         Assert.That(error.Message, Is.EqualTo("IGreeter has no default registration to replace."));
     }
-
-    static AnchorBuilder Builder(IServiceCollection services) =>
-        new("Sample", services, new ConfigurationBuilder().Build());
 
     public interface IGreeter;
 

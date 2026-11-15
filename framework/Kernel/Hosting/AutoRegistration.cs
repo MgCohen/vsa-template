@@ -1,10 +1,10 @@
+namespace VSA.Kernel;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace VSA.Kernel;
-
-sealed class AutoRegisterInstaller : IInstaller {
-    public void Install(IServiceCollection services, AnchorTypes types) {
+static class AutoRegistration {
+    internal static void Add(IServiceCollection services, AppTypes types) {
         foreach (var type in types.Registered()) {
             var lifetime = MarkedTypes.LifetimeOf(type);
             services.TryAdd(new ServiceDescriptor(type, type, lifetime));

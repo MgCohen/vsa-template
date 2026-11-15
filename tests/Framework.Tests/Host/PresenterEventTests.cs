@@ -10,7 +10,7 @@ using VSA.Kernel;
 
 namespace Framework.Tests.Host;
 
-// AppBuilder with the Signals fixture: an event, its handler, a helper class next to the handler, and a presenter of the event.
+// The web test app with the Signals fixture: an event, its handler, a helper class next to the handler, and a presenter of the event.
 public sealed class PresenterEventTests {
     [Test]
     public void HostRegistersTheEventHandlerAndNotTheHelperClass() {
@@ -83,5 +83,5 @@ public sealed class PresenterEventTests {
     }
 
     static Task<IHost> Start(Action<IServiceCollection>? configure = null) =>
-        WebApps.OnTestServer(new SignalsModule()).Services(configure ?? (_ => { })).Start();
+        WebApps.OnTestServer(new SignalsModule()).With(configure ?? (_ => { })).Start();
 }

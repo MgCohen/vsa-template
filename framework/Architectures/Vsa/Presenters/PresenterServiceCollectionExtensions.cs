@@ -1,22 +1,24 @@
+namespace VSA.Presenters;
+
 using Microsoft.Extensions.DependencyInjection;
 using VSA.Contracts.Events;
 using VSA.Kernel;
 
-namespace VSA.Presenters;
-
-sealed class PresenterInstaller : IInstaller {
-    public void Install(IServiceCollection services, AnchorTypes types) {
-        var presenters = types.Implementations(typeof(Presenter));
+public static class PresenterServiceCollectionExtensions {
+    public static IServiceCollection AddPresenters(this IServiceCollection services, AppTypes types) {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
-        foreach (var (_, presenter) in presenters.Where(p => ShowsEvents(p.Implementation))) {
+        var presenters = types.Implementations(typeof(Presenter)).Select(p => p.Implementation).Where(ShowsEvents);
+        foreach (var presenter in presenters) {
             services.AddScoped(presenter, provider => Connected(provider, presenter));
         }
+        return services;
     }
 
     static bool ShowsEvents(Type presenter) =>
-        presenter.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>));
+        presenter.GetInterfaces()
+            .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>));
 
     static Presenter Connected(IServiceProvider provider, Type presenter) {
         var instance = (Presenter)ActivatorUtilities.CreateInstance(provider, presenter);
