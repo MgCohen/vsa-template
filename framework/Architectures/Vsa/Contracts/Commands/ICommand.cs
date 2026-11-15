@@ -7,5 +7,4 @@ namespace VSA.Contracts.Commands;
 // A command has no route: a module sends it with ICommandSender, and HTTP does not see it.
 public interface ICommand<TResult> : ICommand;
 
-// Each command, with no result type. A constraint uses it, for example on BeforeCommandHook<TCommand>.
 public interface ICommand : IMessage;

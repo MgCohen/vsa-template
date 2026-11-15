@@ -25,7 +25,7 @@ The validators run by full type name. A validator, a hook or a typed step for a 
 
 ## Steps and hooks
 
-A step belongs to one pipeline: the builder names it. A hook belongs to a module: the pipeline finds it by its base.
+A step belongs to one pipeline: the builder names it. A hook belongs to a module: the pipeline finds it by its base. The name of a hook ends with `Hook`, so that a reader knows that it runs before or after the handlers of each command or event of its type. `ICommand` is the command with no result type, for the constraint of `BeforeCommandHook<TCommand>`.
 
 | Base | Project | Sees |
 |---|---|---|
@@ -122,9 +122,9 @@ public sealed class ArenaModule : Module {
 | `new PipelineBuilder<TMessage>()` | A description of a pipeline for `TMessage` and each type that derives from it |
 | `.Handlers<TBase>()`, `.HandlersOf(typeof(TBase<,>))` | Each handler of the modules that derives from the base |
 | `.Handlers(typeof(A), typeof(B))` | Only these handlers |
-| `.HooksOf(typeof(A<>), typeof(B<,>))` | Each hook of the modules that derives from these bases. With no `HooksOf`, no hook runs |
+| `.HooksOf(typeof(A<>), typeof(B<,>))` | Each hook of the modules that derives from these bases. A step base is not a hook base. With no `HooksOf`, no hook runs |
 | `.Runner<TRunner>()` | The runner. Default: `InlineRunner` |
-| `.BeforeStep<T>()`, `.AfterStep<T>()` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep` |
+| `.BeforeStep<T>()`, `.AfterStep<T>()` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep`. Add each step one time |
 | `.Build(services)` | A new instance with its own runner. Keep the builder to build more instances, for example one for each match |
 | `services.AddPipeline(builder)` | The module instance: `ICommandSender`, `IBus` and the publisher send each message of `TMessage` to it, and the services give it as `Pipeline<TMessage>` |
 
@@ -134,7 +134,9 @@ A send goes to the most specific pipeline whose message base matches the message
 |---|---|---|
 | Commands | `CommandHandler<,>` | `BeforeCommandHook<>`, `AfterCommandHook<,>` |
 | Events | `IntegrationEventHandler<>` | `BeforeEventHook<>`, `AfterEventHook<>` |
-| Requests | `RequestHandler<,>` | None | A message base has one pipeline: a second `AddPipeline` for the same base fails.
+| Requests | `RequestHandler<,>` | None |
+
+A message base has one pipeline: a second `AddPipeline` for the same base fails.
 
 ## Projects
 

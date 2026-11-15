@@ -5,8 +5,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace VSA.Analyzers;
 
-// VSA1015: the name of a hook ends with "Hook". A hook is a class that inherits one of the four hook bases.
-// The name tells the reader that the class runs before or after the handlers of each command or event of its type.
 public sealed class HookNameRule() : VsaAnalyzerRule(Descriptor) {
     const string Suffix = "Hook";
 

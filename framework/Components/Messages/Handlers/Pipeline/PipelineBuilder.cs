@@ -29,8 +29,8 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
             if (!IsHookBase(hookBase)) {
                 throw new ArgumentException(
                     $"{hookBase?.FullName ?? "null"} is not a hook base. "
-                    + "A hook base implements IBeforeCall or IAfterCall, "
-                    + "for example BeforeCommandHook<> or AfterEventHook<>.",
+                    + "A hook base implements IBeforeCall or IAfterCall, and it is not a step base. "
+                    + "Add a step with BeforeStep<TStep>() or AfterStep<TStep>().",
                     nameof(hookBases));
             }
             this.hookBases.Add(hookBase);
@@ -44,12 +44,12 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
     }
 
     public PipelineBuilder<TMessage> BeforeStep<TStep>() where TStep : BeforeStep {
-        beforeSteps.Add(typeof(TStep));
+        AddOnce(beforeSteps, typeof(TStep), "a before");
         return this;
     }
 
     public PipelineBuilder<TMessage> AfterStep<TStep>() where TStep : AfterStep {
-        afterSteps.Add(typeof(TStep));
+        AddOnce(afterSteps, typeof(TStep), "an after");
         return this;
     }
 
@@ -57,7 +57,21 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         new(Definition(), services ?? throw new ArgumentNullException(nameof(services)));
 
     static bool IsHookBase(Type? type) =>
-        type is not null && (typeof(IBeforeCall).IsAssignableFrom(type) || typeof(IAfterCall).IsAssignableFrom(type));
+        type is not null
+        && (typeof(IBeforeCall).IsAssignableFrom(type) || typeof(IAfterCall).IsAssignableFrom(type))
+        && !IsStep(type);
+
+    static bool IsStep(Type type) =>
+        typeof(BeforeStep).IsAssignableFrom(type) || typeof(AfterStep).IsAssignableFrom(type);
+
+    static void AddOnce(List<Type> steps, Type step, string stage) {
+        if (steps.Contains(step)) {
+            throw new InvalidOperationException(
+                $"{step.FullName} is already {stage} step of the pipeline of {typeof(TMessage).Name}. "
+                + "Add each step one time.");
+        }
+        steps.Add(step);
+    }
 
     PipelineDefinition Definition() =>
         new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases], runner,

@@ -4,7 +4,6 @@ using VSA.Kernel;
 
 namespace Signals;
 
-// A module with an event, its handler, a helper class, two event hooks, and a presenter that shows the event.
 public sealed class SignalsModule : Module {
     public override void Configure(IServiceCollection services) => services.AddSingleton<RingLog>();
 }

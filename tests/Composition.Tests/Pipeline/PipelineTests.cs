@@ -13,9 +13,6 @@ using VSA.Kernel;
 
 namespace Composition.Tests.Pipeline;
 
-// The Arena fixture sends its moves through a custom pipeline: StackRunner, the command hooks, TagStep (a plain step)
-// before, AuditStep (a typed step) after. Its slice has a validator. Its hooks are a Before hook (ArmorHook takes
-// 1 damage) and two After hooks (CounterHook, LogMoveHook), which run by full type name.
 public sealed class PipelineTests {
     IHost host = null!;
     AsyncServiceScope scope;
@@ -179,6 +176,27 @@ public sealed class PipelineTests {
             () => new PipelineBuilder<ArenaMove>().HooksOf(typeof(CommandHandler<,>)));
 
         Assert.That(error!.Message, Does.StartWith("VSA.Handlers.Commands.CommandHandler`2 is not a hook base."));
+    }
+
+    [TestCase(typeof(BeforeStep<>))]
+    [TestCase(typeof(AfterStep<>))]
+    [TestCase(typeof(BeforeStep))]
+    [TestCase(typeof(TagStep))]
+    public void A_step_base_is_not_a_hook_base(Type stepBase) {
+        var error = Assert.Throws<ArgumentException>(() => new PipelineBuilder<ArenaMove>().HooksOf(stepBase));
+
+        Assert.That(error!.Message, Does.Contain("is not a hook base"));
+    }
+
+    [Test]
+    public void A_step_is_added_one_time() {
+        var builder = new PipelineBuilder<ArenaMove>().BeforeStep<TagStep>().AfterStep<AuditStep>();
+
+        var before = Assert.Throws<InvalidOperationException>(() => builder.BeforeStep<TagStep>());
+        var after = Assert.Throws<InvalidOperationException>(() => builder.AfterStep<AuditStep>());
+
+        Assert.That(before!.Message, Does.StartWith("Arena.Slices.Duel.TagStep is already a before step"));
+        Assert.That(after!.Message, Does.StartWith("Arena.Slices.Duel.AuditStep is already an after step"));
     }
 
     [TestCase(typeof(BeforeCommandHook<>))]
