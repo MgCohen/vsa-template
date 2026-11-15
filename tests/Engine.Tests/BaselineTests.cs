@@ -116,6 +116,23 @@ public sealed class BaselineTests {
 
         Assert.That(result.Value.Accepted, Is.Empty);
         Assert.That(File.Exists(Path.Combine(root, FileName)), Is.False);
+        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("VSA3007"));
+    }
+
+    [Test]
+    public async Task An_update_after_a_failed_step_keeps_the_file_and_gives_VSA3007() {
+        WriteBaseline("VSA2001|App/Host/Probe.cs|Probe in Host", "VSA2001|App/Host/Other.cs|Other in Host");
+        Finding[] findings = [
+            Error("VSA2001", "App/Host/Probe.cs", 4, "Probe in Host"),
+            new Finding("VSA3004", FindingSeverity.Info, "CheckRules skipped: App is missing"),
+        ];
+
+        var result = await Apply(findings, update: true);
+
+        Assert.That(File.ReadAllLines(Path.Combine(root, FileName)), Has.Length.EqualTo(2));
+        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "VSA3007", "VSA3005" }));
+        Assert.That(result.Value.Findings[0].Severity, Is.EqualTo(FindingSeverity.Warning));
+        Assert.That(result.Value.Accepted, Has.Count.EqualTo(1));
     }
 
     [Test]

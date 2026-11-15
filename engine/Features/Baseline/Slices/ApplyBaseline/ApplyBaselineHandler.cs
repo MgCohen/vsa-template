@@ -9,6 +9,7 @@ namespace Baseline.Slices.ApplyBaseline;
 sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBaselineResult> {
     public const string StaleEntry = "VSA3005";
     public const string UnreadableEntry = "VSA3006";
+    public const string NotUpdated = "VSA3007";
     const string EngineCodePrefix = "VSA3";
     const string UpdateSwitch = "build with -p:VsaUpdateBaseline=true";
 
@@ -19,7 +20,8 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
         var root = Path.GetFullPath(command.AppRoot);
         var path = BaselineFile.PathIn(root);
         var errors = command.Findings.Where(IsBaselineError).Distinct().ToList();
-        if (command.Update) {
+        var incomplete = command.Findings.Any(IsIncompleteRun);
+        if (command.Update && !incomplete) {
             BaselineFile.Write(path, errors.Select(error => Entry(error, root)));
         }
         var open = new Dictionary<BaselineEntry, Queue<int>>();
@@ -42,12 +44,23 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
             .SelectMany(pair => pair.Value.Select(number => Stale(pair.Key, path, number)))
             .OrderBy(finding => finding.Line)
             .ToList();
-        return new ApplyBaselineResult(stale, accepted);
+        IReadOnlyList<Finding> findings = command.Update && incomplete ? [NotUpdatedWarning(path), .. stale] : stale;
+        return new ApplyBaselineResult(findings, accepted);
     }
 
     static bool IsBaselineError(Finding finding) =>
         finding.Severity == FindingSeverity.Error
         && !finding.Code.StartsWith(EngineCodePrefix, StringComparison.Ordinal);
+
+    static bool IsIncompleteRun(Finding finding) =>
+        finding.Code.StartsWith(EngineCodePrefix, StringComparison.Ordinal)
+        && finding.Severity is FindingSeverity.Error or FindingSeverity.Info;
+
+    static Finding NotUpdatedWarning(string path) => new(
+        NotUpdated,
+        FindingSeverity.Warning,
+        $"{path} was not updated, because a step failed or was skipped, so the run has not found each error. "
+            + "Fix the engine error, then build with -p:VsaUpdateBaseline=true again.");
 
     static bool Consume(Dictionary<BaselineEntry, Queue<int>> open, BaselineEntry entry) =>
         open.TryGetValue(entry, out var numbers) && numbers.TryDequeue(out _);

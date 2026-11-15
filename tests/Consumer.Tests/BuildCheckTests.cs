@@ -39,6 +39,13 @@ public sealed class BuildCheckTests {
 
         workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
 
+        var accepted = File.ReadAllText(baseline);
+        File.Delete(baseline);
+        var withoutBaseline = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
+        Assert.That(withoutBaseline.Succeeded, Is.False, "A delete of the baseline skips the check.");
+        Assert.That(withoutBaseline.Output, Does.Contain(finding));
+        File.WriteAllText(baseline, accepted);
+
         File.Delete(probe);
         var fixedBuild = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
         Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning VSA3005"));

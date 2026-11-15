@@ -268,6 +268,8 @@ VSA2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does no
 | Update | `dotnet build -p:VsaUpdateBaseline=true` (engine switch `--updatebaseline true`) writes each current error, sorted (ordinal), and removes the stale entries. With no error, the update deletes the file. The update never skips the check |
 | Stale entry | An entry that no error matches gives the warning `VSA3005` at its line in the file. Remove the line, or run the update |
 | Bad line | A line that does not have the form gives the error `VSA3006`. Then no error is accepted |
+| Incomplete run | If a step failed or was skipped (an engine error, or `VSA3004`), the update does not write the file and gives the warning `VSA3007`. Reason: that run has not found each error |
+| Build stamp | The stamp name tells if the file exists. A delete of the file runs the check again |
 
 `--mode Warn` applies after the baseline: each remaining error becomes a warning.
 
