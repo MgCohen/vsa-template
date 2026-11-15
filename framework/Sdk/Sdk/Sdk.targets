@@ -46,26 +46,17 @@
     <ProjectReference Update="$(VsaFrameworkSourceDir)Kernel/Analyzers/VSA.Kernel.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Package mode (consumers): package references. _VsaAlignVersions gives them the version of this SDK. -->
-  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
-    <PackageReference Include="@(_VsaFramework)" />
-    <PackageReference Update="VSA.Analyzers" PrivateAssets="all" />
-  </ItemGroup>
-
-  <!-- Each VSA.* package with no version gets the version of this SDK, so all VSA packages stay at one version.
-       This includes a package that the project adds itself, for example VSA.Host.
-       With central package management, a PackageReference cannot set Version, so it gets VersionOverride. -->
+  <!-- Package mode (consumers): package references with the version of this SDK.
+       With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
+       A VSA.* package that the project adds itself, for example VSA.Host, gives its own version. The rule engine checks it (VSA3001). -->
   <PropertyGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
     <_VsaV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(VsaVersion)</_VsaV>
     <_VsaVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(VsaVersion)</_VsaVO>
   </PropertyGroup>
-  <Target Name="_VsaAlignVersions" BeforeTargets="CollectPackageReferences" Condition="'$(VsaFrameworkSourceDir)' == ''">
-    <ItemGroup>
-      <_VsaAligned Include="@(PackageReference)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('VSA.')) and '%(PackageReference.Version)' == '' and '%(PackageReference.VersionOverride)' == ''" />
-      <PackageReference Remove="@(_VsaAligned)" />
-      <PackageReference Include="@(_VsaAligned)" Version="$(_VsaV)" VersionOverride="$(_VsaVO)" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
+    <PackageReference Include="@(_VsaFramework)" Version="$(_VsaV)" VersionOverride="$(_VsaVO)" />
+    <PackageReference Update="VSA.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
 
   <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">

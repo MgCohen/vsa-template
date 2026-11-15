@@ -13,11 +13,6 @@ sealed class LoadDefinitionHandler : CommandHandler<LoadDefinitionCommand, Loade
         var root = Path.GetFullPath(command.AppRoot);
         var bin = Path.GetFullPath(command.Bin);
         var loader = new AppLoader(bin);
-        var versions = loader.VersionMismatches();
-        if (versions.Count > 0) {
-            return new Error("VSA3001",
-                $"The app and the engine use different versions: {string.Join(", ", versions)}. Use one version: run dotnet vsa update.");
-        }
         var app = loader.AppAssemblies(root, Names(command.Skip));
         if (app.Count == 0) {
             return new Error("VSA3002", $"No assembly in {bin} has source files under the app root {root}. "
