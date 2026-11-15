@@ -24,8 +24,13 @@
   <ItemGroup>
     <ProjectReference Include="$(VsaFrameworkSourceDir)architecture/VSA.Architecture.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)packs/Vsa/Architecture/VSA.Architecture.Vsa.csproj" />
-    <ProjectReference Include="$(VsaFrameworkSourceDir)framework/Engine/Core/VSA.Architecture.Engine.csproj" />
     <ProjectReference Include="$(VsaFrameworkSourceDir)engine/Versions/VSA.Architecture.Versions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Architecture.Tests" />
   </ItemGroup>
   <ItemGroup>
     <None Include="VSA.Architecture.Build.targets" Pack="true" PackagePath="build/" />

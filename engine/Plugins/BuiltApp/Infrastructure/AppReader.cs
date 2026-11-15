@@ -1,17 +1,20 @@
 using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
+using Steps.Domain.Shared;
+using VSA.Architecture;
 
-namespace VSA.Architecture.Engine;
+namespace BuiltApp.Infrastructure;
 
-static class ArchitectureLoader {
-    public static LoadedApp Load(IEnumerable<string> dlls, string appRoot) {
+public static class AppReader {
+    public static LoadedApp Read(IEnumerable<string> dlls, string appRoot, ResolvedArchitecture architecture) {
         var root = Path.GetFullPath(appRoot);
         var given = dlls.Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var unity = UnityProject.Scripts(root, given, out var warning);
         var files = unity.Concat(given).ToList();
         var types = Distinct(Load(files), files);
-        var warnings = warning is null ? new List<RuleFinding>() : [warning];
-        return new LoadedApp(root, files, types, SourceFiles.Read(files), warnings);
+        var facts = TypeFactsReader.Read(types, SourceFiles.Read(files), architecture);
+        var warnings = warning is null ? new List<Finding>() : [warning];
+        return new LoadedApp(root, files, types, facts, warnings);
     }
 
     static ArchUnitNET.Domain.Architecture Load(IReadOnlyList<string> files) {

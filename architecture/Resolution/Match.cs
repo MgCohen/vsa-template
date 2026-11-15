@@ -1,51 +1,40 @@
-using ArchUnitNET.Domain;
+namespace VSA.Architecture;
 
-namespace VSA.Architecture.Engine;
-
-sealed class Binder {
+sealed class Match {
+    readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<Part> folderParts;
-    readonly IReadOnlyList<Part> externalParts;
     readonly string rootPath;
     readonly IReadOnlyList<FolderAlias> aliases;
-    readonly IReadOnlyDictionary<string, Source> sources;
     readonly string appRoot;
 
-    Binder(Architecture definition, IReadOnlyDictionary<string, Source> sources, string appRoot) {
+    Match(ResolvedArchitecture resolved, string appRoot) {
+        var definition = resolved.Architecture;
+        this.resolved = resolved;
         folderParts = [.. definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
-        externalParts = [.. definition.Parts().Where(p => p.IsExternal)];
         rootPath = definition.Root.Path;
         aliases = definition.FolderAliases(appRoot);
-        this.sources = sources;
         this.appRoot = appRoot;
     }
 
-    public static Bindings Bind(Architecture definition, LoadedApp app) {
-        var binder = new Binder(definition, app.Sources, app.AppRoot);
+    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string appRoot) {
+        var match = new Match(resolved, appRoot);
         var bound = new List<Binding>();
         var unmapped = new List<UnmappedType>();
-        foreach (var type in app.Types) {
-            binder.Place(type, bound, unmapped);
+        foreach (var type in types) {
+            match.Place(type, bound, unmapped);
         }
         return new Bindings(FollowUsers(bound), unmapped);
     }
 
-    public static bool Is(IType type, Type target) {
-        var name = target.FullName!;
-        var bases = new[] { type }
-            .Concat(type is Class c ? c.InheritedClasses : [])
-            .Concat(type.ImplementedInterfaces);
-        return bases.Any(b => b.FullName == name);
-    }
-
-    void Place(IType type, List<Binding> bound, List<UnmappedType> unmapped) {
+    void Place(TypeFacts type, List<Binding> bound, List<UnmappedType> unmapped) {
         if (type.Name.StartsWith('<')) {
             return;
         }
-        if (ExternalPart(type) is { } external) {
+        if (resolved.ExternalPart(type.Assembly) is { } external) {
             bound.Add(new Binding(type, external, new Dictionary<string, string>(), null));
             return;
         }
-        if (!sources.TryGetValue(type.FullName, out var source)) {
+        if (type.Source is not { } source) {
             return;
         }
         var file = Path.GetFullPath(source.File);
@@ -55,20 +44,12 @@ sealed class Binder {
             return;
         }
         var located = source with { File = file };
-        var match = Match(paths);
+        var match = Folder(paths);
         if (match is null || match.IsUndeclaredGroupFolder) {
             unmapped.Add(new UnmappedType(type, located));
         } else {
             bound.Add(BindTo(match, type, located));
         }
-    }
-
-    Part? ExternalPart(IType type) {
-        var assembly = AssemblyName(type);
-        return externalParts
-            .Where(p => assembly == p.Assembly || assembly.StartsWith(p.Assembly + ".", StringComparison.Ordinal))
-            .OrderByDescending(p => p.Assembly!.Length)
-            .FirstOrDefault();
     }
 
     List<string> PathsUnderRoot(string relative) {
@@ -88,7 +69,7 @@ sealed class Binder {
     bool IsUnderRoot(string relative) =>
         rootPath.Length == 0 || relative.StartsWith(rootPath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
 
-    FolderMatch? Match(IReadOnlyList<string> paths) => paths
+    FolderMatch? Folder(IReadOnlyList<string> paths) => paths
         .Select(path => path.Split('/')[..^1])
         .SelectMany(folders => folderParts
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
@@ -96,14 +77,14 @@ sealed class Binder {
         .OrderByDescending(m => m.Pattern.Length)
         .FirstOrDefault();
 
-    static Binding BindTo(FolderMatch match, IType type, Source source) {
+    static Binding BindTo(FolderMatch match, TypeFacts type, Source source) {
         var part = Select(match.Part, type);
         var values = part.Groups.ToDictionary(i => i.Name, i => match.Folders[i.Path.Split('/').Length - 1]);
         return new Binding(type, part, values, source);
     }
 
-    static Part Select(Part folderPart, IType type) {
-        var shared = ParentFolderChildren(folderPart).Where(p => p.Types.Any(t => Is(type, t))).ToList();
+    static Part Select(Part folderPart, TypeFacts type) {
+        var shared = ParentFolderChildren(folderPart).Where(p => p.Types.Any(type.Is)).ToList();
         if (shared.Count > 1) {
             throw new InvalidOperationException(
                 $"{type.FullName} matches {string.Join(" and ", shared.Select(p => p.Name))}, which share one folder. Give each part a different type.");
@@ -135,18 +116,13 @@ sealed class Binder {
         if (shared.Count == 0) {
             return null;
         }
-        var users = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path && Uses(b.Type, helper.Type))
+        var users = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path && b.Type.Mentions.Contains(helper.Type.FullName))
             .Select(b => b.Part).Distinct();
         return users.OrderBy(p => p.Types.Count == 0).ThenBy(shared.IndexOf).FirstOrDefault();
     }
 
-    static bool Uses(IType user, IType target) =>
-        user.Dependencies.Any(d => d.Target == target || d.TargetGenericArguments.Any(g => g.Type == target));
-
     static IEnumerable<Part> ParentFolderChildren(Part part) =>
         part.Children.Where(c => !c.HasFolder && !c.IsGroup).SelectMany(c => new[] { c }.Concat(ParentFolderChildren(c)));
-
-    static string AssemblyName(IType type) => type.Assembly.Name.Split(',')[0];
 
     sealed record FolderMatch(Part Part, string[] Pattern, string[] Folders) {
         public bool Matches => Pattern.Length <= Folders.Length && Pattern.Select((s, i) => Fits(s, Folders[i])).All(x => x);

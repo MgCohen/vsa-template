@@ -1,4 +1,4 @@
-using VSA.Architecture.Engine;
+using VSA.Architecture;
 
 namespace EngineCore.Tests;
 

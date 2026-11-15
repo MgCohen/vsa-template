@@ -1,32 +1,32 @@
-using ArchUnitNET.Domain;
+using Steps.Domain.Shared;
+using VSA.Architecture;
 
-namespace VSA.Architecture.Engine;
+namespace Rules.Slices.CheckRules;
 
-sealed class RuleChecks(Architecture definition, Bindings bindings) {
-    public IReadOnlyList<RuleFinding> Of(Binding from) =>
+sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
+    public IReadOnlyList<Finding> Of(Binding from) =>
         [.. WrongType(from), .. DeniedUses(from), .. WideExposures(from)];
 
-    public RuleFinding Unmapped(UnmappedType unmapped) =>
+    public static Finding Unmapped(UnmappedType unmapped) =>
         Error("VSA2102", unmapped.Source, $"{unmapped.Type.Name} is in a folder that the definition does not have. "
             + "Move it to a part, or add the folder in Define.");
 
-    static RuleFinding Error(string code, Source source, string text) =>
-        new(code, RuleSeverity.Error, source.File, source.Line, source.Column, text);
+    static Finding Error(string code, Source source, string text) =>
+        new(code, FindingSeverity.Error, text, source.File, source.Line);
 
-    IEnumerable<RuleFinding> WrongType(Binding from) {
+    static IEnumerable<Finding> WrongType(Binding from) {
         var type = from.Type;
-        if (from.FollowsUser || from.Part.Types.Count == 0 || from.Part.Types.Any(t => Binder.Is(type, t))) {
+        if (from.FollowsUser || from.Part.Types.Count == 0 || from.Part.Types.Any(type.Is)) {
             yield break;
         }
         yield return Error("VSA2101", from.Source!, $"{type.Name} is in {from.Where}, but it is not "
             + $"{string.Join(" or ", from.Part.Types.Select(t => t.Name))}. Move it, or change its base type.");
     }
 
-    IEnumerable<RuleFinding> DeniedUses(Binding from) {
+    IEnumerable<Finding> DeniedUses(Binding from) {
         var type = from.Type;
-        var targets = type.Dependencies.Select(d => d.Target).Distinct();
-        foreach (var to in targets.Select(target => Other(from, target)).OfType<Binding>()) {
-            var decision = DecisionFor(from, to);
+        foreach (var to in type.Uses.Select(target => Other(from, target)).OfType<Binding>()) {
+            var decision = resolved.DecisionFor(from, to);
             if (decision.Permission != Permission.Deny) {
                 continue;
             }
@@ -39,13 +39,13 @@ sealed class RuleChecks(Architecture definition, Bindings bindings) {
         }
     }
 
-    IEnumerable<RuleFinding> WideExposures(Binding from) {
+    IEnumerable<Finding> WideExposures(Binding from) {
         var type = from.Type;
-        foreach (var exposure in Exposures.Of(type, IsFramework).DistinctBy(e => new { e.Target, e.Member })) {
+        foreach (var exposure in type.Exposures) {
             if (Other(from, exposure.Target) is not { } to) {
                 continue;
             }
-            var decision = DecisionFor(from, to);
+            var decision = resolved.DecisionFor(from, to);
             if (decision.Permission != Permission.Allow || decision.Rule is not { } rule
                 || exposure.Access.IsWithin(rule.Access)) {
                 continue;
@@ -58,11 +58,6 @@ sealed class RuleChecks(Architecture definition, Bindings bindings) {
         }
     }
 
-    bool IsFramework(IType type) => bindings.Of(type)?.External == true;
-
-    Decision DecisionFor(Binding from, Binding to) =>
-        Decide.For(definition, from.Part, from.Values, to.Part, to.Values);
-
-    Binding? Other(Binding from, IType target) =>
+    Binding? Other(Binding from, string target) =>
         bindings.Of(target) is { } to && !(to.Part == from.Part && to.Path == from.Path) ? to : null;
 }

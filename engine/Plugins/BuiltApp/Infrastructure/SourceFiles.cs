@@ -1,4 +1,6 @@
-namespace VSA.Architecture.Engine;
+using VSA.Architecture;
+
+namespace BuiltApp.Infrastructure;
 
 static class SourceFiles {
     public static Dictionary<string, Source> Read(IEnumerable<string> dlls) {

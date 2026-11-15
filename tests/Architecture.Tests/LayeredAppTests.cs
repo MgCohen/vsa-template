@@ -1,6 +1,6 @@
 using LayeredApp.Ui;
 using VSA.Architecture;
-using VSA.Architecture.Engine;
+using Rules.Slices.CheckRules;
 
 namespace EngineCore.Tests;
 
@@ -28,7 +28,7 @@ public sealed class LayeredArchitecture() : Architecture("LayeredApp") {
 }
 
 public sealed class LayeredAppTests {
-    static readonly Lazy<ArchitectureMap> LayeredMap =
+    static readonly Lazy<ArchitectureCheck> LayeredMap =
         new(() => FixtureApps.Load(new LayeredArchitecture(), AppContext.BaseDirectory, FixtureApps.Root));
 
     [Test]

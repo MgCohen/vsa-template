@@ -1,6 +1,6 @@
-namespace VSA.Architecture.Engine;
+namespace VSA.Architecture;
 
-static class BuildOutput {
+public static class BuildOutput {
     static readonly string[] Folders = ["obj", "bin"];
     static readonly char[] Separators = ['/', '\\'];
 

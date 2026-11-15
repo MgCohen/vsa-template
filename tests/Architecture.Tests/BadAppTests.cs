@@ -1,5 +1,5 @@
 using ArchUnitNET.Domain;
-using VSA.Architecture.Engine;
+using Steps.Domain.Shared;
 
 namespace EngineCore.Tests;
 
@@ -7,7 +7,7 @@ public sealed class BadAppTests {
     const string Billing = "BadApp/Features/Billing";
     const string Notes = "BadApp/Features/Notes";
 
-    static readonly Lazy<IReadOnlyList<RuleFinding>> AllFindings = new(() => FixtureApps.Bad.Findings());
+    static readonly Lazy<IReadOnlyList<Finding>> AllFindings = new(() => FixtureApps.Bad.Findings());
 
     static string UseFailures => Lines("VSA2001");
 
@@ -23,7 +23,7 @@ public sealed class BadAppTests {
         var finding = AllFindings.Value.Single(f => f.Code == "VSA2102");
 
         Assert.That(finding.File, Is.EqualTo(Path.Combine(FixtureApps.Root, "BadApp", "Features", "Billing", "Utils", "Clock.cs")));
-        Assert.That((finding.Severity, finding.Line), Is.EqualTo((RuleSeverity.Error, 4)));
+        Assert.That((finding.Severity, finding.Line), Is.EqualTo((FindingSeverity.Error, (int?)4)));
     }
 
     [Test]

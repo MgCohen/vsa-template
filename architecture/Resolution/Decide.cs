@@ -1,6 +1,6 @@
-namespace VSA.Architecture.Engine;
+namespace VSA.Architecture;
 
-static class Decide {
+public static class Decide {
     public static Decision For(Architecture definition,
         Part fromPart, IReadOnlyDictionary<string, string> fromValues,
         Part toPart, IReadOnlyDictionary<string, string> toValues) {

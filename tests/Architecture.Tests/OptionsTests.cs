@@ -24,7 +24,7 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
     public Permission Decide() {
         var user = Parts().Single(p => p.Is(typeof(User)));
         var target = Parts().Single(p => p.Is(typeof(Target)));
-        return VSA.Architecture.Engine.Decide.For(this,
+        return VSA.Architecture.Decide.For(this,
             user, new Dictionary<string, string> { [GroupName] = "a" },
             target, new Dictionary<string, string> { [GroupName] = "b" }).Permission;
     }

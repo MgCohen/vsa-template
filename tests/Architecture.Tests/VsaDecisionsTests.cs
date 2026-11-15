@@ -56,7 +56,7 @@ public sealed class VsaDecisionsTests {
         string.Join(" ", to.Select(i => from.TryGetValue(i.Key, out var value) ? $"{(value == i.Value ? "same" : "other")} {i.Key}" : $"{i.Key} {i.Value}"));
 
     static string Decide(Architecture definition, Part from, Dictionary<string, string> fromValues, Part to, Dictionary<string, string> toValues) {
-        var (permission, pair) = VSA.Architecture.Engine.Decide.For(definition, from, fromValues, to, toValues);
+        var (permission, pair) = VSA.Architecture.Decide.For(definition, from, fromValues, to, toValues);
         return permission == Permission.Allow ? $"Allow {pair?.Access.ToString() ?? "(default)"}" : "Deny";
     }
 

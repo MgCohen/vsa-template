@@ -1,7 +1,8 @@
 using ArchUnitNET.Domain;
 using ArchUnitNET.Domain.Dependencies;
+using VSA.Architecture;
 
-namespace VSA.Architecture.Engine;
+namespace BuiltApp.Infrastructure;
 
 sealed record Exposure(IType Target, Access Access, string Member);
 
@@ -36,7 +37,7 @@ static class Exposures {
         }
     }
 
-    static IReadOnlyDictionary<string, GenericArgument> ArgumentsByParameter(
+    static Dictionary<string, GenericArgument> ArgumentsByParameter(
         IType type, IReadOnlyList<GenericArgument> arguments) =>
         type.GenericParameters.Zip(arguments).ToDictionary(pair => pair.First.Name, pair => pair.Second);
 

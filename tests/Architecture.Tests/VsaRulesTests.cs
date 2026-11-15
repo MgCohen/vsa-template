@@ -1,5 +1,4 @@
 using VSA.Architecture;
-using VSA.Architecture.Engine;
 using VSA.Architecture.Vsa;
 
 namespace EngineCore.Tests;
@@ -68,7 +67,7 @@ public sealed class VsaRulesTests {
     }
 
     static Decision Decide(PartPlace from, PartPlace to) =>
-        VSA.Architecture.Engine.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
+        VSA.Architecture.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
 
     static PartPlace Place(string group, string name, string feature = "A", string slice = "s1") {
         var part = Definition.Parts().Single(p => p.Name == name && p.SelfAndAncestors().Any(a => a.Name == group));

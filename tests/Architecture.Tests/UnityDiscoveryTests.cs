@@ -1,4 +1,5 @@
-using VSA.Architecture.Engine;
+using Rules.Slices.CheckRules;
+using Steps.Domain.Shared;
 using VSA.Architecture.Vsa;
 using VSA.Kernel;
 
@@ -9,7 +10,7 @@ public sealed class UnityDiscoveryTests {
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
     UnityProjectFolder project = null!;
-    ArchitectureMap map = null!;
+    ArchitectureCheck map = null!;
 
     [OneTimeSetUp]
     public void BuildTheUnityProjectAndItsDotnetBuild() {
@@ -60,7 +61,7 @@ public sealed class UnityDiscoveryTests {
     public void The_checks_read_the_uses_of_a_view_in_the_Unity_build() {
         var board = map.App.Types.Single(t => t.FullName == "Game.Views.Board");
 
-        Assert.That(map.Findings(board).Select(f => f.Code), Has.Some.EqualTo("VSA2001"));
+        Assert.That(map.Findings(board.FullName).Select(f => f.Code), Has.Some.EqualTo("VSA2001"));
     }
 
     [Test]
@@ -76,7 +77,7 @@ public sealed class UnityDiscoveryTests {
 
         var discovered = FixtureApps.Load(new VsaArchitecture(), unbuilt.Output, unbuilt.Root);
 
-        Assert.That(discovered.Findings().Where(f => f.Severity == RuleSeverity.Warning).Select(f => f.Code + ": " + f.Text),
+        Assert.That(discovered.Findings().Where(f => f.Severity == FindingSeverity.Warning).Select(f => f.Code + ": " + f.Message),
             Has.One.StartsWith("VSA2103: ").And.Contains("has no Library/ScriptAssemblies folder"));
     }
 }

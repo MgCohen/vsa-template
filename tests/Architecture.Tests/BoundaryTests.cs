@@ -8,7 +8,7 @@ public sealed class BoundaryArchitecture(Boundary options, Boundary? group, Cros
     public Permission Decide(string fromPackage, string toPackage) {
         var user = Parts().Single(p => p.Is(typeof(User)));
         var target = Parts().Single(p => p.Is(typeof(Target)));
-        return VSA.Architecture.Engine.Decide.For(this,
+        return VSA.Architecture.Decide.For(this,
             user, new Dictionary<string, string> { ["Package"] = fromPackage },
             target, new Dictionary<string, string> { ["Package"] = toPackage }).Permission;
     }

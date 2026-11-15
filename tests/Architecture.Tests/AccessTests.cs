@@ -1,6 +1,6 @@
 using ArchUnitNET.Loader;
 using VSA.Architecture;
-using VSA.Architecture.Engine;
+using BuiltApp.Infrastructure;
 
 namespace EngineCore.Tests;
 
