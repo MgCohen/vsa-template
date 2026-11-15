@@ -19,7 +19,8 @@ flowchart LR
 | `VSA.Architecture` | `framework/Engine/Definition/` | The definition API. No ArchUnitNET |
 | `VSA.Architecture.Engine` | `framework/Engine/Core/` | The core: load, bind, decide, check |
 | `VSA.Architecture.Vsa` | `framework/Architectures/Vsa/Definition/` | `VsaDefinition` and the VSA layers. No ArchUnitNET |
-| Engine app | `engine/` | The runner: Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
+| `VSA.Architecture.Versions` | `framework/Engine/Versions/` | The version check (`VSA3001`). The engine app and the `vsa` tool bundle it |
+| Engine app | `engine/` | The runner: Versions, Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
 
 The runtime of an app references `VSA.Architecture` through `VSA.Composition` (`VsaApp<TDefinition>`), and VSA.Sdk gives each project `VSA.Architecture.Vsa`. So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
@@ -202,11 +203,25 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 | Step | Source |
 |---|---|
 | App root | `VsaAppRoot`, else the nearest `global.json` |
+| Versions | Each VSA version slot of the app root and each `VSA.*.dll` of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class) |
 | Fallback definition | The most derived class with no constructor parameters that inherits `ArchitectureDefinition` |
 | Unity DLLs | See "Unity projects" |
+
+## One version
+
+The engine, VSA.Sdk, the `vsa` tool and the `VSA.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `VSA3001` error with each different slot, and the engine skips the load and the rule checks (`VSA3004`). `vsa doctor` runs the same check (`VersionCheck` of `VSA.Architecture.Versions`) with the version of the tool, without the host output.
+
+| Slot | Item |
+|---|---|
+| `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
+| `global.json` | `msbuild-sdks` → `VSA.Sdk` |
+| Each `.csproj` and `Directory.*.props` of the app root | Each `VSA.Sdk` pin and each `VSA.*` package, also `VSA.Architecture.Build` |
+| The host output (engine only) | Each `VSA.*.dll` |
+
+A file that does not exist gives no slot. A `VSA.*` package with no version uses its `PackageVersion` in the app root. If the app root has no `PackageVersion` for it, the package gives no slot: NuGet reports it, and its DLL is a slot of the host output.
 
 The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaDefinition` and override `Rules`. Call `base.Rules` first: a later rule wins.
 

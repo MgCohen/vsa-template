@@ -1,6 +1,8 @@
 using Definition.Domain.Shared;
 using Steps.Contracts.Commands;
+using Versions.Domain.Shared;
 
 namespace Definition.Slices.LoadDefinition;
 
-public sealed record LoadDefinitionCommand(string AppRoot, string Bin, string Skip) : EngineStep<LoadedApp>;
+public sealed record LoadDefinitionCommand(string AppRoot, string Bin, string Skip, OneVersion Version)
+    : EngineStep<LoadedApp>;

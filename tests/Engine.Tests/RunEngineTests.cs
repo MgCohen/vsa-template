@@ -5,6 +5,7 @@ using Report;
 using Rules;
 using Steps;
 using Steps.Domain.Shared;
+using Versions;
 using Tests.Shared;
 using VSA.Composition;
 using VSA.Contracts.Commands;
@@ -25,7 +26,7 @@ public sealed class RunEngineTests {
         var modules = AnchorScan.InOrder(AnchorScan.Roots(typeof(VSA.Module.Module)).Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -34,6 +35,22 @@ public sealed class RunEngineTests {
 
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
         Assert.That(result.Lines, Has.None.Contains(": error "));
+    }
+
+    [Test]
+    public async Task A_VSA_version_that_is_not_the_engine_version_gives_VSA3001_and_skips_the_load() {
+        var root = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "VSA.Sdk": "0.0.1" } }""");
+
+            var result = await Run(root: root);
+
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.Lines, Has.One.Contains("error VSA3001").And.Contains("global.json: VSA.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("VSA3004: LoadDefinition skipped: Version is missing"));
+        } finally {
+            TempFolder.Delete(root);
+        }
     }
 
     [Test]
@@ -63,7 +80,8 @@ public sealed class RunEngineTests {
 
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
         VSA.Module.Module[] modules = [
-            new StepsPlugin(), new EngineModule(), new DefinitionModule(), new RulesModule(), new ReportModule(),
+            new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
+            new ReportModule(),
         ];
         using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
         await using var scope = host.Services.CreateAsyncScope();

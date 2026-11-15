@@ -20,6 +20,8 @@ flowchart BT
     Core["Engine/Core"] --> Definition
 ```
 
+`Engine/Versions` (`VSA.Architecture.Versions`) has no VSA reference. The engine app and the `vsa` tool bundle it for the version check.
+
 The kernel and the engine do not reference each other. Only an architecture pack uses both.
 
 ## Two kinds of type
