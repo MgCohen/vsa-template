@@ -3,7 +3,7 @@
 //
 //   dotnet run solution.cs
 //
-// The solution has one folder for each top-level folder (framework, samples, tests).
+// The solution has one folder for each top-level folder (architecture, framework, packs, engine, tools, samples, tests).
 
 using System.Runtime.CompilerServices;
 using System.Text;

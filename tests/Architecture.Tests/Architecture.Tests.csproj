@@ -9,7 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Engine/Core/VSA.Architecture.Engine.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Definition/VSA.Architecture.Vsa.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Architecture/VSA.Architecture.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
   </ItemGroup>
 </Project>

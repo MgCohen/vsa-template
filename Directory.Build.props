@@ -22,10 +22,10 @@
   </PropertyGroup>
 
   <!-- The framework and its tests follow the same editor rules and VSA rule values as a consumer (VSA.Rules.props). -->
-  <Import Project="$(MSBuildThisFileDirectory)framework/Sdk/Sdk/VSA.Rules.props" />
+  <Import Project="$(MSBuildThisFileDirectory)tools/sdk/Sdk/VSA.Rules.props" />
 
   <!-- netstandard2.1 does not have some types that the compiler needs. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <Compile Include="$(MSBuildThisFileDirectory)framework/Polyfills/*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)tools/sdk/Polyfills/*.cs" />
   </ItemGroup>
 </Project>

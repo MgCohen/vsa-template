@@ -4,7 +4,7 @@
   <Import Project="$(MSBuildThisFileDirectory)../../Directory.Build.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'framework'))</VsaFrameworkSourceDir>
+    <VsaFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</VsaFrameworkSourceDir>
   </PropertyGroup>
   <!-- This repository has one global.json and more than one app. Each folder here is one app, so it is the app root of its projects.
        A consumer app has its own global.json, so it does not set VsaAppRoot. -->

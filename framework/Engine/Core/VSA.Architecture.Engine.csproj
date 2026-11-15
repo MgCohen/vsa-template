@@ -3,7 +3,7 @@
        and gives each finding as a record. It reads the source files from the PDB files with System.Reflection.Metadata.
        The engine app (engine/) runs it. It has no test framework. -->
   <ItemGroup>
-    <ProjectReference Include="../Definition/VSA.Architecture.csproj" />
+    <ProjectReference Include="../../../architecture/VSA.Architecture.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Architecture.Tests" />

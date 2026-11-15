@@ -108,7 +108,7 @@ public sealed class BaselineTests {
 
     [Test]
     public async Task An_engine_error_VSA3xxx_is_never_accepted_or_written() {
-        var crash = new Finding("VSA3000", FindingSeverity.Error, "LoadDefinition could not run: boom");
+        var crash = new Finding("VSA3000", FindingSeverity.Error, "LoadApp could not run: boom");
 
         var result = await Apply([crash], update: true);
 

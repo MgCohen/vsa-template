@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../../architecture/Markers/VSA.Analyzers.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../../framework/Components/Messages/Handlers/VSA.Handlers.csproj" />
+    <ProjectReference Include="../../Domain/VSA.Domain.csproj" />
+    <ProjectReference Include="../../Contracts/Requests/VSA.Contracts.Requests.csproj" />
+  </ItemGroup>
+  <!-- The registration of the layer uses AppTypes (VSA.Kernel). Private, so the module projects of this layer do not see VSA.Kernel. -->
+  <ItemGroup>
+    <ProjectReference Include="../../../../../framework/Kernel/VSA.Kernel.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VSA.Composition" />
+    <InternalsVisibleTo Include="VSA.Host" />
+  </ItemGroup>
+</Project>

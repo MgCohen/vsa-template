@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The architecture definition API: concepts, anchors, parts and rules. It has no test framework and no ArchUnitNET reference. -->
+  <ItemGroup>
+    <Compile Remove="Markers/**" />
+    <None Remove="Markers/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Markers/VSA.Analyzers.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VSA.Architecture.Engine" />
+  </ItemGroup>
+</Project>

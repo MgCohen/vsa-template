@@ -106,7 +106,7 @@ public sealed class ScaffoldingTests {
     [Test]
     public void EachTrackedTemplateFileIsInTheTool() {
         var git = Process.Start(new ProcessStartInfo("git", "ls-files") {
-            WorkingDirectory = Repo.Path("framework", "Tooling", "Cli", "Templates"),
+            WorkingDirectory = Repo.Path("tools", "cli", "Templates"),
             RedirectStandardOutput = true,
         })!;
         var tracked = git.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -184,7 +184,7 @@ public sealed class ScaffoldingTests {
         var versions = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Packages.props")).Descendants("PackageVersion")
             .Where(e => e.Parent!.Attribute("Condition") is null)
             .ToDictionary(e => (string)e.Attribute("Include")!, e => (string)e.Attribute("Version")!);
-        var project = System.Xml.Linq.XDocument.Load(Repo.Path("framework", "Tooling", "Cli", "Templates", "Tests", "App.Tests.csproj"));
+        var project = System.Xml.Linq.XDocument.Load(Repo.Path("tools", "cli", "Templates", "Tests", "App.Tests.csproj"));
 
         foreach (var reference in project.Descendants("PackageReference")) {
             var id = (string)reference.Attribute("Include")!;

@@ -1,0 +1,83 @@
+<Project>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition="'$(_VsaImportsNetSdk)' == 'true'" />
+
+  <!-- An app has one root project in the app root. It compiles each file in its folder tree. A nested project is optional,
+       for example a test project or a separate assembly. The parent project does not compile the files of a nested project,
+       so no file compiles two times. The build output of each project (bin/, obj/) and the folders in VsaExcludedFolders
+       (for example Assets/ of a Unity project) are not source folders. -->
+  <PropertyGroup>
+    <VsaExcludedFolders Condition="'$(VsaExcludedFolders)' == ''">Assets;Library;Temp;Logs;UserSettings;node_modules</VsaExcludedFolders>
+    <_VsaNotSource>**/bin/**;**/obj/**;$([MSBuild]::Unescape($(VsaExcludedFolders.Replace(';', '/**;'))))/**</_VsaNotSource>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(_VsaNotSource)</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <_VsaNestedProject Include="**/*.csproj" Exclude="$(MSBuildProjectFile);$(_VsaNotSource)" />
+    <Compile Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+    <Content Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+    <None Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+    <EmbeddedResource Remove="@(_VsaNestedProject->'%(RelativeDir)**')" />
+  </ItemGroup>
+
+  <!-- The framework bases of all layers. The architecture definition, not the references, decides which layer uses which base:
+       the rule engine checks each use after the build. Path is the project folder under the repository root in source mode. -->
+  <ItemGroup>
+    <_VsaFramework Include="VSA.Analyzers" Path="packs/Vsa/Tests/Analyzers" />
+    <_VsaFramework Include="VSA.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Condition="'$(VsaFrameworkSourceDir)' != ''" />
+    <_VsaFramework Include="VSA.Analyzers.Markers" Path="architecture/Markers" />
+    <_VsaFramework Include="VSA.Domain" Path="packs/Vsa/Kernel/Domain" />
+    <_VsaFramework Include="VSA.Infrastructure" Path="packs/Vsa/Kernel/Infrastructure" />
+    <_VsaFramework Include="VSA.Contracts.Requests" Path="packs/Vsa/Kernel/Contracts/Requests" />
+    <_VsaFramework Include="VSA.Contracts.Events" Path="packs/Vsa/Kernel/Contracts/Events" />
+    <_VsaFramework Include="VSA.Contracts.Commands" Path="packs/Vsa/Kernel/Contracts/Commands" />
+    <_VsaFramework Include="VSA.Handlers.Requests" Path="packs/Vsa/Kernel/Handlers/Requests" />
+    <_VsaFramework Include="VSA.Handlers.Events" Path="packs/Vsa/Kernel/Handlers/Events" />
+    <_VsaFramework Include="VSA.Handlers.Commands" Path="packs/Vsa/Kernel/Handlers/Commands" />
+    <_VsaFramework Include="VSA.Presenters" Path="packs/Vsa/Kernel/Presenters" />
+    <_VsaFramework Include="VSA.Kernel" Path="framework/Kernel" />
+    <_VsaFramework Include="VSA.Composition" Path="packs/Vsa/Kernel/Composition" />
+    <_VsaFramework Include="VSA.Architecture.Vsa" Path="packs/Vsa/Architecture" />
+  </ItemGroup>
+
+  <!-- Source mode (this repository): project references into the framework source, when VsaFrameworkSourceDir is set. -->
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' != ''">
+    <ProjectReference Include="@(_VsaFramework->'$(VsaFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
+    <ProjectReference Update="$(VsaFrameworkSourceDir)packs/Vsa/Tests/Analyzers/VSA.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Update="$(VsaFrameworkSourceDir)framework/Kernel/Analyzers/VSA.Kernel.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Package mode (consumers): package references with the version of this SDK.
+       With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
+       A VSA.* package that the project adds itself, for example VSA.Host, gives its own version. The rule engine checks it (VSA3001). -->
+  <PropertyGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
+    <_VsaV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(VsaVersion)</_VsaV>
+    <_VsaVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(VsaVersion)</_VsaVO>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VsaFrameworkSourceDir)' == ''">
+    <PackageReference Include="@(_VsaFramework)" Version="$(_VsaV)" VersionOverride="$(_VsaVO)" />
+    <PackageReference Update="VSA.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Include="$(MSBuildThisFileDirectory)../Polyfills/*.cs" Visible="false" />
+  </ItemGroup>
+
+  <!-- EF Core writes the files in Infrastructure/Migrations/, so they are generated code: the style rules do not check them.
+       EF does not mark each file as generated, so a global config in obj/ marks each one (generated_code = true). -->
+  <Target Name="_VsaGeneratedMigrations" BeforeTargets="CoreCompile" DependsOnTargets="_VsaMigrationConfig">
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_VsaMigrationConfig)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_VsaMigrationConfig">
+    <PropertyGroup>
+      <_VsaMigrationConfig>$(IntermediateOutputPath)VSA.Migrations.globalconfig</_VsaMigrationConfig>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VsaMigration Include="@(Compile->'%(FullPath)')" Condition="$([System.String]::Copy('%(Compile.FullPath)').Replace('\', '/').Contains('/Infrastructure/Migrations/'))" />
+      <_VsaMigrationLine Include="is_global = true" />
+      <_VsaMigrationLine Include="@(_VsaMigration->'[%(FullPath)]%0Agenerated_code = true'->Replace('\', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_VsaMigrationConfig)" Lines="@(_VsaMigrationLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+</Project>

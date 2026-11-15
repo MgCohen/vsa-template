@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="../../../Kernel/Markers/VSA.Analyzers.Markers.csproj" />
+    <ProjectReference Include="../../../../architecture/Markers/VSA.Analyzers.Markers.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Contracts/VSA.Contracts.csproj" />

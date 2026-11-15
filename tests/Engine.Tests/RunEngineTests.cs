@@ -1,6 +1,6 @@
 using Baseline;
-using Definition;
-using Definition.Infrastructure;
+using LoadApp;
+using LoadApp.Infrastructure;
 using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
@@ -28,7 +28,7 @@ public sealed class RunEngineTests {
         var modules = AppTypes.InOrder(AppTypes.Roots().Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Baseline", "Definition", "Engine", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Baseline", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -65,7 +65,7 @@ public sealed class RunEngineTests {
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.Lines, Has.One.Contains("error VSA3001").And.Contains("global.json: VSA.Sdk 0.0.1"));
-            Assert.That(result.Lines, Has.One.Contains("VSA3004: LoadDefinition skipped: CheckedVersions is missing"));
+            Assert.That(result.Lines, Has.One.Contains("VSA3004: LoadApp skipped: CheckedVersions is missing"));
         } finally {
             TempFolder.Delete(root);
         }
@@ -114,7 +114,7 @@ public sealed class RunEngineTests {
         var result = await Run(bin: Path.Combine(Notes, "missing-bin"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.StartsWith("vsa-engine: error VSA3000: LoadDefinition could not run: "));
+        Assert.That(result.Lines, Has.One.StartsWith("vsa-engine: error VSA3000: LoadApp could not run: "));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
@@ -127,7 +127,7 @@ public sealed class RunEngineTests {
 
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
         using var host = new EngineTestApp(
-            new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
+            new StepsPlugin(), new EngineModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
             new BaselineModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast);
