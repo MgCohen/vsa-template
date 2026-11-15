@@ -7,5 +7,5 @@ namespace VSA.Handlers.Requests;
 static class RequestDispatch {
     internal static Task<Result<TResponse>> SendAsync<TResponse>(
         IServiceProvider services, IRequest<TResponse> request, CancellationToken ct) where TResponse : IResponse =>
-        services.GetRequiredService<Pipelines>().SendAsync<TResponse>(PipelineKind.Requests, request, services, ct);
+        services.GetRequiredService<Pipelines>().SendAsync<TResponse>(typeof(RequestHandler<,>), request, services, ct);
 }

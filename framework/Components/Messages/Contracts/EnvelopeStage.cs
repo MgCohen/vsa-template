@@ -4,9 +4,9 @@ public enum EnvelopeStage {
     Waiting,
     Validate,
     BeforeSteps,
-    BeforeEvents,
+    BeforeHooks,
     Handle,
-    AfterEvents,
+    AfterHooks,
     AfterSteps,
     Done,
 }

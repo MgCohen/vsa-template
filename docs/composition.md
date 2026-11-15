@@ -179,9 +179,9 @@ The markers are in `VSA.Analyzers.Markers`. The same package has the stripping m
 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
-| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>`, `Module`, `App`, `Pack`, `AppHost` |
-| `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IApp`, `IRunner`, and the internal `IEnvelopeFactory`, `IBeforeCall`, `IAfterCall` |
-| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep<>`, `AfterStep<>` |
+| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, `Module`, `App`, `Pack`, `AppHost` |
+| `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
+| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
 
 The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so VSA.Kernel uses the markers assembly in code.
 
@@ -193,7 +193,7 @@ An IL2CPP player with stripping High also needs a `link.xml` that keeps the mark
 </linker>
 ```
 
-The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, `Before<>`, `After<>` and `Presenter`. A class that derives from one of them needs no marker.
+The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, the four hook bases and `Presenter`. A class that derives from one of them needs no marker.
 
 ```csharp
 [TypeArgument]

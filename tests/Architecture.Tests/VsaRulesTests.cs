@@ -21,6 +21,16 @@ public sealed class VsaRulesTests {
         Assert.That(Decide(user, target).Permission, Is.EqualTo(expected));
     }
 
+    [TestCase(typeof(VSA.Handlers.Commands.BeforeCommandHook<>), "Handlers.Commands")]
+    [TestCase(typeof(VSA.Handlers.Commands.AfterCommandHook<,>), "Handlers.Commands")]
+    [TestCase(typeof(VSA.Handlers.Events.BeforeEventHook<>), "Handlers.Events")]
+    [TestCase(typeof(VSA.Handlers.Events.AfterEventHook<>), "Handlers.Events")]
+    public void A_hook_binds_to_the_handlers_of_its_target_kind(Type hookBase, string part) {
+        var owners = Definition.Parts().Where(p => p.Types.Contains(hookBase)).Select(p => p.Name).Distinct();
+
+        Assert.That(owners, Is.EqualTo(new[] { part }));
+    }
+
     [TestCase("Kernel", "Composition", Permission.Allow)]
     [TestCase("Kernel", "Host", Permission.Allow)]
     [TestCase("Kernel", "Domain", Permission.Deny)]

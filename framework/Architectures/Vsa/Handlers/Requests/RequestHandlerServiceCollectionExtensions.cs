@@ -8,7 +8,7 @@ public static class RequestHandlerServiceCollectionExtensions {
     public static IServiceCollection AddRequestHandlers(this IServiceCollection services, AppTypes types) {
         EnsureOneHandlerForEachRequest(types.Implementations(typeof(RequestHandler<,>)));
         services.AddDefaultPipeline(
-            PipelineKind.Requests, new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));
+            typeof(RequestHandler<,>), new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));
         return services;
     }
 

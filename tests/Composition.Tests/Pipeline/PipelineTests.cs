@@ -1,4 +1,5 @@
 using Arena;
+using Answers.Slices.Answer;
 using Arena.Slices.Duel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,12 +8,14 @@ using VSA.Contracts;
 using VSA.Contracts.Commands;
 using VSA.Handlers;
 using VSA.Handlers.Commands;
+using VSA.Handlers.Events;
 using VSA.Kernel;
 
 namespace Composition.Tests.Pipeline;
 
-// The Arena fixture sends its moves through a custom pipeline: StackRunner, TagStep before, AuditStep after.
-// Its slice has a validator, a Before event (ArmorRule takes 1 damage) and two After events.
+// The Arena fixture sends its moves through a custom pipeline: StackRunner, the command hooks, TagStep (a plain step)
+// before, AuditStep (a typed step) after. Its slice has a validator. Its hooks are a Before hook (ArmorHook takes
+// 1 damage) and two After hooks (CounterHook, LogMoveHook), which run by full type name.
 public sealed class PipelineTests {
     IHost host = null!;
     AsyncServiceScope scope;
@@ -67,12 +70,12 @@ public sealed class PipelineTests {
     }
 
     [Test]
-    public async Task A_send_from_an_After_event_waits_on_the_stack() {
+    public async Task A_send_from_an_After_hook_waits_on_the_stack() {
         var result = await Sender.SendAsync(new StrikeCommand(11), default);
 
         Assert.That(result.Value, Is.EqualTo(10));
         Assert.That(Log, Is.EqualTo(new[] {
-            "handle:Strike:10:arena", "after:StrikeCommand:Accepted:0:none", "counter", "audit:StrikeCommand:Accepted",
+            "handle:Strike:10:arena", "counter", "after:StrikeCommand:Accepted:0:none", "audit:StrikeCommand:Accepted",
             "handle:Strike:0:arena", "after:StrikeCommand:Accepted:1:StrikeCommand", "audit:StrikeCommand:Accepted",
         }));
     }
@@ -121,10 +124,10 @@ public sealed class PipelineTests {
 
         await first.StartAsync();
 
-        Assert.That((await firstSent).Value, Is.EqualTo(2));
+        Assert.That((await firstSent).Value, Is.EqualTo(3));
         Assert.That(secondSent.IsCompleted, Is.False);
         await second.StartAsync();
-        Assert.That((await secondSent).Value, Is.EqualTo(2));
+        Assert.That((await secondSent).Value, Is.EqualTo(3));
     }
 
     [Test]
@@ -134,12 +137,12 @@ public sealed class PipelineTests {
         var sent = inline.SendAsync<int>(new StrikeCommand(3));
 
         Assert.That(sent.IsCompleted, Is.True);
-        Assert.That(sent.Result.Value, Is.EqualTo(2));
+        Assert.That(sent.Result.Value, Is.EqualTo(3));
     }
 
     [Test]
     public void The_module_instance_is_one_service() {
-        var pipeline = host.Services.GetRequiredService<IPipeline<ArenaMove>>();
+        var pipeline = host.Services.GetRequiredService<Pipeline<ArenaMove>>();
 
         Assert.That(pipeline, Is.SameAs(host.Services.GetRequiredService<Pipelines>().Of<ArenaMove>()));
         Assert.That(pipeline.Runner, Is.TypeOf<StackRunner>());
@@ -157,6 +160,38 @@ public sealed class PipelineTests {
 
         Assert.That(result.Value, Is.EqualTo(4));
         Assert.That(app.Services.GetRequiredService<ArenaLog>().Lines, Does.Contain("audit:StrikeCommand:Accepted"));
+    }
+
+    [Test]
+    public async Task A_pipeline_with_no_hook_base_runs_no_hook() {
+        var pipeline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>))
+            .Build(scope.ServiceProvider);
+
+        var result = await pipeline.SendAsync<int>(new StrikeCommand(5));
+
+        Assert.That(result.Value, Is.EqualTo(5));
+        Assert.That(Log, Is.EqualTo(new[] { "handle:Strike:5:none" }));
+    }
+
+    [Test]
+    public void A_hook_base_is_a_type_that_implements_a_call_interface() {
+        var error = Assert.Throws<ArgumentException>(
+            () => new PipelineBuilder<ArenaMove>().HooksOf(typeof(CommandHandler<,>)));
+
+        Assert.That(error!.Message, Does.StartWith("VSA.Handlers.Commands.CommandHandler`2 is not a hook base."));
+    }
+
+    [TestCase(typeof(BeforeCommandHook<>))]
+    [TestCase(typeof(AfterEventHook<>))]
+    [TestCase(typeof(BeforeEventHook<>))]
+    public void No_hook_base_takes_a_request(Type hookBase) {
+        Assert.Throws<ArgumentException>(() => hookBase.MakeGenericType(typeof(AnswerRequest)));
+    }
+
+    [Test]
+    public void The_After_command_hook_takes_no_request() {
+        Assert.Throws<ArgumentException>(
+            () => typeof(AfterCommandHook<,>).MakeGenericType(typeof(AnswerRequest), typeof(AnswerResponse)));
     }
 
     [Test]

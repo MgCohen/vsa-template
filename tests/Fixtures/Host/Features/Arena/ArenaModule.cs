@@ -11,6 +11,7 @@ public sealed class ArenaModule : Module {
         services.AddSingleton<ArenaLog>();
         services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))
+            .HooksOf(typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>))
             .Runner<StackRunner>()
             .BeforeStep<TagStep>()
             .AfterStep<AuditStep>());

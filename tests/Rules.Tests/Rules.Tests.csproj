@@ -14,6 +14,7 @@
     <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Testing/VSA.Testing.Unit.csproj" />
     <!-- The analyzer tests compile code against these assemblies. -->
     <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Handlers/Events/VSA.Handlers.Events.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Handlers/Commands/VSA.Handlers.Commands.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Presenters/VSA.Presenters.csproj" />
     <!-- The fixture module of the unit test base (UnitBaseTests). -->
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Rules/Features/*/*.csproj" />

@@ -1,5 +1,6 @@
 using Baseline.Slices.ApplyBaseline;
 using Definition.Slices.LoadDefinition;
+using Report.Domain.Shared;
 using Report.Slices.WriteReport;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
