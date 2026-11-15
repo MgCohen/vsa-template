@@ -5,31 +5,31 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1012: the members of a type are in order: first by kind, then by access, then static before instance.
+// UMP1012: the members of a type are in order: first by kind, then by access, then static before instance.
 // The diagnostic marks each member that comes after a member of a later group. An explicit interface implementation is public.
-// Options, in VSA.Rules.globalconfig. A kind or an access that a list does not name comes after the named ones.
-//   vsa.VSA1012.kind_order     constant, field, constructor, finalizer, property, event, method, nested_type
-//   vsa.VSA1012.access_order   public, internal, protected_internal, protected, private_protected, private
-//   vsa.VSA1012.static_first   true: static before instance
-public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
+// Options, in Umpire.Rules.globalconfig. A kind or an access that a list does not name comes after the named ones.
+//   umpire.UMP1012.kind_order     constant, field, constructor, finalizer, property, event, method, nested_type
+//   umpire.UMP1012.access_order   public, internal, protected_internal, protected, private_protected, private
+//   umpire.UMP1012.static_first   true: static before instance
+public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
     public const string KindOrderKey = "kind_order";
     public const string AccessOrderKey = "access_order";
     public const string StaticFirstKey = "static_first";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1012",
+        "UMP1012",
         "Members are ordered by kind, then by access, then static before instance",
         "{0} is a {1}, and it comes after a {2}. Move {0} up. The order is: by kind ({3}), then by access ({4}), then {5}.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     public override bool IsModuleRule => false;
 
-    public override IReadOnlyList<VsaOption> RequiredOptions { get; } =
-        [VsaOption.List(KindOrderKey), VsaOption.List(AccessOrderKey), VsaOption.Bool(StaticFirstKey)];
+    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } =
+        [UmpireOption.List(KindOrderKey), UmpireOption.List(AccessOrderKey), UmpireOption.Bool(StaticFirstKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxNodeAction(Check,
@@ -132,7 +132,7 @@ public sealed class MemberOrderRule() : VsaAnalyzerRule(Descriptor) {
         public bool StaticFirst { get; } = staticFirst;
 
         // Null if a value of this file is not valid.
-        public static Order? Read(VsaOptions options) =>
+        public static Order? Read(UmpireOptions options) =>
             options.List(KindOrderKey) is { } kinds && options.List(AccessOrderKey) is { } accesses
             && options.Bool(StaticFirstKey) is { } staticFirst
                 ? new Order(kinds, accesses, staticFirst)

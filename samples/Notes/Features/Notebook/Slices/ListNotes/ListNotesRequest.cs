@@ -1,6 +1,6 @@
 namespace Notes.Features.Notebook.Slices.ListNotes;
 
-using VSA.Contracts.Requests;
+using Umpire.Vsa.Contracts.Requests;
 
 public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
     public static HttpMethod Method => HttpMethod.Get;

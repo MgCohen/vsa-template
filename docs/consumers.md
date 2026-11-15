@@ -43,7 +43,7 @@ GitHub Packages needs a token to restore, also for public packages.
 | GitHub Actions | `GITHUB_TOKEN` of the workflow, with `packages: read` |
 | Dev machine | `gh auth token`, after `gh auth refresh -s read:packages` |
 
-The `nuget.config` that `vsa new app` writes reads the token from the environment variable `GITHUB_TOKEN`:
+The `nuget.config` that `umpire new app` writes reads the token from the environment variable `GITHUB_TOKEN`:
 
 ```xml
 <add key="ClearTextPassword" value="%GITHUB_TOKEN%" />
@@ -55,7 +55,7 @@ If `GITHUB_TOKEN` is not set, restore fails with 401.
 
 | Repo | Contains | Gets VSA | Check |
 |---|---|---|---|
-| [vsa-consumer-dotnet](https://github.com/MgCohen/vsa-consumer-dotnet) | `vsa new app`, one module | `<Project Sdk="VSA.Sdk" />` | CI: build and test |
+| [vsa-consumer-dotnet](https://github.com/MgCohen/vsa-consumer-dotnet) | `umpire new app`, one module | `<Project Sdk="Umpire.Sdk" />` | CI: build and test |
 | [vsa-consumer-unity](https://github.com/MgCohen/vsa-consumer-unity) | Unity 6 project, one module | DLLs in `Assets/Plugins/VSA` | Unity Test Framework, batch mode |
 
 ## Unity
@@ -64,37 +64,37 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 
 ### Unity app build
 
-VSA.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). VSA.Sdk does not compile `Assets/` (`VsaExcludedFolders`).
+Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). Umpire.Sdk does not compile `Assets/` (`UmpireExcludedFolders`).
 
-VSA.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer compiler also runs it. An analyzer that references a newer Roslyn does not run in Unity (`CS9057`).
+Umpire.Vsa.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer compiler also runs it. An analyzer that references a newer Roslyn does not run in Unity (`CS9057`).
 
 ### Layers that Unity can use
 
 | Layer | Package | Unity |
 |---|---|---|
-| Domain | `VSA.Domain` | Yes |
-| Contracts (`IMessage`, `Envelope`, `Result`) | `VSA.Contracts` | Yes |
-| Handler pipeline | `VSA.Handlers` | Yes |
-| Contracts, events | `VSA.Contracts.Events` | Yes |
-| Handlers, events | `VSA.Handlers.Events` | Yes |
-| Infrastructure | `VSA.Infrastructure` | Yes |
-| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `VSA.Kernel` | Yes |
-| Composition | `VSA.Composition` | Yes, without presenters. `VsaHost` and `Plugin` are here |
-| Contracts, requests | `VSA.Contracts.Requests` | Yes. The route members are only on `net10.0` |
-| Handlers, requests | `VSA.Handlers.Requests` | Yes |
-| Presenters | `VSA.Presenters` | Yes |
-| Architecture definition | `VSA.Architecture`, `VSA.Architecture.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
+| Domain | `Umpire.Vsa.Domain` | Yes |
+| Contracts (`IMessage`, `Envelope`, `Result`) | `Umpire.Messages.Contracts` | Yes |
+| Handler pipeline | `Umpire.Messages.Handlers` | Yes |
+| Contracts, events | `Umpire.Vsa.Contracts.Events` | Yes |
+| Handlers, events | `Umpire.Vsa.Handlers.Events` | Yes |
+| Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |
+| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernel` | Yes |
+| Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaHost` and `Plugin` are here |
+| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The route members are only on `net10.0` |
+| Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
+| Presenters | `Umpire.Vsa.Presenters` | Yes |
+| Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
 | Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
-The root `Directory.Build.props` lists the portable layers (`VsaPortableLayer`). They target `net10.0` and `netstandard2.1`.
+The root `Directory.Build.props` lists the portable layers (`UmpirePortableLayer`). They target `net10.0` and `netstandard2.1`.
 
 ### Rules for the netstandard2.1 target
 
 - Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app calls `new MyApp().Run(args)` through the Unity host, or `new Vsa<UnityVsaHost>().CreateHost().Compose(services, app)` with no host run (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies, because VSA.Composition references them.
-- An IL2CPP player with stripping High needs `<assembly fullname="VSA.Analyzers.Markers" preserve="all" />` in a `link.xml`. The UPM package ships it (`docs/composition.md`).
+- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app calls `new MyApp().Run(args)` through the Unity host, or `new Vsa<UnityVsaHost>().CreateHost().Compose(services, app)` with no host run (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies, because Umpire.Vsa.Composition references them.
+- An IL2CPP player with stripping High needs `<assembly fullname="Umpire.Markers" preserve="all" />` in a `link.xml`. The UPM package ships it (`docs/composition.md`).
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Open questions

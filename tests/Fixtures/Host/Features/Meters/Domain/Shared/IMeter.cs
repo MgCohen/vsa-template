@@ -1,4 +1,4 @@
-using VSA.Analyzers.Markers;
+using Umpire.Markers;
 
 namespace Meters.Domain.Shared;
 

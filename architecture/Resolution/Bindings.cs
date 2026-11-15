@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public sealed class Bindings {
     readonly Dictionary<string, Binding> byName;

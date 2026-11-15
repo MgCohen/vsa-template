@@ -1,7 +1,8 @@
-namespace VSA.Architecture.Vsa;
+namespace Umpire.Vsa;
 
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa.Composition;
+using Umpire.Vsa.Definition;
+using Umpire.Kernel;
 
 public class Vsa<TArchitecture, THost> : Pack<TArchitecture, THost>
     where TArchitecture : VsaArchitecture, new()

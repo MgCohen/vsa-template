@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public sealed record Binding(
     TypeFacts Type, Part Part, IReadOnlyDictionary<string, string> Values, Source? Source, bool FollowsUser = false) {

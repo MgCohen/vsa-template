@@ -1,5 +1,5 @@
 using ArchUnitNET.Domain;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace BuiltApp.Infrastructure;
 

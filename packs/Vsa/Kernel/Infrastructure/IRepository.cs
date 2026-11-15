@@ -1,6 +1,6 @@
-using VSA.Domain;
+using Umpire.Vsa.Domain;
 
-namespace VSA.Infrastructure;
+namespace Umpire.Vsa.Infrastructure;
 
 public interface IRepository<T, TId> where T : Entity<TId> where TId : notnull {
     Task<T?> GetAsync(TId id, CancellationToken ct);

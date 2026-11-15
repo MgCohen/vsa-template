@@ -3,7 +3,7 @@ using Tests.Shared;
 namespace Consumer.Tests;
 
 public sealed class BuildCheckTests {
-    const string Summary = "vsa-engine: ";
+    const string Summary = "umpire-engine: ";
 
     [Test]
     [CancelAfter(20 * 60 * 1000)]
@@ -26,16 +26,16 @@ public sealed class BuildCheckTests {
                 public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
             }
             """);
-        var finding = $"{probe}(4,1): error VSA2001: Probe in Host";
+        var finding = $"{probe}(4,1): error UMP2001: Probe in Host";
 
         var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(build.Succeeded, Is.False, build.Output);
         Assert.That(build.Output, Does.Contain(finding));
 
-        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:VsaUpdateBaseline=true")
+        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireUpdateBaseline=true")
             .EnsureSuccess();
-        var baseline = Path.Combine(workspace.Src, "vsa-baseline.txt");
-        Assert.That(File.ReadAllLines(baseline), Has.One.StartsWith("VSA2001|App/Host/Probe.cs|Probe in Host"));
+        var baseline = Path.Combine(workspace.Src, "umpire-baseline.txt");
+        Assert.That(File.ReadAllLines(baseline), Has.One.StartsWith("UMP2001|App/Host/Probe.cs|Probe in Host"));
 
         workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
 
@@ -48,14 +48,14 @@ public sealed class BuildCheckTests {
 
         File.Delete(probe);
         var fixedBuild = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning VSA3005"));
+        Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning UMP3005"));
     }
 
     static void AddBuildHook(string root, string project) {
         var path = Path.Combine(root, project);
         var text = File.ReadAllText(path).Replace("</Project>", """
               <ItemGroup>
-                <PackageReference Include="VSA.Architecture.Build" PrivateAssets="all" />
+                <PackageReference Include="Umpire.Engine.Build" PrivateAssets="all" />
               </ItemGroup>
             </Project>
             """);

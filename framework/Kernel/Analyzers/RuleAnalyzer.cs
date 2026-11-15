@@ -5,33 +5,33 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// The base of each analyzer DLL. It runs each VsaAnalyzerRule of the assembly of the derived class,
+// The base of each analyzer DLL. It runs each UmpireAnalyzerRule of the assembly of the derived class,
 // so each DLL has one analyzer class that inherits RuleAnalyzer.
 // Roslyn skips an analyzer only when all of its IDs are off, so this class skips each rule that is off by itself.
 public abstract class RuleAnalyzer : DiagnosticAnalyzer {
-    // VSA1000: an option of a rule is missing or not valid. Each value is in VSA.Rules.globalconfig, and no rule has a default.
+    // UMP1000: an option of a rule is missing or not valid. Each value is in Umpire.Rules.globalconfig, and no rule has a default.
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
-        "VSA1000",
-        "A VSA rule option is missing or not valid",
-        "Rule {0} needs the option vsa.{0}.{1}, {2}. The value is '{3}'. Set it in VSA.Rules.globalconfig or .editorconfig. "
+        "UMP1000",
+        "An Umpire rule option is missing or not valid",
+        "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in Umpire.Rules.globalconfig or .editorconfig. "
             + "{0} does not run until the option is valid.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         customTags: WellKnownDiagnosticTags.CompilationEnd);
 
     protected RuleAnalyzer() {
         Rules = [.. GetType().Assembly.GetTypes()
-            .Where(t => t.IsSubclassOf(typeof(VsaAnalyzerRule)) && !t.IsAbstract)
-            .Select(t => (VsaAnalyzerRule)Activator.CreateInstance(t)!)
+            .Where(t => t.IsSubclassOf(typeof(UmpireAnalyzerRule)) && !t.IsAbstract)
+            .Select(t => (UmpireAnalyzerRule)Activator.CreateInstance(t)!)
             .OrderBy(r => r.Id, StringComparer.Ordinal)];
         SupportedDiagnostics = [OptionDescriptor, .. Rules.Select(r => r.Rule)];
     }
 
-    // Each non-abstract VsaAnalyzerRule of the assembly of the derived class, in ID order.
-    public ImmutableArray<VsaAnalyzerRule> Rules { get; }
+    // Each non-abstract UmpireAnalyzerRule of the assembly of the derived class, in ID order.
+    public ImmutableArray<UmpireAnalyzerRule> Rules { get; }
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
 
@@ -40,7 +40,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(start => {
             var global = start.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
-            var frameworkCode = global.TryGetValue("build_property.VsaFrameworkCode", out var value)
+            var frameworkCode = global.TryGetValue("build_property.UmpireFrameworkCode", out var value)
                 && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
             var missing = new List<Diagnostic>();
             var running = Rules.Where(r => !(frameworkCode && r.IsModuleRule) && !IsOff(r.Rule, start.Compilation, start.CancellationToken));
@@ -57,9 +57,9 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         });
     }
 
-    // One VSA1000 diagnostic for each option of the rule that the global config does not give, or gives with a bad value.
-    static IEnumerable<Diagnostic> Invalid(VsaAnalyzerRule rule, AnalyzerConfigOptions global) {
-        var options = new VsaOptions(rule.Id, global);
+    // One UMP1000 diagnostic for each option of the rule that the global config does not give, or gives with a bad value.
+    static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, AnalyzerConfigOptions global) {
+        var options = new UmpireOptions(rule.Id, global);
         return rule.RequiredOptions
             .Select(option => (Option: option, Value: options.Value(option.Key)))
             .Where(pair => !pair.Option.IsValid(pair.Value))

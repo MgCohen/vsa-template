@@ -1,6 +1,6 @@
 namespace Styled.Infrastructure;
 
-// VSA1011: SecondType is a second top-level type.
+// UMP1011: SecondType is a second top-level type.
 public sealed class TwoTypes {
 }
 

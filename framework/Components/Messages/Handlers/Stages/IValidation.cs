@@ -1,6 +1,6 @@
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 interface IValidation {
     Error? Validate(Envelope envelope);

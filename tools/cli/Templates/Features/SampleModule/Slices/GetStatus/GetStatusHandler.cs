@@ -1,7 +1,7 @@
 namespace SampleApp.Features.SampleModule.Slices.GetStatus;
 
-using VSA.Contracts;
-using VSA.Handlers.Requests;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Requests;
 
 sealed class GetStatusHandler : RequestHandler<GetStatusRequest, GetStatusResponse> {
     public override Task<Result<GetStatusResponse>> HandleAsync(Envelope<GetStatusRequest> envelope) =>

@@ -1,26 +1,26 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1014: the root class of a plugin module (VsaRootFolder = Plugins) inherits Plugin, and the root class of a module
-// (VsaRootFolder = Features) does not. The host configures the plugin modules first, and the name of the base says which one it is.
-public sealed class PluginRootRule() : VsaAnalyzerRule(Descriptor) {
+// UMP1014: the root class of a plugin module (UmpireRootFolder = Plugins) inherits Plugin, and the root class of a module
+// (UmpireRootFolder = Features) does not. The host configures the plugin modules first, and the name of the base says which one it is.
+public sealed class PluginRootRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1014",
+        "UMP1014",
         "A plugin root inherits Plugin, and a module root inherits Module",
         "{0} is the root class of the {1} {2}, but it inherits {3}. Make it inherit {4}.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         var options = start.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
-        if (!options.TryGetValue("build_property.VsaRootFolder", out var root) || root is not ("Plugins" or "Features")) {
+        if (!options.TryGetValue("build_property.UmpireRootFolder", out var root) || root is not ("Plugins" or "Features")) {
             return;
         }
-        var module = start.Compilation.GetTypeByMetadataName("VSA.Kernel.Module");
-        var plugin = start.Compilation.GetTypeByMetadataName("VSA.Composition.Plugin");
+        var module = start.Compilation.GetTypeByMetadataName("Umpire.Kernel.Module");
+        var plugin = start.Compilation.GetTypeByMetadataName("Umpire.Vsa.Composition.Plugin");
         if (module is null || plugin is null) {
             return;
         }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
-using VSA.Presenters;
+using Umpire.Vsa.Presenters;
 
-namespace VSA.Views;
+namespace Umpire.Vsa.Views;
 
 // The base of a component that shows one or more presenters. It only renders: it listens to Changed and calls
 // StateHasChanged on the thread of the component. The presenters get their events by themselves, with or without a view.

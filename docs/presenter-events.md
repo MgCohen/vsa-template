@@ -27,13 +27,13 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 
 | Part | Project | Job |
 |---|---|---|
-| `IIntegrationEventObserver` | `VSA.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `VSA.Handlers.Events` needs no reference to `VSA.Presenters` (it also targets `netstandard2.1`). |
-| `IPresenterEvent<TEvent>` | `VSA.Presenters` | A presenter implements it one time for each event that it shows. |
-| `LivePresenters` | `VSA.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. `Connect` adds a presenter. |
-| `AddPresenters` | `VSA.Presenters` | Registers each presenter as scoped. When the services make a presenter with `IPresenterEvent`, they connect it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. |
-| `LivePresenters.Dispatch` | `VSA.Presenters` | Optional scoped service. The app sets the thread of the events, for example the main thread in Unity. |
-| `PresenterWatcher` | `VSA.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` listens to `Changed` of each presenter and renders. |
-| `PresenterComponent<T>` | `VSA.Views` | A `PresenterWatcher` for one presenter, given as the `Presenter` parameter. |
+| `IIntegrationEventObserver` | `Umpire.Vsa.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `Umpire.Vsa.Handlers.Events` needs no reference to `Umpire.Vsa.Presenters` (it also targets `netstandard2.1`). |
+| `IPresenterEvent<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. |
+| `LivePresenters` | `Umpire.Vsa.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. `Connect` adds a presenter. |
+| `AddPresenters` | `Umpire.Vsa.Presenters` | Registers each presenter as scoped. When the services make a presenter with `IPresenterEvent`, they connect it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. |
+| `LivePresenters.Dispatch` | `Umpire.Vsa.Presenters` | Optional scoped service. The app sets the thread of the events, for example the main thread in Unity. |
+| `PresenterWatcher` | `Umpire.Vsa.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` listens to `Changed` of each presenter and renders. |
+| `PresenterComponent<T>` | `Umpire.Vsa.Views` | A `PresenterWatcher` for one presenter, given as the `Presenter` parameter. |
 
 ## Rules
 
@@ -44,8 +44,8 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 - The publisher does not wait for the presenters, and the token of the publisher does not go to the presenters. An error in one presenter goes to the log.
 - The observer runs after the handlers, in the scope of the publisher. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
 - A presenter that sends a request can get the event of that request before the response. Make `OnEventAsync` safe for a change that the presenter has already applied, for example replace by ID.
-- A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`VSA1004`). To change state, it sends a request with `IBus`, and the request handler publishes the event.
-- A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`VSA2001`).
+- A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`UMP1004`). To change state, it sends a request with `IBus`, and the request handler publishes the event.
+- A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP2001`).
 
 ## Example
 

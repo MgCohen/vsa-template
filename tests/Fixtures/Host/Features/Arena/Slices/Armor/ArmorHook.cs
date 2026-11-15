@@ -1,6 +1,6 @@
 using Arena.Slices.Duel;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 namespace Arena.Slices.Armor;
 

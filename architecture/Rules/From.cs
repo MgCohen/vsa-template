@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public sealed class From : Chain<From> {
     readonly List<Rule> rules;

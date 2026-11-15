@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Packs Sdk/ as an MSBuild SDK. The package has no DLL. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageType>MSBuildSdk</PackageType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Sdk/**" Pack="true" PackagePath="Sdk" />
+    <None Include="Polyfills/**" Pack="true" PackagePath="Polyfills" />
+    <!-- Polyfills/ holds sources for the module projects and the framework projects, not for this project. -->
+    <Compile Remove="Sdk/**;Polyfills/**" />
+  </ItemGroup>
+  <!-- The SDK adds the Umpire.* packages with its own version, so all packages stay at one version. -->
+  <Target Name="_UmpireWriteVersion" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <_UmpireVersionFile>$([MSBuild]::NormalizePath('$(ProjectDir)', '$(IntermediateOutputPath)', 'Umpire.Version.props'))</_UmpireVersionFile>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_UmpireVersionFile)" Overwrite="true" WriteOnlyWhenDifferent="true"
+                      Lines="&lt;Project&gt;&lt;PropertyGroup&gt;&lt;UmpireVersion Condition=&quot;'%24(UmpireVersion)' == ''&quot;&gt;$(Version)&lt;/UmpireVersion&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;" />
+    <ItemGroup>
+      <None Include="$(_UmpireVersionFile)" Pack="true" PackagePath="Sdk" Visible="false" />
+    </ItemGroup>
+  </Target>
+</Project>

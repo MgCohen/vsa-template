@@ -1,3 +1,3 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 public sealed record Registration(Type Service, Type Implementation);

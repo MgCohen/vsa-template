@@ -1,5 +1,5 @@
 using ArchUnitNET.Loader;
-using VSA.Architecture;
+using Umpire.Architecture;
 using BuiltApp.Infrastructure;
 
 namespace EngineCore.Tests;

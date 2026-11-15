@@ -1,6 +1,6 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
-using VSA.Architecture;
+using Umpire.Architecture;
 
 public class Pack<TArchitecture, THost> : Pack
     where TArchitecture : Architecture, new()

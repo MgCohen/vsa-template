@@ -2,10 +2,10 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "vsa.cli": {
-      "version": "{{VsaVersion}}",
+    "umpire.cli": {
+      "version": "{{UmpireVersion}}",
       "commands": [
-        "vsa"
+        "umpire"
       ],
       "rollForward": false
     }

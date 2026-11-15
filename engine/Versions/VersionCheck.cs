@@ -1,15 +1,15 @@
-namespace VSA.Architecture.Versions;
+namespace Umpire.Engine.Versions;
 
 public static class VersionCheck {
-    public const string Code = "VSA3001";
+    public const string Code = "UMP3001";
 
     public static IReadOnlyList<VersionSlot> Mismatches(IEnumerable<VersionSlot> slots, string expected) =>
         [.. slots.Where(slot => slot.IsChecked && slot.Version != expected)];
 
     public static string Message(IReadOnlyList<VersionSlot> mismatches, string expected) =>
-        $"The versions are not the same. Expected VSA {expected}, found: "
+        $"The versions are not the same. Expected Umpire {expected}, found: "
         + string.Join("; ", mismatches.Select(Found))
-        + ". Use one version for the tool, VSA.Sdk and all VSA.* packages: run dotnet vsa update.";
+        + ". Use one version for the tool, Umpire.Sdk and all Umpire.* packages: run dotnet umpire update.";
 
     public static string Shown(VersionSlot slot) => slot switch {
         { Version: null } => "(no version)",

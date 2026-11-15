@@ -2,7 +2,7 @@ using Bare;
 using Shelf;
 using Toolbox;
 using Twin;
-using VSA.Kernel;
+using Umpire.Kernel;
 
 namespace Framework.Tests.Discovery;
 

@@ -3,9 +3,9 @@ using Microsoft.Extensions.Hosting;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
-using VSA.Contracts.Events;
-using VSA.Handlers.Events;
-using VSA.Presenters;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Handlers.Events;
+using Umpire.Vsa.Presenters;
 
 namespace Framework.Tests.Host;
 

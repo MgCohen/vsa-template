@@ -1,6 +1,6 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
-using VSA.Analyzers.Markers;
+using Umpire.Markers;
 
 [RequireImplementors]
 public interface IApp {

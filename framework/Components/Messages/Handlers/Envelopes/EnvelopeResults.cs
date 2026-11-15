@@ -1,6 +1,6 @@
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 static class EnvelopeResults {
     internal const string FaultCode = "Fault";

@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Reflection;
-using VSA.Contracts;
-using VSA.Contracts.Requests;
-using VSA.Handlers.Requests;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Requests;
+using Umpire.Vsa.Handlers.Requests;
 
-namespace VSA.Host;
+namespace Umpire.Vsa.Hosts.Web;
 
 static class HttpApi {
     internal static void Map(WebApplication app, IEnumerable<Type> handlerServices) {

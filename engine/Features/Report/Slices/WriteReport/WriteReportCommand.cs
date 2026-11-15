@@ -1,6 +1,6 @@
 using Report.Domain.Shared;
 using Steps.Domain.Shared;
-using VSA.Contracts.Commands;
+using Umpire.Vsa.Contracts.Commands;
 
 namespace Report.Slices.WriteReport;
 

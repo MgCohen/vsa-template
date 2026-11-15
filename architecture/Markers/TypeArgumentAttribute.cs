@@ -1,4 +1,4 @@
-namespace VSA.Analyzers.Markers;
+namespace Umpire.Markers;
 
 [AttributeUsage(
     AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Assembly,

@@ -1,5 +1,5 @@
 using System.Reflection;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace LoadApp.Domain.Shared;
 

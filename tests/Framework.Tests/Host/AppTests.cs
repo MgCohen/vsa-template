@@ -3,12 +3,13 @@ namespace Framework.Tests.Host;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Architecture;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-using VSA.Host;
-using VSA.Kernel;
-using Concepts = VSA.Architecture.Vsa;
+using Umpire.Architecture;
+using Umpire.Vsa;
+using Umpire.Vsa.Definition;
+using Umpire.Vsa.Composition;
+using Umpire.Vsa.Hosts.Web;
+using Umpire.Kernel;
+using Concepts = Umpire.Vsa.Definition;
 
 public sealed class AppTests {
     [Test]
@@ -159,7 +160,7 @@ public sealed class AppTests {
     sealed class RulesApp : App<Vsa<RulesArchitecture, WebVsaHost>>;
 
     sealed class WaitingApp : App<Vsa<VsaHost>> {
-        protected override IReadOnlyList<VSA.Kernel.Module> Modules() => [];
+        protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
     }
 
     sealed class ReturningApp : App<Vsa<ReturningHost>> {
@@ -169,7 +170,7 @@ public sealed class AppTests {
 
         public int Composes { get; private set; }
 
-        protected override IReadOnlyList<VSA.Kernel.Module> Modules() => [];
+        protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
 
         protected override void OnStart() => Marker = Services!.GetRequiredService<IConfiguration>()["name"];
 

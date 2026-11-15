@@ -1,10 +1,10 @@
 using System.Xml.Linq;
 
-namespace VSA.Cli.Scaffolding;
+namespace Umpire.Cli.Scaffolding;
 
 static class NugetConfig {
     public const string FileName = "nuget.config";
-    const string VsaFeedKey = "vsa";
+    const string UmpireFeedKey = "umpire";
 
     public static string Write(string template, IReadOnlyList<string> sources) {
         if (sources.Count == 0) {
@@ -12,10 +12,10 @@ static class NugetConfig {
         }
         var document = XDocument.Parse(template);
         var vsaFeed = document.Descendants("add")
-            .Single(e => (string?)e.Attribute("key") == VsaFeedKey && e.Parent?.Name == "packageSources");
+            .Single(e => (string?)e.Attribute("key") == UmpireFeedKey && e.Parent?.Name == "packageSources");
         vsaFeed.ReplaceWith(sources.Select((source, i) => new XElement(
             "add",
-            new XAttribute("key", i == 0 ? VsaFeedKey : $"{VsaFeedKey}{i + 1}"),
+            new XAttribute("key", i == 0 ? UmpireFeedKey : $"{UmpireFeedKey}{i + 1}"),
             new XAttribute("value", Path.GetFullPath(source)))));
         document.Descendants("packageSourceCredentials").Remove();
         return $"{document.Declaration}\n{document}\n".Replace("\r\n", "\n");

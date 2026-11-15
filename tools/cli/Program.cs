@@ -1,5 +1,5 @@
-using VSA.Cli;
-using VSA.Cli.Commands;
+using Umpire.Cli;
+using Umpire.Cli.Commands;
 
 try {
     return args switch {
@@ -7,8 +7,8 @@ try {
         [] or ["-h" or "--help" or "help"] => Write(CommandList.Usage),
         _ => CommandList.Run(args),
     };
-} catch (VsaException e) {
-    Console.Error.WriteLine($"vsa: {e.Message}");
+} catch (UmpireException e) {
+    Console.Error.WriteLine($"umpire: {e.Message}");
     return 1;
 }
 

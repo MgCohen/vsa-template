@@ -1,5 +1,3 @@
-using VSA.Architecture;
-
-namespace VSA.Architecture.Vsa;
+namespace Umpire.Vsa.Definition;
 
 public record App : Layer;

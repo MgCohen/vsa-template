@@ -29,29 +29,29 @@ Plugins/Game/
 | Current name | Plugin name |
 |---|---|
 | Folder `Shared/` | `Plugins/` |
-| `VsaRootFolders`: `Modules;Shared` | `Modules;Plugins` |
-| `VsaSharedDir` | `VsaPluginsDir` |
+| `UmpireRootFolders`: `Modules;Shared` | `Modules;Plugins` |
+| `UmpireSharedDir` | `UmpirePluginsDir` |
 | `VsaUses` (a plugin layer uses other plugins) | `VsaPluginUses` |
 | `ModuleMetadata.Shared` | `ModuleMetadata.Plugins` |
 | `ModuleRoot.IsShared` | `ModuleRoot.IsPlugin` |
-| A root class that inherits `Module` | A root class that inherits `Plugin` or `Plugin<TSettings>` (`VSA1014`, and a startup check) |
+| A root class that inherits `Module` | A root class that inherits `Plugin` or `Plugin<TSettings>` (`UMP1014`, and a startup check) |
 | `tests/Fixtures/SharedApp`, `tests/Fixtures/Host/Shared` | `PluginApp`, `Host/Plugins` |
-| No tool command | `vsa add plugin <Name>` |
+| No tool command | `umpire add plugin <Name>` |
 
 These names do not change: `Domain/Shared/`, `Domain.Shared`, `Slices/Shared/`, `VsaModuleUses` and `SliceRouter.Shared` (the slice name of `Slices/Shared/`).
 
-In the same change, the folder `framework/Layers/` becomes `framework/Core/`: the core is the base of each layer, and the plugin modules extend it. The package and assembly names (`VSA.Domain`, `VSA.Module`, ...) and the word "layer" do not change.
+In the same change, the folder `framework/Layers/` becomes `framework/Core/`: the core is the base of each layer, and the plugin modules extend it. The package and assembly names (`Umpire.Vsa.Domain`, `VSA.Module`, ...) and the word "layer" do not change.
 
 ## Steps of the work
 
-1. Change the names in VSA.Sdk, `SliceRouter`, `ModuleRoot`, `ModuleMetadata` and `LayerRules`. Add `Plugin`, `Plugin<TSettings>` and `VSA1014`.
-2. Rename the fixtures, the CLI templates and the docs. Add `vsa add plugin`. Run `dotnet run solution.cs`.
+1. Change the names in Umpire.Sdk, `SliceRouter`, `ModuleRoot`, `ModuleMetadata` and `LayerRules`. Add `Plugin`, `Plugin<TSettings>` and `UMP1014`.
+2. Rename the fixtures, the CLI templates and the docs. Add `umpire add plugin`. Run `dotnet run solution.cs`.
 3. Move `framework/Layers/` to `framework/Core/`.
 4. Move the folders in `vsa-consumer-dotnet` and `vsa-consumer-unity` after the release.
 
 ## Non-goals
 
-- No plugins that load at run time. Reason: a plugin module is a compile-time base, and VSA.Sdk references it from each module.
+- No plugins that load at run time. Reason: a plugin module is a compile-time base, and Umpire.Sdk references it from each module.
 - No optional plugins in this proposal. Each module gets each plugin module, as each module gets the framework layers.
 
 ## Decisions

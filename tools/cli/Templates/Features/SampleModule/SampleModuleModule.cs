@@ -1,7 +1,7 @@
 namespace SampleApp.Features.SampleModule;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Kernel;
+using Umpire.Kernel;
 
 // The root of the SampleModule module. The host finds it and calls Configure at start-up.
 // When Domain has an aggregate, register its IRepository here, for example:

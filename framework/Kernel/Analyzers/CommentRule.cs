@@ -3,14 +3,14 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-public sealed class CommentRule() : VsaAnalyzerRule(Descriptor) {
+public sealed class CommentRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1013",
+        "UMP1013",
         "The code has no comments",
         "The code has a comment. Remove it. Put the information in a name: a type, a member, a variable or a test.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 

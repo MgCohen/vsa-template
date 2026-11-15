@@ -1,5 +1,5 @@
-using VSA.Contracts;
-using VSA.Handlers.Events;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Events;
 
 namespace Signals.Slices.Ring;
 

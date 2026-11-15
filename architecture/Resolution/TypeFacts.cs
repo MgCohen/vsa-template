@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public sealed record TypeFacts(
     string FullName,

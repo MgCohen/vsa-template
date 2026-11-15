@@ -1,6 +1,6 @@
 using ArchUnitNET.Domain;
 using ArchUnitNET.Domain.Dependencies;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace BuiltApp.Infrastructure;
 

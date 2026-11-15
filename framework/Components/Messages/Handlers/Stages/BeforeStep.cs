@@ -1,7 +1,7 @@
-using VSA.Analyzers.Markers;
-using VSA.Contracts;
+using Umpire.Markers;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 [RequireDerived]
 [Preserve]

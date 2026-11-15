@@ -13,7 +13,7 @@ Each type of a module keeps one classification from one source, and a tool shows
 | Use | DTOs and command results | `NoteDto`, used by `ListNotesResponse` |
 | Module root | The module class and its settings | `NotesModule : Module<NotesSettings>` |
 
-Each type gets its project from one of these sources (`docs/slice-layout.md`). `VSA0005` reports a slice type with two classifications, for example a DTO that a response and an event use. The result is correct, but it is not visible: a reader cannot see why `NoteDto` is in `Contracts.Requests`.
+Each type gets its project from one of these sources (`docs/slice-layout.md`). `UMP0005` reports a slice type with two classifications, for example a DTO that a response and an event use. The result is correct, but it is not visible: a reader cannot see why `NoteDto` is in `Contracts.Requests`.
 
 ## Options
 
@@ -21,7 +21,7 @@ Each type gets its project from one of these sources (`docs/slice-layout.md`). `
 |---|---|---|
 | A. A marker on each type | One rule for all; reflection finds each type | Not possible for enums and delegates; markers that no code reads |
 | B. An optional attribute `[VsaKind(...)]` | Works on enums; overrides the router | Two ways to say one fact |
-| C. Keep the sources, show the result (recommended) | No new code in modules; `VSA0005` checks it | The router logic stays in three sources |
+| C. Keep the sources, show the result (recommended) | No new code in modules; `UMP0005` checks it | The router logic stays in three sources |
 
 ## The design (option C)
 
@@ -37,8 +37,8 @@ flowchart LR
 ```
 
 1. Write the rule in `docs/architecture-rules.md`: "A marker exists only on a type that framework code dispatches on."
-2. Add `dotnet vsa explain <Type>`: it shows the source and the project of a type.
-3. Put the flow above in one function that the router and `dotnet vsa explain` use. The architecture definition then gives its inputs.
+2. Add `dotnet umpire explain <Type>`: it shows the source and the project of a type.
+3. Put the flow above in one function that the router and `dotnet umpire explain` use. The architecture definition then gives its inputs.
 
 ## Non-goals
 

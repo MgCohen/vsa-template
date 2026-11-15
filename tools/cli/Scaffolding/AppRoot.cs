@@ -1,6 +1,6 @@
-using VSA.Architecture.Versions;
+using Umpire.Engine.Versions;
 
-namespace VSA.Cli.Scaffolding;
+namespace Umpire.Cli.Scaffolding;
 
 static class AppRoot {
     public static string Find() {
@@ -10,14 +10,14 @@ static class AppRoot {
                 return folder.FullName;
             }
         }
-        throw new VsaException("This folder is not in a VSA app. "
-            + "Run the command in the app folder, or make an app with 'vsa new app <Name>'.");
+        throw new UmpireException("This folder is not in an Umpire app. "
+            + "Run the command in the app folder, or make an app with 'umpire new app <Name>'.");
     }
 
     public static string Name(string root) {
         var projects = Directory.GetFiles(root, "*.csproj");
         return projects.Length == 1
             ? Path.GetFileNameWithoutExtension(projects[0])
-            : throw new VsaException($"The app root {root} has {projects.Length} .csproj files. Keep one root project of the app in this folder.");
+            : throw new UmpireException($"The app root {root} has {projects.Length} .csproj files. Keep one root project of the app in this folder.");
     }
 }

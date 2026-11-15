@@ -2,17 +2,17 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
 using System.Reflection;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Contracts.Events;
-using VSA.Contracts.Requests;
-using VSA.Domain;
-using VSA.Handlers;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Requests;
-using VSA.Infrastructure;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Contracts.Requests;
+using Umpire.Vsa.Domain;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Requests;
+using Umpire.Vsa.Infrastructure;
 
-namespace VSA.Testing.Unit;
+namespace Umpire.Vsa.Testing.Unit;
 
 // The NUnit base of a unit test: it runs a request handler or a command handler without HTTP and without a database.
 // Before each test, the base makes new services with the default fakes and calls Configure.

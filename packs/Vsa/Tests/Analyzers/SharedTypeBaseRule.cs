@@ -5,26 +5,26 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1007: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
+// UMP1007: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
 // and each interface in the base list of a type. A permitted base is in a .Domain.Shared assembly (this project or
-// another one) or in VSA.Analyzers.Markers (for example ITypeArgument), or its metadata name is in the option
+// another one) or in Umpire.Markers (for example ITypeArgument), or its metadata name is in the option
 // allowed_bases, for example System.IEquatable`1.
 // The rule compares the original definition, so IEquatable<Money> matches System.IEquatable`1.
-// Option: vsa.VSA1007.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
-public sealed class SharedTypeBaseRule() : VsaAnalyzerRule(Descriptor) {
+// Option: umpire.UMP1007.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
+public sealed class SharedTypeBaseRule() : UmpireAnalyzerRule(Descriptor) {
     public const string AllowedBasesKey = "allowed_bases";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1007",
+        "UMP1007",
         "Domain.Shared types have only permitted bases",
-        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to vsa.VSA1007.allowed_bases.",
-        "VSA",
+        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to umpire.UMP1007.allowed_bases.",
+        "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public override IReadOnlyList<VsaOption> RequiredOptions { get; } = [VsaOption.List(AllowedBasesKey)];
+    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.List(AllowedBasesKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (!DomainShared.Is(start.Compilation, start.Options)) {
@@ -60,7 +60,7 @@ public sealed class SharedTypeBaseRule() : VsaAnalyzerRule(Descriptor) {
         || DomainShared.IsAssembly(baseType.ContainingAssembly?.Name)
         || baseType.ContainingAssembly?.Name == MarkersAssembly;
 
-    const string MarkersAssembly = "VSA.Analyzers.Markers";
+    const string MarkersAssembly = "Umpire.Markers";
 
     // Namespace.Name`N, and Outer+Inner for a nested type.
     static string MetadataName(INamedTypeSymbol type) {

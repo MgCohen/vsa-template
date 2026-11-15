@@ -1,6 +1,6 @@
 namespace Notes.Features.Notebook.Domain;
 
-using VSA.Domain;
+using Umpire.Vsa.Domain;
 
 public sealed class Note : Entity<NoteId> {
     public const int MaxTitleLength = 200;

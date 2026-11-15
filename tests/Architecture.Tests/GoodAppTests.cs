@@ -1,5 +1,5 @@
 using Kit;
-using VSA.Architecture;
+using Umpire.Architecture;
 using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
 

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Umpire version check (UMP3001): each place of an app that gives an Umpire version, and the compare.
+       The engine step CheckVersions and the umpire tool (doctor, update) use it. The tool and the engine bundle the DLL. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

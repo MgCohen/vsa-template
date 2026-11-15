@@ -1,4 +1,4 @@
-namespace VSA.Cli.Commands.Bases;
+namespace Umpire.Cli.Commands.Bases;
 
 sealed class CommandInput {
     readonly ToolCommand command;
@@ -18,7 +18,7 @@ sealed class CommandInput {
         string? name = null;
         if (command.TakesName) {
             if (args is [] || args[0].StartsWith('-')) {
-                throw new VsaException($"Give the name: {command.Usage}");
+                throw new UmpireException($"Give the name: {command.Usage}");
             }
             name = args[next++];
         }
@@ -26,13 +26,13 @@ sealed class CommandInput {
         while (next < args.Count) {
             var option = command.Options.FirstOrDefault(o => o.Names.Contains(args[next]));
             if (option is null || next + 1 >= args.Count) {
-                throw new VsaException($"Unknown option or missing value: {args[next]}");
+                throw new UmpireException($"Unknown option or missing value: {args[next]}");
             }
             if (!values.TryGetValue(option, out var list)) {
                 values[option] = list = [];
             }
             if (!option.Many && list.Count > 0) {
-                throw new VsaException($"Give {option.Names[0]} one time only: {command.Usage}");
+                throw new UmpireException($"Give {option.Names[0]} one time only: {command.Usage}");
             }
             list.Add(args[next + 1]);
             next += 2;
@@ -43,7 +43,7 @@ sealed class CommandInput {
     public void EnsureRequiredOptions() {
         var missing = command.Options.FirstOrDefault(o => o.Required && !values.ContainsKey(o));
         if (missing is not null) {
-            throw new VsaException($"Give the {missing.Value.ToLowerInvariant()}: {command.Usage}");
+            throw new UmpireException($"Give the {missing.Value.ToLowerInvariant()}: {command.Usage}");
         }
     }
 

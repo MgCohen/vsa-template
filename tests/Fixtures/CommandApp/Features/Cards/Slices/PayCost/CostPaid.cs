@@ -1,5 +1,5 @@
 using Cards.Domain.Shared;
-using VSA.Contracts.Events;
+using Umpire.Vsa.Contracts.Events;
 
 namespace Cards.Slices.PayCost;
 

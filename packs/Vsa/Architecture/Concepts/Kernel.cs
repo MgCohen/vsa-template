@@ -1,7 +1,7 @@
-using VSA.Architecture;
+namespace Umpire.Vsa.Definition;
 
-namespace VSA.Architecture.Vsa;
+using Umpire.Architecture;
 
 public record Kernel : External {
-    public override string Assembly => "VSA";
+    public override string Assembly => "Umpire";
 }

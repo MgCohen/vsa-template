@@ -2,13 +2,13 @@
 <configuration>
   <packageSources>
     <clear />
-    <add key="vsa" value="https://nuget.pkg.github.com/MgCohen/index.json" />
+    <add key="umpire" value="https://nuget.pkg.github.com/MgCohen/index.json" />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>
   <packageSourceCredentials>
-    <vsa>
-      <add key="Username" value="vsa" />
+    <umpire>
+      <add key="Username" value="umpire" />
       <add key="ClearTextPassword" value="%GITHUB_TOKEN%" />
-    </vsa>
+    </umpire>
   </packageSourceCredentials>
 </configuration>

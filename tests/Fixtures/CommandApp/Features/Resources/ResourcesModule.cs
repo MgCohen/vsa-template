@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Resources.Domain;
-using VSA.Kernel;
+using Umpire.Kernel;
 
 namespace Resources;
 

@@ -1,4 +1,4 @@
-using VSA.Contracts.Commands;
+using Umpire.Vsa.Contracts.Commands;
 
 namespace Echo.Slices.Echo;
 

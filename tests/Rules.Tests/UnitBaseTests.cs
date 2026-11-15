@@ -1,8 +1,8 @@
 using Good.Slices.GetItem;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using VSA.Contracts.Events;
-using VSA.Testing.Unit;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Testing.Unit;
 
 namespace Rules.Tests;
 

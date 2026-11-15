@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 sealed class Match {
     readonly ResolvedArchitecture resolved;

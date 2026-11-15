@@ -1,4 +1,4 @@
-using VSA.Domain;
+using Umpire.Vsa.Domain;
 
 namespace Good.Domain;
 

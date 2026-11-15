@@ -1,5 +1,5 @@
-using VSA.Contracts;
-using VSA.Handlers.Requests;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Requests;
 
 namespace Answers.Slices.Answer;
 

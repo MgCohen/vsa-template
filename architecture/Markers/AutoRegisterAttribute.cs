@@ -1,4 +1,4 @@
-namespace VSA.Analyzers.Markers;
+namespace Umpire.Markers;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = true)]
 public sealed class AutoRegisterAttribute : Attribute

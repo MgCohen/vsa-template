@@ -1,6 +1,6 @@
-using VSA.Cli.Scaffolding;
+using Umpire.Cli.Scaffolding;
 
-namespace VSA.Cli.Commands.Bases;
+namespace Umpire.Cli.Commands.Bases;
 
 abstract class AddCommand : AppCommand {
     public override bool TakesName => true;

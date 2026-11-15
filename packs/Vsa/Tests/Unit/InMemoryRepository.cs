@@ -1,7 +1,7 @@
-using VSA.Domain;
-using VSA.Infrastructure;
+using Umpire.Vsa.Domain;
+using Umpire.Vsa.Infrastructure;
 
-namespace VSA.Testing.Unit;
+namespace Umpire.Vsa.Testing.Unit;
 
 public sealed class InMemoryRepository<T, TId> : IRepository<T, TId> where T : Entity<TId> where TId : notnull {
     readonly Dictionary<TId, T> saved = [];

@@ -1,8 +1,8 @@
 using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 static class PipelineRun {
     internal static async Task ExecuteAsync(MessageRoute route, Envelope envelope) {

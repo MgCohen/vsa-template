@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace VSA.Cli.Scaffolding;
+namespace Umpire.Cli.Scaffolding;
 
 static partial class Templates {
     public const string App = "SampleApp";
@@ -8,12 +8,12 @@ static partial class Templates {
     public const string Request = "SampleAction";
     public const string Command = "SampleChange";
     public const string Plugin = "SamplePlugin";
-    public const string VersionToken = "{{VsaVersion}}";
+    public const string VersionToken = "{{UmpireVersion}}";
     const string ResourcePrefix = "Templates/";
     const string InactiveSuffix = ".template";
-    const string DevProps = "  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))\" />\n";
-    const string DevTargets = "  <Import Project=\"$(VsaSdkDir)Sdk.targets\" />\n";
-    const string AddedSdk = "  <Sdk Name=\"VSA.Sdk\" />\n";
+    const string DevProps = "  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))\" />\n";
+    const string DevTargets = "  <Import Project=\"$(UmpireSdkDir)Sdk.targets\" />\n";
+    const string AddedSdk = "  <Sdk Name=\"Umpire.Sdk\" />\n";
 
     public static IReadOnlyList<TemplateFile> Files(
         Kind kind,
@@ -57,16 +57,16 @@ static partial class Templates {
         } else if (hasDevProps) {
             content = content.Replace(DevProps, "")
                 .Replace(DevTargets, "")
-                .Replace("<Project>", "<Project Sdk=\"VSA.Sdk\">");
-            content = Empty().Replace(content, "<Project Sdk=\"VSA.Sdk\" />");
+                .Replace("<Project>", "<Project Sdk=\"Umpire.Sdk\">");
+            content = Empty().Replace(content, "<Project Sdk=\"Umpire.Sdk\" />");
         }
         content = SourceReference().Replace(
             content,
             m => $"<PackageReference Include=\"{m.Groups[1].Value}\" Version=\"{version}\" />");
-        if (content.Contains("$(Vsa", StringComparison.Ordinal)) {
-            throw new VsaException(
+        if (content.Contains("$(Umpire", StringComparison.Ordinal)) {
+            throw new UmpireException(
                 $"The template {path} has a source-mode property that the tool cannot change. "
-                + "Report this error to the VSA maintainers.");
+                + "Report this error to the Umpire maintainers.");
         }
         return content;
     }
@@ -86,10 +86,10 @@ static partial class Templates {
         return text;
     }
 
-    [GeneratedRegex(@"^<Project Sdk=""VSA.Sdk"">\s*</Project>")]
+    [GeneratedRegex(@"^<Project Sdk=""Umpire.Sdk"">\s*</Project>")]
     private static partial Regex Empty();
 
-    [GeneratedRegex(@"<ProjectReference Include=""\$\(VsaFrameworkSourceDir\)[^""]*/(VSA\.[\w.]+)\.csproj"" />")]
+    [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex SourceReference();
 
     public enum Kind { App, Module, Request, Command, Plugin }

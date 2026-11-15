@@ -3,23 +3,23 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-public sealed class HookNameRule() : VsaAnalyzerRule(Descriptor) {
+public sealed class HookNameRule() : UmpireAnalyzerRule(Descriptor) {
     const string Suffix = "Hook";
 
     static readonly string[] HookBases = [
-        "VSA.Handlers.Commands.BeforeCommandHook`1",
-        "VSA.Handlers.Commands.AfterCommandHook`2",
-        "VSA.Handlers.Events.BeforeEventHook`1",
-        "VSA.Handlers.Events.AfterEventHook`1",
+        "Umpire.Vsa.Handlers.Commands.BeforeCommandHook`1",
+        "Umpire.Vsa.Handlers.Commands.AfterCommandHook`2",
+        "Umpire.Vsa.Handlers.Events.BeforeEventHook`1",
+        "Umpire.Vsa.Handlers.Events.AfterEventHook`1",
     ];
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1015",
+        "UMP1015",
         "The name of a hook ends with Hook",
         "{0} inherits {1}, so it is a hook. Rename it to {2}.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 

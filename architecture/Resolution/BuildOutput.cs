@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public static class BuildOutput {
     static readonly string[] Folders = ["obj", "bin"];

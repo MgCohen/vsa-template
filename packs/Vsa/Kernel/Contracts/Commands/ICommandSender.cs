@@ -1,6 +1,6 @@
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Contracts.Commands;
+namespace Umpire.Vsa.Contracts.Commands;
 
 // Here, so each handler can send a command without a reference to Handlers.Commands.
 // An interface: in process now, a fake in tests.

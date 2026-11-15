@@ -3,14 +3,14 @@ namespace Tests.Shared;
 // A short folder in the temporary folder. Windows has a 260-character path limit, so the names are short.
 public static class TempFolder {
     public static string Create() {
-        var path = Path.Combine(Path.GetTempPath(), "vsa", Guid.NewGuid().ToString("N")[..8]);
+        var path = Path.Combine(Path.GetTempPath(), "umpire", Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(path);
         return path;
     }
 
     public static string Stable(string name) {
         var id = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(name)))[..8].ToLowerInvariant();
-        var path = Path.Combine(Path.GetTempPath(), "vsa", $"s{id}");
+        var path = Path.Combine(Path.GetTempPath(), "umpire", $"s{id}");
         if (Directory.Exists(path)) {
             Directory.Delete(path, recursive: true);
         }

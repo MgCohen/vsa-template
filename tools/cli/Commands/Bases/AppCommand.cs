@@ -1,6 +1,6 @@
-using VSA.Cli.Scaffolding;
+using Umpire.Cli.Scaffolding;
 
-namespace VSA.Cli.Commands.Bases;
+namespace Umpire.Cli.Commands.Bases;
 
 abstract class AppCommand : ToolCommand {
     public sealed override int Run(CommandInput input) {

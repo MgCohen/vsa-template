@@ -1,9 +1,9 @@
-using VSA.Architecture;
-using VSA.Contracts.Commands;
-using VSA.Contracts.Events;
-using VSA.Contracts.Requests;
+namespace Umpire.Vsa.Definition;
 
-namespace VSA.Architecture.Vsa;
+using Umpire.Architecture;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Contracts.Requests;
 
 public record Contracts : Layer {
     protected override void Configure(Options defaults) {

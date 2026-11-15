@@ -1,9 +1,9 @@
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Resources.Domain.Shared;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Handlers.Requests;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Handlers.Requests;
 
 namespace Battle.Slices.PlayCard;
 

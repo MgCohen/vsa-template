@@ -1,9 +1,9 @@
-using VSA.Cli.Commands.Bases;
+using Umpire.Cli.Commands.Bases;
 
-namespace VSA.Cli.Commands;
+namespace Umpire.Cli.Commands;
 
 static class CommandList {
-    const string VersionUsage = "vsa --version";
+    const string VersionUsage = "umpire --version";
     const string VersionSummary = "Shows the version of the tool.";
 
     public static IReadOnlyList<ToolCommand> All { get; } = [
@@ -29,7 +29,7 @@ static class CommandList {
             args.Count >= command.Words.Count && command.Words.SequenceEqual(args.Take(command.Words.Count)));
 
     public static int Run(string[] args) {
-        var command = Find(args) ?? throw new VsaException(
+        var command = Find(args) ?? throw new UmpireException(
             $"Unknown command: {string.Join(' ', args)}{Environment.NewLine}{Environment.NewLine}{Usage}");
         return command.Run(CommandInput.Parse(command, args[command.Words.Count..]));
     }

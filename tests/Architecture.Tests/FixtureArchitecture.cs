@@ -1,5 +1,5 @@
 using Kit;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace EngineCore.Tests;
 

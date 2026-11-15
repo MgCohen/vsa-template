@@ -3,10 +3,10 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
 
-namespace VSA.Composition;
+namespace Umpire.Vsa.Composition;
 
 sealed class ConsoleEntry(
     Type command,

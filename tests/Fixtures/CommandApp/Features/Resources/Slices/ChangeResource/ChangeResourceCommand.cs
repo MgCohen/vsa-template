@@ -1,5 +1,5 @@
 using Resources.Domain.Shared;
-using VSA.Contracts.Commands;
+using Umpire.Vsa.Contracts.Commands;
 
 namespace Resources.Slices.ChangeResource;
 

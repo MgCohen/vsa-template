@@ -2,16 +2,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1008: a line has at most max characters. The diagnostic marks the characters after the limit.
-// Option: vsa.VSA1008.max, in VSA.Rules.globalconfig.
+// UMP1008: a line has at most max characters. The diagnostic marks the characters after the limit.
+// Option: umpire.UMP1008.max, in Umpire.Rules.globalconfig.
 public sealed class LineLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1008",
+        "UMP1008",
         "A line has at most the maximum number of characters",
         "The line has {0} characters, and the limit is {1}. Break the line.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 

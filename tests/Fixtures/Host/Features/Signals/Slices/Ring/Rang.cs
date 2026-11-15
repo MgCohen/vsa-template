@@ -1,4 +1,4 @@
-using VSA.Contracts.Events;
+using Umpire.Vsa.Contracts.Events;
 
 namespace Signals.Slices.Ring;
 

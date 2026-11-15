@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
 
-namespace VSA.Views;
+namespace Umpire.Vsa.Views;
 
 public abstract class ViewsRoot : ComponentBase;

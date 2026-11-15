@@ -1,4 +1,4 @@
-using VSA.Contracts.Requests;
+using Umpire.Vsa.Contracts.Requests;
 
 namespace Answers.Slices.GetItem;
 

@@ -1,6 +1,6 @@
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Contracts.Events;
+namespace Umpire.Vsa.Contracts.Events;
 
 public abstract record IntegrationEvent : IBroadcastMessage {
     public Guid EventId { get; init; } = Guid.NewGuid();

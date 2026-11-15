@@ -1,8 +1,9 @@
-namespace VSA.Handlers.Requests;
+namespace Umpire.Vsa.Handlers.Requests;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts;
-using VSA.Kernel;
+using Umpire.Messages.Contracts;
+using Umpire.Kernel;
+using Umpire.Messages.Handlers;
 
 public static class RequestHandlerServiceCollectionExtensions {
     public static IServiceCollection AddRequestHandlers(this IServiceCollection services, AppTypes types) {

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../../architecture/Markers/Umpire.Markers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../../framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
+    <ProjectReference Include="../../Domain/Umpire.Vsa.Domain.csproj" />
+    <ProjectReference Include="../../Contracts/Requests/Umpire.Vsa.Contracts.Requests.csproj" />
+  </ItemGroup>
+  <!-- The registration of the layer uses AppTypes (Umpire.Kernel). Private, so the module projects of this layer do not see Umpire.Kernel. -->
+  <ItemGroup>
+    <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umpire.Vsa.Composition" />
+    <InternalsVisibleTo Include="Umpire.Vsa.Hosts.Web" />
+  </ItemGroup>
+</Project>

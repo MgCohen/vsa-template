@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public static class Decide {
     public static Decision For(Architecture definition,

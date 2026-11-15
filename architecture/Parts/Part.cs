@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public class Part : IPartChain {
     readonly List<Part> children = [];
@@ -7,6 +7,7 @@ public class Part : IPartChain {
     Access? access;
     Boundary? boundary;
     string? folder;
+    string? assembly;
 
     protected internal Part(Concept? concept, string? folder, Part? parent, bool group = false) {
         Concept = concept;
@@ -19,8 +20,8 @@ public class Part : IPartChain {
     public Part? Parent { get; }
     public bool IsGroup { get; }
     public bool HasFolder => folder is not null;
-    public string? Assembly => Concept is External external ? external.Assembly
-        : Parent?.Assembly is { } parent ? $"{parent}.{folder}" : null;
+    public string? Assembly => assembly ?? (Concept is External external ? external.Assembly
+        : Parent?.Assembly is { } parent ? $"{parent}.{folder}" : null);
     public bool IsExternal => Assembly is not null;
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
@@ -60,6 +61,15 @@ public class Part : IPartChain {
                 $"Define: {Name} is in the external {Assembly}. An external part has no InParentFolder, because its name is a DLL name segment. Remove InParentFolder.");
         }
         folder = null;
+        return this;
+    }
+
+    public Part InAssembly(string name) {
+        if (!IsExternal) {
+            throw new InvalidOperationException(
+                $"Define: {Name} is not in an external, so it has no DLL. Remove InAssembly, or add the part under an external.");
+        }
+        assembly = name;
         return this;
     }
 

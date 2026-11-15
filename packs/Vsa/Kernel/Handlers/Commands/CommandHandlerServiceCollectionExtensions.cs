@@ -1,9 +1,10 @@
-namespace VSA.Handlers.Commands;
+namespace Umpire.Vsa.Handlers.Commands;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Kernel;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Kernel;
+using Umpire.Messages.Handlers;
 
 public static class CommandHandlerServiceCollectionExtensions {
     public static IServiceCollection AddCommandHandlers(this IServiceCollection services, AppTypes types) {

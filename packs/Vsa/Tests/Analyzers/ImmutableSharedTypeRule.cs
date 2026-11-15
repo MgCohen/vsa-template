@@ -1,17 +1,17 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1005: the types of a <Module>.Domain.Shared project are immutable. Other modules read these values,
+// UMP1005: the types of a <Module>.Domain.Shared project are immutable. Other modules read these values,
 // so a value does not change after it is made. A property has no set accessor (init is permitted).
 // A field is readonly or const. A type has no field event. This rule is a trial (decision D-37).
-public sealed class ImmutableSharedTypeRule() : VsaAnalyzerRule(Descriptor) {
+public sealed class ImmutableSharedTypeRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1005",
+        "UMP1005",
         "Domain.Shared types are immutable",
         "{0}.{1} is {2}. A type in a Domain.Shared project does not change after it is made. {3}.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 

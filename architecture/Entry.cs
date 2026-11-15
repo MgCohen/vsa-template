@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 internal sealed class Entry(Type concept, Depth? depth, Access? access = null, Boundary? boundary = null) {
     public Type Target { get; } = concept;

@@ -1,5 +1,5 @@
-using VSA.Architecture;
-using VSA.Architecture.Vsa;
+using Umpire.Architecture;
+using Umpire.Vsa.Definition;
 
 namespace EngineCore.Tests;
 
@@ -20,18 +20,18 @@ public sealed class VsaRulesTests {
         Assert.That(Decide(user, target).Permission, Is.EqualTo(expected));
     }
 
-    [TestCase(typeof(VSA.Handlers.Commands.BeforeCommandHook<>), "Handlers.Commands")]
-    [TestCase(typeof(VSA.Handlers.Commands.AfterCommandHook<,>), "Handlers.Commands")]
-    [TestCase(typeof(VSA.Handlers.Events.BeforeEventHook<>), "Handlers.Events")]
-    [TestCase(typeof(VSA.Handlers.Events.AfterEventHook<>), "Handlers.Events")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Commands.BeforeCommandHook<>), "Handlers.Commands")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Commands.AfterCommandHook<,>), "Handlers.Commands")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Events.BeforeEventHook<>), "Handlers.Events")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Events.AfterEventHook<>), "Handlers.Events")]
     public void A_hook_binds_to_the_handlers_of_its_target_kind(Type hookBase, string part) {
         var owners = Definition.Parts().Where(p => p.Types.Contains(hookBase)).Select(p => p.Name).Distinct();
 
         Assert.That(owners, Is.EqualTo(new[] { part }));
     }
 
-    [TestCase(typeof(VSA.Contracts.Requests.IRequest))]
-    [TestCase(typeof(VSA.Contracts.Requests.IResponse))]
+    [TestCase(typeof(Umpire.Vsa.Contracts.Requests.IRequest))]
+    [TestCase(typeof(Umpire.Vsa.Contracts.Requests.IResponse))]
     public void The_request_bases_bind_to_the_request_contracts(Type requestBase) {
         var owners = Definition.Parts().Where(p => p.Types.Contains(requestBase)).Select(p => p.Name).Distinct();
 
@@ -67,7 +67,7 @@ public sealed class VsaRulesTests {
     }
 
     static Decision Decide(PartPlace from, PartPlace to) =>
-        VSA.Architecture.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
+        Umpire.Architecture.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
 
     static PartPlace Place(string group, string name, string feature = "A", string slice = "s1") {
         var part = Definition.Parts().Single(p => p.Name == name && p.SelfAndAncestors().Any(a => a.Name == group));

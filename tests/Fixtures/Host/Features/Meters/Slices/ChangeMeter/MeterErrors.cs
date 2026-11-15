@@ -1,4 +1,4 @@
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
 namespace Meters.Slices.ChangeMeter;
 

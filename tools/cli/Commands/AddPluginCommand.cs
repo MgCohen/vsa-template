@@ -1,7 +1,7 @@
-using VSA.Cli.Commands.Bases;
-using VSA.Cli.Scaffolding;
+using Umpire.Cli.Commands.Bases;
+using Umpire.Cli.Scaffolding;
 
-namespace VSA.Cli.Commands;
+namespace Umpire.Cli.Commands;
 
 sealed class AddPluginCommand : AddCommand {
     public override IReadOnlyList<string> Words => ["add", "plugin"];

@@ -1,3 +1,3 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public record Module : Concept;

@@ -1,6 +1,6 @@
-using VSA.Cli.Scaffolding;
+using Umpire.Cli.Scaffolding;
 
-namespace VSA.Cli.Commands;
+namespace Umpire.Cli.Commands;
 
 sealed record SliceKind(
     string Noun,

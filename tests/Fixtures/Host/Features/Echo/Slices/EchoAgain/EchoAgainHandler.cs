@@ -1,6 +1,6 @@
 using Echo.Slices.Echo;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 namespace Echo.Slices.EchoAgain;
 

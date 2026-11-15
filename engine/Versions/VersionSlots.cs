@@ -5,12 +5,12 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace VSA.Architecture.Versions;
+namespace Umpire.Engine.Versions;
 
 public static partial class VersionSlots {
-    public const string PackagePrefix = "VSA.";
-    public const string Sdk = "VSA.Sdk";
-    public const string Tool = "vsa.cli";
+    public const string PackagePrefix = "Umpire.";
+    public const string Sdk = "Umpire.Sdk";
+    public const string Tool = "umpire.cli";
     public const string GlobalJsonFile = "global.json";
     const string CentralFile = "Directory.Packages.props";
     const LoadOptions KeepLayout = LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo;
@@ -179,7 +179,7 @@ public static partial class VersionSlots {
 
     static int? Line(XElement element) => element is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : null;
 
-    [GeneratedRegex("(\"VSA\\.Sdk\"\\s*:\\s*\")[^\"]*\"")]
+    [GeneratedRegex("(\"Umpire\\.Sdk\"\\s*:\\s*\")[^\"]*\"")]
     private static partial Regex SdkEntry();
 
     sealed record ProjectDocument(string File, XDocument Document);

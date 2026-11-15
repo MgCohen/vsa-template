@@ -1,9 +1,9 @@
 using Resources.Domain.Shared;
 using Resources.Slices.ChangeResource;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Contracts.Events;
-using VSA.Handlers.Commands;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Handlers.Commands;
 
 namespace Cards.Slices.PayCost;
 

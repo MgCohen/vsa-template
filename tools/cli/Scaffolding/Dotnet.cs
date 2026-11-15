@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace VSA.Cli.Scaffolding;
+namespace Umpire.Cli.Scaffolding;
 
 static class Dotnet {
     public static DotnetRun Run(string folder, params string[] args) {

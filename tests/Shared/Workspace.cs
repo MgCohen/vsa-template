@@ -5,7 +5,7 @@ using System.Xml.Linq;
 namespace Tests.Shared;
 
 // A copy of a folder in a short temporary folder, prepared as a consumer of the local feed.
-// global.json names the VSA.Sdk version, and restore uses its own NuGet cache.
+// global.json names the Umpire.Sdk version, and restore uses its own NuGet cache.
 public sealed class Workspace : IDisposable {
     Workspace(string root) {
         Root = root;
@@ -34,8 +34,8 @@ public sealed class Workspace : IDisposable {
 
     void WriteConsumerFiles() {
         var globalJson = JsonNode.Parse(File.ReadAllText(Repo.Path("global.json")))!;
-        globalJson["msbuild-sdks"] = new JsonObject { ["VSA.Sdk"] = LocalFeed.Version };
-        // In Src, the app root, as in an app that the vsa tool makes: VSA.Sdk finds the app root from global.json.
+        globalJson["msbuild-sdks"] = new JsonObject { ["Umpire.Sdk"] = LocalFeed.Version };
+        // In Src, the app root, as in an app that the umpire tool makes: Umpire.Sdk finds the app root from global.json.
         File.WriteAllText(Path.Combine(Src, "global.json"), globalJson.ToJsonString());
 
         // The global packages folder of the user is also a feed, so restore does not download each package again.
@@ -46,7 +46,7 @@ public sealed class Workspace : IDisposable {
             <configuration>
               <packageSources>
                 <clear />
-                <add key="vsa" value="{LocalFeed.Path}" />
+                <add key="umpire" value="{LocalFeed.Path}" />
                 <add key="cache" value="{globalPackages}" />
                 <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
               </packageSources>
@@ -67,7 +67,7 @@ public sealed class Workspace : IDisposable {
         // The package versions of the repository, and the VSA packages at the test version.
         var packages = XDocument.Load(Repo.Path("Directory.Packages.props"));
         var items = packages.Root!.Element("ItemGroup")!;
-        foreach (var id in LocalFeed.Packages.Where(id => id != "VSA.Sdk")) {
+        foreach (var id in LocalFeed.Packages.Where(id => id != "Umpire.Sdk")) {
             items.Add(new XElement("PackageVersion", new XAttribute("Include", id), new XAttribute("Version", LocalFeed.Version)));
         }
         packages.Save(Path.Combine(Root, "Directory.Packages.props"));

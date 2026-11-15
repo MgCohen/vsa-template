@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Kernel;
+using Umpire.Kernel;
 
 namespace Framework.Tests.Settings;
 

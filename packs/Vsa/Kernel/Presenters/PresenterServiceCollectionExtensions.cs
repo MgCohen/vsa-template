@@ -1,8 +1,8 @@
-namespace VSA.Presenters;
+namespace Umpire.Vsa.Presenters;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts.Events;
-using VSA.Kernel;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Kernel;
 
 public static class PresenterServiceCollectionExtensions {
     public static IServiceCollection AddPresenters(this IServiceCollection services, AppTypes types) {

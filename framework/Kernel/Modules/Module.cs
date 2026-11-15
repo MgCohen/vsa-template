@@ -1,7 +1,7 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Analyzers.Markers;
+using Umpire.Markers;
 
 [RequireDerived]
 public abstract class Module {

@@ -1,4 +1,4 @@
-namespace VSA.Contracts;
+namespace Umpire.Messages.Contracts;
 
 public abstract class Envelope : IEnvelope {
     static long lastId;

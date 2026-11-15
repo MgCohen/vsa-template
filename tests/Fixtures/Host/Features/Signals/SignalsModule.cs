@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Signals.Slices.Ring;
-using VSA.Kernel;
+using Umpire.Kernel;
 
 namespace Signals;
 

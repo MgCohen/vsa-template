@@ -1,5 +1,5 @@
 using Steps.Domain.Shared;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace Rules.Slices.CheckRules;
 
@@ -8,7 +8,7 @@ sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
         [.. WrongType(from), .. DeniedUses(from), .. WideExposures(from)];
 
     public static Finding Unmapped(UnmappedType unmapped) =>
-        Error("VSA2102", unmapped.Source, $"{unmapped.Type.Name} is in a folder that the definition does not have. "
+        Error("UMP2102", unmapped.Source, $"{unmapped.Type.Name} is in a folder that the definition does not have. "
             + "Move it to a part, or add the folder in Define.");
 
     static Finding Error(string code, Source source, string text) =>
@@ -19,7 +19,7 @@ sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
         if (from.FollowsUser || from.Part.Types.Count == 0 || from.Part.Types.Any(type.Is)) {
             yield break;
         }
-        yield return Error("VSA2101", from.Source!, $"{type.Name} is in {from.Where}, but it is not "
+        yield return Error("UMP2101", from.Source!, $"{type.Name} is in {from.Where}, but it is not "
             + $"{string.Join(" or ", from.Part.Types.Select(t => t.Name))}. Move it, or change its base type.");
     }
 
@@ -33,7 +33,7 @@ sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
             var why = decision.Rule is null
                 ? "no rule allows it (DefaultPermission = Deny)"
                 : $"the rule \"{decision.Rule.Text}\" denies it";
-            yield return Error("VSA2001", from.Source!,
+            yield return Error("UMP2001", from.Source!,
                 $"{type.Name} in {from.Where} uses {to.Type.Name} in {to.Where}: {why}. "
                 + "Remove the use, or change the rule in Rules.");
         }
@@ -50,7 +50,7 @@ sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
                 || exposure.Access.IsWithin(rule.Access)) {
                 continue;
             }
-            yield return Error("VSA2003", from.Source!,
+            yield return Error("UMP2003", from.Source!,
                 $"{type.Name} in {from.Where} exposes {to.Type.Name} in {to.Where} "
                 + $"in {exposure.Member} with {exposure.Access} access, "
                 + $"but the rule \"{rule.Text}\" allows {rule.Access} at most. "

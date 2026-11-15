@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace VSA.Views;
+namespace Umpire.Vsa.Views;
 
 static class ViewsInstaller {
     internal static Type? FindRoot(IEnumerable<Assembly> viewAssemblies) {

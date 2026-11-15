@@ -1,7 +1,8 @@
-namespace VSA.Handlers.Events;
+namespace Umpire.Vsa.Handlers.Events;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts.Events;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Messages.Handlers;
 
 public static class EventHandlerServiceCollectionExtensions {
     public static IServiceCollection AddEventHandlers(this IServiceCollection services) {

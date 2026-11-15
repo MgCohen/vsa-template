@@ -1,4 +1,4 @@
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 static class MessageTypes {
     internal static Type OfHandler(Type handler) =>

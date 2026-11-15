@@ -1,5 +1,5 @@
 using LayeredApp.Ui;
-using VSA.Architecture;
+using Umpire.Architecture;
 using Rules.Slices.CheckRules;
 
 namespace EngineCore.Tests;
@@ -36,7 +36,7 @@ public sealed class LayeredAppTests {
         var findings = LayeredMap.Value.Findings().Select(FixtureApps.Line).ToList();
 
         Assert.That(findings, Has.Count.EqualTo(1));
-        Assert.That(findings[0], Does.StartWith("LayeredApp/Data/OrderStore.cs").And.Contain("error VSA2001").And.Contain("OrderScreen"));
+        Assert.That(findings[0], Does.StartWith("LayeredApp/Data/OrderStore.cs").And.Contain("error UMP2001").And.Contain("OrderScreen"));
     }
 
     [Test]
@@ -48,6 +48,6 @@ public sealed class LayeredAppTests {
     public void The_layered_app_references_no_VSA_assembly() {
         var references = typeof(OrderScreen).Assembly.GetReferencedAssemblies().Select(a => a.Name);
 
-        Assert.That(references, Has.None.StartsWith("VSA."));
+        Assert.That(references, Has.None.StartsWith("Umpire."));
     }
 }

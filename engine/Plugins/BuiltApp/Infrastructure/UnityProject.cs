@@ -19,7 +19,7 @@ static class UnityProject {
         }
         var folder = Path.Combine(appRoot, ScriptAssembliesFolder);
         if (!Directory.Exists(folder)) {
-            warning = new Finding("VSA2103", FindingSeverity.Warning,
+            warning = new Finding("UMP2103", FindingSeverity.Warning,
                 $"{appRoot} is a Unity project, but it has no {ScriptAssembliesFolder} folder. "
                 + "The checks read only the .NET build, so they do not check the code that only Unity compiles. "
                 + "Open the project in Unity to compile its scripts, then build again.");

@@ -1,28 +1,28 @@
 <Project>
   <!-- The layers that Unity can use also target netstandard2.1 (see docs/consumers.md). -->
   <PropertyGroup>
-    <VsaPortableLayer Condition="'$(MSBuildProjectName)' == 'VSA.Domain' or '$(MSBuildProjectName)' == 'VSA.Handlers' or '$(MSBuildProjectName)' == 'VSA.Contracts' or '$(MSBuildProjectName)' == 'VSA.Contracts.Events' or '$(MSBuildProjectName)' == 'VSA.Contracts.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Commands' or '$(MSBuildProjectName)' == 'VSA.Handlers.Events' or '$(MSBuildProjectName)' == 'VSA.Infrastructure' or '$(MSBuildProjectName)' == 'VSA.Kernel' or '$(MSBuildProjectName)' == 'VSA.Composition' or '$(MSBuildProjectName)' == 'VSA.Contracts.Requests' or '$(MSBuildProjectName)' == 'VSA.Handlers.Requests' or '$(MSBuildProjectName)' == 'VSA.Presenters' or '$(MSBuildProjectName)' == 'VSA.Architecture' or '$(MSBuildProjectName)' == 'VSA.Architecture.Vsa'">true</VsaPortableLayer>
+    <UmpirePortableLayer Condition="'$(MSBuildProjectName)' == 'Umpire.Vsa.Domain' or '$(MSBuildProjectName)' == 'Umpire.Messages.Handlers' or '$(MSBuildProjectName)' == 'Umpire.Messages.Contracts' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Infrastructure' or '$(MSBuildProjectName)' == 'Umpire.Kernel' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Composition' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Presenters' or '$(MSBuildProjectName)' == 'Umpire.Architecture' or '$(MSBuildProjectName)' == 'Umpire.Vsa'">true</UmpirePortableLayer>
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework Condition="'$(VsaPortableLayer)' != 'true'">net10.0</TargetFramework>
-    <TargetFrameworks Condition="'$(VsaPortableLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>
+    <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true'">net10.0</TargetFramework>
+    <TargetFrameworks Condition="'$(UmpirePortableLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <!-- All VSA packages ship together with one version. -->
+  <!-- All Umpire packages ship together with one version. -->
   <PropertyGroup>
     <Version>0.1.0</Version>
-    <Authors>VSA</Authors>
+    <Authors>Umpire</Authors>
     <!-- GitHub Packages links each package to this repository. -->
     <RepositoryUrl>https://github.com/MgCohen/vsa-template</RepositoryUrl>
   </PropertyGroup>
 
-  <!-- The framework and its tests follow the same editor rules and VSA rule values as a consumer (VSA.Rules.props). -->
-  <Import Project="$(MSBuildThisFileDirectory)tools/sdk/Sdk/VSA.Rules.props" />
+  <!-- The framework and its tests follow the same editor rules and Umpire rule values as a consumer (Umpire.Rules.props). -->
+  <Import Project="$(MSBuildThisFileDirectory)tools/sdk/Sdk/Umpire.Rules.props" />
 
   <!-- netstandard2.1 does not have some types that the compiler needs. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">

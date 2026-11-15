@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
+using Umpire.Vsa.Composition;
 
 namespace BuiltApp;
 

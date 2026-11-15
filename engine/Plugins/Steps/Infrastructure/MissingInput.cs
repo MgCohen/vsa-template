@@ -1,12 +1,12 @@
 using System.Reflection;
 using Steps.Domain.Shared;
-using VSA.Contracts;
-using VSA.Handlers;
+using Umpire.Messages.Contracts;
+using Umpire.Messages.Handlers;
 
 namespace Steps.Infrastructure;
 
 public sealed class MissingInput : BeforeStep<IEngineStep> {
-    public const string Code = "VSA3004";
+    public const string Code = "UMP3004";
 
     public override Task<IEngineStep> BeforeAsync(IEnvelope<IEngineStep> envelope) {
         var step = envelope.Message;

@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.Loader;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace LoadApp.Infrastructure;
 
@@ -10,7 +10,7 @@ public sealed class AppLoader : AssemblyLoadContext {
     readonly string bin;
     readonly AssemblyDependencyResolver? resolver;
 
-    public AppLoader(string bin) : base("vsa-app", isCollectible: false) {
+    public AppLoader(string bin) : base("umpire-app", isCollectible: false) {
         this.bin = bin;
         var main = Directory.GetFiles(bin, "*.deps.json")
             .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))

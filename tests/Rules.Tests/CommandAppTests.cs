@@ -4,8 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Resources.Domain.Shared;
 using Resources.Slices.ChangeResource;
-using VSA.Contracts.Commands;
-using VSA.Testing.Unit;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Testing.Unit;
 
 namespace Rules.Tests;
 

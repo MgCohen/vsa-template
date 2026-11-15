@@ -1,6 +1,6 @@
 using BuiltApp.Infrastructure;
 using Steps.Domain.Shared;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace Rules.Slices.CheckRules;
 

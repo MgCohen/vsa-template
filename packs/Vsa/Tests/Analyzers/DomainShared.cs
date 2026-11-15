@@ -1,16 +1,16 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// The test of the Domain.Shared rules (VSA1005, VSA1006, VSA1007). A <Module>.Domain.Shared project is the published
+// The test of the Domain.Shared rules (UMP1005, UMP1006, UMP1007). A <Module>.Domain.Shared project is the published
 // domain of a module: the keys, ids and components that other modules read.
-// VSA.Sdk gives the layer in the MSBuild property VsaLayer. If the property is not there, the assembly name decides.
+// Umpire.Sdk gives the layer in the MSBuild property UmpireLayer. If the property is not there, the assembly name decides.
 static class DomainShared {
     public const string Suffix = ".Domain.Shared";
 
     public static bool Is(Compilation compilation, AnalyzerOptions options) {
-        if (options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.VsaLayer", out var layer)
+        if (options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.UmpireLayer", out var layer)
             && layer.Length > 0) {
             return layer == "Domain/Shared";
         }

@@ -11,6 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Notes.csproj" />
-    <ProjectReference Include="$(VsaFrameworkSourceDir)packs/Vsa/Tests/Unit/VSA.Testing.Unit.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" />
   </ItemGroup>
 </Project>

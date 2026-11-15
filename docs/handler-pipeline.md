@@ -29,12 +29,12 @@ A step belongs to one pipeline: the builder names it. A hook belongs to a module
 
 | Base | Project | Sees |
 |---|---|---|
-| `BeforeStep`, `AfterStep` | VSA.Handlers | Each message of the pipeline, as `Envelope`. The step casts |
-| `BeforeStep<T>`, `AfterStep<T>` | VSA.Handlers | Each `T` of the pipeline, as `IEnvelope<T>` |
-| `BeforeCommandHook<TCommand>` | VSA.Handlers.Commands | The command. It returns the command, or rejects it |
-| `AfterCommandHook<TCommand, TResult>` | VSA.Handlers.Commands | The command and its outcome, `Result<TResult>` |
-| `BeforeEventHook<TEvent>` | VSA.Handlers.Events | The event. It returns the event, or rejects it |
-| `AfterEventHook<TEvent>` | VSA.Handlers.Events | The event. No outcome |
+| `BeforeStep`, `AfterStep` | Umpire.Messages.Handlers | Each message of the pipeline, as `Envelope`. The step casts |
+| `BeforeStep<T>`, `AfterStep<T>` | Umpire.Messages.Handlers | Each `T` of the pipeline, as `IEnvelope<T>` |
+| `BeforeCommandHook<TCommand>` | Umpire.Vsa.Handlers.Commands | The command. It returns the command, or rejects it |
+| `AfterCommandHook<TCommand, TResult>` | Umpire.Vsa.Handlers.Commands | The command and its outcome, `Result<TResult>` |
+| `BeforeEventHook<TEvent>` | Umpire.Vsa.Handlers.Events | The event. It returns the event, or rejects it |
+| `AfterEventHook<TEvent>` | Umpire.Vsa.Handlers.Events | The event. No outcome |
 
 ```csharp
 sealed class ArmorHook : BeforeCommandHook<StrikeCommand> {
@@ -43,7 +43,7 @@ sealed class ArmorHook : BeforeCommandHook<StrikeCommand> {
 }
 ```
 
-- Put each hook in its own slice, in a module of the app. Its name ends with `Hook` (`VSA1015`).
+- Put each hook in its own slice, in a module of the app. Its name ends with `Hook` (`UMP1015`).
 - A hook binds to the handlers part of its target kind: `Handlers.Commands` or `Handlers.Events`.
 - The constraint of each hook base takes only a command or an event, so no hook runs for a request.
 - Module code uses only the four hook bases. `IBeforeCall` and `IAfterCall` are public for the hook bases. No pipeline runs a class of a module that implements them for a request.
@@ -55,9 +55,9 @@ The envelope is what is sent. The pipeline makes it, and each stage of the run g
 
 | Type | Project | Members |
 |---|---|---|
-| `Envelope`, `Envelope<TMessage>` | VSA.Contracts | `Id`, `Parent` and `Depth` (the call chain), `State`, `Stage`, `Cancellation`, `Services`, `Items`, `Error`, `Result`, `Message`, `Original` |
-| `Result<T>` | VSA.Contracts | `IsSuccess`, `Value`, `Error`, `Envelope`. It converts from a `T` and from an `Error` |
-| `Unit` | VSA.Contracts | The value of a message with no value, for example an event |
+| `Envelope`, `Envelope<TMessage>` | Umpire.Messages.Contracts | `Id`, `Parent` and `Depth` (the call chain), `State`, `Stage`, `Cancellation`, `Services`, `Items`, `Error`, `Result`, `Message`, `Original` |
+| `Result<T>` | Umpire.Messages.Contracts | `IsSuccess`, `Value`, `Error`, `Envelope`. It converts from a `T` and from an `Error` |
+| `Unit` | Umpire.Messages.Contracts | The value of a message with no value, for example an event |
 
 | State | When |
 |---|---|
@@ -142,11 +142,11 @@ A message base has one pipeline: a second `AddPipeline` for the same base fails.
 
 | Project | Types |
 |---|---|
-| VSA.Contracts | `IMessage`, `IBroadcastMessage`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
-| VSA.Handlers | `PipelineBuilder<T>`, `Pipeline<T>`, `Pipelines`, `IHandler<T>`, `IRunner` and the runners, `Validator<T>`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipelines` |
-| VSA.Handlers.Commands, .Events, .Requests | The handler bases, the hook bases, the senders, and the default pipeline of each kind |
+| Umpire.Messages.Contracts | `IMessage`, `IBroadcastMessage`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
+| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline<T>`, `Pipelines`, `IHandler<T>`, `IRunner` and the runners, `Validator<T>`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipelines` |
+| Umpire.Vsa.Handlers.Commands, .Events, .Requests | The handler bases, the hook bases, the senders, and the default pipeline of each kind |
 
-The folders of VSA.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `VSA.Handlers`.
+The folders of Umpire.Messages.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`.
 
 `VsaHost.Install` calls `AddPipelines` before the handler registrations. It finds the validators of the modules and registers `Pipelines`. Each pipeline finds the hooks of its hook bases. All these projects also target `netstandard2.1`, for Unity.
 

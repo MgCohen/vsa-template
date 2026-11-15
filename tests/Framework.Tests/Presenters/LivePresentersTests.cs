@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using VSA.Contracts.Events;
-using VSA.Presenters;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Presenters;
 
 namespace Framework.Tests.Presenters;
 

@@ -1,12 +1,12 @@
-namespace VSA.Composition;
+namespace Umpire.Vsa.Composition;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Handlers;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Events;
-using VSA.Handlers.Requests;
-using VSA.Kernel;
-using VSA.Presenters;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Events;
+using Umpire.Vsa.Handlers.Requests;
+using Umpire.Kernel;
+using Umpire.Vsa.Presenters;
 
 public class VsaHost : AppHost {
     protected override void Install(IServiceCollection services, AppTypes types) {

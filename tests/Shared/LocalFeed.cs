@@ -1,6 +1,6 @@
 namespace Tests.Shared;
 
-// All framework packages and VSA.Sdk, packed one time for each test process to a feed in a temporary folder.
+// All framework packages and Umpire.Sdk, packed one time for each test process to a feed in a temporary folder.
 public static class LocalFeed {
     public const string Version = "0.0.0-test";
 
@@ -11,7 +11,7 @@ public static class LocalFeed {
     // The folder of the .nupkg files. The first call packs, so it takes some time.
     public static string Path => Feed.Value;
 
-    // The package ids in the feed, for example VSA.Domain and VSA.Sdk.
+    // The package ids in the feed, for example Umpire.Vsa.Domain and Umpire.Sdk.
     public static IReadOnlyList<string> Packages =>
         [.. Directory.EnumerateFiles(Path, "*.nupkg").Select(f => System.IO.Path.GetFileName(f)[..^$".{Version}.nupkg".Length])];
 

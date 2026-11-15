@@ -1,11 +1,11 @@
 using System.Reflection;
-using VSA.Architecture;
-using VSA.Kernel;
+using Umpire.Architecture;
+using Umpire.Kernel;
 
 namespace LoadApp.Infrastructure;
 
 public static class DefinitionFinder {
-    const string AppClass = $"{nameof(VSA)}.{nameof(VSA.Kernel)}.{nameof(App)}";
+    const string AppClass = $"{nameof(Umpire)}.{nameof(Umpire.Kernel)}.{nameof(App)}";
 
     public static AppClasses Find(IReadOnlyList<Assembly> app) {
         var classes = Leaves([.. app.SelectMany(TypesOf).Where(IsAppClass)]);

@@ -2,9 +2,9 @@ namespace Composition.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa;
+using Umpire.Vsa.Composition;
+using Umpire.Kernel;
 
 public class TestApp<THost>(params Module[] modules) : App<Vsa<THost>> where THost : VsaHost, new() {
     readonly List<Action<IServiceCollection>> configure = [];

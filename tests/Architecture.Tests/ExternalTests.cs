@@ -1,4 +1,4 @@
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace EngineCore.Tests;
 
@@ -27,6 +27,23 @@ public sealed class ExternalTests {
         _ = new InlineArchitecture(root => child = root.Add<Lib>().Add<Child>()).Root;
 
         Assert.That((child!.Assembly, child.IsExternal), Is.EqualTo(("Lib.Child", true)));
+    }
+
+    [Test]
+    public void A_part_under_an_external_can_name_its_own_DLL() {
+        Part? child = null;
+        Part? grandchild = null;
+        _ = new InlineArchitecture(root => {
+            child = root.Add<Lib>().Add<Child>().InAssembly("Other.Name");
+            grandchild = child.Add<Group>();
+        }).Root;
+
+        Assert.That((child!.Assembly, grandchild!.Assembly), Is.EqualTo(("Other.Name", "Other.Name.Group")));
+    }
+
+    [Test]
+    public void InAssembly_on_a_part_that_is_not_external_throws() {
+        Blocks(root => root.Add<Child>().InAssembly("Other.Name"), "Define: Child is not in an external, so it has no DLL.");
     }
 
     [Test]

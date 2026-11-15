@@ -3,26 +3,26 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1001: requests and responses are sealed records. A record compares by value, and sealed stops a second
+// UMP1001: requests and responses are sealed records. A record compares by value, and sealed stops a second
 // request type that inherits the first and gets its route. The response is checked when it is in the same project.
-// Option: vsa.VSA1001.check_responses (in VSA.Rules.globalconfig). If false, the rule checks only the requests.
-public sealed class SealedRecordRule() : VsaAnalyzerRule(Descriptor) {
+// Option: umpire.UMP1001.check_responses (in Umpire.Rules.globalconfig). If false, the rule checks only the requests.
+public sealed class SealedRecordRule() : UmpireAnalyzerRule(Descriptor) {
     public const string CheckResponsesKey = "check_responses";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1001",
+        "UMP1001",
         "Requests and responses are sealed records",
         "{0} is {1}. Make it a sealed record.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public override IReadOnlyList<VsaOption> RequiredOptions { get; } = [VsaOption.Bool(CheckResponsesKey)];
+    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.Bool(CheckResponsesKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
-        if (start.Compilation.GetTypeByMetadataName("VSA.Contracts.Requests.IRequest`1") is not { } request) {
+        if (start.Compilation.GetTypeByMetadataName("Umpire.Vsa.Contracts.Requests.IRequest`1") is not { } request) {
             return;
         }
         start.RegisterSymbolAction(symbol => Check((INamedTypeSymbol)symbol.Symbol, request, symbol), SymbolKind.NamedType);

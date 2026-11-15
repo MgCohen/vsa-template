@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Kernel;
+using Umpire.Kernel;
 
 namespace Composition.Tests;
 

@@ -1,6 +1,6 @@
-using VSA.Contracts;
+using Umpire.Messages.Contracts;
 
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 public interface IHandler {
     Task<IMessageResult> HandleAsync(Envelope envelope);

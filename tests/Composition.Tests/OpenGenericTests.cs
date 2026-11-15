@@ -2,12 +2,12 @@ using Meters;
 using Meters.Domain.Shared;
 using Meters.Slices.ChangeMeter;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Analyzers.Markers;
-using VSA.Composition;
-using VSA.Contracts.Commands;
-using VSA.Handlers;
-using VSA.Handlers.Commands;
-using VSA.Kernel;
+using Umpire.Markers;
+using Umpire.Vsa.Composition;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Kernel;
 
 namespace Composition.Tests;
 

@@ -1,6 +1,6 @@
 using Resources.Domain;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 namespace Resources.Slices.ChangeResource;
 

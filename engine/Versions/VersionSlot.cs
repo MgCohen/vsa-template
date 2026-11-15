@@ -1,4 +1,4 @@
-namespace VSA.Architecture.Versions;
+namespace Umpire.Engine.Versions;
 
 public sealed class VersionSlot(
     string file, string package, string? text, int? line = null, Action<string>? write = null) {

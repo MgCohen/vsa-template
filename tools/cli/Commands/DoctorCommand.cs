@@ -1,15 +1,15 @@
-using VSA.Architecture.Versions;
-using VSA.Cli.Commands.Bases;
+using Umpire.Engine.Versions;
+using Umpire.Cli.Commands.Bases;
 
-namespace VSA.Cli.Commands;
+namespace Umpire.Cli.Commands;
 
 sealed class DoctorCommand : AppCommand {
     public override IReadOnlyList<string> Words => ["doctor"];
 
-    public override string Summary => "Makes sure that the tool, VSA.Sdk and the packages have one version.";
+    public override string Summary => "Makes sure that the tool, Umpire.Sdk and the packages have one version.";
 
     internal static IReadOnlyList<VersionSlot> Slots(string root) {
-        var tool = new VersionSlot("this tool", "VSA.Cli", ToolVersion.Current);
+        var tool = new VersionSlot("this tool", "Umpire.Cli", ToolVersion.Current);
         return [tool, .. VersionSlots.InApp(root).SelectMany(file => file.Slots)];
     }
 
@@ -22,9 +22,9 @@ sealed class DoctorCommand : AppCommand {
         }
         var mismatches = VersionCheck.Mismatches(slots, expected);
         if (mismatches is []) {
-            Console.WriteLine($"OK: all use VSA {expected}.");
+            Console.WriteLine($"OK: all use Umpire {expected}.");
             return 0;
         }
-        throw new VsaException(VersionCheck.Message(mismatches, expected));
+        throw new UmpireException(VersionCheck.Message(mismatches, expected));
     }
 }

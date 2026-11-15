@@ -1,5 +1,5 @@
 using Meters.Domain.Shared;
-using VSA.Analyzers.Markers;
+using Umpire.Markers;
 
 namespace Meters.Slices.ChangeMeter;
 

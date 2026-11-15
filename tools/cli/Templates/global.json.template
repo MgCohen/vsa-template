@@ -4,7 +4,7 @@
     "rollForward": "latestFeature"
   },
   "msbuild-sdks": {
-    "VSA.Sdk": "{{VsaVersion}}"
+    "Umpire.Sdk": "{{UmpireVersion}}"
   },
   "test": {
     "runner": "Microsoft.Testing.Platform"

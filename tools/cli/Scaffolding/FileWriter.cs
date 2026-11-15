@@ -1,4 +1,4 @@
-namespace VSA.Cli.Scaffolding;
+namespace Umpire.Cli.Scaffolding;
 
 static class FileWriter {
     public static void WriteAllOrNone(string root, IEnumerable<TemplateFile> files) {
@@ -6,7 +6,7 @@ static class FileWriter {
         var existing = all.Where(f => File.Exists(FullPath(root, f))).Select(f => f.Path).ToList();
         if (existing.Count > 0) {
             var list = string.Join(Environment.NewLine + "  ", existing);
-            throw new VsaException(
+            throw new UmpireException(
                 $"These files exist. The tool does not write over a file:{Environment.NewLine}  {list}");
         }
         foreach (var file in all) {

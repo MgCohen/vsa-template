@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../../framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj" />
+  </ItemGroup>
+</Project>

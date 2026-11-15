@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts;
-using VSA.Handlers;
+using Umpire.Messages.Contracts;
+using Umpire.Messages.Handlers;
 
 namespace Steps.Infrastructure;
 

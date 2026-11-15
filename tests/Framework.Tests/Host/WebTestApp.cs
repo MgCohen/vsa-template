@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-using VSA.Host;
-using VSA.Kernel;
+using Umpire.Vsa;
+using Umpire.Vsa.Composition;
+using Umpire.Vsa.Hosts.Web;
+using Umpire.Kernel;
 
 sealed class WebTestApp(params Module[] modules) : App<Vsa<WebVsaHost>> {
     readonly List<Action<IServiceCollection>> configure = [];

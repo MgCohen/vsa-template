@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
     internal readonly List<Entry> Entries = [];

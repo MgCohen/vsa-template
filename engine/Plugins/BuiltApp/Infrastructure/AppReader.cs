@@ -1,7 +1,7 @@
 using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
 using Steps.Domain.Shared;
-using VSA.Architecture;
+using Umpire.Architecture;
 
 namespace BuiltApp.Infrastructure;
 

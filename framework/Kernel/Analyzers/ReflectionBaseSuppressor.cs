@@ -4,7 +4,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class ReflectionBaseSuppressor : DiagnosticSuppressor {
@@ -13,13 +13,13 @@ public sealed class ReflectionBaseSuppressor : DiagnosticSuppressor {
     const string Justification =
         "Reflection uses the members of a type that derives from a type or an interface with [ReflectionBase].";
 
-    public static readonly SuppressionDescriptor UnusedMember = new("VSA9001", "IDE0051", Justification);
-    public static readonly SuppressionDescriptor UnreadMember = new("VSA9002", "IDE0052", Justification);
-    public static readonly SuppressionDescriptor FieldNeverAssigned = new("VSA9003", "CS0649", Justification);
-    public static readonly SuppressionDescriptor FieldNeverUsed = new("VSA9004", "CS0169", Justification);
-    public static readonly SuppressionDescriptor UnusedParameter = new("VSA9005", "IDE0060", Justification);
-    public static readonly SuppressionDescriptor MemberCanBeStatic = new("VSA9006", "CA1822", Justification);
-    public static readonly SuppressionDescriptor TypeNeverCreated = new("VSA9007", "CA1812", Justification);
+    public static readonly SuppressionDescriptor UnusedMember = new("UMP9001", "IDE0051", Justification);
+    public static readonly SuppressionDescriptor UnreadMember = new("UMP9002", "IDE0052", Justification);
+    public static readonly SuppressionDescriptor FieldNeverAssigned = new("UMP9003", "CS0649", Justification);
+    public static readonly SuppressionDescriptor FieldNeverUsed = new("UMP9004", "CS0169", Justification);
+    public static readonly SuppressionDescriptor UnusedParameter = new("UMP9005", "IDE0060", Justification);
+    public static readonly SuppressionDescriptor MemberCanBeStatic = new("UMP9006", "CA1822", Justification);
+    public static readonly SuppressionDescriptor TypeNeverCreated = new("UMP9007", "CA1812", Justification);
 
     static readonly ImmutableDictionary<string, SuppressionDescriptor> ById =
         new[] { UnusedMember, UnreadMember, FieldNeverAssigned, FieldNeverUsed, UnusedParameter, MemberCanBeStatic, TypeNeverCreated }

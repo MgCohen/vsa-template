@@ -1,9 +1,9 @@
-using VSA.Architecture;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Events;
-using VSA.Handlers.Requests;
+namespace Umpire.Vsa.Definition;
 
-namespace VSA.Architecture.Vsa;
+using Umpire.Architecture;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Events;
+using Umpire.Vsa.Handlers.Requests;
 
 public record Handlers : Layer {
     protected override void Configure(Options defaults) {

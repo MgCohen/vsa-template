@@ -27,24 +27,24 @@ public class ToolApp : App<Vsa<ToolArchitecture, ConsoleVsaHost>>;
 new Vsa<UnityVsaHost>().CreateHost().Compose(services, app);
 ```
 
-The app class file imports `VSA.Kernel` (`App<TPack>`), `VSA.Architecture.Vsa` (`Vsa<THost>`) and the namespace of the host. `VSA.Architecture.Vsa` also has the concept record `App`. `App<…>` is not ambiguous, because the record has no type parameter. A use of `App` with no type argument in the same file is ambiguous (CS0104).
+The app class file imports `Umpire.Kernel` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host. `Umpire.Vsa` also has the concept record `App`. `App<…>` is not ambiguous, because the record has no type parameter. A use of `App` with no type argument in the same file is ambiguous (CS0104).
 
 ## The kernel types
 
 | Type | Package | Job |
 |---|---|---|
-| `IApp` | VSA.Kernel | `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
-| `App`, `App<TPack>` | VSA.Kernel | The lifetime of the app. `App<TPack>` makes its pack with `new TPack()` |
-| `Pack`, `Pack<TArchitecture, THost>` | VSA.Kernel | Gives `Architecture` and `CreateHost()` |
-| `AppHost` | VSA.Kernel | The composition root: `Create`, `Compose`, `Run`, `Stop` |
-| `Module`, `Module<TSettings>` | VSA.Kernel | The root class of a module. `Order` 1 |
-| `AppTypes` | VSA.Kernel | The one type source: the modules and their types |
+| `IApp` | Umpire.Kernel | `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
+| `App`, `App<TPack>` | Umpire.Kernel | The lifetime of the app. `App<TPack>` makes its pack with `new TPack()` |
+| `Pack`, `Pack<TArchitecture, THost>` | Umpire.Kernel | Gives `Architecture` and `CreateHost()` |
+| `AppHost` | Umpire.Kernel | The composition root: `Create`, `Compose`, `Run`, `Stop` |
+| `Module`, `Module<TSettings>` | Umpire.Kernel | The root class of a module. `Order` 1 |
+| `AppTypes` | Umpire.Kernel | The one type source: the modules and their types |
 
-The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in VSA.Architecture.Vsa, and `VsaHost`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in VSA.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
+The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa, and `VsaHost`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
 
 ## The app class
 
-`vsa new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`).
+`umpire new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`).
 
 | Member | Default | Override to |
 |---|---|---|
@@ -69,9 +69,9 @@ Each `Run` makes a new host, so `Run` after `Stop` starts the app again in the s
 
 | Host | Package | Use |
 |---|---|---|
-| `VsaHost` | VSA.Composition | The .NET Generic Host with the VSA layers |
-| `ConsoleVsaHost` | VSA.Composition | A console app with one entry command (`IConsoleCommand<TResult>`) |
-| `WebVsaHost` | VSA.Host | ASP.NET Core: the HTTP API of the requests, and the views |
+| `VsaHost` | Umpire.Vsa.Composition | The .NET Generic Host with the VSA layers |
+| `ConsoleVsaHost` | Umpire.Vsa.Composition | A console app with one entry command (`IConsoleCommand<TResult>`) |
+| `WebVsaHost` | Umpire.Vsa.Hosts.Web | ASP.NET Core: the HTTP API of the requests, and the views |
 | `UnityVsaHost` | `vsa-unity` | A Unity app. `Run` returns |
 
 | `AppHost` member | Kind | Default |
@@ -89,21 +89,21 @@ Each host has a public constructor with no parameters, and `AppHost` has `[Requi
 
 ```
 AppHost.Compose(services, app)                 fixed order
-├─ core                                        VSA.Kernel
+├─ core                                        Umpire.Kernel
 │  ├─ IConfiguration                           keep one that exists, else an empty one
 │  ├─ AddLogging                               no log provider
 │  ├─ AppTypes                                 a singleton
 │  └─ auto-register                            each [AutoRegister] type
 ├─ Install(services, types)                    VsaHost:
-│  ├─ AddPipelines, AddRequestHandlers         VSA.Handlers, VSA.Handlers.Requests
-│  ├─ AddEventHandlers, AddCommandHandlers     VSA.Handlers.Events, VSA.Handlers.Commands
-│  ├─ AddPresenters, IBus                      VSA.Presenters, VSA.Composition
+│  ├─ AddPipelines, AddRequestHandlers         Umpire.Messages.Handlers, Umpire.Vsa.Handlers.Requests
+│  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
+│  ├─ AddPresenters, IBus                      Umpire.Vsa.Presenters, Umpire.Vsa.Composition
 │  └─ the platform                             WebVsaHost: HTTP API, views. ConsoleVsaHost: entry command
 ├─ Module.Configure(services)                  each module, in Order, then by name
 └─ app.ConfigureServices(services)             last
 ```
 
-The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (VSA.Kernel). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one. If `services` registers `IConfiguration` with a factory or a type, `Compose` cannot read it before the build, so it stops with an error.
+The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernel). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one. If `services` registers `IConfiguration` with a factory or a type, `Compose` cannot read it before the build, so it stops with an error.
 
 ## Definitions and transports
 
@@ -138,11 +138,11 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 
 - `IRequest` is an interface, because only an interface can make each request give the static members.
 - On `net10.0`, an interface with static abstract members cannot be a type argument (CS8920). Name it with `typeof(IRequest)`, for example in the definition.
-- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IBus` require it, so the compiler finds a response with no marker. VSA.Sdk also uses it to find the contract files of a slice.
+- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IBus` require it, so the compiler finds a response with no marker. Umpire.Sdk also uses it to find the contract files of a slice.
 
 ## AppTypes finds the parts of the app
 
-`AppTypes` (VSA.Kernel) reads 2 sources and keeps each loaded assembly that references a given assembly:
+`AppTypes` (Umpire.Kernel) reads 2 sources and keeps each loaded assembly that references a given assembly:
 
 | Source | Finds |
 |---|---|
@@ -158,8 +158,8 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 
 | Part | Scan for | Rule |
 |---|---|---|
-| Module root | A reference to `VSA.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `VSA.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
-| Views root | A reference to `VSA.Views` | One component that inherits `ViewsRoot` |
+| Module root | A reference to `Umpire.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `Umpire.Vsa.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
+| Views root | A reference to `Umpire.Vsa.Views` | One component that inherits `ViewsRoot` |
 
 The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
 
@@ -181,7 +181,7 @@ AppTypes.Registered()
 | `[TypeArgument]`, `ITypeArgument` | Type argument | A struct or a concrete class that closes the open classes. |
 | `[assembly: TypeArgument(typeof(int))]` | Type argument | A type that cannot have the attribute. |
 
-The markers are in `VSA.Analyzers.Markers`. The same package has the stripping markers for IL2CPP. The UnityLinker finds them by class name, so do not rename them:
+The markers are in `Umpire.Markers`. The same package has the stripping markers for IL2CPP. The UnityLinker finds them by class name, so do not rename them:
 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
@@ -189,13 +189,13 @@ The markers are in `VSA.Analyzers.Markers`. The same package has the stripping m
 | `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
 | `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
 
-The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so VSA.Kernel uses the markers assembly in code.
+The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernel uses the markers assembly in code.
 
 An IL2CPP player with stripping High also needs a `link.xml` that keeps the markers assembly. Without it, the linker removes `[AutoRegister]` from the bases, and the scan finds no handlers. The UPM package must ship this file:
 
 ```xml
 <linker>
-  <assembly fullname="VSA.Analyzers.Markers" preserve="all" />
+  <assembly fullname="Umpire.Markers" preserve="all" />
 </linker>
 ```
 
@@ -264,7 +264,7 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 ## Projects
 
 ```
-framework/Kernel/                      VSA.Kernel
+framework/Kernel/                      Umpire.Kernel
   App, App<TPack>, IApp                the lifetime of the app
   Pack, Pack<TArchitecture, THost>     the architecture and the host of the app
   Module, Module<TSettings>            the root class of a module
@@ -272,33 +272,33 @@ framework/Kernel/                      VSA.Kernel
   Hosting/                             AppHost, the core step (AutoRegistration, ComposedConfiguration)
   Scan/                                AppTypes, ModuleRoot, Registration, IKeySource, ConstraintKeys, MarkedTypes
   Factories/                           IFactory<T>, AddFactory
-framework/Engine/Definition/           VSA.Architecture: Architecture (the kernel references it for Pack)
+framework/Engine/Definition/           Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/
   Handlers/                            PipelineBuilder, Pipelines, the runners, Validator, Before, After, AddPipelines
 framework/Architectures/Vsa/
-  Definition/                          VSA.Architecture.Vsa: VsaArchitecture, the VSA layers, Vsa<THost>, Vsa<TArchitecture, THost>
+  Definition/                          Umpire.Vsa: VsaArchitecture, the VSA layers, Vsa<THost>, Vsa<TArchitecture, THost>
   Handlers/Events/                     AddEventHandlers, InProcessEventPublisher
   Handlers/Commands/                   AddCommandHandlers, InProcessCommandSender
   Handlers/Requests/                   RequestHandler, AddRequestHandlers
   Presenters/                          AddPresenters
   Views/                               ViewsRoot, ViewsInstaller
-  Composition/                         VSA.Composition: VsaHost, Plugin, Plugin<TSettings>, InProcessBus
+  Composition/                         Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>, InProcessBus
     Hosts/Console/                     ConsoleVsaHost, ConsoleEntry, ConsoleExit
-  Host/                                VSA.Host: WebVsaHost, HttpApi, HttpRequestBinder
+  Host/                                Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
 ```mermaid
 flowchart BT
-    Kernel["VSA.Kernel"] --> Definition["VSA.Architecture"]
-    Layers["VSA.Handlers.*, VSA.Presenters"] -. private .-> Kernel
-    Composition["VSA.Composition"] --> Kernel
+    Kernel["Umpire.Kernel"] --> Definition["Umpire.Architecture"]
+    Layers["Umpire.Messages.Handlers.*, Umpire.Vsa.Presenters"] -. private .-> Kernel
+    Composition["Umpire.Vsa.Composition"] --> Kernel
     Composition --> Layers
-    VsaDefinition["VSA.Architecture.Vsa"] --> Composition
-    Host["VSA.Host"] --> Composition
+    VsaDefinition["Umpire.Vsa"] --> Composition
+    Host["Umpire.Vsa.Hosts.Web"] --> Composition
 ```
 
 - The kernel knows no layer. `VsaHost.Install` calls each layer registration by a direct call, in a fixed order.
-- `VSA.Architecture.Vsa` references `VSA.Composition`, because its definition names `Module` and `Plugin` with `OfType`, and `Vsa<THost>` uses `VsaHost`. `VSA.Composition` does not reference `VSA.Architecture.Vsa`.
+- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition names `Module` and `Plugin` with `OfType`, and `Vsa<THost>` uses `VsaHost`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
 
 ## The container
 
@@ -355,7 +355,7 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 ## Unity target
 
-`VSA.Kernel`, `VSA.Composition`, `VSA.Architecture`, `VSA.Architecture.Vsa` and all definition layers are portable layers (`VsaPortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (VSA.Host, VSA.Views) need ASP.NET Core, so they build for `net10.0` only.
+`Umpire.Kernel`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Vsa.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only.
 
 A Unity app calls `new MyApp().Run(args)` from the shell of the UPM package (repo `vsa-unity`). Its app class is `App<Vsa<UnityVsaHost>>`. The Unity host returns from `Run`, and the shell calls `Stop` when the app quits or the play mode stops. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
 
@@ -390,6 +390,6 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 ## Open questions
 
 - Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
-- Generated module list: VSA.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppTypes` can read that list first (#111).
+- Generated module list: Umpire.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppTypes` can read that list first (#111).
 - IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
-- Hosting DLLs in Unity: VSA.Kernel references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.
+- Hosting DLLs in Unity: Umpire.Kernel references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.

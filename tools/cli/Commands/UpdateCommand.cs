@@ -1,17 +1,17 @@
-using VSA.Architecture.Versions;
-using VSA.Cli.Commands.Bases;
-using VSA.Cli.Scaffolding;
+using Umpire.Engine.Versions;
+using Umpire.Cli.Commands.Bases;
+using Umpire.Cli.Scaffolding;
 
-namespace VSA.Cli.Commands;
+namespace Umpire.Cli.Commands;
 
 sealed class UpdateCommand : AppCommand {
-    const string AddTool = "Add it with 'dotnet tool install vsa.cli --local'.";
+    const string AddTool = "Add it with 'dotnet tool install umpire.cli --local'.";
     static readonly CommandOption Version = new(["--version"], "version");
 
     public override IReadOnlyList<string> Words => ["update"];
 
     public override string Summary =>
-        "Moves the tool, VSA.Sdk and the packages to the latest version, or to <version>.";
+        "Moves the tool, Umpire.Sdk and the packages to the latest version, or to <version>.";
 
     public override IReadOnlyList<CommandOption> Options => [Version];
 
@@ -30,7 +30,7 @@ sealed class UpdateCommand : AppCommand {
         var manifest = Manifest(root);
         var manifestPath = Path.Combine(root, manifest);
         var current = VersionSlots.ManifestToolVersion(manifestPath)
-            ?? throw new VsaException($"{manifest} has no vsa.cli. {AddTool}");
+            ?? throw new UmpireException($"{manifest} has no umpire.cli. {AddTool}");
 
         if (version != current) {
             UpdateTool(root, version, current);
@@ -39,8 +39,8 @@ sealed class UpdateCommand : AppCommand {
 
         var changed = SetVersion(root, target);
         Console.WriteLine(current == target
-            ? $"The tool has VSA {target}."
-            : $"The tool changed from VSA {current} to {target}.");
+            ? $"The tool has Umpire {target}."
+            : $"The tool changed from Umpire {current} to {target}.");
         foreach (var file in changed) {
             Console.WriteLine($"  {file}");
         }
@@ -52,19 +52,19 @@ sealed class UpdateCommand : AppCommand {
 
     static string Manifest(string root) => VersionSlots.ToolManifests(root) switch {
         [var one] => one,
-        [] => throw new VsaException($"The app has no tool manifest (dotnet-tools.json) with vsa.cli. {AddTool}"),
-        _ => throw new VsaException(
+        [] => throw new UmpireException($"The app has no tool manifest (dotnet-tools.json) with umpire.cli. {AddTool}"),
+        _ => throw new UmpireException(
             "The app has two tool manifests: dotnet-tools.json and .config/dotnet-tools.json. Keep one."),
     };
 
     static void UpdateTool(string root, string? version, string current) {
         string[] prerelease = current.Contains('-') ? ["--prerelease"] : [];
         string[] args = version is null
-            ? ["tool", "update", "vsa.cli", "--local", .. prerelease]
-            : ["tool", "update", "vsa.cli", "--local", "--version", version, "--allow-downgrade"];
+            ? ["tool", "update", "umpire.cli", "--local", .. prerelease]
+            : ["tool", "update", "umpire.cli", "--local", "--version", version, "--allow-downgrade"];
         var run = Dotnet.Run(root, args);
         if (run.ExitCode != 0) {
-            throw new VsaException(
+            throw new UmpireException(
                 $"'dotnet {string.Join(' ', args)}' failed. The app did not change.{Environment.NewLine}{run.Output}");
         }
     }

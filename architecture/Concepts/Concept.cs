@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public abstract record Concept {
     public virtual string Folder => GetType().Name;

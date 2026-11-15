@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Signals;
 using Signals.Slices.Ring;
-using VSA.Composition;
-using VSA.Contracts;
-using VSA.Contracts.Events;
+using Umpire.Vsa.Composition;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Events;
 
 namespace Composition.Tests.Pipeline;
 

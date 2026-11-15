@@ -1,6 +1,6 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
-[VSA.Analyzers.Markers.RequireDerived]
+[Umpire.Markers.RequireDerived]
 public abstract class Architecture {
     const string DefinitionSource = "definition";
     readonly string rootPath;

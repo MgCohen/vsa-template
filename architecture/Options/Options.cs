@@ -1,12 +1,12 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public sealed class Options {
     public static Options BuiltIn => new() {
         DefaultPermission = Permission.Deny,
-        Boundary = VSA.Architecture.Boundary.Open,
+        Boundary = Umpire.Architecture.Boundary.Open,
         UseSameConcept = false,
-        Depth = VSA.Architecture.Depth.WithChildren,
-        Access = VSA.Architecture.Access.Public,
+        Depth = Umpire.Architecture.Depth.WithChildren,
+        Access = Umpire.Architecture.Access.Public,
     };
 
     public Permission? DefaultPermission { get; set; }

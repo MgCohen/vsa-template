@@ -1,7 +1,7 @@
 using Arena.Slices.Duel;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Handlers.Commands;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Handlers.Commands;
 
 namespace Arena.Slices.Counter;
 

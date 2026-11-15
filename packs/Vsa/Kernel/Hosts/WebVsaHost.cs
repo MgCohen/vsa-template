@@ -1,12 +1,12 @@
-namespace VSA.Host;
+namespace Umpire.Vsa.Hosts.Web;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VSA.Composition;
-using VSA.Handlers.Requests;
-using VSA.Kernel;
-using VSA.Views;
+using Umpire.Vsa.Composition;
+using Umpire.Vsa.Handlers.Requests;
+using Umpire.Kernel;
+using Umpire.Vsa.Views;
 
 public sealed class WebVsaHost : VsaHost {
     Type[] requestHandlers = [];

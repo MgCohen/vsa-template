@@ -1,4 +1,4 @@
-namespace VSA.Contracts;
+namespace Umpire.Messages.Contracts;
 
 public enum EnvelopeState {
     Listed,

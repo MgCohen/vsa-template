@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 public sealed class ConstraintKeys : IKeySource {
     public IEnumerable<Type> KeysFor(Type genericParameter, IReadOnlyList<Type> candidates) {

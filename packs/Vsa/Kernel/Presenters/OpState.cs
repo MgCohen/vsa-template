@@ -1,4 +1,4 @@
-namespace VSA.Presenters;
+namespace Umpire.Vsa.Presenters;
 
 // The state of one operation of a presenter. Views read it and do not change it.
 public sealed class OpState {

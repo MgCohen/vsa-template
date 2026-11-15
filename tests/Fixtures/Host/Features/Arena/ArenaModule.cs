@@ -1,8 +1,8 @@
 using Arena.Slices.Duel;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Handlers;
-using VSA.Handlers.Commands;
-using VSA.Kernel;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Kernel;
 
 namespace Arena;
 

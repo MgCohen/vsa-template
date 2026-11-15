@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 
-namespace VSA.Host;
+namespace Umpire.Vsa.Hosts.Web;
 
 static class HttpRequestBinder {
     internal static async Task<TRequest> Bind<TRequest>(HttpContext http, JsonSerializerOptions json) {

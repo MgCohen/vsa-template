@@ -1,6 +1,6 @@
 namespace Styled.Infrastructure;
 
-// VSA1010: this file has 301 lines.
+// UMP1010: this file has 301 lines.
 public static class LongFile {
     public const int Value1 = 1;
     public const int Value2 = 2;

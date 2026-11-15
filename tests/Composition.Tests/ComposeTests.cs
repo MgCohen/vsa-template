@@ -10,8 +10,8 @@ using Resources.Domain.Shared;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
-using VSA.Contracts.Commands;
-using VSA.Contracts.Events;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Events;
 
 namespace Composition.Tests;
 
@@ -87,6 +87,6 @@ public sealed class ComposeTests {
         Assert.That(provider.GetRequiredService<RingLog>(), Is.SameAs(appRingLog));
     }
 
-    static ServiceProvider Compose(params VSA.Kernel.Module[] modules) =>
+    static ServiceProvider Compose(params Umpire.Kernel.Module[] modules) =>
         new TestApp(modules).Compose(new ServiceCollection()).BuildServiceProvider();
 }

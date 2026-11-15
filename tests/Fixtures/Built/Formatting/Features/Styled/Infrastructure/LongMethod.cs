@@ -1,6 +1,6 @@
 namespace Styled.Infrastructure;
 
-// VSA1009: Sum has 41 lines.
+// UMP1009: Sum has 41 lines.
 public static class LongMethod {
     public static int Sum() {
         var total = 0;

@@ -1,8 +1,9 @@
-using VSA.Analyzers.Markers;
-using VSA.Contracts;
-using VSA.Contracts.Events;
+using Umpire.Markers;
+using Umpire.Messages.Contracts;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Contracts.Events;
 
-namespace VSA.Handlers.Events;
+namespace Umpire.Vsa.Handlers.Events;
 
 [AutoRegister]
 [RequireDerived]

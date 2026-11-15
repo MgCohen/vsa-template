@@ -1,9 +1,9 @@
 namespace Engine.Tests;
 
 using Microsoft.Extensions.Hosting;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa;
+using Umpire.Vsa.Composition;
+using Umpire.Kernel;
 
 sealed class EngineTestApp(params Module[] modules) : App<Vsa<VsaHost>> {
     public IHost Build() => Pack.CreateHost().Create([], this);

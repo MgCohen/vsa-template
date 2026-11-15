@@ -1,4 +1,4 @@
-namespace VSA.Cli.Commands.Bases;
+namespace Umpire.Cli.Commands.Bases;
 
 abstract class ToolCommand {
     public abstract IReadOnlyList<string> Words { get; }
@@ -13,7 +13,7 @@ abstract class ToolCommand {
         get {
             var name = TakesName ? " <Name>" : "";
             var options = string.Concat(Options.Select(option => " " + option.Usage));
-            return $"vsa {string.Join(' ', Words)}{name}{options}";
+            return $"umpire {string.Join(' ', Words)}{name}{options}";
         }
     }
 

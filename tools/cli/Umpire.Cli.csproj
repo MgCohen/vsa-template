@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The umpire tool. It ships as a .NET tool with the same version as Umpire.Sdk and the Umpire.* packages. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Umpire.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>umpire</ToolCommandName>
+    <PackageId>Umpire.Cli</PackageId>
+    <!-- Templates/ is a separate app that builds on its own. The tool holds its files as resources. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Templates/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cli.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../engine/Versions/Umpire.Engine.Versions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
+                      LogicalName="Templates/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

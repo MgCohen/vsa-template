@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using VSA.Architecture;
+using Umpire.Architecture;
 using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;

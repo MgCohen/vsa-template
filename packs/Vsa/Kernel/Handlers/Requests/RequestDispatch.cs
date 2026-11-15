@@ -1,8 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts;
-using VSA.Contracts.Requests;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Requests;
+using Umpire.Messages.Handlers;
 
-namespace VSA.Handlers.Requests;
+namespace Umpire.Vsa.Handlers.Requests;
 
 static class RequestDispatch {
     internal static Task<Result<TResponse>> SendAsync<TResponse>(

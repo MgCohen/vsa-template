@@ -1,6 +1,6 @@
-using VSA.Architecture;
+namespace Umpire.Vsa.Definition;
 
-namespace VSA.Architecture.Vsa;
+using Umpire.Architecture;
 
 public class VsaArchitecture : Architecture {
     public VsaArchitecture() { }
@@ -22,23 +22,32 @@ public class VsaArchitecture : Architecture {
 
     protected override void Define(Root root) {
         var kernel = root.Add<Framework>().Add<Kernel>();
-        kernel.Add<Domain>().And<Infrastructure>().And<Presenters>();
-        kernel.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
-        kernel.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
-        kernel.Add<Views>();
-        kernel.Add<Composition>().And<Host>();
+        kernel.Add<Domain>().InAssembly("Umpire.Vsa.Domain");
+        kernel.Add<Infrastructure>().InAssembly("Umpire.Vsa.Infrastructure");
+        kernel.Add<Presenters>().InAssembly("Umpire.Vsa.Presenters");
+        var contracts = kernel.Add<Contracts>().InAssembly("Umpire.Messages.Contracts");
+        contracts.Add<Contracts.Requests>().InAssembly("Umpire.Vsa.Contracts.Requests");
+        contracts.Add<Contracts.Events>().InAssembly("Umpire.Vsa.Contracts.Events");
+        contracts.Add<Contracts.Commands>().InAssembly("Umpire.Vsa.Contracts.Commands");
+        var handlers = kernel.Add<Handlers>().InAssembly("Umpire.Messages.Handlers");
+        handlers.Add<Handlers.Requests>().InAssembly("Umpire.Vsa.Handlers.Requests");
+        handlers.Add<Handlers.Events>().InAssembly("Umpire.Vsa.Handlers.Events");
+        handlers.Add<Handlers.Commands>().InAssembly("Umpire.Vsa.Handlers.Commands");
+        kernel.Add<Views>().InAssembly("Umpire.Vsa.Views");
+        kernel.Add<Composition>().InAssembly("Umpire.Vsa.Composition");
+        kernel.Add<Host>().InAssembly("Umpire.Vsa.Hosts.Web");
 
         root.Add<App>().Add<Host>().And<Views>();
 
         var plugin = root.AddGroup<Plugin>(Boundary.Open);
-        plugin.Add<Module>().OfType<VSA.Composition.Plugin>();
+        plugin.Add<Module>().OfType<Umpire.Vsa.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
         plugin.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
         plugin.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
 
         var feature = root.AddGroup<Feature>();
-        feature.Add<Module>().OfType<VSA.Kernel.Module>();
+        feature.Add<Module>().OfType<Umpire.Kernel.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();
         feature.AddGroup<Slice>()

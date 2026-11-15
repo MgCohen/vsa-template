@@ -1,5 +1,5 @@
-using VSA.Contracts;
-using VSA.Handlers;
+using Umpire.Messages.Contracts;
+using Umpire.Messages.Handlers;
 
 namespace Arena.Slices.Duel;
 

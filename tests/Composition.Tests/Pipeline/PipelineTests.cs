@@ -3,13 +3,13 @@ using Answers.Slices.Answer;
 using Arena.Slices.Duel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VSA.Composition;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Handlers;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Events;
-using VSA.Kernel;
+using Umpire.Vsa.Composition;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Events;
+using Umpire.Kernel;
 
 namespace Composition.Tests.Pipeline;
 
@@ -175,7 +175,7 @@ public sealed class PipelineTests {
         var error = Assert.Throws<ArgumentException>(
             () => new PipelineBuilder<ArenaMove>().HooksOf(typeof(CommandHandler<,>)));
 
-        Assert.That(error!.Message, Does.StartWith("VSA.Handlers.Commands.CommandHandler`2 is not a hook base."));
+        Assert.That(error!.Message, Does.StartWith("Umpire.Vsa.Handlers.Commands.CommandHandler`2 is not a hook base."));
     }
 
     [TestCase(typeof(BeforeStep<>))]

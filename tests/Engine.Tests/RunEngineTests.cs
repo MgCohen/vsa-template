@@ -10,15 +10,15 @@ using Steps;
 using Steps.Domain.Shared;
 using Versions;
 using Tests.Shared;
-using VSA.Contracts.Commands;
-using VSA.Kernel;
-using VsaEngine;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Kernel;
+using UmpireEngine;
 
 namespace Engine.Tests;
 
 public sealed class RunEngineTests {
     const string RulesSkipped =
-        "vsa-engine: VSA3004: CheckRules skipped: App is missing, because an earlier step failed.";
+        "umpire-engine: UMP3004: CheckRules skipped: App is missing, because an earlier step failed.";
     static readonly string Notes = Repo.Path("samples", "Notes");
 
     [Test]
@@ -56,16 +56,16 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task A_VSA_version_that_is_not_the_engine_version_gives_VSA3001_and_skips_the_load() {
+    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP3001_and_skips_the_load() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "VSA.Sdk": "0.0.1" } }""");
+            File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
 
             var result = await Run(root: root);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error VSA3001").And.Contains("global.json: VSA.Sdk 0.0.1"));
-            Assert.That(result.Lines, Has.One.Contains("VSA3004: LoadApp skipped: CheckedVersions is missing"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP3001").And.Contains("global.json: Umpire.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("UMP3004: LoadApp skipped: CheckedVersions is missing"));
         } finally {
             TempFolder.Delete(root);
         }
@@ -76,36 +76,36 @@ public sealed class RunEngineTests {
         var result = await Run(root: Path.Combine(Notes, "Features", "Missing"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error VSA3002"));
+        Assert.That(result.Lines, Has.One.Contains("error UMP3002"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_with_two_app_classes_gives_VSA3005_with_both_names() {
+    public async Task An_app_with_two_app_classes_gives_UMP3005_with_both_names() {
         var result = await Run(root: Repo.Path("tests", "Fixtures", "TwoApps"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error VSA3005: The app has more than one app class: "
+        Assert.That(result.Lines, Has.One.Contains("error UMP3005: The app has more than one app class: "
             + "TwoApps.App.Host.FirstApp, TwoApps.App.Host.SecondApp."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_class_with_no_empty_constructor_gives_VSA3006_with_its_name() {
+    public async Task An_app_class_with_no_empty_constructor_gives_UMP3006_with_its_name() {
         var result = await Run(root: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error VSA3006: The app class NoConstructorApp.App.Host.NamedApp "
+        Assert.That(result.Lines, Has.One.Contains("error UMP3006: The app class NoConstructorApp.App.Host.NamedApp "
             + "has no public constructor with no parameters"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_with_no_app_class_gives_VSA3003() {
+    public async Task An_app_with_no_app_class_gives_UMP3003() {
         var result = await Run(root: Repo.Path("tests", "Shared"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error VSA3003: The app has no app class."));
+        Assert.That(result.Lines, Has.One.Contains("error UMP3003: The app has no app class."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
@@ -114,7 +114,7 @@ public sealed class RunEngineTests {
         var result = await Run(bin: Path.Combine(Notes, "missing-bin"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.StartsWith("vsa-engine: error VSA3000: LoadApp could not run: "));
+        Assert.That(result.Lines, Has.One.StartsWith("umpire-engine: error UMP3000: LoadApp could not run: "));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 

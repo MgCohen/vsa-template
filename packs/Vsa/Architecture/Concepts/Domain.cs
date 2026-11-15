@@ -1,6 +1,4 @@
-using VSA.Architecture;
-
-namespace VSA.Architecture.Vsa;
+namespace Umpire.Vsa.Definition;
 
 public record Domain : Layer {
     public record Shared : Layer;

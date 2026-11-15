@@ -1,11 +1,11 @@
-namespace VSA.Composition;
+namespace Umpire.Vsa.Composition;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using VSA.Handlers.Commands;
-using VSA.Kernel;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Kernel;
 
 public sealed class ConsoleVsaHost : VsaHost {
     public override int Run(IHost app) {

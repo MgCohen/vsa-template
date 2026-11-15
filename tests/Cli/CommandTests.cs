@@ -1,7 +1,7 @@
 using Tests.Shared;
-using VSA.Cli;
-using VSA.Cli.Commands;
-using VSA.Cli.Commands.Bases;
+using Umpire.Cli;
+using Umpire.Cli.Commands;
+using Umpire.Cli.Commands.Bases;
 
 namespace Cli.Tests;
 
@@ -11,7 +11,7 @@ public sealed class CommandTests {
     [Test]
     public void EachCommandInheritsOneBaseAndIsInTheList() {
         var commands = typeof(ToolCommand).Assembly.GetTypes()
-            .Where(t => t.Namespace == "VSA.Cli.Commands" && t.Name.EndsWith("Command", StringComparison.Ordinal))
+            .Where(t => t.Namespace == "Umpire.Cli.Commands" && t.Name.EndsWith("Command", StringComparison.Ordinal))
             .ToList();
 
         Assert.That(commands, Is.Not.Empty);
@@ -31,33 +31,33 @@ public sealed class CommandTests {
         foreach (var command in CommandList.All) {
             Assert.That(usage, Does.Contain(command.Usage).And.Contain(command.Summary));
         }
-        Assert.That(usage, Does.Contain("vsa --version"));
+        Assert.That(usage, Does.Contain("umpire --version"));
     }
 
     [TestCase("add", "request", "X", "-m", "A", "-m", "B")]
     [TestCase("update", "--version", "1.0.0", "--version", "2.0.0")]
     public void AnOptionWithOneValueRejectsTwo(params string[] args) =>
-        Assert.That(() => CommandList.Run(args), Throws.TypeOf<VsaException>().With.Message.Contain("one time only"));
+        Assert.That(() => CommandList.Run(args), Throws.TypeOf<UmpireException>().With.Message.Contain("one time only"));
 
     [Test]
     public void ARequiredOptionIsChecked() =>
         Assert.That(() => RunInAnApp(["add", "command", "ChangeLimit"]),
-            Throws.TypeOf<VsaException>().With.Message.Contain("Give the module: vsa add command <Name> -m <Module>"));
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Give the module: umpire add command <Name> -m <Module>"));
 
     [Test]
     public void ACommandThatTakesANameStopsWithoutIt() =>
         Assert.That(() => CommandList.Run(["add", "module"]),
-            Throws.TypeOf<VsaException>().With.Message.Contain("Give the name: vsa add module <Name>"));
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Give the name: umpire add module <Name>"));
 
     [TestCase("add", "module", "Billing", "--force", "true")]
     [TestCase("doctor", "--version")]
     public void AnUnknownOptionStops(params string[] args) =>
-        Assert.That(() => CommandList.Run(args), Throws.TypeOf<VsaException>().With.Message.Contain("Unknown option"));
+        Assert.That(() => CommandList.Run(args), Throws.TypeOf<UmpireException>().With.Message.Contain("Unknown option"));
 
     [Test]
     public void AnUnknownCommandShowsTheUsage() =>
         Assert.That(() => CommandList.Run(["add", "thing", "X"]),
-            Throws.TypeOf<VsaException>().With.Message.Contain("Unknown command").And.Message.Contain("Usage:"));
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Unknown command").And.Message.Contain("Usage:"));
 
     [Test]
     public void ASourceCanBeGivenManyTimes() {
@@ -71,18 +71,18 @@ public sealed class CommandTests {
     [TestCase("add", "request", "bad")]
     [TestCase("add", "command", "bad", "-m", "Billing")]
     public void AnInvalidNameStopsBeforeTheAppRootAndTheOptions(params string[] args) =>
-        Assert.That(() => RunOutsideAnApp(args), Throws.TypeOf<VsaException>().With.Message.Contain("is not valid"));
+        Assert.That(() => RunOutsideAnApp(args), Throws.TypeOf<UmpireException>().With.Message.Contain("is not valid"));
 
     [Test]
     public void AValidNameOutsideAnAppStopsAtTheAppRoot() =>
         Assert.That(() => RunOutsideAnApp(["add", "request", "CreateInvoice"]),
-            Throws.TypeOf<VsaException>().With.Message.Contain("not in a VSA app"));
+            Throws.TypeOf<UmpireException>().With.Message.Contain("not in an Umpire app"));
 
     [TestCase("module", "module")]
     [TestCase("plugin", "plugin module")]
     public void AModuleWithTheAppNameStops(string kind, string noun) =>
         Assert.That(() => RunInAnApp(["add", kind, "Shop"], app: "Shop"),
-            Throws.TypeOf<VsaException>().With.Message.Contain($"The {noun} name Shop is the name of the app.")
+            Throws.TypeOf<UmpireException>().With.Message.Contain($"The {noun} name Shop is the name of the app.")
                 .And.Message.Contain("CS0234"));
 
     static int RunOutsideAnApp(string[] args) => RunInFolder(args, app: null);
@@ -94,8 +94,8 @@ public sealed class CommandTests {
         var current = Environment.CurrentDirectory;
         try {
             if (app is not null) {
-                File.WriteAllText(Path.Combine(folder, "global.json"), $$"""{ "msbuild-sdks": { "VSA.Sdk": "{{ToolVersion.Current}}" } }""");
-                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), "<Project Sdk=\"VSA.Sdk\" />");
+                File.WriteAllText(Path.Combine(folder, "global.json"), $$"""{ "msbuild-sdks": { "Umpire.Sdk": "{{ToolVersion.Current}}" } }""");
+                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), "<Project Sdk=\"Umpire.Sdk\" />");
             }
             Environment.CurrentDirectory = folder;
             return CommandList.Run(args);

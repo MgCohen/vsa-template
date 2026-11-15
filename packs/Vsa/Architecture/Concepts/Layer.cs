@@ -1,5 +1,5 @@
-using VSA.Architecture;
+namespace Umpire.Vsa.Definition;
 
-namespace VSA.Architecture.Vsa;
+using Umpire.Architecture;
 
 public abstract record Layer : Concept;

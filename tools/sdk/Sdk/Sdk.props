@@ -1,15 +1,15 @@
 <Project>
-  <!-- VSA.Sdk: the .NET SDK, the VSA framework packages, the analyzers and the rule values. A project is one line: <Project Sdk="VSA.Sdk" />. -->
+  <!-- Umpire.Sdk: the .NET SDK, the Umpire packages, the analyzers and the rule values. A project is one line: <Project Sdk="Umpire.Sdk" />. -->
 
-  <!-- A web app uses <Project Sdk="Microsoft.NET.Sdk.Web"> with <Sdk Name="VSA.Sdk" />. That SDK imports the .NET SDK, so VSA.Sdk does not. -->
+  <!-- A web app uses <Project Sdk="Microsoft.NET.Sdk.Web"> with <Sdk Name="Umpire.Sdk" />. That SDK imports the .NET SDK, so Umpire.Sdk does not. -->
   <PropertyGroup Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
-    <_VsaImportsNetSdk>true</_VsaImportsNetSdk>
+    <_UmpireImportsNetSdk>true</_UmpireImportsNetSdk>
   </PropertyGroup>
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="'$(_VsaImportsNetSdk)' == 'true'" />
-  <Import Project="$(MSBuildThisFileDirectory)VSA.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)VSA.Version.props')" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="'$(_UmpireImportsNetSdk)' == 'true'" />
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)Umpire.Version.props')" />
 
   <PropertyGroup>
-    <UsingVsaSdk>true</UsingVsaSdk>
+    <UsingUmpireSdk>true</UsingUmpireSdk>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -17,10 +17,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from VSA.Analyzers. -->
+  <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from Umpire.Vsa.Analyzers. -->
   <PropertyGroup>
     <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
   </PropertyGroup>
-  <!-- In the VSA repository, the root Directory.Build.props imports the rules first. -->
-  <Import Project="$(MSBuildThisFileDirectory)VSA.Rules.props" Condition="'$(_VsaRulesImported)' != 'true'" />
+  <!-- In the Umpire repository, the root Directory.Build.props imports the rules first. -->
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Rules.props" Condition="'$(_UmpireRulesImported)' != 'true'" />
 </Project>

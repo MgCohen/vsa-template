@@ -1,7 +1,7 @@
-using VSA.Cli.Commands.Bases;
-using VSA.Cli.Scaffolding;
+using Umpire.Cli.Commands.Bases;
+using Umpire.Cli.Scaffolding;
 
-namespace VSA.Cli.Commands;
+namespace Umpire.Cli.Commands;
 
 sealed class NewAppCommand : ToolCommand {
     static readonly CommandOption Source = new(["--source"], "feed", Many: true);
@@ -9,7 +9,7 @@ sealed class NewAppCommand : ToolCommand {
     public override IReadOnlyList<string> Words => ["new", "app"];
 
     public override string Summary =>
-        "Makes a new app in the folder <Name>. Each --source replaces the GitHub feed of the VSA packages.";
+        "Makes a new app in the folder <Name>. Each --source replaces the GitHub feed of the Umpire packages.";
 
     public override bool TakesName => true;
 
@@ -21,12 +21,12 @@ sealed class NewAppCommand : ToolCommand {
         var root = Path.GetFullPath(name);
         var version = ToolVersion.Current;
         var files = Files(name, input.All(Source), version);
-        Console.WriteLine($"Making the app {name} (VSA {version}):");
+        Console.WriteLine($"Making the app {name} (Umpire {version}):");
         FileWriter.WriteAllOrNone(root, files);
 
         var (code, output) = Dotnet.Run(root, "tool", "restore");
         if (code != 0) {
-            throw new VsaException(
+            throw new UmpireException(
                 $"The app is written, but 'dotnet tool restore' failed. Fix the error, then run it in {name}."
                 + $"{Environment.NewLine}{output}");
         }
@@ -34,7 +34,7 @@ sealed class NewAppCommand : ToolCommand {
 
             Next:
               cd {name}
-              dotnet vsa add module <Name>
+              dotnet umpire add module <Name>
             """);
         return 0;
     }

@@ -57,7 +57,7 @@ sealed class UnityProjectFolder : IDisposable {
 
     static IEnumerable<MetadataReference> References() =>
         ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
-            .Append(typeof(VSA.Kernel.Module).Assembly.Location)
+            .Append(typeof(Umpire.Kernel.Module).Assembly.Location)
             .Append(typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Select(path => MetadataReference.CreateFromFile(path));

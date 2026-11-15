@@ -11,7 +11,7 @@ The VSA layers, root folders, markers and installers go into one architecture de
 | Place | Holds | Language |
 |---|---|---|
 | `framework/Testing/Core/Layers.cs` | The layer map | C# |
-| `framework/Sdk/Sdk/VSA.Layers.targets` | The same map as references, the root folders | MSBuild |
+| `framework/Sdk/Sdk/Umpire.Layers.targets` | The same map as references, the root folders | MSBuild |
 | `framework/Sdk/Tasks/SliceRouter.cs` | The marker names and their layers | C# (no semantic model) |
 | `VsaComposer.InstallLayers` | The list of installers | C# |
 | `framework/Analyzers/` | Marker names in the module rules | C# |
@@ -23,14 +23,14 @@ The VSA layers, root folders, markers and installers go into one architecture de
 
 ```mermaid
 flowchart LR
-    D[vsa.architecture.json] --> S[Sdk task: references]
+    D[umpire.architecture.json] --> S[Sdk task: references]
     D --> R[SliceRouter: markers]
     D --> T[Testing.Core: layer map]
     D --> N[Analyzers: AdditionalFiles]
     D --> C[Composer: installer list]
 ```
 
-One data file in the VSA.Sdk package gives the definition. An app can replace it with `VsaArchitecture` in `Directory.Build.props`.
+One data file in the Umpire.Sdk package gives the definition. An app can replace it with `VsaArchitecture` in `Directory.Build.props`.
 
 ```json
 {
@@ -45,21 +45,21 @@ One data file in the VSA.Sdk package gives the definition. An app can replace it
       "references": [ { "layer": "Domain.Shared", "edge": "moduleOnly" } ]
     }
   },
-  "installers": [ "VSA.Handlers.Events.EventHandlerInstaller", "VSA.Handlers.Commands.CommandHandlerInstaller" ]
+  "installers": [ "Umpire.Vsa.Handlers.Events.EventHandlerInstaller", "Umpire.Vsa.Handlers.Commands.CommandHandlerInstaller" ]
 }
 ```
 
 | Package | Part |
 |---|---|
-| `VSA.Sdk` | Engine: project build, references from the definition, router |
+| `Umpire.Sdk` | Engine: project build, references from the definition, router |
 | `VSA.Testing.Core` | Engine: the layer map loads the definition |
-| `VSA.Composition` | Engine: the composer runs the installers of the definition |
-| `VSA.Layers.targets`, `Layers.cs` | VSA definition: `vsa.architecture.json` |
+| `Umpire.Vsa.Composition` | Engine: the composer runs the installers of the definition |
+| `Umpire.Layers.targets`, `Layers.cs` | VSA definition: `umpire.architecture.json` |
 
 ## Steps of the work
 
 1. Write the definition file. Make `Layers.cs` load it, and make `SdkLayerMapTests` compare the targets with it.
-2. Make an Sdk task write the references from the definition. Delete the references that `VSA.Layers.targets` writes by hand.
+2. Make an Sdk task write the references from the definition. Delete the references that `Umpire.Layers.targets` writes by hand.
 3. Make `SliceRouter` read the markers and the folders from the definition.
 4. Make the composer read the installer list. A plugin module can then add an installer.
 5. Give the analyzers the file as `AdditionalFiles`, and read the marker names from it.
@@ -73,5 +73,5 @@ Each step keeps the build result the same. `tests/Consumer.Tests` and `BuildRule
 
 ## Open questions
 
-- Do the engine and the definition get different package names, for example `Arch.Sdk` and `VSA.Sdk`?
-- Do the analyzer rules go into the definition, or stay in VSA.Analyzers with the marker names as options?
+- Do the engine and the definition get different package names, for example `Arch.Sdk` and `Umpire.Sdk`?
+- Do the analyzer rules go into the definition, or stay in Umpire.Vsa.Analyzers with the marker names as options?

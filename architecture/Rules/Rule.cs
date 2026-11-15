@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public sealed class Rule : Chain<Rule> {
     internal Permission Permission;

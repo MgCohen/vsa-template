@@ -1,4 +1,4 @@
-namespace VSA.Architecture.Versions;
+namespace Umpire.Engine.Versions;
 
 public sealed class VersionFile(string file, IReadOnlyList<VersionSlot> slots, Action save) {
     public string File => file;

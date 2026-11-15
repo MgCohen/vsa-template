@@ -1,4 +1,4 @@
-namespace VSA.Analyzers.Markers;
+namespace Umpire.Markers;
 
 public sealed class PreserveAttribute : Attribute
 {

@@ -2,7 +2,7 @@ namespace Notes.Features.Notebook.Infrastructure;
 
 using System.Collections.Concurrent;
 using Notes.Features.Notebook.Domain;
-using VSA.Infrastructure;
+using Umpire.Vsa.Infrastructure;
 
 // The saved notes of the app. The sample has no database, so the notes stay in memory while the app runs.
 public sealed class NoteStore {

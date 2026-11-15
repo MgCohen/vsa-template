@@ -5,12 +5,12 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-VSA1001 | VSA | Error | SealedRecordRule
-VSA1002 | VSA | Error | EventHandlerRequestRule
-VSA1003 | VSA | Error | ContractTypeRule
-VSA1004 | VSA | Error | PresenterPublishRule
-VSA1005 | VSA | Error | ImmutableSharedTypeRule
-VSA1006 | VSA | Error | DataOnlySharedTypeRule
-VSA1007 | VSA | Error | SharedTypeBaseRule
-VSA1014 | VSA | Error | PluginRootRule
-VSA1015 | VSA | Error | HookNameRule
+UMP1001 | Umpire | Error | SealedRecordRule
+UMP1002 | Umpire | Error | EventHandlerRequestRule
+UMP1003 | Umpire | Error | ContractTypeRule
+UMP1004 | Umpire | Error | PresenterPublishRule
+UMP1005 | Umpire | Error | ImmutableSharedTypeRule
+UMP1006 | Umpire | Error | DataOnlySharedTypeRule
+UMP1007 | Umpire | Error | SharedTypeBaseRule
+UMP1014 | Umpire | Error | PluginRootRule
+UMP1015 | Umpire | Error | HookNameRule

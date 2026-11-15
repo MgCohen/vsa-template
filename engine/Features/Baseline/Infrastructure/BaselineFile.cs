@@ -3,7 +3,7 @@ using Baseline.Domain;
 namespace Baseline.Infrastructure;
 
 public static class BaselineFile {
-    public const string Name = "vsa-baseline.txt";
+    public const string Name = "umpire-baseline.txt";
 
     public static string PathIn(string appRoot) => Path.Combine(appRoot, Name);
 

@@ -1,7 +1,7 @@
 using Versions.Domain.Shared;
-using VSA.Architecture.Versions;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
+using Umpire.Engine.Versions;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 namespace Versions.Slices.CheckVersions;
 

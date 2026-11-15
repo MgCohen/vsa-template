@@ -1,5 +1,5 @@
-using VSA.Architecture;
-using VSA.Architecture.Vsa;
+using Umpire.Architecture;
+using Umpire.Vsa.Definition;
 
 namespace EngineCore.Tests;
 

@@ -1,7 +1,7 @@
 using Greet;
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa.Composition;
+using Umpire.Kernel;
 
 namespace Composition.Tests;
 

@@ -1,4 +1,4 @@
-namespace VSA.Architecture;
+namespace Umpire.Architecture;
 
 public interface IPartChain {
     IPartChain Add<T>() where T : Concept, new();

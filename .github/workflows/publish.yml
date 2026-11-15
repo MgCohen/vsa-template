@@ -33,7 +33,7 @@ jobs:
       - name: Test
         run: |
           dotnet run solution.cs
-          dotnet test VSA.slnx -c Release
+          dotnet test Umpire.slnx -c Release
 
       - name: Get the version from the tag
         if: github.ref_type == 'tag'

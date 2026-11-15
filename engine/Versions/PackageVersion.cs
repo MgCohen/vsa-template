@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 
-namespace VSA.Architecture.Versions;
+namespace Umpire.Engine.Versions;
 
 public static class PackageVersion {
     public static string Of(Assembly assembly) =>

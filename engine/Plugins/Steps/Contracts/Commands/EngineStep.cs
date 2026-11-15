@@ -1,5 +1,5 @@
 using Steps.Domain.Shared;
-using VSA.Contracts.Commands;
+using Umpire.Vsa.Contracts.Commands;
 
 namespace Steps.Contracts.Commands;
 

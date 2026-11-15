@@ -1,7 +1,7 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
-using VSA.Analyzers.Markers;
-using VSA.Architecture;
+using Umpire.Markers;
+using Umpire.Architecture;
 
 [RequireDerived]
 public abstract class Pack {

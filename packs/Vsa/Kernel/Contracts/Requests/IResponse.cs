@@ -1,3 +1,3 @@
-namespace VSA.Contracts.Requests;
+namespace Umpire.Vsa.Contracts.Requests;
 
 public interface IResponse;

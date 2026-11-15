@@ -1,5 +1,5 @@
 using Signals.Slices.Ring;
-using VSA.Presenters;
+using Umpire.Vsa.Presenters;
 
 namespace Signals.Presenters;
 

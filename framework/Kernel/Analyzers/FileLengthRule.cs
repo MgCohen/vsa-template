@@ -1,16 +1,16 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
+namespace Umpire.Vsa.Analyzers;
 
-// VSA1010: a file has at most max lines. The diagnostic marks the first line after the limit.
-// Option: vsa.VSA1010.max, in VSA.Rules.globalconfig.
+// UMP1010: a file has at most max lines. The diagnostic marks the first line after the limit.
+// Option: umpire.UMP1010.max, in Umpire.Rules.globalconfig.
 public sealed class FileLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1010",
+        "UMP1010",
         "A file has at most the maximum number of lines",
         "The file has {0} lines, and the limit is {1}. Move a type or a part of a type to a new file.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 

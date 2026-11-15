@@ -1,4 +1,6 @@
-namespace VSA.Architecture.Vsa;
+namespace Umpire.Vsa.Definition;
+
+using Umpire.Architecture;
 
 static class UnityLayout {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
