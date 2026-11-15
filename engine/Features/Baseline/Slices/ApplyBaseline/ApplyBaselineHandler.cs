@@ -1,17 +1,17 @@
+namespace Baseline.Slices.ApplyBaseline;
+
 using Baseline.Domain;
 using Baseline.Infrastructure;
 using Steps.Domain.Shared;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
-
-namespace Baseline.Slices.ApplyBaseline;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBaselineResult> {
-    public const string StaleEntry = "VSA3005";
-    public const string UnreadableEntry = "VSA3006";
-    public const string NotUpdated = "VSA3007";
-    const string EngineCodePrefix = "VSA3";
-    const string UpdateSwitch = "build with -p:VsaUpdateBaseline=true";
+    public const string StaleEntry = "UMP3005";
+    public const string UnreadableEntry = "UMP3006";
+    public const string NotUpdated = "UMP3007";
+    const string EngineCodePrefix = "UMP3";
+    const string UpdateSwitch = "build with -p:UmpireUpdateBaseline=true";
 
     public override Task<Result<ApplyBaselineResult>> HandleAsync(Envelope<ApplyBaselineCommand> envelope) =>
         Task.FromResult(Apply(envelope.Message));
@@ -60,7 +60,7 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
         NotUpdated,
         FindingSeverity.Warning,
         $"{path} was not updated, because a step failed or was skipped, so the run has not found each error. "
-            + "Fix the engine error, then build with -p:VsaUpdateBaseline=true again.");
+            + "Fix the engine error, then build with -p:UmpireUpdateBaseline=true again.");
 
     static bool Consume(Dictionary<BaselineEntry, Queue<int>> open, BaselineEntry entry) =>
         open.TryGetValue(entry, out var numbers) && numbers.TryDequeue(out _);

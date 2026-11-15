@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="umpire" value="https://nuget.pkg.github.com/MgCohen/index.json" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+  <packageSourceCredentials>
+    <umpire>
+      <add key="Username" value="umpire" />
+      <add key="ClearTextPassword" value="%GITHUB_TOKEN%" />
+    </umpire>
+  </packageSourceCredentials>
+</configuration>

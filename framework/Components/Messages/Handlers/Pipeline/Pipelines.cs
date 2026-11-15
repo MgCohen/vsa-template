@@ -1,7 +1,7 @@
-using System.Collections.Concurrent;
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using System.Collections.Concurrent;
+using Umpire.Messages.Contracts;
 
 public sealed class Pipelines {
     readonly IServiceProvider root;

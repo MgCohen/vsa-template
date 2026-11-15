@@ -1,7 +1,7 @@
-using VSA.Contracts;
-using VSA.Handlers.Requests;
-
 namespace Answers.Slices.Answer;
+
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Requests;
 
 sealed class AnswerHandler : RequestHandler<AnswerRequest, AnswerResponse> {
     public override Task<Result<AnswerResponse>> HandleAsync(Envelope<AnswerRequest> envelope) =>

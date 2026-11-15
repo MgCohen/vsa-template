@@ -1,10 +1,10 @@
 namespace Notes.Features.Notebook.Slices.DeleteNote;
 
 using Notes.Features.Notebook.Domain;
-using VSA.Contracts;
-using VSA.Contracts.Events;
-using VSA.Handlers.Requests;
-using VSA.Infrastructure;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Handlers.Requests;
+using Umpire.Vsa.Infrastructure;
 
 sealed class DeleteNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEventPublisher events)
     : RequestHandler<DeleteNoteRequest, DeleteNoteResponse> {

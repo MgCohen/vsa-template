@@ -1,13 +1,13 @@
-using System.Reflection;
-using VSA.Analyzers.Markers;
-using VSA.Handlers;
-using VSA.Handlers.Commands;
-using VSA.Handlers.Events;
-using VSA.Handlers.Requests;
-using VSA.Presenters;
-using VSA.Kernel;
-
 namespace Framework.Tests.Stripping;
+
+using System.Reflection;
+using Umpire.Markers;
+using Umpire.Messages.Handlers;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Events;
+using Umpire.Vsa.Handlers.Requests;
+using Umpire.Vsa.Presenters;
+using Umpire.Kernel;
 
 public sealed class StrippingMarkerTests {
     [TestCase(typeof(PreserveAttribute), "PreserveAttribute", AttributeTargets.All)]
@@ -31,10 +31,10 @@ public sealed class StrippingMarkerTests {
     [TestCase(typeof(BeforeStep<>))]
     [TestCase(typeof(AfterStep<>))]
     [TestCase(typeof(Presenter))]
-    [TestCase(typeof(VSA.Kernel.Module))]
+    [TestCase(typeof(Umpire.Kernel.Module))]
     [TestCase(typeof(App))]
     [TestCase(typeof(Pack))]
-    [TestCase(typeof(VSA.Architecture.Architecture))]
+    [TestCase(typeof(Umpire.Architecture.Architecture))]
     [TestCase(typeof(AppHost))]
     public void A_base_class_that_the_scan_reads_keeps_its_derived_classes(Type scannedBase) {
         Assert.That(scannedBase.IsDefined(typeof(RequireDerivedAttribute), inherit: false), Is.True);
@@ -64,7 +64,7 @@ public sealed class StrippingMarkerTests {
 
     [Test]
     public void The_envelope_create_method_that_the_pipeline_closes_by_reflection_is_kept() {
-        var route = typeof(IRunner).Assembly.GetType("VSA.Handlers.MessageRoute", throwOnError: true)!;
+        var route = typeof(IRunner).Assembly.GetType("Umpire.Messages.Handlers.MessageRoute", throwOnError: true)!;
         var create = route.GetMethod("CreateEnvelope", BindingFlags.NonPublic | BindingFlags.Static)!;
 
         Assert.That(create.IsDefined(typeof(PreserveAttribute), inherit: false), Is.True);

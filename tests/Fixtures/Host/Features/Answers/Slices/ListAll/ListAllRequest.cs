@@ -1,6 +1,6 @@
-using VSA.Contracts.Requests;
-
 namespace Answers.Slices.ListAll;
+
+using Umpire.Vsa.Contracts.Requests;
 
 public sealed record ListAllRequest : IRequest<ListAllResponse> {
     public static HttpMethod Method => HttpMethod.Get;

@@ -1,7 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
-using VSA.Kernel;
-
 namespace Twin;
+
+using Microsoft.Extensions.DependencyInjection;
+using Umpire.Kernel;
 
 // Two Module classes in one module namespace. AnchorRoot.CreateModule must give an error for it.
 public sealed class TwinModule : Module {

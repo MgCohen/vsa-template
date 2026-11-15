@@ -1,8 +1,8 @@
-using Signals.Slices.Ring;
-using VSA.Contracts;
-using VSA.Handlers.Events;
-
 namespace Signals.Slices.Chime;
+
+using Signals.Slices.Ring;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Events;
 
 sealed class ChimeHook(RingLog log) : AfterEventHook<Rang> {
     public override Task AfterAsync(IEnvelope<Rang> envelope) {

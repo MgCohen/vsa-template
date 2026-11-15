@@ -1,8 +1,8 @@
-using Signals.Slices.Ring;
-using VSA.Contracts;
-using VSA.Handlers.Events;
-
 namespace Signals.Slices.Silence;
+
+using Signals.Slices.Ring;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Events;
 
 sealed class SilenceHook : BeforeEventHook<Rang> {
     public const string Code = "signals.silent";

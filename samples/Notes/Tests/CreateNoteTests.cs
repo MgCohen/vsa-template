@@ -5,8 +5,8 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Notes.Features.Notebook.Domain;
 using Notes.Features.Notebook.Slices.CreateNote;
-using VSA.Contracts.Events;
-using VSA.Testing.Unit;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Testing.Unit;
 
 // A unit test of one slice: the request goes to its handler, with the default fakes.
 public sealed class CreateNoteTests : VsaUnitTest {

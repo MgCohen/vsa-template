@@ -1,4 +1,4 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 public interface IKeySource {
     IEnumerable<Type> KeysFor(Type genericParameter, IReadOnlyList<Type> candidates);

@@ -1,6 +1,6 @@
-using VSA.Kernel;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using Umpire.Kernel;
 
 sealed class PipelineCatalog {
     internal PipelineCatalog(AppTypes? types) {
@@ -16,7 +16,7 @@ sealed class PipelineCatalog {
         Types is null
             ? throw new InvalidOperationException(
                 $"Handlers<{handlerBase.Name}>() needs the module types, and these services have none. "
-                + "Build the pipeline from the services of a VSA app, or list the handlers with Handlers(typeof(...)).")
+                + "Build the pipeline from the services of an Umpire app, or list the handlers with Handlers(typeof(...)).")
             : Types.Implementations(handlerBase).Select(h => h.Implementation);
 
     internal IReadOnlyList<StageType> HooksOf(Type hookBase) => Scan(hookBase);

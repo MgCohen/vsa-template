@@ -2,7 +2,7 @@ using Tests.Shared;
 
 namespace Rules.Tests;
 
-// The formatting rules in a real build from the packed VSA.Sdk: VSA.Rules.props turns them on, and they are warnings.
+// The formatting rules in a real build from the packed Umpire.Sdk: Umpire.Rules.props turns them on, and they are warnings.
 // The built fixture tests/Fixtures/Built/Formatting has one file in Infrastructure/ for each rule,
 // and a file in Infrastructure/Migrations/ that breaks the rules, but is generated code.
 [NonParallelizable]
@@ -15,15 +15,15 @@ public sealed class FormattingBuildTests {
         build = workspace.Dotnet("build", "Features/Styled/Styled.csproj", "-nodeReuse:false");
     }
 
-    // TreatWarningsAsErrors is true in VSA.Sdk, but the formatting rules are in WarningsNotAsErrors.
+    // TreatWarningsAsErrors is true in Umpire.Sdk, but the formatting rules are in WarningsNotAsErrors.
     [Test]
     public void Build_passes() => Assert.That(build.Succeeded, Is.True, build.Output);
 
-    [TestCase("VSA1008", "LongLine.cs")]
-    [TestCase("VSA1009", "LongMethod.cs")]
-    [TestCase("VSA1010", "LongFile.cs")]
-    [TestCase("VSA1011", "TwoTypes.cs")]
-    [TestCase("VSA1012", "MemberOrder.cs")]
+    [TestCase("UMP1008", "LongLine.cs")]
+    [TestCase("UMP1009", "LongMethod.cs")]
+    [TestCase("UMP1010", "LongFile.cs")]
+    [TestCase("UMP1011", "TwoTypes.cs")]
+    [TestCase("UMP1012", "MemberOrder.cs")]
     [TestCase("IDE0055", "BuiltInRules.cs")]
     [TestCase("IDE0040", "BuiltInRules.cs")]
     [TestCase("IDE2000", "BuiltInRules.cs")]
@@ -78,7 +78,7 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Rules_give_no_errors() => Assert.That(Lines(": error "), Is.Empty);
 
-    // VSA.Sdk marks the files in Infrastructure/Migrations/ as generated code, so no rule checks them.
+    // Umpire.Sdk marks the files in Infrastructure/Migrations/ as generated code, so no rule checks them.
     [Test]
     public void Migrations_give_no_warnings() =>
         Assert.That(Lines(": warning ").Where(line => line.Contains("Migrations", StringComparison.Ordinal)), Is.Empty);

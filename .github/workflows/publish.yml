@@ -33,7 +33,7 @@ jobs:
       - name: Test
         run: |
           dotnet run solution.cs
-          dotnet test VSA.slnx -c Release
+          dotnet test Umpire.slnx -c Release
 
       - name: Get the version from the tag
         if: github.ref_type == 'tag'
@@ -55,13 +55,13 @@ jobs:
           git push origin "v$next"
           echo "VERSION=$next" >> "$GITHUB_ENV"
 
-      # The same project list as tests/Shared/LocalFeed.cs: each project under framework/.
+      # The same project list as tests/Shared/LocalFeed.cs (PackRoots): each project under architecture/, framework/, packs/, engine/ and tools/.
       # The projects that do not ship set IsPackable to false.
       - name: Pack
         run: |
           {
             echo '<Solution>'
-            find framework -name '*.csproj' | sort | sed 's|.*|  <Project Path="&" />|'
+            find architecture framework packs engine tools -name '*.csproj' -not -path '*/bin/*' -not -path '*/obj/*' | sort | sed 's|.*|  <Project Path="&" />|'
             echo '</Solution>'
           } > pack.slnx
           dotnet pack pack.slnx -c Release -o feed -p:Version="$VERSION"

@@ -1,3 +1,3 @@
-using VSA.Analyzers.Markers;
+using Umpire.Markers;
 
 [assembly: TypeArgument(typeof(int))]

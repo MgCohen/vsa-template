@@ -1,10 +1,10 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using VSA.Analyzers.Markers;
+using Umpire.Markers;
 
 [RequireDerived]
 public abstract class AppHost {

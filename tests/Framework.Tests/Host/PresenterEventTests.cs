@@ -1,13 +1,13 @@
+namespace Framework.Tests.Host;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
-using VSA.Contracts.Events;
-using VSA.Handlers.Events;
-using VSA.Presenters;
-
-namespace Framework.Tests.Host;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Handlers.Events;
+using Umpire.Vsa.Presenters;
 
 // The web test app with the Signals fixture: an event, its handler, a helper class next to the handler, and a presenter of the event.
 public sealed class PresenterEventTests {

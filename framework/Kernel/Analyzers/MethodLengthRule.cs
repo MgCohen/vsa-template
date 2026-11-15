@@ -1,19 +1,19 @@
+namespace Umpire.Vsa.Analyzers;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
-
-// VSA1009: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
+// UMP1009: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
 // The rule checks methods, constructors, finalizers, operators, accessors and local functions.
-// Option: vsa.VSA1009.max, in VSA.Rules.globalconfig.
+// Option: umpire.UMP1009.max, in Umpire.Rules.globalconfig.
 public sealed class MethodLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1009",
+        "UMP1009",
         "A method has at most the maximum number of lines",
         "{0} has {1} lines, and the limit is {2}. Move a part of it to a new method.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 

@@ -1,8 +1,8 @@
-using ArchUnitNET.Loader;
-using VSA.Architecture;
-using VSA.Architecture.Engine;
-
 namespace EngineCore.Tests;
+
+using ArchUnitNET.Loader;
+using Umpire.Architecture;
+using BuiltApp.Infrastructure;
 
 public record OpenTarget : Concept;
 

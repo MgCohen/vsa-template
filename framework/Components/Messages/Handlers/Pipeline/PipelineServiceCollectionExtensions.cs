@@ -1,8 +1,8 @@
+namespace Umpire.Messages.Handlers;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using VSA.Kernel;
-
-namespace VSA.Handlers;
+using Umpire.Kernel;
 
 public static class PipelineServiceCollectionExtensions {
     public static IServiceCollection AddPipelines(this IServiceCollection services, AppTypes types) {

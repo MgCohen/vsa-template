@@ -1,28 +1,27 @@
 # Architecture engine
 
-The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. The core library (`VSA.Architecture.Engine`) loads the app, binds each type to a part, decides each use and gives each problem as a record. The engine app (`engine/`) runs the core after each build of the host.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `architecture/Resolution/` gives the answers on plain facts: the part of each type (`Match`) and the decision for each use (`Decide`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
 
 ```mermaid
 flowchart LR
-    L[ArchitectureLoader] --> A[LoadedApp]
-    A --> B[Binder]
-    D[Definition: VSA.Architecture] --> B
+    L["AppReader (BuiltApp plugin)"] --> A["TypeFacts"]
+    A --> B["Match (Resolution)"]
+    D[Definition: Umpire.Architecture] --> B
     B --> S[Bindings]
-    S --> C[RuleChecks + Decide]
-    C --> F["RuleFinding (code, severity, file, line, column, text)"]
+    S --> C["RuleChecks + Decide"]
+    C --> F["Finding (code, severity, message, file, line)"]
 ```
 
 ## Projects
 
 | Project | Path | Contains |
 |---|---|---|
-| `VSA.Architecture` | `framework/Engine/Definition/` | The definition API. No ArchUnitNET |
-| `VSA.Architecture.Engine` | `framework/Engine/Core/` | The core: load, bind, decide, check |
-| `VSA.Architecture.Vsa` | `framework/Architectures/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
-| `VSA.Architecture.Versions` | `framework/Engine/Versions/` | The version check (`VSA3001`). The engine app and the `vsa` tool bundle it |
-| Engine app | `engine/` | The runner: Versions, Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `VSA.Architecture.Build` |
+| `Umpire.Architecture` | `architecture/` | The definition API and `Resolution/`. No ArchUnitNET |
+| `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
+| `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP3001`). The engine app and the `umpire` tool bundle it |
+| Engine app | `engine/` | The runner: Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
-The runtime of an app references `VSA.Architecture` through `VSA.Kernel` (`Pack.Architecture`), and VSA.Sdk gives each project `VSA.Architecture.Vsa`. So `VSA.Architecture` and `VSA.Architecture.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -30,7 +29,7 @@ A concept is a record that inherits `Concept`. A definition is a class that inhe
 
 ```csharp
 public record Feature : Layer { public override string GroupFolder => "Features"; }
-public record Kernel : External { public override string Assembly => "VSA"; }
+public record Kernel : External { public override string Assembly => "Umpire"; }
 
 public class VsaArchitecture : Architecture {
     protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
@@ -38,7 +37,7 @@ public class VsaArchitecture : Architecture {
     protected override void Define(Root root) {
         root.Add<Framework>().Add<Kernel>();
         var feature = root.AddGroup<Feature>();
-        feature.Add<Module>().OfType<VSA.Kernel.Module>();
+        feature.Add<Module>().OfType<Umpire.Kernel.Module>();
         feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
     }
 
@@ -94,7 +93,7 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 ## External parts
 
-An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `VSA.dll` and each `VSA.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `VSA.Contracts.Requests`. The types of an external DLL are rule targets: a rule can deny them.
+An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `Umpire.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`: `VsaArchitecture` gives `Contracts` the DLL `Umpire.Messages.Contracts`, and `Contracts.Requests` the DLL `Umpire.Vsa.Contracts.Requests`. The longest matching DLL name wins. The types of an external DLL are rule targets: a rule can deny them.
 
 The definition stops at these shapes. The first four give one error, because a DLL name has no group segment, and the child of an external gets its DLL name from its parent:
 
@@ -139,7 +138,7 @@ The framework can require a public exposure, so the check ignores two exposures:
 | A base type or an interface of an `External` part, with its generic arguments | `: Presenter(bus), IPresenterEvent<Rang>` |
 | A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task OnEventAsync(Rang e)` |
 
-An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `VSA2003` if the rule limits `Note`.
+An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `UMP2003` if the rule limits `Note`.
 
 The first access that is set wins:
 
@@ -155,7 +154,7 @@ The first access that is set wins:
 | Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
 | Source file only in `obj/` or `bin/` | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
-| Source file in no part folder | None: `VSA2102` |
+| Source file in no part folder | None: `UMP2102` |
 | Source file out of the definition root | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
@@ -184,42 +183,42 @@ public sealed class CardsArchitecture : VsaArchitecture {
 public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 ```
 
-`ArchitectureLoader` also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
+`AppReader` (`engine/Plugins/BuiltApp/Infrastructure`) also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
 
 | Step | Unity project |
 |---|---|
 | App DLLs | Also `Library/ScriptAssemblies/*.dll` |
-| No `Library/ScriptAssemblies/` | The warning `VSA2103` |
+| No `Library/ScriptAssemblies/` | The warning `UMP2103` |
 | A DLL name in the host output too | The engine loads the host output DLL only |
 | A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
 | Source file under `Library/` | Not app code (package cache, generated types) |
 
 ## The four checks
 
-`RuleChecks.Of(type)` gives the findings of one type. `ArchitectureMap.Findings()` gives the findings of all app types, and the warnings of the loader.
+`RuleChecks.Of(type)` gives the findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, and the warnings of the loader.
 
 | ID | Severity | Problem |
 |---|---|---|
-| `VSA2001` | Error | A type uses a part that the rules deny |
-| `VSA2003` | Error | A type exposes a part with more access than its rule allows |
-| `VSA2101` | Error | A type is not assignable to the `OfType` of its part |
-| `VSA2102` | Error | A type is in a folder that the definition does not have |
-| `VSA2103` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
+| `UMP2001` | Error | A type uses a part that the rules deny |
+| `UMP2003` | Error | A type exposes a part with more access than its rule allows |
+| `UMP2101` | Error | A type is not assignable to the `OfType` of its part |
+| `UMP2102` | Error | A type is in a folder that the definition does not have |
+| `UMP2103` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
 
-Each finding is a `RuleFinding(Code, Severity, File, Line, Column, Text)`. `File` is the full path. The engine app writes one line for each finding:
+Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
 
 ```text
-C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error VSA2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
+C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
 ```
 
 ## The checks of an app
 
-The build hook package `VSA.Architecture.Build` on the host project runs the engine after each build. A test project does not check the architecture. See "The rule engine" in `AGENTS.md`.
+The build hook package `Umpire.Engine.Build` on the host project runs the engine after each build. A test project does not check the architecture. See "The rule engine" in `AGENTS.md`.
 
 | Step | Source |
 |---|---|
-| App root | `VsaAppRoot`, else the nearest `global.json` |
-| Versions | Each VSA version slot of the app root and of the host output (see "One version") |
+| App root | `UmpireAppRoot`, else the nearest `global.json` |
+| Versions | Each Umpire version slot of the app root and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine errors" |
@@ -229,34 +228,34 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 
 | ID | Problem |
 |---|---|
-| `VSA3000` | A step throws an exception. The run continues |
-| `VSA3001` | A VSA version is not the engine version (see "One version") |
-| `VSA3002` | No DLL of the host output has source files under the app root |
-| `VSA3003` | The app has no app class |
-| `VSA3004` | A step is skipped, because an earlier step failed |
-| `VSA3005` | The app has more than one most derived app class |
-| `VSA3006` | An app class has no public constructor with no parameters |
+| `UMP3000` | A step throws an exception. The run continues |
+| `UMP3001` | An Umpire version is not the engine version (see "One version") |
+| `UMP3002` | No DLL of the host output has source files under the app root |
+| `UMP3003` | The app has no app class |
+| `UMP3004` | A step is skipped, because an earlier step failed |
+| `UMP3005` | The app has more than one most derived app class |
+| `UMP3006` | An app class has no public constructor with no parameters |
 
 ## One version
 
-The engine, VSA.Sdk, the `vsa` tool and the `VSA.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `VSA3001` error with each different slot, and the engine skips the load and the rule checks (`VSA3004`). `vsa doctor` runs the same check (`VersionCheck` of `VSA.Architecture.Versions`) with the version of the tool, without the host output.
+The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP3001` error with each different slot, and the engine skips the load and the rule checks (`UMP3004`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|
-| `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
-| `global.json` | `msbuild-sdks` → `VSA.Sdk` |
-| Each `.csproj` and `Directory.*.props` of the app root | Each `VSA.Sdk` pin and each `VSA.*` package, also `VSA.Architecture.Build` |
-| `*.deps.json` of the host output (engine only) | Each `VSA.*` package library |
+| `dotnet-tools.json`, `.config/dotnet-tools.json` | `umpire.cli` |
+| `global.json` | `msbuild-sdks` → `Umpire.Sdk` |
+| Each `.csproj` and `Directory.*.props` of the app root | Each `Umpire.Sdk` pin and each `Umpire.*` package, also `Umpire.Engine.Build` |
+| `*.deps.json` of the host output (engine only) | Each `Umpire.*` package library |
 
 A file that does not exist gives no slot. The JSON files can have comments and trailing commas, as dotnet reads them.
 
 | Value | Result |
 |---|---|
-| A version, or an exact range `[x]` | Compared as `x`. `vsa update` keeps the brackets |
+| A version, or an exact range `[x]` | Compared as `x`. `umpire update` keeps the brackets |
 | A `PackageReference` with no version | Uses its `PackageVersion` in the app root, else in the nearest `Directory.Packages.props` above it. With none, the check fails: the package has no version |
-| A value with an MSBuild property, for example `$(VsaVersion)` | Not checked, not written. `vsa doctor` shows it as "not checked" |
+| A value with an MSBuild property, for example `$(UmpireVersion)` | Not checked, not written. `umpire doctor` shows it as "not checked" |
 
-`vsa update` changes only the version text of `global.json`, so the file keeps its comments, BOM and line endings. A project file keeps its BOM and its line endings.
+`umpire update` changes only the version text of `global.json`, so the file keeps its comments, BOM and line endings. A project file keeps its BOM and its line endings.
 
 The app class (`MyApp : App<Vsa<TArchitecture, THost>>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Call `base.Rules` first: a later rule wins.
 
@@ -273,11 +272,11 @@ public class MyApp : App<Vsa<MyArchitecture, WebVsaHost>>;
 
 ## Baseline
 
-The step `ApplyBaseline` runs after `CheckRules` and before the Report step. It reads `vsa-baseline.txt` in the app root. An error with an entry in the file does not go to the report. A new error fails the build.
+The step `ApplyBaseline` runs after `CheckRules` and before the Report step. It reads `umpire-baseline.txt` in the app root. An error with an entry in the file does not go to the report. A new error fails the build.
 
 ```text
-VSA2001|App/Host/Probe.cs|Probe in Host uses CreateNoteRequest ...
-VSA2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does not have ...
+UMP2001|App/Host/Probe.cs|Probe in Host uses CreateNoteRequest ...
+UMP2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does not have ...
 ```
 
 | Item | Rule |
@@ -285,12 +284,12 @@ VSA2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does no
 | Line | `CODE\|path\|message`. The path is relative to the app root, with `/`. A finding with no file has an empty path |
 | Key | The code, the path and the full message. The line number is not in the key, so an edit above an error does not change its entry |
 | Count | Two equal entries accept two errors with that key. A third error with that key is new |
-| Content | Errors only. A warning does not fail the build. The engine codes `VSA3000`-`VSA3999` never go in the file, so a version error or a crash always fails |
+| Content | Errors only. A warning does not fail the build. The engine codes `UMP3000`-`UMP3999` never go in the file, so a version error or a crash always fails |
 | No file | No error is accepted |
-| Update | `dotnet build -p:VsaUpdateBaseline=true` (engine switch `--updatebaseline true`) writes each current error, sorted (ordinal), and removes the stale entries. With no error, the update deletes the file. The update never skips the check |
-| Stale entry | An entry that no error matches gives the warning `VSA3005` at its line in the file. Remove the line, or run the update |
-| Bad line | A line that does not have the form gives the error `VSA3006`. Then no error is accepted |
-| Incomplete run | If a step failed or was skipped (an engine error, or `VSA3004`), the update does not write the file and gives the warning `VSA3007`. Reason: that run has not found each error |
+| Update | `dotnet build -p:UmpireUpdateBaseline=true` (engine switch `--updatebaseline true`) writes each current error, sorted (ordinal), and removes the stale entries. With no error, the update deletes the file. The update never skips the check |
+| Stale entry | An entry that no error matches gives the warning `UMP3005` at its line in the file. Remove the line, or run the update |
+| Bad line | A line that does not have the form gives the error `UMP3006`. Then no error is accepted |
+| Incomplete run | If a step failed or was skipped (an engine error, or `UMP3004`), the update does not write the file and gives the warning `UMP3007`. Reason: that run has not found each error |
 | Build stamp | The stamp name tells if the file exists. A delete of the file runs the check again |
 
 `--mode Warn` applies after the baseline: each remaining error becomes a warning.

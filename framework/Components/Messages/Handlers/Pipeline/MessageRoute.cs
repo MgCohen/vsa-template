@@ -1,8 +1,8 @@
-using System.Reflection;
-using VSA.Analyzers.Markers;
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using System.Reflection;
+using Umpire.Markers;
+using Umpire.Messages.Contracts;
 
 sealed class MessageRoute {
     internal MessageRoute(Type message, IReadOnlyList<Type> handlers, bool many) {

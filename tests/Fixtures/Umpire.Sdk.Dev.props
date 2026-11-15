@@ -1,0 +1,4 @@
+<Project>
+  <!-- The fixture modules use the same Umpire.Sdk source as the samples. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../samples/Umpire.Sdk.Dev.props" />
+</Project>

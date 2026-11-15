@@ -1,3 +1,5 @@
+namespace Composition.Tests;
+
 using Answers;
 using Answers.Slices.Answer;
 using Answers.Slices.GetItem;
@@ -13,14 +15,12 @@ using Resources.Domain.Shared;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
-using VSA.Composition;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Contracts.Events;
-using VSA.Presenters;
-using VSA.Kernel;
-
-namespace Composition.Tests;
+using Umpire.Vsa.Composition;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Presenters;
+using Umpire.Kernel;
 
 public sealed class HeadlessCompositionTests {
     [Test]

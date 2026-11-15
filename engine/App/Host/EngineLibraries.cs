@@ -1,7 +1,7 @@
-using VSA.Architecture;
+namespace UmpireEngine;
 
-namespace VsaEngine;
+using Umpire.Architecture;
 
 public record EngineLibraries : External {
-    public override string Assembly => "VSA.Architecture";
+    public override string Assembly => "Umpire.Architecture";
 }

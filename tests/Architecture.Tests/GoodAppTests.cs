@@ -1,11 +1,12 @@
-using Kit;
-using VSA.Architecture;
-using VSA.Architecture.Engine;
-
 namespace EngineCore.Tests;
 
+using Kit;
+using Umpire.Architecture;
+using BuiltApp.Infrastructure;
+using Rules.Slices.CheckRules;
+
 public sealed class GoodAppTests {
-    static ArchitectureMap Map => FixtureApps.Good;
+    static ArchitectureCheck Map => FixtureApps.Good;
 
     [Test]
     public void The_good_app_has_no_findings() {
@@ -74,11 +75,13 @@ public sealed class GoodAppTests {
     public void A_presenter_with_a_framework_interface_in_the_header_has_no_findings() {
         var presenter = Map.Bindings.BoundTypes.Single(t => t.Name == "BellPresenter");
 
-        Assert.That(Map.Findings(presenter), Is.Empty);
+        Assert.That(Map.Findings(presenter.FullName), Is.Empty);
     }
 
     static Binding External() => Map.Bindings.All.Single(b => b.Type.FullName == typeof(IEntity).FullName);
 
     static IEnumerable<Exposure> ExposuresOf(string name) =>
-        Exposures.Of(Map.Bindings.BoundTypes.Single(t => t.Name == name), t => Map.Bindings.Of(t)?.External == true);
+        Exposures.Of(
+            Map.App.Types.Single(t => t.Name == name && Map.Bindings.Of(t.FullName)?.External == false),
+            t => Map.Bindings.Of(t.FullName)?.External == true);
 }

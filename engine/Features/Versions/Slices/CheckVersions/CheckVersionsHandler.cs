@@ -1,9 +1,9 @@
-using Versions.Domain.Shared;
-using VSA.Architecture.Versions;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
-
 namespace Versions.Slices.CheckVersions;
+
+using Versions.Domain.Shared;
+using Umpire.Engine.Versions;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 sealed class CheckVersionsHandler : CommandHandler<CheckVersionsCommand, CheckVersionsResult> {
     public override Task<Result<CheckVersionsResult>> HandleAsync(Envelope<CheckVersionsCommand> envelope) =>

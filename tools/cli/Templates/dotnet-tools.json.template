@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "umpire.cli": {
+      "version": "{{UmpireVersion}}",
+      "commands": [
+        "umpire"
+      ],
+      "rollForward": false
+    }
+  }
+}

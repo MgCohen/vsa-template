@@ -1,6 +1,6 @@
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using Umpire.Messages.Contracts;
 
 interface IPipelineRun {
     bool Runs(Type message);

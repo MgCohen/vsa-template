@@ -1,9 +1,9 @@
-// Writes VSA.slnx with each project in this repository. Git ignores VSA.slnx: run this script again after you add,
+// Writes Umpire.slnx with each project in this repository. Git ignores Umpire.slnx: run this script again after you add,
 // move or remove a project.
 //
 //   dotnet run solution.cs
 //
-// The solution has one folder for each top-level folder (framework, samples, tests).
+// The solution has one folder for each top-level folder (architecture, framework, packs, engine, tools, samples, tests).
 
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -30,7 +30,7 @@ foreach (var group in projects.GroupBy(path => path[..path.IndexOf('/')])) {
 }
 solution.Append("</Solution>\n");
 
-File.WriteAllText(Path.Combine(root, "VSA.slnx"), solution.ToString());
-Console.WriteLine($"VSA.slnx: {projects.Count} projects.");
+File.WriteAllText(Path.Combine(root, "Umpire.slnx"), solution.ToString());
+Console.WriteLine($"Umpire.slnx: {projects.Count} projects.");
 
 static string Here([CallerFilePath] string path = "") => path;

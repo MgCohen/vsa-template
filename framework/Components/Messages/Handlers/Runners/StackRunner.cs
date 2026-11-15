@@ -1,6 +1,6 @@
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using Umpire.Messages.Contracts;
 
 public sealed class StackRunner : IRunner {
     readonly RunQueue queue = new();

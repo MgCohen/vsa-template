@@ -1,7 +1,7 @@
 namespace Notes.Features.Ping.Slices.Ping;
 
-using VSA.Contracts;
-using VSA.Handlers.Requests;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Requests;
 
 sealed class PingHandler : RequestHandler<PingRequest, PingResponse> {
     public override Task<Result<PingResponse>> HandleAsync(Envelope<PingRequest> envelope) =>

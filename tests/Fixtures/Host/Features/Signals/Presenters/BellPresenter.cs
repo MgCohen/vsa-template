@@ -1,7 +1,7 @@
-using Signals.Slices.Ring;
-using VSA.Presenters;
-
 namespace Signals.Presenters;
+
+using Signals.Slices.Ring;
+using Umpire.Vsa.Presenters;
 
 // Shows the last bell. It gets Rang from the Contracts.Events project of its module.
 public sealed class BellPresenter(IBus bus) : Presenter(bus), IPresenterEvent<Rang> {

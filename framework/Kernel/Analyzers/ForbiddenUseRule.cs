@@ -1,3 +1,5 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -5,12 +7,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
-namespace VSA.Analyzers;
-
 // The base of a rule that forbids some types in the classes that inherit one base class.
 // It checks fields, properties, parameters (also of a primary constructor), object creations, calls and locals.
 // The message gets two arguments: the class name and the forbidden type name.
-public abstract class ForbiddenUseRule(DiagnosticDescriptor rule) : VsaAnalyzerRule(rule) {
+public abstract class ForbiddenUseRule(DiagnosticDescriptor rule) : UmpireAnalyzerRule(rule) {
     // The base class of the checked classes. Null: the compilation does not have it, and the rule does nothing.
     protected abstract INamedTypeSymbol? Subject(Compilation compilation);
 

@@ -1,6 +1,6 @@
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using Umpire.Messages.Contracts;
 
 static class CurrentEnvelope {
     static readonly AsyncLocal<Envelope?> current = new();

@@ -7,7 +7,7 @@ using Tests.Shared;
 
 namespace Consumer.Tests;
 
-// Builds samples/Notes as a consumer does: from the packed framework packages and VSA.Sdk, not from the source.
+// Builds samples/Notes as a consumer does: from the packed framework packages and Umpire.Sdk, not from the source.
 public sealed partial class NotesConsumerTests {
     [Test]
     [CancelAfter(10 * 60 * 1000)]
@@ -17,7 +17,7 @@ public sealed partial class NotesConsumerTests {
 
         workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         var runtimeDependencies = File.ReadAllText(Path.Combine(workspace.Src, "bin", "Release", "net10.0", "Notes.deps.json"));
-        Assert.That(runtimeDependencies, Does.Contain("VSA.Architecture.Vsa").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
+        Assert.That(runtimeDependencies, Does.Contain("Umpire.Vsa").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
 
         var url = $"http://127.0.0.1:{FreePort()}";
         using var app = workspace.Start("run", "--project", "Notes.csproj", "-c", "Release", "--no-build", "--no-launch-profile", "--urls", url);
@@ -44,21 +44,21 @@ public sealed partial class NotesConsumerTests {
     }
 
     // Changes the projects from the source mode of this repository to the consumer form.
-    // A project becomes <Project Sdk="VSA.Sdk">, or gets <Sdk Name="VSA.Sdk" /> after another SDK (the web root project).
+    // A project becomes <Project Sdk="Umpire.Sdk">, or gets <Sdk Name="Umpire.Sdk" /> after another SDK (the web root project).
     // A reference to a framework project becomes a package reference.
     internal static void UsePackages(string root) {
         foreach (var file in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)) {
             var text = File.ReadAllText(file);
-            if (text.Contains("VSA.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
+            if (text.Contains("Umpire.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
                 text = DevImport().Replace(text, "");
-                text = text.Insert(text.IndexOf('>') + 1, "\n  <Sdk Name=\"VSA.Sdk\" />");
-            } else if (text.Contains("VSA.Sdk.Dev.props")) {
+                text = text.Insert(text.IndexOf('>') + 1, "\n  <Sdk Name=\"Umpire.Sdk\" />");
+            } else if (text.Contains("Umpire.Sdk.Dev.props")) {
                 text = DevImport().Replace(text, "");
-                text = text.Replace("<Project>", "<Project Sdk=\"VSA.Sdk\">");
-                text = EmptyProject().Replace(text, "<Project Sdk=\"VSA.Sdk\" />");
+                text = text.Replace("<Project>", "<Project Sdk=\"Umpire.Sdk\">");
+                text = EmptyProject().Replace(text, "<Project Sdk=\"Umpire.Sdk\" />");
             }
             text = FrameworkReference().Replace(text, "<PackageReference Include=\"$1\" />");
-            Assert.That(text, Does.Not.Contain("VsaFrameworkSourceDir").And.Not.Contain("VsaSdkDir"));
+            Assert.That(text, Does.Not.Contain("UmpireFrameworkSourceDir").And.Not.Contain("UmpireSdkDir"));
             File.WriteAllText(file, text);
         }
     }
@@ -91,12 +91,12 @@ public sealed partial class NotesConsumerTests {
         return ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 
-    [GeneratedRegex(@"\s*<Import Project=""[^""]*(VSA\.Sdk\.Dev\.props|Sdk\.targets)[^""]*"" />")]
+    [GeneratedRegex(@"\s*<Import Project=""[^""]*(Umpire\.Sdk\.Dev\.props|Sdk\.targets)[^""]*"" />")]
     private static partial Regex DevImport();
 
-    [GeneratedRegex(@"<Project Sdk=""VSA\.Sdk"">\s*</Project>")]
+    [GeneratedRegex(@"<Project Sdk=""Umpire\.Sdk"">\s*</Project>")]
     private static partial Regex EmptyProject();
 
-    [GeneratedRegex(@"<ProjectReference Include=""\$\(VsaFrameworkSourceDir\)[^""]*/(VSA\.[\w.]+)\.csproj"" />")]
+    [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex FrameworkReference();
 }

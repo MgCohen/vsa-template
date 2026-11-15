@@ -1,9 +1,10 @@
 namespace Composition.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa;
+using Umpire.Vsa.Definition;
+using Umpire.Vsa.Composition;
+using Umpire.Kernel;
 
 public sealed class ComposeOrderTests {
     [Test]

@@ -1,6 +1,6 @@
 namespace Composition.Tests;
 
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa.Composition;
+using Umpire.Kernel;
 
 public sealed class TestApp(params Module[] modules) : TestApp<VsaHost>(modules);

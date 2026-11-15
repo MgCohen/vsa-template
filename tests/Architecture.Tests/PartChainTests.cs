@@ -1,6 +1,6 @@
-using VSA.Architecture;
-
 namespace EngineCore.Tests;
+
+using Umpire.Architecture;
 
 public sealed class PartChainTests {
     [Test]

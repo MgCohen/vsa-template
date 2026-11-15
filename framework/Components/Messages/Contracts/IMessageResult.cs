@@ -1,4 +1,4 @@
-namespace VSA.Contracts;
+namespace Umpire.Messages.Contracts;
 
 public interface IMessageResult {
     bool IsSuccess { get; }

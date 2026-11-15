@@ -3,8 +3,8 @@ namespace Notes.Features.Notebook.Presenters;
 using Notes.Features.Notebook.Slices.CreateNote;
 using Notes.Features.Notebook.Slices.DeleteNote;
 using Notes.Features.Notebook.Slices.ListNotes;
-using VSA.Contracts;
-using VSA.Presenters;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Presenters;
 
 public sealed class NotebookPresenter(IBus bus) : Presenter(bus) {
     // The sample has no sign-in, so all notes have the same author.

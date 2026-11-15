@@ -1,9 +1,8 @@
-using VSA.Architecture;
-using VSA.Architecture.Engine;
-using VSA.Architecture.Vsa;
-using Vsa = VSA.Architecture.Vsa;
-
 namespace EngineCore.Tests;
+
+using Umpire.Architecture;
+using Umpire.Vsa.Definition;
+using Vsa = Umpire.Vsa.Definition;
 
 public sealed class RulesArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {

@@ -1,8 +1,8 @@
-using Resources.Domain;
-using VSA.Contracts;
-using VSA.Handlers.Commands;
-
 namespace Resources.Slices.ChangeResource;
+
+using Resources.Domain;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Commands;
 
 sealed class ChangeResourceHandler(Wallet wallet) : CommandHandler<ChangeResourceCommand, ChangeResourceResult> {
     public override Task<Result<ChangeResourceResult>> HandleAsync(Envelope<ChangeResourceCommand> envelope) {

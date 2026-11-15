@@ -1,10 +1,10 @@
 # Persistence
 
-VSA has one persistence port, `IRepository<T, TId>` (`framework/Architectures/Vsa/Infrastructure/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
+VSA has one persistence port, `IRepository<T, TId>` (`packs/Vsa/Kernel/Infrastructure/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
 
 ## The domain base
 
-`Entity<TId>` (`framework/Architectures/Vsa/Domain/Entity.cs`) is the one domain base of VSA. It holds only `Id`. It has no behavior.
+`Entity<TId>` (`packs/Vsa/Kernel/Domain/Entity.cs`) is the one domain base of VSA. It holds only `Id`. It has no behavior.
 
 | Type | Constraint |
 |---|---|
@@ -38,7 +38,7 @@ public sealed class NotebookModule : Module {
 }
 ```
 
-The sample `samples/Notes` keeps its notes in memory (`Infrastructure/NoteRepository.cs`). Unit tests use `InMemoryRepository<T, TId>` from `VSA.Testing.Unit`. `VsaUnitTest` registers it for each `IRepository<T, TId>`. `Add` and `Remove` have no effect before `SaveChangesAsync`, as in a real adapter.
+The sample `samples/Notes` keeps its notes in memory (`Infrastructure/NoteRepository.cs`). Unit tests use `InMemoryRepository<T, TId>` from `Umpire.Vsa.Testing.Unit`. `VsaUnitTest` registers it for each `IRepository<T, TId>`. `Add` and `Remove` have no effect before `SaveChangesAsync`, as in a real adapter.
 
 ## Non-goals
 

@@ -1,6 +1,6 @@
-using LayeredApp.Ui;
-
 namespace LayeredApp.Data;
+
+using LayeredApp.Ui;
 
 public sealed class OrderStore {
     public OrderScreen? LastScreen { get; set; }

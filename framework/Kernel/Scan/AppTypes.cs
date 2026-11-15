@@ -1,4 +1,4 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -69,7 +69,7 @@ public sealed class AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
         if (parameters.Length != 1) {
             throw new InvalidOperationException(
                 $"{definition.FullName} has {parameters.Length} generic parameters. "
-                + "VSA closes an open module type with one generic parameter only. "
+                + "Umpire closes an open module type with one generic parameter only. "
                 + "Write one closed type for each type argument.");
         }
         return keys.KeysFor(parameters[0], TypeArguments()).Select(key => definition.MakeGenericType(key));

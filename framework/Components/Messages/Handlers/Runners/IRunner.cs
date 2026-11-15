@@ -1,7 +1,7 @@
-using VSA.Analyzers.Markers;
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using Umpire.Markers;
+using Umpire.Messages.Contracts;
 
 [RequireImplementors]
 public interface IRunner {

@@ -1,4 +1,4 @@
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 sealed record PipelineDefinition(
     Type Message,

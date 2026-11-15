@@ -1,6 +1,6 @@
-using BadApp.Billing.Domain;
-
 namespace BadApp.Notes.Slices.ArchiveInvoice;
+
+using BadApp.Billing.Domain;
 
 public sealed class ArchiveInvoiceHandler : Kit.IRequestHandler {
     public static async Task<string> InAsyncMethod(ArchiveInvoiceRequest request) {

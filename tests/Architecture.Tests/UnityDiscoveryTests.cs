@@ -1,15 +1,16 @@
-using VSA.Architecture.Engine;
-using VSA.Architecture.Vsa;
-using VSA.Kernel;
-
 namespace EngineCore.Tests;
 
+using Rules.Slices.CheckRules;
+using Steps.Domain.Shared;
+using Umpire.Vsa.Definition;
+using Umpire.Kernel;
+
 public sealed class UnityDiscoveryTests {
-    const string ModuleClass = "public sealed class {0} : VSA.Kernel.Module {{ public override void Configure("
+    const string ModuleClass = "public sealed class {0} : Umpire.Kernel.Module {{ public override void Configure("
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
     UnityProjectFolder project = null!;
-    ArchitectureMap map = null!;
+    ArchitectureCheck map = null!;
 
     [OneTimeSetUp]
     public void BuildTheUnityProjectAndItsDotnetBuild() {
@@ -60,7 +61,7 @@ public sealed class UnityDiscoveryTests {
     public void The_checks_read_the_uses_of_a_view_in_the_Unity_build() {
         var board = map.App.Types.Single(t => t.FullName == "Game.Views.Board");
 
-        Assert.That(map.Findings(board).Select(f => f.Code), Has.Some.EqualTo("VSA2001"));
+        Assert.That(map.Findings(board.FullName).Select(f => f.Code), Has.Some.EqualTo("UMP2001"));
     }
 
     [Test]
@@ -69,14 +70,14 @@ public sealed class UnityDiscoveryTests {
     }
 
     [Test]
-    public void A_Unity_project_with_no_script_assemblies_gives_the_warning_VSA2103() {
+    public void A_Unity_project_with_no_script_assemblies_gives_the_warning_UMP2103() {
         using var unbuilt = UnityProjectFolder.Create();
         var module = unbuilt.Write("Source/Features/Lists/ListsModule.cs", "namespace Lists; " + string.Format(ModuleClass, "ListsModule"));
         unbuilt.Compile("Unbuilt.Modules", unbuilt.Output, module);
 
         var discovered = FixtureApps.Load(new VsaArchitecture(), unbuilt.Output, unbuilt.Root);
 
-        Assert.That(discovered.Findings().Where(f => f.Severity == RuleSeverity.Warning).Select(f => f.Code + ": " + f.Text),
-            Has.One.StartsWith("VSA2103: ").And.Contains("has no Library/ScriptAssemblies folder"));
+        Assert.That(discovered.Findings().Where(f => f.Severity == FindingSeverity.Warning).Select(f => f.Code + ": " + f.Message),
+            Has.One.StartsWith("UMP2103: ").And.Contains("has no Library/ScriptAssemblies folder"));
     }
 }

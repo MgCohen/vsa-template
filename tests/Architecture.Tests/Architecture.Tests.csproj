@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the rule engine core (VSA.Architecture.Engine) on the fixture apps in tests/Fixtures/Architecture,
+  <!-- Tests of the rule answers (architecture/Resolution) and the Rules step of the engine on the fixture apps in tests/Fixtures/Architecture,
        with a small test definition. -->
   <PropertyGroup>
     <RootNamespace>EngineCore.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Engine/Core/VSA.Architecture.Engine.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Definition/VSA.Architecture.Vsa.csproj" />
+    <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
   </ItemGroup>
 </Project>

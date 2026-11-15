@@ -3,8 +3,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Composition/VSA.Composition.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Architectures/Vsa/Definition/VSA.Architecture.Vsa.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Echo/Echo.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Arena/Arena.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Answers/Answers.csproj" />

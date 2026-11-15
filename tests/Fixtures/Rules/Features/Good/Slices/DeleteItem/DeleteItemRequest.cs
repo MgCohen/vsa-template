@@ -1,6 +1,6 @@
-using VSA.Contracts.Requests;
-
 namespace Good.Slices.DeleteItem;
+
+using Umpire.Vsa.Contracts.Requests;
 
 public sealed record DeleteItemRequest(Guid Id) : IRequest<DeleteItemResponse> {
     public static HttpMethod Method => HttpMethod.Delete;

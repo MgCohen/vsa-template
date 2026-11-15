@@ -1,4 +1,4 @@
-namespace VSA.Contracts;
+namespace Umpire.Messages.Contracts;
 
 public readonly record struct Unit {
     public static Unit Value => default;

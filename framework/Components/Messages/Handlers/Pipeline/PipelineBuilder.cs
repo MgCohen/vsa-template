@@ -1,4 +1,4 @@
-namespace VSA.Handlers;
+namespace Umpire.Messages.Handlers;
 
 public sealed class PipelineBuilder<TMessage> where TMessage : class {
     readonly List<Type> handlerBases = [];

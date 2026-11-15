@@ -1,9 +1,9 @@
 namespace Notes.Features.Notebook.Slices.ListNotes;
 
 using Notes.Features.Notebook.Domain;
-using VSA.Contracts;
-using VSA.Handlers.Requests;
-using VSA.Infrastructure;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Handlers.Requests;
+using Umpire.Vsa.Infrastructure;
 
 sealed class ListNotesHandler(IRepository<Note, NoteId> notes) : RequestHandler<ListNotesRequest, ListNotesResponse> {
     public override async Task<Result<ListNotesResponse>> HandleAsync(Envelope<ListNotesRequest> envelope) {

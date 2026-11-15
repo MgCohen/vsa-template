@@ -1,6 +1,6 @@
-using VSA.Architecture;
+namespace UmpireEngine;
 
-namespace VsaEngine;
+using Umpire.Architecture;
 
 public record ArchUnitLibraries : External {
     public override string Assembly => "ArchUnitNET";

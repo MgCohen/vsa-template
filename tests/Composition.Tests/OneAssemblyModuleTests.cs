@@ -1,10 +1,10 @@
-using Microsoft.Extensions.DependencyInjection;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Handlers.Commands;
-using VSA.Kernel;
-
 namespace Composition.Tests;
+
+using Microsoft.Extensions.DependencyInjection;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Handlers.Commands;
+using Umpire.Kernel;
 
 public sealed class OneAssemblyModuleTests {
     [Test]

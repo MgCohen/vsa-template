@@ -1,4 +1,4 @@
-namespace VSA.Contracts;
+namespace Umpire.Messages.Contracts;
 
 public readonly record struct Result<T> : IMessageResult {
     Result(T value, Error? error, Envelope? envelope) {

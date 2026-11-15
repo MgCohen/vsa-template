@@ -1,6 +1,6 @@
-using VSA.Contracts;
+namespace Umpire.Messages.Handlers;
 
-namespace VSA.Handlers;
+using Umpire.Messages.Contracts;
 
 public sealed class InlineRunner : IRunner {
     public Task RunAsync(Envelope envelope, Func<Envelope, Task> run) => run(envelope);

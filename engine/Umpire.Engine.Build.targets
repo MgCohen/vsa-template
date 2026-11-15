@@ -1,0 +1,44 @@
+<Project>
+  <!-- Runs the rule engine after each build of the project that has this package (the host of the app).
+       UmpireCheck=false turns it off. UmpireCheckMode=Warn reports each error as a warning.
+       UmpireUpdateBaseline=true writes the errors of this build to umpire-baseline.txt in the app root.
+       The stamp file skips the check when no input changed. Each stamp name tells if umpire-baseline.txt exists,
+       so a delete of the baseline runs the check again. An update never skips. -->
+  <PropertyGroup>
+    <UmpireCheck Condition="'$(UmpireCheck)' == ''">true</UmpireCheck>
+    <UmpireCheckMode Condition="'$(UmpireCheckMode)' == ''">Error</UmpireCheckMode>
+    <UmpireUpdateBaseline Condition="'$(UmpireUpdateBaseline)' == ''">false</UmpireUpdateBaseline>
+    <_UmpireEngine>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'umpire-engine.dll'))</_UmpireEngine>
+    <_UmpireDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_UmpireDotnet>
+    <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
+  </PropertyGroup>
+
+  <Target Name="_UmpireCheckInputs">
+    <PropertyGroup>
+      <_UmpireCheckRoot Condition="'$(UmpireAppRoot)' != ''">$(UmpireAppRoot)</_UmpireCheckRoot>
+      <_UmpireCheckRoot Condition="'$(_UmpireCheckRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'global.json'))</_UmpireCheckRoot>
+      <_UmpireCheckRoot>$([MSBuild]::EnsureTrailingSlash('$(_UmpireCheckRoot)'))</_UmpireCheckRoot>
+      <_UmpireBaseline>$(_UmpireCheckRoot)umpire-baseline.txt</_UmpireBaseline>
+      <_UmpireBaselineState>nobaseline</_UmpireBaselineState>
+      <_UmpireBaselineState Condition="Exists('$(_UmpireBaseline)')">baseline</_UmpireBaselineState>
+      <_UmpireCheckStamp>$(ProjectDir)$(IntermediateOutputPath)umpire-check.$(UmpireCheckMode).$(_UmpireBaselineState).stamp</_UmpireCheckStamp>
+      <_UmpireCheckStamp Condition="'$(UmpireUpdateBaseline)' == 'true'">$(ProjectDir)$(IntermediateOutputPath)umpire-check.update.stamp</_UmpireCheckStamp>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireCheckInput Include="@(IntermediateAssembly->'%(FullPath)');@(ReferenceCopyLocalPaths->'%(FullPath)');$(_UmpireEngine)" />
+      <_UmpireCheckInput Include="$(_UmpireBaseline)" Condition="Exists('$(_UmpireBaseline)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UmpireCheck" AfterTargets="Build" DependsOnTargets="_UmpireCheckInputs"
+          Condition="'$(UmpireCheck)' == 'true' and '$(DesignTimeBuild)' != 'true'"
+          Inputs="@(_UmpireCheckInput)" Outputs="$(_UmpireCheckStamp)">
+    <Error Condition="!Exists('$(_UmpireEngine)')" Code="UMP3003"
+           Text="The rule engine $(_UmpireEngine) does not exist. Restore the Umpire.Engine.Build package again." />
+    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
+          Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(_UmpireEngine)&quot; --root &quot;$(_UmpireCheckRoot.TrimEnd('\').TrimEnd('/'))&quot; --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --mode $(UmpireCheckMode) --updatebaseline $(UmpireUpdateBaseline)">
+      <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
+    </Exec>
+    <Touch Condition="'$(_UmpireCheckExit)' == '0' and '$(UmpireUpdateBaseline)' != 'true'" Files="$(_UmpireCheckStamp)" AlwaysCreate="true" />
+  </Target>
+</Project>

@@ -1,6 +1,6 @@
-using VSA.Contracts.Requests;
-
 namespace Good.Slices.GetItem;
+
+using Umpire.Vsa.Contracts.Requests;
 
 public sealed record GetItemRequest(Guid Id) : IRequest<GetItemResponse> {
     public static HttpMethod Method => HttpMethod.Get;

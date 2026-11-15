@@ -1,3 +1,5 @@
+namespace Framework.Tests.Commands;
+
 using System.Net.Http.Json;
 using Battle;
 using Battle.Slices.PlayCard;
@@ -11,9 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
-using VSA.Contracts.Commands;
-
-namespace Framework.Tests.Commands;
+using Umpire.Vsa.Contracts.Commands;
 
 // The host registers ICommandSender and the one handler of each command (tests/Fixtures/CommandApp).
 // Battle PlayCard sends PayCost to Cards. Cards sends ChangeResource to Resources. Each mana pool starts at 10.
@@ -61,5 +61,5 @@ public sealed class CommandTests {
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:").And.EndWith("A command has one handler."));
     }
 
-    static Task<IHost> Start(params VSA.Kernel.Module[] modules) => WebApps.OnTestServer(modules).Start();
+    static Task<IHost> Start(params Umpire.Kernel.Module[] modules) => WebApps.OnTestServer(modules).Start();
 }

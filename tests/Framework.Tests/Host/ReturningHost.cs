@@ -1,7 +1,7 @@
 namespace Framework.Tests.Host;
 
 using Microsoft.Extensions.Hosting;
-using VSA.Composition;
+using Umpire.Vsa.Composition;
 
 public sealed class ReturningHost : VsaHost {
     public override int Run(IHost app) {

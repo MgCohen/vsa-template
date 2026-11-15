@@ -1,7 +1,7 @@
+namespace BadApp.Billing.Slices.CreateInvoice;
+
 using BadApp.Billing.Domain;
 using BadApp.Billing.Presenters;
-
-namespace BadApp.Billing.Slices.CreateInvoice;
 
 public sealed class CreateInvoiceHandler(InvoicePresenter presenter) : Kit.IRequestHandler {
     public (Invoice, InvoiceCreated) Handle(CreateInvoiceRequest request) {

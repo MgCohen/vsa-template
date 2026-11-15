@@ -1,9 +1,9 @@
-using Arena.Slices.Duel;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Handlers.Commands;
-
 namespace Arena.Slices.Counter;
+
+using Arena.Slices.Duel;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Handlers.Commands;
 
 sealed class CounterHook(ICommandSender commands, ArenaLog log) : AfterCommandHook<StrikeCommand, int> {
     public override Task AfterAsync(IEnvelope<StrikeCommand> envelope, Result<int> outcome) {

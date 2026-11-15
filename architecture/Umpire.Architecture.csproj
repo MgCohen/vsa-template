@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The architecture definition API: concepts, parts and rules, and Resolution/: the answers of the rules on plain data. It has no test framework and no ArchUnitNET reference. -->
+  <ItemGroup>
+    <Compile Remove="Markers/**" />
+    <None Remove="Markers/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Markers/Umpire.Markers.csproj" />
+  </ItemGroup>
+</Project>

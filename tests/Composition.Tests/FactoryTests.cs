@@ -1,7 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
-using VSA.Kernel;
-
 namespace Composition.Tests;
+
+using Microsoft.Extensions.DependencyInjection;
+using Umpire.Kernel;
 
 public sealed class FactoryTests {
     public sealed record Greeting(string Text);

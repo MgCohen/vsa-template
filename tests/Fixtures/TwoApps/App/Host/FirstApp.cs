@@ -1,7 +1,7 @@
 namespace TwoApps.App.Host;
 
-using VSA.Architecture.Vsa;
-using VSA.Composition;
-using VSA.Kernel;
+using Umpire.Vsa;
+using Umpire.Vsa.Composition;
+using Umpire.Kernel;
 
 public class FirstApp : App<Vsa<VsaHost>>;

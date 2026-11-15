@@ -1,7 +1,7 @@
-using VSA.Architecture;
-using VSA.Architecture.Vsa;
-
 namespace EngineCore.Tests;
+
+using Umpire.Architecture;
+using Umpire.Vsa.Definition;
 
 public sealed class UnityFoldersTests {
     [Test]

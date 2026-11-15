@@ -1,10 +1,10 @@
-# Runs the same build and tests as Publish on each pull request and on main, so a release does not find a broken build.
+# Runs the same build and tests as Publish on each push to main, and by hand (workflow_dispatch). It does not run on a pull request (issue #134).
 name: CI
 
 on:
-  pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,4 +22,4 @@ jobs:
       - name: Test
         run: |
           dotnet run solution.cs
-          dotnet test VSA.slnx -c Release
+          dotnet test Umpire.slnx -c Release

@@ -1,11 +1,11 @@
+namespace Composition.Tests.Pipeline;
+
 using Microsoft.Extensions.DependencyInjection;
 using Signals;
 using Signals.Slices.Ring;
-using VSA.Composition;
-using VSA.Contracts;
-using VSA.Contracts.Events;
-
-namespace Composition.Tests.Pipeline;
+using Umpire.Vsa.Composition;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Events;
 
 public sealed class EventHookTests {
     [Test]

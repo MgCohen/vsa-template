@@ -1,29 +1,29 @@
+namespace Umpire.Vsa.Analyzers;
+
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace VSA.Analyzers;
-
-// VSA1011: a file has one top-level type. Nested types are not top-level types.
+// UMP1011: a file has one top-level type. Nested types are not top-level types.
 // The diagnostic marks each top-level type after the first.
-// Option: vsa.VSA1011.allow_same_name (in VSA.Rules.globalconfig). If true, types with the name of the first type can share its file,
+// Option: umpire.UMP1011.allow_same_name (in Umpire.Rules.globalconfig). If true, types with the name of the first type can share its file,
 // for example Module and Module<TSettings>, which have a different number of type parameters.
-public sealed class OneTypePerFileRule() : VsaAnalyzerRule(Descriptor) {
+public sealed class OneTypePerFileRule() : UmpireAnalyzerRule(Descriptor) {
     public const string AllowSameNameKey = "allow_same_name";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "VSA1011",
+        "UMP1011",
         "A file has one top-level type",
         "{0} is a second top-level type in the file of {1}. Move {0} to its own file, {0}.cs.",
-        "VSA",
+        "Umpire",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     public override bool IsModuleRule => false;
 
-    public override IReadOnlyList<VsaOption> RequiredOptions { get; } = [VsaOption.Bool(AllowSameNameKey)];
+    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.Bool(AllowSameNameKey)];
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(Check);

@@ -1,8 +1,8 @@
-using VSA.Analyzers;
-
 namespace Rules.Tests;
 
-// The rules of a Domain.Shared project: VSA1005, VSA1006 and VSA1007. The test code is in Cards.Domain.Shared,
+using Umpire.Vsa.Analyzers;
+
+// The rules of a Domain.Shared project: UMP1005, UMP1006 and UMP1007. The test code is in Cards.Domain.Shared,
 // so all three rules check each type.
 static class Shared {
     public const string Assembly = "Cards.Domain.Shared";
@@ -52,16 +52,16 @@ public sealed class ImmutableSharedTypeRuleTests {
         public sealed class Card { public string Name { get; set; } = ""; public int count; }
         """);
 
-    // The MSBuild property VsaLayer wins over the assembly name.
+    // The MSBuild property UmpireLayer wins over the assembly name.
     [Test]
     public Task Layer_property_selects_the_project() => Analyzer.VerifyIn("Cards.Domain.Shared", """
         public sealed class Card { public string Name { get; set; } = ""; }
-        """, "build_property.VsaLayer = Domain");
+        """, "build_property.UmpireLayer = Domain");
 
     [Test]
     public Task Layer_property_Domain_Shared_is_checked() => Analyzer.VerifyIn("Cards.Published", """
         public sealed class Card { public string {|#0:Name|} { get; set; } = ""; }
-        """, "build_property.VsaLayer = Domain/Shared",
+        """, "build_property.UmpireLayer = Domain/Shared",
         Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Card", "Name", "a property with a set accessor", "Use init in place of set"));
 }
 
@@ -150,8 +150,8 @@ public sealed class SharedTypeBaseRuleTests {
 
     [Test]
     public Task Marker_interface_of_VSA_passes() => Analyzer.VerifyIn(Shared.Assembly, """
-        public readonly record struct Mana(int Value) : VSA.Analyzers.Markers.ITypeArgument;
-        """, ("VSA.Analyzers.Markers", "namespace VSA.Analyzers.Markers { public interface ITypeArgument { } }"));
+        public readonly record struct Mana(int Value) : Umpire.Markers.ITypeArgument;
+        """, ("Umpire.Markers", "namespace Umpire.Markers { public interface ITypeArgument { } }"));
 
     [Test]
     public Task Base_in_allowed_bases_passes() => Analyzer.VerifyIn(Shared.Assembly, """
@@ -159,13 +159,13 @@ public sealed class SharedTypeBaseRuleTests {
             public bool Equals(int other) => Value == other;
             public int CompareTo(Rank? other) => 0;
         }
-        """, "vsa.VSA1007.allowed_bases = System.IEquatable`1, System.IComparable`1\ndotnet_diagnostic.VSA1006.severity = none");
+        """, "umpire.UMP1007.allowed_bases = System.IEquatable`1, System.IComparable`1\ndotnet_diagnostic.UMP1006.severity = none");
 
     [Test]
     public Task Other_base_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
         public sealed record Rank(int Value) : {|#1:IEquatable<int>|} { public bool Equals(int other) => Value == other; }
-        """, "vsa.VSA1007.allowed_bases = System.IComparable`1\ndotnet_diagnostic.VSA1006.severity = none",
+        """, "umpire.UMP1007.allowed_bases = System.IComparable`1\ndotnet_diagnostic.UMP1006.severity = none",
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"),
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 1, "Rank", "System.IEquatable<int>", "System.IEquatable`1"));
 
@@ -173,7 +173,7 @@ public sealed class SharedTypeBaseRuleTests {
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
-        """, "vsa.allowed_bases = System.Collections.Generic.List`1\nvsa.VSA1007.allowed_bases = System.IEquatable`1",
+        """, "umpire.allowed_bases = System.Collections.Generic.List`1\nvsa.UMP1007.allowed_bases = System.IEquatable`1",
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"));
 
     [Test]
@@ -183,22 +183,22 @@ public sealed class SharedTypeBaseRuleTests {
 }
 
 // A list option. A config file line ends at a semicolon, so a config file uses a comma. Other sources can use a semicolon.
-public sealed class VsaOptionsTests {
+public sealed class UmpireOptionsTests {
     sealed class Config(Dictionary<string, string> values) : Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptions {
         public override bool TryGetValue(string key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value) =>
             values.TryGetValue(key, out value);
     }
 
-    static VsaOptions Of(params (string Key, string Value)[] values) =>
-        new("VSA1007", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
+    static UmpireOptions Of(params (string Key, string Value)[] values) =>
+        new("UMP1007", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>
-        Assert.That(Of(("vsa.VSA1007.allowed_bases", " A`1, B ;C;; ")).List("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
+        Assert.That(Of(("umpire.UMP1007.allowed_bases", " A`1, B ;C;; ")).List("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
 
     [Test]
     public void Rule_key_wins_over_the_global_key() =>
-        Assert.That(Of(("vsa.allowed_bases", "A"), ("vsa.VSA1007.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
+        Assert.That(Of(("umpire.allowed_bases", "A"), ("umpire.UMP1007.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
 
     [Test]
     public void Missing_key_gives_null() =>

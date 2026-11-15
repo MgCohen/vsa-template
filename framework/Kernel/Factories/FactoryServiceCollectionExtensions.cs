@@ -1,4 +1,4 @@
-namespace VSA.Kernel;
+namespace Umpire.Kernel;
 
 using Microsoft.Extensions.DependencyInjection;
 

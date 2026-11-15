@@ -1,11 +1,11 @@
+namespace Cards.Slices.PayCost;
+
 using Resources.Domain.Shared;
 using Resources.Slices.ChangeResource;
-using VSA.Contracts;
-using VSA.Contracts.Commands;
-using VSA.Contracts.Events;
-using VSA.Handlers.Commands;
-
-namespace Cards.Slices.PayCost;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Handlers.Commands;
 
 // A command handler that sends a command of another module, and publishes an event of its own module.
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events)

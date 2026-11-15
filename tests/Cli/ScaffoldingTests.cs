@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Tests.Shared;
-using VSA.Cli;
-using VSA.Cli.Commands;
-using VSA.Cli.Scaffolding;
+using Umpire.Cli;
+using Umpire.Cli.Commands;
+using Umpire.Cli.Scaffolding;
 
 namespace Cli.Tests;
 
@@ -20,7 +20,7 @@ public sealed class ScaffoldingTests {
     [TestCase("2Orders")]
     [TestCase("")]
     [TestCase("App")]
-    [TestCase("VSAThings")]
+    [TestCase("UmpireThings")]
     [TestCase("Features")]
     [TestCase("Home")]
     [TestCase("Pages")]
@@ -33,22 +33,22 @@ public sealed class ScaffoldingTests {
     [TestCase("SampleChangeLog")]
     [TestCase("SamplePluginBase")]
     [TestCase("Plugins")]
-    public void InvalidModuleNamesFail(string name) => Assert.Throws<VsaException>(() => Names.Check(name, "module"));
+    public void InvalidModuleNamesFail(string name) => Assert.Throws<UmpireException>(() => Names.Check(name, "module"));
 
     [Test]
     public void SourceModePropertyThatStaysIsAToolError() =>
-        Assert.That(() => Templates.ToPackageMode("<Project>\n  <PropertyGroup><X>$(VsaOther)</X></PropertyGroup>\n</Project>\n", Version, "X.csproj"),
-            Throws.TypeOf<VsaException>().With.Message.Contain("X.csproj"));
+        Assert.That(() => Templates.ToPackageMode("<Project>\n  <PropertyGroup><X>$(UmpireOther)</X></PropertyGroup>\n</Project>\n", Version, "X.csproj"),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("X.csproj"));
 
     [Test]
     public void RequestNamesCannotEndWithRequest() =>
-        Assert.That(() => Names.Check("CreateInvoiceRequest", "request", SliceKind.Request.Suffixes), Throws.TypeOf<VsaException>().With.Message.Contain("CreateInvoice"));
+        Assert.That(() => Names.Check("CreateInvoiceRequest", "request", SliceKind.Request.Suffixes), Throws.TypeOf<UmpireException>().With.Message.Contain("CreateInvoice"));
 
     [TestCase("ChangeLimitCommand")]
     [TestCase("ChangeLimitResult")]
     [TestCase("ChangeLimitHandler")]
     public void CommandNamesCannotEndWithASuffix(string name) =>
-        Assert.That(() => Names.Check(name, "command", SliceKind.Command.Suffixes), Throws.TypeOf<VsaException>().With.Message.Contain("ChangeLimit"));
+        Assert.That(() => Names.Check(name, "command", SliceKind.Command.Suffixes), Throws.TypeOf<UmpireException>().With.Message.Contain("ChangeLimit"));
 
     [TestCase("Billing", "billing")]
     [TestCase("CreateInvoice", "create-invoice")]
@@ -106,13 +106,13 @@ public sealed class ScaffoldingTests {
     [Test]
     public void EachTrackedTemplateFileIsInTheTool() {
         var git = Process.Start(new ProcessStartInfo("git", "ls-files") {
-            WorkingDirectory = Repo.Path("framework", "Tooling", "Cli", "Templates"),
+            WorkingDirectory = Repo.Path("tools", "cli", "Templates"),
             RedirectStandardOutput = true,
         })!;
         var tracked = git.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         git.WaitForExit();
 
-        Assert.That(Templates.All(), Is.EqualTo(tracked.Where(f => f is not ("Directory.Build.props" or "VSA.Sdk.Dev.props")).Order(StringComparer.Ordinal)));
+        Assert.That(Templates.All(), Is.EqualTo(tracked.Where(f => f is not ("Directory.Build.props" or "Umpire.Sdk.Dev.props")).Order(StringComparer.Ordinal)));
     }
 
     [Test]
@@ -142,7 +142,7 @@ public sealed class ScaffoldingTests {
     public void NewAppWritesTheToolVersionToTheRootFiles() {
         var files = NewApp("Hello");
 
-        Assert.That(files.Single(f => f.Path == "global.json").Content, Does.Contain($"\"VSA.Sdk\": \"{Version}\""));
+        Assert.That(files.Single(f => f.Path == "global.json").Content, Does.Contain($"\"Umpire.Sdk\": \"{Version}\""));
         Assert.That(files.Single(f => f.Path == "dotnet-tools.json").Content, Does.Contain($"\"version\": \"{Version}\""));
         Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
@@ -155,14 +155,14 @@ public sealed class ScaffoldingTests {
 
         Assert.That(projects, Is.EqualTo(["Hello.csproj", "Tests/App.Tests.csproj"]));
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
-            Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"VSA.Sdk\" />\n").And.Not.Contain("Sdk.targets"));
+            Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"Umpire.Sdk\" />\n").And.Not.Contain("Sdk.targets"));
     }
 
     [Test]
     public void NewAppGetsTheVsaPackagesFromGitHubByDefault() {
         var config = NewApp("Hello").Single(f => f.Path == NugetConfig.FileName).Content;
 
-        Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{GitHubFeed}\" />"));
+        Assert.That(config, Does.Contain($"<add key=\"umpire\" value=\"{GitHubFeed}\" />"));
         Assert.That(config, Does.Contain("<add key=\"ClearTextPassword\" value=\"%GITHUB_TOKEN%\" />"));
     }
 
@@ -171,8 +171,8 @@ public sealed class ScaffoldingTests {
         var config = NewApp("Hello", "feed", "other").Single(f => f.Path == NugetConfig.FileName).Content;
 
         Assert.That(config, Does.StartWith("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>"));
-        Assert.That(config, Does.Contain($"<add key=\"vsa\" value=\"{Path.GetFullPath("feed")}\" />"));
-        Assert.That(config, Does.Contain($"<add key=\"vsa2\" value=\"{Path.GetFullPath("other")}\" />"));
+        Assert.That(config, Does.Contain($"<add key=\"umpire\" value=\"{Path.GetFullPath("feed")}\" />"));
+        Assert.That(config, Does.Contain($"<add key=\"umpire2\" value=\"{Path.GetFullPath("other")}\" />"));
         Assert.That(config, Does.Contain("<add key=\"nuget.org\" value=\"https://api.nuget.org/v3/index.json\" />"));
         Assert.That(config, Does.Not.Contain(GitHubFeed));
         Assert.That(config, Does.Not.Contain("packageSourceCredentials"));
@@ -184,7 +184,7 @@ public sealed class ScaffoldingTests {
         var versions = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Packages.props")).Descendants("PackageVersion")
             .Where(e => e.Parent!.Attribute("Condition") is null)
             .ToDictionary(e => (string)e.Attribute("Include")!, e => (string)e.Attribute("Version")!);
-        var project = System.Xml.Linq.XDocument.Load(Repo.Path("framework", "Tooling", "Cli", "Templates", "Tests", "App.Tests.csproj"));
+        var project = System.Xml.Linq.XDocument.Load(Repo.Path("tools", "cli", "Templates", "Tests", "App.Tests.csproj"));
 
         foreach (var reference in project.Descendants("PackageReference")) {
             var id = (string)reference.Attribute("Include")!;
@@ -206,9 +206,9 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
         var root = files.Single(f => f.Path == "Hello.csproj").Content;
-        Assert.That(root, Does.Contain($"<PackageReference Include=\"VSA.Host\" Version=\"{Version}\" />"));
-        Assert.That(root, Does.Contain($"<PackageReference Include=\"VSA.Views\" Version=\"{Version}\" />"));
-        Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Vsa"));
+        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Vsa.Hosts.Web\" Version=\"{Version}\" />"));
+        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Vsa.Views\" Version=\"{Version}\" />"));
+        Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Umpire"));
     }
 
     [Test]
@@ -259,7 +259,7 @@ public sealed class ScaffoldingTests {
             File.WriteAllText(Path.Combine(root, "b.txt"), "mine");
 
             Assert.That(() => FileWriter.WriteAllOrNone(root, [new TemplateFile("a.txt", "new"), new TemplateFile("b.txt", "new")]),
-                Throws.TypeOf<VsaException>().With.Message.Contain("b.txt"));
+                Throws.TypeOf<UmpireException>().With.Message.Contain("b.txt"));
 
             Assert.That(File.ReadAllText(Path.Combine(root, "b.txt")), Is.EqualTo("mine"));
             Assert.That(File.Exists(Path.Combine(root, "a.txt")), Is.False);
@@ -272,7 +272,7 @@ public sealed class ScaffoldingTests {
     public void ARequestAndACommandShareOneSliceCommand() {
         var slices = CommandList.All.OfType<AddSliceCommand>().ToList();
 
-        Assert.That(slices.Select(c => c.Usage), Is.EqualTo(new[] { "vsa add request <Name> -m <Module>", "vsa add command <Name> -m <Module>" }));
+        Assert.That(slices.Select(c => c.Usage), Is.EqualTo(new[] { "umpire add request <Name> -m <Module>", "umpire add command <Name> -m <Module>" }));
         Assert.That(slices.Select(c => c.SliceKind), Is.EqualTo(SliceKind.All));
     }
 

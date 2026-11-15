@@ -33,7 +33,7 @@ Features/Cards/
 
 ## Plugin module layout
 
-A plugin module is the base of the same layer in each module, as the VSA pack (`framework/Architectures/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`VSA1014`), and a module root inherits `Module` or `Module<TSettings>`. `vsa add plugin <Name>` writes a new one.
+A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`UMP1014`), and a module root inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
 
 ```
 Plugins/Pipeline/
@@ -62,26 +62,26 @@ samples/Notes/
 └─ Tests/Notes.Tests.csproj     nested project: the root project does not compile Tests/
 ```
 
-| VSA.Sdk rule | Effect |
+| Umpire.Sdk rule | Effect |
 |---|---|
 | Nested project | The parent project does not compile its folder |
 | `bin/`, `obj/` | Not source folders, at each depth |
-| `VsaExcludedFolders` | Not source folders. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
+| `UmpireExcludedFolders` | Not source folders. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
 | Framework references | Each project gets the base of each layer |
 
-A web root project uses the Web SDK first, then VSA.Sdk:
+A web root project uses the Web SDK first, then Umpire.Sdk:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <Sdk Name="VSA.Sdk" />
+  <Sdk Name="Umpire.Sdk" />
   <ItemGroup>
-    <PackageReference Include="VSA.Host" />
-    <PackageReference Include="VSA.Views" />
+    <PackageReference Include="Umpire.Vsa.Hosts.Web" />
+    <PackageReference Include="Umpire.Vsa.Views" />
   </ItemGroup>
 </Project>
 ```
 
-A `VSA.*` package that VSA.Sdk does not add, for example `VSA.Host`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of VSA.Sdk: the rule engine checks it (`VSA3001`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Vsa.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP3001`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Host/`) has its own project in the module folder. It then references the other modules that it uses.
 
@@ -103,7 +103,7 @@ public sealed record Cost(string Resource, int Amount);
 
 - Put keys, ids and data records here. Put the rules in `Domain/`, for example `Resources/Domain/Wallet.cs`.
 - A `Domain.Shared` type uses only its own module. The published domain of one module does not depend on another module.
-- A type holds only immutable data: `VSA1005`, `VSA1006` and `VSA1007` check it (see `architecture-rules.md`).
+- A type holds only immutable data: `UMP1005`, `UMP1006` and `UMP1007` check it (see `architecture-rules.md`).
 
 ## Plugins and the two meanings of Shared
 
@@ -115,7 +115,7 @@ public sealed record Cost(string Resource, int Amount);
 
 "Shared" is the name of two things in one module: `Slices/Shared/` and `Domain/Shared/`. A base of the whole app is a plugin module, not a Shared one.
 
-The namespace of the published domain is `<App>.Features.<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
+The namespace of the published domain is `<App>.Features.<Module>.Domain.Shared`. `Shared` is a VB keyword, but `Umpire.globalconfig` turns off CA1716, because the code is C# only.
 
 ## Commands
 
@@ -162,7 +162,7 @@ sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher 
 
 - The definition lets each handler use the `Contracts.Commands` of each module, so each handler can send each command.
 - A command has exactly one handler. If two handlers handle one command, `AddCommandHandlers` stops start-up. If a command has no handler, `SendAsync` fails.
-- `AddCommandHandlers` (`VSA.Handlers.Commands`) registers `ICommandSender` and each command handler of the modules (`docs/composition.md`).
+- `AddCommandHandlers` (`Umpire.Vsa.Handlers.Commands`) registers `ICommandSender` and each command handler of the modules (`docs/composition.md`).
 - A unit test sends a command to its handler with `VsaUnitTest.Send` (see `architecture-rules.md`).
 
 VSA has no direction check for commands. See L-04 in "Open questions".

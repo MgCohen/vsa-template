@@ -1,6 +1,6 @@
-# Scaffolding: the vsa tool
+# Scaffolding: the umpire tool
 
-The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `VSA.slnx` builds them as normal code (`dotnet run solution.cs` makes `VSA.slnx`). The tool, VSA.Sdk and the VSA.* packages have one version. The rule engine checks it on each build (`VSA3001`), `vsa doctor` runs the same check, and `vsa update` moves all to the latest version.
+The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP3001`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
 
 ## Commands
 
@@ -12,7 +12,7 @@ The `vsa` tool (package `VSA.Cli`) writes new apps, modules, plugin modules, req
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
 | `doctor` | None | None |
-| `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the VSA versions in `global.json` and the project files |
+| `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the Umpire versions in `global.json` and the project files |
 
 Rules for all commands:
 
@@ -24,26 +24,26 @@ Rules for all commands:
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
-- `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
+- `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
 - `new app` writes a `.gitignore` for the build folders and the local files (`bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
 
 ## Add a command
 
-Each command of the tool is one class in `framework/Tooling/Cli/Commands/`. It inherits one base from `Commands/Bases/`, and it has one entry in `CommandList.All`. The help text comes from that list.
+Each command of the tool is one class in `tools/cli/Commands/`. It inherits one base from `Commands/Bases/`, and it has one entry in `CommandList.All`. The help text comes from that list.
 
 ```
 ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(CommandInput)
-├─ NewAppCommand                 vsa new app <Name> [--source <feed>]
+├─ NewAppCommand                 umpire new app <Name> [--source <feed>]
 └─ AppCommand                    finds the app root, then Run(root, CommandInput)
-   ├─ DoctorCommand              vsa doctor
-   ├─ UpdateCommand              vsa update [--version <version>]
+   ├─ DoctorCommand              umpire doctor
+   ├─ UpdateCommand              umpire update [--version <version>]
    └─ AddCommand                 checks the name, writes the template files of one Templates.Kind
-      ├─ AddModuleCommand        vsa add module <Name>
-      ├─ AddPluginCommand        vsa add plugin <Name>
+      ├─ AddModuleCommand        umpire add module <Name>
+      ├─ AddPluginCommand        umpire add plugin <Name>
       └─ AddSliceCommand         one class, one instance for each SliceKind:
-                                   SliceKind.Request  vsa add request <Name> -m <Module>
-                                   SliceKind.Command  vsa add command <Name> -m <Module>
+                                   SliceKind.Request  umpire add request <Name> -m <Module>
+                                   SliceKind.Command  umpire add command <Name> -m <Module>
 ```
 
 | You want | Inherit | You write |
@@ -58,7 +58,7 @@ To add a command:
 1. Write the class in `Commands/`. Inherit the base from the table.
 2. Give its options as `CommandOption` values. `Required` makes the option necessary. `Many` accepts more than one value.
 3. Read the input with `input.Name`, `input.Single(option)` or `input.All(option)`.
-4. For an error for the user, throw `VsaException`. The tool shows the message and stops with exit code 1.
+4. For an error for the user, throw `UmpireException`. The tool shows the message and stops with exit code 1.
 5. Add the command to `CommandList.All`.
 6. Add a test in `tests/Cli`. `CommandTests` makes sure that each command inherits one base and is in the list.
 
@@ -67,12 +67,12 @@ An `AppCommand` checks the input in this order: the name, then the app root, the
 ## Template format A
 
 ```
-framework/Tooling/Cli/Templates/
+tools/cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
 ├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
-├─ global.json.template, dotnet-tools.json.template   new app (the version token {{VsaVersion}})
-├─ nuget.config.template             new app (each --source replaces the vsa feed and removes the credentials)
+├─ global.json.template, dotnet-tools.json.template   new app (the version token {{UmpireVersion}})
+├─ nuget.config.template             new app (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               new app
 ├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
@@ -87,7 +87,7 @@ framework/Tooling/Cli/Templates/
 ├─ Plugins/.gitkeep                                new app (keeps the empty Plugins/ folder)
 ├─ Tests/App.Tests.csproj                         new app
 ├─ Tests/SampleModuleStatusTests.cs                add module
-├─ Directory.Build.props, VSA.Sdk.Dev.props        source mode only, not copied
+├─ Directory.Build.props, Umpire.Sdk.Dev.props        source mode only, not copied
 ```
 
 The path of a template file gives its command. The tool uses the first rule that matches:
@@ -104,7 +104,7 @@ The path of a template file gives its command. The tool uses the first rule that
 
 The tool also replaces the kebab form of each name, for routes: `sample-module` becomes `billing`, and `sample-action` becomes `create-invoice`.
 
-The suffix `.template` keeps a file inactive in this repository, for example a `global.json` that would change the SDK of the template build. The tool removes the suffix. In each template file, the tool replaces `{{VsaVersion}}` with its own version.
+The suffix `.template` keeps a file inactive in this repository, for example a `global.json` that would change the SDK of the template build. The tool removes the suffix. In each template file, the tool replaces `{{UmpireVersion}}` with its own version.
 
 ## Source mode and package mode
 
@@ -112,9 +112,9 @@ The templates build in this repository in source mode, as `samples/` does. The t
 
 | Source mode (repository) | Package mode (consumer) |
 |---|---|
-| `<Project>` with `<Import ... VSA.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="VSA.Sdk" />` |
-| `<Project Sdk="Microsoft.NET.Sdk.Web">` with the same imports | `<Project Sdk="Microsoft.NET.Sdk.Web">` with `<Sdk Name="VSA.Sdk" />` |
-| `<ProjectReference Include="$(VsaFrameworkSourceDir).../VSA.Host.csproj" />` | `<PackageReference Include="VSA.Host" Version="<tool version>" />` |
+| `<Project>` with `<Import ... Umpire.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="Umpire.Sdk" />` |
+| `<Project Sdk="Microsoft.NET.Sdk.Web">` with the same imports | `<Project Sdk="Microsoft.NET.Sdk.Web">` with `<Sdk Name="Umpire.Sdk" />` |
+| `<ProjectReference Include="$(UmpireFrameworkSourceDir).../Umpire.Vsa.Hosts.Web.csproj" />` | `<PackageReference Include="Umpire.Vsa.Hosts.Web" Version="<tool version>" />` |
 
 If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
 
@@ -126,26 +126,26 @@ The rule engine checks the architecture after each build of the host (see [archi
 
 ## One version
 
-`new app` writes the version of the tool to these files. `vsa doctor` runs the version check of the rule engine (`VersionCheck`, see "One version" in [architecture-engine.md](architecture-engine.md)) with the version of the running tool. It fails if a slot has a different version. `vsa update` writes one version to all of them, and checks nothing.
+`new app` writes the version of the tool to these files. `umpire doctor` runs the version check of the rule engine (`VersionCheck`, see "One version" in [architecture-engine.md](architecture-engine.md)) with the version of the running tool. It fails if a slot has a different version. `umpire update` writes one version to all of them, and checks nothing.
 
 | File | Item |
 |---|---|
-| The running tool | `VSA.Cli` |
-| `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
-| `global.json` | `msbuild-sdks` → `VSA.Sdk` |
-| Each `.csproj` and `Directory.*.props` | Each `VSA.Sdk` pin (`Sdk="VSA.Sdk/1.0.0"`, `<Sdk Name="VSA.Sdk" Version="1.0.0" />`) and each `VSA.*` package reference, also `VSA.Architecture.Build`. A reference with no version uses its `PackageVersion` |
+| The running tool | `Umpire.Cli` |
+| `dotnet-tools.json`, `.config/dotnet-tools.json` | `umpire.cli` |
+| `global.json` | `msbuild-sdks` → `Umpire.Sdk` |
+| Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` pin (`Sdk="Umpire.Sdk/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference, also `Umpire.Engine.Build`. A reference with no version uses its `PackageVersion` |
 
-A missing tool manifest gives no slot, so `vsa doctor` does not fail for it. `vsa update` needs one tool manifest.
+A missing tool manifest gives no slot, so `umpire doctor` does not fail for it. `umpire update` needs one tool manifest.
 
 ## Update
 
-`vsa update` moves an app to a new VSA version:
+`umpire update` moves an app to a new Umpire version:
 
-1. `dotnet tool update vsa.cli --local` changes the tool manifest. With no `--version`, it gets the latest version on the feeds of the app. If the app uses a preview, it also accepts previews. With `--version`, it gets that version, also a lower one.
+1. `dotnet tool update umpire.cli --local` changes the tool manifest. With no `--version`, it gets the latest version on the feeds of the app. If the app uses a preview, it also accepts previews. With `--version`, it gets that version, also a lower one.
 2. The tool writes the version of the manifest to `global.json` and to each place in the table above. It changes no other item. A package reference with no version keeps its `PackageVersion`.
 3. The tool shows the changed files. Then run `dotnet build`.
 
-The running tool is the old version. So run `vsa doctor` after the update, not in the same command.
+The running tool is the old version. So run `umpire doctor` after the update, not in the same command.
 
 ## Empty Domain
 

@@ -1,6 +1,6 @@
-using GoodApp.Billing.Domain;
-
 namespace GoodApp.Billing.Slices.CreateInvoice;
+
+using GoodApp.Billing.Domain;
 
 public sealed class CreateInvoiceHandler : Kit.IRequestHandler {
     public static (Invoice, InvoiceCreated) Handle(CreateInvoiceRequest request) {
