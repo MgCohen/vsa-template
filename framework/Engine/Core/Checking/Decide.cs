@@ -6,7 +6,7 @@ static class Decide {
         Part toPart, IReadOnlyDictionary<string, string> toValues) {
         var winner = definition.Resolve().LastOrDefault(rule =>
             rule.From == fromPart && rule.To == toPart && Holds(rule.Condition, fromValues, toValues));
-        return new Decision(winner?.Permission ?? definition.Options.DefaultPermission, winner);
+        return new Decision(winner?.Permission ?? definition.Options.DefaultPermission!.Value, winner);
     }
 
     static bool Holds(string condition, IReadOnlyDictionary<string, string> from, IReadOnlyDictionary<string, string> to) =>

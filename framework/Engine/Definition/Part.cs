@@ -98,16 +98,28 @@ public class Part : IPartChain {
 
     internal Part Group<T>(string? folder, Boundary? boundary) where T : Concept, new() {
         var concept = new T();
-        var part = Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true));
-        part.boundary = boundary;
-        return part;
+        var part = new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true) { boundary = boundary };
+        return Attach(part);
+    }
+
+    static void RefuseArchitectureOptions(Part child, Options options) {
+        var names = new[] {
+            options.DefaultPermission is null ? null : nameof(Options.DefaultPermission),
+            options.UseSameConcept is null ? null : nameof(Options.UseSameConcept),
+        };
+        if (names.FirstOrDefault(n => n is not null) is { } name) {
+            throw new InvalidOperationException(
+                $"Define: the concept {child.Name} sets {name}. Only the architecture sets {name}. Move it to Configure of the architecture.");
+        }
     }
 
     Part Attach(Part child) {
         Block(child);
         var options = child.Concept!.Configured();
+        RefuseArchitectureOptions(child, options);
         child.depth = options.Depth;
         child.access = options.Access;
+        child.boundary ??= options.Boundary;
         children.Add(child);
         child.Concept!.Define(child);
         return child;
@@ -115,23 +127,18 @@ public class Part : IPartChain {
 
     void Block(Part child) {
         var name = child.Name;
-        if (child.Concept is External && child.IsGroup) {
-            throw new InvalidOperationException(
-                $"Define: AddGroup<{name}>() makes a group of an external. A DLL is not a group of folders. Use Add<{name}>().");
+        var group = SelfAndAncestors().FirstOrDefault(p => p.IsGroup);
+        var external = child.Concept is External;
+        if (!(external && (child.IsGroup || group is not null || IsExternal)) && !(child.IsGroup && IsExternal)) {
+            return;
         }
-        if (child.Concept is External && SelfAndAncestors().Any(p => p.IsGroup)) {
-            throw new InvalidOperationException(
-                $"Define: the external {name} is under the group {SelfAndAncestors().First(p => p.IsGroup).Name}. "
-                + $"A DLL has no copy for each group instance. Add {name} outside the group.");
-        }
-        if (child.Concept is External && IsExternal) {
-            throw new InvalidOperationException(
-                $"Define: the external {name} is under the external {Assembly}. "
-                + $"The child of an external gets its DLL name from its parent. Add {name} outside {Name}.");
-        }
-        if (child.IsGroup && IsExternal) {
-            throw new InvalidOperationException(
-                $"Define: AddGroup<{name}>() is under the external {Assembly}. DLL names have no instance segment. Use Add<{name}>().");
-        }
+        var call = child.IsGroup ? $"AddGroup<{name}>()" : $"Add<{name}>()";
+        var place = IsExternal ? $"is under the external {Assembly}"
+            : group is not null ? $"is under the group {group.Name}"
+            : "makes a group of an external";
+        throw new InvalidOperationException(
+            $"Define: {call} {place}. A DLL name has no group segment, and the child of an external gets its DLL name from its parent. "
+            + "So an external is not a group, and it is not under a group or another external. A group is not under an external. "
+            + $"Use Add<{name}>(), and add each external outside the groups and the other externals.");
     }
 }
