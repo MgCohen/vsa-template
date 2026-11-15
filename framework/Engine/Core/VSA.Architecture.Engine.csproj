@@ -6,6 +6,9 @@
     <ProjectReference Include="../Definition/VSA.Architecture.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Architecture.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="TngTech.ArchUnitNET" />
   </ItemGroup>
 </Project>

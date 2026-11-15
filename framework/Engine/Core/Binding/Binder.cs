@@ -2,7 +2,7 @@ using ArchUnitNET.Domain;
 
 namespace VSA.Architecture.Engine;
 
-public sealed class Binder {
+sealed class Binder {
     readonly IReadOnlyList<Part> folderParts;
     readonly IReadOnlyList<Part> externalParts;
     readonly string rootPath;
@@ -21,10 +21,12 @@ public sealed class Binder {
 
     public static Bindings Bind(Architecture definition, LoadedApp app) {
         var binder = new Binder(definition, app.Sources, app.AppRoot);
-        var places = app.Types.Select(binder.Place).ToList();
-        return new Bindings(
-            FollowUsers([.. places.Select(p => p.Bound).OfType<Binding>()]),
-            [.. places.Select(p => p.Unmapped).OfType<UnmappedType>()]);
+        var bound = new List<Binding>();
+        var unmapped = new List<UnmappedType>();
+        foreach (var type in app.Types) {
+            binder.Place(type, bound, unmapped);
+        }
+        return new Bindings(FollowUsers(bound), unmapped);
     }
 
     public static bool Is(IType type, Type target) {
@@ -35,23 +37,30 @@ public sealed class Binder {
         return bases.Any(b => b.FullName == name);
     }
 
-    TypePlace Place(IType type) {
+    void Place(IType type, List<Binding> bound, List<UnmappedType> unmapped) {
+        if (type.Name.StartsWith('<')) {
+            return;
+        }
         if (ExternalPart(type) is { } external) {
-            return type.Name.StartsWith('<') ? TypePlace.None : TypePlace.Of(ExternalBinding(type, external));
+            bound.Add(new Binding(type, external, new Dictionary<string, string>(), null));
+            return;
         }
-        if (type.Name.StartsWith('<') || !sources.TryGetValue(type.FullName, out var source)) {
-            return TypePlace.None;
+        if (!sources.TryGetValue(type.FullName, out var source)) {
+            return;
         }
-        var relative = Path.GetRelativePath(appRoot, source.File).Replace('\\', '/');
+        var file = Path.GetFullPath(source.File);
+        var relative = Path.GetRelativePath(appRoot, file).Replace('\\', '/');
         var paths = PathsUnderRoot(relative);
-        if (paths.Count == 0 || IsBuildOutput(relative)) {
-            return TypePlace.None;
+        if (paths.Count == 0 || BuildOutput.Contains(relative)) {
+            return;
         }
-        var located = source with { File = relative };
+        var located = source with { File = file };
         var match = Match(paths);
-        return match is null || match.IsUndeclaredGroupFolder
-            ? TypePlace.Of(new UnmappedType(type, located))
-            : TypePlace.Of(BindTo(match, type, located));
+        if (match is null || match.IsUndeclaredGroupFolder) {
+            unmapped.Add(new UnmappedType(type, located));
+        } else {
+            bound.Add(BindTo(match, type, located));
+        }
     }
 
     Part? ExternalPart(IType type) {
@@ -61,9 +70,6 @@ public sealed class Binder {
             .OrderByDescending(p => p.Assembly!.Length)
             .FirstOrDefault();
     }
-
-    static Binding ExternalBinding(IType type, Part external) =>
-        new(type, external, new Dictionary<string, string>(), new Source(AssemblyName(type), 0), External: true);
 
     List<string> PathsUnderRoot(string relative) {
         if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative)) {
@@ -81,10 +87,6 @@ public sealed class Binder {
 
     bool IsUnderRoot(string relative) =>
         rootPath.Length == 0 || relative.StartsWith(rootPath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
-
-    static bool IsBuildOutput(string relative) =>
-        relative.Split('/')[..^1].Any(f =>
-            f.Equals("obj", StringComparison.OrdinalIgnoreCase) || f.Equals("bin", StringComparison.OrdinalIgnoreCase));
 
     FolderMatch? Match(IReadOnlyList<string> paths) => paths
         .Select(path => path.Split('/')[..^1])
@@ -145,14 +147,6 @@ public sealed class Binder {
         part.Children.Where(c => !c.HasFolder && !c.IsGroup).SelectMany(c => new[] { c }.Concat(ParentFolderChildren(c)));
 
     static string AssemblyName(IType type) => type.Assembly.Name.Split(',')[0];
-
-    sealed record TypePlace(Binding? Bound, UnmappedType? Unmapped) {
-        public static readonly TypePlace None = new(null, null);
-
-        public static TypePlace Of(Binding bound) => new(bound, null);
-
-        public static TypePlace Of(UnmappedType unmapped) => new(null, unmapped);
-    }
 
     sealed record FolderMatch(Part Part, string[] Pattern, string[] Folders) {
         public bool Matches => Pattern.Length <= Folders.Length && Pattern.Select((s, i) => Fits(s, Folders[i])).All(x => x);

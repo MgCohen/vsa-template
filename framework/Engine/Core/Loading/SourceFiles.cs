@@ -1,6 +1,6 @@
 namespace VSA.Architecture.Engine;
 
-public static class SourceFiles {
+static class SourceFiles {
     public static Dictionary<string, Source> Read(IEnumerable<string> dlls) {
         var result = new Dictionary<string, Source>();
         foreach (var dll in dlls.Where(HasSymbols)) {
@@ -14,7 +14,15 @@ public static class SourceFiles {
 
     public static bool HasSymbols(string dll) => File.Exists(Path.ChangeExtension(dll, ".pdb"));
 
-    public static IReadOnlyList<string> Documents(string dll) {
+    public static bool HasSourceUnder(string dll, string appRoot) {
+        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(appRoot)) + Path.DirectorySeparatorChar;
+        return Documents(dll)
+            .Where(Path.IsPathRooted)
+            .Select(Path.GetFullPath)
+            .Any(file => file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && !UnityProject.IsInLibrary(file[prefix.Length..]));
+    }
+
+    static IReadOnlyList<string> Documents(string dll) {
         if (!HasSymbols(dll)) {
             return [];
         }
@@ -24,13 +32,5 @@ public static class SourceFiles {
         } catch (Exception e) when (e is BadImageFormatException or IOException) {
             return [];
         }
-    }
-
-    public static bool HasSourceUnder(string dll, string appRoot) {
-        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(appRoot)) + Path.DirectorySeparatorChar;
-        return Documents(dll)
-            .Where(Path.IsPathRooted)
-            .Select(Path.GetFullPath)
-            .Any(file => file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && !UnityProject.IsInLibrary(file[prefix.Length..]));
     }
 }

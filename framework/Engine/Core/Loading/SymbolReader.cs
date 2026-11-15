@@ -6,7 +6,6 @@ namespace VSA.Architecture.Engine;
 
 sealed class SymbolReader : IDisposable {
     static readonly Guid TypeDefinitionDocuments = new("932E74BC-DBA9-4478-8D46-0F32A7BAB3D3");
-    static readonly string[] GeneratedFolders = ["obj", "bin"];
     const string EmbeddedAttribute = "Microsoft.CodeAnalysis.EmbeddedAttribute";
     const int OutputFolders = 2;
     const int GeneratorFolders = 2;
@@ -116,15 +115,14 @@ sealed class SymbolReader : IDisposable {
 
     string DocumentName(DocumentHandle handle) => pdb.GetString(pdb.GetDocument(handle).Name);
 
-    static bool IsGenerated(string file) =>
-        file.Split(Separators).Any(segment => GeneratedFolders.Contains(segment, StringComparer.OrdinalIgnoreCase));
+    static bool IsGenerated(string file) => BuildOutput.Contains(file);
 
     static Source? InProjectFolder(Source? source) {
         if (source is null || !IsGenerated(source.File)) {
             return source;
         }
         var segments = source.File.Split(Separators);
-        var output = Array.FindIndex(segments, segment => GeneratedFolders.Contains(segment, StringComparer.OrdinalIgnoreCase));
+        var output = Array.FindIndex(segments, BuildOutput.IsFolder);
         var project = string.Join("/", segments[..output]);
         return new Source($"{project}/{string.Join("/", HintPath(segments[(output + 1)..]))}", 1);
     }

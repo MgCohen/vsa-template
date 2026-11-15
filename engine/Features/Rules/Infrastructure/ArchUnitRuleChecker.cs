@@ -6,7 +6,7 @@ namespace Rules.Infrastructure;
 
 public static class ArchUnitRuleChecker {
     public static RuleCheck Check(Architecture definition, IReadOnlyList<Assembly> assemblies, string appRoot) {
-        var map = ArchitectureMap.Load(definition, assemblies, appRoot);
+        var map = ArchitectureMap.Load(definition, assemblies.Select(a => a.Location), appRoot);
         return new RuleCheck([.. map.Findings().Select(ToFinding)], map.Bindings.AppTypes.Count);
     }
 
