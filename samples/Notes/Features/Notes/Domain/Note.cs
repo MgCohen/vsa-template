@@ -2,7 +2,7 @@ using VSA.Domain;
 
 namespace Notes.Domain;
 
-public sealed class Note : AggregateRoot<NoteId> {
+public sealed class Note : Entity<NoteId> {
     public const int MaxTitleLength = 200;
 
     Note() { }

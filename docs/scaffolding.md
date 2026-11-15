@@ -104,4 +104,4 @@ The running tool is the old version. So run `vsa doctor` after the update, not i
 
 ## Empty Domain
 
-A new module has an empty Domain. When you add the first aggregate, write an `IRepository<T, TId>` for it in `Infrastructure/`, and register it in the module root.
+A new module has an empty Domain. When you add the first entity, write an `IRepository<T, TId>` for it in `Infrastructure/`, and register it in the module root.
