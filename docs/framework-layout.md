@@ -1,29 +1,50 @@
-# Framework layout: kernel, components, engine and architectures
+# Repository layout: architecture, framework, packs, engine and tools
 
-The framework has four groups. The kernel and the engine know no layer, so a second architecture can use them with no VSA package. VSA is one architecture pack on top of them.
+Umpire has five groups of code, and each group has one top folder. The definition API depends on no other folder, and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
 
 ## Groups
 
 | Group | Folder | Purpose | Who selects it |
 |---|---|---|---|
-| Kernel | `framework/Kernel/` | What each app needs to start | Nobody: always there |
-| Components | `framework/Components/` | Optional blocks, for example `Messages/` | The architecture |
-| Engine | `framework/Engine/` | The definition API and the checks | The build hook |
-| Architectures | `framework/Architectures/<Name>/` | One full pack: definition, bases, rules | The app: one for each app |
+| Architecture | `architecture/` | The definition API and the rule answers | Each pack and the engine |
+| Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
+| Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
+| Engine | `engine/` | The rule engine app and the build hook | The build hook package |
+| Tools | `tools/` | The `umpire` tool and Umpire.Sdk | The developer |
 
 ```mermaid
 flowchart BT
-    Vsa["Architectures/Vsa"] --> Kernel
-    Vsa --> Messages["Components/Messages"]
-    Vsa --> Definition["Engine/Definition"]
-    Messages -. private .-> Kernel
-    Kernel --> Definition
-    Core["Engine/Core"] --> Definition
+    Kernel["framework/Kernel"] --> Architecture["architecture/"]
+    Messages["framework/Components/Messages"] -. private .-> Kernel
+    Vsa["packs/Vsa"] --> Kernel
+    Vsa --> Messages
+    Vsa --> Architecture
+    Engine["engine/"] --> Vsa
+    Cli["tools/cli"] --> Versions["engine/Versions"]
 ```
 
-`Engine/Versions` (`Umpire.Engine.Versions`) has no VSA reference. The engine app and the `vsa` tool bundle it for the version check.
+## Three tiers
 
-The kernel references the definition API (`Umpire.Architecture`), because a `Pack` gives the `Architecture` of the app. The definition API is portable and has no ArchUnitNET. The engine core (`Engine/Core`) does not reference the kernel.
+| Tier | Example | Layer rules | Reuse |
+|---|---|---|---|
+| Kernel | `framework/Kernel/` | None | Each app, each architecture |
+| Component | `framework/Components/Messages/` | None, but it can have a layer shape | Many definitions |
+| Plugin | `Plugins/<Plugin>/` of an app | The VSA definition checks it | One VSA app |
+
+The terms are in `vocabulary.md`.
+
+## Where the rule answers are
+
+```
+engine Rules step (engine/Features/Rules)
+├─ BuiltApp plugin: DLL, PDB and Unity facts      ArchUnitNET (the only place)
+├─ ResolvedArchitecture.Place(facts)              architecture/Resolution: Match
+└─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Resolution: Decide
+```
+
+`architecture/Resolution/` takes plain facts (`TypeFacts`: file, assembly, base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
+
+The kernel references the definition API (`Umpire.Architecture`), because a `Pack` gives the `Architecture` of the app. The definition API is portable and has no ArchUnitNET.
 
 ## Two kinds of type
 
@@ -59,12 +80,11 @@ See `composition.md` for each step.
 
 ## Non-goals
 
-- No package rename yet. Reason: the neutral product prefix comes with the names pass. The packages keep their `Umpire.*` names.
 - No split of the web host. Reason: its generic part is about 20 lines. Split it when a second architecture needs a web host.
+- No portable hosts project. Reason: `VsaHost` and `ConsoleVsaHost` stay in `Umpire.Vsa.Composition`, so `Vsa<THost>` has no project cycle (W11 examines a split).
 
 ## Open questions
 
-- The neutral prefix for the kernel, the components and the engine, and for the rule IDs (`UMP1xxx`, `UMP2xxx`).
-- The place of the `vsa` tool and the viewer: `tools/` as separate apps, and the templates in the VSA pack.
-- The engine app as a bootstrap: built on the last released VSA, not on the source.
-- The generic part of Umpire.Sdk: the folder rules and the version pins, apart from the list of VSA packages.
+- The engine app as a bootstrap: built on the last released Umpire, not on the source.
+- The generic part of Umpire.Sdk: the folder rules and the version pins, apart from the list of Umpire packages.
+- The names of "Rules", "Decide", "Resolution" and the place of `Versions` (library or plugin).

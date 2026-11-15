@@ -1,15 +1,15 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`framework/Architectures/Vsa/Definition/VsaArchitecture.cs`, see `architecture-engine.md`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`packs/Vsa/Architecture/VsaArchitecture.cs`, see `architecture-engine.md`).
 
 ## Levels
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
-| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`framework/Architectures/Vsa/Rules`, with `Umpire.Kernel.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP1xxx` |
+| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernel.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP1xxx` |
 | Build of the host | Architecture | `Umpire.Engine.Build` (rule engine, ArchUnitNET) | `UMP2xxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
-| Tests | End-to-end | `VSA.Testing.EndToEnd` | Not started |
+| Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
 
 The editor and the build run the first group in each consumer project. The build of the host project runs the architecture checks. The last group runs in a consumer test project.
 
@@ -41,7 +41,7 @@ The editor and the build run the first group in each consumer project. The build
 
 ## Plugin modules
 
-A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as the VSA pack (`framework/Architectures/Vsa`) is the base of each layer. The VSA definition gives its rules:
+A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as the VSA pack (`packs/Vsa`) is the base of each layer. The VSA definition gives its rules:
 
 | Rule | Check |
 |---|---|
@@ -90,7 +90,7 @@ umpire.UMP1001.check_responses = true             # rule option
 |---|---|
 | `Umpire.globalconfig` | The built-in .NET rules: editor and code style options, severities |
 | `Umpire.Tests.globalconfig` | The built-in rules that are off in a project whose name ends with `.Tests` (CA1707, underscores in test names) |
-| `Umpire.Rules.globalconfig` | The values of the VSA rules. No rule has a default in code |
+| `Umpire.Rules.globalconfig` | The values of the Umpire rules. No rule has a default in code |
 | `Umpire.Rules.props` | The MSBuild setup: both files, `EnforceCodeStyleInBuild`, the formatting rules as warnings |
 
 `Sdk.props` imports `Umpire.Rules.props` for each Umpire.Sdk project. The root `Directory.Build.props` imports it for the framework and its tests, so this repository follows the same rules. `Directory.Build.targets` gives the framework projects the VSA analyzer with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
@@ -219,8 +219,8 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 ## Add a rule
 
-1. If a built-in .NET rule does the check, set its severity in `framework/Sdk/Sdk/Umpire.globalconfig`.
+1. If a built-in .NET rule does the check, set its severity in `tools/sdk/Sdk/Umpire.globalconfig`.
 2. If one file shows the problem, write a rule class that inherits `UmpireAnalyzerRule`. Use the next free `UMP1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
-3. Else change the rules of the VSA definition (`framework/Architectures/Vsa/Definition/VsaArchitecture.cs`).
+3. Else change the rules of the VSA definition (`packs/Vsa/Architecture/VsaArchitecture.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

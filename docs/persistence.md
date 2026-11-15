@@ -1,10 +1,10 @@
 # Persistence
 
-VSA has one persistence port, `IRepository<T, TId>` (`framework/Architectures/Vsa/Infrastructure/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
+VSA has one persistence port, `IRepository<T, TId>` (`packs/Vsa/Kernel/Infrastructure/IRepository.cs`). VSA has no storage adapter. Each module writes its adapter in `Infrastructure/` and registers it in its module root.
 
 ## The domain base
 
-`Entity<TId>` (`framework/Architectures/Vsa/Domain/Entity.cs`) is the one domain base of VSA. It holds only `Id`. It has no behavior.
+`Entity<TId>` (`packs/Vsa/Kernel/Domain/Entity.cs`) is the one domain base of VSA. It holds only `Id`. It has no behavior.
 
 | Type | Constraint |
 |---|---|

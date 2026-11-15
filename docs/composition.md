@@ -265,26 +265,27 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 
 ```
 framework/Kernel/                      Umpire.Kernel
-  App, App<TPack>, IApp                the lifetime of the app
-  Pack, Pack<TArchitecture, THost>     the architecture and the host of the app
-  Module, Module<TSettings>            the root class of a module
-  ServiceCollectionExtensions          Replace<TService, TImplementation>
+  App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, THost>
+  Modules/                             Module, Module<TSettings>, the settings
+  Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
   Hosting/                             AppHost, the core step (AutoRegistration, ComposedConfiguration)
   Scan/                                AppTypes, ModuleRoot, Registration, IKeySource, ConstraintKeys, MarkedTypes
   Factories/                           IFactory<T>, AddFactory
-framework/Engine/Definition/           Umpire.Architecture: Architecture (the kernel references it for Pack)
+architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/
   Handlers/                            PipelineBuilder, Pipelines, the runners, Validator, Before, After, AddPipelines
-framework/Architectures/Vsa/
-  Definition/                          Umpire.Vsa: VsaArchitecture, the VSA layers, Vsa<THost>, Vsa<TArchitecture, THost>
-  Handlers/Events/                     AddEventHandlers, InProcessEventPublisher
-  Handlers/Commands/                   AddCommandHandlers, InProcessCommandSender
-  Handlers/Requests/                   RequestHandler, AddRequestHandlers
-  Presenters/                          AddPresenters
-  Views/                               ViewsRoot, ViewsInstaller
-  Composition/                         Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>, InProcessBus
-    Hosts/Console/                     ConsoleVsaHost, ConsoleEntry, ConsoleExit
-  Host/                                Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
+packs/Vsa/
+  VsaPack.cs                           Umpire.Vsa: Vsa<THost>, Vsa<TArchitecture, THost>
+  Architecture/                        Umpire.Vsa.Definition: VsaArchitecture, the VSA layers
+  Kernel/
+    Handlers/Events/                   AddEventHandlers, InProcessEventPublisher
+    Handlers/Commands/                 AddCommandHandlers, InProcessCommandSender
+    Handlers/Requests/                 RequestHandler, AddRequestHandlers
+    Presenters/                        AddPresenters
+    Views/                             ViewsRoot, ViewsInstaller
+    Composition/                       Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>, InProcessBus
+      Hosts/Console/                   ConsoleVsaHost, ConsoleEntry, ConsoleExit
+    Hosts/                             Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
 ```mermaid

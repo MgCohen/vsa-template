@@ -1,6 +1,6 @@
-# Scaffolding: the vsa tool
+# Scaffolding: the umpire tool
 
-The `vsa` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP3001`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
+The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP3001`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
 
 ## Commands
 
@@ -12,7 +12,7 @@ The `vsa` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, 
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
 | `doctor` | None | None |
-| `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the VSA versions in `global.json` and the project files |
+| `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the Umpire versions in `global.json` and the project files |
 
 Rules for all commands:
 
@@ -24,13 +24,13 @@ Rules for all commands:
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
-- `new app` writes a `nuget.config` that gets the VSA packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
+- `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
 - `new app` writes a `.gitignore` for the build folders and the local files (`bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
 
 ## Add a command
 
-Each command of the tool is one class in `framework/Tooling/Cli/Commands/`. It inherits one base from `Commands/Bases/`, and it has one entry in `CommandList.All`. The help text comes from that list.
+Each command of the tool is one class in `tools/cli/Commands/`. It inherits one base from `Commands/Bases/`, and it has one entry in `CommandList.All`. The help text comes from that list.
 
 ```
 ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(CommandInput)
@@ -67,12 +67,12 @@ An `AppCommand` checks the input in this order: the name, then the app root, the
 ## Template format A
 
 ```
-framework/Tooling/Cli/Templates/
+tools/cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
 ├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
 ├─ global.json.template, dotnet-tools.json.template   new app (the version token {{UmpireVersion}})
-├─ nuget.config.template             new app (each --source replaces the vsa feed and removes the credentials)
+├─ nuget.config.template             new app (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               new app
 ├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
@@ -139,7 +139,7 @@ A missing tool manifest gives no slot, so `umpire doctor` does not fail for it. 
 
 ## Update
 
-`umpire update` moves an app to a new VSA version:
+`umpire update` moves an app to a new Umpire version:
 
 1. `dotnet tool update umpire.cli --local` changes the tool manifest. With no `--version`, it gets the latest version on the feeds of the app. If the app uses a preview, it also accepts previews. With `--version`, it gets that version, also a lower one.
 2. The tool writes the version of the manifest to `global.json` and to each place in the table above. It changes no other item. A package reference with no version keeps its `PackageVersion`.

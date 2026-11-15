@@ -1,26 +1,25 @@
 # Architecture engine
 
-The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. The core library (`VSA.Architecture.Engine`) loads the app, binds each type to a part, decides each use and gives each problem as a record. The engine app (`engine/`) runs the core after each build of the host.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `architecture/Resolution/` gives the answers on plain facts: the part of each type (`Match`) and the decision for each use (`Decide`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
 
 ```mermaid
 flowchart LR
-    L[ArchitectureLoader] --> A[LoadedApp]
-    A --> B[Binder]
+    L["AppReader (BuiltApp plugin)"] --> A["TypeFacts"]
+    A --> B["Match (Resolution)"]
     D[Definition: Umpire.Architecture] --> B
     B --> S[Bindings]
-    S --> C[RuleChecks + Decide]
-    C --> F["RuleFinding (code, severity, file, line, column, text)"]
+    S --> C["RuleChecks + Decide"]
+    C --> F["Finding (code, severity, message, file, line)"]
 ```
 
 ## Projects
 
 | Project | Path | Contains |
 |---|---|---|
-| `Umpire.Architecture` | `framework/Engine/Definition/` | The definition API. No ArchUnitNET |
-| `VSA.Architecture.Engine` | `framework/Engine/Core/` | The core: load, bind, decide, check |
-| `Umpire.Vsa` | `framework/Architectures/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
-| `Umpire.Engine.Versions` | `framework/Engine/Versions/` | The version check (`UMP3001`). The engine app and the `vsa` tool bundle it |
-| Engine app | `engine/` | The runner: Versions, Definition, Rules, Report. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
+| `Umpire.Architecture` | `architecture/` | The definition API and `Resolution/`. No ArchUnitNET |
+| `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
+| `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP3001`). The engine app and the `umpire` tool bundle it |
+| Engine app | `engine/` | The runner: Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
@@ -94,7 +93,7 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 ## External parts
 
-An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `VSA.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Umpire.Vsa.Contracts.Requests`. The types of an external DLL are rule targets: a rule can deny them.
+An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `Umpire.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`: `VsaArchitecture` gives `Contracts` the DLL `Umpire.Messages.Contracts`, and `Contracts.Requests` the DLL `Umpire.Vsa.Contracts.Requests`. The longest matching DLL name wins. The types of an external DLL are rule targets: a rule can deny them.
 
 The definition stops at these shapes. The first four give one error, because a DLL name has no group segment, and the child of an external gets its DLL name from its parent:
 
@@ -184,7 +183,7 @@ public sealed class CardsArchitecture : VsaArchitecture {
 public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 ```
 
-`ArchitectureLoader` also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
+`AppReader` (`engine/Plugins/BuiltApp/Infrastructure`) also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
 
 | Step | Unity project |
 |---|---|
@@ -196,7 +195,7 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 
 ## The four checks
 
-`RuleChecks.Of(type)` gives the findings of one type. `ArchitectureMap.Findings()` gives the findings of all app types, and the warnings of the loader.
+`RuleChecks.Of(type)` gives the findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, and the warnings of the loader.
 
 | ID | Severity | Problem |
 |---|---|---|
@@ -206,7 +205,7 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 | `UMP2102` | Error | A type is in a folder that the definition does not have |
 | `UMP2103` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
 
-Each finding is a `RuleFinding(Code, Severity, File, Line, Column, Text)`. `File` is the full path. The engine app writes one line for each finding:
+Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
 
 ```text
 C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
@@ -219,7 +218,7 @@ The build hook package `Umpire.Engine.Build` on the host project runs the engine
 | Step | Source |
 |---|---|
 | App root | `UmpireAppRoot`, else the nearest `global.json` |
-| Versions | Each VSA version slot of the app root and of the host output (see "One version") |
+| Versions | Each Umpire version slot of the app root and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine errors" |
@@ -230,7 +229,7 @@ The build hook package `Umpire.Engine.Build` on the host project runs the engine
 | ID | Problem |
 |---|---|
 | `UMP3000` | A step throws an exception. The run continues |
-| `UMP3001` | A VSA version is not the engine version (see "One version") |
+| `UMP3001` | An Umpire version is not the engine version (see "One version") |
 | `UMP3002` | No DLL of the host output has source files under the app root |
 | `UMP3003` | The app has no app class |
 | `UMP3004` | A step is skipped, because an earlier step failed |
@@ -239,7 +238,7 @@ The build hook package `Umpire.Engine.Build` on the host project runs the engine
 
 ## One version
 
-The engine, Umpire.Sdk, the `vsa` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP3001` error with each different slot, and the engine skips the load and the rule checks (`UMP3004`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
+The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP3001` error with each different slot, and the engine skips the load and the rule checks (`UMP3004`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|

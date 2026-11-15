@@ -1,6 +1,6 @@
 # Release and consumers
 
-Each push to `main` publishes all VSA packages to GitHub Packages as the next preview. A tag `v<version>` publishes a stable version. Two public consumer repos use the published packages: a .NET app and a Unity project. They are the release check: the local samples build VSA from source, and the consumers use only what ships.
+Each push to `main` publishes all Umpire packages to GitHub Packages as the next preview. A tag `v<version>` publishes a stable version. Two public consumer repos use the published packages: a .NET app and a Unity project. They are the release check: the local samples build VSA from source, and the consumers use only what ships.
 
 ## Release flow: a merge reaches the consumers
 
@@ -32,7 +32,7 @@ To release a stable version:
 2. Push the tag: `git push origin v0.2.0`.
 3. Set `<Version>` in `Directory.Build.props` to the next version, for example `0.3.0`. If you do not, the next previews (`0.2.0-preview.<n>`) sort below `0.2.0`, and consumers do not get them.
 
-After a new version, update the VSA version in each consumer repo, then make sure that its checks pass.
+After a new version, update the Umpire version in each consumer repo, then make sure that its checks pass.
 
 ## Feed access
 
@@ -92,7 +92,7 @@ The root `Directory.Build.props` lists the portable layers (`UmpirePortableLayer
 
 - Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. So the `netstandard2.1` target uses the 8.0 packages (`Directory.Packages.props`). A higher version is a compile error in Unity (`CS1705`).
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
-- `netstandard2.1` does not have `IsExternalInit`. The layers compile `framework/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
+- `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app calls `new MyApp().Run(args)` through the Unity host, or `new Vsa<UnityVsaHost>().CreateHost().Compose(services, app)` with no host run (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies, because Umpire.Vsa.Composition references them.
 - An IL2CPP player with stripping High needs `<assembly fullname="Umpire.Markers" preserve="all" />` in a `link.xml`. The UPM package ships it (`docs/composition.md`).
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.

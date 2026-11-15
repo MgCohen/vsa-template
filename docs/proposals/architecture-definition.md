@@ -11,11 +11,11 @@ The VSA layers, root folders, markers and installers go into one architecture de
 | Place | Holds | Language |
 |---|---|---|
 | `framework/Testing/Core/Layers.cs` | The layer map | C# |
-| `framework/Sdk/Sdk/Umpire.Layers.targets` | The same map as references, the root folders | MSBuild |
-| `framework/Sdk/Tasks/SliceRouter.cs` | The marker names and their layers | C# (no semantic model) |
+| `tools/sdk/Sdk/Umpire.Layers.targets` | The same map as references, the root folders | MSBuild |
+| `tools/sdk/Tasks/SliceRouter.cs` | The marker names and their layers | C# (no semantic model) |
 | `VsaComposer.InstallLayers` | The list of installers | C# |
 | `framework/Analyzers/` | Marker names in the module rules | C# |
-| `framework/Tooling/Cli/Templates/` | Folder and project names | Template files |
+| `tools/cli/Templates/` | Folder and project names | Template files |
 
 `SdkLayerMapTests` keeps the first two the same. A layer change touches all six places.
 
