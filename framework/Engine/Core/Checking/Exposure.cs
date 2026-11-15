@@ -3,9 +3,9 @@ using ArchUnitNET.Domain.Dependencies;
 
 namespace VSA.Architecture.Engine;
 
-public sealed record Exposure(IType Target, Access Access, string Member);
+sealed record Exposure(IType Target, Access Access, string Member);
 
-public static class Exposures {
+static class Exposures {
     static readonly Dictionary<string, GenericArgument> NoArguments = [];
 
     public static IEnumerable<Exposure> Of(IType type, Func<IType, bool> isFramework) {
@@ -78,7 +78,7 @@ public static class Exposures {
     static IEnumerable<IType> Flatten(IType type, IEnumerable<GenericArgument> arguments) =>
         new[] { type }.Concat(arguments.SelectMany(argument => Flatten(argument.Type, argument.GenericArguments)));
 
-    public static Access AccessOf(Visibility visibility) => visibility switch {
+    static Access AccessOf(Visibility visibility) => visibility switch {
         Visibility.Public => Access.Public,
         Visibility.ProtectedInternal => Access.ProtectedInternal,
         Visibility.Internal => Access.Internal,

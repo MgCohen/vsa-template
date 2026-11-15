@@ -47,9 +47,10 @@ public sealed class GoodAppTests {
     public void A_type_of_an_external_DLL_is_a_rule_target() {
         var domain = Map.Bindings.All.Single(b => b.Type.Name == "Invoice" && !b.External);
         var handler = Map.Bindings.All.Single(b => b.Type.Name == "CreateInvoiceHandler");
+        var kit = External();
 
-        Assert.That(Decide.For(Map.Definition, domain, External()).Permission, Is.EqualTo(Permission.Deny));
-        Assert.That(Decide.For(Map.Definition, handler, External()).Permission, Is.EqualTo(Permission.Allow));
+        Assert.That(Decide.For(Map.Definition, domain.Part, domain.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Deny));
+        Assert.That(Decide.For(Map.Definition, handler.Part, handler.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Allow));
     }
 
     [Test]
@@ -79,5 +80,5 @@ public sealed class GoodAppTests {
     static Binding External() => Map.Bindings.All.Single(b => b.Type.FullName == typeof(IEntity).FullName);
 
     static IEnumerable<Exposure> ExposuresOf(string name) =>
-        Exposures.Of(Map.Bindings.BoundTypes.Single(t => t.Name == name), Map.Bindings.Framework.Contains);
+        Exposures.Of(Map.Bindings.BoundTypes.Single(t => t.Name == name), t => Map.Bindings.Of(t)?.External == true);
 }
