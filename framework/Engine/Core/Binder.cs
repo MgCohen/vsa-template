@@ -83,7 +83,8 @@ public sealed class Binder {
         rootPath.Length == 0 || relative.StartsWith(rootPath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
 
     static bool IsBuildOutput(string relative) =>
-        relative.Split('/')[..^1].Any(f => f.StartsWith("obj", StringComparison.Ordinal) || f.StartsWith("bin", StringComparison.Ordinal));
+        relative.Split('/')[..^1].Any(f =>
+            f.Equals("obj", StringComparison.OrdinalIgnoreCase) || f.Equals("bin", StringComparison.OrdinalIgnoreCase));
 
     FolderMatch? Match(IReadOnlyList<string> paths) => paths
         .Select(path => path.Split('/')[..^1])
