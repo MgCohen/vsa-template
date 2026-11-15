@@ -1,3 +1,4 @@
+using Baseline.Slices.ApplyBaseline;
 using Definition.Slices.LoadDefinition;
 using Report.Slices.WriteReport;
 using Rules.Slices.CheckRules;
@@ -14,13 +15,16 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHan
     public override async Task<Result<ReportResult>> HandleAsync(Envelope<RunEngineCommand> envelope) {
         var run = envelope.Message;
         log.FailFast = run.FailFast;
-        await Run(run, envelope.Cancellation);
-        return await commands.SendAsync(new WriteReportCommand(run.Mode, log.Findings), envelope.Cancellation);
+        var findings = await Run(run, envelope.Cancellation);
+        return await commands.SendAsync(new WriteReportCommand(run.Mode, findings), envelope.Cancellation);
     }
 
-    async Task Run(RunEngineCommand run, CancellationToken ct) {
+    async Task<IReadOnlyList<Finding>> Run(RunEngineCommand run, CancellationToken ct) {
         var version = await commands.SendAsync(new CheckVersionsCommand(run.Root, run.Bin), ct);
         var app = await commands.SendAsync(new LoadDefinitionCommand(run.Root, run.Bin, run.Skip, version.Value), ct);
         await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
+        var found = log.Findings.ToList();
+        var baseline = await commands.SendAsync(new ApplyBaselineCommand(run.Root, run.UpdateBaseline, found), ct);
+        return [.. log.Findings.Except(baseline.IsSuccess ? baseline.Value.Accepted : [])];
     }
 }

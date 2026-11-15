@@ -1,3 +1,4 @@
+using Baseline;
 using Definition;
 using Definition.Infrastructure;
 using Engine.Slices.RunEngine;
@@ -6,10 +7,8 @@ using Report;
 using Rules;
 using Steps;
 using Steps.Domain.Shared;
-using VSA.Architecture.Vsa;
 using Versions;
 using Tests.Shared;
-using VSA.Composition;
 using VSA.Contracts.Commands;
 using VSA.Kernel;
 using VsaEngine;
@@ -28,7 +27,7 @@ public sealed class RunEngineTests {
         var modules = AppTypes.InOrder(AppTypes.Roots().Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Baseline", "Definition", "Engine", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -126,19 +125,12 @@ public sealed class RunEngineTests {
     }
 
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
-        using var host = new EngineTestApp().Build();
+        using var host = new EngineTestApp(
+            new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
+            new BaselineModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var command = new RunEngineCommand(root ?? Notes, bin ?? AppContext.BaseDirectory, FailFast: failFast);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
         return result.Value;
-    }
-
-    sealed class EngineTestApp : App<Vsa<VsaHost>> {
-        public Microsoft.Extensions.Hosting.IHost Build() => Pack.CreateHost().Create([], this);
-
-        protected override IReadOnlyList<Module> Modules() => [
-            new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
-            new ReportModule(),
-        ];
     }
 }
