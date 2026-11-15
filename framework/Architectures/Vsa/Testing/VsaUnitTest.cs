@@ -71,7 +71,7 @@ public abstract class VsaUnitTest {
     }
 
     // The default repository of T. If a test replaces IRepository<T, TId>, use Provider instead.
-    protected InMemoryRepository<T, TId> Repository<T, TId>() where T : AggregateRoot<TId> where TId : notnull =>
+    protected InMemoryRepository<T, TId> Repository<T, TId>() where T : Entity<TId> where TId : notnull =>
         Provider.GetRequiredService<IRepository<T, TId>>() as InMemoryRepository<T, TId>
         ?? throw new InvalidOperationException($"IRepository<{typeof(T).Name}, {typeof(TId).Name}> is replaced. Get it from Provider.");
 
