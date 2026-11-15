@@ -6,7 +6,6 @@ using Signals.Slices.Ring;
 using VSA.Contracts.Events;
 using VSA.Handlers.Events;
 using VSA.Presenters;
-using VSA.Kernel;
 
 namespace Framework.Tests.Host;
 

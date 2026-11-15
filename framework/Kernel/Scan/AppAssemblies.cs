@@ -5,6 +5,8 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
 static class AppAssemblies {
+    const string TestFramework = "nunit.framework";
+
     internal static IReadOnlyList<Assembly> OfModules() {
         var found = new List<Assembly>();
         var seen = new HashSet<Assembly>();
@@ -13,7 +15,7 @@ static class AppAssemblies {
             if (!seen.Add(moduleBase)) {
                 continue;
             }
-            foreach (var assembly in ThatReference(moduleBase)) {
+            foreach (var assembly in ThatReference(moduleBase).Where(assembly => !IsTestAssembly(assembly))) {
                 Add(found, assembly);
                 if (DefinesModuleBase(assembly)) {
                     bases.Enqueue(assembly);
@@ -38,6 +40,9 @@ static class AppAssemblies {
         }
         return found;
     }
+
+    static bool IsTestAssembly(Assembly assembly) =>
+        assembly.GetReferencedAssemblies().Any(reference => reference.Name == TestFramework);
 
     static bool DefinesModuleBase(Assembly assembly) =>
         AppTypes.Types(assembly).Any(t => t is { IsClass: true, IsAbstract: true } && t.IsSubclassOf(typeof(Module)));

@@ -59,6 +59,15 @@ public sealed class ComposeTests {
     }
 
     [Test]
+    public void Compose_with_a_configuration_from_a_factory_is_an_error() {
+        var services = new ServiceCollection().AddSingleton<IConfiguration>(_ => new ConfigurationBuilder().Build());
+
+        var error = Assert.Throws<InvalidOperationException>(() => new TestApp().Compose(services));
+
+        Assert.That(error!.Message, Does.StartWith("The services register IConfiguration with a factory or a type"));
+    }
+
+    [Test]
     public void Compose_adds_no_host_parts_and_no_logger_providers() {
         var services = new TestApp().Compose(new ServiceCollection());
 

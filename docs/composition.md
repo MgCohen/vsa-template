@@ -58,7 +58,7 @@ To add app rules, derive an architecture from `VsaArchitecture`, override `Rules
 
 | Lifetime member | Use |
 |---|---|
-| `Run(string[] args)` | Makes a host from the pack, composes and runs the app. A second `Run` while the app runs is an error |
+| `Run(string[] args)` | Makes a host from the pack, composes and runs the app. A second `Run` while the app starts or runs is an error, before it makes a host |
 | `Stop()` | Stops the app. If the app does not run, it does nothing |
 | `IsRunning` | True from `Run` until the host stops |
 | `Services` | The services of the running app, else `null` |
@@ -103,7 +103,7 @@ AppHost.Compose(services, app)                 fixed order
 └─ app.ConfigureServices(services)             last
 ```
 
-The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (VSA.Kernel). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one.
+The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (VSA.Kernel). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one. If `services` registers `IConfiguration` with a factory or a type, `Compose` cannot read it before the build, so it stops with an error.
 
 ## Definitions and transports
 
@@ -147,7 +147,8 @@ public interface IRoutedRequest {
 - A file that the runtime cannot load by name (not in `deps.json`) is not part of the app. The scan ignores it.
 - Each source finds nothing where it does not apply, so the scan has no Unity case.
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
-- To skip assemblies, for example test assemblies, the app gives its modules in `Modules()`.
+- The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
+- To select other modules, the app gives its modules in `Modules()`.
 
 | Part | Scan for | Rule |
 |---|---|---|

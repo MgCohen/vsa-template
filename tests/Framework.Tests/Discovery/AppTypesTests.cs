@@ -15,6 +15,14 @@ public sealed class AppTypesTests {
     }
 
     [Test]
+    public void TheScanSkipsTheModulesOfATestAssembly() {
+        Assert.That(AppTypes.Roots().Select(root => root.Name), Has.None.EqualTo("TestOnly"));
+        var testRoots = ModuleRoot.In(typeof(TestOnly.TestOnlyModule).Assembly).Select(root => root.Name);
+
+        Assert.That(testRoots, Does.Contain("TestOnly"));
+    }
+
+    [Test]
     public void PluginsAreBeforeModulesThenInOrdinalOrderOfName() {
         var modules = AppTypes.InOrder([new ShelfModule(), new BareModule(), new ToolboxPlugin()]);
 
@@ -54,7 +62,7 @@ public sealed class AppTypesTests {
     }
 
     [Test]
-    public void AssemblyWithOnlyANestedModuleClassHasNoRoot() {
-        Assert.That(ModuleRoot.In(typeof(AppTypesTests).Assembly), Is.Empty);
+    public void ANestedModuleClassIsNotARoot() {
+        Assert.That(ModuleRoot.In(typeof(AppTypesTests).Assembly).Select(root => root.Name), Is.EqualTo(new[] { "TestOnly" }));
     }
 }

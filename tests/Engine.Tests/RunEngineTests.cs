@@ -33,14 +33,18 @@ public sealed class RunEngineTests {
 
     [Test]
     public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
-        var architecture = DefinitionFinder.Find([typeof(EngineApp).Assembly]);
+        var classes = DefinitionFinder.Find([typeof(EngineApp).Assembly]);
 
-        Assert.That(architecture, Is.TypeOf<EngineArchitecture>());
+        Assert.That(classes.Usable, Is.EqualTo(new[] { typeof(EngineApp) }));
+        Assert.That(DefinitionFinder.ArchitectureOf(classes.Usable[0]), Is.TypeOf<EngineArchitecture>());
     }
 
     [Test]
     public void Assemblies_with_no_app_class_give_no_architecture() {
-        Assert.That(DefinitionFinder.Find([typeof(Repo).Assembly]), Is.Null);
+        var classes = DefinitionFinder.Find([typeof(Repo).Assembly]);
+
+        Assert.That(classes.Usable, Is.Empty);
+        Assert.That(classes.NoConstructor, Is.Empty);
     }
 
     [Test]
@@ -73,6 +77,26 @@ public sealed class RunEngineTests {
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Lines, Has.One.Contains("error VSA3002"));
+        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+    }
+
+    [Test]
+    public async Task An_app_with_two_app_classes_gives_VSA3005_with_both_names() {
+        var result = await Run(root: Repo.Path("tests", "Fixtures", "TwoApps"));
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error VSA3005: The app has more than one app class: "
+            + "TwoApps.App.Host.FirstApp, TwoApps.App.Host.SecondApp."));
+        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+    }
+
+    [Test]
+    public async Task An_app_class_with_no_empty_constructor_gives_VSA3006_with_its_name() {
+        var result = await Run(root: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error VSA3006: The app class NoConstructorApp.App.Host.NamedApp "
+            + "has no public constructor with no parameters"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 

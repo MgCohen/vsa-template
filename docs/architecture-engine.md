@@ -222,8 +222,20 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 | Versions | Each VSA version slot of the app root and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
-| Definition | `Pack.Architecture` of the one most derived app class (`App`, with no constructor parameters). With no app class, the error `VSA3003` |
+| Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine errors" |
 | Unity DLLs | See "Unity projects" |
+
+### Engine errors
+
+| ID | Problem |
+|---|---|
+| `VSA3000` | A step throws an exception. The run continues |
+| `VSA3001` | A VSA version is not the engine version (see "One version") |
+| `VSA3002` | No DLL of the host output has source files under the app root |
+| `VSA3003` | The app has no app class |
+| `VSA3004` | A step is skipped, because an earlier step failed |
+| `VSA3005` | The app has more than one most derived app class |
+| `VSA3006` | An app class has no public constructor with no parameters |
 
 ## One version
 

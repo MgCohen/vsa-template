@@ -8,5 +8,7 @@
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
     <ProjectReference Include="$(RepoRoot)samples/Notes/Notes.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/TwoApps/TwoApps.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/NoConstructorApp/NoConstructorApp.csproj" />
   </ItemGroup>
 </Project>

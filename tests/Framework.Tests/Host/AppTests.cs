@@ -74,6 +74,7 @@ public sealed class AppTests {
             var error = Assert.Throws<InvalidOperationException>(() => app.Run([]));
 
             Assert.That(error!.Message, Is.EqualTo("ReturningApp is already running. Call Stop() before Run."));
+            Assert.That(app.Composes, Is.EqualTo(1));
         } finally {
             app.Stop();
         }
@@ -166,10 +167,14 @@ public sealed class AppTests {
 
         public int Stops { get; private set; }
 
+        public int Composes { get; private set; }
+
         protected override IReadOnlyList<VSA.Kernel.Module> Modules() => [];
 
         protected override void OnStart() => Marker = Services!.GetRequiredService<IConfiguration>()["name"];
 
         protected override void OnStop() => Stops++;
+
+        protected override void ConfigureServices(IServiceCollection services) => Composes++;
     }
 }

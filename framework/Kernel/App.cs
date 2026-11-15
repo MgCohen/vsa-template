@@ -8,6 +8,7 @@ using VSA.Analyzers.Markers;
 public abstract class App : IApp {
     readonly object gate = new();
     Running? running;
+    bool starting;
 
     public abstract Pack Pack { get; }
 
@@ -28,21 +29,18 @@ public abstract class App : IApp {
     }
 
     public int Run(string[] args) {
-        var host = Pack.CreateHost();
-        var app = host.Create(args, this);
-        var started = new Running(host, app);
         lock (gate) {
-            if (running is not null) {
-                app.Dispose();
+            if (running is not null || starting) {
                 throw new InvalidOperationException(
                     $"{GetType().Name} is already running. Call Stop() before Run.");
             }
-            running = started;
+            starting = true;
         }
-        app.Services.GetService<IHostApplicationLifetime>()?.ApplicationStopped.Register(() => Stopped(started));
+        var started = Start(args);
+        started.App.Services.GetService<IHostApplicationLifetime>()?.ApplicationStopped.Register(() => Stopped(started));
         try {
             OnStart();
-            return host.Run(app);
+            return started.Host.Run(started.App);
         } catch {
             Clear(started);
             throw;
@@ -68,6 +66,21 @@ public abstract class App : IApp {
     }
 
     protected virtual void OnStop() {
+    }
+
+    Running Start(string[] args) {
+        try {
+            var host = Pack.CreateHost();
+            var started = new Running(host, host.Create(args, this));
+            lock (gate) {
+                running = started;
+            }
+            return started;
+        } finally {
+            lock (gate) {
+                starting = false;
+            }
+        }
     }
 
     void Stopped(Running stopped) {

@@ -1,5 +1,6 @@
 namespace VSA.Architecture;
 
+[VSA.Analyzers.Markers.RequireDerived]
 public abstract class Architecture {
     const string DefinitionSource = "definition";
     readonly string rootPath;

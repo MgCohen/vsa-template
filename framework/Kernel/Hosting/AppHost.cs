@@ -15,7 +15,7 @@ public abstract class AppHost {
     }
 
     public IServiceCollection Compose(IServiceCollection services, App app) =>
-        Compose(services, app, ConfigurationOf(services));
+        Compose(services, app, ComposedConfiguration.InstanceIn(services));
 
     public virtual int Run(IHost app) {
         app.Run();
@@ -39,10 +39,6 @@ public abstract class AppHost {
         services.AddSingleton(types);
         AutoRegistration.Add(services, types);
     }
-
-    static IConfiguration? ConfigurationOf(IServiceCollection services) =>
-        services.LastOrDefault(service => service.ServiceType == typeof(IConfiguration))?.ImplementationInstance
-            as IConfiguration;
 
     IServiceCollection Compose(IServiceCollection services, App app, IConfiguration? configuration) {
         var types = new AppTypes(app.Modules() ?? AppTypes.FindModules(), app.Keys());

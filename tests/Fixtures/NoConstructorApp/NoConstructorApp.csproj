@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('VSA.Sdk.Dev.props'))" />
+  <Import Project="$(VsaSdkDir)Sdk.targets" />
+</Project>

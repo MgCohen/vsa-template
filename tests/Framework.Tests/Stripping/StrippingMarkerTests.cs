@@ -1,6 +1,5 @@
 using System.Reflection;
 using VSA.Analyzers.Markers;
-using VSA.Composition;
 using VSA.Handlers;
 using VSA.Handlers.Commands;
 using VSA.Handlers.Events;
@@ -31,6 +30,7 @@ public sealed class StrippingMarkerTests {
     [TestCase(typeof(VSA.Kernel.Module))]
     [TestCase(typeof(App))]
     [TestCase(typeof(Pack))]
+    [TestCase(typeof(VSA.Architecture.Architecture))]
     [TestCase(typeof(AppHost))]
     public void A_base_class_that_the_scan_reads_keeps_its_derived_classes(Type scannedBase) {
         Assert.That(scannedBase.IsDefined(typeof(RequireDerivedAttribute), inherit: false), Is.True);
