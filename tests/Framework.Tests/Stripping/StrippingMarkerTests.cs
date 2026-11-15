@@ -22,8 +22,12 @@ public sealed class StrippingMarkerTests {
     [TestCase(typeof(RequestHandler<,>))]
     [TestCase(typeof(IntegrationEventHandler<>))]
     [TestCase(typeof(Validator<>))]
-    [TestCase(typeof(Before<>))]
-    [TestCase(typeof(After<>))]
+    [TestCase(typeof(BeforeCommandHook<>))]
+    [TestCase(typeof(AfterCommandHook<,>))]
+    [TestCase(typeof(BeforeEventHook<>))]
+    [TestCase(typeof(AfterEventHook<>))]
+    [TestCase(typeof(BeforeStep))]
+    [TestCase(typeof(AfterStep))]
     [TestCase(typeof(BeforeStep<>))]
     [TestCase(typeof(AfterStep<>))]
     [TestCase(typeof(Presenter))]
@@ -40,17 +44,30 @@ public sealed class StrippingMarkerTests {
     [TestCase(typeof(ITypeArgument))]
     [TestCase(typeof(IApp))]
     [TestCase(typeof(IRunner))]
+    [TestCase(typeof(IBeforeCall))]
+    [TestCase(typeof(IAfterCall))]
     public void An_interface_that_the_scan_reads_keeps_its_implementors(Type scannedInterface) {
         Assert.That(scannedInterface.IsDefined(typeof(RequireImplementorsAttribute), inherit: false), Is.True);
     }
 
-    [TestCase("VSA.Handlers.IEnvelopeFactory")]
-    [TestCase("VSA.Handlers.IBeforeCall")]
-    [TestCase("VSA.Handlers.IAfterCall")]
-    public void An_internal_interface_that_the_pipeline_creates_by_reflection_keeps_its_implementors(string name) {
-        var internalInterface = typeof(IRunner).Assembly.GetType(name, throwOnError: true)!;
+    [TestCase(typeof(BeforeCommandHook<>))]
+    [TestCase(typeof(AfterCommandHook<,>))]
+    [TestCase(typeof(BeforeEventHook<>))]
+    [TestCase(typeof(AfterEventHook<>))]
+    [TestCase(typeof(BeforeStep))]
+    [TestCase(typeof(AfterStep))]
+    [TestCase(typeof(BeforeStep<>))]
+    [TestCase(typeof(AfterStep<>))]
+    public void A_stage_base_keeps_its_members(Type stageBase) {
+        Assert.That(stageBase.IsDefined(typeof(PreserveAttribute), inherit: false), Is.True);
+    }
 
-        Assert.That(internalInterface.IsDefined(typeof(RequireImplementorsAttribute), inherit: false), Is.True);
+    [Test]
+    public void The_envelope_create_method_that_the_pipeline_closes_by_reflection_is_kept() {
+        var route = typeof(IRunner).Assembly.GetType("VSA.Handlers.MessageRoute", throwOnError: true)!;
+        var create = route.GetMethod("CreateEnvelope", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        Assert.That(create.IsDefined(typeof(PreserveAttribute), inherit: false), Is.True);
     }
 
     [Test]

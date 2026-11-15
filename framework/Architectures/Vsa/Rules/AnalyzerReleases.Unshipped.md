@@ -13,3 +13,4 @@ VSA1005 | VSA | Error | ImmutableSharedTypeRule
 VSA1006 | VSA | Error | DataOnlySharedTypeRule
 VSA1007 | VSA | Error | SharedTypeBaseRule
 VSA1014 | VSA | Error | PluginRootRule
+VSA1015 | VSA | Error | HookNameRule

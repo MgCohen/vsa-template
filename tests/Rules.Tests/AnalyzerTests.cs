@@ -64,7 +64,8 @@ static class Analyzer {
         }
         Type[] layers = [typeof(VSA.Contracts.IMessage), typeof(VSA.Contracts.Requests.IRequest<>), typeof(VSA.Contracts.Events.IntegrationEvent),
             typeof(VSA.Handlers.Events.IntegrationEventHandler<>), typeof(VSA.Presenters.IBus), typeof(VSA.Kernel.Module), typeof(VSA.Composition.Plugin),
-            typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection)];
+            typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection), typeof(VSA.Handlers.Commands.CommandHandler<,>),
+            typeof(VSA.Handlers.IHandler), typeof(VSA.Contracts.Commands.ICommand)];
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }
@@ -315,4 +316,42 @@ public sealed class PluginRootRuleTests {
     public Task Code_out_of_a_root_folder_passes() => Analyzer.Verify($$"""
         public sealed class ToolPlugin : VSA.Composition.Plugin { {{Configure}} }
         """);
+}
+
+public sealed class HookNameRuleTests {
+    const string Bell = """
+        public sealed record Rang(string Bell) : VSA.Contracts.Events.IntegrationEvent;
+
+        """;
+
+    const string Chime = """
+        public override Task AfterAsync(VSA.Contracts.IEnvelope<Rang> envelope) => Task.CompletedTask;
+        """;
+
+    [Test]
+    public Task Event_hook_with_the_suffix_passes() => Analyzer.VerifyIn("Bells.Handlers.Events", Bell + $$"""
+        sealed class ChimeHook : VSA.Handlers.Events.AfterEventHook<Rang> { {{Chime}} }
+        """);
+
+    [Test]
+    public Task Event_hook_without_the_suffix_fails() => Analyzer.VerifyIn("Bells.Handlers.Events", Bell + $$"""
+        sealed class {|#0:Chime|} : VSA.Handlers.Events.AfterEventHook<Rang> { {{Chime}} }
+        """, Analyzer.Diagnostic(HookNameRule.Descriptor, 0, "Chime", "AfterEventHook", "ChimeHook"));
+
+    [Test]
+    public Task Class_that_derives_from_a_hook_through_a_base_fails() => Analyzer.VerifyIn("Bells.Handlers.Events", Bell + $$"""
+        abstract class BellHook : VSA.Handlers.Events.BeforeEventHook<Rang> { }
+        sealed class {|#0:Loud|} : BellHook {
+            public override Task<Rang> BeforeAsync(VSA.Contracts.IEnvelope<Rang> envelope) => Task.FromResult(envelope.Message);
+        }
+        """, Analyzer.Diagnostic(HookNameRule.Descriptor, 0, "Loud", "BeforeEventHook", "LoudHook"));
+
+    [Test]
+    public Task Command_hook_without_the_suffix_fails() => Analyzer.VerifyIn("Bells.Handlers.Commands", """
+        public sealed record Ring(int Times) : VSA.Contracts.Commands.ICommand<int>;
+        sealed class {|#0:CountRings|} : VSA.Handlers.Commands.AfterCommandHook<Ring, int> {
+            public override Task AfterAsync(VSA.Contracts.IEnvelope<Ring> envelope, VSA.Contracts.Result<int> outcome) =>
+                Task.CompletedTask;
+        }
+        """, Analyzer.Diagnostic(HookNameRule.Descriptor, 0, "CountRings", "AfterCommandHook", "CountRingsHook"));
 }

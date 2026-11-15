@@ -18,13 +18,17 @@ public record Handlers : Layer {
 
     public record Events : Layer {
         protected override void Define(Part part) {
-            part.OfType(typeof(IntegrationEventHandler<>));
+            part.OfType(typeof(IntegrationEventHandler<>))
+                .OfType(typeof(BeforeEventHook<>))
+                .OfType(typeof(AfterEventHook<>));
         }
     }
 
     public record Commands : Layer {
         protected override void Define(Part part) {
-            part.OfType(typeof(CommandHandler<,>));
+            part.OfType(typeof(CommandHandler<,>))
+                .OfType(typeof(BeforeCommandHook<>))
+                .OfType(typeof(AfterCommandHook<,>));
         }
     }
 }

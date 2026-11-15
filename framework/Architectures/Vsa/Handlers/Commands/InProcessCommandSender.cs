@@ -6,5 +6,5 @@ namespace VSA.Handlers.Commands;
 
 sealed class InProcessCommandSender(IServiceProvider provider) : ICommandSender {
     public Task<Result<TResult>> SendAsync<TResult>(ICommand<TResult> command, CancellationToken ct) =>
-        provider.GetRequiredService<Pipelines>().SendAsync<TResult>(PipelineKind.Commands, command, provider, ct);
+        provider.GetRequiredService<Pipelines>().SendAsync<TResult>(typeof(CommandHandler<,>), command, provider, ct);
 }

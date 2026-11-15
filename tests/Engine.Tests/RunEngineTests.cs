@@ -4,6 +4,7 @@ using Definition.Infrastructure;
 using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
+using Report.Domain.Shared;
 using Rules;
 using Steps;
 using Steps.Domain.Shared;
