@@ -31,22 +31,22 @@ public sealed class ExternalTests {
 
     [Test]
     public void AddMany_of_an_external_throws() {
-        Blocks(root => root.AddGroup<Lib>(), "AddGroup<Lib>() makes a group of an external");
+        Blocks(root => root.AddGroup<Lib>(), "Define: AddGroup<Lib>() makes a group of an external.");
     }
 
     [Test]
     public void An_external_under_a_group_throws() {
-        Blocks(root => root.AddGroup<Group>().Add<Lib>(), "the external Lib is under the group Group");
+        Blocks(root => root.AddGroup<Group>().Add<Lib>(), "Define: Add<Lib>() is under the group Group.");
     }
 
     [Test]
     public void An_external_under_an_external_throws() {
-        Blocks(root => root.Add<Lib>().Add<OtherLib>(), "the external OtherLib is under the external Lib");
+        Blocks(root => root.Add<Lib>().Add<OtherLib>(), "Define: Add<OtherLib>() is under the external Lib.");
     }
 
     [Test]
     public void AddMany_under_an_external_throws() {
-        Blocks(root => root.Add<Lib>().AddGroup<Child>(), "AddGroup<Child>() is under the external Lib");
+        Blocks(root => root.Add<Lib>().AddGroup<Child>(), "Define: AddGroup<Child>() is under the external Lib.");
     }
 
     [Test]

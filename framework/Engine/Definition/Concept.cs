@@ -4,14 +4,12 @@ public abstract record Concept {
     public virtual string Folder => GetType().Name;
     public virtual string? GroupFolder => null;
 
-    protected internal virtual void Configure(ConceptOptions defaults) { }
+    protected internal virtual void Configure(Options defaults) { }
 
     protected internal virtual void Define(Part part) { }
 
-    protected internal virtual void Rules(ConceptRules rules) { }
-
-    internal ConceptOptions Configured() {
-        var options = new ConceptOptions();
+    internal Options Configured() {
+        var options = new Options();
         Configure(options);
         return options;
     }

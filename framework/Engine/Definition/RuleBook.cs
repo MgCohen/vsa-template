@@ -1,7 +1,7 @@
 namespace VSA.Architecture;
 
 public sealed class RuleBook {
-    internal readonly List<IRuleEntries> Rules = [];
+    internal readonly List<Rule> Rules = [];
     readonly Root root;
 
     internal RuleBook(Root root) {
@@ -13,6 +13,6 @@ public sealed class RuleBook {
             throw new InvalidOperationException(
                 $"Rules: For<{Concept.Display(typeof(T))}>() names a concept that the definition does not have. Add it in Define, or remove the rule.");
         }
-        return new From(typeof(T), depth, "definition", Rules);
+        return new From(typeof(T), depth, Rules);
     }
 }

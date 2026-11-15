@@ -1,9 +1,8 @@
 namespace VSA.Architecture;
 
-public abstract partial class Architecture {
+public abstract class Architecture {
+    const string DefinitionSource = "definition";
     readonly string rootPath;
-    readonly List<string> conflicts = [];
-    readonly List<RuleSummary> summary = [];
     Root? root;
     Options? options;
     List<PartRule>? pairs;
@@ -12,7 +11,7 @@ public abstract partial class Architecture {
         this.rootPath = rootPath;
     }
 
-    public Options Options => options ??= Configured();
+    public Options Options => options ??= Configured().Over(Options.BuiltIn);
 
     public Root Root {
         get {
@@ -36,15 +35,11 @@ public abstract partial class Architecture {
         AddSameConcept(all);
 
         var book = new RuleBook(Root);
-        foreach (var concept in Parts().Select(p => p.Concept!).GroupBy(l => l.GetType()).Select(g => g.First())) {
-            concept.Rules(new ConceptRules(concept.GetType(), book.Rules));
-        }
         Rules(book);
 
         foreach (var rule in book.Rules) {
             AddRule(all, rule);
         }
-        FindConflicts(all);
         return pairs = all;
     }
 
@@ -86,19 +81,19 @@ public abstract partial class Architecture {
         var parts = new List<string>();
         foreach (var filter in entry.Filters) {
             switch (filter.Kind) {
-                case "Under":
+                case FilterKind.Under:
                     if (!to.Under(filter.Target)) {
                         return null;
                     }
                     break;
-                case "InSame":
+                case FilterKind.InSame:
                     var own = to.Groups.FirstOrDefault(i => i.Is(filter.Target));
                     if (own is null || !own.Holds(from)) {
                         return null;
                     }
                     parts.Add($"same {own.Name}");
                     break;
-                case "InOther":
+                case FilterKind.InOther:
                     var other = to.Groups.FirstOrDefault(i => i.Is(filter.Target));
                     if (other is null || !other.Parent!.Holds(from)) {
                         return null;
@@ -118,35 +113,27 @@ public abstract partial class Architecture {
     }
 
     IEnumerable<Part> Branch(Entry entry) =>
-        Parts().Where(p => p.Is(entry.Target)).SelectMany(p => Expand(p, entry.Depth ?? p.Depth ?? Options.Depth)).Distinct();
+        Parts().Where(p => p.Is(entry.Target)).SelectMany(p => Expand(p, entry.Depth ?? p.Depth ?? Options.Depth!.Value)).Distinct();
 
     void AddSameConcept(List<PartRule> all) {
-        if (!Options.UseSameConcept) {
+        if (Options.UseSameConcept != true) {
             return;
         }
-        var count = 0;
         foreach (var from in Parts()) {
             foreach (var to in Parts().Where(t => t.Concept!.GetType() == from.Concept!.GetType())) {
-                all.Add(new PartRule(from, to, ApplyBoundaries(from, to, "always", null), Permission.Allow, "same concept", "same concept", to.Access ?? Options.Access));
-                count++;
+                all.Add(new PartRule(from, to, ApplyBoundaries(from, to, "always", null), Permission.Allow, "same concept", "same concept", to.Access ?? Options.Access!.Value));
             }
         }
-        summary.Add(new RuleSummary("same concept", "options", Permission.Allow, count));
     }
 
-    void AddRule(List<PartRule> all, IRuleEntries rule) {
-        var body = rule.Source != "definition";
-        var named = rule.From.Concat(rule.Targets).SelectMany(e => e.Filters.Select(f => f.Target).Append(e.Target));
-        if (body && named.Any(t => !Parts().Any(p => p.Is(t)))) {
-            return;
-        }
+    void AddRule(List<PartRule> all, Rule rule) {
+        var text = rule.ToString();
         foreach (var entry in rule.From.Concat(rule.Targets)) {
-            Validate(entry, rule.Text);
+            Validate(entry, text);
         }
         var fromParts = rule.From.SelectMany(e => Branch(e).Where(p => e.Filters.All(f => p.Under(f.Target)))).Distinct().ToList();
-        var count = 0;
         foreach (var entry in rule.Targets) {
-            var before = count;
+            var matched = false;
             foreach (var from in fromParts) {
                 foreach (var to in Branch(entry)) {
                     if (Condition(from, to, entry) is not { } condition) {
@@ -155,16 +142,15 @@ public abstract partial class Architecture {
                     if (rule.Permission == Permission.Allow) {
                         condition = ApplyBoundaries(from, to, condition, entry);
                     }
-                    all.Add(new PartRule(from, to, condition, rule.Permission, rule.Source, rule.Text, entry.Access ?? to.Access ?? Options.Access));
-                    count++;
+                    all.Add(new PartRule(from, to, condition, rule.Permission, DefinitionSource, text, entry.Access ?? to.Access ?? Options.Access!.Value));
+                    matched = true;
                 }
             }
-            if (count == before && !body) {
+            if (!matched) {
                 throw new InvalidOperationException(
-                    $"Rules: \"{rule.Text}\": the target {entry} matches no part. Change the target or remove the rule.");
+                    $"Rules: \"{text}\": the target {entry} matches no part. Change the target or remove the rule.");
             }
         }
-        summary.Add(new RuleSummary(rule.Text, rule.Source, rule.Permission, count));
     }
 
     string ApplyBoundaries(Part from, Part to, string condition, Entry? entry) {
@@ -173,7 +159,7 @@ public abstract partial class Architecture {
         }
         var terms = condition == "always" ? new List<string>() : [.. condition.Split(", ")];
         foreach (var group in to.Groups.Reverse()) {
-            if (entry?.Filters.Any(f => f.Kind == "InOther" && group.Is(f.Target)) == true) {
+            if (entry?.Filters.Any(f => f.Kind == FilterKind.InOther && group.Is(f.Target)) == true) {
                 break;
             }
             if ((group.Boundary ?? Options.Boundary) == Boundary.Closed && from.Groups.Contains(group) && !terms.Contains($"same {group.Name}")) {
@@ -187,22 +173,8 @@ public abstract partial class Architecture {
         foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts().Any(p => p.Is(t)))) {
             throw new InvalidOperationException($"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
         }
-        foreach (var filter in entry.Filters.Where(f => f.Kind != "Under" && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
+        foreach (var filter in entry.Filters.Where(f => f.Kind != FilterKind.Under && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
             throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a concept that AddGroup adds.");
-        }
-    }
-
-    void FindConflicts(List<PartRule> all) {
-        foreach (var group in all.GroupBy(p => new { p.From, p.To })) {
-            var list = group.ToList();
-            for (var i = 1; i < list.Count; i++) {
-                for (var j = 0; j < i; j++) {
-                    if (list[j].Permission != list[i].Permission && (list[i].Condition == "always" || list[i].Condition == list[j].Condition)) {
-                        conflicts.Add($"{group.Key.From.Name} ({group.Key.From.Path}) -> {group.Key.To.Name} ({group.Key.To.Path}): "
-                            + $"{list[j].Permission} [{list[j].Source}] becomes {list[i].Permission} [{list[i].Source}]");
-                    }
-                }
-            }
         }
     }
 }

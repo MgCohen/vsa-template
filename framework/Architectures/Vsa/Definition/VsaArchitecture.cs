@@ -13,41 +13,7 @@ public class VsaArchitecture : Architecture {
 
     public string UnitySource { get; init; } = DefaultUnitySource;
 
-    public override IReadOnlyList<FolderAlias> FolderAliases(string appRoot) {
-        if (!UnityLayout.Is(appRoot)) {
-            return [];
-        }
-        var source = new FolderAlias(UnitySource, "");
-        if ((UnityApp ?? FindUnityApp(appRoot)) is not { } app) {
-            return [source];
-        }
-        var appFolder = $"{UnityLayout.AssetsFolder}/{app}";
-        return [new FolderAlias(appFolder, ""), new FolderAlias(appFolder, AppFolder), source];
-    }
-
-    static readonly string AppFolder = new App().Folder;
-
-    static readonly string[] UnityAppMarkers = [new Feature().GroupFolder!, new Plugin().GroupFolder!, new Views().Folder];
-
-    static string? FindUnityApp(string appRoot) {
-        var assets = Path.Combine(appRoot, UnityLayout.AssetsFolder);
-        if (!Directory.Exists(assets)) {
-            return null;
-        }
-        var found = Directory.GetDirectories(assets)
-            .Where(folder => UnityAppMarkers.Any(marker => Directory.Exists(Path.Combine(folder, marker))))
-            .Select(Path.GetFileName)
-            .Where(name => !string.Equals(name, UnityLayout.PluginsFolder, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(name => name, StringComparer.Ordinal)
-            .ToList();
-        return found.Count switch {
-            0 => null,
-            1 => found[0],
-            _ => throw new InvalidOperationException(
-                $"The Unity project has {found.Count} app folders in Assets: {string.Join(", ", found)}. "
-                + "Set UnityApp in the definition of the app: derive a class from VsaArchitecture and set UnityApp."),
-        };
-    }
+    public override IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => UnityLayout.Aliases(appRoot, UnityApp, UnitySource);
 
     protected override void Configure(Options defaults) {
         defaults.UseSameConcept = true;
