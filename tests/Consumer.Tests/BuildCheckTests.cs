@@ -31,6 +31,17 @@ public sealed class BuildCheckTests {
         var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(build.Succeeded, Is.False, build.Output);
         Assert.That(build.Output, Does.Contain(finding));
+
+        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:VsaUpdateBaseline=true")
+            .EnsureSuccess();
+        var baseline = Path.Combine(workspace.Src, "vsa-baseline.txt");
+        Assert.That(File.ReadAllLines(baseline), Has.One.StartsWith("VSA2001|App/Host/Probe.cs|Probe in Host"));
+
+        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
+
+        File.Delete(probe);
+        var fixedBuild = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
+        Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning VSA3005"));
     }
 
     static void AddBuildHook(string root, string project) {

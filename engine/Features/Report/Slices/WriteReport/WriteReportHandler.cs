@@ -13,7 +13,13 @@ sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResul
         var warnOnly = string.Equals(command.Mode, "Warn", StringComparison.OrdinalIgnoreCase);
         var findings = command.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error
             ? f with { Severity = FindingSeverity.Warning }
-            : f).ToList();
+            : f)
+            .OrderBy(f => f.File is not null)
+            .ThenBy(f => f.File, StringComparer.Ordinal)
+            .ThenBy(f => f.Line ?? 0)
+            .ThenBy(f => f.Code, StringComparer.Ordinal)
+            .ThenBy(f => f.Message, StringComparer.Ordinal)
+            .ToList();
         var lines = findings.Select(Line).ToList();
         foreach (var line in lines) {
             Console.WriteLine(line);

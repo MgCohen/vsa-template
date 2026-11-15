@@ -1,3 +1,4 @@
+using Baseline;
 using Definition;
 using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +27,7 @@ public sealed class RunEngineTests {
         var modules = AnchorScan.InOrder(AnchorScan.Roots(typeof(VSA.Module.Module)).Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Definition", "Engine", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Steps", "Baseline", "Definition", "Engine", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -81,7 +82,7 @@ public sealed class RunEngineTests {
     static async Task<ReportResult> Run(string? root = null, string? bin = null, bool failFast = false) {
         VSA.Module.Module[] modules = [
             new StepsPlugin(), new EngineModule(), new VersionsModule(), new DefinitionModule(), new RulesModule(),
-            new ReportModule(),
+            new BaselineModule(), new ReportModule(),
         ];
         using var host = AppBuilder.Create().Modules(modules).UseGenericHost().Build();
         await using var scope = host.Services.CreateAsyncScope();

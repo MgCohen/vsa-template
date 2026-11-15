@@ -1,10 +1,12 @@
 <Project>
   <!-- Runs the rule engine after each build of the project that has this package (the host of the app).
        VsaCheck=false turns it off. VsaCheckMode=Warn reports each error as a warning.
-       The stamp file skips the check when no input changed. -->
+       VsaUpdateBaseline=true writes the errors of this build to vsa-baseline.txt in the app root.
+       The stamp file skips the check when no input changed. An update never skips. -->
   <PropertyGroup>
     <VsaCheck Condition="'$(VsaCheck)' == ''">true</VsaCheck>
     <VsaCheckMode Condition="'$(VsaCheckMode)' == ''">Error</VsaCheckMode>
+    <VsaUpdateBaseline Condition="'$(VsaUpdateBaseline)' == ''">false</VsaUpdateBaseline>
     <_VsaEngine>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'vsa-engine.dll'))</_VsaEngine>
     <_VsaDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_VsaDotnet>
     <_VsaDotnet Condition="'$(_VsaDotnet)' == ''">dotnet</_VsaDotnet>
@@ -16,9 +18,12 @@
       <_VsaCheckRoot Condition="'$(_VsaCheckRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'global.json'))</_VsaCheckRoot>
       <_VsaCheckRoot>$([MSBuild]::EnsureTrailingSlash('$(_VsaCheckRoot)'))</_VsaCheckRoot>
       <_VsaCheckStamp>$(ProjectDir)$(IntermediateOutputPath)vsa-check.$(VsaCheckMode).stamp</_VsaCheckStamp>
+      <_VsaCheckStamp Condition="'$(VsaUpdateBaseline)' == 'true'">$(ProjectDir)$(IntermediateOutputPath)vsa-check.update.stamp</_VsaCheckStamp>
+      <_VsaBaseline>$(_VsaCheckRoot)vsa-baseline.txt</_VsaBaseline>
     </PropertyGroup>
     <ItemGroup>
       <_VsaCheckInput Include="@(IntermediateAssembly->'%(FullPath)');@(ReferenceCopyLocalPaths->'%(FullPath)');$(_VsaEngine)" />
+      <_VsaCheckInput Include="$(_VsaBaseline)" Condition="Exists('$(_VsaBaseline)')" />
     </ItemGroup>
   </Target>
 
@@ -28,9 +33,9 @@
     <Error Condition="!Exists('$(_VsaEngine)')" Code="VSA3003"
            Text="The rule engine $(_VsaEngine) does not exist. Restore the VSA.Architecture.Build package again." />
     <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
-          Command="&quot;$(_VsaDotnet)&quot; exec &quot;$(_VsaEngine)&quot; --root &quot;$(_VsaCheckRoot.TrimEnd('\').TrimEnd('/'))&quot; --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --mode $(VsaCheckMode)">
+          Command="&quot;$(_VsaDotnet)&quot; exec &quot;$(_VsaEngine)&quot; --root &quot;$(_VsaCheckRoot.TrimEnd('\').TrimEnd('/'))&quot; --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --mode $(VsaCheckMode) --updatebaseline $(VsaUpdateBaseline)">
       <Output TaskParameter="ExitCode" PropertyName="_VsaCheckExit" />
     </Exec>
-    <Touch Condition="'$(_VsaCheckExit)' == '0'" Files="$(_VsaCheckStamp)" AlwaysCreate="true" />
+    <Touch Condition="'$(_VsaCheckExit)' == '0' and '$(VsaUpdateBaseline)' != 'true'" Files="$(_VsaCheckStamp)" AlwaysCreate="true" />
   </Target>
 </Project>
