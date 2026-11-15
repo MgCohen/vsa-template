@@ -47,7 +47,7 @@ public sealed class RunEngineTests {
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.Lines, Has.One.Contains("error VSA3001").And.Contains("global.json: VSA.Sdk 0.0.1"));
-            Assert.That(result.Lines, Has.One.Contains("VSA3004: LoadDefinition skipped: Version is missing"));
+            Assert.That(result.Lines, Has.One.Contains("VSA3004: LoadDefinition skipped: CheckedVersions is missing"));
         } finally {
             TempFolder.Delete(root);
         }

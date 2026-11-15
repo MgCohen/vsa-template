@@ -203,7 +203,7 @@ The build hook package `VSA.Architecture.Build` on the host project runs the eng
 | Step | Source |
 |---|---|
 | App root | `VsaAppRoot`, else the nearest `global.json` |
-| Versions | Each VSA version slot of the app root and each `VSA.*.dll` of the host output (see "One version") |
+| Versions | Each VSA version slot of the app root and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | The `Architecture` of the most derived `IArchitectureProvider` (the app class) |
@@ -219,9 +219,17 @@ The engine, VSA.Sdk, the `vsa` tool and the `VSA.*` packages have one version. T
 | `dotnet-tools.json`, `.config/dotnet-tools.json` | `vsa.cli` |
 | `global.json` | `msbuild-sdks` → `VSA.Sdk` |
 | Each `.csproj` and `Directory.*.props` of the app root | Each `VSA.Sdk` pin and each `VSA.*` package, also `VSA.Architecture.Build` |
-| The host output (engine only) | Each `VSA.*.dll` |
+| `*.deps.json` of the host output (engine only) | Each `VSA.*` package library |
 
-A file that does not exist gives no slot. A `VSA.*` package with no version uses its `PackageVersion` in the app root. If the app root has no `PackageVersion` for it, the package gives no slot: NuGet reports it, and its DLL is a slot of the host output.
+A file that does not exist gives no slot. The JSON files can have comments and trailing commas, as dotnet reads them.
+
+| Value | Result |
+|---|---|
+| A version, or an exact range `[x]` | Compared as `x`. `vsa update` keeps the brackets |
+| A `PackageReference` with no version | Uses its `PackageVersion` in the app root, else in the nearest `Directory.Packages.props` above it. With none, the check fails: the package has no version |
+| A value with an MSBuild property, for example `$(VsaVersion)` | Not checked, not written. `vsa doctor` shows it as "not checked" |
+
+`vsa update` changes only the version text of `global.json`, so the file keeps its comments, BOM and line endings. A project file keeps its BOM and its line endings.
 
 The app class (`MyApp : VsaApp<TDefinition>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaDefinition` and override `Rules`. Call `base.Rules` first: a later rule wins.
 

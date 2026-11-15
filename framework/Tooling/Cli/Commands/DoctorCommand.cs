@@ -18,7 +18,7 @@ sealed class DoctorCommand : AppCommand {
         var slots = Slots(root);
         var width = slots.Max(slot => slot.File.Length);
         foreach (var slot in slots) {
-            Console.WriteLine($"  {slot.File.PadRight(width)}  {slot.Package,-24} {slot.Version ?? "(no version)"}");
+            Console.WriteLine($"  {slot.File.PadRight(width)}  {slot.Package,-24} {VersionCheck.Shown(slot)}");
         }
         var mismatches = VersionCheck.Mismatches(slots, expected);
         if (mismatches is []) {

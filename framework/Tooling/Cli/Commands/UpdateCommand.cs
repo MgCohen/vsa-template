@@ -62,10 +62,10 @@ sealed class UpdateCommand : AppCommand {
         string[] args = version is null
             ? ["tool", "update", "vsa.cli", "--local", .. prerelease]
             : ["tool", "update", "vsa.cli", "--local", "--version", version, "--allow-downgrade"];
-        var (code, output) = Dotnet.Run(root, args);
-        if (code != 0) {
+        var run = Dotnet.Run(root, args);
+        if (run.ExitCode != 0) {
             throw new VsaException(
-                $"'dotnet {string.Join(' ', args)}' failed. The app did not change.{Environment.NewLine}{output}");
+                $"'dotnet {string.Join(' ', args)}' failed. The app did not change.{Environment.NewLine}{run.Output}");
         }
     }
 }
