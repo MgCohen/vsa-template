@@ -31,6 +31,14 @@ public sealed class VsaRulesTests {
         Assert.That(owners, Is.EqualTo(new[] { part }));
     }
 
+    [TestCase(typeof(VSA.Contracts.Requests.IRequest))]
+    [TestCase(typeof(VSA.Contracts.Requests.IResponse))]
+    public void The_request_bases_bind_to_the_request_contracts(Type requestBase) {
+        var owners = Definition.Parts().Where(p => p.Types.Contains(requestBase)).Select(p => p.Name).Distinct();
+
+        Assert.That(owners, Is.EqualTo(new[] { "Contracts.Requests" }));
+    }
+
     [TestCase("Kernel", "Composition", Permission.Allow)]
     [TestCase("Kernel", "Host", Permission.Allow)]
     [TestCase("Kernel", "Domain", Permission.Deny)]

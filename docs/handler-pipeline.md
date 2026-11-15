@@ -142,7 +142,7 @@ A message base has one pipeline: a second `AddPipeline` for the same base fails.
 
 | Project | Types |
 |---|---|
-| VSA.Contracts | `Envelope`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
+| VSA.Contracts | `IMessage`, `IBroadcastMessage`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
 | VSA.Handlers | `PipelineBuilder<T>`, `Pipeline<T>`, `Pipelines`, `IHandler<T>`, `IRunner` and the runners, `Validator<T>`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipelines` |
 | VSA.Handlers.Commands, .Events, .Requests | The handler bases, the hook bases, the senders, and the default pipeline of each kind |
 

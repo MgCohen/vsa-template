@@ -12,7 +12,7 @@ public record Contracts : Layer {
 
     public record Requests : Layer {
         protected override void Define(Part part) {
-            part.OfType(typeof(IRoutedRequest)).OfType<IResponse>();
+            part.OfType(typeof(IRequest)).OfType<IResponse>();
         }
     }
 

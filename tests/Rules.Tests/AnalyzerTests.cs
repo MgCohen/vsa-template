@@ -173,6 +173,13 @@ public sealed class EventHandlerRequestRuleTests {
         }
         """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "Ping"));
 
+    [Test]
+    public Task Event_handler_with_the_request_base_fails() => Analyzer.Verify(Types + """
+        sealed class DoneHandler(VSA.Contracts.Requests.IRequest {|#0:request|}) : VSA.Handlers.Events.IntegrationEventHandler<Done> {
+            public override Task<VSA.Contracts.Result<VSA.Contracts.Unit>> HandleAsync(VSA.Contracts.Envelope<Done> envelope) => null!;
+        }
+        """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "IRequest"));
+
     // The rule is only for event handlers. Other classes can send requests.
     [Test]
     public Task Other_class_that_sends_a_request_passes() => Analyzer.Verify(Types + """
