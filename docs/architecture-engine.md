@@ -260,6 +260,32 @@ public sealed class MyArchitecture : VsaArchitecture {
 public class MyApp : VsaApp<MyArchitecture>;
 ```
 
+## Baseline
+
+The step `ApplyBaseline` runs after `CheckRules` and before the Report step. It reads `vsa-baseline.txt` in the app root. An error with an entry in the file does not go to the report. A new error fails the build.
+
+```text
+VSA2001|App/Host/Probe.cs|Probe in Host uses CreateNoteRequest ...
+VSA2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does not have ...
+```
+
+| Item | Rule |
+|---|---|
+| Line | `CODE\|path\|message`. The path is relative to the app root, with `/`. A finding with no file has an empty path |
+| Key | The code, the path and the full message. The line number is not in the key, so an edit above an error does not change its entry |
+| Count | Two equal entries accept two errors with that key. A third error with that key is new |
+| Content | Errors only. A warning does not fail the build. The engine codes `VSA3000`-`VSA3999` never go in the file, so a version error or a crash always fails |
+| No file | No error is accepted |
+| Update | `dotnet build -p:VsaUpdateBaseline=true` (engine switch `--updatebaseline true`) writes each current error, sorted (ordinal), and removes the stale entries. With no error, the update deletes the file. The update never skips the check |
+| Stale entry | An entry that no error matches gives the warning `VSA3005` at its line in the file. Remove the line, or run the update |
+| Bad line | A line that does not have the form gives the error `VSA3006`. Then no error is accepted |
+| Incomplete run | If a step failed or was skipped (an engine error, or `VSA3004`), the update does not write the file and gives the warning `VSA3007`. Reason: that run has not found each error |
+| Build stamp | The stamp name tells if the file exists. A delete of the file runs the check again |
+
+`--mode Warn` applies after the baseline: each remaining error becomes a warning.
+
+The Report step sorts the findings: the findings with no file first, then by path, line, code and message (ordinal). Each run gives the same order.
+
 ## Tests of the engine
 
 `tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. `BadApp` has one known problem for each rule ID.
