@@ -75,13 +75,13 @@ public sealed class VsaAppTests {
 
     [Test]
     public void An_app_of_the_VSA_definition_has_the_VSA_rules() {
-        Assert.That(Rules(new PlainApp().Architecture), Is.EqualTo(Rules(new VsaDefinition())));
+        Assert.That(Rules(new PlainApp().Architecture), Is.EqualTo(Rules(new VsaArchitecture())));
     }
 
     [Test]
     public void An_app_of_a_derived_definition_has_its_rules_after_the_VSA_rules() {
         var app = Rules(new RulesApp().Architecture);
-        var vsa = Rules(new VsaDefinition());
+        var vsa = Rules(new VsaArchitecture());
 
         Assert.That(app.Take(vsa.Count), Is.EqualTo(vsa));
         Assert.That(app[^1], Is.EqualTo(("Presenters", "Contracts.Events", Permission.Deny)));
@@ -106,7 +106,7 @@ public sealed class VsaAppTests {
         return await run;
     }
 
-    static List<(string From, string To, Permission Permission)> Rules(ArchitectureDefinition definition) =>
+    static List<(string From, string To, Permission Permission)> Rules(Architecture definition) =>
         definition.Resolve().Select(p => (p.From.Name, p.To.Name, p.Permission)).ToList();
 
     static HashSet<string> RuntimeReferences(Assembly start) {
@@ -123,20 +123,20 @@ public sealed class VsaAppTests {
         return found;
     }
 
-    sealed class PlainApp : VsaApp<VsaDefinition> {
+    sealed class PlainApp : VsaApp<VsaArchitecture> {
         public IAppHost DefaultHost => Host();
     }
 
-    sealed class RulesDefinition : VsaDefinition {
+    sealed class RulesArchitecture : VsaArchitecture {
         protected override void Rules(RuleBook rules) {
             base.Rules(rules);
             rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
         }
     }
 
-    sealed class RulesApp : VsaApp<RulesDefinition>;
+    sealed class RulesApp : VsaApp<RulesArchitecture>;
 
-    sealed class StartedApp : VsaApp<VsaDefinition> {
+    sealed class StartedApp : VsaApp<VsaArchitecture> {
         public string? Marker { get; private set; }
 
         protected override int Start(string[] args) {
@@ -150,11 +150,11 @@ public sealed class VsaAppTests {
         protected override void Services(IServiceCollection services) => services.AddSingleton(new ExitCode(7));
     }
 
-    sealed class WaitingApp : VsaApp<VsaDefinition> {
+    sealed class WaitingApp : VsaApp<VsaArchitecture> {
         protected override IReadOnlyList<VSA.Module.Module> Modules() => [];
     }
 
-    sealed class ReturningApp : VsaApp<VsaDefinition> {
+    sealed class ReturningApp : VsaApp<VsaArchitecture> {
         protected override IAppHost Host() => new ReturningHost();
 
         protected override IReadOnlyList<VSA.Module.Module> Modules() => [];

@@ -1,97 +1,30 @@
-using System.Text.Json.Nodes;
-using System.Xml.Linq;
-using VSA.Cli.Scaffolding;
+using VSA.Architecture.Versions;
+using VSA.Cli.Commands.Bases;
 
 namespace VSA.Cli.Commands;
 
-// vsa doctor: the tool, VSA.Sdk and the VSA.* packages ship together, so the app must use one version of all.
-// It reads the running tool, the tool manifests, global.json, each VSA.Sdk pin and each VSA.* package reference.
-static class DoctorCommand {
-    public static int Run() {
-        var found = Versions(AppRoot.Find());
+sealed class DoctorCommand : AppCommand {
+    public override IReadOnlyList<string> Words => ["doctor"];
 
-        var width = found.Max(f => f.Where.Length);
-        foreach (var (where, what, version) in found) {
-            Console.WriteLine($"  {where.PadRight(width)}  {what,-20} {version ?? "(missing)"}");
+    public override string Summary => "Makes sure that the tool, VSA.Sdk and the packages have one version.";
+
+    internal static IReadOnlyList<VersionSlot> Slots(string root) {
+        var tool = new VersionSlot("this tool", "VSA.Cli", ToolVersion.Current);
+        return [tool, .. VersionSlots.InApp(root).SelectMany(file => file.Slots)];
+    }
+
+    protected override int Run(string root, CommandInput input) {
+        var expected = ToolVersion.Current;
+        var slots = Slots(root);
+        var width = slots.Max(slot => slot.File.Length);
+        foreach (var slot in slots) {
+            Console.WriteLine($"  {slot.File.PadRight(width)}  {slot.Package,-24} {VersionCheck.Shown(slot)}");
         }
-        var versions = found.Select(f => f.Version).Distinct().ToList();
-        if (versions is [string one]) {
-            Console.WriteLine($"OK: all use VSA {one}.");
+        var mismatches = VersionCheck.Mismatches(slots, expected);
+        if (mismatches is []) {
+            Console.WriteLine($"OK: all use VSA {expected}.");
             return 0;
         }
-        throw new VsaException("The versions are not the same. Use one version for the tool, VSA.Sdk and all VSA.* packages.");
+        throw new VsaException(VersionCheck.Message(mismatches, expected));
     }
-
-    // Each place in the app that gives a VSA version. A null version is a place that must give one, but does not.
-    internal static List<(string Where, string What, string? Version)> Versions(string root) {
-        var found = new List<(string, string, string?)> { ("this tool", "VSA.Cli", ToolVersion.Current) };
-        var manifests = ToolManifests(root);
-        found.AddRange(manifests is []
-            ? [("dotnet-tools.json", "vsa.cli", null)]
-            : manifests.Select(m => (m, "vsa.cli", ToolManifestVersion(Path.Combine(root, m)))));
-        found.Add(("global.json", "VSA.Sdk", AppRoot.SdkVersion(Path.Combine(root, "global.json"))));
-        found.AddRange(ProjectVersions(root));
-        return found;
-    }
-
-    // dotnet new tool-manifest writes .config/dotnet-tools.json. vsa new app writes dotnet-tools.json.
-    internal static List<string> ToolManifests(string root) =>
-        new[] { "dotnet-tools.json", ".config/dotnet-tools.json" }.Where(m => File.Exists(Path.Combine(root, m))).ToList();
-
-    internal static string? ToolManifestVersion(string file) =>
-        JsonNode.Parse(File.ReadAllText(file))?["tools"]?["vsa.cli"]?["version"]?.GetValue<string>();
-
-    // Each .csproj and Directory.*.props of the app, without bin/ and obj/, relative to the root with "/".
-    internal static List<string> ProjectFiles(string root) =>
-        Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
-            .Concat(Directory.EnumerateFiles(root, "Directory.*.props", SearchOption.AllDirectories))
-            .Select(file => Path.GetRelativePath(root, file).Replace('\\', '/'))
-            .Where(file => !file.Split('/').Any(part => part is "bin" or "obj"))
-            .Order(StringComparer.Ordinal)
-            .ToList();
-
-    // In each project file of the app:
-    //   a VSA.Sdk pin        <Project Sdk="VSA.Sdk/1.0.0">, <Import Sdk="VSA.Sdk/1.0.0" />, <Sdk Name="VSA.Sdk" Version="1.0.0" />
-    //   a VSA.* package      PackageReference or PackageVersion, with Version or VersionOverride. A PackageReference with
-    //                        no version gets it from a PackageVersion (central package management).
-    static IEnumerable<(string, string, string?)> ProjectVersions(string root) {
-        var files = ProjectFiles(root)
-            .Select(file => (Path: file, Elements: XDocument.Load(Path.Combine(root, file)).Descendants().ToList()))
-            .ToList();
-        var central = files.SelectMany(f => f.Elements)
-            .Where(e => e.Name.LocalName == "PackageVersion" && Id(e) is not null && Version(e) is not null)
-            .GroupBy(e => Id(e)!, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => Version(g.First()), StringComparer.OrdinalIgnoreCase);
-
-        foreach (var (file, elements) in files) {
-            foreach (var element in elements) {
-                foreach (var pin in SdkPins(element)) {
-                    yield return (file, "VSA.Sdk", pin);
-                }
-                var id = Id(element);
-                if (element.Name.LocalName is "PackageReference" or "PackageVersion" && id is not null && id.StartsWith("VSA.", StringComparison.OrdinalIgnoreCase)) {
-                    yield return (file, id, Version(element) ?? central.GetValueOrDefault(id));
-                }
-            }
-        }
-    }
-
-    // The VSA.Sdk versions that this element pins. An Sdk attribute can name more than one SDK, separated by ";".
-    static IEnumerable<string> SdkPins(XElement element) {
-        if (element.Name.LocalName == "Sdk") {
-            if (string.Equals((string?)element.Attribute("Name"), "VSA.Sdk", StringComparison.OrdinalIgnoreCase) && (string?)element.Attribute("Version") is string version) {
-                yield return version;
-            }
-            yield break;
-        }
-        foreach (var sdk in ((string?)element.Attribute("Sdk") ?? "").Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) {
-            if (sdk.Split('/') is [var name, var version] && string.Equals(name, "VSA.Sdk", StringComparison.OrdinalIgnoreCase)) {
-                yield return version;
-            }
-        }
-    }
-
-    internal static string? Id(XElement e) => (string?)e.Attribute("Include") ?? (string?)e.Attribute("Update");
-
-    static string? Version(XElement e) => (string?)e.Attribute("VersionOverride") ?? (string?)e.Attribute("Version");
 }

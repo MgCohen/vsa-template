@@ -5,18 +5,18 @@ namespace VSA.Architecture.Engine;
 public sealed class ArchitectureMap {
     readonly RuleChecks checks;
 
-    ArchitectureMap(ArchitectureDefinition definition, LoadedApp app, Bindings bindings) {
+    ArchitectureMap(Architecture definition, LoadedApp app, Bindings bindings) {
         Definition = definition;
         App = app;
         Bindings = bindings;
         checks = new RuleChecks(definition, bindings);
     }
 
-    public ArchitectureDefinition Definition { get; }
+    public Architecture Definition { get; }
     public LoadedApp App { get; }
     public Bindings Bindings { get; }
 
-    public static ArchitectureMap Load(ArchitectureDefinition definition, IEnumerable<string> dlls, string appRoot) {
+    public static ArchitectureMap Load(Architecture definition, IEnumerable<string> dlls, string appRoot) {
         var app = ArchitectureLoader.Load(dlls, appRoot);
         return new ArchitectureMap(definition, app, Binder.Bind(definition, app));
     }

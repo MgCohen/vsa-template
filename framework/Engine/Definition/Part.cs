@@ -1,6 +1,6 @@
 namespace VSA.Architecture;
 
-public class Part {
+public class Part : IPartChain {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
     Depth? depth;
@@ -43,22 +43,14 @@ public class Part {
         }
     }
 
-
     public Part Add<T>() where T : Concept, new() {
         var concept = new T();
-        return Attach(new Part(concept, concept is Anchor ? null : concept.Folder, this));
+        return Attach(new Part(concept, concept is Module ? null : concept.Folder, this));
     }
 
-    public Part AddGroup<T>(string? folder = null) where T : Concept, new() {
-        var concept = new T();
-        return Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true));
-    }
+    public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() => new([Group<T>(folder, null)]);
 
-    public Part AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() {
-        var part = AddGroup<T>(folder);
-        part.boundary = boundary;
-        return part;
-    }
+    public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() => new([Group<T>(folder, boundary)]);
 
     public PartGroup And<T>() where T : Concept, new() => new PartGroup([this]).And<T>();
 
@@ -80,6 +72,14 @@ public class Part {
         return this;
     }
 
+    IPartChain IPartChain.Add<T>() => Add<T>();
+
+    IPartChain IPartChain.InParentFolder() => InParentFolder();
+
+    IPartChain IPartChain.OfType<T>() => OfType<T>();
+
+    IPartChain IPartChain.OfType(Type type) => OfType(type);
+
     public IEnumerable<Part> Walk() => new[] { this }.Concat(children.SelectMany(c => c.Walk()));
 
     public IEnumerable<Part> SelfAndAncestors() => new[] { this }.Concat(Ancestors());
@@ -95,6 +95,13 @@ public class Part {
     internal bool Under(Type concept) => SelfAndAncestors().Any(a => a.Is(concept));
 
     internal bool Holds(Part other) => other.SelfAndAncestors().Contains(this);
+
+    internal Part Group<T>(string? folder, Boundary? boundary) where T : Concept, new() {
+        var concept = new T();
+        var part = Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true));
+        part.boundary = boundary;
+        return part;
+    }
 
     Part Attach(Part child) {
         Block(child);

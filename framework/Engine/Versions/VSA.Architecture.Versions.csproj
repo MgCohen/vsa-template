@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The VSA version check (VSA3001): each place of an app that gives a VSA version, and the compare.
+       The engine step CheckVersions and the vsa tool (doctor, update) use it. The tool and the engine bundle the DLL. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

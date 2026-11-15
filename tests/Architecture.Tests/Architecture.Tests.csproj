@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Tests of the rule engine core (VSA.Architecture.Engine) on the fixture apps in tests/Fixtures/Architecture,
        with a small test definition. -->
+  <PropertyGroup>
+    <RootNamespace>EngineCore.Tests</RootNamespace>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>

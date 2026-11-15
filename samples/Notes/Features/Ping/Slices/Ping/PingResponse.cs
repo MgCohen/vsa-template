@@ -1,5 +1,5 @@
-using VSA.Contracts.Requests;
+namespace Notes.Features.Ping.Slices.Ping;
 
-namespace Ping.Slices.Ping;
+using VSA.Contracts.Requests;
 
 public sealed record PingResponse(string Message) : IResponse;

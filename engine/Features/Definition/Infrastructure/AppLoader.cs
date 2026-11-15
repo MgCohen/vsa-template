@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.Loader;
@@ -7,7 +6,7 @@ using VSA.Architecture;
 namespace Definition.Infrastructure;
 
 public sealed class AppLoader : AssemblyLoadContext {
-    static readonly HashSet<string> Shared = SharedClosure(typeof(ArchitectureDefinition).Assembly);
+    static readonly HashSet<string> Shared = SharedClosure(typeof(Architecture).Assembly);
     readonly string bin;
     readonly AssemblyDependencyResolver? resolver;
 
@@ -17,23 +16,6 @@ public sealed class AppLoader : AssemblyLoadContext {
             .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))
             .FirstOrDefault(File.Exists);
         resolver = main is null ? null : new AssemblyDependencyResolver(main);
-    }
-
-    public List<string> VersionMismatches() {
-        var mismatches = new List<string>();
-        foreach (var name in Shared.Order(StringComparer.Ordinal)) {
-            var dll = Path.Combine(bin, name + ".dll");
-            var engineCopy = Path.Combine(AppContext.BaseDirectory, name + ".dll");
-            if (!File.Exists(dll) || !File.Exists(engineCopy)) {
-                continue;
-            }
-            var app = PackageVersion(dll);
-            var engine = PackageVersion(engineCopy);
-            if (app != engine) {
-                mismatches.Add($"the app uses {name} {app}, the engine uses {engine}");
-            }
-        }
-        return mismatches;
     }
 
     public List<Assembly> AppAssemblies(string appRoot, IReadOnlyList<string> skip) {
@@ -75,12 +57,6 @@ public sealed class AppLoader : AssemblyLoadContext {
         name is "netstandard" or "mscorlib"
         || name.StartsWith("System", StringComparison.Ordinal)
         || name.StartsWith("Microsoft.", StringComparison.Ordinal);
-
-    static string PackageVersion(string dll) {
-        var version = FileVersionInfo.GetVersionInfo(dll).ProductVersion ?? "";
-        var plus = version.IndexOf('+', StringComparison.Ordinal);
-        return plus < 0 ? version : version[..plus];
-    }
 
     static bool HasSourceUnder(string dll, string prefix) {
         var pdb = Path.ChangeExtension(dll, ".pdb");

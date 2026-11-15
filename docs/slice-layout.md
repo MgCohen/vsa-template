@@ -5,8 +5,8 @@ A feature module (`Features/<Feature>/`) keeps each slice in one flat folder, `S
 ## Layout
 
 ```
-Features/Notes/
-├─ NotesModule.cs, NotesSettings.cs                   module root
+Features/Notebook/
+├─ NotebookModule.cs, NotebookSettings.cs             module root
 ├─ Domain/  Infrastructure/  Presenters/
 └─ Slices/
    ├─ CreateNote/       CreateNoteRequest.cs, CreateNoteResponse.cs, NoteCreated.cs, CreateNoteHandler.cs
@@ -27,7 +27,7 @@ Features/Cards/
 ```
 
 - A module has only the layer folders that it needs. Ping has only `Slices/`.
-- All files of one slice have one namespace, for example `Notes.Slices.CreateNote`.
+- All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name and follows the folders.
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses.
 
@@ -58,7 +58,7 @@ An app has one root project in the app root, the root of the definition. It comp
 samples/Notes/
 ├─ Notes.csproj                 root project: App/, Features/, Plugins/
 ├─ App/Host/  App/Views/
-├─ Features/Notes/  Features/Ping/
+├─ Features/Notebook/  Features/Ping/
 └─ Tests/Notes.Tests.csproj     nested project: the root project does not compile Tests/
 ```
 
@@ -81,11 +81,11 @@ A web root project uses the Web SDK first, then VSA.Sdk:
 </Project>
 ```
 
-A `VSA.*` package with no version gets the version of VSA.Sdk. The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+A `VSA.*` package that VSA.Sdk does not add, for example `VSA.Host`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of VSA.Sdk: the rule engine checks it (`VSA3001`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Host/`) has its own project in the module folder. It then references the other modules that it uses.
 
-The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notes`. One assembly can have many modules.
+The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notebook`. One assembly can have many modules.
 
 `IResponse` is a marker interface. `IRequest`, `RequestHandler`, `IBus.Send` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
 
@@ -109,13 +109,13 @@ public sealed record Cost(string Resource, int Amount);
 
 | Name | What it is | Who uses it | List |
 |---|---|---|---|
-| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | The definition (`VsaDefinition`) |
+| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | The definition (`VsaArchitecture`) |
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
 | `Domain/Shared/` | The published domain of one module | Other modules (table above) | None |
 
 "Shared" is the name of two things in one module: `Slices/Shared/` and `Domain/Shared/`. A base of the whole app is a plugin module, not a Shared one.
 
-The namespace of the published domain is `<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
+The namespace of the published domain is `<App>.Features.<Module>.Domain.Shared`. `Shared` is a VB keyword, but `VSA.globalconfig` turns off CA1716, because the code is C# only.
 
 ## Commands
 

@@ -1,17 +1,21 @@
 namespace VSA.Cli.Scaffolding;
 
 static class FileWriter {
-    // Writes all files, or none. The tool does not write over a file that exists.
-    public static void Write(string root, IEnumerable<(string Path, string Content)> files) {
-        var all = files.Select(f => (f.Path, Full: Path.GetFullPath(Path.Combine(root, f.Path)), f.Content)).ToList();
-        var existing = all.Where(f => File.Exists(f.Full)).Select(f => f.Path).ToList();
+    public static void WriteAllOrNone(string root, IEnumerable<TemplateFile> files) {
+        var all = files.ToList();
+        var existing = all.Where(f => File.Exists(FullPath(root, f))).Select(f => f.Path).ToList();
         if (existing.Count > 0) {
-            throw new VsaException($"These files exist. The tool does not write over a file:{Environment.NewLine}  {string.Join(Environment.NewLine + "  ", existing)}");
+            var list = string.Join(Environment.NewLine + "  ", existing);
+            throw new VsaException(
+                $"These files exist. The tool does not write over a file:{Environment.NewLine}  {list}");
         }
         foreach (var file in all) {
-            Directory.CreateDirectory(Path.GetDirectoryName(file.Full)!);
-            File.WriteAllText(file.Full, file.Content);
+            var full = FullPath(root, file);
+            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+            File.WriteAllText(full, file.Content);
             Console.WriteLine($"  created {file.Path}");
         }
     }
+
+    static string FullPath(string root, TemplateFile file) => Path.GetFullPath(Path.Combine(root, file.Path));
 }

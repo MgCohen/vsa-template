@@ -1,7 +1,7 @@
 using VSA.Architecture;
 using VSA.Architecture.Vsa;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class UnityFoldersTests {
     [Test]
@@ -9,7 +9,7 @@ public sealed class UnityFoldersTests {
         using var project = UnityProjectFolder.Create();
         File.Delete(Path.Combine(project.Root, UnityProjectFolder.VersionFile));
 
-        Assert.That(new VsaDefinition().FolderAliases(project.Root), Is.Empty);
+        Assert.That(new VsaArchitecture().FolderAliases(project.Root), Is.Empty);
     }
 
     [Test]
@@ -18,7 +18,7 @@ public sealed class UnityFoldersTests {
         project.Write("Assets/Game/Features/Notes/NotesModule.cs", "");
         project.Write("Assets/Art/Board.png", "");
 
-        Assert.That(new VsaDefinition().FolderAliases(project.Root), Is.EqualTo(new[] {
+        Assert.That(new VsaArchitecture().FolderAliases(project.Root), Is.EqualTo(new[] {
             new FolderAlias("Assets/Game", ""), new FolderAlias("Assets/Game", "App"), new FolderAlias("Source", ""),
         }));
     }
@@ -27,7 +27,7 @@ public sealed class UnityFoldersTests {
     public void The_definition_can_name_the_app_folder_and_the_source_folder() {
         using var project = UnityProjectFolder.Create();
 
-        var definition = new VsaDefinition { UnityApp = "Cards", UnitySource = "Modules" };
+        var definition = new VsaArchitecture { UnityApp = "Cards", UnitySource = "Modules" };
 
         Assert.That(definition.FolderAliases(project.Root), Is.EqualTo(new[] {
             new FolderAlias("Assets/Cards", ""), new FolderAlias("Assets/Cards", "App"), new FolderAlias("Modules", ""),
@@ -39,7 +39,7 @@ public sealed class UnityFoldersTests {
         using var project = UnityProjectFolder.Create();
         project.Write("Assets/Plugins/VSA/Notes.dll", "");
 
-        Assert.That(new VsaDefinition().FolderAliases(project.Root), Is.EqualTo(new[] { new FolderAlias("Source", "") }));
+        Assert.That(new VsaArchitecture().FolderAliases(project.Root), Is.EqualTo(new[] { new FolderAlias("Source", "") }));
     }
 
     [Test]
@@ -48,7 +48,7 @@ public sealed class UnityFoldersTests {
         project.Write("Assets/Game/Views/Board.cs", "");
         project.Write("Assets/Tools/Plugins/Grid/GridPlugin.cs", "");
 
-        var error = Assert.Throws<InvalidOperationException>(() => new VsaDefinition().FolderAliases(project.Root));
+        var error = Assert.Throws<InvalidOperationException>(() => new VsaArchitecture().FolderAliases(project.Root));
 
         Assert.That(error!.Message, Does.StartWith("The Unity project has 2 app folders in Assets: Game, Tools."));
     }

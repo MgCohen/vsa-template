@@ -2,7 +2,7 @@ using LayeredApp.Ui;
 using VSA.Architecture;
 using VSA.Architecture.Engine;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public record Ui : Concept;
 
@@ -10,9 +10,9 @@ public record Logic : Concept;
 
 public record Data : Concept;
 
-public sealed class LayeredDefinition() : ArchitectureDefinition("LayeredApp") {
-    protected override void Configure(Options options) {
-        options.DefaultPermission = Permission.Deny;
+public sealed class LayeredArchitecture() : Architecture("LayeredApp") {
+    protected override void Configure(Options defaults) {
+        defaults.DefaultPermission = Permission.Deny;
     }
 
     protected override void Define(Root root) {
@@ -29,7 +29,7 @@ public sealed class LayeredDefinition() : ArchitectureDefinition("LayeredApp") {
 
 public sealed class LayeredAppTests {
     static readonly Lazy<ArchitectureMap> LayeredMap =
-        new(() => FixtureApps.Load(new LayeredDefinition(), AppContext.BaseDirectory, FixtureApps.Root));
+        new(() => FixtureApps.Load(new LayeredArchitecture(), AppContext.BaseDirectory, FixtureApps.Root));
 
     [Test]
     public void The_engine_checks_an_architecture_with_no_VSA_type() {

@@ -1,6 +1,6 @@
 using VSA.Architecture.Engine;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class BuildOutputTests {
     [TestCase("Src/obj/Debug/X.cs")]

@@ -1,7 +1,7 @@
-using SampleModule.Slices.GetStatus;
-using VSA.Presenters;
+namespace SampleApp.Features.SampleModule.Presenters;
 
-namespace SampleModule.Presenters;
+using SampleApp.Features.SampleModule.Slices.GetStatus;
+using VSA.Presenters;
 
 public sealed class SampleModulePresenter(IBus bus) : Presenter(bus) {
     public string Status { get; private set; } = "";

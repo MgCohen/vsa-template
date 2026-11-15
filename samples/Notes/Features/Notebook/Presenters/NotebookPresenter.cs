@@ -1,0 +1,33 @@
+namespace Notes.Features.Notebook.Presenters;
+
+using Notes.Features.Notebook.Slices.CreateNote;
+using Notes.Features.Notebook.Slices.DeleteNote;
+using Notes.Features.Notebook.Slices.ListNotes;
+using VSA.Contracts;
+using VSA.Presenters;
+
+public sealed class NotebookPresenter(IBus bus) : Presenter(bus) {
+    // The sample has no sign-in, so all notes have the same author.
+    static readonly Guid SampleAuthor = new("00000000-0000-0000-0000-000000000001");
+
+    public IReadOnlyList<NoteItem> Notes { get; private set; } = [];
+    public OpState Load { get; } = new();
+    public OpState Create { get; } = new();
+    public OpState Delete { get; } = new();
+
+    public Task LoadAsync() => Run(Load, Refresh);
+
+    public Task CreateAsync(string title) => Run(Create, async () =>
+        (await Bus.Send(new CreateNoteRequest(SampleAuthor, title))).Error ?? await Refresh());
+
+    public Task DeleteAsync(Guid id) => Run(Delete, async () =>
+        (await Bus.Send(new DeleteNoteRequest(id))).Error ?? await Refresh());
+
+    async Task<Error?> Refresh() {
+        var listed = await Bus.Send(new ListNotesRequest());
+        if (listed.IsSuccess) {
+            Notes = [.. listed.Value.Notes.Select(NoteItem.From)];
+        }
+        return listed.Error;
+    }
+}

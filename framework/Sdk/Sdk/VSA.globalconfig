@@ -43,8 +43,8 @@ csharp_style_allow_blank_lines_between_consecutive_braces_experimental = false
 dotnet_diagnostic.IDE2002.severity = warning
 
 # Language style.
-# using directives are outside the namespace.
-csharp_using_directive_placement = outside_namespace
+# using directives are inside the namespace.
+csharp_using_directive_placement = inside_namespace
 dotnet_diagnostic.IDE0065.severity = warning
 # Modifiers are in the default order, for example public static readonly.
 dotnet_diagnostic.IDE0036.severity = warning

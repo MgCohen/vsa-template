@@ -1,7 +1,7 @@
 namespace VSA.Architecture.Engine;
 
 static class Decide {
-    public static Decision For(ArchitectureDefinition definition,
+    public static Decision For(Architecture definition,
         Part fromPart, IReadOnlyDictionary<string, string> fromValues,
         Part toPart, IReadOnlyDictionary<string, string> toValues) {
         var winner = definition.Resolve().LastOrDefault(rule =>

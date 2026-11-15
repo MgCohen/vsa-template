@@ -2,7 +2,7 @@ using Kit;
 using VSA.Architecture;
 using VSA.Architecture.Engine;
 
-namespace Architecture.Tests;
+namespace EngineCore.Tests;
 
 public sealed class GoodAppTests {
     static ArchitectureMap Map => FixtureApps.Good;

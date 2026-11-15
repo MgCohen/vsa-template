@@ -2,7 +2,7 @@ using ArchUnitNET.Domain;
 
 namespace VSA.Architecture.Engine;
 
-sealed class RuleChecks(ArchitectureDefinition definition, Bindings bindings) {
+sealed class RuleChecks(Architecture definition, Bindings bindings) {
     public IReadOnlyList<RuleFinding> Of(Binding from) =>
         [.. WrongType(from), .. DeniedUses(from), .. WideExposures(from)];
 
