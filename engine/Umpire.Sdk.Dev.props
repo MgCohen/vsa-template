@@ -1,7 +1,3 @@
 <Project>
-  <!-- Takes the place of Sdk="Umpire.Sdk" inside this repository, so the engine uses the SDK files from source. -->
-  <PropertyGroup>
-    <UmpireSdkDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools', 'sdk', 'Sdk'))</UmpireSdkDir>
-  </PropertyGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../tools/sdk/Umpire.Sdk.Dev.props" />
 </Project>

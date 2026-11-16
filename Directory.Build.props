@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <!-- All build output goes to artifacts~, so no bin/ or obj/ folder is next to the code. The library projects and the test
-       projects share the artifacts~ folder of the repository root. Each block (samples, engine, fixtures, templates) sets its own. -->
+       projects share the artifacts~ folder of the repository root. Each block (engine, fixtures, templates) sets its own. -->
   <PropertyGroup>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>

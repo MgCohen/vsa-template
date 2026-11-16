@@ -21,7 +21,7 @@ public sealed class RunEngineTests {
     const string RulesSkipped =
         "umpire-engine: UMP030002: CheckRules skipped: App is missing, because an earlier step failed.";
     const string PinnedSdk = "global.json: Umpire.Sdk 0.0.1";
-    static readonly string Notes = Repo.Path("samples", "Notes");
+    static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
 
     [Test]
     public void The_scan_finds_each_module_of_the_one_engine_assembly() {

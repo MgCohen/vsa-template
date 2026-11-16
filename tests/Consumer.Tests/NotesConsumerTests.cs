@@ -12,7 +12,7 @@ public sealed partial class NotesConsumerTests {
     [Test]
     [CancelAfter(10 * 60 * 1000)]
     public async Task NotesBuildsFromThePackagesAndRuns(CancellationToken ct) {
-        using var workspace = Workspace.Create(Repo.Path("samples", "Notes"));
+        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
         UsePackages(workspace.Src);
 
         workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
