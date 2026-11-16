@@ -32,6 +32,9 @@ public sealed class ScaffoldingTests {
     [TestCase("SampleChangeLog")]
     [TestCase("SamplePluginBase")]
     [TestCase("Plugins")]
+    [TestCase("Pack")]
+    [TestCase("Packs")]
+    [TestCase("SamplePackX")]
     public void InvalidModuleNamesFail(string name) => Assert.Throws<UmpireException>(() => Names.Check(name, "module"));
 
     [Test]
@@ -58,7 +61,7 @@ public sealed class ScaffoldingTests {
     [Test]
     public void EachTemplateFileHasOneCommand() {
         const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command,
-            Plugin = Templates.Kind.Plugin;
+            Plugin = Templates.Kind.Plugin, Pack = Templates.Kind.Pack;
         (string, Templates.Kind)[] expected = [
             (".gitignore.template", App),
             ("AGENTS.md.template", App),
@@ -83,6 +86,8 @@ public sealed class ScaffoldingTests {
             ("Features/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
             ("Features/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
             ("Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
+            ("Packs/SamplePack/Architecture/SamplePackArchitecture.cs", Pack),
+            ("Packs/SamplePack/SamplePackPack.cs", Pack),
             ("Plugins/.gitkeep", App),
             ("Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
             ("Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),

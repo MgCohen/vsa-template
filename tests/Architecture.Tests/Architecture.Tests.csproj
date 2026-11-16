@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Tests of the rule answers (architecture/Queries) and the Rules step of the engine on the fixture apps in tests/Fixtures/Architecture,
-       with a small test definition. -->
+       with a small test definition, and the pack variant of tests/Fixtures/PackVariant. -->
   <PropertyGroup>
     <RootNamespace>EngineCore.Tests</RootNamespace>
   </PropertyGroup>
@@ -14,5 +14,6 @@
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
   </ItemGroup>
 </Project>

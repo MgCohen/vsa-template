@@ -37,6 +37,14 @@ public sealed class BlocksTests {
     }
 
     [Test]
+    public void An_app_with_its_own_pack_has_the_app_entry_and_the_pack_entry() {
+        var app = Repo.Path("tests", "Fixtures", "PackVariant");
+
+        Assert.That(EntriesIn(app), Is.EqualTo(new[] { EntryForm.App }));
+        Assert.That(EntriesIn(Path.Combine(app, "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Base }));
+    }
+
+    [Test]
     public void Assembly_metadata_with_Umpire_Root_is_the_check_entry_of_the_folder_above_the_project() {
         var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "Lib")));
 

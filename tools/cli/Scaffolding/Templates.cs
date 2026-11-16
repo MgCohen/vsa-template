@@ -8,6 +8,7 @@ static partial class Templates {
     public const string Request = "SampleAction";
     public const string Command = "SampleChange";
     public const string Plugin = "SamplePlugin";
+    public const string Pack = "SamplePack";
     public const string VersionToken = "{{UmpireVersion}}";
     const string ResourcePrefix = "Templates/";
     const string InactiveSuffix = ".template";
@@ -45,6 +46,7 @@ static partial class Templates {
         return pathInTemplates.Contains(Request, StringComparison.Ordinal) ? Kind.Request
             : pathInTemplates.Contains(Command, StringComparison.Ordinal) ? Kind.Command
             : pathInTemplates.Contains(Plugin, StringComparison.Ordinal) ? Kind.Plugin
+            : pathInTemplates.Contains(Pack, StringComparison.Ordinal) ? Kind.Pack
             : inModuleFolder ? Kind.Module
             : Kind.App;
     }
@@ -102,5 +104,5 @@ static partial class Templates {
     [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex SourceReference();
 
-    public enum Kind { App, Module, Request, Command, Plugin }
+    public enum Kind { App, Module, Request, Command, Plugin, Pack }
 }

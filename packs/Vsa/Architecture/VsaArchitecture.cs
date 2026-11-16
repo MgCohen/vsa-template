@@ -17,7 +17,14 @@ public class VsaArchitecture : Architecture {
     }
 
     protected override void Define(Block block) {
-        var kernel = block.Add<Framework>().Add<Kernel>();
+        DefineKernel(block.Add<Framework>().Add<Kernel>());
+        block.Add<App>().Add<Host>().And<Views>();
+        block.AddBlockGroup<Pack>();
+        DefinePlugin(block.AddGroup<Plugin>(Boundary.Open));
+        DefineFeature(block.AddGroup<Feature>());
+    }
+
+    protected virtual void DefineKernel(Part kernel) {
         kernel.Add<Domain>().InAssembly("Umpire.Vsa.Domain");
         kernel.Add<Infrastructure>().InAssembly("Umpire.Vsa.Infrastructure");
         kernel.Add<Presenters>().InAssembly("Umpire.Vsa.Presenters");
@@ -32,10 +39,9 @@ public class VsaArchitecture : Architecture {
         kernel.Add<Views>().InAssembly("Umpire.Vsa.Views");
         kernel.Add<Composition>().InAssembly("Umpire.Vsa.Composition");
         kernel.Add<Host>().InAssembly("Umpire.Vsa.Hosts.Web");
+    }
 
-        block.Add<App>().Add<Host>().And<Views>();
-
-        var plugin = block.AddGroup<Plugin>(Boundary.Open);
+    protected virtual void DefinePlugin(PartGroup plugin) {
         plugin.Add<Module>().OfType<Umpire.Vsa.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
@@ -44,14 +50,18 @@ public class VsaArchitecture : Architecture {
         pluginHandlers.Add<Handlers.Requests>();
         pluginHandlers.Add<Handlers.Events>().Add<Handlers.Events.Hooks>().InParentFolder();
         pluginHandlers.Add<Handlers.Commands>().Add<Handlers.Commands.Hooks>().InParentFolder();
+    }
 
-        var feature = block.AddGroup<Feature>();
+    protected virtual void DefineFeature(PartGroup feature) {
         feature.Add<Module>().OfType<Umpire.Kernel.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();
         feature.Add<Slice.Shared>();
-        feature.AddGroup<Slice>()
-            .Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
+        DefineSlice(feature.AddGroup<Slice>());
+    }
+
+    protected virtual void DefineSlice(PartGroup slice) {
+        slice.Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
             .And<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
             .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>()
             .InParentFolder();
@@ -91,6 +101,8 @@ public class VsaArchitecture : Architecture {
         rules.For<Module>().Under<Feature>().Denies<Composition>();
         rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self);
         rules.For<Views>().Uses<Presenters>();
+        rules.For<Host>().Under<App>().Uses<Pack>();
+        rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
         rules.For<Slice>().Has<Handlers>().AtLeast(1);
         rules.For<Slice>().Has<Handlers>().OfOneKind();

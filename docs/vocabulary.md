@@ -8,6 +8,7 @@ Each term has one meaning in the code, the docs and the messages. Umpire is the 
 |---|---|---|
 | Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernel`, `umpire` tool |
 | Pack | One architecture with its definition, bases and rules | `packs/Vsa/`, `Vsa<THost>` |
+| Pack variant | A pack whose architecture inherits the architecture of another pack and adds parts and rules | `Packs/Ecs/`, `EcsArchitecture : VsaArchitecture` |
 | VSA | The Vertical Slice Architecture pack | `Umpire.Vsa.*`, `VsaArchitecture` |
 | Architecture | A definition: concepts, parts and rules | `VsaArchitecture : Architecture` |
 | Host | The startup of one app kind | `WebVsaHost`, `ConsoleVsaHost` |
@@ -33,6 +34,8 @@ A component can have a layer shape. That does not make it a plugin. "Component" 
 | Concept | A kind of part that a definition names, for example a layer (`record Domain : Layer`) |
 | Part | One place in the folder tree of a definition |
 | Module | The root part of a group instance, for example a feature folder |
+| Module kind | A group of modules with one shape, for example `Feature`, `Plugin` or the `EcsFeature` of a pack variant |
+| Define method | A `virtual` method of `VsaArchitecture.Define` for one base group, for example `DefineFeature(PartGroup feature)` |
 | External | A part that is a DLL, not a folder, for example `Kernel` |
 | Rule | Who may use whom (`rules.For<A>().Uses<B>()`) |
 | Queries | The answers of the rules on plain facts: `PartOf` (which part), `MayUse` (allow or deny), `Counts` and `Matches` (`architecture/Queries/`) |

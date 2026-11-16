@@ -78,6 +78,8 @@ A concept sets its values in `Configure(Options defaults)`. If a concept sets `D
 
 `defaults.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
+`VsaArchitecture.Define` calls one `virtual` define method for each base group and for the kernel: `DefineKernel`, `DefinePlugin`, `DefineFeature` and `DefineSlice`. A pack variant overrides one to add a part to each instance of that group (see `pack-variants.md`).
+
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
 ### `using` placement
@@ -376,6 +378,8 @@ A block is a folder tree of code with one check entry. The check entry names the
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The engine does not check the types of these DLLs.
 
 `PackArchitecture` (Umpire.Kernel) is the shape of a pack: the pack class in the pack folder (`<Name>Pack.cs`, required), and the folders `Architecture/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`). The pack class uses `Architecture/` and `Kernel/`, `Architecture/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack.
+
+`VsaArchitecture` marks `Packs/` with `AddBlockGroup<Pack>()`, so each `Packs/<Name>/` of a VSA app is the place of a pack block. The app host and each module may use `Pack`. A pack variant in that folder inherits `VsaArchitecture` and adds parts and rules: see `pack-variants.md`.
 
 ## One version
 

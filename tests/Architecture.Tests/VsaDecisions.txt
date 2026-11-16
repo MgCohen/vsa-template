@@ -16,6 +16,7 @@ Framework -> Framework/Kernel/Host [any] Deny
 Framework -> App [any] Deny
 Framework -> App/Host [any] Deny
 Framework -> App/Views [any] Deny
+Framework -> Pack [any] Deny
 Framework -> Plugin [any] Deny
 Framework -> Plugin/Module [any] Deny
 Framework -> Plugin/Domain [any] Deny
@@ -66,6 +67,7 @@ App -> Framework/Kernel/Composition [any] Deny
 App -> Framework/Kernel/Host [any] Deny
 App -> App/Host [any] Deny
 App -> App/Views [any] Deny
+App -> Pack [any] Deny
 App -> Plugin [any] Deny
 App -> Plugin/Module [any] Deny
 App -> Plugin/Domain [any] Deny
@@ -116,6 +118,7 @@ App/Host -> Framework/Kernel/Composition [any] Allow Public
 App/Host -> Framework/Kernel/Host [any] Allow Public
 App/Host -> App [any] Deny
 App/Host -> App/Views [any] Deny
+App/Host -> Pack [any] Allow Public
 App/Host -> Plugin [any] Deny
 App/Host -> Plugin/Module [any] Deny
 App/Host -> Plugin/Domain [any] Deny
@@ -166,6 +169,7 @@ App/Views -> Framework/Kernel/Composition [any] Deny
 App/Views -> Framework/Kernel/Host [any] Deny
 App/Views -> App [any] Deny
 App/Views -> App/Host [any] Deny
+App/Views -> Pack [any] Deny
 App/Views -> Plugin [any] Deny
 App/Views -> Plugin/Module [any] Deny
 App/Views -> Plugin/Domain [any] Deny
@@ -198,6 +202,58 @@ App/Views -> Feature/Slice/Handlers.Events [any] Deny
 App/Views -> Feature/Slice/Handlers.Commands [any] Deny
 App/Views -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App/Views -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Pack -> Framework [any] Deny
+Pack -> Framework/Kernel [any] Deny
+Pack -> Framework/Kernel/Domain [any] Deny
+Pack -> Framework/Kernel/Infrastructure [any] Deny
+Pack -> Framework/Kernel/Presenters [any] Deny
+Pack -> Framework/Kernel/Contracts [any] Deny
+Pack -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
+Pack -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
+Pack -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
+Pack -> Framework/Kernel/Handlers [any] Deny
+Pack -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
+Pack -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
+Pack -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
+Pack -> Framework/Kernel/Views [any] Deny
+Pack -> Framework/Kernel/Composition [any] Deny
+Pack -> Framework/Kernel/Host [any] Deny
+Pack -> App [any] Deny
+Pack -> App/Host [any] Deny
+Pack -> App/Views [any] Deny
+Pack -> Pack [any] Deny
+Pack -> Plugin [any] Deny
+Pack -> Plugin/Module [any] Deny
+Pack -> Plugin/Domain [any] Deny
+Pack -> Plugin/Domain/Domain.Shared [any] Deny
+Pack -> Plugin/Infrastructure [any] Deny
+Pack -> Plugin/Presenters [any] Deny
+Pack -> Plugin/Contracts [any] Deny
+Pack -> Plugin/Contracts/Contracts.Requests [any] Deny
+Pack -> Plugin/Contracts/Contracts.Events [any] Deny
+Pack -> Plugin/Contracts/Contracts.Commands [any] Deny
+Pack -> Plugin/Handlers [any] Deny
+Pack -> Plugin/Handlers/Handlers.Requests [any] Deny
+Pack -> Plugin/Handlers/Handlers.Events [any] Deny
+Pack -> Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
+Pack -> Plugin/Handlers/Handlers.Commands [any] Deny
+Pack -> Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
+Pack -> Feature [any] Deny
+Pack -> Feature/Module [any] Deny
+Pack -> Feature/Domain [any] Deny
+Pack -> Feature/Domain/Domain.Shared [any] Deny
+Pack -> Feature/Infrastructure [any] Deny
+Pack -> Feature/Presenters [any] Deny
+Pack -> Feature/Slice.Shared [any] Deny
+Pack -> Feature/Slice [any] Deny
+Pack -> Feature/Slice/Contracts.Requests [any] Deny
+Pack -> Feature/Slice/Contracts.Events [any] Deny
+Pack -> Feature/Slice/Contracts.Commands [any] Deny
+Pack -> Feature/Slice/Handlers.Requests [any] Deny
+Pack -> Feature/Slice/Handlers.Events [any] Deny
+Pack -> Feature/Slice/Handlers.Commands [any] Deny
+Pack -> Feature/Slice/Handlers.Events.Hooks [any] Deny
+Pack -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
 Plugin -> Framework [any] Deny
 Plugin -> Framework/Kernel [any] Deny
 Plugin -> Framework/Kernel/Domain [any] Deny
@@ -217,6 +273,7 @@ Plugin -> Framework/Kernel/Host [any] Deny
 Plugin -> App [any] Deny
 Plugin -> App/Host [any] Deny
 Plugin -> App/Views [any] Deny
+Plugin -> Pack [any] Allow Public
 Plugin -> Plugin [any] Allow Public
 Plugin -> Plugin/Module [any] Deny
 Plugin -> Plugin/Domain [any] Deny
@@ -268,6 +325,7 @@ Plugin/Module -> Framework/Kernel/Host [any] Allow Public
 Plugin/Module -> App [any] Deny
 Plugin/Module -> App/Host [any] Deny
 Plugin/Module -> App/Views [any] Deny
+Plugin/Module -> Pack [any] Allow Public
 Plugin/Module -> Plugin [any] Allow Internal
 Plugin/Module -> Plugin/Module [any] Deny
 Plugin/Module -> Plugin/Domain [any] Allow Internal
@@ -319,6 +377,7 @@ Plugin/Domain -> Framework/Kernel/Host [any] Deny
 Plugin/Domain -> App [any] Deny
 Plugin/Domain -> App/Host [any] Deny
 Plugin/Domain -> App/Views [any] Deny
+Plugin/Domain -> Pack [any] Allow Public
 Plugin/Domain -> Plugin [any] Deny
 Plugin/Domain -> Plugin/Module [any] Deny
 Plugin/Domain -> Plugin/Domain [any] Deny
@@ -370,6 +429,7 @@ Plugin/Domain/Domain.Shared -> Framework/Kernel/Host [any] Deny
 Plugin/Domain/Domain.Shared -> App [any] Deny
 Plugin/Domain/Domain.Shared -> App/Host [any] Deny
 Plugin/Domain/Domain.Shared -> App/Views [any] Deny
+Plugin/Domain/Domain.Shared -> Pack [any] Allow Public
 Plugin/Domain/Domain.Shared -> Plugin [any] Deny
 Plugin/Domain/Domain.Shared -> Plugin/Module [any] Deny
 Plugin/Domain/Domain.Shared -> Plugin/Domain [any] Deny
@@ -421,6 +481,7 @@ Plugin/Infrastructure -> Framework/Kernel/Host [any] Deny
 Plugin/Infrastructure -> App [any] Deny
 Plugin/Infrastructure -> App/Host [any] Deny
 Plugin/Infrastructure -> App/Views [any] Deny
+Plugin/Infrastructure -> Pack [any] Allow Public
 Plugin/Infrastructure -> Plugin [any] Deny
 Plugin/Infrastructure -> Plugin/Module [any] Deny
 Plugin/Infrastructure -> Plugin/Domain [any] Allow Public
@@ -472,6 +533,7 @@ Plugin/Presenters -> Framework/Kernel/Host [any] Deny
 Plugin/Presenters -> App [any] Deny
 Plugin/Presenters -> App/Host [any] Deny
 Plugin/Presenters -> App/Views [any] Deny
+Plugin/Presenters -> Pack [any] Allow Public
 Plugin/Presenters -> Plugin [any] Deny
 Plugin/Presenters -> Plugin/Module [any] Deny
 Plugin/Presenters -> Plugin/Domain [any] Deny
@@ -523,6 +585,7 @@ Plugin/Contracts -> Framework/Kernel/Host [any] Deny
 Plugin/Contracts -> App [any] Deny
 Plugin/Contracts -> App/Host [any] Deny
 Plugin/Contracts -> App/Views [any] Deny
+Plugin/Contracts -> Pack [any] Allow Public
 Plugin/Contracts -> Plugin [any] Deny
 Plugin/Contracts -> Plugin/Module [any] Deny
 Plugin/Contracts -> Plugin/Domain [any] Deny
@@ -574,6 +637,7 @@ Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Host [any] Deny
 Plugin/Contracts/Contracts.Requests -> App [any] Deny
 Plugin/Contracts/Contracts.Requests -> App/Host [any] Deny
 Plugin/Contracts/Contracts.Requests -> App/Views [any] Deny
+Plugin/Contracts/Contracts.Requests -> Pack [any] Allow Public
 Plugin/Contracts/Contracts.Requests -> Plugin [any] Deny
 Plugin/Contracts/Contracts.Requests -> Plugin/Module [any] Deny
 Plugin/Contracts/Contracts.Requests -> Plugin/Domain [any] Deny
@@ -625,6 +689,7 @@ Plugin/Contracts/Contracts.Events -> Framework/Kernel/Host [any] Deny
 Plugin/Contracts/Contracts.Events -> App [any] Deny
 Plugin/Contracts/Contracts.Events -> App/Host [any] Deny
 Plugin/Contracts/Contracts.Events -> App/Views [any] Deny
+Plugin/Contracts/Contracts.Events -> Pack [any] Allow Public
 Plugin/Contracts/Contracts.Events -> Plugin [any] Deny
 Plugin/Contracts/Contracts.Events -> Plugin/Module [any] Deny
 Plugin/Contracts/Contracts.Events -> Plugin/Domain [any] Deny
@@ -676,6 +741,7 @@ Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Host [any] Deny
 Plugin/Contracts/Contracts.Commands -> App [any] Deny
 Plugin/Contracts/Contracts.Commands -> App/Host [any] Deny
 Plugin/Contracts/Contracts.Commands -> App/Views [any] Deny
+Plugin/Contracts/Contracts.Commands -> Pack [any] Allow Public
 Plugin/Contracts/Contracts.Commands -> Plugin [any] Deny
 Plugin/Contracts/Contracts.Commands -> Plugin/Module [any] Deny
 Plugin/Contracts/Contracts.Commands -> Plugin/Domain [any] Deny
@@ -727,6 +793,7 @@ Plugin/Handlers -> Framework/Kernel/Host [any] Deny
 Plugin/Handlers -> App [any] Deny
 Plugin/Handlers -> App/Host [any] Deny
 Plugin/Handlers -> App/Views [any] Deny
+Plugin/Handlers -> Pack [any] Allow Public
 Plugin/Handlers -> Plugin [any] Deny
 Plugin/Handlers -> Plugin/Module [any] Deny
 Plugin/Handlers -> Plugin/Domain [any] Deny
@@ -778,6 +845,7 @@ Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Requests -> App [any] Deny
 Plugin/Handlers/Handlers.Requests -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Requests -> App/Views [any] Deny
+Plugin/Handlers/Handlers.Requests -> Pack [any] Allow Public
 Plugin/Handlers/Handlers.Requests -> Plugin [any] Deny
 Plugin/Handlers/Handlers.Requests -> Plugin/Module [any] Deny
 Plugin/Handlers/Handlers.Requests -> Plugin/Domain [any] Allow Internal
@@ -829,6 +897,7 @@ Plugin/Handlers/Handlers.Events -> Framework/Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Events -> App [any] Deny
 Plugin/Handlers/Handlers.Events -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Events -> App/Views [any] Deny
+Plugin/Handlers/Handlers.Events -> Pack [any] Allow Public
 Plugin/Handlers/Handlers.Events -> Plugin [any] Deny
 Plugin/Handlers/Handlers.Events -> Plugin/Module [any] Deny
 Plugin/Handlers/Handlers.Events -> Plugin/Domain [any] Allow Internal
@@ -880,6 +949,7 @@ Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Host [
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Views [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Pack [any] Allow Public
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Plugin [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Plugin/Module [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Plugin/Domain [any] Allow Internal
@@ -931,6 +1001,7 @@ Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Commands -> App [any] Deny
 Plugin/Handlers/Handlers.Commands -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Commands -> App/Views [any] Deny
+Plugin/Handlers/Handlers.Commands -> Pack [any] Allow Public
 Plugin/Handlers/Handlers.Commands -> Plugin [any] Deny
 Plugin/Handlers/Handlers.Commands -> Plugin/Module [any] Deny
 Plugin/Handlers/Handlers.Commands -> Plugin/Domain [any] Allow Internal
@@ -982,6 +1053,7 @@ Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Ho
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Views [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Pack [any] Allow Public
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Plugin [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Plugin/Module [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Plugin/Domain [any] Allow Internal
@@ -1033,6 +1105,7 @@ Feature -> Framework/Kernel/Host [any] Deny
 Feature -> App [any] Deny
 Feature -> App/Host [any] Deny
 Feature -> App/Views [any] Deny
+Feature -> Pack [any] Allow Public
 Feature -> Plugin [any] Deny
 Feature -> Plugin/Module [any] Deny
 Feature -> Plugin/Domain [any] Deny
@@ -1085,6 +1158,7 @@ Feature/Module -> Framework/Kernel/Host [any] Allow Public
 Feature/Module -> App [any] Deny
 Feature/Module -> App/Host [any] Deny
 Feature/Module -> App/Views [any] Deny
+Feature/Module -> Pack [any] Allow Public
 Feature/Module -> Plugin [any] Allow Internal
 Feature/Module -> Plugin/Module [any] Deny
 Feature/Module -> Plugin/Domain [any] Allow Internal
@@ -1168,6 +1242,7 @@ Feature/Domain -> Framework/Kernel/Host [any] Deny
 Feature/Domain -> App [any] Deny
 Feature/Domain -> App/Host [any] Deny
 Feature/Domain -> App/Views [any] Deny
+Feature/Domain -> Pack [any] Allow Public
 Feature/Domain -> Plugin [any] Deny
 Feature/Domain -> Plugin/Module [any] Deny
 Feature/Domain -> Plugin/Domain [any] Allow Public
@@ -1219,6 +1294,7 @@ Feature/Domain/Domain.Shared -> Framework/Kernel/Host [any] Deny
 Feature/Domain/Domain.Shared -> App [any] Deny
 Feature/Domain/Domain.Shared -> App/Host [any] Deny
 Feature/Domain/Domain.Shared -> App/Views [any] Deny
+Feature/Domain/Domain.Shared -> Pack [any] Allow Public
 Feature/Domain/Domain.Shared -> Plugin [any] Deny
 Feature/Domain/Domain.Shared -> Plugin/Module [any] Deny
 Feature/Domain/Domain.Shared -> Plugin/Domain [any] Deny
@@ -1270,6 +1346,7 @@ Feature/Infrastructure -> Framework/Kernel/Host [any] Deny
 Feature/Infrastructure -> App [any] Deny
 Feature/Infrastructure -> App/Host [any] Deny
 Feature/Infrastructure -> App/Views [any] Deny
+Feature/Infrastructure -> Pack [any] Allow Public
 Feature/Infrastructure -> Plugin [any] Deny
 Feature/Infrastructure -> Plugin/Module [any] Deny
 Feature/Infrastructure -> Plugin/Domain [any] Allow Public
@@ -1322,6 +1399,7 @@ Feature/Presenters -> Framework/Kernel/Host [any] Deny
 Feature/Presenters -> App [any] Deny
 Feature/Presenters -> App/Host [any] Deny
 Feature/Presenters -> App/Views [any] Deny
+Feature/Presenters -> Pack [any] Allow Public
 Feature/Presenters -> Plugin [any] Deny
 Feature/Presenters -> Plugin/Module [any] Deny
 Feature/Presenters -> Plugin/Domain [any] Deny
@@ -1380,6 +1458,7 @@ Feature/Slice.Shared -> Framework/Kernel/Host [any] Deny
 Feature/Slice.Shared -> App [any] Deny
 Feature/Slice.Shared -> App/Host [any] Deny
 Feature/Slice.Shared -> App/Views [any] Deny
+Feature/Slice.Shared -> Pack [any] Allow Public
 Feature/Slice.Shared -> Plugin [any] Deny
 Feature/Slice.Shared -> Plugin/Module [any] Deny
 Feature/Slice.Shared -> Plugin/Domain [any] Deny
@@ -1431,6 +1510,7 @@ Feature/Slice -> Framework/Kernel/Host [any] Deny
 Feature/Slice -> App [any] Deny
 Feature/Slice -> App/Host [any] Deny
 Feature/Slice -> App/Views [any] Deny
+Feature/Slice -> Pack [any] Allow Public
 Feature/Slice -> Plugin [any] Deny
 Feature/Slice -> Plugin/Module [any] Deny
 Feature/Slice -> Plugin/Domain [any] Deny
@@ -1483,6 +1563,7 @@ Feature/Slice/Contracts.Requests -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Contracts.Requests -> App [any] Deny
 Feature/Slice/Contracts.Requests -> App/Host [any] Deny
 Feature/Slice/Contracts.Requests -> App/Views [any] Deny
+Feature/Slice/Contracts.Requests -> Pack [any] Allow Public
 Feature/Slice/Contracts.Requests -> Plugin [any] Deny
 Feature/Slice/Contracts.Requests -> Plugin/Module [any] Deny
 Feature/Slice/Contracts.Requests -> Plugin/Domain [any] Deny
@@ -1535,6 +1616,7 @@ Feature/Slice/Contracts.Events -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Contracts.Events -> App [any] Deny
 Feature/Slice/Contracts.Events -> App/Host [any] Deny
 Feature/Slice/Contracts.Events -> App/Views [any] Deny
+Feature/Slice/Contracts.Events -> Pack [any] Allow Public
 Feature/Slice/Contracts.Events -> Plugin [any] Deny
 Feature/Slice/Contracts.Events -> Plugin/Module [any] Deny
 Feature/Slice/Contracts.Events -> Plugin/Domain [any] Deny
@@ -1587,6 +1669,7 @@ Feature/Slice/Contracts.Commands -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Contracts.Commands -> App [any] Deny
 Feature/Slice/Contracts.Commands -> App/Host [any] Deny
 Feature/Slice/Contracts.Commands -> App/Views [any] Deny
+Feature/Slice/Contracts.Commands -> Pack [any] Allow Public
 Feature/Slice/Contracts.Commands -> Plugin [any] Deny
 Feature/Slice/Contracts.Commands -> Plugin/Module [any] Deny
 Feature/Slice/Contracts.Commands -> Plugin/Domain [any] Deny
@@ -1639,6 +1722,7 @@ Feature/Slice/Handlers.Requests -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Handlers.Requests -> App [any] Deny
 Feature/Slice/Handlers.Requests -> App/Host [any] Deny
 Feature/Slice/Handlers.Requests -> App/Views [any] Deny
+Feature/Slice/Handlers.Requests -> Pack [any] Allow Public
 Feature/Slice/Handlers.Requests -> Plugin [any] Deny
 Feature/Slice/Handlers.Requests -> Plugin/Module [any] Deny
 Feature/Slice/Handlers.Requests -> Plugin/Domain [any] Allow Internal
@@ -1697,6 +1781,7 @@ Feature/Slice/Handlers.Events -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Handlers.Events -> App [any] Deny
 Feature/Slice/Handlers.Events -> App/Host [any] Deny
 Feature/Slice/Handlers.Events -> App/Views [any] Deny
+Feature/Slice/Handlers.Events -> Pack [any] Allow Public
 Feature/Slice/Handlers.Events -> Plugin [any] Deny
 Feature/Slice/Handlers.Events -> Plugin/Module [any] Deny
 Feature/Slice/Handlers.Events -> Plugin/Domain [any] Allow Internal
@@ -1752,6 +1837,7 @@ Feature/Slice/Handlers.Commands -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Handlers.Commands -> App [any] Deny
 Feature/Slice/Handlers.Commands -> App/Host [any] Deny
 Feature/Slice/Handlers.Commands -> App/Views [any] Deny
+Feature/Slice/Handlers.Commands -> Pack [any] Allow Public
 Feature/Slice/Handlers.Commands -> Plugin [any] Deny
 Feature/Slice/Handlers.Commands -> Plugin/Module [any] Deny
 Feature/Slice/Handlers.Commands -> Plugin/Domain [any] Allow Internal
@@ -1807,6 +1893,7 @@ Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> App [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> App/Host [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> App/Views [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Pack [any] Allow Public
 Feature/Slice/Handlers.Events.Hooks -> Plugin [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Plugin/Module [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Plugin/Domain [any] Allow Internal
@@ -1865,6 +1952,7 @@ Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Host [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> App [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> App/Host [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> App/Views [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Pack [any] Allow Public
 Feature/Slice/Handlers.Commands.Hooks -> Plugin [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Plugin/Module [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Plugin/Domain [any] Allow Internal

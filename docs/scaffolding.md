@@ -11,19 +11,21 @@ The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin module
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
+| `add pack <Name>` | Pack class `<Name><THost>` in `Packs/<Name>/<Name>Pack.cs`, and `Architecture/<Name>Architecture.cs` (inherits `VsaArchitecture`). See `pack-variants.md` | None |
 | `doctor` | None | None |
 | `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the Umpire versions in `global.json` and the project files |
 
 Rules for all commands:
 
-- A name is a PascalCase C# identifier. Names that start with `VSA` are forbidden. These names are also forbidden, because they break the build: `App`, `Views`, `Pages`, `Home`, `Features`, `Plugins`, `System`, `Microsoft`.
-- A name cannot contain a template name (`SampleApp`, `SampleModule`, `SampleAction`, `SampleChange`, `SamplePlugin`).
+- A name is a PascalCase C# identifier. Names that start with `VSA` are forbidden. These names are also forbidden, because they break the build: `App`, `Views`, `Pages`, `Home`, `Features`, `Plugins`, `Pack`, `Packs`, `System`, `Microsoft`.
+- A name cannot contain a template name (`SampleApp`, `SampleModule`, `SampleAction`, `SampleChange`, `SamplePlugin`, `SamplePack`).
 - A request name cannot end with `Request`, `Response` or `Handler`. A command name cannot end with `Command`, `Result` or `Handler`.
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
 - An option that takes one value stops the command if you give it two times, for example `-m A -m B`.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
+- `add pack` stops if `Packs/<Name>/` exists.
 - `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
 - `new app` writes a `Directory.Build.props` that puts all build output in `artifacts~/` in the block folder (`UseArtifactsOutput`, `ArtifactsPath`). No `bin/` or `obj/` folder is next to the code, and Unity does not import the DLLs a second time: it skips each folder whose name ends with `~`. The .NET SDK reads this setting only from `Directory.Build.props` or the command line (`NETSDK1199`), so the setting is not in Umpire.Sdk.
 - `new app` writes a `.gitignore` for the build folders and the local files (`artifacts~/`, `bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
@@ -42,6 +44,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
    └─ AddCommand                 checks the name, writes the template files of one Templates.Kind
       ├─ AddModuleCommand        umpire add module <Name>
       ├─ AddPluginCommand        umpire add plugin <Name>
+      ├─ AddPackCommand          umpire add pack <Name>
       └─ AddSliceCommand         one class, one instance for each SliceKind:
                                    SliceKind.Request  umpire add request <Name> -m <Module>
                                    SliceKind.Command  umpire add command <Name> -m <Module>
@@ -85,6 +88,7 @@ tools/cli/Templates/
 │  ├─ Slices/SampleAction/**                       add request
 │  └─ Slices/SampleChange/**                       add command
 ├─ Features/.gitkeep                                new app (keeps the empty Features/ folder)
+├─ Packs/SamplePack/**                             add pack (SamplePackPack.cs, Architecture/SamplePackArchitecture.cs)
 ├─ Plugins/SamplePlugin/**                         add plugin (root, Contracts/Commands/SamplePluginStep.cs)
 ├─ Plugins/.gitkeep                                new app (keeps the empty Plugins/ folder)
 ├─ Tests/App.Tests.csproj                         new app
@@ -99,8 +103,9 @@ The path of a template file gives its command. The tool uses the first rule that
 | 1 | Contains `SampleAction` | `add request` | `SampleAction`, `SampleModule` |
 | 2 | Contains `SampleChange` | `add command` | `SampleChange`, `SampleModule` |
 | 3 | Contains `SamplePlugin` | `add plugin` | `SamplePlugin` |
-| 4 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
-| 5 | Other | `new app` | `SampleApp` |
+| 4 | Contains `SamplePack` | `add pack` | `SamplePack` |
+| 5 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
+| 6 | Other | `new app` | `SampleApp` |
 
 `ScaffoldingTests.EachTemplateFileHasOneCommand` lists each template file with its command. If you add a template file, add it to this test.
 
