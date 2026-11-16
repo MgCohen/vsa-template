@@ -18,31 +18,25 @@
     <EmbeddedResource Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
   </ItemGroup>
 
-  <!-- The framework bases of all layers. The architecture definition, not the references, decides which layer uses which base:
-       the rule engine checks each use after the build. Path is the project folder under the repository root in source mode. -->
+  <!-- The general packages that each app needs, with no layer. The pack of the app adds its own packages (Umpire.Pack.targets).
+       Path is the project folder under the repository root in source mode. An Analyzer item is a Roslyn analyzer, not a library. -->
+  <ItemDefinitionGroup>
+    <_UmpireFramework>
+      <Analyzer>false</Analyzer>
+    </_UmpireFramework>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" />
-    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" />
-    <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
-    <_UmpireFramework Include="Umpire.Vsa.Domain" Path="packs/Vsa/Kernel/Domain" />
-    <_UmpireFramework Include="Umpire.Vsa.Infrastructure" Path="packs/Vsa/Kernel/Infrastructure" />
-    <_UmpireFramework Include="Umpire.Vsa.Contracts.Requests" Path="packs/Vsa/Kernel/Contracts/Requests" />
-    <_UmpireFramework Include="Umpire.Vsa.Contracts.Events" Path="packs/Vsa/Kernel/Contracts/Events" />
-    <_UmpireFramework Include="Umpire.Vsa.Contracts.Commands" Path="packs/Vsa/Kernel/Contracts/Commands" />
-    <_UmpireFramework Include="Umpire.Vsa.Handlers.Requests" Path="packs/Vsa/Kernel/Handlers/Requests" />
-    <_UmpireFramework Include="Umpire.Vsa.Handlers.Events" Path="packs/Vsa/Kernel/Handlers/Events" />
-    <_UmpireFramework Include="Umpire.Vsa.Handlers.Commands" Path="packs/Vsa/Kernel/Handlers/Commands" />
-    <_UmpireFramework Include="Umpire.Vsa.Presenters" Path="packs/Vsa/Kernel/Presenters" />
     <_UmpireFramework Include="Umpire.Kernel" Path="framework/Kernel" />
-    <_UmpireFramework Include="Umpire.Vsa.Composition" Path="packs/Vsa/Kernel/Composition" />
-    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Architecture" />
+    <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
+    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" />
   </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Pack.targets" />
 
   <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set. -->
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
-    <ProjectReference Include="@(_UmpireFramework->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
-    <ProjectReference Update="$(UmpireFrameworkSourceDir)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <ProjectReference Update="$(UmpireFrameworkSourceDir)framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
+    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- Package mode (consumers): package references with the version of this SDK.
@@ -53,9 +47,8 @@
     <_UmpireVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireVersion)</_UmpireVO>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <PackageReference Include="@(_UmpireFramework)" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
-    <PackageReference Update="Umpire.Vsa.Analyzers" PrivateAssets="all" />
-    <PackageReference Update="Umpire.Kernel.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->

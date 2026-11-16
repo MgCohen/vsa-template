@@ -1,0 +1,12 @@
+<Project>
+  <!-- The only file that knows how an app selects its pack. UmpirePack names a pack package, for example Vsa for Umpire.Vsa.
+       The pack package depends on its layer packages. Its analyzer package is Umpire.<Pack>.Analyzers.
+       A pack variant in Packs/<Name>/ of an app is not a package, so it does not change UmpirePack. -->
+  <PropertyGroup>
+    <UmpirePack Condition="'$(UmpirePack)' == ''">Vsa</UmpirePack>
+  </PropertyGroup>
+  <ItemGroup>
+    <_UmpireFramework Include="Umpire.$(UmpirePack)" Path="packs/$(UmpirePack)/Architecture" />
+    <_UmpireFramework Include="Umpire.$(UmpirePack).Analyzers" Path="packs/$(UmpirePack)/Tests/Analyzers" Analyzer="true" />
+  </ItemGroup>
+</Project>

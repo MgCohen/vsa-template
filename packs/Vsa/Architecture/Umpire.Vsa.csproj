@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The VSA architecture definition: the VSA layers and rules, and the VSA pack Vsa<THost>, which joins the definition
-       and a VSA host. It has no test framework, no ArchUnitNET and no Mono.Cecil. -->
+       and a VSA host. It depends on each layer base of the VSA kernel, so an app gets all of them from this one package.
+       It has no test framework, no ArchUnitNET and no Mono.Cecil. -->
   <ItemGroup>
     <Compile Include="../VsaPack.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../architecture/Umpire.Architecture.csproj" />
     <ProjectReference Include="../Kernel/Composition/Umpire.Vsa.Composition.csproj" />
+    <ProjectReference Include="../Kernel/Domain/Umpire.Vsa.Domain.csproj" />
+    <ProjectReference Include="../Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
+    <ProjectReference Include="../Kernel/Presenters/Umpire.Vsa.Presenters.csproj" />
     <ProjectReference Include="../Kernel/Contracts/Requests/Umpire.Vsa.Contracts.Requests.csproj" />
     <ProjectReference Include="../Kernel/Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />
     <ProjectReference Include="../Kernel/Contracts/Commands/Umpire.Vsa.Contracts.Commands.csproj" />
