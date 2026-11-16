@@ -5,10 +5,10 @@ using System.Text.RegularExpressions;
 
 static partial class Names {
     static readonly string[] NamesThatBreakTheBuild =
-        ["App", "Views", "Pages", "Home", "Features", "Plugins", "System", "Microsoft"];
+        ["App", "Views", "Pages", "Home", "Features", "Plugins", "Pack", "Packs", "System", "Microsoft"];
 
     static readonly string[] TemplateSampleNames =
-        [Templates.App, Templates.Module, Templates.Request, Templates.Command, Templates.Plugin];
+        [Templates.App, Templates.Module, Templates.Request, Templates.Command, Templates.Plugin, Templates.Pack];
 
     public static string Check(string name, string kind, IReadOnlyList<string>? forbiddenSuffixes = null) {
         if (!PascalCase().IsMatch(name)) {

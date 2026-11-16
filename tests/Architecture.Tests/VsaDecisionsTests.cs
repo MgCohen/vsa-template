@@ -21,7 +21,7 @@ public sealed class VsaDecisionsTests {
             + "If the change is correct, copy the .actual.txt file over the baseline.");
     }
 
-    static IEnumerable<string> Decisions(Architecture definition) {
+    internal static IEnumerable<string> Decisions(Architecture definition) {
         var parts = definition.Parts().ToList();
         foreach (var from in parts.Where(p => !p.IsExternal)) {
             var fromValues = from.Groups.ToDictionary(i => i.Name, _ => "a");

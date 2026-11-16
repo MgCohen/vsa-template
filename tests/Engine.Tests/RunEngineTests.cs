@@ -105,6 +105,7 @@ public sealed class RunEngineTests {
 
     [TestCase("packs", "Vsa")]
     [TestCase("tests", "Fixtures", "Blocks", "Packs", "Alpha")]
+    [TestCase("tests", "Fixtures", "PackVariant", "Packs", "Ecs")]
     public async Task A_pack_block_passes_its_own_check(params string[] folder) {
         var result = await Run(project: Repo.Path(folder));
 
@@ -130,6 +131,13 @@ public sealed class RunEngineTests {
     [Test]
     public async Task The_engine_finds_no_errors_in_a_block_with_inner_blocks() {
         var result = await Run(project: Repo.Path("tests", "Fixtures", "Blocks"));
+
+        Assert.That(result.Lines, Has.None.Contains(": error "), string.Join(Environment.NewLine, result.Lines));
+    }
+
+    [Test]
+    public async Task The_engine_finds_no_errors_in_an_app_with_its_own_pack_variant() {
+        var result = await Run(project: Repo.Path("tests", "Fixtures", "PackVariant"));
 
         Assert.That(result.Lines, Has.None.Contains(": error "), string.Join(Environment.NewLine, result.Lines));
     }

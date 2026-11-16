@@ -85,11 +85,30 @@ public sealed class CommandTests {
             Throws.TypeOf<UmpireException>().With.Message.Contain($"The {noun} name Shop is the name of the app.")
                 .And.Message.Contain("CS0234"));
 
+    [Test]
+    public void AddPackWritesThePackClassAndItsArchitecture() {
+        var files = FilesAfter(["add", "pack", "Ecs"], app: "Shop");
+
+        Assert.That(files, Is.EquivalentTo(new[] { "Packs/Ecs/EcsPack.cs", "Packs/Ecs/Architecture/EcsArchitecture.cs" }));
+    }
+
+    [Test]
+    public void AddPackStopsIfThePackExists() =>
+        Assert.That(() => RunInFolder(["add", "pack", "Ecs"], "Shop", folder => Directory.CreateDirectory(Path.Combine(folder, "Packs", "Ecs"))),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("The pack Ecs exists: Packs/Ecs."));
+
     static int RunOutsideAnApp(string[] args) => RunInFolder(args, app: null);
 
     static int RunInAnApp(string[] args, string app = "Hello") => RunInFolder(args, app);
 
-    static int RunInFolder(string[] args, string? app) {
+    static IReadOnlyList<string> FilesAfter(string[] args, string app) {
+        var files = new List<string>();
+        RunInFolder(args, app, inspect: folder => files.AddRange(Directory.GetFiles(folder, "*.cs", SearchOption.AllDirectories)
+            .Select(file => Path.GetRelativePath(folder, file).Replace('\\', '/'))));
+        return files;
+    }
+
+    static int RunInFolder(string[] args, string? app, Action<string>? prepare = null, Action<string>? inspect = null) {
         var folder = TempFolder.Create();
         var current = Environment.CurrentDirectory;
         try {
@@ -97,8 +116,11 @@ public sealed class CommandTests {
                 File.WriteAllText(Path.Combine(folder, "global.json"), $$"""{ "msbuild-sdks": { "Umpire.Sdk": "{{ToolVersion.Current}}" } }""");
                 File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), "<Project Sdk=\"Umpire.Sdk\" />");
             }
+            prepare?.Invoke(folder);
             Environment.CurrentDirectory = folder;
-            return CommandList.Run(args);
+            var exitCode = CommandList.Run(args);
+            inspect?.Invoke(folder);
+            return exitCode;
         } finally {
             Environment.CurrentDirectory = current;
             TempFolder.Delete(folder);

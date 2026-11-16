@@ -50,6 +50,17 @@ Plugins/Pipeline/
 
 The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`) have the same folders as in a module. A module slice derives from a plugin base, for example `Heal : Step<HealResult>` and `HealHandler : StepHandler<Heal, HealResult>`.
 
+## Packs of an app
+
+An app can have its own packs in `Packs/<Name>/`. Each one is an inner block: its pack class is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `EcsFeatures/<Module>/`. See `pack-variants.md`.
+
+```
+Shop/
+├─ App/  Features/  Plugins/
+├─ EcsFeatures/Combat/      a module of the kind EcsFeature
+└─ Packs/Ecs/               EcsPack.cs, Architecture/, Kernel/
+```
+
 ## Projects
 
 An app has one root project in the block folder. It compiles each file in its folder tree, so a module, a slice or a plugin needs no project of its own. All other projects are optional, for example a test project or a separate assembly.

@@ -10,6 +10,7 @@ static class CommandList {
         new NewAppCommand(),
         new AddModuleCommand(),
         new AddPluginCommand(),
+        new AddPackCommand(),
         .. SliceKind.All.Select(kind => new AddSliceCommand(kind)),
         new DoctorCommand(),
         new UpdateCommand(),

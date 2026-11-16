@@ -106,6 +106,31 @@ public sealed class VsaRulesTests {
         });
     }
 
+    [TestCase("App", "Host", Permission.Allow)]
+    [TestCase("Feature", "Domain", Permission.Allow)]
+    [TestCase("Feature", "Handlers.Commands", Permission.Allow)]
+    [TestCase("Plugin", "Infrastructure", Permission.Allow)]
+    public void The_app_class_and_the_modules_use_the_packs_of_the_app(string group, string user, Permission expected) {
+        Assert.That(MayUse(Place(group, user), Place("Pack", "Pack")).Permission, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void A_folder_in_Packs_is_the_place_of_a_pack_block() {
+        var type = new TypeFacts("App.Packs.Ecs.Kernel.EcsSystem", "EcsSystem", "App", new Source("C:/app/Packs/Ecs/Kernel/EcsSystem.cs", 1), [], [], [], []);
+
+        var bindings = new ResolvedArchitecture(Definition).Place([type], "C:/app", ["C:/app/Packs/Ecs"]);
+
+        Assert.That(bindings.Unmapped, Is.Empty);
+        Assert.That(bindings.All.Single().Part.Is(typeof(Pack)), Is.True);
+    }
+
+    [Test]
+    public void A_hook_override_adds_a_part_to_each_feature() {
+        var paths = new ExtraFeaturePart().Parts().Select(p => p.Path);
+
+        Assert.That(paths, Does.Contain("Features/{feature}/Extra"));
+    }
+
     static Decision MayUse(PartPlace from, PartPlace to) =>
         Umpire.Architecture.MayUse.For(Definition, from.Part, from.Values, to.Part, to.Values);
 
@@ -120,4 +145,13 @@ public sealed class VsaRulesTests {
     }
 
     sealed record PartPlace(Part Part, IReadOnlyDictionary<string, string> Values);
+
+    sealed class ExtraFeaturePart : VsaArchitecture {
+        protected override void DefineFeature(PartGroup feature) {
+            base.DefineFeature(feature);
+            feature.Add<Extra>();
+        }
+    }
+
+    sealed record Extra : Layer;
 }

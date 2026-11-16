@@ -22,7 +22,7 @@ Umpire: a framework and a rule engine that check the architecture of an app afte
 
 The framework groups and their references are in `docs/framework-layout.md`.
 
-There are three kinds of module: the VSA pack (`packs/Vsa/`), a plugin module and a feature module (the code of the app). A feature module is a folder `Features/<Feature>/`, and a plugin module is a folder `Plugins/<Plugin>/`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/` and `Presenters/`. A feature module has its other code in `Slices/<Slice>/`. A plugin module has no slices: it has the layout of the framework, with one folder for each layer, for example `Handlers/Commands/`. Its root class inherits `Plugin` (`UMP020101`, `UMP020301`). The word "Shared" is only `Domain/Shared/` and `Slices/Shared/`. See `docs/slice-layout.md`.
+There are three kinds of module: the VSA pack (`packs/Vsa/`), a plugin module and a feature module (the code of the app). A feature module is a folder `Features/<Feature>/`, and a plugin module is a folder `Plugins/<Plugin>/`. The code is in `Domain/`, `Domain/Shared/` (the published domain of the module), `Infrastructure/` and `Presenters/`. A feature module has its other code in `Slices/<Slice>/`. A plugin module has no slices: it has the layout of the framework, with one folder for each layer, for example `Handlers/Commands/`. Its root class inherits `Plugin` (`UMP020101`, `UMP020301`). The word "Shared" is only `Domain/Shared/` and `Slices/Shared/`. See `docs/slice-layout.md`. An app can also have its own packs in `Packs/<Name>/`: each one is an inner block with its pack class as its check entry, and a pack variant there adds module kinds and rules to `VsaArchitecture`. See `docs/pack-variants.md`.
 
 An app has one root project in the block folder, for example `tests/Fixtures/Notes/Notes.csproj`. It compiles each file in its folder tree. All other projects are optional, for example a test project or a separate assembly. A parent project does not compile the folder of a nested project, and no project compiles `bin/`, `obj/` or the folders in `UmpireExcludedFolders` (for example `Assets/`). The folders select the layers, and the rule engine checks each use. The name of a module is the last part of the namespace of its root class, and one assembly can have many modules. Each namespace starts with the app name and follows the folders, for example `Notes.Features.Notebook.Slices.CreateNote` or `Notes.App.Host`. Put the `using` directives inside the namespace, so a type of Umpire wins over a namespace of the app with the same name, for example `App`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records (a pack variant), put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace. See "`using` placement" in `docs/architecture-engine.md`.
 
@@ -80,6 +80,7 @@ Each first folder in `tests/Fixtures/` is one block:
 | `Modules/` | The referenced modules of the framework, composition and rule tests |
 | `Notes/` | A full web app with its own unit tests. Engine.Tests and Consumer.Tests use it |
 | `TwoApps/`, `NoConstructorApp/` | Engine cases: a block with two apps, an app class with no public constructor |
+| `PackVariant/` | An app with its own pack variant `Packs/Ecs/` and the module kind `EcsFeature`. Engine.Tests and Architecture.Tests use it |
 
 There are two kinds of fixture:
 
@@ -140,7 +141,7 @@ Fifteen framework projects also target `netstandard2.1`, for Unity: Umpire.Vsa.D
 
 ## Scaffolding: the umpire tool
 
-The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands. It writes only new files: it does not write over a file, and it does not edit a file. The one exception is `umpire update`: it changes only the Umpire versions. Each command is a class in `tools/cli/Commands/` that inherits one base in `Commands/Bases/` (`ToolCommand`, `AppCommand` or `AddCommand`). See "Add a command" in `docs/scaffolding.md`.
+The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, packs, requests and commands. It writes only new files: it does not write over a file, and it does not edit a file. The one exception is `umpire update`: it changes only the Umpire versions. Each command is a class in `tools/cli/Commands/` that inherits one base in `Commands/Bases/` (`ToolCommand`, `AppCommand` or `AddCommand`). See "Add a command" in `docs/scaffolding.md`.
 
 ```bash
 dotnet tool exec Umpire.Cli new app <Name>          # global.json, nuget.config, .gitignore, Directory.Build.props (the build output in artifacts~/), dotnet-tools.json, <Name>.slnx, AGENTS.md, <Name>.csproj (with Umpire.Engine.Build: the check after each build), App/, Features/, Plugins/, Tests/
@@ -148,8 +149,9 @@ dotnet umpire add module <Name>                     # the module root, the publi
 dotnet umpire add request <Name> -m <Module>        # the request, the response and the handler
 dotnet umpire add command <Name> -m <Module>        # the command, the result and the handler
 dotnet umpire add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
+dotnet umpire add pack <Name>                       # a pack variant in Packs/<Name>: the pack class and its architecture
 dotnet umpire doctor                                # the version check of the engine (UMP030201), with the tool version
 dotnet umpire update                                # the tool, Umpire.Sdk and the Umpire.* packages move to the latest version
 ```
 
-The templates are in `tools/cli/Templates/`. They are one app that builds in `Umpire.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction`, `SampleChange` and `SamplePlugin`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path belongs to `add command`. A template file with `SamplePlugin` in its path belongs to `add plugin`. Any other file under `Features/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `Umpire.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.
+The templates are in `tools/cli/Templates/`. They are one app that builds in `Umpire.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction`, `SampleChange`, `SamplePlugin` and `SamplePack`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path belongs to `add command`. A template file with `SamplePlugin` in its path belongs to `add plugin`. A template file with `SamplePack` in its path belongs to `add pack`. Any other file under `Features/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `Umpire.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.
