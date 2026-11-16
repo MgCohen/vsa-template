@@ -11,16 +11,18 @@ public class Part : IPartChain {
     string? folder;
     string? assembly;
 
-    protected internal Part(Concept? concept, string? folder, Part? parent, bool group = false) {
+    protected internal Part(Concept? concept, string? folder, Part? parent, bool group = false, bool blockPlace = false) {
         Concept = concept;
         this.folder = folder;
         Parent = parent;
         IsGroup = group;
+        IsBlockPlace = blockPlace;
     }
 
     public Concept? Concept { get; }
     public Part? Parent { get; }
     public bool IsGroup { get; }
+    public bool IsBlockPlace { get; }
     public bool HasFolder => folder is not null;
     public string? Assembly => assembly ?? (Concept is External external ? external.Assembly
         : Parent?.Assembly is { } parent ? $"{parent}.{folder}" : null);
@@ -56,6 +58,16 @@ public class Part : IPartChain {
     public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() => new([Group<T>(folder, boundary)]);
 
     public PartGroup And<T>() where T : Concept, new() => new PartGroup([this]).And<T>();
+
+    public Part AddBlock<T>(string? folder = null) where T : Concept, new() {
+        var concept = new T();
+        return Attach(new Part(concept, folder ?? concept.Folder, this, blockPlace: true));
+    }
+
+    public Part AddBlockGroup<T>(string? folder = null) where T : Concept, new() {
+        var concept = new T();
+        return Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true, blockPlace: true));
+    }
 
     public Part InParentFolder() {
         if (IsExternal) {
@@ -140,6 +152,7 @@ public class Part : IPartChain {
     }
 
     Part Attach(Part child) {
+        RefuseInBlockPlace(child);
         Block(child);
         var options = child.Concept!.Configured();
         RefuseArchitectureOptions(child, options);
@@ -150,6 +163,18 @@ public class Part : IPartChain {
         children.Add(child);
         child.Concept!.Define(child);
         return child;
+    }
+
+    void RefuseInBlockPlace(Part child) {
+        if (IsBlockPlace) {
+            throw new InvalidOperationException(
+                $"Define: {child.Name} is under {Name}, but {Name} is the place of another block. The block in that place has its own definition. "
+                + $"Remove the part, or add it in the definition of the block in {Path}.");
+        }
+        if (child.IsBlockPlace && (IsExternal || child.Concept is External)) {
+            throw new InvalidOperationException(
+                $"Define: the block place {child.Name} is an external or under an external. A block place is a folder. Add it outside the externals.");
+        }
     }
 
     void Block(Part child) {

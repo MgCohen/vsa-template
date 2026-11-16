@@ -3,19 +3,23 @@ namespace Umpire.Architecture;
 sealed class PartOf {
     readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<Part> folderParts;
+    readonly IReadOnlyList<Part> blockPlaces;
     readonly IReadOnlyList<FolderAlias> aliases;
     readonly string blockFolder;
+    readonly IReadOnlyList<string> innerBlocks;
 
-    PartOf(ResolvedArchitecture resolved, string blockFolder) {
+    PartOf(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
         var definition = resolved.Architecture;
         this.resolved = resolved;
         folderParts = [.. definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
+        blockPlaces = [.. folderParts.Where(p => p.IsBlockPlace)];
         aliases = definition.FolderAliases(blockFolder);
         this.blockFolder = blockFolder;
+        this.innerBlocks = [.. innerBlocks.Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)];
     }
 
-    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder) {
-        var partOf = new PartOf(resolved, blockFolder);
+    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks) {
+        var partOf = new PartOf(resolved, blockFolder, innerBlocks);
         var bound = new List<Binding>();
         var unmapped = new List<UnmappedType>();
         foreach (var type in types) {
@@ -42,6 +46,16 @@ sealed class PartOf {
             return;
         }
         var located = source with { File = file };
+        if (InInnerBlock(file)) {
+            if (BlockPlace(paths) is { } place) {
+                bound.Add(BindTo(place, type, located));
+            }
+            return;
+        }
+        if (TopFile(paths, type) is { } top) {
+            bound.Add(new Binding(type, top, new Dictionary<string, string>(), located));
+            return;
+        }
         var match = Folder(paths);
         if (match is null || match.IsUndeclaredGroupFolder) {
             unmapped.Add(new UnmappedType(type, located));
@@ -49,6 +63,24 @@ sealed class PartOf {
             bound.Add(BindTo(match, type, located));
         }
     }
+
+    Part? TopFile(IReadOnlyList<string> paths, TypeFacts type) {
+        if (!paths.Any(path => !path.Contains('/'))) {
+            return null;
+        }
+        var part = Select(resolved.Architecture.Block, type);
+        return part == resolved.Architecture.Block ? null : part;
+    }
+
+    bool InInnerBlock(string file) => innerBlocks.Any(folder => file.StartsWith(folder, StringComparison.OrdinalIgnoreCase));
+
+    FolderMatch? BlockPlace(IReadOnlyList<string> paths) => paths
+        .Select(path => path.Split('/')[..^1])
+        .SelectMany(folders => blockPlaces
+            .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
+            .Where(m => m.Matches))
+        .OrderByDescending(m => m.Pattern.Length)
+        .FirstOrDefault();
 
     List<string> PathsInBlock(string relative) {
         if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative)) {

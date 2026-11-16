@@ -5,5 +5,5 @@ using Steps.Contracts.Commands;
 using Steps.Domain.Shared;
 
 public sealed record CheckRulesCommand(AppInput App) : EngineStep<CheckRulesResult>, IStepGroup {
-    public static int Group => 3;
+    public static int Group => 4;
 }

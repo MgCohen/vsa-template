@@ -15,7 +15,16 @@ public sealed class ResolvedArchitecture {
         .OrderByDescending(p => p.Assembly!.Length)
         .FirstOrDefault();
 
-    public Bindings Place(IReadOnlyList<TypeFacts> types, string blockFolder) => PartOf.Bind(this, types, blockFolder);
+    public Bindings Place(IReadOnlyList<TypeFacts> types, string blockFolder) => Place(types, blockFolder, []);
+
+    public Bindings Place(IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks) =>
+        PartOf.Bind(this, types, blockFolder, innerBlocks);
+
+    public IReadOnlyList<BlockPlace> CoveredBlocks(string blockFolder, IReadOnlyList<string> innerBlocks) =>
+        BlockPlaces.Covered(Architecture, blockFolder, innerBlocks);
+
+    public IReadOnlyList<BlockPlace> EmptyPlaces(string blockFolder, IReadOnlyList<string> innerBlocks) =>
+        BlockPlaces.Empty(Architecture, blockFolder, innerBlocks);
 
     public Decision DecisionFor(Binding from, Binding to) =>
         MayUse.For(Architecture, from.Part, from.Values, to.Part, to.Values);

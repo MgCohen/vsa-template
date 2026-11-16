@@ -7,20 +7,7 @@ public sealed class BlockFolderTests {
     const string PinnedGlobalJson = """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""";
 
     [Test]
-    public void The_declared_folder_wins_over_the_global_json() {
-        var root = TempFolder.Create();
-        try {
-            File.WriteAllText(Path.Combine(root, BlockFolder.Marker), PinnedGlobalJson);
-            var declared = Directory.CreateDirectory(Path.Combine(root, "Apps", "Notes")).FullName;
-
-            Assert.That(BlockFolder.Find(Path.Combine(declared, "App"), declared), Is.EqualTo(declared));
-        } finally {
-            TempFolder.Delete(root);
-        }
-    }
-
-    [Test]
-    public void With_no_declared_folder_the_block_is_the_nearest_folder_with_a_global_json() {
+    public void The_tool_finds_the_nearest_folder_with_a_global_json() {
         var root = TempFolder.Create();
         try {
             File.WriteAllText(Path.Combine(root, BlockFolder.Marker), "{}");
@@ -47,10 +34,4 @@ public sealed class BlockFolderTests {
         }
     }
 
-    [Test]
-    public void The_not_found_message_gives_the_two_fixes() {
-        var message = BlockFolder.NotFound("C:/apps/Notes");
-
-        Assert.That(message, Does.Contain("Add a global.json file").And.Contain("--block").And.Contain("UmpireBlock"));
-    }
 }

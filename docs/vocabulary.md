@@ -27,7 +27,9 @@ A component can have a layer shape. That does not make it a plugin. "Component" 
 | Term | Meaning |
 |---|---|
 | Block | A folder tree of code with one definition. The top part of a definition (`Define(Block block)`) |
-| Block folder | The folder where a definition applies: the folder of `global.json`, or `--block` (`UmpireBlock`) |
+| Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` (`UmpireBlock`) |
+| Check entry | The pointer from a block to its architecture: an app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, or an `umpire.json` file. Each block has one |
+| Block place | A folder that an outer definition marks with `AddBlock<T>()` or `AddBlockGroup<T>()` as the place of another block. The outer definition sees that block as one part |
 | Concept | A kind of part that a definition names, for example a layer (`record Domain : Layer`) |
 | Part | One place in the folder tree of a definition |
 | Module | The root part of a group instance, for example a feature folder |
