@@ -6,7 +6,8 @@ The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin module
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | Root files, the root project `<Name>.csproj`, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/` | None |
+| `new app <Name>` | The root project `<Name>.csproj`, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/`, then the setup files of `init` | None |
+| `init [--source <feed>] [--check true]` | Each missing setup file | Each setup file that has no Umpire setup: it adds the missing entry, element or line. See "Setup pipeline" |
 | `add module <Name>` | Module root, published domain, status request, presenter, page, unit test | None |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler | None |
@@ -22,6 +23,7 @@ Rules for all commands:
 - A request name cannot end with `Request`, `Response` or `Handler`. A command name cannot end with `Command`, `Result` or `Handler`.
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
 - An option that takes one value stops the command if you give it two times, for example `-m A -m B`.
+- The tool writes only new files. Two commands change files: `init` adds the missing setup, and `update` changes only the Umpire versions.
 - The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
@@ -38,6 +40,7 @@ Each command of the tool is one class in `tools/cli/Commands/`. It inherits one 
 ```
 ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(CommandInput)
 ├─ NewAppCommand                 umpire new app <Name> [--source <feed>]
+├─ InitCommand                   umpire init [--source <feed>] [--check true]
 └─ AppCommand                    finds the block folder, then Run(root, CommandInput)
    ├─ DoctorCommand              umpire doctor
    ├─ UpdateCommand              umpire update [--version <version>]
@@ -75,10 +78,10 @@ tools/cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
 ├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
-├─ global.json.template, dotnet-tools.json.template   new app (the version token {{UmpireVersion}})
-├─ nuget.config.template             new app (each --source replaces the umpire feed and removes the credentials)
-├─ .gitignore.template               new app
-├─ Directory.Build.props.template    new app (the build output in artifacts~/)
+├─ global.json.template, dotnet-tools.json.template   setup (the version token {{UmpireVersion}})
+├─ nuget.config.template             setup (each --source replaces the umpire feed and removes the credentials)
+├─ .gitignore.template               setup
+├─ Directory.Build.props.template    setup (the build output in artifacts~/)
 ├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
 ├─ App/Views/Pages/SampleModulePage.razor          add module
@@ -105,7 +108,8 @@ The path of a template file gives its command. The tool uses the first rule that
 | 3 | Contains `SamplePlugin` | `add plugin` | `SamplePlugin` |
 | 4 | Contains `SamplePack` | `add pack` | `SamplePack` |
 | 5 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
-| 6 | Other | `new app` | `SampleApp` |
+| 6 | One of the five setup templates (`SetupTemplates` in `Templates.cs`) | The setup pipeline (`init`, `new app`) | None |
+| 7 | Other | `new app` | `SampleApp` |
 
 `ScaffoldingTests.EachTemplateFileHasOneCommand` lists each template file with its command. If you add a template file, add it to this test.
 
@@ -137,7 +141,60 @@ The rule engine checks the architecture after each build of the host (see [archi
 </ItemGroup>
 ```
 
-The templates build in source mode, so the template `.csproj` does not have this line. `Templates.ToPackageMode` adds it to the `.csproj` in the block folder. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
+The templates build in source mode, so the template `.csproj` does not have this line. The setup step `build-package` adds it to the root project. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
+
+## Setup pipeline
+
+`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` writes its app files, then runs the same pipeline. The pipeline is the list `SetupPipeline.Default` in `tools/cli/Scaffolding/Setup/`, with one class for each step in `Steps/`.
+
+```
+umpire init                          umpire new app <Name>
+   │                                     ├─ the app files (root project, App/, Tests/, slnx, AGENTS.md)
+   ▼                                     ▼
+SetupPipeline.Plan ──► each step: Done | Change(file, content) | ByHand(message)
+   ├─ --check true: show the plan, write nothing, exit 1 if a step is not done
+   ├─ write each change ("created" or "changed")
+   ├─ dotnet tool restore, if the tool manifest changed
+   └─ show each by-hand step, exit 1 if one is left
+```
+
+| Step | File | Done when | No file | A file without the setup | By hand |
+|---|---|---|---|---|---|
+| `global-json` | `global.json` | `msbuild-sdks` has `Umpire.Sdk` | The template | Adds `msbuild-sdks` → `Umpire.Sdk` | Another version (`umpire update`), comments |
+| `nuget-config` | `nuget.config` | A source has the key `umpire` | The template | Adds the `umpire` source and its credentials | Not valid XML |
+| `tool-manifest` | `dotnet-tools.json` or `.config/dotnet-tools.json` | `tools` has `umpire.cli` | The template | Adds the `umpire.cli` entry | Another version (`umpire update`), two manifests |
+| `build-output` | `Directory.Build.props` | `UseArtifactsOutput` is set, to any value | The template | Adds the `PropertyGroup` of the template | Not valid XML |
+| `git-ignore` | `.gitignore` | Each line of the template is in the file | The template | Adds the missing lines | None |
+| `umpire-sdk` | The root project | `Umpire.Sdk` is in `Sdk` or in an `<Sdk>` element | Not possible | Adds `<Sdk Name="Umpire.Sdk" />` | Not valid XML |
+| `build-package` | The root project | A `PackageReference` to `Umpire.Engine.Build` | Not possible | Adds the package, with the tool version | Central package versions |
+
+Rules of a step:
+
+1. A step only plans. The pipeline writes all changes after all steps.
+2. A step adds. It does not remove, reorder or change a value of the app.
+3. A conflict is a by-hand step, with the fix in its message.
+4. A changed file keeps its line endings and its byte order mark.
+5. Two steps can change one file. A step plans on the planned content of the steps before it.
+6. A second run of `init` gives "done" for each step.
+
+`init` needs exactly one `.csproj` in the current folder: the root project. It writes only in that folder. A file in a parent folder stays, and the new file does not hide it:
+
+- The new `Directory.Build.props` imports the parent one.
+- The new `nuget.config` has no `<clear />`.
+- The new `global.json` keeps the `sdk` and `test` sections of the parent one.
+- The new tool manifest is not the root.
+
+`new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030302`.
+
+To add a step:
+
+1. Write a class in `Scaffolding/Setup/Steps/` that inherits `SetupStep`. Give it an `Id` and `Plan(SetupContext)`.
+2. Read each file with `context.Read(path)`. It gives the planned content, or the file on disk.
+3. Return `Done()`, `Change(file, content)` or `ByHand(message)`.
+4. Add the step to `SetupPipeline.Default`, in its order.
+5. Add tests to `tests/Cli/SetupTests.cs`. `ASecondRunOfEachStepChangesNothing` runs each step two times.
+
+The step ids are stable. A later version can let a consumer skip or add a step by its id.
 
 ## One version
 

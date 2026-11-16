@@ -61,9 +61,9 @@ public sealed class ScaffoldingTests {
     [Test]
     public void EachTemplateFileHasOneCommand() {
         const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command,
-            Plugin = Templates.Kind.Plugin, Pack = Templates.Kind.Pack;
+            Plugin = Templates.Kind.Plugin, Pack = Templates.Kind.Pack, Setup = Templates.Kind.Setup;
         (string, Templates.Kind)[] expected = [
-            (".gitignore.template", App),
+            (".gitignore.template", Setup),
             ("AGENTS.md.template", App),
             ("App/Host/Program.cs", App),
             ("App/Host/SampleAppApp.cs", App),
@@ -72,7 +72,7 @@ public sealed class ScaffoldingTests {
             ("App/Views/Pages/SampleModulePage.razor", Module),
             ("App/Views/Routes.razor", App),
             ("App/Views/_Imports.razor", App),
-            ("Directory.Build.props.template", App),
+            ("Directory.Build.props.template", Setup),
             ("Features/.gitkeep", App),
             ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
             ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
@@ -98,9 +98,9 @@ public sealed class ScaffoldingTests {
             ("Tests/SampleAppArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
             ("appsettings.json", App),
-            ("dotnet-tools.json.template", App),
-            ("global.json.template", App),
-            ("nuget.config.template", App),
+            ("dotnet-tools.json.template", Setup),
+            ("global.json.template", Setup),
+            ("nuget.config.template", Setup),
         ];
 
         Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));

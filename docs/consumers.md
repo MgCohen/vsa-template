@@ -51,6 +51,17 @@ The `nuget.config` that `umpire new app` writes reads the token from the environ
 
 If `GITHUB_TOKEN` is not set, restore fails with 401.
 
+## An existing app
+
+`umpire init` adds the Umpire setup to an app that exists. Run it in the folder of the root project:
+
+```bash
+dotnet tool exec Umpire.Cli init --check true   # show the missing setup, write nothing
+dotnet tool exec Umpire.Cli init                # add it
+```
+
+It adds the missing parts of `global.json`, `nuget.config`, the tool manifest, `Directory.Build.props` and `.gitignore`. Then it adds `Umpire.Sdk` and `Umpire.Engine.Build` to the root project. It shows each step that it cannot do, for example with central package versions. Then write the app class (`UMP030302`) and run `dotnet build`. See "Setup pipeline" in [scaffolding.md](scaffolding.md).
+
 ## The architecture check of a new app
 
 The root project of a new app has the package `Umpire.Engine.Build`. So the rule engine checks the architecture after each build, and an error fails the build. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning. `umpire doctor` and `umpire update` include this package in the one version.

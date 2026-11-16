@@ -8,6 +8,7 @@ static class CommandList {
 
     public static IReadOnlyList<ToolCommand> All { get; } = [
         new NewAppCommand(),
+        new InitCommand(),
         new AddModuleCommand(),
         new AddPluginCommand(),
         new AddPackCommand(),

@@ -15,7 +15,13 @@ static partial class Templates {
     const string DevProps = "  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))\" />\n";
     const string DevTargets = "  <Import Project=\"$(UmpireSdkDir)Sdk.targets\" />\n";
     const string AddedSdk = "  <Sdk Name=\"Umpire.Sdk\" />\n";
-    const string BuildHook = "Umpire.Engine.Build";
+    static readonly string[] SetupTemplates = [
+        ".gitignore.template",
+        "Directory.Build.props.template",
+        "dotnet-tools.json.template",
+        "global.json.template",
+        "nuget.config.template",
+    ];
 
     public static IReadOnlyList<TemplateFile> Files(
         Kind kind,
@@ -40,6 +46,9 @@ static partial class Templates {
         return files;
     }
 
+    public static string SetupFile(string path, string version) =>
+        Files(Kind.Setup, new Dictionary<string, string>(), version).Single(file => file.Path == path).Content;
+
     public static Kind KindOf(string pathInTemplates) {
         var inModuleFolder = pathInTemplates.StartsWith($"Features/{Module}/", StringComparison.Ordinal)
             || Path.GetFileName(pathInTemplates).Contains(Module, StringComparison.Ordinal);
@@ -48,6 +57,7 @@ static partial class Templates {
             : pathInTemplates.Contains(Plugin, StringComparison.Ordinal) ? Kind.Plugin
             : pathInTemplates.Contains(Pack, StringComparison.Ordinal) ? Kind.Pack
             : inModuleFolder ? Kind.Module
+            : SetupTemplates.Contains(pathInTemplates) ? Kind.Setup
             : Kind.App;
     }
 
@@ -66,13 +76,6 @@ static partial class Templates {
         content = SourceReference().Replace(
             content,
             m => $"<PackageReference Include=\"{m.Groups[1].Value}\" Version=\"{version}\" />");
-        if (IsRootProject(path)) {
-            content = content.Replace(
-                "</Project>",
-                $"  <ItemGroup>\n    <PackageReference Include=\"{BuildHook}\" "
-                + $"Version=\"{version}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>",
-                StringComparison.Ordinal);
-        }
         if (content.Contains("$(Umpire", StringComparison.Ordinal)) {
             throw new UmpireException(
                 $"The template {path} has a source-mode property that the tool cannot change. "
@@ -80,8 +83,6 @@ static partial class Templates {
         }
         return content;
     }
-
-    static bool IsRootProject(string path) => !path.Contains('/', StringComparison.Ordinal);
 
     static IEnumerable<string> Resources() =>
         typeof(Templates).Assembly.GetManifestResourceNames()
@@ -104,5 +105,5 @@ static partial class Templates {
     [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex SourceReference();
 
-    public enum Kind { App, Module, Request, Command, Plugin, Pack }
+    public enum Kind { App, Setup, Module, Request, Command, Plugin, Pack }
 }
