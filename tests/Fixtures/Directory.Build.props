@@ -11,5 +11,6 @@
   <PropertyGroup>
     <_UmpireDevApp>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)', '$(MSBuildProjectDirectory)').Replace('\', '/'))/</_UmpireDevApp>
     <UmpireAppRoot>$(MSBuildThisFileDirectory)$(_UmpireDevApp.Substring(0, $(_UmpireDevApp.IndexOf('/'))))/</UmpireAppRoot>
+    <ArtifactsPath>$(UmpireAppRoot)artifacts~</ArtifactsPath>
   </PropertyGroup>
 </Project>

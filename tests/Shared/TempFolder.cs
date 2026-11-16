@@ -26,7 +26,7 @@ public static class TempFolder {
         }
     }
 
-    // Copies a source folder without its bin and obj folders.
+    // Copies a source folder without its build output: the bin, obj and artifacts~ folders.
     public static void Copy(string from, string to) {
         Directory.CreateDirectory(to);
         foreach (var file in Directory.EnumerateFiles(from)) {
@@ -34,7 +34,7 @@ public static class TempFolder {
         }
         foreach (var dir in Directory.EnumerateDirectories(from)) {
             var name = Path.GetFileName(dir);
-            if (name is not ("bin" or "obj")) {
+            if (name is not ("bin" or "obj" or "artifacts~")) {
                 Copy(dir, Path.Combine(to, name));
             }
         }

@@ -16,12 +16,14 @@ sealed class SymbolReader : IDisposable {
     readonly MetadataReaderProvider symbols;
     readonly MetadataReader metadata;
     readonly MetadataReader pdb;
+    readonly Lazy<IReadOnlyList<string>> sourceFolders;
 
     public SymbolReader(string dll) {
         image = new PEReader(File.OpenRead(dll));
         symbols = MetadataReaderProvider.FromPortablePdbStream(File.OpenRead(Path.ChangeExtension(dll, ".pdb")));
         metadata = image.GetMetadataReader();
         pdb = symbols.GetMetadataReader();
+        sourceFolders = new(SourceFoldersAndParents);
     }
 
     public IReadOnlyList<string> Documents() => [.. pdb.Documents.Select(DocumentName)];
@@ -118,14 +120,29 @@ sealed class SymbolReader : IDisposable {
 
     static bool IsGenerated(string file) => BuildOutput.Contains(file);
 
-    static Source? InProjectFolder(Source? source) {
+    Source? InProjectFolder(Source? source) {
         if (source is null || !IsGenerated(source.File)) {
             return source;
         }
         var segments = source.File.Split(Separators);
         var output = Array.FindIndex(segments, BuildOutput.IsFolder);
-        var project = string.Join("/", segments[..output]);
+        var project = ArtifactsProjectFolder(segments[output + 1]) ?? string.Join("/", segments[..output]);
         return new Source($"{project}/{string.Join("/", HintPath(segments[(output + 1)..]))}", 1);
+    }
+
+    string? ArtifactsProjectFolder(string projectName) =>
+        sourceFolders.Value.FirstOrDefault(folder => File.Exists(Path.Combine(folder, projectName + ".csproj")))?.Replace('\\', '/');
+
+    IReadOnlyList<string> SourceFoldersAndParents() =>
+        [.. Documents().Where(file => !IsGenerated(file))
+            .SelectMany(file => Parents(Path.GetDirectoryName(file)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(folder => folder.Length)];
+
+    static IEnumerable<string> Parents(string? folder) {
+        for (; !string.IsNullOrEmpty(folder); folder = Path.GetDirectoryName(folder)) {
+            yield return folder;
+        }
     }
 
     static string[] HintPath(string[] underOutput) {
