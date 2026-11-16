@@ -158,6 +158,10 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 
 A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list.
 
+A rule key wins over a global key, for example `umpire.UMP010201.check_responses` over `umpire.check_responses`. In a config file line, a semicolon starts a comment, so a list option uses commas between its items.
+
+`RuleAnalyzer` skips each rule that is off by itself, because Roslyn skips an analyzer only when all of its IDs are off. If it cannot tell that a rule is off, the rule runs, and Roslyn drops its diagnostics.
+
 | Test | Checks |
 |---|---|
 | `FormattingRuleTests` | Each VSA rule and its options, on small sources |
