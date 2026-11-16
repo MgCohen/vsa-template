@@ -7,14 +7,16 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Hosts/Umpire.Vsa.Hosts.Web.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Plugins/Toolbox/Toolbox.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Bare/Bare.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Shelf/Shelf.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Twin/Twin.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Signals/Signals.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Echo/Echo.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Answers/Answers.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Plugins/Toolbox/Toolbox.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Bare/Bare.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Shelf/Shelf.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Twin/Twin.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Signals/Signals.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Echo/Echo.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Answers/Answers.csproj" />
     <!-- Three modules that send commands to each other (CommandTests). -->
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/*/*.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Battle/Battle.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
   </ItemGroup>
 </Project>

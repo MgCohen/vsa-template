@@ -17,8 +17,10 @@
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Handlers/Commands/Umpire.Vsa.Handlers.Commands.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Presenters/Umpire.Vsa.Presenters.csproj" />
     <!-- The fixture module of the unit test base (UnitBaseTests). -->
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Rules/Features/*/*.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Good/Good.csproj" />
     <!-- A fixture app with commands and Domain.Shared projects (UnitBaseCommandTests). -->
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/*/*.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Battle/Battle.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
   </ItemGroup>
 </Project>
