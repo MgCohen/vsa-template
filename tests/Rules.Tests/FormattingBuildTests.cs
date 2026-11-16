@@ -21,9 +21,7 @@ public sealed class FormattingBuildTests {
     [TestCase("UMP010104", "TwoTypes.cs")]
     [TestCase("UMP010105", "MemberOrder.cs")]
     [TestCase("IDE0055", "BuiltInRules.cs")]
-    [TestCase("IDE0040", "BuiltInRules.cs")]
     [TestCase("IDE2000", "BuiltInRules.cs")]
-    [TestCase("IDE0008", "BuiltInRules.cs")]
     [TestCase("IDE0011", "BuiltInRules.cs")]
     [TestCase("IDE0005", "QualityRules.cs")]
     [TestCase("IDE0051", "QualityRules.cs")]
@@ -43,7 +41,6 @@ public sealed class FormattingBuildTests {
     [TestCase("IDE2002", "StyleRules.cs")]
     [TestCase("IDE1006", "StyleRules.cs")]
     [TestCase("IDE0021", "StyleRules.cs")]
-    [TestCase("IDE0022", "StyleRules.cs")]
     [TestCase("IDE0023", "StyleRules.cs")]
     [TestCase("IDE0024", "StyleRules.cs")]
     [TestCase("IDE0025", "StyleRules.cs")]
@@ -52,6 +49,12 @@ public sealed class FormattingBuildTests {
     [TestCase("IDE0061", "StyleRules.cs")]
     public void Rule_gives_a_warning(string rule, string file) =>
         Assert.That(Lines($"warning {rule}").Where(line => line.Contains(file, StringComparison.Ordinal)), Is.Not.Empty, build.Output);
+
+    [TestCase("IDE0040")]
+    [TestCase("IDE0008")]
+    [TestCase("IDE0022")]
+    public void Rule_relaxed_until_0_1_0_gives_no_warning(string rule) =>
+        Assert.That(Lines($"warning {rule}"), Is.Empty, build.Output);
 
     [TestCase("IDE0051")]
     [TestCase("IDE0052")]

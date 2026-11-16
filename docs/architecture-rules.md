@@ -130,11 +130,11 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 
 | Rule | Checks | Option |
 |---|---|---|
-| `IDE0055` | Each brace on its own line (Allman) | `csharp_new_line_before_open_brace` |
+| `IDE0055` | Relaxed until 0.1.0: each brace on the line of its statement, and `else`, `catch` and `finally` on the line of the closing brace. Target value: each brace on its own line (Allman), and `else`, `catch` and `finally` on a new line | `csharp_new_line_before_open_brace`, `csharp_new_line_before_else`, `csharp_new_line_before_catch`, `csharp_new_line_before_finally` |
 | `IDE0011` | Braces on each `if`, `for`, `while` | `csharp_prefer_braces` |
 | `IDE2000` | No two blank lines in a row | `dotnet_style_allow_multiple_blank_lines_experimental` |
-| `IDE0008` | Explicit type, except where the line shows the type | `csharp_style_var_*` |
-| `IDE0040` | Access modifier on each member, except in an interface | `dotnet_style_require_accessibility_modifiers` |
+| `IDE0008` | Relaxed until 0.1.0: `var` is correct everywhere. Target value: explicit type, except where the line shows the type | `csharp_style_var_*` |
+| `IDE0040` | Relaxed until 0.1.0: off. Target value: access modifier on each member, except in an interface | `dotnet_style_require_accessibility_modifiers` |
 | `IDE0055` | One statement on each line | `csharp_preserve_single_line_statements` |
 | `IDE2002` | No blank line between two closing braces | `csharp_style_allow_blank_lines_between_consecutive_braces_experimental` |
 | `IDE0036` | Modifiers in the default order | `csharp_preferred_modifier_order` |
@@ -142,7 +142,7 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `IDE0054` | `x += 1`, not `x = x + 1` | `dotnet_style_prefer_compound_assignment` |
 | `IDE1005` | `Changed?.Invoke(...)` | `csharp_style_conditional_delegate_call` |
 | `IDE0083` | `is not`, not `!(x is T)` | `csharp_style_prefer_not_pattern` |
-| `IDE0021`, `IDE0022`, `IDE0061` | Block body for constructors, methods and local functions | `csharp_style_expression_bodied_*` |
+| `IDE0021`, `IDE0022`, `IDE0061` | Block body for constructors, methods and local functions. `IDE0022` is relaxed until 0.1.0: off. Target value: a block body for methods | `csharp_style_expression_bodied_*` |
 | `IDE0023`–`IDE0027`, `IDE0053` | `=>` for operators, properties, indexers, accessors and lambdas when it fits on one line (`IDE0053` editor only) | `csharp_style_expression_bodied_*` |
 | `IDE1006` | Names: `I` + PascalCase interfaces, `T` + PascalCase type parameters, PascalCase types, members and constants, camelCase private fields, parameters and locals | `dotnet_naming_*` |
 | `IDE0051`, `IDE0052` | No private member that no code uses, or that code writes and never reads | |
