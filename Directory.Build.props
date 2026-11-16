@@ -1,5 +1,5 @@
 <Project>
-  <!-- The layers that Unity can use also target netstandard2.1 (see docs/consumers.md). -->
+  <!-- The layers that Unity can use also target netstandard2.1 (see docs/unity.md). -->
   <PropertyGroup>
     <UmpirePortableLayer Condition="'$(MSBuildProjectName)' == 'Umpire.Vsa.Domain' or '$(MSBuildProjectName)' == 'Umpire.Messages.Handlers' or '$(MSBuildProjectName)' == 'Umpire.Messages.Contracts' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Infrastructure' or '$(MSBuildProjectName)' == 'Umpire.Kernel' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Composition' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Presenters' or '$(MSBuildProjectName)' == 'Umpire.Architecture' or '$(MSBuildProjectName)' == 'Umpire.Vsa'">true</UmpirePortableLayer>
   </PropertyGroup>
