@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
 using System.Reflection;
+using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
@@ -104,7 +105,7 @@ public abstract class VsaUnitTest {
     static Type HandlerOf(Type request) {
         var name = request.Assembly.GetName().Name!;
         var handlers = Assembly.Load(name.Replace(".Contracts.Requests", ".Handlers.Requests", StringComparison.Ordinal));
-        var found = handlers.GetTypes().Where(t => !t.IsAbstract && HandledRequest(t) == request).ToList();
+        var found = LoadedTypes.Of(handlers).Where(t => !t.IsAbstract && HandledRequest(t) == request).ToList();
         return found.Count == 1 ? found[0]
             : throw new InvalidOperationException($"{request.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
     }
@@ -112,7 +113,7 @@ public abstract class VsaUnitTest {
     static Type CommandHandlerOf(Type command, Type service) {
         var name = command.Assembly.GetName().Name!;
         var handlers = Assembly.Load(name.Replace(".Contracts.Commands", ".Handlers.Commands", StringComparison.Ordinal));
-        var found = handlers.GetTypes().Where(t => !t.IsAbstract && service.IsAssignableFrom(t)).ToList();
+        var found = LoadedTypes.Of(handlers).Where(t => !t.IsAbstract && service.IsAssignableFrom(t)).ToList();
         return found.Count == 1 ? found[0]
             : throw new InvalidOperationException($"{command.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
     }

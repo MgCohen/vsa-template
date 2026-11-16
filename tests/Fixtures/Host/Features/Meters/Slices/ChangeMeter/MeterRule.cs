@@ -3,7 +3,8 @@ namespace Meters.Slices.ChangeMeter;
 using Meters.Domain.Shared;
 using Umpire.Markers;
 
-public interface IMeterRule : IAutoRegister {
+[AutoRegister]
+public interface IMeterRule {
     string Meter { get; }
 }
 

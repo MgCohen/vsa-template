@@ -8,7 +8,7 @@ public static class DefinitionFinder {
     const string AppClass = $"{nameof(Umpire)}.{nameof(Umpire.Kernel)}.{nameof(App)}";
 
     public static AppClasses Find(IReadOnlyList<Assembly> app) {
-        var classes = Leaves([.. app.SelectMany(TypesOf).Where(IsAppClass)]);
+        var classes = Leaves([.. app.SelectMany(LoadedTypes.Of).Where(IsAppClass)]);
         return new AppClasses(
             [.. classes.Where(HasEmptyConstructor)],
             [.. classes.Where(type => !HasEmptyConstructor(type))]);
@@ -39,12 +39,4 @@ public static class DefinitionFinder {
 
     static List<Type> Leaves(List<Type> types) =>
         [.. types.Where(t => !types.Any(other => other != t && t.IsAssignableFrom(other)))];
-
-    static IEnumerable<Type> TypesOf(Assembly assembly) {
-        try {
-            return assembly.GetTypes();
-        } catch (ReflectionTypeLoadException e) {
-            return e.Types.OfType<Type>();
-        }
-    }
 }

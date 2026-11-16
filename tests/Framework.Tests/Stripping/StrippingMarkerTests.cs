@@ -40,8 +40,6 @@ public sealed class StrippingMarkerTests {
         Assert.That(scannedBase.IsDefined(typeof(RequireDerivedAttribute), inherit: false), Is.True);
     }
 
-    [TestCase(typeof(IAutoRegister))]
-    [TestCase(typeof(ITypeArgument))]
     [TestCase(typeof(IApp))]
     [TestCase(typeof(IRunner))]
     [TestCase(typeof(IBeforeCall))]

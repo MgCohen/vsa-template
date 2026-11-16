@@ -17,7 +17,7 @@ public sealed class Pipeline<TMessage> : IPipelineRun where TMessage : class {
         this.services = services;
         catalog = services.GetService<PipelineCatalog>() ?? PipelineCatalog.Empty;
         handlers = HandlerIndex();
-        Runner = (IRunner)ActivatorUtilities.CreateInstance(services, definition.Runner);
+        Runner = CreateRunner(definition, services);
     }
 
     public IRunner Runner { get; }
@@ -31,6 +31,17 @@ public sealed class Pipeline<TMessage> : IPipelineRun where TMessage : class {
 
     Task<Envelope> IPipelineRun.RunAsync(object message, IServiceProvider scope, CancellationToken ct) =>
         RunAsync(message, scope, ct);
+
+    static IRunner CreateRunner(PipelineDefinition definition, IServiceProvider services) {
+        try {
+            return (IRunner)ActivatorUtilities.CreateInstance(services, definition.Runner);
+        } catch (InvalidOperationException e) {
+            throw new InvalidOperationException(
+                $"The pipeline of {definition.Message.Name} cannot create its runner {definition.Runner.FullName}: "
+                + $"{e.Message} Register each service of the runner constructor, "
+                + "or give the runner a public constructor.", e);
+        }
+    }
 
     static Type[] ByName(IEnumerable<StageType> types, Type message) =>
         [.. types.Where(t => t.Message.IsAssignableFrom(message))

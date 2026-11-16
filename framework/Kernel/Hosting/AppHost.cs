@@ -41,7 +41,7 @@ public abstract class AppHost {
     }
 
     IServiceCollection Compose(IServiceCollection services, App app, IConfiguration? configuration) {
-        var types = new AppTypes(app.Modules() ?? AppTypes.FindModules(), app.Keys());
+        var types = app.Modules() is { } modules ? new AppTypes(modules, app.Keys()) : AppTypes.Find(app.Keys());
         InstallCore(services, types, configuration ?? new ConfigurationBuilder().Build());
         Install(services, types);
         foreach (var module in types.Modules) {

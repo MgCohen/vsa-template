@@ -7,7 +7,6 @@ using Umpire.Markers;
 public static class MarkedTypes {
     public static readonly string TypeArgumentName = typeof(TypeArgumentAttribute).FullName!;
     public static readonly string AutoRegisterName = typeof(AutoRegisterAttribute).FullName!;
-    static readonly string AutoRegisterInterface = typeof(IAutoRegister).FullName!;
 
     public static bool IsTypeArgument(Type type) =>
         !type.ContainsGenericParameters
@@ -29,7 +28,7 @@ public static class MarkedTypes {
             }
         }
         foreach (var i in type.GetInterfaces()) {
-            if (i.FullName != AutoRegisterInterface && Marker(i, AutoRegisterName) is not null) {
+            if (Marker(i, AutoRegisterName) is not null) {
                 yield return i;
             }
         }

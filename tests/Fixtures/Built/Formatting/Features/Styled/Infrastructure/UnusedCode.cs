@@ -1,11 +1,11 @@
 namespace Styled.Infrastructure;
 
-internal sealed class UnmarkedScreen
+internal sealed class UnusedScreen
 {
     private readonly int shownCount;
     private readonly int writtenNeverRead;
 
-    public UnmarkedScreen(int shownCount, int writtenNeverRead)
+    public UnusedScreen(int shownCount, int writtenNeverRead)
     {
         this.shownCount = shownCount;
         this.writtenNeverRead = writtenNeverRead;
