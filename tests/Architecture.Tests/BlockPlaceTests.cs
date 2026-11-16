@@ -1,0 +1,114 @@
+namespace EngineCore.Tests;
+
+using Umpire.Architecture;
+
+public record Tool : Concept {
+    public override string Folder => "Tools";
+}
+
+public record PackPlace : Concept {
+    public override string Folder => "Packs";
+}
+
+public sealed class PlaceArchitecture : Architecture {
+    protected override void Define(Block block) {
+        block.AddGroup<Box>().Add<Item>().InParentFolder();
+        block.AddBlock<Tool>();
+        block.AddBlockGroup<PackPlace>();
+    }
+}
+
+public sealed class BlockPlaceTests {
+    string block = "";
+
+    [SetUp]
+    public void CreateBlock() => block = Directory.CreateTempSubdirectory("umpire-places-").FullName;
+
+    [TearDown]
+    public void DeleteBlock() => Directory.Delete(block, recursive: true);
+
+    [Test]
+    public void A_type_in_an_inner_block_binds_to_its_place_and_not_to_the_outer_parts() {
+        var bindings = Place([Fact("Tools", "Note")], Inner("Tools"));
+
+        Assert.That(bindings.All.Single().Part.Is(typeof(Tool)), Is.True);
+        Assert.That(bindings.All.Single().Part.IsBlockPlace, Is.True);
+        Assert.That(bindings.Unmapped, Is.Empty);
+    }
+
+    [Test]
+    public void A_type_in_a_block_of_a_block_group_binds_to_the_group_with_its_folder() {
+        var bound = Place([Fact("Packs/Alpha/Kernel", "Note")], Inner("Packs/Alpha")).All.Single();
+
+        Assert.That(bound.Part.Is(typeof(PackPlace)), Is.True);
+        Assert.That(bound.Values["PackPlace"], Is.EqualTo("Alpha"));
+    }
+
+    [Test]
+    public void A_type_in_an_inner_block_with_no_place_is_not_checked() {
+        var bindings = Place([Fact("Other", "Note")], Inner("Other"));
+
+        Assert.That(bindings.All, Is.Empty);
+        Assert.That(bindings.Unmapped, Is.Empty);
+    }
+
+    [Test]
+    public void A_type_in_a_folder_with_no_part_and_no_block_is_unmapped() {
+        var bindings = Place([Fact("Other", "Note")], []);
+
+        Assert.That(bindings.Unmapped, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void An_outer_part_that_covers_an_inner_block_is_a_problem() {
+        var covered = Resolved().CoveredBlocks(block, Inner("Boxes/a"));
+
+        Assert.That(covered.Select(c => c.Part.Name), Is.EqualTo(new[] { "Box" }));
+        Assert.That(covered.Single().Folder, Is.EqualTo(Path.Combine(block, "Boxes", "a")));
+    }
+
+    [Test]
+    public void A_block_at_its_place_is_not_covered() {
+        Directory.CreateDirectory(Path.Combine(block, "Packs", "Alpha"));
+
+        Assert.That(Resolved().CoveredBlocks(block, Inner("Tools", "Packs/Alpha")), Is.Empty);
+    }
+
+    [Test]
+    public void A_place_with_no_block_is_a_problem() {
+        var empty = Resolved().EmptyPlaces(block, []);
+
+        Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Tools") }));
+    }
+
+    [Test]
+    public void Each_subfolder_of_a_block_group_must_hold_a_block() {
+        foreach (var folder in new[] { "Alpha", "Beta", "bin", "obj", "artifacts~" }) {
+            Directory.CreateDirectory(Path.Combine(block, "Packs", folder));
+        }
+
+        var empty = Resolved().EmptyPlaces(block, Inner("Tools", "Packs/Alpha"));
+
+        Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Packs", "Beta") }));
+    }
+
+    [Test]
+    public void A_block_place_takes_no_parts() {
+        var error = Assert.Throws<InvalidOperationException>(() => _ = new PlaceWithChild().Block);
+
+        Assert.That(error!.Message, Does.Contain("Tool is the place of another block"));
+    }
+
+    static ResolvedArchitecture Resolved() => new(new PlaceArchitecture());
+
+    Bindings Place(TypeFacts[] types, IReadOnlyList<string> inner) => Resolved().Place(types, block, inner);
+
+    TypeFacts Fact(string folder, string name) =>
+        new($"App.{name}", name, "App", new Source(Path.Combine(block, folder, name + ".cs"), 1), [], [], [], []);
+
+    IReadOnlyList<string> Inner(params string[] folders) => [.. folders.Select(f => Path.Combine(block, f))];
+
+    sealed class PlaceWithChild : Architecture {
+        protected override void Define(Block block) => block.AddBlock<Tool>().Add<Item>();
+    }
+}

@@ -65,13 +65,13 @@ public sealed class BaselineTests {
     }
 
     [Test]
-    public async Task An_entry_with_no_error_gives_UMP030401_at_its_line() {
+    public async Task An_entry_with_no_error_gives_UMP030501_at_its_line() {
         WriteBaseline("UMP020101|App/Host/Probe.cs|Probe in Host", "UMP020101|App/Host/Fixed.cs|Fixed in Host");
 
         var result = await Apply([Error("UMP020101", "App/Host/Probe.cs", 4, "Probe in Host")]);
 
         var stale = result.Value.Findings.Single();
-        Assert.That(stale.Code, Is.EqualTo("UMP030401"));
+        Assert.That(stale.Code, Is.EqualTo("UMP030501"));
         Assert.That(stale.Severity, Is.EqualTo(FindingSeverity.Warning));
         Assert.That(stale.File, Is.EqualTo(Path.Combine(root, FileName)));
         Assert.That(stale.Line, Is.EqualTo(2));
@@ -79,13 +79,13 @@ public sealed class BaselineTests {
     }
 
     [Test]
-    public async Task A_line_that_does_not_parse_gives_UMP030402_and_accepts_no_error() {
+    public async Task A_line_that_does_not_parse_gives_UMP030502_and_accepts_no_error() {
         WriteBaseline("UMP020101|App/Host/Probe.cs|Probe in Host", "not an entry");
 
         var result = await Apply([Error("UMP020101", "App/Host/Probe.cs", 4, "Probe in Host")]);
 
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error!.Code, Is.EqualTo("UMP030402"));
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030502"));
         Assert.That(result.Error.Message, Does.Contain($"{FileName}(2,1)"));
     }
 
@@ -114,11 +114,11 @@ public sealed class BaselineTests {
 
         Assert.That(result.Value.Accepted, Is.Empty);
         Assert.That(File.Exists(Path.Combine(root, FileName)), Is.False);
-        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030403"));
+        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030503"));
     }
 
     [Test]
-    public async Task An_update_after_a_failed_step_keeps_the_file_and_gives_UMP030403() {
+    public async Task An_update_after_a_failed_step_keeps_the_file_and_gives_UMP030503() {
         WriteBaseline("UMP020101|App/Host/Probe.cs|Probe in Host", "UMP020101|App/Host/Other.cs|Other in Host");
         Finding[] findings = [
             Error("UMP020101", "App/Host/Probe.cs", 4, "Probe in Host"),
@@ -128,7 +128,7 @@ public sealed class BaselineTests {
         var result = await Apply(findings, update: true);
 
         Assert.That(File.ReadAllLines(Path.Combine(root, FileName)), Has.Length.EqualTo(2));
-        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "UMP030403", "UMP030401" }));
+        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "UMP030503", "UMP030501" }));
         Assert.That(result.Value.Findings[0].Severity, Is.EqualTo(FindingSeverity.Warning));
         Assert.That(result.Value.Accepted, Has.Count.EqualTo(1));
     }

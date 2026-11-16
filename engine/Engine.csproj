@@ -27,10 +27,12 @@
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="System.Reflection.MetadataLoadContext" />
     <PackageReference Include="TngTech.ArchUnitNET" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Architecture.Tests" />
+    <InternalsVisibleTo Include="Engine.Tests" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Umpire.Engine.Build.targets" Pack="true" PackagePath="build/" />

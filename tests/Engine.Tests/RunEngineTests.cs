@@ -1,4 +1,5 @@
 using Baseline;
+using Blocks;
 using LoadApp;
 using LoadApp.Infrastructure;
 using Engine.Slices.RunEngine;
@@ -30,7 +31,7 @@ public sealed class RunEngineTests {
         var modules = AppTypes.InOrder(AppTypes.Find(new ConstraintKeys()).Roots.Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Baseline", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Baseline", "Blocks", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -58,7 +59,7 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030101_and_skips_the_load() {
+    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030201_and_skips_the_load() {
         var root = TempFolder.Create();
         try {
             File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
@@ -66,7 +67,7 @@ public sealed class RunEngineTests {
             var result = await Run(block: root);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030101").And.Contains("global.json: Umpire.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030201").And.Contains("global.json: Umpire.Sdk 0.0.1"));
             Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped: CheckedVersions is missing"));
         } finally {
             TempFolder.Delete(root);
@@ -74,30 +75,28 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task With_no_block_the_engine_finds_the_block_folder_by_the_global_json_above_the_project() {
+    public async Task With_no_block_the_engine_uses_the_nearest_check_entry_above_the_project() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
+            File.WriteAllText(Path.Combine(root, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
             var project = Directory.CreateDirectory(Path.Combine(root, "App", "Host")).FullName;
 
             var result = await Run(project: project);
 
-            Assert.That(result.Lines, Has.One.Contains("error UMP030101").And.Contains(PinnedSdk));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030301").And.Contains($"under the block folder {Path.GetFullPath(root)}"));
         } finally {
             TempFolder.Delete(root);
         }
     }
 
     [Test]
-    public async Task With_no_global_json_and_no_block_the_run_gives_UMP030004_and_runs_no_step() {
+    public async Task With_no_check_entry_and_no_block_the_run_gives_UMP030103_and_runs_no_other_step() {
         var project = TempFolder.Create();
         try {
-            Assume.That(BlockFolder.Find(project), Is.Null, "A global.json above the temporary folder.");
-
-            var result = await Run(project: project);
+            var result = await Run(project: project, bin: project);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030004: No block folder contains"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030103: No check entry is in"));
             Assert.That(result.Lines, Has.None.Contains("UMP030002"));
         } finally {
             TempFolder.Delete(project);
@@ -105,40 +104,47 @@ public sealed class RunEngineTests {
     }
 
     [Test]
+    public async Task The_engine_finds_no_errors_in_a_block_with_inner_blocks() {
+        var result = await Run(project: Repo.Path("tests", "Fixtures", "Blocks"));
+
+        Assert.That(result.Lines, Has.None.Contains(": error "), string.Join(Environment.NewLine, result.Lines));
+    }
+
+    [Test]
     public async Task A_step_that_fails_skips_the_steps_that_use_its_output() {
         var result = await Run(block: Path.Combine(Notes, "Features", "Missing"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030201"));
+        Assert.That(result.Lines, Has.One.Contains("error UMP030301"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_with_two_app_classes_gives_UMP030203_with_both_names() {
+    public async Task An_app_with_two_app_classes_gives_UMP030303_with_both_names() {
         var result = await Run(block: Repo.Path("tests", "Fixtures", "TwoApps"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030203: The app has more than one app class: "
+        Assert.That(result.Lines, Has.One.Contains("error UMP030303: The app has more than one app class: "
             + "TwoApps.App.Host.FirstApp, TwoApps.App.Host.SecondApp."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_class_with_no_empty_constructor_gives_UMP030204_with_its_name() {
+    public async Task An_app_class_with_no_empty_constructor_gives_UMP030304_with_its_name() {
         var result = await Run(block: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030204: The app class NoConstructorApp.App.Host.NamedApp "
+        Assert.That(result.Lines, Has.One.Contains("error UMP030304: The app class NoConstructorApp.App.Host.NamedApp "
             + "has no public constructor with no parameters"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_with_no_app_class_gives_UMP030202() {
+    public async Task An_app_with_no_app_class_gives_UMP030302() {
         var result = await Run(block: Repo.Path("tests", "Shared"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030202: The app has no app class."));
+        Assert.That(result.Lines, Has.One.Contains("error UMP030302: The app has no app class."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
@@ -161,7 +167,7 @@ public sealed class RunEngineTests {
     static async Task<ReportResult> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null) {
         using var host = new EngineTestApp(
-            new StepsPlugin(), new EngineModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
+            new StepsPlugin(), new EngineModule(), new BlocksModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
             new BaselineModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";

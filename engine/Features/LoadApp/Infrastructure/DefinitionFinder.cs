@@ -1,6 +1,7 @@
 namespace LoadApp.Infrastructure;
 
 using System.Reflection;
+using System.Runtime.Loader;
 using Umpire.Architecture;
 using Umpire.Kernel;
 
@@ -18,6 +19,13 @@ public static class DefinitionFinder {
         var app = Activator.CreateInstance(appClass)!;
         var pack = appClass.GetProperty(nameof(App.Pack))!.GetValue(app)!;
         return (Architecture)pack.GetType().GetProperty(nameof(Pack.Architecture))!.GetValue(pack)!;
+    }
+
+    public static Architecture ArchitectureOf(string name, AssemblyLoadContext loader) {
+        var comma = name.IndexOf(',');
+        var assembly = loader.LoadFromAssemblyName(new AssemblyName(name[(comma + 1)..].Trim()));
+        var type = assembly.GetType(name[..comma].Trim(), throwOnError: true)!;
+        return (Architecture)Activator.CreateInstance(type)!;
     }
 
     public static string Names(IEnumerable<Type> types) =>

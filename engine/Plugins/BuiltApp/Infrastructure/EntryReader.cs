@@ -1,0 +1,168 @@
+namespace BuiltApp.Infrastructure;
+
+using System.Reflection;
+using System.Runtime.InteropServices;
+using BuiltApp.Domain.Shared;
+using Umpire.Architecture;
+
+public sealed class EntryReader : IDisposable {
+    public const string ArchitectureKey = "Umpire.Architecture";
+    public const string RootKey = "Umpire.Root";
+    const string AppBase = "Umpire.Kernel.App`1";
+    const string BlockBase = "Umpire.Architecture.Block`1";
+    const string ArchitectureBase = "Umpire.Architecture.Architecture";
+    const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
+    const string AspNetCore = "Microsoft.AspNetCore.App";
+
+    readonly MetadataLoadContext context;
+    readonly IReadOnlyList<string> dlls;
+
+    public EntryReader(string bin) {
+        var all = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
+        var shared = SharedFrameworks().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
+        dlls = [.. all.Where(SourceFiles.HasSymbols)];
+        context = new MetadataLoadContext(new PathAssemblyResolver(all.Concat(shared)));
+    }
+
+    public IReadOnlyList<BlockEntry> Entries() => [.. dlls.SelectMany(Entries)];
+
+    public string? Problem(string name) {
+        var comma = name.IndexOf(',');
+        if (comma < 0) {
+            return "the name has no assembly";
+        }
+        var typeName = name[..comma].Trim();
+        var assemblyName = name[(comma + 1)..].Trim();
+        Assembly assembly;
+        try {
+            assembly = context.LoadFromAssemblyName(assemblyName);
+        } catch (FileNotFoundException) {
+            return $"the build output has no assembly {assemblyName}";
+        }
+        var type = assembly.GetType(typeName);
+        if (type is null) {
+            return $"{assemblyName} has no type {typeName}";
+        }
+        if (Base(type, ArchitectureBase) is null) {
+            return $"{typeName} does not inherit {ArchitectureBase}";
+        }
+        return type.IsAbstract ? $"{typeName} is abstract" : null;
+    }
+
+    public void Dispose() => context.Dispose();
+
+    static IEnumerable<BlockEntry> TypeEntries(Assembly assembly, Dictionary<string, Source> sources) {
+        foreach (var type in Types(assembly).Where(t => t is { IsAbstract: false, IsInterface: false })) {
+            if (type.FullName is not { } name || !sources.TryGetValue(name, out var source)) {
+                continue;
+            }
+            if (Entry(type, source) is { } entry) {
+                yield return entry;
+            }
+        }
+    }
+
+    static BlockEntry? Entry(Type type, Source source) {
+        var file = Path.GetFullPath(source.File);
+        var folder = Path.GetDirectoryName(file)!;
+        try {
+            if (Base(type, AppBase) is not null) {
+                return new BlockEntry(ProjectFolder(folder), EntryForm.App, null, file);
+            }
+            if (Base(type, BlockBase) is { } block) {
+                return new BlockEntry(folder, EntryForm.Base, Name(block.GetGenericArguments()[0]), file);
+            }
+        } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
+            return null;
+        }
+        return null;
+    }
+
+    static IEnumerable<BlockEntry> MetadataEntries(Assembly assembly, Dictionary<string, Source> sources) {
+        var values = Metadata(assembly);
+        if (!values.TryGetValue(ArchitectureKey, out var architecture) || CommonFolder(sources.Values) is not { } common) {
+            yield break;
+        }
+        var project = ProjectFolder(common);
+        var folder = values.TryGetValue(RootKey, out var root) ? Path.GetFullPath(Path.Combine(project, root)) : project;
+        var file = Directory.EnumerateFiles(project, "*.csproj").FirstOrDefault() ?? project;
+        yield return new BlockEntry(Path.TrimEndingDirectorySeparator(folder), EntryForm.Metadata, architecture, file);
+    }
+
+    static Dictionary<string, string> Metadata(Assembly assembly) {
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var attribute in assembly.GetCustomAttributesData().Where(a => a.AttributeType.FullName == MetadataAttribute)) {
+            if (attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }]) {
+                values.TryAdd(key, value);
+            }
+        }
+        return values;
+    }
+
+    static IEnumerable<Type> Types(Assembly assembly) {
+        try {
+            return assembly.GetTypes();
+        } catch (ReflectionTypeLoadException e) {
+            return e.Types.OfType<Type>();
+        }
+    }
+
+    static Type? Base(Type type, string name) {
+        for (var b = type.BaseType; b is not null; b = b.BaseType) {
+            var definition = b.IsGenericType ? b.GetGenericTypeDefinition() : b;
+            if (definition.FullName == name) {
+                return b;
+            }
+        }
+        return null;
+    }
+
+    static string Name(Type type) => $"{type.FullName}, {type.Assembly.GetName().Name}";
+
+    static string? CommonFolder(IEnumerable<Source> sources) {
+        var folders = sources
+            .Select(s => Path.GetDirectoryName(Path.GetFullPath(s.File))!.Split(Path.DirectorySeparatorChar))
+            .ToList();
+        if (folders.Count == 0) {
+            return null;
+        }
+        var common = Enumerable.Range(0, folders.Min(f => f.Length))
+            .TakeWhile(i => folders.All(f => string.Equals(f[i], folders[0][i], StringComparison.OrdinalIgnoreCase)))
+            .Count();
+        return common == 0 ? null : string.Join(Path.DirectorySeparatorChar, folders[0][..common]);
+    }
+
+    static string ProjectFolder(string start) {
+        for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent) {
+            if (folder.Exists && folder.EnumerateFiles("*.csproj").Any()) {
+                return folder.FullName;
+            }
+        }
+        return start;
+    }
+
+    static IEnumerable<string> SharedFrameworks() {
+        var runtime = RuntimeEnvironment.GetRuntimeDirectory();
+        var shared = Path.GetDirectoryName(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(runtime)));
+        var web = shared is null ? null : Path.Combine(shared, AspNetCore);
+        var newest = web is not null && Directory.Exists(web)
+            ? Directory.GetDirectories(web).OrderByDescending(VersionOf).FirstOrDefault()
+            : null;
+        return newest is null ? [runtime] : [runtime, newest];
+    }
+
+    static Version VersionOf(string folder) => Version.TryParse(Path.GetFileName(folder), out var version) ? version : new Version();
+
+    IEnumerable<BlockEntry> Entries(string dll) {
+        Assembly assembly;
+        Dictionary<string, Source> sources;
+        try {
+            assembly = context.LoadFromAssemblyPath(dll);
+            using var symbols = new SymbolReader(dll);
+            sources = symbols.TypeSources().GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
+        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException) {
+            return [];
+        }
+        return [.. TypeEntries(assembly, sources), .. MetadataEntries(assembly, sources)];
+    }
+}

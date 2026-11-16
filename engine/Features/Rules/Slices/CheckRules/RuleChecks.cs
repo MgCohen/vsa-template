@@ -8,6 +8,17 @@ sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
         Error("UMP020202", unmapped.Source, $"{unmapped.Type.Name} is in a folder that the definition does not have. "
             + "Move it to a part, or add the folder in Define.");
 
+    public static Finding Covered(BlockPlace place) =>
+        new("UMP020401", FindingSeverity.Error,
+            $"{place.Part.Name} ({place.Part.Path}) covers the folder {place.InBlock}, "
+            + $"but a check entry makes {place.InBlock} another block. Mark the folder with AddBlock<T>() "
+            + "or AddBlockGroup<T>() in Define, or remove the check entry of the inner block.", place.Folder);
+
+    public static Finding Empty(BlockPlace place) =>
+        new("UMP020402", FindingSeverity.Error,
+            $"{place.Part.Name} ({place.Part.Path}) marks the folder {place.InBlock} as the place of a block, "
+            + "but no check entry is in it. Add a check entry to the folder, or remove the place from Define.", place.Folder);
+
     public IReadOnlyList<Finding> Of(Binding from) =>
         [.. WrongType(from), .. DeniedUses(from), .. WideExposures(from)];
 

@@ -9,6 +9,7 @@
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Notes/Notes.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/TwoApps/TwoApps.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Blocks/Blocks.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/NoConstructorApp/NoConstructorApp.csproj" />
   </ItemGroup>
 </Project>

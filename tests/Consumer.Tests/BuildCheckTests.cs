@@ -48,7 +48,7 @@ public sealed class BuildCheckTests {
 
         File.Delete(probe);
         var fixedBuild = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning UMP030401"));
+        Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning UMP030501"));
     }
 
     static void AddBuildHook(string root, string project) {

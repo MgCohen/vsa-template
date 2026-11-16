@@ -18,8 +18,8 @@ flowchart LR
 |---|---|---|
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
-| `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030101`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
+| `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030201`). The engine app and the `umpire` tool bundle it |
+| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET and `MetadataLoadContext`. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
@@ -53,6 +53,8 @@ public class VsaArchitecture : Architecture {
 | `Add<T>()` | A part in the folder of the layer. It returns the `Part` |
 | `And<T>()` | A sibling part. It returns a `PartGroup`: the next call applies to each part in it |
 | `AddGroup<T>()` | A group: one part instance for each subfolder. It returns a `PartGroup` |
+| `AddBlock<T>()` | The place of another block in the folder of `T`. The place is one part, with no children (see "Blocks and check entries") |
+| `AddBlockGroup<T>()` | Each subfolder of the folder of `T` is the place of another block, for example `Packs/<Name>/` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
@@ -289,7 +291,7 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 
 ## The checks of the Rules step
 
-`RuleChecks.Of(type)` gives the use, exposure and type findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, the counts and the matches (`RuleChecks.Counts`, `RuleChecks.Matches`), and the warnings of the loader.
+`RuleChecks.Of(type)` gives the use, exposure and type findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, the counts and the matches (`RuleChecks.Counts`, `RuleChecks.Matches`), the block places (`RuleChecks.Covered`, `RuleChecks.Empty`), and the warnings of the loader.
 
 | ID | Severity | Problem |
 |---|---|---|
@@ -300,6 +302,8 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 | `UMP020203` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
 | `UMP020301` | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | Error | A match of the definition does not hold (see "Counts and matches") |
+| `UMP020401` | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
+| `UMP020402` | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
 
 Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
 
@@ -321,11 +325,11 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 
 | Step | Source |
 |---|---|
-| Block folder | `--block` (MSBuild `UmpireBlock`), else the nearest folder with `global.json` above `--project`. `BlockFolder` in Umpire.Engine.Versions finds it |
+| Block folder | `--block` (MSBuild `UmpireBlock`), else the folder of the nearest check entry at or above `--project` (see "Blocks and check entries") |
 | Versions | Each Umpire version slot of the block folder and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
-| Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine codes" |
+| Definition | The architecture of the check entry of the block. For an app class: `Pack.Architecture` of the one most derived app class (`App`). See "Engine codes" |
 | Unity DLLs | See "Unity projects" |
 
 ### Engine codes
@@ -337,21 +341,43 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
 | `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
 | `UMP030003` | 00 Run | Error | The build hook cannot find the rule engine. Restore `Umpire.Engine.Build` again |
-| `UMP030004` | 00 Run | Error | No block folder contains the project: no `global.json` above it, and no `--block` |
-| `UMP030101` | 01 Versions | Error | An Umpire version is not the engine version (see "One version") |
-| `UMP030201` | 02 LoadApp | Error | No DLL of the host output has source files under the block folder |
-| `UMP030202` | 02 LoadApp | Error | The app has no app class |
-| `UMP030203` | 02 LoadApp | Error | The app has more than one most derived app class |
-| `UMP030204` | 02 LoadApp | Error | An app class has no public constructor with no parameters |
-| `UMP030401` | 04 Baseline | Warning | A baseline entry matches no error (see "Baseline") |
-| `UMP030402` | 04 Baseline | Error | A baseline line does not have the form |
-| `UMP030403` | 04 Baseline | Warning | The update did not write the file, because a step failed or was skipped |
+| `UMP030101` | 01 Blocks | Error | A block has more than one check entry |
+| `UMP030102` | 01 Blocks | Error | A check entry names a type that does not load or that is not an `Architecture` |
+| `UMP030103` | 01 Blocks | Error | No check entry is at or above the project, and no `--block` is given. The run stops |
+| `UMP030201` | 02 Versions | Error | An Umpire version is not the engine version (see "One version") |
+| `UMP030301` | 03 LoadApp | Error | No DLL of the host output has source files under the block folder |
+| `UMP030302` | 03 LoadApp | Error | The app has no app class |
+| `UMP030303` | 03 LoadApp | Error | The app has more than one most derived app class |
+| `UMP030304` | 03 LoadApp | Error | An app class has no public constructor with no parameters |
+| `UMP030501` | 05 Baseline | Warning | A baseline entry matches no error (see "Baseline") |
+| `UMP030502` | 05 Baseline | Error | A baseline line does not have the form |
+| `UMP030503` | 05 Baseline | Warning | The update did not write the file, because a step failed or was skipped |
 
-The Rules step (group `03`) gives the rule findings of area `02`. The Report step (group `05`) has no code.
+The Rules step (group `04`) gives the rule findings of area `02`. The Report step (group `06`) has no code. If `UMP030101` or `UMP030102` is about the block of the project, the run stops. If it is about an inner block, the run continues.
+
+### Blocks and check entries
+
+A block is a folder tree of code with one check entry. The check entry names the architecture of the block. The step `FindBlocks` (`engine/Features/Blocks/`) reads the entries before all other steps.
+
+| Form | Example | Block folder |
+|---|---|---|
+| App class | `NotesApp : App<Vsa<WebVsaHost>>` | The project folder of its assembly |
+| Typed base | `public abstract class Pack : Block<PackArchitecture>` | The folder of the source file of each concrete subclass |
+| `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
+| `umpire.json` | `{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }` | The folder of the file |
+
+- The engine reads the entries from the DLLs of the host output (with `MetadataLoadContext`, with no instance) and from the `umpire.json` files. The search for `umpire.json` skips `bin/`, `obj/` and each folder whose name ends with `~`.
+- The project folder of an assembly is the deepest common folder of its source files, or the first folder above it with a `.csproj` file.
+- A typed base counts only for a type that is not abstract. Thus `Pack` (abstract, in `framework/Kernel/`) gives no entry, and `Vsa<THost>` gives one. Two types of one form with one architecture in one folder are one entry.
+- The nearest block wins: a source file belongs to the deepest block folder above it.
+- The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
+- An outer part that covers the folder of an inner block gives `UMP020401`. A place with no check entry gives `UMP020402`.
+
+`PackArchitecture` (Umpire.Kernel) is the shape of a pack: the pack class in the pack folder (`<Name>Pack.cs`, required), and the folders `Architecture/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`).
 
 ## One version
 
-The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030101` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
+The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030201` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|
@@ -400,9 +426,9 @@ UMP020202|Features/Old/Legacy.cs|Legacy is in a folder that the definition does 
 | Content | Errors only. A warning does not fail the build. The engine codes `UMP030000`-`UMP039999` never go in the file, so a version error or a crash always fails |
 | No file | No error is accepted |
 | Update | `dotnet build -p:UmpireUpdateBaseline=true` (engine switch `--updatebaseline true`) writes each current error, sorted (ordinal), and removes the stale entries. With no error, the update deletes the file. The update never skips the check |
-| Stale entry | An entry that no error matches gives the warning `UMP030401` at its line in the file. Remove the line, or run the update |
-| Bad line | A line that does not have the form gives the error `UMP030402`. Then no error is accepted |
-| Incomplete run | If a step failed or was skipped (an engine error, or `UMP030002`), the update does not write the file and gives the warning `UMP030403`. Reason: that run has not found each error |
+| Stale entry | An entry that no error matches gives the warning `UMP030501` at its line in the file. Remove the line, or run the update |
+| Bad line | A line that does not have the form gives the error `UMP030502`. Then no error is accepted |
+| Incomplete run | If a step failed or was skipped (an engine error, or `UMP030002`), the update does not write the file and gives the warning `UMP030503`. Reason: that run has not found each error |
 | Build stamp | The stamp name tells if the file exists. A delete of the file runs the check again |
 
 `--mode Warn` applies after the baseline: each remaining error becomes a warning.
