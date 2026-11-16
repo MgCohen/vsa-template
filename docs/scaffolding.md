@@ -132,7 +132,7 @@ The rule engine checks the architecture after each build of the host (see [archi
 </ItemGroup>
 ```
 
-The templates build in source mode, so the template `.csproj` does not have this line. `Templates.ToPackageMode` adds it to the `.csproj` in the app root. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
+The templates build in source mode, so the template `.csproj` does not have this line. `Templates.ToPackageMode` adds it to the `.csproj` in the block folder. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
 
 ## One version
 
