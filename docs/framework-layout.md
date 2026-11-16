@@ -1,6 +1,6 @@
 # Repository layout: architecture, framework, packs, engine and tools
 
-Umpire has five groups of code, and each group has one top folder. The definition API depends on no other folder, and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
+Umpire has five groups of code, and each group has one top folder. The definition API references no other C# project (its build gets the polyfill and the rule values of Umpire.Sdk, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
 
 ## Groups
 

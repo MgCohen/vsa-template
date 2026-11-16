@@ -55,7 +55,7 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 An app has one root project in the block folder. It compiles each file in its folder tree, so a module, a slice or a plugin needs no project of its own. All other projects are optional, for example a test project or a separate assembly.
 
 ```
-samples/Notes/
+tests/Fixtures/Notes/
 ├─ Notes.csproj                 root project: App/, Features/, Plugins/
 ├─ App/Host/  App/Views/
 ├─ Features/Notebook/  Features/Ping/
