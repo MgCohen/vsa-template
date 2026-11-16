@@ -37,10 +37,14 @@ public abstract class App : IApp {
             starting = true;
         }
         var started = Start(args);
-        started.App.Services.GetService<IHostApplicationLifetime>()?.ApplicationStopped.Register(() => Stopped(started));
+        var lifetime = started.App.Services.GetService<IHostApplicationLifetime>();
+        lifetime?.ApplicationStopped.Register(() => Stopped(started));
         try {
             OnStart();
             return started.Host.Run(started.App);
+        } catch (OperationCanceledException) when (lifetime?.ApplicationStopping.IsCancellationRequested == true) {
+            Stopped(started);
+            return 0;
         } catch {
             Clear(started);
             throw;
