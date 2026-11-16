@@ -32,12 +32,13 @@ public sealed class AppLoader : AssemblyLoadContext {
             .Where(name => !Shared.Contains(name) && names.Any(e => name == e || name.StartsWith(e + ".", StringComparison.Ordinal)))
             .Select(name => LoadFromAssemblyName(new AssemblyName(name)));
 
-    public IEnumerable<Assembly> ReferencedAssemblies(IReadOnlyList<Assembly> app) {
+    public IEnumerable<Assembly> ReferencedAssemblies(IReadOnlyList<Assembly> app, IReadOnlyList<string> skip) {
         var found = new Dictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
         var next = new Queue<Assembly>(app);
         while (next.TryDequeue(out var assembly)) {
             foreach (var reference in assembly.GetReferencedAssemblies().Select(r => r.Name!)) {
                 if (Shared.Contains(reference) || IsFramework(reference) || found.ContainsKey(reference)
+                    || skip.Contains(reference, StringComparer.OrdinalIgnoreCase)
                     || app.Any(a => a.GetName().Name == reference) || !File.Exists(Path.Combine(bin, reference + ".dll"))) {
                     continue;
                 }

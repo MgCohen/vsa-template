@@ -12,7 +12,9 @@ public record PackPlace : Concept {
 
 public sealed class PlaceArchitecture : Architecture {
     protected override void Define(Block block) {
-        block.AddGroup<Box>().Add<Item>().InParentFolder();
+        var box = block.AddGroup<Box>();
+        box.Add<Item>().InParentFolder();
+        box.Add<Tag>();
         block.AddBlock<Tool>();
         block.AddBlockGroup<PackPlace>();
     }
@@ -70,6 +72,20 @@ public sealed class BlockPlaceTests {
     [Test]
     public void An_outer_part_that_contains_an_inner_block_is_a_problem() {
         var covered = Resolved().CoveredBlocks(block, Inner("Boxes/a/Deep/Store"));
+
+        Assert.That(covered.Select(c => c.Part.Name), Is.EqualTo(new[] { "Box" }));
+    }
+
+    [Test]
+    public void A_block_above_the_part_folders_names_the_nearest_part_below_it() {
+        var covered = Resolved().CoveredBlocks(block, Inner("Boxes"));
+
+        Assert.That(covered.Select(c => c.Part.Name), Is.EqualTo(new[] { "Box" }));
+    }
+
+    [Test]
+    public void A_block_in_a_part_folder_names_that_part_and_not_a_part_below_it() {
+        var covered = Resolved().CoveredBlocks(block, Inner("Boxes/a"));
 
         Assert.That(covered.Select(c => c.Part.Name), Is.EqualTo(new[] { "Box" }));
     }

@@ -83,7 +83,7 @@ public sealed class EntryReader : IDisposable {
 
     static IEnumerable<BlockEntry> MetadataEntries(Assembly assembly, Dictionary<string, Source> sources) {
         var values = Metadata(assembly);
-        if (!values.TryGetValue(ArchitectureKey, out var architecture) || CommonFolder(sources.Values) is not { } common) {
+        if (!values.TryGetValue(ArchitectureKey, out var architecture) || SourceFolder(sources.Values) is not { } common) {
             yield break;
         }
         var project = ProjectFolder(common);
@@ -122,11 +122,16 @@ public sealed class EntryReader : IDisposable {
 
     static string Name(Type type) => $"{type.FullName}, {type.Assembly.GetName().Name}";
 
-    static string? CommonFolder(IEnumerable<Source> sources) {
-        var folders = sources
-            .Where(s => !IsGenerated(s.File))
-            .Select(s => Path.GetDirectoryName(Path.GetFullPath(s.File))!.Split(Path.DirectorySeparatorChar))
-            .ToList();
+    public static string? SourceFolder(IEnumerable<Source> sources) {
+        var files = sources.Select(s => Path.GetFullPath(s.File)).ToList();
+        if (CommonFolder(files) is not { } all) {
+            return null;
+        }
+        return CommonFolder([.. files.Where(file => !IsGenerated(Path.GetRelativePath(all, file)))]) ?? all;
+    }
+
+    static string? CommonFolder(IReadOnlyList<string> files) {
+        var folders = files.Select(file => Path.GetDirectoryName(file)!.Split(Path.DirectorySeparatorChar)).ToList();
         if (folders.Count == 0) {
             return null;
         }
@@ -136,8 +141,8 @@ public sealed class EntryReader : IDisposable {
         return common == 0 ? null : string.Join(Path.DirectorySeparatorChar, folders[0][..common]);
     }
 
-    static bool IsGenerated(string file) =>
-        BuildOutput.Contains(file) || file.Split('/', '\\')[..^1].Any(folder => folder.EndsWith('~'));
+    static bool IsGenerated(string relative) =>
+        relative.Split('/', '\\')[..^1].Any(folder => BuildOutput.IsFolder(folder) || folder.EndsWith('~'));
 
     static string ProjectFolder(string start) {
         for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent) {

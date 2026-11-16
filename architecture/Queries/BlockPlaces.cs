@@ -12,9 +12,11 @@ static class BlockPlaces {
             if (parts.Any(p => p.IsBlockPlace && Same(p.Path.Split('/'), segments))) {
                 continue;
             }
-            var part = parts.Where(p => !p.IsBlockPlace && Overlaps(p.Path.Split('/'), segments))
+            var overlapping = parts.Where(p => !p.IsBlockPlace && Overlaps(p.Path.Split('/'), segments)).ToList();
+            var part = overlapping.Where(p => p.Path.Split('/').Length <= segments.Length)
                 .OrderByDescending(p => p.Path.Split('/').Length)
-                .FirstOrDefault();
+                .FirstOrDefault()
+                ?? overlapping.OrderBy(p => p.Path.Split('/').Length).FirstOrDefault();
             if (part is not null) {
                 covered.Add(new BlockPlace(part, Full(blockFolder, folder), folder));
             }

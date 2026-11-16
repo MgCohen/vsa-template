@@ -17,7 +17,8 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         var root = Path.GetFullPath(blocks.Current.Folder);
         var bin = Path.GetFullPath(command.Bin);
         var loader = new AppLoader(bin);
-        var app = loader.AppAssemblies(root, Names(command.Skip));
+        var skip = Names(command.Skip);
+        var app = loader.AppAssemblies(root, skip);
         if (app.Count == 0) {
             return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin} has source files under the block folder {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
@@ -28,7 +29,8 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         }
         var definition = found.Value;
         var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
-        var assemblies = app.Concat(loader.ExternalAssemblies(externals)).Concat(loader.ReferencedAssemblies(app)).Distinct().ToList();
+        var referenced = loader.ReferencedAssemblies(app, skip);
+        var assemblies = app.Concat(loader.ExternalAssemblies(externals)).Concat(referenced).Distinct().ToList();
         return new AppInput(definition, assemblies, root, blocks.InnerFolders);
     }
 

@@ -75,6 +75,26 @@ public sealed class BlocksTests {
     }
 
     [Test]
+    public void The_source_folder_of_a_library_skips_the_generated_files_but_not_a_parent_folder_named_bin() {
+        var sources = new[] { "C:/x/bin/Lib/A.cs", "C:/x/bin/Lib/Sub/B.cs", "C:/x/bin/artifacts~/obj/Lib/G.cs" }
+            .Select(file => new Umpire.Architecture.Source(file, 1));
+
+        Assert.That(EntryReader.SourceFolder(sources), Is.EqualTo(Path.GetFullPath("C:/x/bin/Lib")));
+    }
+
+    [Test]
+    public void A_skipped_assembly_is_not_loaded_as_a_reference() {
+        var loader = new LoadApp.Infrastructure.AppLoader(AppContext.BaseDirectory);
+        var app = loader.AppAssemblies(Fixture, ["Lib"]);
+
+        var names = (IReadOnlyList<string> skip) => loader.ReferencedAssemblies(app, skip).Select(a => a.GetName().Name).ToList();
+
+        Assert.That(app.Select(a => a.GetName().Name), Is.EqualTo(new[] { "Blocks" }));
+        Assert.That(names([]), Does.Contain("Lib"));
+        Assert.That(names(["Lib"]), Does.Not.Contain("Lib"));
+    }
+
+    [Test]
     public void The_nearest_entry_above_the_project_is_the_block() {
         var entries = new[] { Entry("C:/a", EntryForm.File), Entry("C:/a/b", EntryForm.App) };
 

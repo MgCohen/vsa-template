@@ -1,3 +1,5 @@
 namespace Blocks.Tools;
 
-public sealed record ToolNote(string Text);
+using Lib;
+
+public sealed record ToolNote(LibNote Note);
