@@ -4,11 +4,11 @@ using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
 public sealed class EngineArchitecture : VsaArchitecture {
-    protected override void Define(Root root) {
-        base.Define(root);
-        root.Add<EngineLibraries>();
-        root.Add<VersionLibraries>();
-        root.Add<ArchUnitLibraries>();
+    protected override void Define(Block block) {
+        base.Define(block);
+        block.Add<EngineLibraries>();
+        block.Add<VersionLibraries>();
+        block.Add<ArchUnitLibraries>();
     }
 
     protected override void Rules(RuleBook rules) {

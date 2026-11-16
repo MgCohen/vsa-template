@@ -6,7 +6,7 @@ using Versions.Domain.Shared;
 namespace LoadApp.Slices.LoadApp;
 
 public sealed record LoadAppCommand(
-    string AppRoot, string Bin, string Skip, CheckVersionsResult CheckedVersions)
+    string BlockFolder, string Bin, string Skip, CheckVersionsResult CheckedVersions)
     : EngineStep<AppInput>, IStepGroup {
     public static int Group => 2;
 }

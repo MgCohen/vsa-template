@@ -18,10 +18,10 @@ sealed class ArchitectureCheck {
     public LoadedApp App { get; }
     public Bindings Bindings { get; }
 
-    public static ArchitectureCheck Load(Architecture definition, IEnumerable<string> dlls, string appRoot) {
+    public static ArchitectureCheck Load(Architecture definition, IEnumerable<string> dlls, string blockFolder) {
         var resolved = new ResolvedArchitecture(definition);
-        var app = AppReader.Read(dlls, appRoot, resolved);
-        return new ArchitectureCheck(resolved, app, resolved.Place(app.Facts, app.AppRoot));
+        var app = AppReader.Read(dlls, blockFolder, resolved);
+        return new ArchitectureCheck(resolved, app, resolved.Place(app.Facts, app.BlockFolder));
     }
 
     public IReadOnlyList<Finding> Findings() => [

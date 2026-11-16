@@ -3,29 +3,24 @@ namespace Umpire.Architecture;
 [Umpire.Markers.RequireDerived]
 public abstract class Architecture {
     const string DefinitionSource = "definition";
-    readonly string rootPath;
-    Root? root;
+    Block? block;
     Options? options;
     List<PartRule>? pairs;
     RuleBook? book;
     IReadOnlyList<CountStatement>? counts;
     IReadOnlyList<MatchStatement>? matches;
 
-    protected Architecture(string rootPath = "") {
-        this.rootPath = rootPath;
-    }
-
     public Options Options => options ??= Configured().Over(Options.BuiltIn);
 
-    public Root Root {
+    public Block Block {
         get {
-            if (root is not null) {
-                return root;
+            if (block is not null) {
+                return block;
             }
-            root = new Root(rootPath);
-            Define(root);
-            CheckShared(root);
-            return root;
+            block = new Block();
+            Define(block);
+            CheckShared(block);
+            return block;
         }
     }
 
@@ -34,13 +29,13 @@ public abstract class Architecture {
             if (book is not null) {
                 return book;
             }
-            book = new RuleBook(Root);
+            book = new RuleBook(Block);
             Rules(book);
             return book;
         }
     }
 
-    public IEnumerable<Part> Parts() => Root.Walk().Skip(1);
+    public IEnumerable<Part> Parts() => Block.Walk().Skip(1);
 
     public IReadOnlyList<PartRule> Resolve() {
         if (pairs is not null) {
@@ -55,7 +50,7 @@ public abstract class Architecture {
         return pairs = all;
     }
 
-    public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
+    public virtual IReadOnlyList<FolderAlias> FolderAliases(string blockFolder) => [];
 
     internal IReadOnlyList<CountStatement> CountStatements() => counts ??= Statements.Counts(this, Book);
 
@@ -72,12 +67,12 @@ public abstract class Architecture {
 
     protected virtual void Configure(Options defaults) { }
 
-    protected abstract void Define(Root root);
+    protected abstract void Define(Block block);
 
     protected virtual void Rules(RuleBook rules) { }
 
-    static void CheckShared(Root root) {
-        var groups = root.Walk().Skip(1).Where(p => !p.HasFolder && !p.IsGroup).GroupBy(p => p.Parent).Where(g => g.Count() > 1);
+    static void CheckShared(Block block) {
+        var groups = block.Walk().Skip(1).Where(p => !p.HasFolder && !p.IsGroup).GroupBy(p => p.Parent).Where(g => g.Count() > 1);
         foreach (var shared in groups) {
             var parts = shared.ToList();
             var none = parts.FirstOrDefault(p => p.Types.Count == 0);

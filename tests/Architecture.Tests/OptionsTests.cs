@@ -35,8 +35,8 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
         defaults.Boundary = architecture;
     }
 
-    protected override void Define(Root root) {
-        var group = closedConcept ? Group<ClosedPackage>(root) : Group<Package>(root);
+    protected override void Define(Block block) {
+        var group = closedConcept ? Group<ClosedPackage>(block) : Group<Package>(block);
         group.Add<Target>().And<User>();
     }
 
@@ -44,12 +44,12 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
         rules.For<User>().Uses<Target>();
     }
 
-    PartGroup Group<T>(Root root) where T : Concept, new() =>
-        part is { } boundary ? root.AddGroup<T>(boundary) : root.AddGroup<T>();
+    PartGroup Group<T>(Block block) where T : Concept, new() =>
+        part is { } boundary ? block.AddGroup<T>(boundary) : block.AddGroup<T>();
 }
 
 public sealed class EmptyArchitecture : Architecture {
-    protected override void Define(Root root) { }
+    protected override void Define(Block block) { }
 }
 
 public sealed class OptionsTests {
@@ -76,15 +76,15 @@ public sealed class OptionsTests {
     [TestCase(typeof(DenyingConcept), nameof(Options.DefaultPermission))]
     [TestCase(typeof(SameConceptConcept), nameof(Options.UseSameConcept))]
     public void A_concept_that_sets_an_option_of_the_architecture_stops_the_definition(Type concept, string option) {
-        var definition = new InlineArchitecture(root => {
+        var definition = new InlineArchitecture(block => {
             if (concept == typeof(DenyingConcept)) {
-                root.Add<DenyingConcept>();
+                block.Add<DenyingConcept>();
             } else {
-                root.Add<SameConceptConcept>();
+                block.Add<SameConceptConcept>();
             }
         });
 
-        Assert.That(() => definition.Root, Throws.InvalidOperationException.With.Message.EqualTo(
+        Assert.That(() => definition.Block, Throws.InvalidOperationException.With.Message.EqualTo(
             $"Define: the concept {concept.Name} sets {option}. Only the architecture sets {option}. Move it to Configure of the architecture."));
     }
 }

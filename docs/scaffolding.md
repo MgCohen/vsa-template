@@ -25,7 +25,7 @@ Rules for all commands:
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
 - `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
-- `new app` writes a `Directory.Build.props` that puts all build output in `artifacts~/` in the app root (`UseArtifactsOutput`, `ArtifactsPath`). No `bin/` or `obj/` folder is next to the code, and Unity does not import the DLLs a second time: it skips each folder whose name ends with `~`. The .NET SDK reads this setting only from `Directory.Build.props` or the command line (`NETSDK1199`), so the setting is not in Umpire.Sdk.
+- `new app` writes a `Directory.Build.props` that puts all build output in `artifacts~/` in the block folder (`UseArtifactsOutput`, `ArtifactsPath`). No `bin/` or `obj/` folder is next to the code, and Unity does not import the DLLs a second time: it skips each folder whose name ends with `~`. The .NET SDK reads this setting only from `Directory.Build.props` or the command line (`NETSDK1199`), so the setting is not in Umpire.Sdk.
 - `new app` writes a `.gitignore` for the build folders and the local files (`artifacts~/`, `bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
 
@@ -36,7 +36,7 @@ Each command of the tool is one class in `tools/cli/Commands/`. It inherits one 
 ```
 ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(CommandInput)
 ├─ NewAppCommand                 umpire new app <Name> [--source <feed>]
-└─ AppCommand                    finds the app root, then Run(root, CommandInput)
+└─ AppCommand                    finds the block folder, then Run(root, CommandInput)
    ├─ DoctorCommand              umpire doctor
    ├─ UpdateCommand              umpire update [--version <version>]
    └─ AddCommand                 checks the name, writes the template files of one Templates.Kind
@@ -63,7 +63,7 @@ To add a command:
 5. Add the command to `CommandList.All`.
 6. Add a test in `tests/Cli`. `CommandTests` makes sure that each command inherits one base and is in the list.
 
-An `AppCommand` checks the input in this order: the name, then the app root, then the required options. `AddCommand.Run` makes the template names in one place, from `TemplateNames` of the command.
+An `AppCommand` checks the input in this order: the name, then the block folder, then the required options. `AddCommand.Run` makes the template names in one place, from `TemplateNames` of the command.
 
 ## Template format A
 

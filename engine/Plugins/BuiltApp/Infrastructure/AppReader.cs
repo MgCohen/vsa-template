@@ -6,8 +6,8 @@ using Steps.Domain.Shared;
 using Umpire.Architecture;
 
 public static class AppReader {
-    public static LoadedApp Read(IEnumerable<string> dlls, string appRoot, ResolvedArchitecture architecture) {
-        var root = Path.GetFullPath(appRoot);
+    public static LoadedApp Read(IEnumerable<string> dlls, string blockFolder, ResolvedArchitecture architecture) {
+        var root = Path.GetFullPath(blockFolder);
         var given = dlls.Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var unity = UnityProject.Scripts(root, given, out var warning);
         var files = unity.Concat(given).ToList();

@@ -9,18 +9,20 @@ using Steps.Domain.Shared;
 static class FixtureApps {
     public static readonly string Root = FixtureRoot();
 
-    static readonly Lazy<ArchitectureCheck> GoodMap = new(() => Load(new GoodArchitecture(), AppContext.BaseDirectory, Root));
-    static readonly Lazy<ArchitectureCheck> BadMap = new(() => Load(new BadArchitecture(), AppContext.BaseDirectory, Root));
+    static readonly Lazy<ArchitectureCheck> GoodMap = new(() => Load(new GoodArchitecture(), AppContext.BaseDirectory, Block("GoodApp")));
+    static readonly Lazy<ArchitectureCheck> BadMap = new(() => Load(new BadArchitecture(), AppContext.BaseDirectory, Block("BadApp")));
 
     public static ArchitectureCheck Good => GoodMap.Value;
 
     public static ArchitectureCheck Bad => BadMap.Value;
 
-    public static ArchitectureCheck Load(Architecture definition, string bin, string appRoot) {
+    public static string Block(string app) => Path.Combine(Root, app);
+
+    public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder) {
         var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         var dlls = Directory.GetFiles(bin, "*.dll")
-            .Where(dll => SourceFiles.HasSourceUnder(dll, appRoot) || IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
-        return ArchitectureCheck.Load(definition, dlls, appRoot);
+            .Where(dll => SourceFiles.HasSourceUnder(dll, blockFolder) || IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
+        return ArchitectureCheck.Load(definition, dlls, blockFolder);
     }
 
     public static string Line(Finding finding) {

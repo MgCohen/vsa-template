@@ -6,6 +6,8 @@ using Steps.Domain.Shared;
 public sealed class BadAppTests {
     const string Billing = "BadApp/Features/Billing";
     const string Notes = "BadApp/Features/Notes";
+    const string BillingPart = "Features/Billing";
+    const string NotesPart = "Features/Notes";
 
     static readonly Lazy<IReadOnlyList<Finding>> AllFindings = new(() => FixtureApps.Bad.Findings());
 
@@ -30,7 +32,7 @@ public sealed class BadAppTests {
     public void A_use_that_no_rule_allows_gives_UMP020101_with_the_file_and_line() {
         Assert.That(UseFailures, Does.Contain(
             $"{Notes}/Slices/ReadInvoice/ReadInvoiceHandler.cs(6): error UMP020101: ReadInvoiceHandler in Handlers.Requests "
-            + $"({Notes}/Slices/ReadInvoice) uses Invoice in Domain ({Billing}/Domain): no rule allows it (DefaultPermission = Deny). "
+            + $"({NotesPart}/Slices/ReadInvoice) uses Invoice in Domain ({BillingPart}/Domain): no rule allows it (DefaultPermission = Deny). "
             + "Remove the use, or change the rule in Rules."));
     }
 
@@ -38,21 +40,21 @@ public sealed class BadAppTests {
     public void A_use_that_a_rule_denies_names_the_rule() {
         Assert.That(UseFailures, Does.Contain(
             $"{Billing}/Slices/CreateInvoice/CreateInvoiceHandler.cs(6): error UMP020101: CreateInvoiceHandler in Handlers.Requests "
-            + $"({Billing}/Slices/CreateInvoice) uses InvoicePresenter in Presenters ({Billing}/Presenters): "
+            + $"({BillingPart}/Slices/CreateInvoice) uses InvoicePresenter in Presenters ({BillingPart}/Presenters): "
             + "the rule \"Slice denies Presenters InSame<Feature> and Module InSame<Feature>\" denies it."));
     }
 
     [Test]
     public void An_event_of_another_slice_in_the_same_feature_is_denied() {
         Assert.That(UseFailures, Does.Contain(
-            $"error UMP020101: InvoiceAuditHandler in Handlers.Events ({Billing}/Slices/AuditInvoice) uses InvoiceCreated in Contracts.Events "
-            + $"({Billing}/Slices/CreateInvoice): no rule allows it"));
+            $"error UMP020101: InvoiceAuditHandler in Handlers.Events ({BillingPart}/Slices/AuditInvoice) uses InvoiceCreated in Contracts.Events "
+            + $"({BillingPart}/Slices/CreateInvoice): no rule allows it"));
     }
 
     [Test]
     public void A_denied_use_of_an_external_DLL_gives_UMP020101() {
         Assert.That(UseFailures, Does.Contain(
-            $"error UMP020101: Invoice in Domain ({Billing}/Domain) uses IEntity in KitLayer (Kit.dll): "
+            $"error UMP020101: Invoice in Domain ({BillingPart}/Domain) uses IEntity in KitLayer (Kit.dll): "
             + "the rule \"Domain denies KitLayer\" denies it."));
     }
 
@@ -60,7 +62,7 @@ public sealed class BadAppTests {
     public void A_use_inside_compiler_generated_code_gives_UMP020101_on_the_declaring_type() {
         Assert.That(UseFailures, Does.Contain(
             "error UMP020101: ArchiveInvoiceHandler in Handlers.Requests "
-            + $"({Notes}/Slices/ArchiveInvoice) uses Invoice in Domain ({Billing}/Domain): "
+            + $"({NotesPart}/Slices/ArchiveInvoice) uses Invoice in Domain ({BillingPart}/Domain): "
             + "no rule allows it (DefaultPermission = Deny)."));
     }
 
@@ -86,7 +88,7 @@ public sealed class BadAppTests {
     [Test]
     public void A_type_in_a_folder_whose_name_starts_with_bin_is_checked() {
         Assert.That(UseFailures, Does.Contain(
-            $"{Billing}/Domain/binders/Money.cs(3): error UMP020101: Money in Domain ({Billing}/Domain) "
+            $"{Billing}/Domain/binders/Money.cs(3): error UMP020101: Money in Domain ({BillingPart}/Domain) "
             + "uses IEntity in KitLayer (Kit.dll): "
             + "the rule \"Domain denies KitLayer\" denies it."));
     }
@@ -104,15 +106,15 @@ public sealed class BadAppTests {
     [Test]
     public void A_type_that_is_not_the_type_of_its_part_fails_with_UMP020201() {
         Assert.That(Lines("UMP020201"), Is.EqualTo(
-            $"{Billing}/Presenters/Formatting.cs(4): error UMP020201: Formatting is in Presenters ({Billing}/Presenters), "
+            $"{Billing}/Presenters/Formatting.cs(4): error UMP020201: Formatting is in Presenters ({BillingPart}/Presenters), "
             + "but it is not IPresenter. Move it, or change its base type."));
     }
 
     [Test]
     public void A_public_member_that_exposes_a_use_only_part_gives_UMP020102() {
         Assert.That(ExposureFailures, Does.Contain(
-            $"{Billing}/Presenters/InvoicePresenter.cs(6): error UMP020102: InvoicePresenter in Presenters ({Billing}/Presenters) "
-            + $"exposes Invoice in Domain ({Billing}/Domain) in Shown with Public access, "
+            $"{Billing}/Presenters/InvoicePresenter.cs(6): error UMP020102: InvoicePresenter in Presenters ({BillingPart}/Presenters) "
+            + $"exposes Invoice in Domain ({BillingPart}/Domain) in Shown with Public access, "
             + "but the rule \"Presenters uses Domain(Internal)\" allows Internal at most. "
             + "Make the member less visible, or change the rule in Rules."));
     }
@@ -123,7 +125,7 @@ public sealed class BadAppTests {
     [TestCase("Invoice", "base type")]
     [TestCase("Invoice", "Equals(BadApp.Billing.Domain.Invoice)")]
     public void A_public_member_that_implements_no_framework_interface_gives_UMP020102(string target, string member) {
-        Assert.That(ExposureFailures, Does.Contain($"error UMP020102: BellPresenter in Presenters ({Billing}/Presenters) exposes {target} in")
+        Assert.That(ExposureFailures, Does.Contain($"error UMP020102: BellPresenter in Presenters ({BillingPart}/Presenters) exposes {target} in")
             .And.Contain($") in {member} with Public access"));
     }
 

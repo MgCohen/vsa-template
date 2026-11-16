@@ -3,21 +3,19 @@ namespace Umpire.Architecture;
 sealed class PartOf {
     readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<Part> folderParts;
-    readonly string rootPath;
     readonly IReadOnlyList<FolderAlias> aliases;
-    readonly string appRoot;
+    readonly string blockFolder;
 
-    PartOf(ResolvedArchitecture resolved, string appRoot) {
+    PartOf(ResolvedArchitecture resolved, string blockFolder) {
         var definition = resolved.Architecture;
         this.resolved = resolved;
         folderParts = [.. definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
-        rootPath = definition.Root.Path;
-        aliases = definition.FolderAliases(appRoot);
-        this.appRoot = appRoot;
+        aliases = definition.FolderAliases(blockFolder);
+        this.blockFolder = blockFolder;
     }
 
-    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string appRoot) {
-        var partOf = new PartOf(resolved, appRoot);
+    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder) {
+        var partOf = new PartOf(resolved, blockFolder);
         var bound = new List<Binding>();
         var unmapped = new List<UnmappedType>();
         foreach (var type in types) {
@@ -38,8 +36,8 @@ sealed class PartOf {
             return;
         }
         var file = Path.GetFullPath(source.File);
-        var relative = Path.GetRelativePath(appRoot, file).Replace('\\', '/');
-        var paths = PathsUnderRoot(relative);
+        var relative = Path.GetRelativePath(blockFolder, file).Replace('\\', '/');
+        var paths = PathsInBlock(relative);
         if (paths.Count == 0 || BuildOutput.Contains(relative)) {
             return;
         }
@@ -52,12 +50,11 @@ sealed class PartOf {
         }
     }
 
-    List<string> PathsUnderRoot(string relative) {
+    List<string> PathsInBlock(string relative) {
         if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative)) {
             return [];
         }
-        var candidates = aliases.Count == 0 ? [relative] : AliasedPaths(relative);
-        return [.. candidates.Where(IsUnderRoot)];
+        return aliases.Count == 0 ? [relative] : AliasedPaths(relative);
     }
 
     List<string> AliasedPaths(string relative) => [.. aliases
@@ -65,9 +62,6 @@ sealed class PartOf {
         .Select(alias => alias.As.Length == 0
             ? relative[(alias.Folder.TrimEnd('/').Length + 1)..]
             : $"{alias.As.TrimEnd('/')}/{relative[(alias.Folder.TrimEnd('/').Length + 1)..]}")];
-
-    bool IsUnderRoot(string relative) =>
-        rootPath.Length == 0 || relative.StartsWith(rootPath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
 
     FolderMatch? Folder(IReadOnlyList<string> paths) => paths
         .Select(path => path.Split('/')[..^1])

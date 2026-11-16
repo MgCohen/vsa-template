@@ -20,7 +20,7 @@ static class ModuleFolder {
     }
 
     public static void EnsureFree(string root, string name, ModuleKind kind) {
-        if (name == AppRoot.Name(root)) {
+        if (name == RootProject.Name(root)) {
             throw new UmpireException($"The {Noun(kind)} name {name} is the name of the app. "
                 + "A module with the app name makes usings that do not compile (CS0234). Use a different name.");
         }

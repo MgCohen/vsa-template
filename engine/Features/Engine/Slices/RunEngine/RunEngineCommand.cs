@@ -4,8 +4,9 @@ using Report.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
 
 public sealed record RunEngineCommand(
-    string Root,
+    string Project,
     string Bin,
+    string Block = "",
     string Mode = "Error",
     string Skip = "",
     bool FailFast = false,

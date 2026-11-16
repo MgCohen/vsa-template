@@ -18,7 +18,7 @@ public sealed class CountTests {
         Assert.That(results, Has.Count.EqualTo(1));
         Assert.That(results[0].Problem, Is.EqualTo(CountProblem.TooFew));
         Assert.That(results[0].At.Type, Is.EqualTo(TagB));
-        Assert.That(results[0].Message, Does.StartWith("Box App/Boxes/b has 0 Item types: the rule \"Box has Item at least 1\" needs at least 1."));
+        Assert.That(results[0].Message, Does.StartWith("Box Boxes/b has 0 Item types: the rule \"Box has Item at least 1\" needs at least 1."));
     }
 
     [Test]
@@ -67,12 +67,12 @@ public sealed class CountTests {
 
         Assert.Multiple(() => {
             Assert.That(definition.Counts(ItemA, taker), Is.Empty);
-            Assert.That(definition.Counts(ItemA).Single().Message, Does.StartWith("ItemA in Item (App/Boxes/a) has 0 Tag types that take it"));
+            Assert.That(definition.Counts(ItemA).Single().Message, Does.StartWith("ItemA in Item (Boxes/a) has 0 Tag types that take it"));
         });
     }
 
     [Test]
-    public void A_count_takes_only_the_types_under_its_root() {
+    public void A_count_takes_only_the_types_in_its_block_folder() {
         var definition = new CountArchitecture(rules => rules.For<Box>().Has<Item>().AtLeast(1));
 
         Assert.That(definition.Counts(Outside("ItemOutside")), Is.Empty);
@@ -92,7 +92,7 @@ public sealed class CountTests {
 
         var results = definition.Counts(ItemA, TagB);
 
-        Assert.That(results.Single().Message, Does.StartWith("Box App/Boxes/b has 0 Item types with base ICounted"));
+        Assert.That(results.Single().Message, Does.StartWith("Box Boxes/b has 0 Item types with base ICounted"));
     }
 
     [Test]
@@ -107,8 +107,8 @@ public sealed class CountTests {
         var definition = new CountArchitecture(parts: box => box.Add<Item>().And<Tag>().InParentFolder(), required: true);
 
         Assert.That(definition.Counts(ItemA, TagB).Select(r => r.Subject + ": " + r.Rule), Is.EquivalentTo(new[] {
-            "Box App/Boxes/a: Tag requires ITagged in each Box",
-            "Box App/Boxes/b: Item requires ICounted in each Box",
+            "Box Boxes/a: Tag requires ITagged in each Box",
+            "Box Boxes/b: Item requires ICounted in each Box",
         }));
     }
 

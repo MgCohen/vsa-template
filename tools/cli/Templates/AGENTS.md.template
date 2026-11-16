@@ -45,7 +45,7 @@ The rule engine checks each type against the VSA definition after each build of 
 | `-p:UmpireCheckMode=Warn` | Each error of the check is a warning |
 | `-p:UmpireUpdateBaseline=true` | Writes the errors of this build to `umpire-baseline.txt`, so the next builds accept them |
 
-All build output goes to `artifacts~/` in the app root (`Directory.Build.props`). No `bin/` or `obj/` folder is next to the code. To get a clean build, delete `artifacts~/`.
+All build output goes to `artifacts~/` in the block folder (`Directory.Build.props`). No `bin/` or `obj/` folder is next to the code. To get a clean build, delete `artifacts~/`.
 
 The Umpire packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 
