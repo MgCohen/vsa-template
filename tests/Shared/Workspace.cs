@@ -60,6 +60,8 @@ public sealed class Workspace : IDisposable {
                 <Nullable>enable</Nullable>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+                <UseArtifactsOutput>true</UseArtifactsOutput>
+                <ArtifactsPath>$(MSBuildThisFileDirectory)src/artifacts~</ArtifactsPath>
               </PropertyGroup>
             </Project>
             """);

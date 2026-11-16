@@ -144,6 +144,20 @@ public sealed class UmpireToolTests {
         Assert.That(outputFoldersNextToCode, Is.Empty);
     }
 
+    [Test]
+    [CancelAfter(600_000)]
+    public void TheRuleEngineChecksANewAppWithItsBuildOutputInArtifacts() {
+        var app = NewApp();
+        var project = Path.Combine(app, "Hello.csproj");
+        File.WriteAllText(project, File.ReadAllText(project).Replace("</Project>",
+            $"""<ItemGroup><PackageReference Include="Umpire.Engine.Build" Version="{LocalFeed.Version}" PrivateAssets="all" /></ItemGroup></Project>"""));
+
+        var build = Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
+
+        Assert.That(build.Output, Does.Not.Contain("error UMP"));
+        Assert.That(Directory.GetFiles(Path.Combine(app, "artifacts~", "obj", "Hello"), "umpire-check.*.stamp", SearchOption.AllDirectories), Is.Not.Empty);
+    }
+
     // umpire new app <name>, with the packed tool from the local feed. Returns the folder of the app.
     string NewApp(string name = "Hello") {
         // The global packages folder of the user is also a feed, so restore does not download each package again.

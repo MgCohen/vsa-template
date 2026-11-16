@@ -4,6 +4,13 @@
     <UmpirePortableLayer Condition="'$(MSBuildProjectName)' == 'Umpire.Vsa.Domain' or '$(MSBuildProjectName)' == 'Umpire.Messages.Handlers' or '$(MSBuildProjectName)' == 'Umpire.Messages.Contracts' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Infrastructure' or '$(MSBuildProjectName)' == 'Umpire.Kernel' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Composition' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Presenters' or '$(MSBuildProjectName)' == 'Umpire.Architecture' or '$(MSBuildProjectName)' == 'Umpire.Vsa'">true</UmpirePortableLayer>
   </PropertyGroup>
 
+  <!-- All build output goes to artifacts~, so no bin/ or obj/ folder is next to the code. The library projects and the test
+       projects share the artifacts~ folder of the repository root. Each app root (samples, engine, fixtures, templates) sets its own. -->
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
+  </PropertyGroup>
+
   <PropertyGroup>
     <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true'">net10.0</TargetFramework>
     <TargetFrameworks Condition="'$(UmpirePortableLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>

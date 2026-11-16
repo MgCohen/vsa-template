@@ -6,5 +6,6 @@
     <IsPackable>false</IsPackable>
     <UmpireFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</UmpireFrameworkSourceDir>
     <UmpireAppRoot>$(MSBuildThisFileDirectory)</UmpireAppRoot>
+    <ArtifactsPath>$(UmpireAppRoot)artifacts~</ArtifactsPath>
   </PropertyGroup>
 </Project>

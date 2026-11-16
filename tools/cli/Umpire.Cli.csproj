@@ -16,7 +16,7 @@
     <ProjectReference Include="../../engine/Versions/Umpire.Engine.Versions.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
+    <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/artifacts~/**;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
                       LogicalName="Templates/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

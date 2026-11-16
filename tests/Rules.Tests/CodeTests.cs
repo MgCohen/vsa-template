@@ -7,7 +7,7 @@ namespace Rules.Tests;
 
 public sealed partial class CodeTests {
     static readonly string[] CodeFiles = ["*.cs", "*.md", "*.globalconfig", "*.targets", "*.props", "*.template", "umpire-baseline.txt"];
-    static readonly string[] SkippedFolders = ["bin", "obj", ".git", ".claude", "proposals"];
+    static readonly string[] SkippedFolders = ["artifacts~", "bin", "obj", ".git", ".claude", "proposals"];
 
     [Test]
     public void Each_rule_of_the_Kernel_analyzers_has_an_ID_of_block_01_group_00_or_01() {

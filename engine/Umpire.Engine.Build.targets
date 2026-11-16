@@ -21,8 +21,8 @@
       <_UmpireBaseline>$(_UmpireCheckRoot)umpire-baseline.txt</_UmpireBaseline>
       <_UmpireBaselineState>nobaseline</_UmpireBaselineState>
       <_UmpireBaselineState Condition="Exists('$(_UmpireBaseline)')">baseline</_UmpireBaselineState>
-      <_UmpireCheckStamp>$(ProjectDir)$(IntermediateOutputPath)umpire-check.$(UmpireCheckMode).$(_UmpireBaselineState).stamp</_UmpireCheckStamp>
-      <_UmpireCheckStamp Condition="'$(UmpireUpdateBaseline)' == 'true'">$(ProjectDir)$(IntermediateOutputPath)umpire-check.update.stamp</_UmpireCheckStamp>
+      <_UmpireCheckStamp>$([MSBuild]::NormalizePath('$(ProjectDir)', '$(IntermediateOutputPath)', 'umpire-check.$(UmpireCheckMode).$(_UmpireBaselineState).stamp'))</_UmpireCheckStamp>
+      <_UmpireCheckStamp Condition="'$(UmpireUpdateBaseline)' == 'true'">$([MSBuild]::NormalizePath('$(ProjectDir)', '$(IntermediateOutputPath)', 'umpire-check.update.stamp'))</_UmpireCheckStamp>
     </PropertyGroup>
     <ItemGroup>
       <_UmpireCheckInput Include="@(IntermediateAssembly->'%(FullPath)');@(ReferenceCopyLocalPaths->'%(FullPath)');$(_UmpireEngine)" />
