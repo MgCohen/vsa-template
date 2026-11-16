@@ -14,6 +14,7 @@ public sealed class DesignTimeBuildTests {
         build = workspace.Dotnet("msbuild", "Features/Styled/Styled.csproj", "-restore", "-nodeReuse:false",
             "-t:Compile", "-p:DesignTimeBuild=true", "-p:SkipCompilerExecution=true", "-p:ProvideCommandLineArgs=true",
             "-getItem:CscCommandLineArgs", "-getProperty:RunAnalyzersDuringLiveAnalysis", "-getProperty:RunAnalyzers");
+        Assert.That(build.Succeeded, Is.True, build.Output);
         var json = build.Output[build.Output.IndexOf('{')..(build.Output.LastIndexOf('}') + 1)];
         result = JsonDocument.Parse(json).RootElement.Clone();
     }
