@@ -22,7 +22,7 @@
        the rule engine checks each use after the build. Path is the project folder under the repository root in source mode. -->
   <ItemGroup>
     <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" />
-    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
+    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" />
     <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
     <_UmpireFramework Include="Umpire.Vsa.Domain" Path="packs/Vsa/Kernel/Domain" />
     <_UmpireFramework Include="Umpire.Vsa.Infrastructure" Path="packs/Vsa/Kernel/Infrastructure" />
@@ -55,6 +55,7 @@
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
     <PackageReference Include="@(_UmpireFramework)" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
     <PackageReference Update="Umpire.Vsa.Analyzers" PrivateAssets="all" />
+    <PackageReference Update="Umpire.Kernel.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
