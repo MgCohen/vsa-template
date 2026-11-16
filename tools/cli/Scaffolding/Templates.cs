@@ -14,6 +14,7 @@ static partial class Templates {
     const string DevProps = "  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))\" />\n";
     const string DevTargets = "  <Import Project=\"$(UmpireSdkDir)Sdk.targets\" />\n";
     const string AddedSdk = "  <Sdk Name=\"Umpire.Sdk\" />\n";
+    const string BuildHook = "Umpire.Engine.Build";
 
     public static IReadOnlyList<TemplateFile> Files(
         Kind kind,
@@ -63,6 +64,12 @@ static partial class Templates {
         content = SourceReference().Replace(
             content,
             m => $"<PackageReference Include=\"{m.Groups[1].Value}\" Version=\"{version}\" />");
+        if (IsAppRoot(path)) {
+            content = content.Replace(
+                "</Project>",
+                $"  <ItemGroup>\n    <PackageReference Include=\"{BuildHook}\" Version=\"{version}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>",
+                StringComparison.Ordinal);
+        }
         if (content.Contains("$(Umpire", StringComparison.Ordinal)) {
             throw new UmpireException(
                 $"The template {path} has a source-mode property that the tool cannot change. "
@@ -70,6 +77,8 @@ static partial class Templates {
         }
         return content;
     }
+
+    static bool IsAppRoot(string path) => !path.Contains('/', StringComparison.Ordinal);
 
     static IEnumerable<string> Resources() =>
         typeof(Templates).Assembly.GetManifestResourceNames()

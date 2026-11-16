@@ -124,7 +124,15 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
 
-The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). It reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
+The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). `new app` writes the build package in the root project only:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Umpire.Engine.Build" Version="<tool version>" PrivateAssets="all" />
+</ItemGroup>
+```
+
+The templates build in source mode, so the template `.csproj` does not have this line. `Templates.ToPackageMode` adds it to the `.csproj` in the app root. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
 
 ## One version
 

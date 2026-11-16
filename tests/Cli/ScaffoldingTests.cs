@@ -158,6 +158,15 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
+    public void TheRootProjectOfANewAppHasTheBuildPackageOfTheRuleEngine() {
+        var files = NewApp("Hello");
+
+        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
+            Does.Contain($"<PackageReference Include=\"Umpire.Engine.Build\" Version=\"{Version}\" PrivateAssets=\"all\" />"));
+        Assert.That(files.Single(f => f.Path == "Tests/App.Tests.csproj").Content, Does.Not.Contain("Umpire.Engine.Build"));
+    }
+
+    [Test]
     public void NewAppHasOneRootProjectWithTheWebSdkAndVsaSdk() {
         var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
         var projects = files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Path).Order(StringComparer.Ordinal);

@@ -146,16 +146,28 @@ public sealed class UmpireToolTests {
 
     [Test]
     [CancelAfter(600_000)]
-    public void TheRuleEngineChecksANewAppWithItsBuildOutputInArtifacts() {
+    public void NewAppChecksTheArchitecture() {
         var app = NewApp();
-        var project = Path.Combine(app, "Hello.csproj");
-        File.WriteAllText(project, File.ReadAllText(project).Replace("</Project>",
-            $"""<ItemGroup><PackageReference Include="Umpire.Engine.Build" Version="{LocalFeed.Version}" PrivateAssets="all" /></ItemGroup></Project>"""));
+        Dotnet.Run(app, env, "umpire", "add", "module", "Billing").EnsureSuccess();
+        Dotnet.Run(app, env, "umpire", "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
 
-        var build = Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
-
-        Assert.That(build.Output, Does.Not.Contain("error UMP"));
+        var clean = Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
+        Assert.That(clean.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
         Assert.That(Directory.GetFiles(Path.Combine(app, "artifacts~", "obj", "Hello"), "umpire-check.*.stamp", SearchOption.AllDirectories), Is.Not.Empty);
+
+        var probe = Path.Combine(app, "App", "Host", "Probe.cs");
+        File.WriteAllText(probe, """
+            namespace Hello.App.Host;
+
+            public static class Probe {
+                public static Hello.Features.Billing.Slices.CreateInvoice.CreateInvoiceRequest? Request { get; set; }
+            }
+            """);
+        var denied = Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false");
+        Assert.That(denied.Succeeded, Is.False, denied.Output);
+        Assert.That(denied.Output, Does.Contain($"{probe}(4,1): error UMP020101: Probe in Host"));
+
+        Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
     }
 
     // umpire new app <name>, with the packed tool from the local feed. Returns the folder of the app.

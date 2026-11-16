@@ -37,7 +37,13 @@ dotnet umpire doctor                            # the tool, Umpire.Sdk and the p
 dotnet test SampleApp.slnx                   # the unit tests
 ```
 
-The rule engine checks each type against the VSA definition after each build of the root project, if the root project has the package `Umpire.Engine.Build`. It gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebVsaHost>>`.
+The rule engine checks each type against the VSA definition after each build of the root project. The root project has the package `Umpire.Engine.Build` for this check. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebVsaHost>>`.
+
+| Switch | Effect |
+|---|---|
+| `-p:UmpireCheck=false` | No check in this build |
+| `-p:UmpireCheckMode=Warn` | Each error of the check is a warning |
+| `-p:UmpireUpdateBaseline=true` | Writes the errors of this build to `umpire-baseline.txt`, so the next builds accept them |
 
 All build output goes to `artifacts~/` in the app root (`Directory.Build.props`). No `bin/` or `obj/` folder is next to the code. To get a clean build, delete `artifacts~/`.
 
