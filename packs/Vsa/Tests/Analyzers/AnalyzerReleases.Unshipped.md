@@ -12,5 +12,4 @@ UMP010204 | Umpire | Error | PresenterPublishRule
 UMP010205 | Umpire | Error | ImmutableSharedTypeRule
 UMP010206 | Umpire | Error | DataOnlySharedTypeRule
 UMP010207 | Umpire | Error | SharedTypeBaseRule
-UMP010208 | Umpire | Error | PluginRootRule
 UMP010209 | Umpire | Error | HookNameRule

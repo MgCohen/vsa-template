@@ -10,6 +10,13 @@ global_level = -1
 dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CA1863.severity = none
 
+# Disabled Umpire rules: the design is not clear, so they wait for the review in issue #143 before 0.1.0.
+# The list is the table "Disabled rules" in docs/architecture-rules.md. A consumer can turn a rule on in its own .editorconfig.
+dotnet_diagnostic.UMP010203.severity = none
+dotnet_diagnostic.UMP010205.severity = none
+dotnet_diagnostic.UMP010206.severity = none
+dotnet_diagnostic.UMP010207.severity = none
+
 # Formatting: the built-in rules. IDE0055 checks the format options below and the default format options.
 # Each brace is on its own line (Allman), and else, catch and finally are on a new line.
 dotnet_diagnostic.IDE0055.severity = warning
@@ -43,9 +50,10 @@ csharp_style_allow_blank_lines_between_consecutive_braces_experimental = false
 dotnet_diagnostic.IDE2002.severity = warning
 
 # Language style.
-# using directives are inside the namespace.
+# using directives are inside the namespace by default. This is a guideline, not an enforced rule: a definition file
+# can need a using outside the namespace (see "using placement" in docs/architecture-engine.md). The editor still suggests the default.
 csharp_using_directive_placement = inside_namespace
-dotnet_diagnostic.IDE0065.severity = warning
+dotnet_diagnostic.IDE0065.severity = none
 # Modifiers are in the default order, for example public static readonly.
 dotnet_diagnostic.IDE0036.severity = warning
 # The keyword of a built-in type: int and string.IsNullOrEmpty, not Int32 and String.IsNullOrEmpty.

@@ -78,6 +78,46 @@ A concept sets its values in `Configure(Options defaults)`. If a concept sets `D
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
+### `using` placement
+
+The placement of the `using` directives is a guideline, not an enforced rule (`IDE0065` is off). Use the next step only if the step before it is not enough:
+
+1. Put the `using` directives inside the namespace. This is the default, and the editor suggests it (`csharp_using_directive_placement = inside_namespace`).
+2. Put some `using` directives outside the namespace if the file is inside the namespace of the concept records, for example a pack variant in `Umpire.Vsa.Definition.*`.
+3. Add an alias inside the namespace, for example `using Plugin = Umpire.Vsa.Definition.Plugin;`.
+
+A definition file writes each real type with its full name, for example `OfType<Umpire.Kernel.Module>()`. Then it does not import the namespace of that type, and no clash occurs.
+
+C# finds a name level by level, from the innermost namespace to the outermost. At each level, it examines the members of the namespace first, then the `using` directives of that level. A concept record has the name of a folder, and a folder is a part of a namespace. In app code, a `using` inside the namespace wins over the outer app namespaces:
+
+```csharp
+using Umpire.Vsa.Definition;
+namespace Shop.App.Host {
+    rules.For<App>();          // CS0118: 'App' is a namespace (Shop.App)
+}
+
+namespace Shop.App.Host {
+    using Umpire.Vsa.Definition;
+    rules.For<App>();          // the record App
+}
+```
+
+In a pack variant, the records are in an outer namespace. There, a `using` inside the namespace wins over the records:
+
+```csharp
+namespace Umpire.Vsa.Definition.Ecs {
+    using Umpire.Vsa.Composition;
+    rules.For<Plugin>();       // the class Umpire.Vsa.Composition.Plugin: CS0311
+}
+
+using Umpire.Vsa.Composition;
+namespace Umpire.Vsa.Definition.Ecs {
+    rules.For<Plugin>();       // the record Umpire.Vsa.Definition.Plugin
+}
+```
+
+Thus no one placement is correct for each file. `RuleBook.For<T>() where T : Concept` makes each wrong binding a compile error (`CS0104`, `CS0118` or `CS0311`), so no clash compiles silently. `IDE0065` selects files only by path, so it cannot make an exception for a definition file. If a rule is necessary after 0.1.0, write a custom analyzer.
+
 ## Boundary
 
 A closed group keeps its instances apart: an allow rule reaches a part in another instance of the group only if the rule crosses the group. The first value that is set wins:

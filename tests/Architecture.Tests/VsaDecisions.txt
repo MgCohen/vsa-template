@@ -1080,7 +1080,7 @@ Feature/Module -> Framework/Kernel/Handlers/Handlers.Requests [any] Allow Public
 Feature/Module -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
 Feature/Module -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
 Feature/Module -> Framework/Kernel/Views [any] Allow Public
-Feature/Module -> Framework/Kernel/Composition [any] Allow Public
+Feature/Module -> Framework/Kernel/Composition [any] Deny
 Feature/Module -> Framework/Kernel/Host [any] Allow Public
 Feature/Module -> App [any] Deny
 Feature/Module -> App/Host [any] Deny

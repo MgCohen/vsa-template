@@ -40,7 +40,6 @@ public sealed class FormattingBuildTests {
     [TestCase("CA1052", "QualityRules.cs")]
     [TestCase("CA1012", "QualityRules.cs")]
     [TestCase("CA1812", "QualityRules.cs")]
-    [TestCase("IDE0065", "StyleRules.cs")]
     [TestCase("IDE0036", "StyleRules.cs")]
     [TestCase("IDE0054", "StyleRules.cs")]
     [TestCase("IDE1005", "StyleRules.cs")]
@@ -72,6 +71,10 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Migrations_give_no_warnings() =>
         Assert.That(Lines(": warning ").Where(line => line.Contains("Migrations", StringComparison.Ordinal)), Is.Empty);
+
+    [Test]
+    public void A_using_outside_the_namespace_gives_no_warning() =>
+        Assert.That(Lines("IDE0065"), Is.Empty, build.Output);
 
     [Test]
     public void Both_namespace_forms_give_no_warning() =>

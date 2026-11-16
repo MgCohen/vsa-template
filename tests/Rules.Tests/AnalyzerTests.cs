@@ -291,40 +291,6 @@ public sealed class VsaAnalyzerTests {
         Assert.That(Analyzer.AllRules.Select(r => r.Id), Is.Unique);
 }
 
-public sealed class PluginRootRuleTests {
-    const string Configure =
-        "public override void Configure(Microsoft.Extensions.DependencyInjection.IServiceCollection services) { }";
-
-    static string In(string rootFolder) => $"build_property.UmpireRootFolder = {rootFolder}\n";
-
-    [Test]
-    public Task Plugin_root_that_inherits_Plugin_passes() => Analyzer.VerifyIn("Game", $$"""
-        public sealed class GamePlugin : Umpire.Vsa.Composition.Plugin { {{Configure}} }
-        """, In("Plugins"));
-
-    [Test]
-    public Task Module_root_that_inherits_Module_passes() => Analyzer.VerifyIn("Shop", $$"""
-        public sealed class ShopModule : Umpire.Kernel.Module { {{Configure}} }
-        """, In("Features"));
-
-    [Test]
-    public Task Plugin_root_that_inherits_Module_fails() => Analyzer.VerifyIn("Game", $$"""
-        public sealed class {|#0:GameModule|} : Umpire.Kernel.Module { {{Configure}} }
-        """, In("Plugins"),
-        Analyzer.Diagnostic(PluginRootRule.Descriptor, 0, "GameModule", "plugin module", "Game", "Module", "Plugin or Plugin<TSettings>"));
-
-    [Test]
-    public Task Module_root_that_inherits_Plugin_fails() => Analyzer.VerifyIn("Shop", $$"""
-        public sealed class {|#0:ShopPlugin|} : Umpire.Vsa.Composition.Plugin { {{Configure}} }
-        """, In("Features"),
-        Analyzer.Diagnostic(PluginRootRule.Descriptor, 0, "ShopPlugin", "module", "Shop", "Plugin", "Module or Module<TSettings>, or move the module to Plugins/"));
-
-    [Test]
-    public Task Code_out_of_a_root_folder_passes() => Analyzer.Verify($$"""
-        public sealed class ToolPlugin : Umpire.Vsa.Composition.Plugin { {{Configure}} }
-        """);
-}
-
 public sealed class HookNameRuleTests {
     const string Bell = """
         public sealed record Rang(string Bell) : Umpire.Vsa.Contracts.Events.IntegrationEvent;
