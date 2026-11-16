@@ -13,6 +13,11 @@ public sealed class PackageGraphTests {
         build = workspace.Dotnet("build", "PackGraph.csproj", "-nodeReuse:false");
     }
 
+    [TestCase("Umpire.Kernel.Analyzers")]
+    [TestCase("Umpire.Vsa.Analyzers")]
+    public void Each_analyzer_package_has_its_values_and_props(string package) =>
+        Assert.That(Entries(package), Is.SupersetOf(new[] { $"build/{package}.props", $"build/{package}.globalconfig" }));
+
     [Test]
     public void The_VSA_analyzer_package_has_no_kernel_analyzer() =>
         Assert.That(Entries("Umpire.Vsa.Analyzers"), Has.None.EndsWith("Umpire.Kernel.Analyzers.dll"));

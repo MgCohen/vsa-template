@@ -37,6 +37,7 @@
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <EditorConfigFiles Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).globalconfig')" />
   </ItemGroup>
 
   <!-- Package mode (consumers): package references with the version of this SDK.

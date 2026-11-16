@@ -1,0 +1,10 @@
+<Project>
+  <!-- The only file that knows how the rule values reach a compile. Each analyzer project imports it.
+       The package holds build/<PackageId>.globalconfig and build/<PackageId>.props. NuGet imports that props file in each project
+       that references the package, and the props file gives the values to the compiler. Source mode reads the same file
+       from the project folder (Sdk.targets, Directory.Build.targets). -->
+  <ItemGroup>
+    <None Include="$(MSBuildProjectName).globalconfig" Pack="true" PackagePath="build" />
+    <None Include="$(MSBuildThisFileDirectory)Umpire.RuleValues.props" Pack="true" PackagePath="build/$(PackageId).props" Visible="false" />
+  </ItemGroup>
+</Project>

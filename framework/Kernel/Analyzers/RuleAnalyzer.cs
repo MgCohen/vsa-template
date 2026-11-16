@@ -11,7 +11,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
         "UMP010001",
         "An Umpire rule option is missing or not valid",
-        "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in Umpire.Rules.globalconfig or .editorconfig. "
+        "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in the globalconfig file of the analyzer package or in .editorconfig. "
             + "{0} does not run until the option is valid.",
         "Umpire",
         DiagnosticSeverity.Error,
