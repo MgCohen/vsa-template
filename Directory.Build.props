@@ -22,7 +22,7 @@
 
   <!-- All Umpire packages ship together with one version. -->
   <PropertyGroup>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Umpire</Authors>
     <!-- GitHub Packages links each package to this repository. -->
     <RepositoryUrl>https://github.com/MgCohen/vsa-template</RepositoryUrl>
