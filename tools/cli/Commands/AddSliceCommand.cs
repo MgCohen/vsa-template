@@ -21,12 +21,12 @@ sealed class AddSliceCommand(SliceKind kind) : AddCommand {
     protected override IReadOnlyList<string> ForbiddenSuffixes => kind.Suffixes;
 
     protected override IReadOnlyDictionary<string, string> TemplateNames(
-        string root,
+        string block,
         string name,
         CommandInput input) =>
         new Dictionary<string, string> {
             [kind.SampleName] = name,
-            [Templates.Module] = ModuleFolder.Find(root, input.Single(Module)!),
+            [Templates.Module] = ModuleFolder.Find(block, input.Single(Module)!),
         };
 
     protected override string Heading(string name, IReadOnlyDictionary<string, string> names) =>

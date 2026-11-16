@@ -43,26 +43,26 @@ public record NeededByConcept : Concept {
 }
 
 public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<PartGroup>? parts = null, bool? required = null)
-    : Architecture(RootFolder) {
-    public const string RootFolder = "App";
-    public const string AppRoot = "C:/count-app";
+    : Architecture {
+    public const string BlockFolder = "C:/count-app/App";
+    public const string OutsideFolder = "C:/count-app/Other";
 
     public IReadOnlyList<CountResult> Counts(params TypeFacts[] types) {
         var resolved = new ResolvedArchitecture(this);
-        return resolved.Counts(resolved.Place(types, AppRoot));
+        return resolved.Counts(resolved.Place(types, BlockFolder));
     }
 
     public IReadOnlyList<MatchResult> Matches(params TypeFacts[] types) {
         var resolved = new ResolvedArchitecture(this);
-        return resolved.Matches(resolved.Place(types, AppRoot));
+        return resolved.Matches(resolved.Place(types, BlockFolder));
     }
 
     public static TypeFacts Fact(string name, string box, Type? baseType = null, params string[] arguments) =>
-        new($"App.{box}.{name}", name, "App", new Source($"{AppRoot}/{RootFolder}/Boxes/{box}/{name}.cs", 1),
+        new($"App.{box}.{name}", name, "App", new Source($"{BlockFolder}/Boxes/{box}/{name}.cs", 1),
             baseType is null ? [] : [baseType.FullName!], [], [], []) { BaseArguments = arguments };
 
     public static TypeFacts Outside(string name) =>
-        new($"Other.{name}", name, "App", new Source($"{AppRoot}/Other/Boxes/a/{name}.cs", 1), [typeof(ICounted).FullName!], [], [], []);
+        new($"Other.{name}", name, "App", new Source($"{OutsideFolder}/Boxes/a/{name}.cs", 1), [typeof(ICounted).FullName!], [], [], []);
 
     public static TypeFacts Using(TypeFacts user, TypeFacts helper) => user with { Mentions = [helper.FullName] };
 
@@ -70,8 +70,8 @@ public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<Par
         defaults.Required = required;
     }
 
-    protected override void Define(Root root) {
-        var box = root.AddGroup<Box>();
+    protected override void Define(Block block) {
+        var box = block.AddGroup<Box>();
         if (parts is null) {
             box.Add<Item>().And<Item.Small>().And<Tag>().InParentFolder();
         } else {

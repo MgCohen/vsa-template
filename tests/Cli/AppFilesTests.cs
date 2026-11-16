@@ -77,7 +77,7 @@ public sealed class AppFilesTests {
     }
 
     [Test]
-    public void APackageUsesTheCentralVersionAboveTheAppRoot() {
+    public void APackageUsesTheCentralVersionAboveTheBlockFolder() {
         var app = Path.Combine(root, "src");
         Write("Directory.Packages.props", $"""<Project><ItemGroup><PackageVersion Include="Umpire.Engine.Build" Version="{V}" /></ItemGroup></Project>""");
         Write("src/App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Engine.Build" PrivateAssets="all" /></ItemGroup></Project>""");

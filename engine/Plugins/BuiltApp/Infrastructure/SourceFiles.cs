@@ -16,8 +16,8 @@ static class SourceFiles {
 
     public static bool HasSymbols(string dll) => File.Exists(Path.ChangeExtension(dll, ".pdb"));
 
-    public static bool HasSourceUnder(string dll, string appRoot) {
-        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(appRoot)) + Path.DirectorySeparatorChar;
+    public static bool HasSourceUnder(string dll, string blockFolder) {
+        var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(blockFolder)) + Path.DirectorySeparatorChar;
         return Documents(dll)
             .Where(Path.IsPathRooted)
             .Select(Path.GetFullPath)

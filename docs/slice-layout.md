@@ -27,7 +27,7 @@ Features/Cards/
 ```
 
 - A module has only the layer folders that it needs. Ping has only `Slices/`.
-- All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name and follows the folders.
+- All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name (the name of the root project in the block folder) and follows the folders. This is a guideline: no check reads the namespace.
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses. It is the part `Slice.Shared`, not a slice: the slices and the presenters of its own feature use it, and the slice counts do not count it.
 
@@ -52,7 +52,7 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 
 ## Projects
 
-An app has one root project in the app root, the root of the definition. It compiles each file in its folder tree, so a module, a slice or a plugin needs no project of its own. All other projects are optional, for example a test project or a separate assembly.
+An app has one root project in the block folder. It compiles each file in its folder tree, so a module, a slice or a plugin needs no project of its own. All other projects are optional, for example a test project or a separate assembly.
 
 ```
 samples/Notes/
@@ -66,7 +66,7 @@ samples/Notes/
 |---|---|
 | Nested project | The parent project does not compile its folder |
 | `bin/`, `obj/` | Not source folders, at each depth |
-| `UmpireExcludedFolders` | Not source folders. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
+| `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
 | Framework references | Each project gets the base of each layer |
 
 A web root project uses the Web SDK first, then Umpire.Sdk:

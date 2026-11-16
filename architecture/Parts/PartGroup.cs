@@ -15,7 +15,7 @@ public sealed class PartGroup : IPartChain {
         new(parts.Select(p => p.Group<T>(folder, boundary)));
 
     public PartGroup And<T>() where T : Concept, new() {
-        var parents = parts.Select(p => p.Parent ?? throw new InvalidOperationException("The root has no sibling.")).Distinct();
+        var parents = parts.Select(p => p.Parent ?? throw new InvalidOperationException("The block has no sibling.")).Distinct();
         return new(parts.Concat(parents.Select(p => p.Add<T>())));
     }
 

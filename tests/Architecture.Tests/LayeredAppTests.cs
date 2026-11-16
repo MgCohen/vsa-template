@@ -10,15 +10,15 @@ public record Logic : Concept;
 
 public record Data : Concept;
 
-public sealed class LayeredArchitecture() : Architecture("LayeredApp") {
+public sealed class LayeredArchitecture : Architecture {
     protected override void Configure(Options defaults) {
         defaults.DefaultPermission = Permission.Deny;
     }
 
-    protected override void Define(Root root) {
-        root.Add<Ui>();
-        root.Add<Logic>();
-        root.Add<Data>();
+    protected override void Define(Block block) {
+        block.Add<Ui>();
+        block.Add<Logic>();
+        block.Add<Data>();
     }
 
     protected override void Rules(RuleBook rules) {
@@ -29,7 +29,7 @@ public sealed class LayeredArchitecture() : Architecture("LayeredApp") {
 
 public sealed class LayeredAppTests {
     static readonly Lazy<ArchitectureCheck> LayeredMap =
-        new(() => FixtureApps.Load(new LayeredArchitecture(), AppContext.BaseDirectory, FixtureApps.Root));
+        new(() => FixtureApps.Load(new LayeredArchitecture(), AppContext.BaseDirectory, FixtureApps.Block("LayeredApp")));
 
     [Test]
     public void The_engine_checks_an_architecture_with_no_VSA_type() {

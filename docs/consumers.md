@@ -74,7 +74,7 @@ Umpire.Vsa.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer co
 
 ### Build output
 
-An app that `umpire new app` makes writes all build output to `artifacts~/` in the app root. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
+An app that `umpire new app` makes writes all build output to `artifacts~/` in the block folder. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
 
 | Need | Do this in `Directory.Build.props` |
 |------|-------------------------------------|

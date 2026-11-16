@@ -27,9 +27,9 @@ public sealed class DepthArchitecture<TTarget>(Depth options, Depth? method) : A
         defaults.Depth = options;
     }
 
-    protected override void Define(Root root) {
-        root.Add<User>();
-        root.Add<TTarget>().Add<TargetChild>();
+    protected override void Define(Block block) {
+        block.Add<User>();
+        block.Add<TTarget>().Add<TargetChild>();
     }
 
     protected override void Rules(RuleBook rules) {

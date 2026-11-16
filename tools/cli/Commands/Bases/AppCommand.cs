@@ -5,12 +5,12 @@ using Umpire.Cli.Scaffolding;
 abstract class AppCommand : ToolCommand {
     public sealed override int Run(CommandInput input) {
         CheckName(input);
-        var root = AppRoot.Find();
+        var block = RootProject.BlockOfCurrentFolder();
         input.EnsureRequiredOptions();
-        return Run(root, input);
+        return Run(block, input);
     }
 
     protected virtual void CheckName(CommandInput input) { }
 
-    protected abstract int Run(string root, CommandInput input);
+    protected abstract int Run(string block, CommandInput input);
 }

@@ -3,25 +3,21 @@ namespace Umpire.Vsa.Definition;
 using Umpire.Architecture;
 
 public class VsaArchitecture : Architecture {
-    public VsaArchitecture() { }
-
-    protected VsaArchitecture(string root) : base(root) { }
-
     public const string DefaultUnitySource = "Source";
 
     public string? UnityApp { get; init; }
 
     public string UnitySource { get; init; } = DefaultUnitySource;
 
-    public override IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => UnityLayout.Aliases(appRoot, UnityApp, UnitySource);
+    public override IReadOnlyList<FolderAlias> FolderAliases(string blockFolder) => UnityLayout.Aliases(blockFolder, UnityApp, UnitySource);
 
     protected override void Configure(Options defaults) {
         defaults.UseSameConcept = true;
         defaults.Boundary = Boundary.Closed;
     }
 
-    protected override void Define(Root root) {
-        var kernel = root.Add<Framework>().Add<Kernel>();
+    protected override void Define(Block block) {
+        var kernel = block.Add<Framework>().Add<Kernel>();
         kernel.Add<Domain>().InAssembly("Umpire.Vsa.Domain");
         kernel.Add<Infrastructure>().InAssembly("Umpire.Vsa.Infrastructure");
         kernel.Add<Presenters>().InAssembly("Umpire.Vsa.Presenters");
@@ -37,9 +33,9 @@ public class VsaArchitecture : Architecture {
         kernel.Add<Composition>().InAssembly("Umpire.Vsa.Composition");
         kernel.Add<Host>().InAssembly("Umpire.Vsa.Hosts.Web");
 
-        root.Add<App>().Add<Host>().And<Views>();
+        block.Add<App>().Add<Host>().And<Views>();
 
-        var plugin = root.AddGroup<Plugin>(Boundary.Open);
+        var plugin = block.AddGroup<Plugin>(Boundary.Open);
         plugin.Add<Module>().OfType<Umpire.Vsa.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
@@ -49,7 +45,7 @@ public class VsaArchitecture : Architecture {
         pluginHandlers.Add<Handlers.Events>().Add<Handlers.Events.Hooks>().InParentFolder();
         pluginHandlers.Add<Handlers.Commands>().Add<Handlers.Commands.Hooks>().InParentFolder();
 
-        var feature = root.AddGroup<Feature>();
+        var feature = block.AddGroup<Feature>();
         feature.Add<Module>().OfType<Umpire.Kernel.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();

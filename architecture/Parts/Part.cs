@@ -27,7 +27,7 @@ public class Part : IPartChain {
     public bool IsExternal => Assembly is not null;
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
-    public string Name => Concept is null ? "(root)" : Concept.Display(Concept.GetType());
+    public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
     public Depth? Depth => depth;
     public Access? Access => access;
     public Boundary? Boundary => boundary;

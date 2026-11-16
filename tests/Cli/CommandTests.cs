@@ -70,11 +70,11 @@ public sealed class CommandTests {
     [TestCase("add", "module", "bad")]
     [TestCase("add", "request", "bad")]
     [TestCase("add", "command", "bad", "-m", "Billing")]
-    public void AnInvalidNameStopsBeforeTheAppRootAndTheOptions(params string[] args) =>
+    public void AnInvalidNameStopsBeforeTheBlockFolderAndTheOptions(params string[] args) =>
         Assert.That(() => RunOutsideAnApp(args), Throws.TypeOf<UmpireException>().With.Message.Contain("is not valid"));
 
     [Test]
-    public void AValidNameOutsideAnAppStopsAtTheAppRoot() =>
+    public void AValidNameOutsideAnAppStopsAtTheBlockFolder() =>
         Assert.That(() => RunOutsideAnApp(["add", "request", "CreateInvoice"]),
             Throws.TypeOf<UmpireException>().With.Message.Contain("not in an Umpire app"));
 

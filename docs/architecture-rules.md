@@ -41,7 +41,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP020302` | Architecture | Each match of the definition holds, for example a request handler handles a request of its own slice. See "Counts and matches". |
 | `UMP03xxxx` | Engine | The engine run: a step throws or is skipped, a version, the load of the app, the baseline. One table: "Engine codes" in `architecture-engine.md`. |
 
-Each ID is `UMP` and six digits: the block (2), the group (2) and the case (2). Block `01` is the analyzers: group `00` the base (`UMP010001`), `01` Umpire.Kernel.Analyzers, `02` Umpire.Vsa.Analyzers. Block `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches. Block `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
+Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`), `01` Umpire.Kernel.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
 ## Disabled rules
 

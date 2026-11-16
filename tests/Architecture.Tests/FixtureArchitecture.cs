@@ -52,15 +52,15 @@ public record Handlers : Concept {
     }
 }
 
-public abstract class FixtureArchitecture(string app) : Architecture(app) {
+public abstract class FixtureArchitecture : Architecture {
     protected override void Configure(Options defaults) {
         defaults.DefaultPermission = Permission.Deny;
         defaults.Boundary = Boundary.Closed;
     }
 
-    protected override void Define(Root root) {
-        root.Add<KitLayer>();
-        var feature = root.AddGroup<Feature>();
+    protected override void Define(Block block) {
+        block.Add<KitLayer>();
+        var feature = block.AddGroup<Feature>();
         feature.Add<Module>().OfType<IModuleRoot>();
         feature.Add<Domain>();
         feature.Add<Presenters>();
@@ -81,6 +81,6 @@ public abstract class FixtureArchitecture(string app) : Architecture(app) {
     }
 }
 
-public sealed class GoodArchitecture() : FixtureArchitecture("GoodApp");
+public sealed class GoodArchitecture : FixtureArchitecture;
 
-public sealed class BadArchitecture() : FixtureArchitecture("BadApp");
+public sealed class BadArchitecture : FixtureArchitecture;

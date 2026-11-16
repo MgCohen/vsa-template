@@ -24,7 +24,7 @@ public sealed class MatchTests {
 
         Assert.That(result.Subject.Type, Is.EqualTo(tag));
         Assert.That(result.Taken!.Type, Is.EqualTo(ItemB));
-        Assert.That(result.Message, Does.StartWith("TagA in Tag (App/Boxes/a) takes ItemB in Item (App/Boxes/b): "
+        Assert.That(result.Message, Does.StartWith("TagA in Tag (Boxes/a) takes ItemB in Item (Boxes/b): "
             + "the rule \"Tag takes Item in same Box\" needs both in one Box."));
     }
 

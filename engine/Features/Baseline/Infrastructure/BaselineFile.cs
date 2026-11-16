@@ -5,7 +5,7 @@ using Baseline.Domain;
 public static class BaselineFile {
     public const string Name = "umpire-baseline.txt";
 
-    public static string PathIn(string appRoot) => Path.Combine(appRoot, Name);
+    public static string PathIn(string blockFolder) => Path.Combine(blockFolder, Name);
 
     public static IReadOnlyList<string> Read(string path) => File.Exists(path) ? File.ReadAllLines(path) : [];
 

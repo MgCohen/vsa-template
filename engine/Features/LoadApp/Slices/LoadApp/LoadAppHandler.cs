@@ -10,12 +10,12 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         Task.FromResult(Load(envelope.Message));
 
     static Result<AppInput> Load(LoadAppCommand command) {
-        var root = Path.GetFullPath(command.AppRoot);
+        var root = Path.GetFullPath(command.BlockFolder);
         var bin = Path.GetFullPath(command.Bin);
         var loader = new AppLoader(bin);
         var app = loader.AppAssemblies(root, Names(command.Skip));
         if (app.Count == 0) {
-            return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin} has source files under the app root {root}. "
+            return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin} has source files under the block folder {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
         }
         var classes = DefinitionFinder.Find(app);

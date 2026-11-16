@@ -17,8 +17,8 @@ public sealed class BoundaryArchitecture(Boundary options, Boundary? group, Cros
         defaults.Boundary = options;
     }
 
-    protected override void Define(Root root) {
-        var package = group is { } boundary ? root.AddGroup<Package>(boundary) : root.AddGroup<Package>();
+    protected override void Define(Block block) {
+        var package = group is { } boundary ? block.AddGroup<Package>(boundary) : block.AddGroup<Package>();
         package.Add<Target>().And<User>();
     }
 

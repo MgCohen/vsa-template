@@ -13,7 +13,7 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
         Task.FromResult(Apply(envelope.Message));
 
     static Result<ApplyBaselineResult> Apply(ApplyBaselineCommand command) {
-        var root = Path.GetFullPath(command.AppRoot);
+        var root = Path.GetFullPath(command.BlockFolder);
         var path = BaselineFile.PathIn(root);
         var errors = command.Findings.Where(IsBaselineError).Distinct().ToList();
         var incomplete = command.Findings.Any(IsIncompleteRun);

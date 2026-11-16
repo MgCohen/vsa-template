@@ -12,9 +12,9 @@ public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture 
         defaults.UseSameConcept = useSameConcept;
     }
 
-    protected override void Define(Root root) {
-        root.Add<Target>();
-        root.AddGroup<Package>().Add<Target>().And<User>();
+    protected override void Define(Block block) {
+        block.Add<Target>();
+        block.AddGroup<Package>().Add<Target>().And<User>();
     }
 
     protected override void Rules(RuleBook rules) {
@@ -60,9 +60,9 @@ public sealed class DenyingSameLayerArchitecture : Architecture {
         defaults.UseSameConcept = true;
     }
 
-    protected override void Define(Root root) {
-        root.Add<Target>();
-        root.AddGroup<Package>().Add<Target>();
+    protected override void Define(Block block) {
+        block.Add<Target>();
+        block.AddGroup<Package>().Add<Target>();
     }
 
     protected override void Rules(RuleBook rules) {

@@ -11,22 +11,22 @@ static class UnityLayout {
 
     static readonly string[] AppMarkers = [new Feature().GroupFolder!, new Plugin().GroupFolder!, new Views().Folder];
 
-    public static bool Is(string appRoot) => File.Exists(Path.Combine(appRoot, VersionFile));
+    public static bool Is(string blockFolder) => File.Exists(Path.Combine(blockFolder, VersionFile));
 
-    public static IReadOnlyList<FolderAlias> Aliases(string appRoot, string? unityApp, string unitySource) {
-        if (!Is(appRoot)) {
+    public static IReadOnlyList<FolderAlias> Aliases(string blockFolder, string? unityApp, string unitySource) {
+        if (!Is(blockFolder)) {
             return [];
         }
         var source = new FolderAlias(unitySource, "");
-        if ((unityApp ?? FindApp(appRoot)) is not { } app) {
+        if ((unityApp ?? FindApp(blockFolder)) is not { } app) {
             return [source];
         }
         var appFolder = $"{AssetsFolder}/{app}";
         return [new FolderAlias(appFolder, ""), new FolderAlias(appFolder, AppFolder), source];
     }
 
-    static string? FindApp(string appRoot) {
-        var assets = Path.Combine(appRoot, AssetsFolder);
+    static string? FindApp(string blockFolder) {
+        var assets = Path.Combine(blockFolder, AssetsFolder);
         if (!Directory.Exists(assets)) {
             return null;
         }

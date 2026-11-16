@@ -18,11 +18,11 @@ public sealed class GoodAppTests {
         Assert.That(Map.Bindings.Unmapped.Select(u => u.Type.FullName), Is.Empty);
     }
 
-    [TestCase("CreateInvoiceHandler", "Handlers.Requests", "GoodApp/Features/Billing/Slices/CreateInvoice")]
-    [TestCase("CreateInvoiceRequest", "Contracts.Requests", "GoodApp/Features/Billing/Slices/CreateInvoice")]
-    [TestCase("InvoiceCreated", "Contracts.Events", "GoodApp/Features/Billing/Slices/CreateInvoice")]
-    [TestCase("BillingModule", "Module", "GoodApp/Features/Billing")]
-    [TestCase("Invoice", "Domain", "GoodApp/Features/Billing/Domain")]
+    [TestCase("CreateInvoiceHandler", "Handlers.Requests", "Features/Billing/Slices/CreateInvoice")]
+    [TestCase("CreateInvoiceRequest", "Contracts.Requests", "Features/Billing/Slices/CreateInvoice")]
+    [TestCase("InvoiceCreated", "Contracts.Events", "Features/Billing/Slices/CreateInvoice")]
+    [TestCase("BillingModule", "Module", "Features/Billing")]
+    [TestCase("Invoice", "Domain", "Features/Billing/Domain")]
     public void Each_type_binds_to_its_part_and_place(string type, string part, string place) {
         var binding = Map.Bindings.All.Single(b => b.Type.Name == type && !b.External);
 

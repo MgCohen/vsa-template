@@ -9,9 +9,9 @@ using Microsoft.CodeAnalysis.Text;
 sealed class UnityProjectFolder : IDisposable {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
 
-    UnityProjectFolder(string root) {
-        Root = root;
-        Output = root + "-out";
+    UnityProjectFolder(string block) {
+        Root = block;
+        Output = block + "-out";
         Directory.CreateDirectory(Output);
         Write("global.json", "{}");
         Write(VersionFile, "m_EditorVersion: 6000.6.0f1");

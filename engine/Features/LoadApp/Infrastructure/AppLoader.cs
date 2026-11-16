@@ -18,8 +18,8 @@ public sealed class AppLoader : AssemblyLoadContext {
         resolver = main is null ? null : new AssemblyDependencyResolver(main);
     }
 
-    public List<Assembly> AppAssemblies(string appRoot, IReadOnlyList<string> skip) {
-        var prefix = Path.TrimEndingDirectorySeparator(appRoot) + Path.DirectorySeparatorChar;
+    public List<Assembly> AppAssemblies(string blockFolder, IReadOnlyList<string> skip) {
+        var prefix = Path.TrimEndingDirectorySeparator(blockFolder) + Path.DirectorySeparatorChar;
         return [.. Directory.GetFiles(bin, "*.dll")
             .Where(dll => !Shared.Contains(Path.GetFileNameWithoutExtension(dll)))
             .Where(dll => !skip.Contains(Path.GetFileNameWithoutExtension(dll), StringComparer.OrdinalIgnoreCase))

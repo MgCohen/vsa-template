@@ -34,9 +34,9 @@ public record Kernel : External { public override string Assembly => "Umpire"; }
 public class VsaArchitecture : Architecture {
     protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
 
-    protected override void Define(Root root) {
-        root.Add<Framework>().Add<Kernel>();
-        var feature = root.AddGroup<Feature>();
+    protected override void Define(Block block) {
+        block.Add<Framework>().Add<Kernel>();
+        var feature = block.AddGroup<Feature>();
         feature.Add<Module>().OfType<Umpire.Kernel.Module>();
         feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
     }
@@ -123,7 +123,7 @@ Thus no one placement is correct for each file. `RuleBook.For<T>() where T : Con
 A closed group keeps its instances apart: an allow rule reaches a part in another instance of the group only if the rule crosses the group. The first value that is set wins:
 
 1. The parameter of the rule call: `Uses<Contracts.Commands>(Boundary.Open)` crosses each closed group.
-2. The parameter of the group: `root.AddGroup<Plugin>(Boundary.Open)`.
+2. The parameter of the group: `block.AddGroup<Plugin>(Boundary.Open)`.
 3. The concept body, for example `defaults.Boundary = Boundary.Closed` in `Configure(Options)` of the concept.
 4. `defaults.Boundary` of the architecture. Its default is `Boundary.Open`.
 
@@ -213,7 +213,7 @@ The rules of a count:
 
 - `T` includes each concept that is nested in `T` (the concept family). For example, `Has<Handlers>()` counts `Handlers.Commands` and `Handlers.Commands.Hooks`. `Has<T>(Depth.Self)` counts only `T`. The `Depth` of the concept does not apply to a count.
 - A helper that follows its user does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts.
-- A count counts only the types of the app under the definition root. A type of an external DLL does not count.
+- A count counts only the types of the app in the block folder. A type of an external DLL does not count.
 - A count with no limit stops the definition: "has no limit. Add AtLeast, AtMost, Exactly or OfOneKind."
 - The finding is at the first type of the instance (by file, then line), or at the type of the subject.
 
@@ -249,14 +249,14 @@ part.OfType(typeof(RequestHandler<,>), required: true);
 | Source file only in `obj/` or `bin/` | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
 | Source file in no part folder | None: `UMP020202` |
-| Source file out of the definition root | Not checked |
+| Source file out of the block folder | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
 The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`SourceFiles`).
 
 ## Unity projects
 
-If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity project. Unity compiles `Assets/`, so the folders of a Unity app are not the folders of a .NET app.
+If the block folder has `ProjectSettings/ProjectVersion.txt`, the app is a Unity project. Unity compiles `Assets/`, so the folders of a Unity app are not the folders of a .NET app.
 
 | Folder | Binds as | Contains |
 |---|---|---|
@@ -264,7 +264,7 @@ If the app root has `ProjectSettings/ProjectVersion.txt`, the app is a Unity pro
 | `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
 | `<UnitySource>/` (default `Source`) | The root | `Features/`, `Plugins/` of the .NET projects |
 
-`Architecture.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
+`Architecture.FolderAliases(blockFolder)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
 
 ```csharp
 public sealed class CardsArchitecture : VsaArchitecture {
@@ -311,11 +311,19 @@ C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHand
 
 The build hook package `Umpire.Engine.Build` on the host project runs the engine after each build. A test project does not check the architecture. See "The rule engine" in `AGENTS.md`.
 
+One definition applies to one block: the folder tree of code that the definition checks. The definition applies to its block folder, not to the repository. `Define(Block block)` starts at the block folder, and each part path is relative to it. A source file outside the block folder is not checked.
+
+```text
+umpire-engine.dll --project <host project folder> [--block <block folder>] --bin <host output>
+```
+
+The hook gives `--project`. It gives `--block` only if the MSBuild property `UmpireBlock` is set. The nearest `umpire-baseline.txt` above the project is the baseline of its block.
+
 | Step | Source |
 |---|---|
-| App root | `UmpireAppRoot`, else the nearest `global.json` |
-| Versions | Each Umpire version slot of the app root and of the host output (see "One version") |
-| App DLLs | Each DLL of the host output with PDB source files under the app root |
+| Block folder | `--block` (MSBuild `UmpireBlock`), else the nearest folder with `global.json` above `--project`. `BlockFolder` in Umpire.Engine.Versions finds it |
+| Versions | Each Umpire version slot of the block folder and of the host output (see "One version") |
+| App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine codes" |
 | Unity DLLs | See "Unity projects" |
@@ -329,8 +337,9 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
 | `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
 | `UMP030003` | 00 Run | Error | The build hook cannot find the rule engine. Restore `Umpire.Engine.Build` again |
+| `UMP030004` | 00 Run | Error | No block folder contains the project: no `global.json` above it, and no `--block` |
 | `UMP030101` | 01 Versions | Error | An Umpire version is not the engine version (see "One version") |
-| `UMP030201` | 02 LoadApp | Error | No DLL of the host output has source files under the app root |
+| `UMP030201` | 02 LoadApp | Error | No DLL of the host output has source files under the block folder |
 | `UMP030202` | 02 LoadApp | Error | The app has no app class |
 | `UMP030203` | 02 LoadApp | Error | The app has more than one most derived app class |
 | `UMP030204` | 02 LoadApp | Error | An app class has no public constructor with no parameters |
@@ -338,7 +347,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030402` | 04 Baseline | Error | A baseline line does not have the form |
 | `UMP030403` | 04 Baseline | Warning | The update did not write the file, because a step failed or was skipped |
 
-The Rules step (group `03`) gives the rule findings of block `02`. The Report step (group `05`) has no code.
+The Rules step (group `03`) gives the rule findings of area `02`. The Report step (group `05`) has no code.
 
 ## One version
 
@@ -348,7 +357,7 @@ The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one v
 |---|---|
 | `dotnet-tools.json`, `.config/dotnet-tools.json` | `umpire.cli` |
 | `global.json` | `msbuild-sdks` → `Umpire.Sdk` |
-| Each `.csproj` and `Directory.*.props` of the app root | Each `Umpire.Sdk` pin and each `Umpire.*` package, also `Umpire.Engine.Build` |
+| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire.Sdk` pin and each `Umpire.*` package, also `Umpire.Engine.Build` |
 | `*.deps.json` of the host output (engine only) | Each `Umpire.*` package library |
 
 A file that does not exist gives no slot. The JSON files can have comments and trailing commas, as dotnet reads them.
@@ -356,7 +365,7 @@ A file that does not exist gives no slot. The JSON files can have comments and t
 | Value | Result |
 |---|---|
 | A version, or an exact range `[x]` | Compared as `x`. `umpire update` keeps the brackets |
-| A `PackageReference` with no version | Uses its `PackageVersion` in the app root, else in the nearest `Directory.Packages.props` above it. With none, the check fails: the package has no version |
+| A `PackageReference` with no version | Uses its `PackageVersion` in the block folder, else in the nearest `Directory.Packages.props` above it. With none, the check fails: the package has no version |
 | A value with an MSBuild property, for example `$(UmpireVersion)` | Not checked, not written. `umpire doctor` shows it as "not checked" |
 
 `umpire update` changes only the version text of `global.json`, so the file keeps its comments, BOM and line endings. A project file keeps its BOM and its line endings.
@@ -376,7 +385,7 @@ public class MyApp : App<Vsa<MyArchitecture, WebVsaHost>>;
 
 ## Baseline
 
-The step `ApplyBaseline` runs after `CheckRules` and before the Report step. It reads `umpire-baseline.txt` in the app root. An error with an entry in the file does not go to the report. A new error fails the build.
+The step `ApplyBaseline` runs after `CheckRules` and before the Report step. It reads `umpire-baseline.txt` in the block folder. An error with an entry in the file does not go to the report. A new error fails the build.
 
 ```text
 UMP020101|App/Host/Probe.cs|Probe in Host uses CreateNoteRequest ...
@@ -385,7 +394,7 @@ UMP020202|Features/Old/Legacy.cs|Legacy is in a folder that the definition does 
 
 | Item | Rule |
 |---|---|
-| Line | `CODE\|path\|message`. The path is relative to the app root, with `/`. A finding with no file has an empty path |
+| Line | `CODE\|path\|message`. The path is relative to the block folder, with `/`. A finding with no file has an empty path |
 | Key | The code, the path and the full message. The line number is not in the key, so an edit above an error does not change its entry |
 | Count | Two equal entries accept two errors with that key. A third error with that key is new |
 | Content | Errors only. A warning does not fail the build. The engine codes `UMP030000`-`UMP039999` never go in the file, so a version error or a crash always fails |
