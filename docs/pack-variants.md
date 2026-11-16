@@ -36,9 +36,9 @@ public class Ecs<THost> : Vsa<EcsArchitecture, THost> where THost : VsaHost, new
 | App | `PackVariant/` | `EcsArchitecture`, from the app class | `App/`, `Features/`, `EcsFeatures/`. `Packs/Ecs/` is one part |
 | Pack | `PackVariant/Packs/Ecs/` | `PackArchitecture`, from `Ecs<THost>` | The pack class, `Architecture/`, `Kernel/`, `Tests/` |
 
-`VsaArchitecture` marks `Packs/` with `AddBlockGroup<Pack>()`. So the app check binds each type of `Packs/<Name>/` to the part `Pack`, and the pack check checks its uses. The app host and each module may use `Pack`. A pack place uses nothing in the app. The root project compiles `Packs/`, so the pack types are in the app DLL.
+`VsaArchitecture` marks `Packs/` with `AddBlockGroup<Pack>()`. So the app check binds each type of `Packs/<Name>/` to the part `Pack`, and the pack check checks its uses. The app host (`App/Host/`) and each feature and plugin module may use `Pack`. The app views (`App/Views/`) may not use `Pack`: a view uses only presenters. A pack place uses nothing in the app. The root project compiles `Packs/`, so the pack types are in the app DLL.
 
-The build of the app checks only the app block. Run the pack check by hand:
+The build of the app checks only the app block ([MgCohen/vsa-template#150](https://github.com/MgCohen/vsa-template/issues/150)). Run the pack check by hand:
 
 ```bash
 dotnet umpire-engine.dll --project Packs/Ecs --bin <host output>
@@ -86,6 +86,7 @@ The host finds `CombatModule`, because it inherits `Module`. A new module kind n
 |---|---|
 | A rule that names a concept, for example `For<Domain>()` | Yes, if the kind has that part |
 | A rule with `Under<Feature>()` or `InOther<Feature>()` | No. Write the rule again with `EcsFeature` |
+| A rule with `Feature` as its subject, for example `For<Feature>().And<Plugin>().Uses<Pack>()` | No. `EcsArchitecture` writes `Systems` uses `Pack` again |
 | The closed boundary of a group | Yes: one `EcsFeature` does not use another `EcsFeature` |
 | `For<Module>().Uses<Kernel>()` | Yes |
 

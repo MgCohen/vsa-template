@@ -5,6 +5,7 @@ using Umpire.Cli.Scaffolding;
 
 sealed class AddPackCommand : AddCommand {
     const string Packs = "Packs";
+    static readonly string[] NamesOfBasePacks = ["Vsa"];
 
     public override IReadOnlyList<string> Words => ["add", "pack"];
 
@@ -15,6 +16,14 @@ sealed class AddPackCommand : AddCommand {
     protected override Templates.Kind Kind => Templates.Kind.Pack;
 
     protected override void CheckFree(string block, string name) {
+        if (name == RootProject.Name(block)) {
+            throw new UmpireException($"The pack name {name} is the name of the app. "
+                + "A pack with the app name makes usings that do not compile (CS0234). Use a different name.");
+        }
+        if (NamesOfBasePacks.Contains(name)) {
+            throw new UmpireException($"The pack name {name} is the name of a base pack. "
+                + $"The architecture {name}Architecture would inherit itself (CS0146). Use a different name.");
+        }
         if (Directory.Exists(Path.Combine(block, Packs, name))) {
             throw new UmpireException($"The pack {name} exists: {Packs}/{name}. Use a different name.");
         }

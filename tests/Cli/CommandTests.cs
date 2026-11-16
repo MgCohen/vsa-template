@@ -80,6 +80,7 @@ public sealed class CommandTests {
 
     [TestCase("module", "module")]
     [TestCase("plugin", "plugin module")]
+    [TestCase("pack", "pack")]
     public void AModuleWithTheAppNameStops(string kind, string noun) =>
         Assert.That(() => RunInAnApp(["add", kind, "Shop"], app: "Shop"),
             Throws.TypeOf<UmpireException>().With.Message.Contain($"The {noun} name Shop is the name of the app.")
@@ -91,6 +92,11 @@ public sealed class CommandTests {
 
         Assert.That(files, Is.EquivalentTo(new[] { "Packs/Ecs/EcsPack.cs", "Packs/Ecs/Architecture/EcsArchitecture.cs" }));
     }
+
+    [Test]
+    public void AddPackStopsOnTheNameOfABasePack() =>
+        Assert.That(() => RunInAnApp(["add", "pack", "Vsa"], app: "Shop"),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("The pack name Vsa is the name of a base pack.").And.Message.Contain("CS0146"));
 
     [Test]
     public void AddPackStopsIfThePackExists() =>
