@@ -190,13 +190,115 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void ANewGlobalJsonKeepsTheSdkOfTheParent() {
-        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" } }");
+    public void ANewGlobalJsonKeepsTheSdkOfTheParentAndAddsNoTestRunner() {
+        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" }, \"msbuild-sdks\": { \"Other.Sdk\": \"1.2.3\" } }");
 
         var json = Written("global.json");
 
         Assert.That(json, Does.Contain("\"version\": \"10.0.200\""));
+        Assert.That(json, Does.Contain("\"Other.Sdk\": \"1.2.3\""));
         Assert.That(json, Does.Contain($"\"Umpire.Sdk\": \"{V}\""));
+        Assert.That(json, Does.Not.Contain("test"));
+    }
+
+    [Test]
+    public void ANewGlobalJsonKeepsTheTestRunnerOfTheParent() {
+        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"test\": { \"runner\": \"VSTest\" } }");
+
+        Assert.That(Written("global.json"), Does.Contain("\"runner\": \"VSTest\""));
+    }
+
+    [Test]
+    public void CentralVersionsInADirectoryBuildPropsAreByHand() {
+        Write("Directory.Build.props", "<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>\n  </PropertyGroup>\n</Project>\n");
+
+        Assert.That(Result("build-package"), Is.TypeOf<SetupResult.ByHand>());
+    }
+
+    [Test]
+    public void CentralVersionsInAParentDirectoryBuildPropsAreByHand() {
+        File.WriteAllText(Path.Combine(parent, "Directory.Build.props"), "<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>\n  </PropertyGroup>\n</Project>\n");
+
+        Assert.That(Result("build-package"), Is.TypeOf<SetupResult.ByHand>());
+    }
+
+    [Test]
+    public void AProjectWithTabsGetsTabs() {
+        Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n</Project>\n");
+
+        Assert.That(Written(Project), Is.EqualTo(
+            "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<Sdk Name=\"Umpire.Sdk\" />\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n"
+            + $"\t<ItemGroup>\n\t\t<PackageReference Include=\"Umpire.Engine.Build\" Version=\"{V}\" PrivateAssets=\"all\" />\n\t</ItemGroup>\n</Project>\n"));
+    }
+
+    [Test]
+    public void ANugetConfigWithFourSpacesGetsFourSpaces() {
+        Write("nuget.config", "<configuration>\n    <packageSources>\n        <add key=\"company\" value=\"https://example.com/index.json\" />\n    </packageSources>\n</configuration>\n");
+
+        var config = Written("nuget.config");
+
+        Assert.That(config, Does.Contain("\n        <add key=\"umpire\" value=\"https://nuget.pkg.github.com/MgCohen/index.json\" />\n    </packageSources>"));
+        Assert.That(config, Does.Contain("\n    <packageSourceCredentials>\n        <umpire>\n            <add key=\"Username\" value=\"umpire\" />"));
+    }
+
+    [Test]
+    public void AToolManifestKeepsItsIndent() {
+        Write("dotnet-tools.json", "{\n    \"version\": 1,\n    \"tools\": {}\n}\n");
+
+        Assert.That(Written("dotnet-tools.json"), Does.StartWith("{\n    \"version\": 1,\n    \"tools\": {\n        \"umpire.cli\": {"));
+    }
+
+    [Test]
+    public void AFileWithMixedLineEndingsKeepsTheEndingOfEachLine() {
+        Write(".gitignore", "bin/\r\nobj/\r\nnode_modules/\n");
+
+        Plan().Write();
+
+        Assert.That(File.ReadAllText(Path.Combine(block, ".gitignore")),
+            Is.EqualTo("bin/\r\nobj/\r\nnode_modules/\nartifacts~/\r\nTestResults/\r\n*.user\r\n.vs/\r\n"));
+    }
+
+    [Test]
+    public void ASourceIsAddedToAConfigThatHasTheGitHubFeed() {
+        Write("nuget.config", "<configuration>\n  <packageSources>\n    <add key=\"umpire\" value=\"https://nuget.pkg.github.com/MgCohen/index.json\" />\n  </packageSources>\n</configuration>\n");
+
+        Assert.That(Result("nuget-config"), Is.TypeOf<SetupResult.Done>());
+        Plan(sources: "feed").Write();
+
+        var config = File.ReadAllText(Path.Combine(block, "nuget.config"));
+        Assert.That(config, Does.Contain($"<add key=\"umpire2\" value=\"{Path.GetFullPath("feed")}\" />"));
+        Assert.That(Plan(sources: "feed").Steps.Single(step => step.Id == "nuget-config").Result, Is.TypeOf<SetupResult.Done>());
+    }
+
+    [Test]
+    public void AnEditOfAMissingElementGivesNoText() {
+        Assert.That(XmlText.AddAtEnd("<Other />\n", "Project", "  <A />\n"), Is.Null);
+        Assert.That(XmlText.AddAtStart("<Other />\n", "Project", "  <A />\n"), Is.Null);
+    }
+
+    [Test]
+    public void InitCheckShowsEachByHandMessage() {
+        Write("global.json", "{ \"msbuild-sdks\": { \"Umpire.Sdk\": \"0.0.1\" } }");
+        var output = new StringWriter();
+        var console = Console.Out;
+        Console.SetOut(output);
+        try {
+            RunInit("init", "--check", "true");
+        } finally {
+            Console.SetOut(console);
+        }
+
+        Assert.That(output.ToString(), Does.Contain("by hand: global.json pins Umpire.Sdk 0.0.1"));
+    }
+
+    [Test]
+    public void NewAppStopsIfASetupFileExists() {
+        File.Delete(Path.Combine(block, Project));
+        Write(".gitignore", "bin/\n");
+
+        Assert.That(() => RunIn(parent, "new", "app", "Shop"),
+            Throws.TypeOf<UmpireException>().With.Message.Contain(".gitignore").And.Message.Contain("umpire init"));
+        Assert.That(Directory.GetFiles(block), Is.EqualTo(new[] { Path.Combine(block, ".gitignore") }));
     }
 
     [Test]
@@ -263,10 +365,12 @@ public sealed class SetupTests {
         File.WriteAllText(full, content);
     }
 
-    int RunInit(params string[] args) {
+    int RunInit(params string[] args) => RunIn(block, args);
+
+    static int RunIn(string folder, params string[] args) {
         var current = Environment.CurrentDirectory;
         try {
-            Environment.CurrentDirectory = block;
+            Environment.CurrentDirectory = folder;
             return CommandList.Run(args);
         } finally {
             Environment.CurrentDirectory = current;

@@ -6,9 +6,12 @@ using Umpire.Engine.Versions;
 sealed class GlobalJsonStep : SetupStep {
     const string FileName = VersionSlots.GlobalJsonFile;
     const string SdksKey = "msbuild-sdks";
-    static readonly string[] KeptParentKeys = ["sdk", "test"];
+    const string TestKey = "test";
+    static readonly string[] KeptParentKeys = ["sdk", SdksKey, TestKey];
 
     public override string Id => "global-json";
+
+    public override IReadOnlyList<string> Files(SetupContext context) => [FileName];
 
     public override SetupResult Plan(SetupContext context) {
         var version = context.Version;
@@ -19,23 +22,17 @@ sealed class GlobalJsonStep : SetupStep {
             return ByHand($"{FileName} has comments or is not valid JSON. "
                 + $"Add \"{SdksKey}\": {{ \"{VersionSlots.Sdk}\": \"{version}\" }} to it.");
         }
-        var sdks = json[SdksKey];
-        var pin = JsonText.Text(sdks?[VersionSlots.Sdk]);
+        var pin = JsonText.Text(json[SdksKey]?[VersionSlots.Sdk]);
         if (pin == version) {
             return Done();
         }
         if (pin is not null) {
             return ByHand($"{FileName} pins {VersionSlots.Sdk} {pin}, and the tool is {version}. Run 'umpire update'.");
         }
-        if (sdks is null) {
-            json[SdksKey] = new JsonObject { [VersionSlots.Sdk] = version };
-        } else if (sdks is JsonObject entries) {
-            entries[VersionSlots.Sdk] = version;
-        } else {
-            return ByHand($"\"{SdksKey}\" in {FileName} is not an object. "
+        return WithPin(json, version)
+            ? Change(FileName, JsonText.Write(json, text))
+            : ByHand($"\"{SdksKey}\" in {FileName} is not an object. "
                 + $"Add \"{VersionSlots.Sdk}\": \"{version}\" to it.");
-        }
-        return Change(FileName, JsonText.Write(json));
     }
 
     static string New(SetupContext context) {
@@ -45,11 +42,25 @@ sealed class GlobalJsonStep : SetupStep {
             return template;
         }
         var json = JsonText.Parse(template)!;
+        json.Remove(TestKey);
         foreach (var key in KeptParentKeys) {
             if (parent[key] is JsonNode kept) {
                 json[key] = kept.DeepClone();
             }
         }
-        return JsonText.Write(json);
+        return WithPin(json, context.Version) ? JsonText.Write(json) : template;
+    }
+
+    static bool WithPin(JsonObject json, string version) {
+        switch (json[SdksKey]) {
+            case null:
+                json[SdksKey] = new JsonObject { [VersionSlots.Sdk] = version };
+                return true;
+            case JsonObject sdks:
+                sdks[VersionSlots.Sdk] = version;
+                return true;
+            default:
+                return false;
+        }
     }
 }

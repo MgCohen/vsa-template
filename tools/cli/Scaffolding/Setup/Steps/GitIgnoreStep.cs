@@ -5,6 +5,8 @@ sealed class GitIgnoreStep : SetupStep {
 
     public override string Id => "git-ignore";
 
+    public override IReadOnlyList<string> Files(SetupContext context) => [FileName];
+
     public override SetupResult Plan(SetupContext context) {
         var template = Templates.SetupFile(FileName, context.Version);
         if (context.Read(FileName) is not string text) {

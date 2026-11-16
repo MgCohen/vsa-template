@@ -38,25 +38,32 @@ sealed class InitCommand : ToolCommand {
             return plan.IsComplete ? 0 : 1;
         }
         plan.Write();
+        ShowByHand(plan);
         if (plan.Writes(ToolManifestStep.FileName) || plan.Writes(ToolManifestStep.InConfigFolder)) {
             Dotnet.RestoreTools(block, block);
         }
         if (plan.ByHand is not []) {
-            Console.WriteLine("Do these steps by hand, then run 'umpire init' again:");
-            foreach (var step in plan.ByHand) {
-                Console.WriteLine($"  {step}");
-            }
             return 1;
         }
-        Console.WriteLine(plan.Files is []
-            ? "The setup is complete."
-            : $"""
-                Next:
-                  If the app has no app class, write App/Host/{project}App.cs and call it from Program.cs (UMP030302).
-                  dotnet build
-                """);
+        Console.WriteLine(plan.Files is [] ? "The setup is complete." : Next(project));
         return 0;
     }
+
+    static void ShowByHand(SetupPlan plan) {
+        if (plan.ByHand is []) {
+            return;
+        }
+        Console.WriteLine("Do these steps by hand, then run 'umpire init' again:");
+        foreach (var step in plan.ByHand) {
+            Console.WriteLine($"  {step}");
+        }
+    }
+
+    static string Next(string project) => $"""
+        Next:
+          If the app has no app class, write App/Host/{project}App.cs and call it from Program.cs (UMP030302).
+          dotnet build
+        """;
 
     static bool CheckOnly(string? value) => value switch {
         null or "false" => false,

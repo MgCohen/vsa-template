@@ -28,12 +28,8 @@ sealed class SetupPlan(SetupContext context, IReadOnlyList<StepResult> steps) {
             var full = context.FullPath(path);
             var exists = File.Exists(full);
             if (exists) {
-                var bytes = File.ReadAllBytes(full);
-                var crlf = File.ReadAllText(full).Contains("\r\n", StringComparison.Ordinal);
-                File.WriteAllText(
-                    full,
-                    crlf ? content.Replace("\n", "\r\n") : content,
-                    new UTF8Encoding(bytes is [0xEF, 0xBB, 0xBF, ..]));
+                var bom = File.ReadAllBytes(full) is [0xEF, 0xBB, 0xBF, ..];
+                File.WriteAllText(full, LineEndings.Keep(File.ReadAllText(full), content), new UTF8Encoding(bom));
             } else {
                 Directory.CreateDirectory(Path.GetDirectoryName(full)!);
                 File.WriteAllText(full, content);
@@ -44,7 +40,7 @@ sealed class SetupPlan(SetupContext context, IReadOnlyList<StepResult> steps) {
 
     string Shown(SetupResult result) => result switch {
         SetupResult.Change change => $"{(context.OnDisk(change.File) ? "changes" : "creates")} {change.File}",
-        SetupResult.ByHand => "by hand",
+        SetupResult.ByHand hand => $"by hand: {hand.Message}",
         _ => "done",
     };
 }

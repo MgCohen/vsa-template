@@ -3,8 +3,11 @@ namespace Umpire.Cli.Scaffolding.Setup.Steps;
 sealed class NugetConfigStep : SetupStep {
     const string FileName = NugetConfig.FileName;
     const string Clear = "    <clear />\n";
+    const string ByHandFeed = $"Add the umpire feed of the template to {FileName}.";
 
     public override string Id => "nuget-config";
+
+    public override IReadOnlyList<string> Files(SetupContext context) => [FileName];
 
     public override SetupResult Plan(SetupContext context) {
         var template = Templates.SetupFile(FileName, context.Version);
@@ -13,10 +16,10 @@ sealed class NugetConfigStep : SetupStep {
             return Change(FileName, context.ParentFile(FileName) is null ? config : config.Replace(Clear, ""));
         }
         if (XmlText.Parse(text) is not { } document) {
-            return ByHand($"{FileName} is not valid XML. Add the umpire feed of the template to it.");
+            return ByHand($"{FileName} is not valid XML. {ByHandFeed}");
         }
-        return NugetConfig.HasUmpireFeed(document)
+        return NugetConfig.HasFeeds(document, context.Sources)
             ? Done()
-            : Change(FileName, NugetConfig.AddFeed(text, document, template, context.Sources));
+            : ChangeOrByHand(FileName, NugetConfig.AddFeeds(text, document, template, context.Sources), ByHandFeed);
     }
 }

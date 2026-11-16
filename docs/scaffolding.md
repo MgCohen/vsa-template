@@ -23,8 +23,8 @@ Rules for all commands:
 - A request name cannot end with `Request`, `Response` or `Handler`. A command name cannot end with `Command`, `Result` or `Handler`.
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
 - An option that takes one value stops the command if you give it two times, for example `-m A -m B`.
-- The tool writes only new files. Two commands change files: `init` adds the missing setup, and `update` changes only the Umpire versions.
-- The tool writes all files or no files. If one file exists, the tool stops and writes nothing.
+- Each command writes only new files, except `init` and `update`. `init` adds the missing setup to existing files, and `update` changes only the Umpire versions.
+- Each command writes all files or no files, except `init` and `update`. If one file exists, the command stops and writes nothing. `new app` also stops if a setup file of `init` exists in the new folder.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
 - `add pack` stops if `Packs/<Name>/` exists.
@@ -152,36 +152,39 @@ umpire init                          umpire new app <Name>
    │                                     ├─ the app files (root project, App/, Tests/, slnx, AGENTS.md)
    ▼                                     ▼
 SetupPipeline.Plan ──► each step: Done | Change(file, content) | ByHand(message)
-   ├─ --check true: show the plan, write nothing, exit 1 if a step is not done
-   ├─ write each change ("created" or "changed")
+   ├─ show each step, with the message of each by-hand step
+   ├─ --check true: write nothing, exit 1 if a step is not done
+   ├─ write each change ("created" or "changed"), then list the by-hand steps
    ├─ dotnet tool restore, if the tool manifest changed
-   └─ show each by-hand step, exit 1 if one is left
+   └─ exit 1 if a by-hand step is left
 ```
 
 | Step | File | Done when | No file | A file without the setup | By hand |
 |---|---|---|---|---|---|
 | `global-json` | `global.json` | `msbuild-sdks` has `Umpire.Sdk` | The template | Adds `msbuild-sdks` → `Umpire.Sdk` | Another version (`umpire update`), comments |
-| `nuget-config` | `nuget.config` | A source has the key `umpire` | The template | Adds the `umpire` source and its credentials | Not valid XML |
+| `nuget-config` | `nuget.config` | A source has the key `umpire`. With `--source`: each source path is a source | The template | Adds the `umpire` source and its credentials. With `--source`: each missing source, with a free key | Not valid XML |
 | `tool-manifest` | `dotnet-tools.json` or `.config/dotnet-tools.json` | `tools` has `umpire.cli` | The template | Adds the `umpire.cli` entry | Another version (`umpire update`), two manifests |
 | `build-output` | `Directory.Build.props` | `UseArtifactsOutput` is set, to any value | The template | Adds the `PropertyGroup` of the template | Not valid XML |
 | `git-ignore` | `.gitignore` | Each line of the template is in the file | The template | Adds the missing lines | None |
 | `umpire-sdk` | The root project | `Umpire.Sdk` is in `Sdk` or in an `<Sdk>` element | Not possible | Adds `<Sdk Name="Umpire.Sdk" />` | Not valid XML |
-| `build-package` | The root project | A `PackageReference` to `Umpire.Engine.Build` | Not possible | Adds the package, with the tool version | Central package versions |
+| `build-package` | The root project | A `PackageReference` to `Umpire.Engine.Build` | Not possible | Adds the package, with the tool version | Central package versions (`ManagePackageVersionsCentrally` in the project, `Directory.Packages.props` or `Directory.Build.props`, in the block or the nearest parent folder) |
 
 Rules of a step:
 
 1. A step only plans. The pipeline writes all changes after all steps.
 2. A step adds. It does not remove, reorder or change a value of the app.
 3. A conflict is a by-hand step, with the fix in its message.
-4. A changed file keeps its line endings and its byte order mark.
-5. Two steps can change one file. A step plans on the planned content of the steps before it.
-6. A second run of `init` gives "done" for each step.
+4. A changed file keeps its byte order mark and the line ending of each line. A new line gets the most frequent line ending of the file.
+5. A new XML element gets the indent of the first child element of the file.
+6. A changed JSON file keeps its indent, but the tool writes all of the JSON again in the indented form. So a JSON file with comments is a by-hand step.
+7. Two steps can change one file. A step plans on the planned content of the steps before it.
+8. A second run of `init` gives "done" for each step.
 
 `init` needs exactly one `.csproj` in the current folder: the root project. It writes only in that folder. A file in a parent folder stays, and the new file does not hide it:
 
 - The new `Directory.Build.props` imports the parent one.
 - The new `nuget.config` has no `<clear />`.
-- The new `global.json` keeps the `sdk` and `test` sections of the parent one.
+- The new `global.json` keeps the `sdk`, `msbuild-sdks` and `test` sections of the parent one. It adds no `test` section of its own.
 - The new tool manifest is not the root.
 
 `new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030302`.

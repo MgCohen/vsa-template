@@ -144,7 +144,7 @@ Fifteen framework projects also target `netstandard2.1`, for Unity: Umpire.Vsa.D
 
 ## Scaffolding: the umpire tool
 
-The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, packs, requests and commands. It writes only new files: it does not write over a file, and it does not edit a file. Two commands change files: `umpire init` adds the missing setup to an existing app (one pipeline of steps in `tools/cli/Scaffolding/Setup/`, also used by `new app`), and `umpire update` changes only the Umpire versions. Each command is a class in `tools/cli/Commands/` that inherits one base in `Commands/Bases/` (`ToolCommand`, `AppCommand` or `AddCommand`). See "Add a command" in `docs/scaffolding.md`.
+The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, packs, requests and commands. Each command, except `init` and `update`, writes only new files: it does not write over a file, it does not edit a file, and it stops if one of its files exists. The two exceptions change files: `umpire init` adds the missing setup to an existing app (one pipeline of steps in `tools/cli/Scaffolding/Setup/`, also used by `new app`), and `umpire update` changes only the Umpire versions. Each command is a class in `tools/cli/Commands/` that inherits one base in `Commands/Bases/` (`ToolCommand`, `AppCommand` or `AddCommand`). See "Add a command" in `docs/scaffolding.md`.
 
 ```bash
 dotnet tool exec Umpire.Cli new app <Name>          # global.json, nuget.config, .gitignore, Directory.Build.props (the build output in artifacts~/), dotnet-tools.json, <Name>.slnx, AGENTS.md, <Name>.csproj (with Umpire.Engine.Build: the check after each build), App/, Features/, Plugins/, Tests/

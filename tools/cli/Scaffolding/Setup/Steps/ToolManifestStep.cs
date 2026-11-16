@@ -10,10 +10,12 @@ sealed class ToolManifestStep : SetupStep {
 
     public override string Id => "tool-manifest";
 
+    public override IReadOnlyList<string> Files(SetupContext context) => [FileName, InConfigFolder];
+
     public override SetupResult Plan(SetupContext context) {
         var version = context.Version;
         var template = JsonText.Parse(Templates.SetupFile(FileName, version))!;
-        string[] manifests = [.. new[] { FileName, InConfigFolder }.Where(path => context.Read(path) is not null)];
+        string[] manifests = [.. Files(context).Where(path => context.Read(path) is not null)];
         if (manifests is []) {
             if ((context.ParentFile(FileName) ?? context.ParentFile(InConfigFolder)) is not null) {
                 template["isRoot"] = false;
@@ -24,7 +26,8 @@ sealed class ToolManifestStep : SetupStep {
             return ByHand($"The app has two tool manifests: {FileName} and {InConfigFolder}. Keep one.");
         }
         var install = $"Add the tool with 'dotnet tool install {VersionSlots.Tool} --local --version {version}'.";
-        if (JsonText.Parse(context.Read(manifest)!) is not JsonObject json) {
+        var text = context.Read(manifest)!;
+        if (JsonText.Parse(text) is not JsonObject json) {
             return ByHand($"{manifest} has comments or is not valid JSON. {install}");
         }
         var tools = json[ToolsKey];
@@ -44,6 +47,6 @@ sealed class ToolManifestStep : SetupStep {
         } else {
             return ByHand($"\"{ToolsKey}\" in {manifest} is not an object. {install}");
         }
-        return Change(manifest, JsonText.Write(json));
+        return Change(manifest, JsonText.Write(json, text));
     }
 }
