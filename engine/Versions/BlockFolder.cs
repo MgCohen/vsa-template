@@ -18,5 +18,6 @@ public static class BlockFolder {
 
     public static string NotFound(string start) =>
         $"No block folder contains {Path.GetFullPath(start)}: no folder above it has a {Marker} file. "
-        + $"Add a {Marker} file to the folder of the app, or give the folder with --block (MSBuild property UmpireBlock).";
+        + $"Add a {Marker} file to the folder of the app, "
+        + "or give the folder with --block (MSBuild property UmpireBlock).";
 }

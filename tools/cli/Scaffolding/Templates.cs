@@ -64,7 +64,7 @@ static partial class Templates {
         content = SourceReference().Replace(
             content,
             m => $"<PackageReference Include=\"{m.Groups[1].Value}\" Version=\"{version}\" />");
-        if (IsAppRoot(path)) {
+        if (IsRootProject(path)) {
             content = content.Replace(
                 "</Project>",
                 $"  <ItemGroup>\n    <PackageReference Include=\"{BuildHook}\" Version=\"{version}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>",
@@ -78,7 +78,7 @@ static partial class Templates {
         return content;
     }
 
-    static bool IsAppRoot(string path) => !path.Contains('/', StringComparison.Ordinal);
+    static bool IsRootProject(string path) => !path.Contains('/', StringComparison.Ordinal);
 
     static IEnumerable<string> Resources() =>
         typeof(Templates).Assembly.GetManifestResourceNames()

@@ -264,7 +264,7 @@ If the block folder has `ProjectSettings/ProjectVersion.txt`, the app is a Unity
 | `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
 | `<UnitySource>/` (default `Source`) | The root | `Features/`, `Plugins/` of the .NET projects |
 
-`Architecture.FolderAliases(appRoot)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
+`Architecture.FolderAliases(blockFolder)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
 
 ```csharp
 public sealed class CardsArchitecture : VsaArchitecture {

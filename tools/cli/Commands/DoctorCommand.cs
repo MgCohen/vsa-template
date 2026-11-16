@@ -8,14 +8,14 @@ sealed class DoctorCommand : AppCommand {
 
     public override string Summary => "Makes sure that the tool, Umpire.Sdk and the packages have one version.";
 
-    internal static IReadOnlyList<VersionSlot> Slots(string root) {
+    internal static IReadOnlyList<VersionSlot> Slots(string block) {
         var tool = new VersionSlot("this tool", "Umpire.Cli", ToolVersion.Current);
-        return [tool, .. VersionSlots.InApp(root).SelectMany(file => file.Slots)];
+        return [tool, .. VersionSlots.InApp(block).SelectMany(file => file.Slots)];
     }
 
-    protected override int Run(string root, CommandInput input) {
+    protected override int Run(string block, CommandInput input) {
         var expected = ToolVersion.Current;
-        var slots = Slots(root);
+        var slots = Slots(block);
         var width = slots.Max(slot => slot.File.Length);
         foreach (var slot in slots) {
             Console.WriteLine($"  {slot.File.PadRight(width)}  {slot.Package,-24} {VersionCheck.Shown(slot)}");

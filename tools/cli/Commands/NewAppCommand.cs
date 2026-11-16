@@ -18,13 +18,13 @@ sealed class NewAppCommand : ToolCommand {
     public override int Run(CommandInput input) {
         var name = Names.Check(input.Name, "app");
         input.EnsureRequiredOptions();
-        var root = Path.GetFullPath(name);
+        var block = Path.GetFullPath(name);
         var version = ToolVersion.Current;
         var files = Files(name, input.All(Source), version);
         Console.WriteLine($"Making the app {name} (Umpire {version}):");
-        FileWriter.WriteAllOrNone(root, files);
+        FileWriter.WriteAllOrNone(block, files);
 
-        var (code, output) = Dotnet.Run(root, "tool", "restore");
+        var (code, output) = Dotnet.Run(block, "tool", "restore");
         if (code != 0) {
             throw new UmpireException(
                 $"The app is written, but 'dotnet tool restore' failed. Fix the error, then run it in {name}."

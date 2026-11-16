@@ -10,6 +10,7 @@ using Steps;
 using Steps.Domain.Shared;
 using Versions;
 using Tests.Shared;
+using Umpire.Engine.Versions;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Kernel;
 using UmpireEngine;
@@ -19,6 +20,7 @@ namespace Engine.Tests;
 public sealed class RunEngineTests {
     const string RulesSkipped =
         "umpire-engine: UMP030002: CheckRules skipped: App is missing, because an earlier step failed.";
+    const string PinnedSdk = "global.json: Umpire.Sdk 0.0.1";
     static readonly string Notes = Repo.Path("samples", "Notes");
 
     [Test]
@@ -80,9 +82,25 @@ public sealed class RunEngineTests {
 
             var result = await Run(project: project);
 
-            Assert.That(result.Lines, Has.One.Contains("error UMP030101").And.Contains("global.json: Umpire.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030101").And.Contains(PinnedSdk));
         } finally {
             TempFolder.Delete(root);
+        }
+    }
+
+    [Test]
+    public async Task With_no_global_json_and_no_block_the_run_gives_UMP030004_and_runs_no_step() {
+        var project = TempFolder.Create();
+        try {
+            Assume.That(BlockFolder.Find(project), Is.Null, "A global.json above the temporary folder.");
+
+            var result = await Run(project: project);
+
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030004: No block folder contains"));
+            Assert.That(result.Lines, Has.None.Contains("UMP030002"));
+        } finally {
+            TempFolder.Delete(project);
         }
     }
 
@@ -140,12 +158,15 @@ public sealed class RunEngineTests {
         Assert.ThrowsAsync<DirectoryNotFoundException>(() => Run(bin: bin, failFast: true));
     }
 
-    static async Task<ReportResult> Run(string? block = null, string? bin = null, bool failFast = false, string? project = null) {
+    static async Task<ReportResult> Run(
+        string? block = null, string? bin = null, bool failFast = false, string? project = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
             new BaselineModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
-        var command = new RunEngineCommand(project ?? block ?? Notes, bin ?? AppContext.BaseDirectory, project is null ? block ?? Notes : "", FailFast: failFast);
+        var declared = project is null ? block ?? Notes : "";
+        var output = bin ?? AppContext.BaseDirectory;
+        var command = new RunEngineCommand(project ?? declared, output, declared, FailFast: failFast);
         var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
         return result.Value;
     }

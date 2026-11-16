@@ -14,7 +14,7 @@ public sealed class Workspace : IDisposable {
 
     public string Root { get; }
 
-    // The copy of the folder, the app root, with global.json. The other consumer files are in Root, one level above.
+    // The copy of the folder, the block folder, with global.json. The other consumer files are in Root, one level above.
     public string Src => Path.Combine(Root, "src");
 
     public IReadOnlyDictionary<string, string> Env { get; }
@@ -35,7 +35,7 @@ public sealed class Workspace : IDisposable {
     void WriteConsumerFiles() {
         var globalJson = JsonNode.Parse(File.ReadAllText(Repo.Path("global.json")))!;
         globalJson["msbuild-sdks"] = new JsonObject { ["Umpire.Sdk"] = LocalFeed.Version };
-        // In Src, the app root, as in an app that the umpire tool makes: Umpire.Sdk finds the app root from global.json.
+        // In Src, the block folder, as in an app that the umpire tool makes: the rule engine finds the block folder from global.json.
         File.WriteAllText(Path.Combine(Src, "global.json"), globalJson.ToJsonString());
 
         // The global packages folder of the user is also a feed, so restore does not download each package again.
