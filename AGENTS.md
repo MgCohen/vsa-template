@@ -18,7 +18,7 @@ Umpire: a framework and a rule engine that check the architecture of an app afte
 | `tools/cli/` | The `umpire` tool (package Umpire.Cli) and its templates (`Templates/`) |
 | `tools/sdk/` | Umpire.Sdk: the build setup of each project: the general framework references, the pack of the app (`Umpire.Pack.targets`), the .NET rule severities, the source folders and the compiler polyfills (`Polyfills/`). The values of the Umpire rules come with each analyzer package |
 | `tests/` | Tests of the framework itself, with fixtures. Does not ship |
-| `docs/` | Architecture decisions, conventions, and guides. The terms are in `docs/vocabulary.md`, and the kinds of block in `docs/blocks.md` |
+| `docs/` | Architecture decisions, conventions, and guides. The first app is in `docs/getting-started.md`, the terms are in `docs/vocabulary.md`, and the kinds of block in `docs/blocks.md` |
 
 The framework groups and their references are in `docs/framework-layout.md`.
 

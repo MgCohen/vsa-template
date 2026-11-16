@@ -2,6 +2,8 @@
 
 Each term has one meaning in the code, the docs and the messages. Umpire is the product, and VSA is one architecture pack of Umpire.
 
+To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
+
 ## Product and packs
 
 | Term | Meaning | Example |
