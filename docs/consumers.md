@@ -2,6 +2,8 @@
 
 Each push to `main` publishes all Umpire packages to GitHub Packages as the next preview. A tag `v<version>` publishes a stable version. Two public consumer repos use the published packages: a .NET app and a Unity project. They are the release check: the test apps of this repository build from source, and the consumers use only what ships.
 
+To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
+
 ## Release flow: a merge reaches the consumers
 
 ```mermaid

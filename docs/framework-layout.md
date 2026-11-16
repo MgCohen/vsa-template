@@ -2,6 +2,8 @@
 
 Umpire has five groups of code, and each group has one top folder. The definition API references no other C# project (its build gets the polyfill of Umpire.Sdk and the rule values of the kernel analyzers, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
 
+To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
+
 ## Groups
 
 | Group | Folder | Purpose | Who selects it |
