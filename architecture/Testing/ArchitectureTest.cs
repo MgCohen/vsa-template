@@ -10,11 +10,20 @@ public abstract class ArchitectureTest<TArchitecture> where TArchitecture : Arch
 
     ResolvedArchitecture Resolved => resolved ??= new ResolvedArchitecture(new TArchitecture());
 
-    protected Place At<T>(string folder) => At(typeof(T), folder);
+    protected Place At<T>(string folder, params Type[] neighbors) => At(typeof(T), folder, neighbors);
 
-    protected Place At(Type type, string folder) => Bind(folder, TypeFactsOf.Type(type, SourceIn(folder, type.Name)));
+    protected Place At(Type type, string folder, params Type[] neighbors) {
+        var facts = new[] { type }.Concat(neighbors).Distinct()
+            .Select(t => TypeFactsOf.Type(t, SourceIn(folder, t.Name)))
+            .ToList();
+        var bindings = Resolved.Place(facts, BlockFolder, InnerBlocks(folder));
+        return new Place(folder, bindings.Of(facts[0].FullName));
+    }
 
-    protected Place At(string folder) => Bind(folder, TypeFactsOf.Plain("PlainType", SourceIn(folder, "PlainType")));
+    protected Place At(string folder) {
+        var facts = TypeFactsOf.Plain("PlainType", SourceIn(folder, "PlainType"));
+        return new Place(folder, Resolved.Place([facts], BlockFolder, InnerBlocks(folder)).All.SingleOrDefault());
+    }
 
     protected Decision MayUse(Place from, Place to) {
         var user = from.Binding ?? throw NotMapped(from);
@@ -39,15 +48,10 @@ public abstract class ArchitectureTest<TArchitecture> where TArchitecture : Arch
     static InvalidOperationException NotMapped(Place place) =>
         new($"No part takes a type in {place.Folder}. Use a folder of the definition, or assert IsMapped.");
 
-    Place Bind(string folder, TypeFacts type) {
-        var bindings = Resolved.Place([type], BlockFolder, InnerBlocks(folder));
-        return new Place(folder, bindings.All.SingleOrDefault());
-    }
-
     IReadOnlyList<string> InnerBlocks(string folder) {
         var segments = Segments(folder);
         return [.. Definition.Parts()
-            .Where(p => p.IsBlockPlace)
+            .Where(p => p.IsBlockPlace && !p.IsExternal && (p.HasFolder || p.IsGroup))
             .Select(p => p.Path.Split('/'))
             .Where(pattern => Covers(pattern, segments))
             .Select(pattern => System.IO.Path.Combine(BlockFolder, string.Join("/", segments.Take(pattern.Length))))];

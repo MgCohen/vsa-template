@@ -25,6 +25,16 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     [Test]
+    public void A_helper_follows_its_user_when_the_user_is_a_neighbor() {
+        Assert.That(At<SampleDetail>(Slice, typeof(SampleRequest)).Part, Is.EqualTo("Contracts.Requests"));
+    }
+
+    [Test]
+    public void A_helper_with_no_neighbor_binds_to_its_folder() {
+        Assert.That(At<SampleDetail>(Slice).Part, Is.EqualTo("Slice"));
+    }
+
+    [Test]
     public void A_plain_type_in_the_infrastructure_folder_binds_to_the_infrastructure() {
         Assert.That(At("Features/Notebook/Infrastructure").Part, Is.EqualTo("Infrastructure"));
     }
@@ -66,11 +76,14 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     public sealed record SampleRequest : IRequest<SampleResponse> {
+        public SampleDetail? Detail { get; init; }
         public static HttpMethod Method => HttpMethod.Get;
         public static string Route => "/api/sample";
     }
 
     public sealed record SampleResponse : IResponse;
+
+    public sealed record SampleDetail(string Text);
 
     public sealed record SampleCommand : Umpire.Vsa.Contracts.Commands.ICommand<SampleResponse>;
 

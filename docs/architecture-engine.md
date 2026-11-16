@@ -464,14 +464,16 @@ public sealed class NotesArchitectureTests : VsaArchitectureTest {
 | Member | Gives |
 |---|---|
 | `Definition` | The `TArchitecture` instance |
-| `At<T>(folder)`, `At(type, folder)` | A `Place`: the binding of the type in that folder |
+| `At<T>(folder, neighbors)`, `At(type, folder, neighbors)` | A `Place`: the binding of the type in that folder. The neighbors are the other types of the folder, so a helper can follow its user |
 | `At(folder)` | A `Place` of a type with no base type in that folder |
 | `MayUse(from, to)` | The `Decision`: `Permission` and the rule. If a place is not mapped, it throws |
 | `Place.Part` | The part name, for example `Handlers.Requests`, or `None` |
 | `Place.Path`, `Place.Values` | The path of the part instance and the group values, for example `Feature` = `Notebook` |
-| `Place.IsMapped` | `false` if the engine gives `UMP020202` for that type in that folder |
+| `Place.IsMapped` | `false` if the engine does not bind the type: `UMP020202`, a folder outside the block, a build output folder, or an inner block folder with no block place |
 
-The base reads the base types of the type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part. The base binds one type alone, so a helper type does not follow its user (`FollowsUser`).
+The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
+
+The folder is the path in the block with no Unity alias. In a Unity project, write `Features/Notebook`, not `Assets/<App>/Features/Notebook`.
 
 The base has no test framework, and a test asserts with NUnit. It needs no build of the app and no DLL: only the type. An internal type is not visible to a test project, so name a public type of the same base, or a plain type with `At(folder)`.
 
