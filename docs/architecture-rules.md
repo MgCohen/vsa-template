@@ -23,7 +23,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
 | `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Disabled (#143). |
 | `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
-| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Rules.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
+| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Vsa.Analyzers.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
 | `UMP010001` | Analyzers | Each option of each running VSA rule is in the config, with a valid value. |
 | `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
 | `UMP010102` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
@@ -47,7 +47,7 @@ Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). A
 
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. `Umpire.globalconfig` sets the severity of each one to `none`, and `RuleAnalyzer` does not run a rule with severity `none`. The code and the tests of each rule stay. A consumer can turn a rule on in its own `.editorconfig`.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. The globalconfig file of its analyzer package sets the severity of each one to `none`, and `RuleAnalyzer` does not run a rule with severity `none`. The code and the tests of each rule stay. A consumer can turn a rule on in its own `.editorconfig`.
 
 | Code | Class | Why disabled | Issue |
 |---|---|---|---|
@@ -56,7 +56,7 @@ If the design of an analyzer or a rule is not clear, it is disabled, not deleted
 | `UMP010206` | `DataOnlySharedTypeRule` | The code shape is not decided | #142, #143 |
 | `UMP010207` | `SharedTypeBaseRule` | The code shape is not decided | #142, #143 |
 
-`DisabledRuleTests` makes sure that the codes with severity `none` in `Umpire.globalconfig` are the codes of this table. To disable a rule, add its severity line and a row here and in #143.
+`DisabledRuleTests` makes sure that the codes with severity `none` in `Umpire.Vsa.Analyzers.globalconfig` are the codes of this table. To disable a rule, add its severity line and a row here and in #143.
 
 ## Plugin modules
 
@@ -111,14 +111,18 @@ umpire.UMP010201.check_responses = true             # rule option
 
 | File | Holds |
 |---|---|
-| `Umpire.globalconfig` | The built-in .NET rules: editor and code style options, severities |
-| `Umpire.Tests.globalconfig` | The built-in rules that are off in a project whose name ends with `.Tests` (CA1707, underscores in test names) |
-| `Umpire.Rules.globalconfig` | The values of the Umpire rules. No rule has a default in code |
-| `Umpire.Rules.props` | The MSBuild setup: both files, `EnforceCodeStyleInBuild`, the formatting rules as warnings |
+| `tools/sdk/Sdk/Umpire.globalconfig` | The built-in .NET rules: editor and code style options, severities. No `UMP` key |
+| `tools/sdk/Sdk/Umpire.Tests.globalconfig` | The built-in rules that are off in a project whose name ends with `.Tests` (CA1707, underscores in test names) |
+| `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` | The values of the kernel rules (`UMP0101xx`). No rule has a default in code |
+| `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig` | The values of the VSA rules (`UMP0102xx`) and the severities of the disabled VSA rules |
+| `tools/sdk/Sdk/Umpire.Rules.props` | The MSBuild setup: the two general files, `EnforceCodeStyleInBuild`, the formatting rules as warnings |
+| `framework/Kernel/Analyzers/Umpire.RuleValues.targets` | The one place that knows how the rule values reach a compile |
 
-`Sdk.props` imports `Umpire.Rules.props` for each Umpire.Sdk project. The root `Directory.Build.props` imports it for the framework and its tests, so this repository follows the same rules. `Directory.Build.targets` gives the framework projects the VSA analyzer with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
+Each analyzer package holds `build/<PackageId>.globalconfig` and `build/<PackageId>.props`. NuGet imports the props file in each project that references the package, and it gives the values to the compiler. In source mode, `Sdk.targets` and `Directory.Build.targets` add the same files from the analyzer folders. The definition holds no analyzer value, and the analyzer files hold no definition option.
 
-A rule lists its options in `RequiredOptions`. At the start of a compilation, `VsaAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in its own `.editorconfig`.
+`Sdk.props` imports `Umpire.Rules.props` for each Umpire.Sdk project. The root `Directory.Build.props` imports it for the framework and its tests, so this repository follows the same rules. `Directory.Build.targets` gives the framework projects the kernel analyzer and its rule values, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
+
+A rule lists its options in `RequiredOptions`. At the start of a compilation, `RuleAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in its own `.editorconfig`.
 
 ## Formatting rules
 
@@ -168,9 +172,10 @@ A rule key wins over a global key, for example `umpire.UMP010201.check_responses
 |---|---|
 | `FormattingRuleTests` | Each VSA rule and its options, on small sources |
 | `FormattingBuildTests` | The Umpire.Sdk setup, on the built fixture `tests/Fixtures/Built/Formatting`: each rule gives a warning, the build passes, and the migrations give no warning |
-| `RuleOptionTests` | `UMP010001`, and each option of each rule is in `Umpire.Rules.globalconfig` |
+| `RuleOptionTests` | `UMP010001` |
+| `RuleValueOwnerTests` | Each option of each rule is in the file of its own package and in no other file. Each key has a rule. The general files have no `UMP` key. No key is a definition option |
 
-The analyzer tests read the real `Umpire.Rules.globalconfig`. A test config overrides a value, because the rules file has `global_level = -1`.
+The analyzer tests read the real values of both analyzer packages, without the severity lines. A test config overrides a value, because each values file has `global_level = -1`.
 
 EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them as generated code (`Umpire.Migrations.globalconfig` in `obj/`), so no rule checks them.
 

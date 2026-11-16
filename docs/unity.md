@@ -40,6 +40,8 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 
 Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). Umpire.Sdk does not compile `Assets/` (`UmpireExcludedFolders`).
 
+The Umpire analyzers read their rule values from two globalconfig files: `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` and `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig`. Each analyzer package ships its file as `build/<PackageId>.globalconfig`. Unity reads a global config only as `Assets/Default.globalconfig` or `<AsmdefName>.globalconfig`, so the Unity package must copy both files there. If a value is missing, the analyzer reports `UMP010001`.
+
 ## Build output
 
 An app that `umpire new app` makes writes all build output to `artifacts~/` in the block folder. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
