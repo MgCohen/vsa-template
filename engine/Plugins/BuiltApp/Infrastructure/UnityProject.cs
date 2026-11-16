@@ -1,20 +1,18 @@
 namespace BuiltApp.Infrastructure;
 
 using Steps.Domain.Shared;
+using Umpire.Vsa.Definition;
 
 static class UnityProject {
-    public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
     public const string LibraryFolder = "Library";
     public const string ScriptAssembliesFolder = "Library/ScriptAssemblies";
-
-    public static bool Is(string blockFolder) => File.Exists(Path.Combine(blockFolder, VersionFile));
 
     public static bool IsInLibrary(string relativePath) =>
         relativePath.Replace('\\', '/').StartsWith(LibraryFolder + "/", StringComparison.OrdinalIgnoreCase);
 
     public static IReadOnlyList<string> Scripts(string blockFolder, IEnumerable<string> loaded, out Finding? warning) {
         warning = null;
-        if (!Is(blockFolder)) {
+        if (!UnityLayout.Is(blockFolder)) {
             return [];
         }
         var folder = Path.Combine(blockFolder, ScriptAssembliesFolder);

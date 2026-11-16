@@ -61,9 +61,8 @@ static class PipelineRun {
         if (!route.Many) {
             if (route.Handlers.Count == 0) {
                 throw new InvalidOperationException(
-                    $"{route.Message.FullName} has no handler in its pipeline. Add one handler for it, "
-                    + $"for example a CommandHandler<{route.Message.Name}, TResult> in the Handlers.Commands project "
-                    + "of its module, or a RequestHandler in its Handlers.Requests project.");
+                    $"{route.Message.FullName} has no handler in its pipeline. Add one handler for it: a class that "
+                    + $"implements IHandler<{route.Message.Name}>, directly or through a handler base.");
             }
             return await Resolve<IHandler>(route.Handlers[0], envelope).HandleAsync(envelope);
         }
