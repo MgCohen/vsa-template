@@ -19,11 +19,11 @@ The editor and the build run the first group in each consumer project. The build
 |---|---|---|
 | `UMP010201` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `UMP010202` | Analyzers | Event handlers do not use a request type or `IBus`. |
-| `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
+| `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. Disabled (#143). |
 | `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
-| `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
-| `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
-| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Rules.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Trial (D-37). |
+| `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Disabled (#143). |
+| `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
+| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Rules.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
 | `UMP010001` | Analyzers | Each option of each running VSA rule is in the config, with a valid value. |
 | `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
 | `UMP010102` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
@@ -31,7 +31,6 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010104` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
 | `UMP010105` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
 | `UMP010106` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
-| `UMP010208` | Analyzers | The root class of a plugin module inherits `Plugin` or `Plugin<TSettings>`, and the root class of a module inherits `Module` or `Module<TSettings>`. The host also checks it at startup. |
 | `UMP010209` | Analyzers | The name of a class that inherits a hook base (`BeforeCommandHook<>`, `AfterCommandHook<,>`, `BeforeEventHook<>`, `AfterEventHook<>`) ends with `Hook`. |
 | `UMP020101` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
 | `UMP020102` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
@@ -44,6 +43,19 @@ The editor and the build run the first group in each consumer project. The build
 
 Each ID is `UMP` and six digits: the block (2), the group (2) and the case (2). Block `01` is the analyzers: group `00` the base (`UMP010001`), `01` Umpire.Kernel.Analyzers, `02` Umpire.Vsa.Analyzers. Block `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches. Block `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
+## Disabled rules
+
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. `Umpire.globalconfig` sets the severity of each one to `none`, and `RuleAnalyzer` does not run a rule with severity `none`. The code and the tests of each rule stay. A consumer can turn a rule on in its own `.editorconfig`.
+
+| Code | Class | Why disabled | Issue |
+|---|---|---|---|
+| `UMP010203` | `ContractTypeRule` | It reads `UmpireRootFolder` and an assembly suffix, so it never runs in a one-project app. The binding and use rules of the engine can cover it | #143 |
+| `UMP010205` | `ImmutableSharedTypeRule` | The code shape (what a type can contain) is not decided | #142, #143 |
+| `UMP010206` | `DataOnlySharedTypeRule` | The code shape is not decided | #142, #143 |
+| `UMP010207` | `SharedTypeBaseRule` | The code shape is not decided | #142, #143 |
+
+`DisabledRuleTests` makes sure that the codes with severity `none` in `Umpire.globalconfig` are the codes of this table. To disable a rule, add its severity line and a row here and in #143.
+
 ## Plugin modules
 
 A plugin module has the layers of a module and the folder layout of the framework: one folder for each layer, and no slices (see `slice-layout.md`). It is for the base types of the app, as the VSA pack (`packs/Vsa`) is the base of each layer. The VSA definition gives its rules:
@@ -54,7 +66,8 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | The `Domain` of a plugin module uses no `Domain` of another plugin module | `UMP020101` |
 | A module root uses the plugin modules | `UMP020101` |
 | `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `UMP020101` |
-| The root class of a plugin inherits `Plugin` | `UMP010208`, and the host at startup |
+| The root class of a plugin inherits `Plugin` | `UMP020101` and `UMP020301`, and the host at startup |
+| The root class of a feature module does not inherit `Plugin` (`Module Under<Feature> denies Composition`) | `UMP020101`, and the host at startup |
 | A plugin module has exactly one root class | `UMP020301`, and the host at startup |
 | A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
 | A plugin module has no `Slices/` folder | `UMP020202` |
@@ -118,7 +131,6 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `IDE0040` | Access modifier on each member, except in an interface | `dotnet_style_require_accessibility_modifiers` |
 | `IDE0055` | One statement on each line | `csharp_preserve_single_line_statements` |
 | `IDE2002` | No blank line between two closing braces | `csharp_style_allow_blank_lines_between_consecutive_braces_experimental` |
-| `IDE0065` | `using` inside the namespace | `csharp_using_directive_placement` |
 | `IDE0036` | Modifiers in the default order | `csharp_preferred_modifier_order` |
 | `IDE0049` | `int`, not `Int32` (editor only) | `dotnet_style_predefined_type_*` |
 | `IDE0054` | `x += 1`, not `x = x + 1` | `dotnet_style_prefer_compound_assignment` |

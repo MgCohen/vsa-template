@@ -1,4 +1,4 @@
-// IDE0065: a using directive outside the namespace.
+// A using directive outside the namespace: the placement is a guideline, so IDE0065 gives no warning.
 using System;
 
 namespace Styled.Infrastructure;

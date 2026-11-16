@@ -92,6 +92,7 @@ public class VsaArchitecture : Architecture {
         rules.For<Module>().Uses<Kernel>().And<Plugin>(Access.Internal);
         rules.For<Module>().Denies<Module>().Under<Plugin>();
         rules.For<Module>().Under<Feature>().Uses<Feature>(Access.Internal);
+        rules.For<Module>().Under<Feature>().Denies<Composition>();
         rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self);
         rules.For<Views>().Uses<Presenters>();
 

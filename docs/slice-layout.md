@@ -33,7 +33,7 @@ Features/Cards/
 
 ## Plugin module layout
 
-A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`UMP010208`), and a module root inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
+A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`UMP020101`, `UMP020301`), and a module root inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
 
 ```
 Plugins/Pipeline/
@@ -103,7 +103,7 @@ public sealed record Cost(string Resource, int Amount);
 
 - Put keys, ids and data records here. Put the rules in `Domain/`, for example `Resources/Domain/Wallet.cs`.
 - A `Domain.Shared` type uses only its own module. The published domain of one module does not depend on another module.
-- A type holds only immutable data: `UMP010205`, `UMP010206` and `UMP010207` check it (see `architecture-rules.md`).
+- A type holds only immutable data. The rules `UMP010205`, `UMP010206` and `UMP010207` are disabled until the review in #143 (see "Disabled rules" in `architecture-rules.md`).
 
 ## Plugins and the two meanings of Shared
 

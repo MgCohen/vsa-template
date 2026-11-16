@@ -34,7 +34,7 @@ Plugins/Game/
 | `VsaUses` (a plugin layer uses other plugins) | `VsaPluginUses` |
 | `ModuleMetadata.Shared` | `ModuleMetadata.Plugins` |
 | `ModuleRoot.IsShared` | `ModuleRoot.IsPlugin` |
-| A root class that inherits `Module` | A root class that inherits `Plugin` or `Plugin<TSettings>` (`UMP010208`, and a startup check) |
+| A root class that inherits `Module` | A root class that inherits `Plugin` or `Plugin<TSettings>` (the engine: `UMP020101` and `UMP020301`, and a startup check) |
 | `tests/Fixtures/SharedApp`, `tests/Fixtures/Host/Shared` | `PluginApp`, `Host/Plugins` |
 | No tool command | `umpire add plugin <Name>` |
 
@@ -44,7 +44,7 @@ In the same change, the folder `framework/Layers/` becomes `framework/Core/`: th
 
 ## Steps of the work
 
-1. Change the names in Umpire.Sdk, `SliceRouter`, `ModuleRoot`, `ModuleMetadata` and `LayerRules`. Add `Plugin`, `Plugin<TSettings>` and `UMP010208`.
+1. Change the names in Umpire.Sdk, `SliceRouter`, `ModuleRoot`, `ModuleMetadata` and `LayerRules`. Add `Plugin`, `Plugin<TSettings>` and a check of the root class (now in the engine: `UMP020101` and `UMP020301`).
 2. Rename the fixtures, the CLI templates and the docs. Add `umpire add plugin`. Run `dotnet run solution.cs`.
 3. Move `framework/Layers/` to `framework/Core/`.
 4. Move the folders in `vsa-consumer-dotnet` and `vsa-consumer-unity` after the release.
