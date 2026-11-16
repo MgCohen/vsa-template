@@ -23,15 +23,25 @@ flowchart BT
     Cli["tools/cli"] --> Versions["engine/Versions"]
 ```
 
-## Three tiers
+## Kinds of block
 
-| Tier | Example | Layer rules | Reuse |
-|---|---|---|---|
-| Kernel | `framework/Kernel/` | None | Each app, each architecture |
-| Component | `framework/Components/Messages/` | None, but it can have a layer shape | Many definitions |
-| Plugin | `Plugins/<Plugin>/` of an app | The VSA definition checks it | One VSA app |
+Each group holds blocks of one or more kinds: app, pack, kernel, component, module and library. The kinds, their entries and the composition guidelines are in `blocks.md`. The terms are in `vocabulary.md`.
 
-The terms are in `vocabulary.md`.
+## Where a new part goes
+
+This table is a guideline. **Not enforced in 0.1.0.**
+
+| You add | Folder |
+|---|---|
+| A type of the definition API | `architecture/` |
+| A rule question on plain data | `architecture/Queries/` |
+| A type that each app needs to start | `framework/Kernel/` |
+| A free block for two or more packs | `framework/Components/<Name>/` |
+| A new architecture | `packs/<Name>/`: `<Name>Pack.cs`, `Architecture/`, `Kernel/`, `Tests/` |
+| A pack variant of an app | `Packs/<Name>/` of the app (`pack-variants.md`) |
+| A new fact of a built app | `engine/Plugins/BuiltApp/` |
+| A step of the engine run | `engine/Features/<Step>/`: one feature module, one command |
+| A tool command | `tools/cli/Commands/`, on a base in `Commands/Bases/` |
 
 ## Where the rule answers are
 
@@ -89,3 +99,10 @@ See `composition.md` for each step.
 - The engine app as a bootstrap: built on the last released Umpire, not on the source.
 - The generic part of Umpire.Sdk: the folder rules and the version pins, apart from the list of Umpire packages.
 - The place of `Versions` (library or plugin).
+- A pack variant in this repository: `packs/<Base>.<Variant>/`, or another folder.
+- The checks that only one pack needs: `packs/<Name>/Checks/`.
+- The templates of each pack: `tools/cli/Templates/<Pack>/`.
+- The group folders (`framework/`, `packs/`, `tools/`): what they are, and if they stay.
+- A source folder (`src/`) for all code, so that the repository root holds only a small number of folders.
+- The place of `packs/`: at the top of the code folder, or under another folder.
+- The place of `architecture/`: each other group uses it, so a top folder can be wrong for it.

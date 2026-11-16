@@ -13,27 +13,34 @@ Each term has one meaning in the code, the docs and the messages. Umpire is the 
 | Architecture | A definition: concepts, parts and rules | `VsaArchitecture : Architecture` |
 | Host | The startup of one app kind | `WebVsaHost`, `ConsoleVsaHost` |
 
-## Tiers of code
+## Block kinds
 
-| Tier | Meaning | Checked by |
+| Kind | Meaning | Example |
 |---|---|---|
-| Kernel | Free base code that each app has, with no layer | No layer rules |
-| Component | Free code that many definitions can use, for example `Messages` | No layer rules |
-| Plugin | A VSA module that is the base of the same layers in each module | The VSA definition |
+| App | A block that runs. Its app class is the check entry and the install point | `NotesApp`, `EngineApp` |
+| Pack | A block with one architecture and its kernel | `packs/Vsa/` |
+| Framework kernel | Free base code that each app has, with no layer. It owns the host | `framework/Kernel/`, `AppHost` |
+| Pack kernel | The layer bases of a pack. It extends the framework kernel | `packs/Vsa/Kernel/`, `VsaHost` |
+| Component | Free code that a kernel installs by name | `framework/Components/Messages/` |
+| Module | A component that the host finds in the app. It ships with the app | A feature module, a plugin module |
+| Library | A block with no install point | `engine/Versions/` |
 
-A component can have a layer shape. That does not make it a plugin. "Component" is only free code, and "Plugin" is only the checked VSA module.
+A component can have a layer shape. That does not make it a module. A plugin is a VSA module kind: the base of the same layers in each module. See `blocks.md`.
 
 ## Definition terms
 
 | Term | Meaning |
 |---|---|
-| Block | A folder tree of code with one definition. The top part of a definition (`Define(Block block)`) |
+| Block | A folder tree of code with one entry. The top part of a definition (`Define(Block block)`) |
+| Independent block | A block with its own definition and check entry, for example an app or a pack |
+| Owned block | A block that gets its shape from the definition around it, for example a feature module |
+| Install point | The class or method that tells the host what to install from a block, for example `Pack.CreateHost()` |
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` (`UmpireBlock`) |
 | Check entry | The pointer from a block to its architecture: an app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, or an `umpire.json` file. Each block has one |
 | Block place | A folder that an outer definition marks with `AddBlock<T>()` or `AddBlockGroup<T>()` as the place of another block. The outer definition sees that block as one part |
 | Concept | A kind of part that a definition names, for example a layer (`record Domain : Layer`) |
 | Part | One place in the folder tree of a definition |
-| Module | The root part of a group instance, for example a feature folder |
+| Module (definition) | The record `Module`: the root part of a group instance, for example a feature folder. The block kind is in "Block kinds" |
 | Module kind | A group of modules with one shape, for example `Feature`, `Plugin` or the `EcsFeature` of a pack variant |
 | Define method | A `virtual` method of `VsaArchitecture.Define` for one base group, for example `DefineFeature(PartGroup feature)` |
 | External | A part that is a DLL, not a folder, for example `Kernel` |
