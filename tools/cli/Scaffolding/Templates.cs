@@ -67,7 +67,8 @@ static partial class Templates {
         if (IsRootProject(path)) {
             content = content.Replace(
                 "</Project>",
-                $"  <ItemGroup>\n    <PackageReference Include=\"{BuildHook}\" Version=\"{version}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>",
+                $"  <ItemGroup>\n    <PackageReference Include=\"{BuildHook}\" "
+                + $"Version=\"{version}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>",
                 StringComparison.Ordinal);
         }
         if (content.Contains("$(Umpire", StringComparison.Ordinal)) {
