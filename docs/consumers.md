@@ -51,6 +51,10 @@ The `nuget.config` that `umpire new app` writes reads the token from the environ
 
 If `GITHUB_TOKEN` is not set, restore fails with 401.
 
+## The architecture check of a new app
+
+The root project of a new app has the package `Umpire.Engine.Build`. So the rule engine checks the architecture after each build, and an error fails the build. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning. `umpire doctor` and `umpire update` include this package in the one version.
+
 ## Consumer repos
 
 | Repo | Contains | Gets VSA | Check |
