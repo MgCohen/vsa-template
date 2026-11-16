@@ -264,9 +264,9 @@ If the block folder has `ProjectSettings/ProjectVersion.txt`, the app is a Unity
 
 | Folder | Binds as | Contains |
 |---|---|---|
-| `Assets/<UnityApp>/` | The root | `Features/`, `Plugins/` |
+| `Assets/<UnityApp>/` | The block | `Features/`, `Plugins/` |
 | `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
-| `<UnitySource>/` (default `Source`) | The root | `Features/`, `Plugins/` of the .NET projects |
+| `<UnitySource>/` (default `Source`) | The block | `Features/`, `Plugins/` of the .NET projects |
 
 `Architecture.FolderAliases(blockFolder)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
 
@@ -359,7 +359,7 @@ The Rules step (group `04`) gives the rule findings of area `02`. The Report ste
 
 ### Blocks and check entries
 
-A block is a folder tree of code with one check entry. The check entry names the architecture of the block. The step `FindBlocks` (`engine/Features/Blocks/`) reads the entries before all other steps.
+A block is a folder tree of code with one check entry. The check entry names the architecture of the block. The step `FindBlocks` (`engine/Features/Blocks/`) reads the entries before all other steps. The kinds of block and their entries are in `blocks.md`.
 
 | Form | Example | Block folder |
 |---|---|---|
