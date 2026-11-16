@@ -47,6 +47,6 @@ public sealed partial class CodeTests {
         .SelectMany(pattern => Directory.EnumerateFiles(Repo.Root, pattern, SearchOption.AllDirectories))
         .Where(file => !Path.GetRelativePath(Repo.Root, file).Split(Path.DirectorySeparatorChar).Any(SkippedFolders.Contains));
 
-    [GeneratedRegex(@"\bUMP(\d{4,5}|\d{7,})\b")]
+    [GeneratedRegex(@"(?<![0-9A-Za-z])UMP(\d{4,5}|\d{7,})(?![0-9A-Za-z])")]
     private static partial Regex OldCode();
 }

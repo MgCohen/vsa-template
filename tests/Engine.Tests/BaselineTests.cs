@@ -65,7 +65,7 @@ public sealed class BaselineTests {
     }
 
     [Test]
-    public async Task An_entry_with_no_error_gives_UMP3005_at_its_line() {
+    public async Task An_entry_with_no_error_gives_UMP030401_at_its_line() {
         WriteBaseline("UMP020101|App/Host/Probe.cs|Probe in Host", "UMP020101|App/Host/Fixed.cs|Fixed in Host");
 
         var result = await Apply([Error("UMP020101", "App/Host/Probe.cs", 4, "Probe in Host")]);
@@ -79,7 +79,7 @@ public sealed class BaselineTests {
     }
 
     [Test]
-    public async Task A_line_that_does_not_parse_gives_UMP3006_and_accepts_no_error() {
+    public async Task A_line_that_does_not_parse_gives_UMP030402_and_accepts_no_error() {
         WriteBaseline("UMP020101|App/Host/Probe.cs|Probe in Host", "not an entry");
 
         var result = await Apply([Error("UMP020101", "App/Host/Probe.cs", 4, "Probe in Host")]);

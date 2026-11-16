@@ -126,4 +126,20 @@ public sealed class CountTests {
 
         Assert.That(definition.Counts(TagB), Is.Empty);
     }
+
+    [Test]
+    public void An_abstract_type_is_not_counted() {
+        var definition = new CountArchitecture(rules => rules.For<Box>().Has<Item>(Depth.Self).Exactly(1));
+        var abstractItem = Fact("ItemBase", "a", typeof(ICounted)) with { IsAbstract = true };
+
+        Assert.That(definition.Counts(ItemA, abstractItem), Is.Empty);
+    }
+
+    [Test]
+    public void A_count_whose_subject_matches_no_part_is_an_error_of_the_definition() {
+        var definition = new CountArchitecture(rules => rules.For<Item>().Under<Tag>().Has<Tag>().AtLeast(1));
+
+        Assert.That(() => definition.Counts(ItemA),
+            Throws.InvalidOperationException.With.Message.Contains("the subject matches no part of the app"));
+    }
 }

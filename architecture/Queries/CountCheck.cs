@@ -20,13 +20,13 @@ internal static class CountCheck {
 
     static IEnumerable<CountResult> TypeFailures(CountStatement statement, Part subject, List<Binding> app) {
         var candidates = Counted(statement, app);
-        return app.Where(b => b.Part == subject && !b.FollowsUser)
+        return app.Where(b => b.Part == subject && !b.FollowsUser && !b.Type.IsAbstract)
             .SelectMany(type => Check(statement, $"{type.Type.Name} in {type.Where}", null,
                 [.. candidates.Where(c => c.Type.BaseArguments.Contains(type.Type.FullName))], type));
     }
 
     static List<Binding> Counted(CountStatement statement, IEnumerable<Binding> bindings) =>
-        [.. bindings.Where(b => !b.FollowsUser && statement.Counts(b))];
+        [.. bindings.Where(b => !b.FollowsUser && !b.Type.IsAbstract && statement.Counts(b))];
 
     static IEnumerable<CountResult> Check(CountStatement statement, string subject, string? group, List<Binding> found, Binding at) {
         var counted = group is null ? $"{statement.Counted} that take it" : statement.Counted;

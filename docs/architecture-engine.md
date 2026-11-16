@@ -172,12 +172,12 @@ The first access that is set wins:
 The rules of a count:
 
 - `T` includes each concept that is nested in `T` (the concept family). For example, `Has<Handlers>()` counts `Handlers.Commands` and `Handlers.Commands.Hooks`. `Has<T>(Depth.Self)` counts only `T`. The `Depth` of the concept does not apply to a count.
-- A helper that follows its user does not count. Only a type that binds by its own base type counts.
+- A helper that follows its user does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts.
 - A count counts only the types of the app under the definition root. A type of an external DLL does not count.
 - A count with no limit stops the definition: "has no limit. Add AtLeast, AtMost, Exactly or OfOneKind."
 - The finding is at the first type of the instance (by file, then line), or at the type of the subject.
 
-`Takes<T>()` reads the type arguments of the direct base types and interfaces (`TypeFacts.BaseArguments`). For example, `rules.For<Handlers.Requests>().Under<Feature>().Takes<Contracts.Requests>().InSame<Slice>()`: a request handler handles a request of its own slice. With no `InSame<G>()`, the match needs only one type argument in `T`. A subject type that is not in an instance of `G` fails, so use `Under<T>()` to select the subjects.
+`Takes<T>()` reads the type arguments of the base types and interfaces of the type and of each class in its base chain (`TypeFacts.BaseArguments`), so a handler that inherits a middle base matches. An abstract subject type is not checked. For example, `rules.For<Handlers.Requests>().Under<Feature>().Takes<Contracts.Requests>().InSame<Slice>()`: a request handler handles a request of its own slice. With no `InSame<G>()`, the match needs only one type argument in `T`. A subject type that is not in an instance of `G` fails, so use `Under<T>()` to select the subjects.
 
 ```text
 error UMP020301: Slice Features/Notebook/Slices/Draft has 0 Handlers types: the rule "Slice has Handlers at least 1" needs at least 1. Add one, or move the other types to another part.

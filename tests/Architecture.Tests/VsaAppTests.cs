@@ -47,6 +47,7 @@ public sealed class VsaAppTests {
 
     [TestCase(Notebook + "Slices/Shared/NoteTitle.cs")]
     [TestCase(Notebook + "Slices/GetNote/")]
+    [TestCase(Notebook + "Slices/ReadNote/")]
     [TestCase("VsaApp/Plugins/Tools/Infrastructure/ToolClock.cs")]
     [TestCase("VsaApp/Plugins/Clock/")]
     public void A_file_that_follows_the_rules_gives_no_finding(string file) {

@@ -173,9 +173,9 @@ The VSA definition has these count and match lines in `Rules` (see "Counts and m
 | S3c, S3d | The same two lines for the commands | `Handlers.Commands`, `Contracts.Commands` | `UMP020302`, `UMP020301` |
 | M1 | A feature module and a plugin module have exactly one root class | `For<Feature>().Has<Module>().Exactly(1)`, the same for `Plugin` | `UMP020301` |
 
-An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count.
+An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d have `Under<Feature>()`, so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 
-The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). A hook has each use of the handlers of its kind.
+The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). A hook has each use of the handlers of its kind. In a slice, the hook parts are siblings of the handler parts in the slice folder. In a plugin module, `Handlers.Commands.Hooks` is a child of `Handlers.Commands` (and the same for the events), with `InParentFolder()`. Reason: a plugin has one folder for each layer, so its hooks are in `Handlers/Commands/`, and only a child part can share that folder. A sibling with `InParentFolder()` would be in `Handlers/`.
 
 `Slices/Shared/` is the part `Slice.Shared`, not a slice, so S1, S2 and S3 do not count it. It has the uses of a slice contract, and the slices and the presenters of its own feature use it.
 

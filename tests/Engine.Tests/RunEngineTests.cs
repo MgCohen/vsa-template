@@ -56,7 +56,7 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP3001_and_skips_the_load() {
+    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030101_and_skips_the_load() {
         var root = TempFolder.Create();
         try {
             File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
@@ -81,7 +81,7 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_app_with_two_app_classes_gives_UMP3005_with_both_names() {
+    public async Task An_app_with_two_app_classes_gives_UMP030203_with_both_names() {
         var result = await Run(root: Repo.Path("tests", "Fixtures", "TwoApps"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
@@ -91,7 +91,7 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_app_class_with_no_empty_constructor_gives_UMP3006_with_its_name() {
+    public async Task An_app_class_with_no_empty_constructor_gives_UMP030204_with_its_name() {
         var result = await Run(root: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));

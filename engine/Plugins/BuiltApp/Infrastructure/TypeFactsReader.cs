@@ -26,13 +26,16 @@ static class TypeFactsReader {
             .Where(e => loaded.Contains(e.Target))
             .Select(e => new TypeExposure(e.Target.FullName, e.Access, e.Member))]) {
         BaseArguments = [.. BaseArguments(type)],
+        IsAbstract = type is Interface || type is Class { IsAbstract: true },
     };
 
     static IEnumerable<IType> Bases(IType type) => new[] { type }
         .Concat(type is Class c ? c.InheritedClasses : [])
         .Concat(type.ImplementedInterfaces);
 
-    static IEnumerable<string> BaseArguments(IType type) => type.Dependencies
+    static IEnumerable<string> BaseArguments(IType type) => new[] { type }
+        .Concat(type is Class c ? c.InheritedClasses : [])
+        .SelectMany(t => t.Dependencies)
         .Where(d => d is InheritsBaseClassDependency or ImplementsInterfaceDependency)
         .SelectMany(d => d.TargetGenericArguments)
         .Select(argument => argument.Type.FullName)

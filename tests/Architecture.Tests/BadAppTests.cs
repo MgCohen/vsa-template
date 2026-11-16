@@ -27,7 +27,7 @@ public sealed class BadAppTests {
     }
 
     [Test]
-    public void A_use_that_no_rule_allows_gives_UMP2001_with_the_file_and_line() {
+    public void A_use_that_no_rule_allows_gives_UMP020101_with_the_file_and_line() {
         Assert.That(UseFailures, Does.Contain(
             $"{Notes}/Slices/ReadInvoice/ReadInvoiceHandler.cs(6): error UMP020101: ReadInvoiceHandler in Handlers.Requests "
             + $"({Notes}/Slices/ReadInvoice) uses Invoice in Domain ({Billing}/Domain): no rule allows it (DefaultPermission = Deny). "
@@ -57,7 +57,7 @@ public sealed class BadAppTests {
     }
 
     [Test]
-    public void A_use_inside_compiler_generated_code_gives_UMP2001_on_the_declaring_type() {
+    public void A_use_inside_compiler_generated_code_gives_UMP020101_on_the_declaring_type() {
         Assert.That(UseFailures, Does.Contain(
             "error UMP020101: ArchiveInvoiceHandler in Handlers.Requests "
             + $"({Notes}/Slices/ArchiveInvoice) uses Invoice in Domain ({Billing}/Domain): "

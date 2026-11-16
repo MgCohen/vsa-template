@@ -16,7 +16,7 @@ internal static class Statements {
         }
         RefuseNoFamily(architecture, count.Counted, text);
         var counted = count.Counted;
-        return new CountStatement(text, Subjects(architecture, count.Subjects), false,
+        return new CountStatement(text, Subjects(architecture, count.Subjects, text), false,
             b => count.Depth == Depth.Self ? b.Part.Is(counted) : b.Part.InFamily(counted),
             $"{Concept.Display(counted)} types", count.Min, count.Max, count.OneKind);
     }
@@ -28,7 +28,7 @@ internal static class Statements {
         if (match.Group is { } group && !architecture.Parts().Any(p => p.Is(group) && p.IsGroup)) {
             throw new InvalidOperationException($"Rules: \"{text}\": InSame<{Concept.Display(group)}> needs a concept that AddGroup adds.");
         }
-        return new MatchStatement(text, Subjects(architecture, match.Subjects), match.Taken, match.Group);
+        return new MatchStatement(text, Subjects(architecture, match.Subjects, text), match.Taken, match.Group);
     }
 
     static IEnumerable<CountStatement> Required(Architecture architecture) {
@@ -44,9 +44,16 @@ internal static class Statements {
         }
     }
 
-    static IReadOnlyList<Part> Subjects(Architecture architecture, IReadOnlyList<Entry> entries) => [.. entries
-        .SelectMany(e => architecture.Parts().Where(p => p.Is(e.Target) && !p.IsExternal && e.Filters.All(f => p.Under(f.Target))))
-        .Distinct()];
+    static IReadOnlyList<Part> Subjects(Architecture architecture, IReadOnlyList<Entry> entries, string text) {
+        List<Part> subjects = [.. entries
+            .SelectMany(e => architecture.Parts().Where(p => p.Is(e.Target) && !p.IsExternal && e.Filters.All(f => p.Under(f.Target))))
+            .Distinct()];
+        if (subjects.Count == 0) {
+            throw new InvalidOperationException(
+                $"Rules: \"{text}\": the subject matches no part of the app. Change the subject or its filter, or remove the rule.");
+        }
+        return subjects;
+    }
 
     static void Validate(Architecture architecture, IReadOnlyList<Entry> entries, string text) {
         foreach (var entry in entries) {
