@@ -383,7 +383,7 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 ## Unity target
 
-`Umpire.Kernel`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Vsa.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only.
+`Umpire.Kernel`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Vsa.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
 
 A Unity app calls `new MyApp().Run(args)` from the shell of the UPM package (repo `vsa-unity`). Its app class is `App<Vsa<UnityVsaHost>>`. The Unity host returns from `Run`, and the shell calls `Stop` when the app quits or the play mode stops. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
 

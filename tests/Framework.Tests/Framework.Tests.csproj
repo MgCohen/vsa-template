@@ -18,5 +18,28 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Battle/Battle.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
+  </ItemGroup>
+  <!-- The Unity tests read the netstandard2.1 DLLs of the portable projects and the analyzer DLLs, so these builds come first. -->
+  <ItemGroup>
+    <PortableProject Include="$(RepoRoot)architecture/Umpire.Architecture.csproj" />
+    <PortableProject Include="$(RepoRoot)framework/Kernel/Umpire.Kernel.csproj" />
+    <PortableProject Include="$(RepoRoot)framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj" />
+    <PortableProject Include="$(RepoRoot)framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Contracts/Commands/Umpire.Vsa.Contracts.Commands.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Contracts/Requests/Umpire.Vsa.Contracts.Requests.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Domain/Umpire.Vsa.Domain.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Handlers/Commands/Umpire.Vsa.Handlers.Commands.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Handlers/Events/Umpire.Vsa.Handlers.Events.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Handlers/Requests/Umpire.Vsa.Handlers.Requests.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Presenters/Umpire.Vsa.Presenters.csproj" />
+    <ProjectReference Include="@(PortableProject)" SetTargetFramework="TargetFramework=netstandard2.1" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)architecture/Markers/Umpire.Markers.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

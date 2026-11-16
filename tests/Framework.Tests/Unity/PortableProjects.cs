@@ -1,0 +1,23 @@
+namespace Framework.Tests.Unity;
+
+public static class PortableProjects {
+    public static readonly string[] Names = [
+        "Umpire.Architecture",
+        "Umpire.Kernel",
+        "Umpire.Messages.Contracts",
+        "Umpire.Messages.Handlers",
+        "Umpire.Vsa",
+        "Umpire.Vsa.Composition",
+        "Umpire.Vsa.Contracts.Commands",
+        "Umpire.Vsa.Contracts.Events",
+        "Umpire.Vsa.Contracts.Requests",
+        "Umpire.Vsa.Domain",
+        "Umpire.Vsa.Handlers.Commands",
+        "Umpire.Vsa.Handlers.Events",
+        "Umpire.Vsa.Handlers.Requests",
+        "Umpire.Vsa.Infrastructure",
+        "Umpire.Vsa.Presenters",
+    ];
+
+    public static readonly string[] Analyzers = ["Umpire.Kernel.Analyzers", "Umpire.Vsa.Analyzers"];
+}
