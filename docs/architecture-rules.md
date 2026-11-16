@@ -6,8 +6,8 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
-| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernel.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP1xxx` |
-| Build of the host | Architecture | `Umpire.Engine.Build` (rule engine, ArchUnitNET) | `UMP2xxx` |
+| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernel.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
+| Build of the host | Architecture | `Umpire.Engine.Build` (rule engine, ArchUnitNET) | `UMP02xxxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
 
@@ -17,27 +17,32 @@ The editor and the build run the first group in each consumer project. The build
 
 | ID | Level | Rule |
 |---|---|---|
-| `UMP1001` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
-| `UMP1002` | Analyzers | Event handlers do not use a request type or `IBus`. |
-| `UMP1003` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
-| `UMP1004` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
-| `UMP1005` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
-| `UMP1006` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
-| `UMP1007` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Rules.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP1006` does not permit). Trial (D-37). |
-| `UMP1000` | Analyzers | Each option of each running VSA rule is in the config, with a valid value. |
-| `UMP1008` | Analyzers | A line has at most `max` characters. Formatting, warning. |
-| `UMP1009` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
-| `UMP1010` | Analyzers | A file has at most `max` lines. Formatting, warning. |
-| `UMP1011` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
-| `UMP1012` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
-| `UMP1013` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
-| `UMP1014` | Analyzers | The root class of a plugin module inherits `Plugin` or `Plugin<TSettings>`, and the root class of a module inherits `Module` or `Module<TSettings>`. The host also checks it at startup. |
-| `UMP1015` | Analyzers | The name of a class that inherits a hook base (`BeforeCommandHook<>`, `AfterCommandHook<,>`, `BeforeEventHook<>`, `AfterEventHook<>`) ends with `Hook`. |
-| `UMP2001` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
-| `UMP2003` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
-| `UMP2101` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
-| `UMP2102` | Architecture | Each type of the app is in a folder of a part. |
-| `UMP2103` | Architecture | A warning: a Unity project has no `Library/ScriptAssemblies/` folder, so the checks do not read the code that only Unity compiles. |
+| `UMP010201` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
+| `UMP010202` | Analyzers | Event handlers do not use a request type or `IBus`. |
+| `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. |
+| `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
+| `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Trial (D-37). |
+| `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Trial (D-37). |
+| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Rules.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Trial (D-37). |
+| `UMP010001` | Analyzers | Each option of each running VSA rule is in the config, with a valid value. |
+| `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
+| `UMP010102` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
+| `UMP010103` | Analyzers | A file has at most `max` lines. Formatting, warning. |
+| `UMP010104` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
+| `UMP010105` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
+| `UMP010106` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
+| `UMP010208` | Analyzers | The root class of a plugin module inherits `Plugin` or `Plugin<TSettings>`, and the root class of a module inherits `Module` or `Module<TSettings>`. The host also checks it at startup. |
+| `UMP010209` | Analyzers | The name of a class that inherits a hook base (`BeforeCommandHook<>`, `AfterCommandHook<,>`, `BeforeEventHook<>`, `AfterEventHook<>`) ends with `Hook`. |
+| `UMP020101` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
+| `UMP020102` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
+| `UMP020201` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
+| `UMP020202` | Architecture | Each type of the app is in a folder of a part. |
+| `UMP020203` | Architecture | A warning: a Unity project has no `Library/ScriptAssemblies/` folder, so the checks do not read the code that only Unity compiles. |
+| `UMP020301` | Architecture | Each count of the definition is in its limit, for example each slice has at least one handler. See "Counts and matches". |
+| `UMP020302` | Architecture | Each match of the definition holds, for example a request handler handles a request of its own slice. See "Counts and matches". |
+| `UMP03xxxx` | Engine | The engine run: a step throws or is skipped, a version, the load of the app, the baseline. One table: "Engine codes" in `architecture-engine.md`. |
+
+Each ID is `UMP` and six digits: the block (2), the group (2) and the case (2). Block `01` is the analyzers: group `00` the base (`UMP010001`), `01` Umpire.Kernel.Analyzers, `02` Umpire.Vsa.Analyzers. Block `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches. Block `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
 ## Plugin modules
 
@@ -45,11 +50,14 @@ A plugin module has the layers of a module and the folder layout of the framewor
 
 | Rule | Check |
 |---|---|
-| A plugin module uses no feature module | `UMP2001` |
-| The `Domain` of a plugin module uses no `Domain` of another plugin module | `UMP2001` |
-| A module root uses the plugin modules | `UMP2001` |
-| `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `UMP2001` |
-| The root class of a plugin inherits `Plugin` | `UMP1014`, and the host at startup |
+| A plugin module uses no feature module | `UMP020101` |
+| The `Domain` of a plugin module uses no `Domain` of another plugin module | `UMP020101` |
+| A module root uses the plugin modules | `UMP020101` |
+| `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `UMP020101` |
+| The root class of a plugin inherits `Plugin` | `UMP010208`, and the host at startup |
+| A plugin module has exactly one root class | `UMP020301`, and the host at startup |
+| A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
+| A plugin module has no `Slices/` folder | `UMP020202` |
 
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
@@ -79,9 +87,9 @@ public sealed class SealedRecordRule() : UmpireAnalyzerRule(Descriptor) {
 ```
 
 ```ini
-dotnet_diagnostic.UMP1001.severity = warning   # standard severity key
+dotnet_diagnostic.UMP010201.severity = warning   # standard severity key
 umpire.check_responses = false                    # global option
-umpire.UMP1001.check_responses = true             # rule option
+umpire.UMP010201.check_responses = true             # rule option
 ```
 
 ## Rule files
@@ -95,7 +103,7 @@ umpire.UMP1001.check_responses = true             # rule option
 
 `Sdk.props` imports `Umpire.Rules.props` for each Umpire.Sdk project. The root `Directory.Build.props` imports it for the framework and its tests, so this repository follows the same rules. `Directory.Build.targets` gives the framework projects the VSA analyzer with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 
-A rule lists its options in `RequiredOptions`. At the start of a compilation, `VsaAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP1000` (error), and that rule does not run. A consumer changes a value in its own `.editorconfig`.
+A rule lists its options in `RequiredOptions`. At the start of a compilation, `VsaAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in its own `.editorconfig`.
 
 ## Formatting rules
 
@@ -129,12 +137,12 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `CA2000` | Dispose each `IDisposable` object | |
 | `CA1849` | No blocking call, such as `.Result`, in an `async` method | |
 | `CA1812` | An internal or private class that no code creates | Handlers and the types that dependency injection creates give false warnings until issue #41 is closed |
-| `UMP1008` | Characters in a line | `umpire.UMP1008.max` |
-| `UMP1009` | Lines in a method | `umpire.UMP1009.max` |
-| `UMP1010` | Lines in a file | `umpire.UMP1010.max` |
-| `UMP1011` | One top-level type in a file | `umpire.UMP1011.allow_same_name` |
-| `UMP1012` | Member order | `umpire.UMP1012.kind_order`, `access_order`, `static_first` |
-| `UMP1013` | No comments | |
+| `UMP010101` | Characters in a line | `umpire.UMP010101.max` |
+| `UMP010102` | Lines in a method | `umpire.UMP010102.max` |
+| `UMP010103` | Lines in a file | `umpire.UMP010103.max` |
+| `UMP010104` | One top-level type in a file | `umpire.UMP010104.allow_same_name` |
+| `UMP010105` | Member order | `umpire.UMP010105.kind_order`, `access_order`, `static_first` |
+| `UMP010106` | No comments | |
 
 A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list.
 
@@ -142,7 +150,7 @@ A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `ki
 |---|---|
 | `FormattingRuleTests` | Each VSA rule and its options, on small sources |
 | `FormattingBuildTests` | The Umpire.Sdk setup, on the built fixture `tests/Fixtures/Built/Formatting`: each rule gives a warning, the build passes, and the migrations give no warning |
-| `RuleOptionTests` | `UMP1000`, and each option of each rule is in `Umpire.Rules.globalconfig` |
+| `RuleOptionTests` | `UMP010001`, and each option of each rule is in `Umpire.Rules.globalconfig` |
 
 The analyzer tests read the real `Umpire.Rules.globalconfig`. A test config overrides a value, because the rules file has `global_level = -1`.
 
@@ -150,7 +158,26 @@ EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them 
 
 ## Architecture: the rule engine
 
-The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP2001`, `UMP2003`, `UMP2101`, `UMP2102` and the warning `UMP2103`. The build hook package `Umpire.Engine.Build` on the host project runs it after each build. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules.
+The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020301`, `UMP020302` and the warning `UMP020203`. The build hook package `Umpire.Engine.Build` on the host project runs it after each build. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules.
+
+### Counts and matches
+
+The VSA definition has these count and match lines in `Rules` (see "Counts and matches" in `architecture-engine.md`):
+
+| ID | Rule | Line | Code |
+|---|---|---|---|
+| S1 | A slice has at least one handler or hook | `For<Slice>().Has<Handlers>().AtLeast(1)` | `UMP020301` |
+| S2 | The handlers of one slice are of one kind. A hook is a kind | `For<Slice>().Has<Handlers>().OfOneKind()` | `UMP020301` |
+| S3a | A request handler handles a request of its own slice | `For<Handlers.Requests>().Under<Feature>().Takes<Contracts.Requests>().InSame<Slice>()` | `UMP020302` |
+| S3b | Each request and each response of a feature has exactly one handler | `For<Contracts.Requests>().Under<Feature>().Has<Handlers.Requests>(Depth.Self).Exactly(1)` | `UMP020301` |
+| S3c, S3d | The same two lines for the commands | `Handlers.Commands`, `Contracts.Commands` | `UMP020302`, `UMP020301` |
+| M1 | A feature module and a plugin module have exactly one root class | `For<Feature>().Has<Module>().Exactly(1)`, the same for `Plugin` | `UMP020301` |
+
+An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count.
+
+The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). A hook has each use of the handlers of its kind.
+
+`Slices/Shared/` is the part `Slice.Shared`, not a slice, so S1, S2 and S3 do not count it. It has the uses of a slice contract, and the slices and the presenters of its own feature use it.
 
 ## Unit: `VsaUnitTest`
 
@@ -186,7 +213,7 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 ## Add a rule
 
 1. If a built-in .NET rule does the check, set its severity in `tools/sdk/Sdk/Umpire.globalconfig`.
-2. If one file shows the problem, write a rule class that inherits `UmpireAnalyzerRule`. Use the next free `UMP1xxx` ID, and add it to `AnalyzerReleases.Unshipped.md`.
+2. If one file shows the problem, write a rule class that inherits `UmpireAnalyzerRule`. Use the next free ID in the group of its DLL: `UMP0101xx` for Umpire.Kernel.Analyzers, `UMP0102xx` for Umpire.Vsa.Analyzers, and add it to `AnalyzerReleases.Unshipped.md`.
 3. Else change the rules of the VSA definition (`packs/Vsa/Architecture/VsaArchitecture.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

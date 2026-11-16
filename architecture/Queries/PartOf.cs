@@ -1,13 +1,13 @@
 namespace Umpire.Architecture;
 
-sealed class Match {
+sealed class PartOf {
     readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<Part> folderParts;
     readonly string rootPath;
     readonly IReadOnlyList<FolderAlias> aliases;
     readonly string appRoot;
 
-    Match(ResolvedArchitecture resolved, string appRoot) {
+    PartOf(ResolvedArchitecture resolved, string appRoot) {
         var definition = resolved.Architecture;
         this.resolved = resolved;
         folderParts = [.. definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
@@ -17,11 +17,11 @@ sealed class Match {
     }
 
     public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string appRoot) {
-        var match = new Match(resolved, appRoot);
+        var partOf = new PartOf(resolved, appRoot);
         var bound = new List<Binding>();
         var unmapped = new List<UnmappedType>();
         foreach (var type in types) {
-            match.Place(type, bound, unmapped);
+            partOf.Place(type, bound, unmapped);
         }
         return new Bindings(FollowUsers(bound), unmapped);
     }
@@ -75,6 +75,7 @@ sealed class Match {
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
             .Where(m => m.Matches))
         .OrderByDescending(m => m.Pattern.Length)
+        .ThenBy(m => m.Pattern.Count(segment => segment.StartsWith('{')))
         .FirstOrDefault();
 
     static Binding BindTo(FolderMatch match, TypeFacts type, Source source) {

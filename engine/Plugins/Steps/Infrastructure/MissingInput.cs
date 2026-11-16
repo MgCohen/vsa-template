@@ -6,7 +6,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
 
 public sealed class MissingInput : BeforeStep<IEngineStep> {
-    public const string Code = "UMP3004";
+    public static readonly string Code = RunCodes.Skipped;
 
     public override Task<IEngineStep> BeforeAsync(IEnvelope<IEngineStep> envelope) {
         var step = envelope.Message;

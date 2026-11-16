@@ -1,14 +1,14 @@
 # Architecture engine
 
-The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `architecture/Resolution/` gives the answers on plain facts: the part of each type (`Match`) and the decision for each use (`Decide`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `architecture/Queries/` gives the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`MayUse`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
 
 ```mermaid
 flowchart LR
     L["AppReader (BuiltApp plugin)"] --> A["TypeFacts"]
-    A --> B["Match (Resolution)"]
+    A --> B["PartOf (Queries)"]
     D[Definition: Umpire.Architecture] --> B
     B --> S[Bindings]
-    S --> C["RuleChecks + Decide"]
+    S --> C["RuleChecks + MayUse"]
     C --> F["Finding (code, severity, message, file, line)"]
 ```
 
@@ -16,9 +16,9 @@ flowchart LR
 
 | Project | Path | Contains |
 |---|---|---|
-| `Umpire.Architecture` | `architecture/` | The definition API and `Resolution/`. No ArchUnitNET |
+| `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
-| `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP3001`). The engine app and the `umpire` tool bundle it |
+| `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030101`). The engine app and the `umpire` tool bundle it |
 | Engine app | `engine/` | The runner: Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
@@ -54,11 +54,12 @@ public class VsaArchitecture : Architecture {
 | `And<T>()` | A sibling part. It returns a `PartGroup`: the next call applies to each part in it |
 | `AddGroup<T>()` | A group: one part instance for each subfolder. It returns a `PartGroup` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
-| `OfType<T>()` | Each type of the part must be assignable to `T` |
+| `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
+| `Has<T>()`, `Takes<T>()` | A count (type `Count`) or a match (type `Match`). See "Counts and matches" |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
 
-`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth` and `Access`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call or the group parameter), the concept, the architecture, then `Options.BuiltIn`.
+`Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth`, `Access` and `Required`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call, the group parameter or the `OfType` call), the concept, the architecture, then `Options.BuiltIn`.
 
 | Field | `Options.BuiltIn` | Set by |
 |---|---|---|
@@ -67,6 +68,9 @@ public class VsaArchitecture : Architecture {
 | `Boundary` | `Open` | The architecture, a concept, a group |
 | `Depth` | `WithChildren` | The architecture, a concept, a rule call |
 | `Access` | `Public` | The architecture, a concept, a rule call |
+| `Required` | `false` | The architecture, a concept, an `OfType` call |
+
+The convention for a new option: if a concept or the architecture can also set it, it gets a nullable parameter at the call site and a nullable field in `Options`. The lookup reads the call site, then the concept, then the architecture, then `Options.BuiltIn`.
 
 A concept sets its values in `Configure(Options defaults)`. If a concept sets `DefaultPermission` or `UseSameConcept`, the definition stops: "Only the architecture sets <name>. Move it to Configure of the architecture."
 
@@ -94,6 +98,8 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 ## External parts
 
 An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `Umpire.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`: `VsaArchitecture` gives `Contracts` the DLL `Umpire.Messages.Contracts`, and `Contracts.Requests` the DLL `Umpire.Vsa.Contracts.Requests`. The longest matching DLL name wins. The types of an external DLL are rule targets: a rule can deny them.
+
+`Umpire.Vsa.dll` (the pack: `Vsa<THost>`, `VsaArchitecture`) has no external part of its own. `Kernel` binds it by the name `Umpire`, and `App/Host` uses `Kernel` (`Uses<Kernel>(Depth.Self)`), so the app class can name the pack. Reason: no other part uses the pack, so a separate part gives no new rule.
 
 The definition stops at these shapes. The first four give one error, because a DLL name has no group segment, and the child of an external gets its DLL name from its parent:
 
@@ -138,13 +144,61 @@ The framework can require a public exposure, so the check ignores two exposures:
 | A base type or an interface of an `External` part, with its generic arguments | `: Presenter(bus), IPresenterEvent<Rang>` |
 | A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task OnEventAsync(Rang e)` |
 
-An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `UMP2003` if the rule limits `Note`.
+An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `UMP020102` if the rule limits `Note`.
 
 The first access that is set wins:
 
 1. The parameter of the rule call, for example `Uses<Domain>(Access.Internal)`.
 2. The layer body, for example `defaults.Access = Access.Internal` in `Configure(Options)` of the layer.
 3. `defaults.Access` of the architecture. Its default is `Access.Public`, so a rule with no access allows use and exposure.
+
+## Counts and matches
+
+`Rules` has three kinds of statement. A use rule gives a decision for each use. A count and a match fail for each instance or type that does not obey them.
+
+| Kind | Call | Fails when | Code |
+|---|---|---|---|
+| Use | `For<S>().Uses<T>()`, `Denies<T>()` | A type of `S` uses a type of `T`, and the decision is `Deny` | `UMP020101` |
+| Count | `For<S>().Has<T>()` with `AtLeast(n)`, `AtMost(n)`, `Exactly(n)`, `OfOneKind()` | The number of types is not in the limit, or the types are in more than one part | `UMP020301` |
+| Match | `For<S>().Takes<T>()`, optional `InSame<G>()` | A type of `S` has no type argument in `T`, or the argument is in another instance of `G` | `UMP020302` |
+
+`Has<T>()` has two meanings. The subject `S` selects the meaning:
+
+| Subject | Count | Example |
+|---|---|---|
+| A group | The types of `T` in each instance of the group | `rules.For<Slice>().Has<Handlers>().AtLeast(1)`: each slice has a handler or a hook |
+| A part | For each type of `S`, the types of `T` that take it as a type argument of a base type | `rules.For<Contracts.Requests>().Has<Handlers.Requests>(Depth.Self).Exactly(1)`: each request has one handler |
+
+The rules of a count:
+
+- `T` includes each concept that is nested in `T` (the concept family). For example, `Has<Handlers>()` counts `Handlers.Commands` and `Handlers.Commands.Hooks`. `Has<T>(Depth.Self)` counts only `T`. The `Depth` of the concept does not apply to a count.
+- A helper that follows its user does not count. Only a type that binds by its own base type counts.
+- A count counts only the types of the app under the definition root. A type of an external DLL does not count.
+- A count with no limit stops the definition: "has no limit. Add AtLeast, AtMost, Exactly or OfOneKind."
+- The finding is at the first type of the instance (by file, then line), or at the type of the subject.
+
+`Takes<T>()` reads the type arguments of the direct base types and interfaces (`TypeFacts.BaseArguments`). For example, `rules.For<Handlers.Requests>().Under<Feature>().Takes<Contracts.Requests>().InSame<Slice>()`: a request handler handles a request of its own slice. With no `InSame<G>()`, the match needs only one type argument in `T`. A subject type that is not in an instance of `G` fails, so use `Under<T>()` to select the subjects.
+
+```text
+error UMP020301: Slice Features/Notebook/Slices/Draft has 0 Handlers types: the rule "Slice has Handlers at least 1" needs at least 1. Add one, or move the other types to another part.
+```
+
+### Required
+
+`OfType(type, required: true)` makes the base type required. Each instance of the nearest group of the part then has at least one type of that base in the part. If the part is in no group, the app is one instance. The engine checks it as a count, so it gives `UMP020301`.
+
+```csharp
+part.OfType(typeof(RequestHandler<,>), required: true);
+```
+
+| Order | Place | Form |
+|---|---|---|
+| 1 | The call site | `OfType(..., required: true)` or `required: false` |
+| 2 | `Configure` of the concept | `defaults.Required = true` |
+| 3 | `Configure` of the architecture | `defaults.Required = true` |
+| 4 | `Options.BuiltIn` | `false`: the part is permitted, not required |
+
+`VsaArchitecture` sets no `Required`. Its counts are lines in `Rules` (see "Counts and matches" in `architecture-rules.md`).
 
 ## Binding
 
@@ -154,7 +208,7 @@ The first access that is set wins:
 | Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
 | Source file only in `obj/` or `bin/` | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
-| Source file in no part folder | None: `UMP2102` |
+| Source file in no part folder | None: `UMP020202` |
 | Source file out of the definition root | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
@@ -188,27 +242,29 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 | Step | Unity project |
 |---|---|
 | App DLLs | Also `Library/ScriptAssemblies/*.dll` |
-| No `Library/ScriptAssemblies/` | The warning `UMP2103` |
+| No `Library/ScriptAssemblies/` | The warning `UMP020203` |
 | A DLL name in the host output too | The engine loads the host output DLL only |
 | A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
 | Source file under `Library/` | Not app code (package cache, generated types) |
 
-## The four checks
+## The checks of the Rules step
 
-`RuleChecks.Of(type)` gives the findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, and the warnings of the loader.
+`RuleChecks.Of(type)` gives the use, exposure and type findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, the counts and the matches (`RuleChecks.Counts`, `RuleChecks.Matches`), and the warnings of the loader.
 
 | ID | Severity | Problem |
 |---|---|---|
-| `UMP2001` | Error | A type uses a part that the rules deny |
-| `UMP2003` | Error | A type exposes a part with more access than its rule allows |
-| `UMP2101` | Error | A type is not assignable to the `OfType` of its part |
-| `UMP2102` | Error | A type is in a folder that the definition does not have |
-| `UMP2103` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
+| `UMP020101` | Error | A type uses a part that the rules deny |
+| `UMP020102` | Error | A type exposes a part with more access than its rule allows |
+| `UMP020201` | Error | A type is not assignable to the `OfType` of its part |
+| `UMP020202` | Error | A type is in a folder that the definition does not have |
+| `UMP020203` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
+| `UMP020301` | Error | A count of the definition is not in its limit (see "Counts and matches") |
+| `UMP020302` | Error | A match of the definition does not hold (see "Counts and matches") |
 
 Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
 
 ```text
-C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP2001: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
+C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHandler in Handlers.Requests (Features/Notes/Slices/Read) uses Invoice in Domain (Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
 ```
 
 ## The checks of an app
@@ -221,24 +277,32 @@ The build hook package `Umpire.Engine.Build` on the host project runs the engine
 | Versions | Each Umpire version slot of the app root and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the app root |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
-| Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine errors" |
+| Definition | `Pack.Architecture` of the one most derived app class (`App`). See "Engine codes" |
 | Unity DLLs | See "Unity projects" |
 
-### Engine errors
+### Engine codes
 
-| ID | Problem |
-|---|---|
-| `UMP3000` | A step throws an exception. The run continues |
-| `UMP3001` | An Umpire version is not the engine version (see "One version") |
-| `UMP3002` | No DLL of the host output has source files under the app root |
-| `UMP3003` | The app has no app class |
-| `UMP3004` | A step is skipped, because an earlier step failed |
-| `UMP3005` | The app has more than one most derived app class |
-| `UMP3006` | An app class has no public constructor with no parameters |
+Each engine code is `UMP03`, the group and the case. Group `00` is the engine run. Each step has the next group, in the order of `RunEngineHandler`. A step command gives its group with `IStepGroup` (`public static int Group => 2;`), and `StepCode.Of<TStep>(n)` makes its codes. Each step module holds its codes in one class, for example `LoadAppCodes`.
+
+| ID | Group | Severity | Problem |
+|---|---|---|---|
+| `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
+| `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
+| `UMP030003` | 00 Run | Error | The build hook cannot find the rule engine. Restore `Umpire.Engine.Build` again |
+| `UMP030101` | 01 Versions | Error | An Umpire version is not the engine version (see "One version") |
+| `UMP030201` | 02 LoadApp | Error | No DLL of the host output has source files under the app root |
+| `UMP030202` | 02 LoadApp | Error | The app has no app class |
+| `UMP030203` | 02 LoadApp | Error | The app has more than one most derived app class |
+| `UMP030204` | 02 LoadApp | Error | An app class has no public constructor with no parameters |
+| `UMP030401` | 04 Baseline | Warning | A baseline entry matches no error (see "Baseline") |
+| `UMP030402` | 04 Baseline | Error | A baseline line does not have the form |
+| `UMP030403` | 04 Baseline | Warning | The update did not write the file, because a step failed or was skipped |
+
+The Rules step (group `03`) gives the rule findings of block `02`. The Report step (group `05`) has no code.
 
 ## One version
 
-The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP3001` error with each different slot, and the engine skips the load and the rule checks (`UMP3004`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
+The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030101` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|
@@ -275,8 +339,8 @@ public class MyApp : App<Vsa<MyArchitecture, WebVsaHost>>;
 The step `ApplyBaseline` runs after `CheckRules` and before the Report step. It reads `umpire-baseline.txt` in the app root. An error with an entry in the file does not go to the report. A new error fails the build.
 
 ```text
-UMP2001|App/Host/Probe.cs|Probe in Host uses CreateNoteRequest ...
-UMP2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does not have ...
+UMP020101|App/Host/Probe.cs|Probe in Host uses CreateNoteRequest ...
+UMP020202|Features/Old/Legacy.cs|Legacy is in a folder that the definition does not have ...
 ```
 
 | Item | Rule |
@@ -284,12 +348,12 @@ UMP2102|Features/Old/Legacy.cs|Legacy is in a folder that the definition does no
 | Line | `CODE\|path\|message`. The path is relative to the app root, with `/`. A finding with no file has an empty path |
 | Key | The code, the path and the full message. The line number is not in the key, so an edit above an error does not change its entry |
 | Count | Two equal entries accept two errors with that key. A third error with that key is new |
-| Content | Errors only. A warning does not fail the build. The engine codes `UMP3000`-`UMP3999` never go in the file, so a version error or a crash always fails |
+| Content | Errors only. A warning does not fail the build. The engine codes `UMP030000`-`UMP039999` never go in the file, so a version error or a crash always fails |
 | No file | No error is accepted |
 | Update | `dotnet build -p:UmpireUpdateBaseline=true` (engine switch `--updatebaseline true`) writes each current error, sorted (ordinal), and removes the stale entries. With no error, the update deletes the file. The update never skips the check |
-| Stale entry | An entry that no error matches gives the warning `UMP3005` at its line in the file. Remove the line, or run the update |
-| Bad line | A line that does not have the form gives the error `UMP3006`. Then no error is accepted |
-| Incomplete run | If a step failed or was skipped (an engine error, or `UMP3004`), the update does not write the file and gives the warning `UMP3007`. Reason: that run has not found each error |
+| Stale entry | An entry that no error matches gives the warning `UMP030401` at its line in the file. Remove the line, or run the update |
+| Bad line | A line that does not have the form gives the error `UMP030402`. Then no error is accepted |
+| Incomplete run | If a step failed or was skipped (an engine error, or `UMP030002`), the update does not write the file and gives the warning `UMP030403`. Reason: that run has not found each error |
 | Build stamp | The stamp name tells if the file exists. A delete of the file runs the check again |
 
 `--mode Warn` applies after the baseline: each remaining error becomes a warning.
@@ -298,4 +362,4 @@ The Report step sorts the findings: the findings with no file first, then by pat
 
 ## Tests of the engine
 
-`tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. `BadApp` has one known problem for each rule ID.
+`tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. `BadApp` has one known problem for each rule ID. `VsaApp` is in the VSA layout and uses `VsaArchitecture`: it has one case for each VSA check, and `VsaAppTests` lists each finding that it expects. `CountTests` and `MatchTests` check the counts, the matches and `Required` on plain type facts, with no DLL.

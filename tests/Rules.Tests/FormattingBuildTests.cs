@@ -19,11 +19,11 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Build_passes() => Assert.That(build.Succeeded, Is.True, build.Output);
 
-    [TestCase("UMP1008", "LongLine.cs")]
-    [TestCase("UMP1009", "LongMethod.cs")]
-    [TestCase("UMP1010", "LongFile.cs")]
-    [TestCase("UMP1011", "TwoTypes.cs")]
-    [TestCase("UMP1012", "MemberOrder.cs")]
+    [TestCase("UMP010101", "LongLine.cs")]
+    [TestCase("UMP010102", "LongMethod.cs")]
+    [TestCase("UMP010103", "LongFile.cs")]
+    [TestCase("UMP010104", "TwoTypes.cs")]
+    [TestCase("UMP010105", "MemberOrder.cs")]
     [TestCase("IDE0055", "BuiltInRules.cs")]
     [TestCase("IDE0040", "BuiltInRules.cs")]
     [TestCase("IDE2000", "BuiltInRules.cs")]

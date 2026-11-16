@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1003: a contracts project holds only contracts. In <Module>.Contracts.Requests, <Module>.Contracts.Commands and
+// UMP010203: a contracts project holds only contracts. In <Module>.Contracts.Requests, <Module>.Contracts.Commands and
 // <Module>.Contracts.Events, each public type is a request, a response, a command, an event, or a type that one of
 // them uses (a DTO). A command result has no marker. It passes because its command uses it.
 // In a slice module, Umpire.Sdk selects the project of each file by its types (VsaSliceRouter.cs).
@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 // A plugin module (UmpireRootFolder = Plugins) is not checked: its public types are bases for the modules.
 public sealed class ContractTypeRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1003",
+        "UMP010203",
         "Contracts projects hold only contract types",
         "{0} is in {1}, but no request, response, command or event uses it. Move it to its own file in the slice, or use it in a contract.",
         "Umpire",

@@ -7,19 +7,19 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1007: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
+// UMP010207: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
 // and each interface in the base list of a type. A permitted base is in a .Domain.Shared assembly (this project or
 // another one) or in Umpire.Markers (for example a marker interface), or its metadata name is in the option
 // allowed_bases, for example System.IEquatable`1.
 // The rule compares the original definition, so IEquatable<Money> matches System.IEquatable`1.
-// Option: umpire.UMP1007.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
+// Option: umpire.UMP010207.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).
 public sealed class SharedTypeBaseRule() : UmpireAnalyzerRule(Descriptor) {
     public const string AllowedBasesKey = "allowed_bases";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1007",
+        "UMP010207",
         "Domain.Shared types have only permitted bases",
-        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to umpire.UMP1007.allowed_bases.",
+        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to umpire.UMP010207.allowed_bases.",
         "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);

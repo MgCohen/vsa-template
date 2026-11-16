@@ -16,7 +16,7 @@ public sealed class HookNameRule() : UmpireAnalyzerRule(Descriptor) {
     ];
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1015",
+        "UMP010209",
         "The name of a hook ends with Hook",
         "{0} inherits {1}, so it is a hook. Rename it to {2}.",
         "Umpire",

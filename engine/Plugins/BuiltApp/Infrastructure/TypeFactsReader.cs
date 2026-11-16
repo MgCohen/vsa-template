@@ -1,6 +1,7 @@
 namespace BuiltApp.Infrastructure;
 
 using ArchUnitNET.Domain;
+using ArchUnitNET.Domain.Dependencies;
 using Umpire.Architecture;
 
 static class TypeFactsReader {
@@ -23,11 +24,19 @@ static class TypeFactsReader {
         [.. Exposures.Of(type, isFramework)
             .DistinctBy(e => new { e.Target, e.Member })
             .Where(e => loaded.Contains(e.Target))
-            .Select(e => new TypeExposure(e.Target.FullName, e.Access, e.Member))]);
+            .Select(e => new TypeExposure(e.Target.FullName, e.Access, e.Member))]) {
+        BaseArguments = [.. BaseArguments(type)],
+    };
 
     static IEnumerable<IType> Bases(IType type) => new[] { type }
         .Concat(type is Class c ? c.InheritedClasses : [])
         .Concat(type.ImplementedInterfaces);
+
+    static IEnumerable<string> BaseArguments(IType type) => type.Dependencies
+        .Where(d => d is InheritsBaseClassDependency or ImplementsInterfaceDependency)
+        .SelectMany(d => d.TargetGenericArguments)
+        .Select(argument => argument.Type.FullName)
+        .Distinct();
 
     static IEnumerable<IType> Mentions(IType type) =>
         type.Dependencies.SelectMany(d => new[] { d.Target }.Concat(d.TargetGenericArguments.Select(g => g.Type)));

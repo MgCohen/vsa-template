@@ -6,15 +6,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1011: a file has one top-level type. Nested types are not top-level types.
+// UMP010104: a file has one top-level type. Nested types are not top-level types.
 // The diagnostic marks each top-level type after the first.
-// Option: umpire.UMP1011.allow_same_name (in Umpire.Rules.globalconfig). If true, types with the name of the first type can share its file,
+// Option: umpire.UMP010104.allow_same_name (in Umpire.Rules.globalconfig). If true, types with the name of the first type can share its file,
 // for example Module and Module<TSettings>, which have a different number of type parameters.
 public sealed class OneTypePerFileRule() : UmpireAnalyzerRule(Descriptor) {
     public const string AllowSameNameKey = "allow_same_name";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1011",
+        "UMP010104",
         "A file has one top-level type",
         "{0} is a second top-level type in the file of {1}. Move {0} to its own file, {0}.cs.",
         "Umpire",

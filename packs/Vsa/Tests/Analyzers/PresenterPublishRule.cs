@@ -3,11 +3,11 @@ namespace Umpire.Vsa.Analyzers;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-// UMP1004: presenters do not publish events, and do not send events to the views (the observer, LivePresenters). The layer map gives presenters the event types, so that they can
+// UMP010204: presenters do not publish events, and do not send events to the views (the observer, LivePresenters). The layer map gives presenters the event types, so that they can
 // show them (IPresenterEvent). A change of state is a request, and its handler publishes the event.
 public sealed class PresenterPublishRule() : ForbiddenUseRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1004",
+        "UMP010204",
         "Presenters do not publish events",
         "Presenter {0} uses {1}. A presenter does not publish events. Send a request with IBus, and publish the event in its handler.",
         "Umpire",

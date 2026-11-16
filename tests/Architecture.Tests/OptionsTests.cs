@@ -21,10 +21,10 @@ public record SameConceptConcept : Concept {
 }
 
 public sealed class OptionsArchitecture(Boundary? architecture, bool closedConcept, Boundary? part) : Architecture {
-    public Permission Decide() {
+    public Permission MayUse() {
         var user = Parts().Single(p => p.Is(typeof(User)));
         var target = Parts().Single(p => p.Is(typeof(Target)));
-        return Umpire.Architecture.Decide.For(this,
+        return Umpire.Architecture.MayUse.For(this,
             user, new Dictionary<string, string> { [GroupName] = "a" },
             target, new Dictionary<string, string> { [GroupName] = "b" }).Permission;
     }
@@ -61,7 +61,7 @@ public sealed class OptionsTests {
         Boundary? architecture, bool closedConcept, Boundary? part, Permission expected) {
         var definition = new OptionsArchitecture(architecture, closedConcept, part);
 
-        Assert.That(definition.Decide(), Is.EqualTo(expected));
+        Assert.That(definition.MayUse(), Is.EqualTo(expected));
     }
 
     [Test]

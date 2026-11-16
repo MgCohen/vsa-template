@@ -29,11 +29,11 @@ Features/Cards/
 - A module has only the layer folders that it needs. Ping has only `Slices/`.
 - All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name and follows the folders.
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
-- `Slices/Shared/` holds contracts that more than one slice uses.
+- `Slices/Shared/` holds contracts that more than one slice uses. It is the part `Slice.Shared`, not a slice: the slices and the presenters of its own feature use it, and the slice counts do not count it.
 
 ## Plugin module layout
 
-A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`UMP1014`), and a module root inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
+A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`UMP010208`), and a module root inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
 
 ```
 Plugins/Pipeline/
@@ -81,7 +81,7 @@ A web root project uses the Web SDK first, then Umpire.Sdk:
 </Project>
 ```
 
-A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Vsa.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP3001`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Vsa.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030101`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Host/`) has its own project in the module folder. It then references the other modules that it uses.
 
@@ -103,7 +103,7 @@ public sealed record Cost(string Resource, int Amount);
 
 - Put keys, ids and data records here. Put the rules in `Domain/`, for example `Resources/Domain/Wallet.cs`.
 - A `Domain.Shared` type uses only its own module. The published domain of one module does not depend on another module.
-- A type holds only immutable data: `UMP1005`, `UMP1006` and `UMP1007` check it (see `architecture-rules.md`).
+- A type holds only immutable data: `UMP010205`, `UMP010206` and `UMP010207` check it (see `architecture-rules.md`).
 
 ## Plugins and the two meanings of Shared
 
@@ -127,7 +127,7 @@ A command goes from one module to another in the same process. It has one handle
 | Command (`ICommand<T>`) | A handler of a module | One `CommandHandler` | Any type of the slice | In process, `ICommandSender` |
 | Event (`IntegrationEvent`) | A handler, after a change | Zero or more | `Unit` | `IIntegrationEventPublisher` |
 
-Each handler takes the envelope of its message and returns `Result<T>`, and each send returns `Result<T>`. A slice can also have validators for its messages. A Before or After hook is in its own slice. See `docs/handler-pipeline.md`.
+Each handler takes the envelope of its message and returns `Result<T>`, and each send returns `Result<T>`. A slice can also have validators for its messages. A Before or After hook is in its own slice: it is the part `Handlers.Commands.Hooks` or `Handlers.Events.Hooks`, and the engine checks that a slice has one kind of handler (`UMP020301`). See `docs/handler-pipeline.md`.
 
 A request and a command are messages (`IMessage`). An event is not a message. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`:
 

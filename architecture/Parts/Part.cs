@@ -3,6 +3,8 @@ namespace Umpire.Architecture;
 public class Part : IPartChain {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
+    readonly Dictionary<Type, bool> requiredAtCallSite = [];
+    bool? conceptRequired;
     Depth? depth;
     Access? access;
     Boundary? boundary;
@@ -73,22 +75,27 @@ public class Part : IPartChain {
         return this;
     }
 
-    public Part OfType<T>() => OfType(typeof(T));
+    public Part OfType<T>(bool? required = null) => OfType(typeof(T), required);
 
-    public Part OfType(Type type) {
+    public Part OfType(Type type, bool? required = null) {
         if (!types.Contains(type)) {
             types.Add(type);
         }
+        if (required is { } value) {
+            requiredAtCallSite[type] = value;
+        }
         return this;
     }
+
+    public bool? RequiredOf(Type type) => requiredAtCallSite.TryGetValue(type, out var value) ? value : conceptRequired;
 
     IPartChain IPartChain.Add<T>() => Add<T>();
 
     IPartChain IPartChain.InParentFolder() => InParentFolder();
 
-    IPartChain IPartChain.OfType<T>() => OfType<T>();
+    IPartChain IPartChain.OfType<T>(bool? required) => OfType<T>(required);
 
-    IPartChain IPartChain.OfType(Type type) => OfType(type);
+    IPartChain IPartChain.OfType(Type type, bool? required) => OfType(type, required);
 
     public IEnumerable<Part> Walk() => new[] { this }.Concat(children.SelectMany(c => c.Walk()));
 
@@ -105,6 +112,15 @@ public class Part : IPartChain {
     internal bool Under(Type concept) => SelfAndAncestors().Any(a => a.Is(concept));
 
     internal bool Holds(Part other) => other.SelfAndAncestors().Contains(this);
+
+    internal bool InFamily(Type concept) {
+        for (var type = Concept?.GetType(); type is not null; type = type.DeclaringType) {
+            if (type == concept) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     internal Part Group<T>(string? folder, Boundary? boundary) where T : Concept, new() {
         var concept = new T();
@@ -130,6 +146,7 @@ public class Part : IPartChain {
         child.depth = options.Depth;
         child.access = options.Access;
         child.boundary ??= options.Boundary;
+        child.conceptRequired = options.Required;
         children.Add(child);
         child.Concept!.Define(child);
         return child;

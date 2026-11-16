@@ -2,7 +2,7 @@ namespace Rules.Tests;
 
 using Umpire.Vsa.Analyzers;
 
-// The rules of a Domain.Shared project: UMP1005, UMP1006 and UMP1007. The test code is in Cards.Domain.Shared,
+// The rules of a Domain.Shared project: UMP010205, UMP010206 and UMP010207. The test code is in Cards.Domain.Shared,
 // so all three rules check each type.
 static class Shared {
     public const string Assembly = "Cards.Domain.Shared";
@@ -159,13 +159,13 @@ public sealed class SharedTypeBaseRuleTests {
             public bool Equals(int other) => Value == other;
             public int CompareTo(Rank? other) => 0;
         }
-        """, "umpire.UMP1007.allowed_bases = System.IEquatable`1, System.IComparable`1\ndotnet_diagnostic.UMP1006.severity = none");
+        """, "umpire.UMP010207.allowed_bases = System.IEquatable`1, System.IComparable`1\ndotnet_diagnostic.UMP010206.severity = none");
 
     [Test]
     public Task Other_base_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
         public sealed record Rank(int Value) : {|#1:IEquatable<int>|} { public bool Equals(int other) => Value == other; }
-        """, "umpire.UMP1007.allowed_bases = System.IComparable`1\ndotnet_diagnostic.UMP1006.severity = none",
+        """, "umpire.UMP010207.allowed_bases = System.IComparable`1\ndotnet_diagnostic.UMP010206.severity = none",
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"),
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 1, "Rank", "System.IEquatable<int>", "System.IEquatable`1"));
 
@@ -173,7 +173,7 @@ public sealed class SharedTypeBaseRuleTests {
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
-        """, "umpire.allowed_bases = System.Collections.Generic.List`1\nvsa.UMP1007.allowed_bases = System.IEquatable`1",
+        """, "umpire.allowed_bases = System.Collections.Generic.List`1\nvsa.UMP010207.allowed_bases = System.IEquatable`1",
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"));
 
     [Test]
@@ -190,15 +190,15 @@ public sealed class UmpireOptionsTests {
     }
 
     static UmpireOptions Of(params (string Key, string Value)[] values) =>
-        new("UMP1007", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
+        new("UMP010207", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>
-        Assert.That(Of(("umpire.UMP1007.allowed_bases", " A`1, B ;C;; ")).List("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
+        Assert.That(Of(("umpire.UMP010207.allowed_bases", " A`1, B ;C;; ")).List("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
 
     [Test]
     public void Rule_key_wins_over_the_global_key() =>
-        Assert.That(Of(("umpire.allowed_bases", "A"), ("umpire.UMP1007.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
+        Assert.That(Of(("umpire.allowed_bases", "A"), ("umpire.UMP010207.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
 
     [Test]
     public void Missing_key_gives_null() =>

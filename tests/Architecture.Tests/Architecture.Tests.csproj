@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the rule answers (architecture/Resolution) and the Rules step of the engine on the fixture apps in tests/Fixtures/Architecture,
+  <!-- Tests of the rule answers (architecture/Queries) and the Rules step of the engine on the fixture apps in tests/Fixtures/Architecture,
        with a small test definition. -->
   <PropertyGroup>
     <RootNamespace>EngineCore.Tests</RootNamespace>

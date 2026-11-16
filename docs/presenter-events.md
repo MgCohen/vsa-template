@@ -44,8 +44,8 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 - The publisher does not wait for the presenters, and the token of the publisher does not go to the presenters. An error in one presenter goes to the log.
 - The observer runs after the handlers, in the scope of the publisher. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
 - A presenter that sends a request can get the event of that request before the response. Make `OnEventAsync` safe for a change that the presenter has already applied, for example replace by ID.
-- A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`UMP1004`). To change state, it sends a request with `IBus`, and the request handler publishes the event.
-- A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP2001`).
+- A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`UMP010204`). To change state, it sends a request with `IBus`, and the request handler publishes the event.
+- A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP020101`).
 
 ## Example
 

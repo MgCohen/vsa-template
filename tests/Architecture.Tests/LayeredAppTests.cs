@@ -36,7 +36,7 @@ public sealed class LayeredAppTests {
         var findings = LayeredMap.Value.Findings().Select(FixtureApps.Line).ToList();
 
         Assert.That(findings, Has.Count.EqualTo(1));
-        Assert.That(findings[0], Does.StartWith("LayeredApp/Data/OrderStore.cs").And.Contain("error UMP2001").And.Contain("OrderScreen"));
+        Assert.That(findings[0], Does.StartWith("LayeredApp/Data/OrderStore.cs").And.Contain("error UMP020101").And.Contain("OrderScreen"));
     }
 
     [Test]

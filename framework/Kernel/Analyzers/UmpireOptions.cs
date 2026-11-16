@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// The options of one rule in one file. A rule key wins over a global key: umpire.UMP1001.check_responses, then umpire.check_responses.
+// The options of one rule in one file. A rule key wins over a global key: umpire.UMP010201.check_responses, then umpire.check_responses.
 // No getter has a default: the values are in Umpire.Rules.globalconfig. A getter gives null if the value of this file is not valid,
 // for example from a bad .editorconfig line. Then the rule does not check the file.
 public sealed class UmpireOptions(string ruleId, AnalyzerConfigOptions options) {

@@ -15,8 +15,14 @@ public sealed class ResolvedArchitecture {
         .OrderByDescending(p => p.Assembly!.Length)
         .FirstOrDefault();
 
-    public Bindings Place(IReadOnlyList<TypeFacts> types, string appRoot) => Match.Bind(this, types, appRoot);
+    public Bindings Place(IReadOnlyList<TypeFacts> types, string appRoot) => PartOf.Bind(this, types, appRoot);
 
     public Decision DecisionFor(Binding from, Binding to) =>
-        Decide.For(Architecture, from.Part, from.Values, to.Part, to.Values);
+        MayUse.For(Architecture, from.Part, from.Values, to.Part, to.Values);
+
+    public IReadOnlyList<CountResult> Counts(Bindings bindings) =>
+        [.. Architecture.CountStatements().SelectMany(statement => CountCheck.Failures(statement, bindings))];
+
+    public IReadOnlyList<MatchResult> Matches(Bindings bindings) =>
+        [.. Architecture.MatchStatements().SelectMany(statement => MatchCheck.Failures(statement, bindings))];
 }

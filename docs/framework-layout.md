@@ -38,11 +38,12 @@ The terms are in `vocabulary.md`.
 ```
 engine Rules step (engine/Features/Rules)
 ├─ BuiltApp plugin: DLL, PDB and Unity facts      ArchUnitNET (the only place)
-├─ ResolvedArchitecture.Place(facts)              architecture/Resolution: Match
-└─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Resolution: Decide
+├─ ResolvedArchitecture.Place(facts)              architecture/Queries: PartOf
+├─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Queries: MayUse
+└─ ResolvedArchitecture.Counts, Matches(bindings) architecture/Queries: CountCheck, MatchCheck
 ```
 
-`architecture/Resolution/` takes plain facts (`TypeFacts`: file, assembly, base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
+`architecture/Queries/` takes plain facts (`TypeFacts`: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
 
 The kernel references the definition API (`Umpire.Architecture`), because a `Pack` gives the `Architecture` of the app. The definition API is portable and has no ArchUnitNET.
 
@@ -87,4 +88,4 @@ See `composition.md` for each step.
 
 - The engine app as a bootstrap: built on the last released Umpire, not on the source.
 - The generic part of Umpire.Sdk: the folder rules and the version pins, apart from the list of Umpire packages.
-- The names of "Rules", "Decide", "Resolution" and the place of `Versions` (library or plugin).
+- The place of `Versions` (library or plugin).

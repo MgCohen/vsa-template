@@ -5,12 +5,12 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-UMP1001 | Umpire | Error | SealedRecordRule
-UMP1002 | Umpire | Error | EventHandlerRequestRule
-UMP1003 | Umpire | Error | ContractTypeRule
-UMP1004 | Umpire | Error | PresenterPublishRule
-UMP1005 | Umpire | Error | ImmutableSharedTypeRule
-UMP1006 | Umpire | Error | DataOnlySharedTypeRule
-UMP1007 | Umpire | Error | SharedTypeBaseRule
-UMP1014 | Umpire | Error | PluginRootRule
-UMP1015 | Umpire | Error | HookNameRule
+UMP010201 | Umpire | Error | SealedRecordRule
+UMP010202 | Umpire | Error | EventHandlerRequestRule
+UMP010203 | Umpire | Error | ContractTypeRule
+UMP010204 | Umpire | Error | PresenterPublishRule
+UMP010205 | Umpire | Error | ImmutableSharedTypeRule
+UMP010206 | Umpire | Error | DataOnlySharedTypeRule
+UMP010207 | Umpire | Error | SharedTypeBaseRule
+UMP010208 | Umpire | Error | PluginRootRule
+UMP010209 | Umpire | Error | HookNameRule

@@ -1,25 +1,25 @@
-# The values of the Umpire analyzer rules (UMP1xxx). This file is the only place of these values: no rule has a default.
-# If a value is missing or not valid, the build reports UMP1000, and that rule does not run.
-# A consumer changes a value in its own .editorconfig. Severity uses the standard key: dotnet_diagnostic.UMP1001.severity = none
+# The values of the Umpire analyzer rules (UMP01xxxx). This file is the only place of these values: no rule has a default.
+# If a value is missing or not valid, the build reports UMP010001, and that rule does not run.
+# A consumer changes a value in its own .editorconfig. Severity uses the standard key: dotnet_diagnostic.UMP010201.severity = none
 # Keys: umpire.<rule ID>.<key> for one rule, umpire.<key> for all rules that read the key. A rule key wins.
 # In a list, write a comma between the items: a semicolon starts a comment.
 is_global = true
 global_level = -1
 
-# UMP1001: true checks the responses too, false checks only the requests.
-umpire.UMP1001.check_responses = true
-# UMP1007: the bases that a Domain.Shared type can use, apart from the Domain.Shared projects.
-# Empty: an interface such as IComparable<T> needs a method, and UMP1006 does not permit methods.
-# An app adds its own bases, for example: umpire.UMP1007.allowed_bases = Card.TypeKeys.TypeKey, Card.Entities.IComponent
-umpire.UMP1007.allowed_bases =
+# UMP010201: true checks the responses too, false checks only the requests.
+umpire.UMP010201.check_responses = true
+# UMP010207: the bases that a Domain.Shared type can use, apart from the Domain.Shared projects.
+# Empty: an interface such as IComparable<T> needs a method, and UMP010206 does not permit methods.
+# An app adds its own bases, for example: umpire.UMP010207.allowed_bases = Card.TypeKeys.TypeKey, Card.Entities.IComponent
+umpire.UMP010207.allowed_bases =
 
 # Formatting (warnings): the maximum characters in a line, lines in a method and lines in a file.
-umpire.UMP1008.max = 120
-umpire.UMP1009.max = 40
-umpire.UMP1010.max = 300
-# UMP1011: one top-level type in a file. true: types with the same name can share a file, for example Module and Module<TSettings>.
-umpire.UMP1011.allow_same_name = true
-# UMP1012: the order of the members in a type: by kind, then by access, then static before instance (static_first = true).
-umpire.UMP1012.kind_order = constant, field, constructor, finalizer, property, event, method, nested_type
-umpire.UMP1012.access_order = public, internal, protected_internal, protected, private_protected, private
-umpire.UMP1012.static_first = true
+umpire.UMP010101.max = 120
+umpire.UMP010102.max = 40
+umpire.UMP010103.max = 300
+# UMP010104: one top-level type in a file. true: types with the same name can share a file, for example Module and Module<TSettings>.
+umpire.UMP010104.allow_same_name = true
+# UMP010105: the order of the members in a type: by kind, then by access, then static before instance (static_first = true).
+umpire.UMP010105.kind_order = constant, field, constructor, finalizer, property, event, method, nested_type
+umpire.UMP010105.access_order = public, internal, protected_internal, protected, private_protected, private
+umpire.UMP010105.static_first = true

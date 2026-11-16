@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 public sealed class CommentRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1013",
+        "UMP010106",
         "The code has no comments",
         "The code has a comment. Remove it. Put the information in a name: a type, a member, a variable or a test.",
         "Umpire",

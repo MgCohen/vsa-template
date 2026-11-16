@@ -3,7 +3,7 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// The test of the Domain.Shared rules (UMP1005, UMP1006, UMP1007). A <Module>.Domain.Shared project is the published
+// The test of the Domain.Shared rules (UMP010205, UMP010206, UMP010207). A <Module>.Domain.Shared project is the published
 // domain of a module: the keys, ids and components that other modules read.
 // Umpire.Sdk gives the layer in the MSBuild property UmpireLayer. If the property is not there, the assembly name decides.
 static class DomainShared {

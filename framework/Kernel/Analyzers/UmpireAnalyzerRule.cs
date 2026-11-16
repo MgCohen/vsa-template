@@ -7,12 +7,12 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 // The base of each VSA analyzer rule. A rule gives one constant descriptor and registers its actions.
 // VsaAnalyzer finds each rule of this assembly, so a new rule is one new class. No list of rules changes.
-// Severity uses the standard key: dotnet_diagnostic.UMP1001.severity = warning.
+// Severity uses the standard key: dotnet_diagnostic.UMP010201.severity = warning.
 // Options come from Umpire.Rules.globalconfig or .editorconfig. No rule has a default value: a rule lists its options in
-// RequiredOptions, and VsaAnalyzer reports UMP1000 if one is missing or not valid. A rule key wins over a global key:
-//   umpire.UMP1001.check_responses = false    only UMP1001
+// RequiredOptions, and VsaAnalyzer reports UMP010001 if one is missing or not valid. A rule key wins over a global key:
+//   umpire.UMP010201.check_responses = false    only UMP010201
 //   umpire.check_responses = false            all VSA rules that read the key
-//   umpire.UMP1007.allowed_bases = A, B       a list, with a comma or a semicolon between the items
+//   umpire.UMP010207.allowed_bases = A, B       a list, with a comma or a semicolon between the items
 // In an .editorconfig or .globalconfig line, a semicolon starts a comment. Write a comma there.
 public abstract class UmpireAnalyzerRule(DiagnosticDescriptor rule) {
     public DiagnosticDescriptor Rule { get; } = rule;

@@ -7,6 +7,7 @@ public sealed class Options {
         UseSameConcept = false,
         Depth = Umpire.Architecture.Depth.WithChildren,
         Access = Umpire.Architecture.Access.Public,
+        Required = false,
     };
 
     public Permission? DefaultPermission { get; set; }
@@ -14,6 +15,7 @@ public sealed class Options {
     public bool? UseSameConcept { get; set; }
     public Depth? Depth { get; set; }
     public Access? Access { get; set; }
+    public bool? Required { get; set; }
 
     internal Options Over(Options fallback) => new() {
         DefaultPermission = DefaultPermission ?? fallback.DefaultPermission,
@@ -21,5 +23,6 @@ public sealed class Options {
         UseSameConcept = UseSameConcept ?? fallback.UseSameConcept,
         Depth = Depth ?? fallback.Depth,
         Access = Access ?? fallback.Access,
+        Required = Required ?? fallback.Required,
     };
 }

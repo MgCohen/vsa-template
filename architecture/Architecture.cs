@@ -7,6 +7,9 @@ public abstract class Architecture {
     Root? root;
     Options? options;
     List<PartRule>? pairs;
+    RuleBook? book;
+    IReadOnlyList<CountStatement>? counts;
+    IReadOnlyList<MatchStatement>? matches;
 
     protected Architecture(string rootPath = "") {
         this.rootPath = rootPath;
@@ -26,6 +29,17 @@ public abstract class Architecture {
         }
     }
 
+    RuleBook Book {
+        get {
+            if (book is not null) {
+                return book;
+            }
+            book = new RuleBook(Root);
+            Rules(book);
+            return book;
+        }
+    }
+
     public IEnumerable<Part> Parts() => Root.Walk().Skip(1);
 
     public IReadOnlyList<PartRule> Resolve() {
@@ -35,16 +49,26 @@ public abstract class Architecture {
         var all = new List<PartRule>();
         AddSameConcept(all);
 
-        var book = new RuleBook(Root);
-        Rules(book);
-
-        foreach (var rule in book.Rules) {
+        foreach (var rule in Book.Rules) {
             AddRule(all, rule);
         }
         return pairs = all;
     }
 
     public virtual IReadOnlyList<FolderAlias> FolderAliases(string appRoot) => [];
+
+    internal IReadOnlyList<CountStatement> CountStatements() => counts ??= Statements.Counts(this, Book);
+
+    internal IReadOnlyList<MatchStatement> MatchStatements() => matches ??= Statements.Matches(this, Book);
+
+    internal void Validate(Entry entry, string text) {
+        foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts().Any(p => p.Is(t)))) {
+            throw new InvalidOperationException($"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
+        }
+        foreach (var filter in entry.Filters.Where(f => f.Kind != FilterKind.Under && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
+            throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a concept that AddGroup adds.");
+        }
+    }
 
     protected virtual void Configure(Options defaults) { }
 
@@ -168,14 +192,5 @@ public abstract class Architecture {
             }
         }
         return terms.Count == 0 ? "always" : string.Join(", ", terms);
-    }
-
-    void Validate(Entry entry, string text) {
-        foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts().Any(p => p.Is(t)))) {
-            throw new InvalidOperationException($"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
-        }
-        foreach (var filter in entry.Filters.Where(f => f.Kind != FilterKind.Under && !Parts().Any(p => p.Is(f.Target) && p.IsGroup))) {
-            throw new InvalidOperationException($"Rules: \"{text}\": {filter} needs a concept that AddGroup adds.");
-        }
     }
 }
