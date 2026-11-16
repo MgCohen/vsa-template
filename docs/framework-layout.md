@@ -51,6 +51,10 @@ engine Rules step (engine/Features/Rules)
 ├─ ResolvedArchitecture.Place(facts)              architecture/Queries: PartOf
 ├─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Queries: MayUse
 └─ ResolvedArchitecture.Counts, Matches(bindings) architecture/Queries: CountCheck, MatchCheck
+
+ArchitectureTest<T> (a test of a definition)
+├─ reflection: the base types of one type        architecture/Testing: TypeFactsOf
+└─ ResolvedArchitecture.Place, DecisionFor        architecture/Queries: PartOf, MayUse
 ```
 
 `architecture/Queries/` takes plain facts (`TypeFacts`: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.

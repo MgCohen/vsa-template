@@ -22,7 +22,8 @@ PackVariant/                             app block: check entry PackVariantApp, 
 └─ Packs/Ecs/                            pack block: check entry Ecs<THost>, definition PackArchitecture
    ├─ EcsPack.cs                         the pack class
    ├─ Architecture/                      EcsArchitecture and its concept records
-   └─ Kernel/                            EcsSystem: the base of each system
+   ├─ Kernel/                            EcsSystem: the base of each system
+   └─ Tests/                             Ecs.Tests: the tests of EcsArchitecture
 ```
 
 The pack class is the check entry of the pack block (`Pack : Block<PackArchitecture>`):
@@ -111,6 +112,24 @@ protected override void DefineFeature(PartGroup feature) {
 A define method can also give a new group the shape of a base group: `DefineFeature(block.AddGroup<EcsFeature>())`. Then the new group has the feature parts, but only the rules in the table above.
 
 A variant does not remove or move a base part. `PackVariantTests` checks that the variant keeps each decision of `VsaArchitecture`.
+
+## Tests of the variant
+
+A pack tests its variant in `Packs/<Name>/Tests/`, with `VsaArchitectureTest<TArchitecture>`. The test project is nested, so the root project of the app does not compile it.
+
+```csharp
+public sealed class EcsArchitectureTests : VsaArchitectureTest<EcsArchitecture> {
+    [Test]
+    public void A_system_uses_the_components_of_its_own_module() {
+        var system = At<DamageSystem>("EcsFeatures/Combat/Systems");
+
+        Assert.That(MayUse(system, At("EcsFeatures/Combat/Components")).Permission, Is.EqualTo(Permission.Allow));
+        Assert.That(MayUse(system, At("EcsFeatures/Loot/Components")).Permission, Is.EqualTo(Permission.Deny));
+    }
+}
+```
+
+See "Tests of a definition" in `architecture-engine.md`.
 
 ## The `using` steps
 

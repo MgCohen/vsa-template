@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The tests of the pack definition EcsArchitecture. It is the Tests/ part of the pack block. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- NUnit on Microsoft.Testing.Platform (global.json). -->
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../PackVariant.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" />
+  </ItemGroup>
+</Project>

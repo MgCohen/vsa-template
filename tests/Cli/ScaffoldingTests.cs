@@ -95,6 +95,7 @@ public sealed class ScaffoldingTests {
             ("SampleApp.csproj", App),
             ("SampleApp.slnx.template", App),
             ("Tests/App.Tests.csproj", App),
+            ("Tests/SampleAppArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
             ("appsettings.json", App),
             ("dotnet-tools.json.template", App),
