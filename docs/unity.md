@@ -42,6 +42,8 @@ Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity
 
 The Umpire analyzers read their rule values from two globalconfig files: `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` and `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig`. Each analyzer package ships its file as `build/<PackageId>.globalconfig`. Unity reads a global config only as `Assets/Default.globalconfig` or `<AsmdefName>.globalconfig`, so the Unity package must copy both files there. If a value is missing, the analyzer reports `UMP010001`.
 
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernel.Analyzers`. The two DLLs are in two packages, and `Umpire.Vsa.Analyzers` has no NuGet dependency on `Umpire.Kernel.Analyzers` (`SuppressDependenciesWhenPacking`). Umpire.Sdk adds both packages. A Unity project, and a project that references `Umpire.Vsa.Analyzers` without Umpire.Sdk, must add both DLLs as analyzers. If the kernel DLL is missing, no VSA rule runs.
+
 ## Build output
 
 An app that `umpire new app` makes writes all build output to `artifacts~/` in the block folder. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.

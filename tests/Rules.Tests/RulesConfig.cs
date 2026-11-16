@@ -11,7 +11,8 @@ sealed class RulesConfig {
     public static RulesConfig Kernel { get; } =
         new(Repo.Path("framework", "Kernel", "Analyzers", "Umpire.Kernel.Analyzers.globalconfig"));
 
-    public static RulesConfig Vsa { get; } = new(Repo.Path("packs", "Vsa", "Tests", "Analyzers", "Umpire.Vsa.Analyzers.globalconfig"));
+    public static RulesConfig Vsa { get; } =
+        new(Repo.Path("packs", "Vsa", "Tests", "Analyzers", "Umpire.Vsa.Analyzers.globalconfig"));
 
     public static IReadOnlyList<RulesConfig> All { get; } = [Kernel, Vsa];
 
@@ -21,8 +22,7 @@ sealed class RulesConfig {
 
     public string FileName => System.IO.Path.GetFileName(Path);
 
-    public string OptionText =>
-        string.Join('\n', Text.Split('\n').Where(line => !line.StartsWith("dotnet_diagnostic.", StringComparison.Ordinal)));
+    public string OptionText => string.Join('\n', Text.Split('\n').Where(line => !IsSeverity(line)));
 
     public IReadOnlyList<string> Keys =>
         [.. Pairs().Select(pair => pair[0].Trim()).Where(key => key is not "is_global" and not "global_level")];
@@ -31,6 +31,8 @@ sealed class RulesConfig {
 
     public string? TryValue(string key) =>
         Pairs().Where(pair => pair[0].Trim() == key).Select(pair => pair[1].Trim()).SingleOrDefault();
+
+    static bool IsSeverity(string line) => line.StartsWith("dotnet_diagnostic.", StringComparison.Ordinal);
 
     IEnumerable<string[]> Pairs() => Text.Split('\n')
         .Where(line => !line.TrimStart().StartsWith('#'))

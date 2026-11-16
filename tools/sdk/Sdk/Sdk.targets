@@ -42,7 +42,7 @@
 
   <!-- Package mode (consumers): package references with the version of this SDK.
        With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
-       A Umpire.* package that the project adds itself, for example Umpire.Vsa.Hosts.Web, gives its own version. The rule engine checks it (UMP030201). -->
+       A Umpire.* package that the project adds itself, for example a web host of the pack, gives its own version. The rule engine checks it (UMP030201). -->
   <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
     <_UmpireV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireVersion)</_UmpireV>
     <_UmpireVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireVersion)</_UmpireVO>

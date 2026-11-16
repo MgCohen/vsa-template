@@ -47,8 +47,21 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
+    public void The_general_build_files_name_no_pack_package() {
+        var lines = Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"))
+            .Where(file => Path.GetExtension(file) is ".props" or ".targets")
+            .SelectMany(file => File.ReadAllLines(file)
+                .Where(line => line.Contains("Umpire.Vsa", StringComparison.Ordinal))
+                .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));
+
+        Assert.That(lines, Is.Empty);
+    }
+
+    [Test]
     public void No_key_is_a_definition_option() {
-        var definition = typeof(Umpire.Architecture.Options).GetProperties().Select(property => Plain(property.Name)).ToHashSet();
+        var definition = typeof(Umpire.Architecture.Options).GetProperties()
+            .Select(property => Plain(property.Name))
+            .ToHashSet();
 
         var clashes = RulesConfig.All.SelectMany(config => config.Keys)
             .Where(key => definition.Contains(Plain(key.Split('.')[^1])));
@@ -56,7 +69,8 @@ public sealed partial class RuleValueOwnerTests {
         Assert.That(clashes, Is.Empty);
     }
 
-    static RulesConfig ConfigOf(RuleAnalyzer analyzer) => analyzer is KernelAnalyzer ? RulesConfig.Kernel : RulesConfig.Vsa;
+    static RulesConfig ConfigOf(RuleAnalyzer analyzer) =>
+        analyzer is KernelAnalyzer ? RulesConfig.Kernel : RulesConfig.Vsa;
 
     static string Key(UmpireAnalyzerRule rule, UmpireOption option) => $"umpire.{rule.Id}.{option.Key}";
 

@@ -16,7 +16,8 @@ public sealed class PackageGraphTests {
     [TestCase("Umpire.Kernel.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]
     public void Each_analyzer_package_has_its_values_and_props(string package) =>
-        Assert.That(Entries(package), Is.SupersetOf(new[] { $"build/{package}.props", $"build/{package}.globalconfig" }));
+        Assert.That(Entries(package),
+            Is.SupersetOf(new[] { $"build/{package}.props", $"build/{package}.globalconfig" }));
 
     [Test]
     public void The_VSA_analyzer_package_has_no_kernel_analyzer() =>
@@ -26,7 +27,7 @@ public sealed class PackageGraphTests {
     public void An_app_with_no_pack_line_gets_the_VSA_pack_and_both_rule_sets() {
         Assert.That(Lines("error UMP010209", "AuditCheck.cs"), Is.Not.Empty, build.Output);
         Assert.That(Lines("warning UMP010101", "LongLine.cs"), Is.Not.Empty, build.Output);
-        Assert.That(Lines("UMP010001", ""), Is.Empty, build.Output);
+        Assert.That(Lines("UMP010001"), Is.Empty, build.Output);
     }
 
     static IReadOnlyList<string> Entries(string package) {
@@ -34,6 +35,9 @@ public sealed class PackageGraphTests {
         return [.. nupkg.Entries.Select(e => e.FullName)];
     }
 
-    IEnumerable<string> Lines(string text, string file) => build.Output.Split('\n')
-        .Where(line => line.Contains(text, StringComparison.Ordinal) && line.Contains(file, StringComparison.Ordinal));
+    IEnumerable<string> Lines(string text) =>
+        build.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));
+
+    IEnumerable<string> Lines(string text, string file) =>
+        Lines(text).Where(line => line.Contains(file, StringComparison.Ordinal));
 }

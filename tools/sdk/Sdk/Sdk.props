@@ -17,7 +17,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <!-- The built-in .NET analyzers and code style rules. The custom VSA rules come from Umpire.Vsa.Analyzers. -->
+  <!-- The built-in .NET analyzers and code style rules. The Umpire rules come from the analyzer packages (Sdk.targets, Umpire.Pack.targets). -->
   <PropertyGroup>
     <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
   </PropertyGroup>
