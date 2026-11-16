@@ -155,11 +155,21 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
 - To select other modules, the app gives its modules in `Modules()`.
+- `Compose` makes one `AppTypes` instance: `AppTypes.Find(keys)`, or `new AppTypes(modules, keys)` if `Modules()` gives the modules. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Run` makes a new instance, so it also finds the assemblies that loaded later.
+- `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
+
+| Member | Gives |
+|---|---|
+| `AppTypes.Find(keys)` | An instance that finds the modules itself |
+| `Roots` | The module roots of the module assemblies, in ordinal order of name |
+| `Modules` | One module for each root, or the modules of `Modules()`, in order |
+| `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in each assembly that references the assembly of `baseType` |
+| `Registered()`, `Implementations(baseType)`, `TypeArguments()` | The marked types (see "One discovery path") |
 
 | Part | Scan for | Rule |
 |---|---|---|
 | Module root | A reference to `Umpire.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `Umpire.Vsa.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
-| Views root | A reference to `Umpire.Vsa.Views` | One component that inherits `ViewsRoot` |
+| Views root | A reference to `Umpire.Vsa.Views` (`ConcreteTypesOf(typeof(ViewsRoot))`) | One component that inherits `ViewsRoot` |
 
 The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
 
@@ -177,8 +187,8 @@ AppTypes.Registered()
 
 | Marker | Side | Meaning |
 |---|---|---|
-| `[AutoRegister(lifetime)]`, `IAutoRegister` | Open or closed class | VSA registers each concrete class. Lifetime default: `Scoped`. |
-| `[TypeArgument]`, `ITypeArgument` | Type argument | A struct or a concrete class that closes the open classes. |
+| `[AutoRegister(lifetime)]` | Open or closed class, its base class or its interface | VSA registers each concrete class. Lifetime default: `Scoped`. |
+| `[TypeArgument]` | Type argument, its base class or its interface | A struct or a concrete class that closes the open classes. |
 | `[assembly: TypeArgument(typeof(int))]` | Type argument | A type that cannot have the attribute. |
 
 The markers are in `Umpire.Markers`. The same package has the stripping markers for IL2CPP. The UnityLinker finds them by class name, so do not rename them:
@@ -186,18 +196,10 @@ The markers are in `Umpire.Markers`. The same package has the stripping markers 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
 | `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, `Module`, `App`, `Pack`, `AppHost` |
-| `[RequireImplementors]` | Interface | Each implementor | `IAutoRegister`, `ITypeArgument`, `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
+| `[RequireImplementors]` | Interface | Each implementor | `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
 | `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
 
 The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernel uses the markers assembly in code.
-
-An IL2CPP player with stripping High also needs a `link.xml` that keeps the markers assembly. Without it, the linker removes `[AutoRegister]` from the bases, and the scan finds no handlers. The UPM package must ship this file:
-
-```xml
-<linker>
-  <assembly fullname="Umpire.Markers" preserve="all" />
-</linker>
-```
 
 The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, the four hook bases and `Presenter`. A class that derives from one of them needs no marker.
 
@@ -210,7 +212,8 @@ public readonly record struct Health(int Value) : IResource;
 sealed class ChangeResourceHandler<T> : CommandHandler<ChangeResourceCommand<T>, int>
     where T : struct, IResource { ... }                     // closed for Health, Mana
 
-public interface IDamageRule : IAutoRegister;
+[AutoRegister]
+public interface IDamageRule;
 sealed class DamageRule<T> : IDamageRule where T : struct, IWeapon { ... }   // closed for Sword, Dagger
 
 [AutoRegister(Lifetime.Singleton)]
@@ -221,7 +224,7 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 
 | Rule | Detail |
 |---|---|
-| Registration | The class itself, and each base class or interface with the marker, except `IAutoRegister`. |
+| Registration | The class itself, and each base class or interface with the marker. |
 | One instance | Each marked base resolves the class itself, so a scope has one instance. |
 | Type arguments | Only marked types and assembly types. A type without the marker is never a type argument. |
 | Constraints | `class`, `struct`, `unmanaged` and each type constraint. A struct with a reference field does not meet `unmanaged`. |
@@ -239,6 +242,30 @@ public class ShopApp : App<Vsa<WebVsaHost>> {
     protected override IKeySource Keys() => new GeneratedKeys();
 }
 ```
+
+### Reflection uses
+
+Umpire uses reflection only in the places below. Each other part gets its types from `AppTypes`.
+
+| Place | Use | Reason |
+|---|---|---|
+| `AppAssemblies` (Kernel) | `AppDomain.GetAssemblies`, `Assembly.Load`, `PEReader` | Finds the module assemblies. Only the `AppTypes` instance calls it |
+| `LoadedTypes.Of` (Architecture) | `GetTypes` | The one load-safe type read |
+| `ModuleRoot.Create` (Kernel) | `Activator.CreateInstance` | Creates the module class. A class with no public constructor with no parameters stops the start, with a message |
+| `AppTypes`, `ConstraintKeys` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class for each type argument |
+| `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[TypeArgument]` by name |
+| `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope of the runtime message type |
+| `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
+| `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
+| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter for its events |
+| `ViewsInstaller` (Views) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
+| `HttpApi` (Hosts.Web) | `MakeGenericMethod` | Reads the static `Route` and `Method` of each request |
+| `ConsoleEntry` (Composition) | `MakeGenericMethod`, `Task.Result` | Sends the entry command. It reads the result through `IMessageResult` |
+| `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `MakeGenericType` | Finds the handler of a request or a command |
+| `DefinitionFinder` (engine) | `LoadedTypes.Of`, `Activator`, `GetProperty` | Finds the app class and reads its architecture |
+| `RuleAnalyzer` (Kernel.Analyzers) | `GetTypes`, `Activator` | Finds the rule classes in its own assembly, in the compiler |
+
+The table does not list the uses that only read metadata, for example `IsAssignableFrom`, `GetInterfaces` and `GetGenericArguments`.
 
 ### Checks
 
@@ -391,6 +418,6 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 ## Open questions
 
 - Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
-- Generated module list: Umpire.Sdk knows the module projects at build time. It can write their names in the host assembly, and `AppTypes` can read that list first (#111).
+- Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
 - IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
 - Hosting DLLs in Unity: Umpire.Kernel references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.

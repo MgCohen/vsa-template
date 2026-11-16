@@ -5,19 +5,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 static class ViewsInstaller {
-    internal static Type? FindRoot(IEnumerable<Assembly> viewAssemblies) {
-        var roots = viewAssemblies
-            .SelectMany(assembly => assembly.GetTypes())
-            .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(typeof(ViewsRoot)))
-            .ToArray();
-        return roots switch {
+    internal static Type? FindRoot(IReadOnlyList<Type> roots) =>
+        roots switch {
             [] => null,
             [var root] => root,
             _ => throw new InvalidOperationException(
-                $"The app has {roots.Length} views roots: {string.Join(", ", roots.Select(t => t.FullName))}. "
+                $"The app has {roots.Count} views roots: {string.Join(", ", roots.Select(t => t.FullName))}. "
                 + "Keep one component that inherits ViewsRoot."),
         };
-    }
 
     internal static void Install(IServiceCollection services) =>
         services.AddRazorComponents().AddInteractiveServerComponents();

@@ -150,8 +150,8 @@ public sealed class SharedTypeBaseRuleTests {
 
     [Test]
     public Task Marker_interface_of_VSA_passes() => Analyzer.VerifyIn(Shared.Assembly, """
-        public readonly record struct Mana(int Value) : Umpire.Markers.ITypeArgument;
-        """, ("Umpire.Markers", "namespace Umpire.Markers { public interface ITypeArgument { } }"));
+        public readonly record struct Mana(int Value) : Umpire.Markers.IKeyMarker;
+        """, ("Umpire.Markers", "namespace Umpire.Markers { public interface IKeyMarker { } }"));
 
     [Test]
     public Task Base_in_allowed_bases_passes() => Analyzer.VerifyIn(Shared.Assembly, """

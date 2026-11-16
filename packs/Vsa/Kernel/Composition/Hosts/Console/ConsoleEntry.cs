@@ -24,7 +24,8 @@ sealed class ConsoleEntry(
             var send = typeof(ICommandSender).GetMethod(nameof(ICommandSender.SendAsync))!.MakeGenericMethod(ResultOf(command)!);
             var task = (Task)send.Invoke(sender, [message, cancellationToken])!;
             await task.ConfigureAwait(false);
-            exit.Code = ExitCodeOf(task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task)!);
+            var result = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task)!;
+            exit.Code = ExitCodeOf((IMessageResult)result);
         } catch (Exception e) when (e is not OperationCanceledException) {
             var reason = (e as TargetInvocationException)?.InnerException?.Message ?? e.Message;
             await Console.Error.WriteLineAsync($"{command.Name} failed: {reason}").ConfigureAwait(false);
@@ -40,13 +41,12 @@ sealed class ConsoleEntry(
         .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IConsoleCommand<>))?
         .GetGenericArguments()[0];
 
-    static int ExitCodeOf(object result) {
-        var type = result.GetType();
-        if (type.GetProperty(nameof(Result<int>.Error))!.GetValue(result) is Error error) {
+    static int ExitCodeOf(IMessageResult result) {
+        if (result.Error is { } error) {
             Console.Error.WriteLine($"{error.Code}: {error.Message}");
             return 1;
         }
-        var value = type.GetProperty(nameof(Result<int>.Value))!.GetValue(result);
+        var value = result.Value;
         return value switch {
             int code => code,
             not null when value.GetType().GetProperty("ExitCode")?.GetValue(value) is int code => code,

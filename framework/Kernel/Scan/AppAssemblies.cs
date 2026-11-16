@@ -1,13 +1,24 @@
 namespace Umpire.Kernel;
 
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using Umpire.Architecture;
 
-static class AppAssemblies {
+sealed class AppAssemblies {
     const string TestFramework = "nunit.framework";
 
-    internal static IReadOnlyList<Assembly> OfModules() {
+    readonly ConcurrentDictionary<Assembly, Type[]> types = new();
+    readonly ConcurrentDictionary<Assembly, IReadOnlyList<Assembly>> referencing = new();
+
+    internal IReadOnlyList<Type> TypesOf(Assembly assembly) =>
+        types.GetOrAdd(assembly, loaded => [.. LoadedTypes.Of(loaded)]);
+
+    internal IReadOnlyList<Assembly> ThatReference(Assembly referenced) =>
+        referencing.GetOrAdd(referenced, Scan);
+
+    internal IReadOnlyList<Assembly> OfModules() {
         var found = new List<Assembly>();
         var seen = new HashSet<Assembly>();
         var bases = new Queue<Assembly>([typeof(Module).Assembly]);
@@ -25,7 +36,7 @@ static class AppAssemblies {
         return found;
     }
 
-    internal static IReadOnlyList<Assembly> ThatReference(Assembly referenced) {
+    static IReadOnlyList<Assembly> Scan(Assembly referenced) {
         var name = referenced.GetName().Name!;
         var found = new List<Assembly>();
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
@@ -43,9 +54,6 @@ static class AppAssemblies {
 
     static bool IsTestAssembly(Assembly assembly) =>
         assembly.GetReferencedAssemblies().Any(reference => reference.Name == TestFramework);
-
-    static bool DefinesModuleBase(Assembly assembly) =>
-        AppTypes.Types(assembly).Any(t => t is { IsClass: true, IsAbstract: true } && t.IsSubclassOf(typeof(Module)));
 
     static void Add(List<Assembly> found, Assembly assembly) {
         if (!found.Contains(assembly)) {
@@ -84,6 +92,9 @@ static class AppAssemblies {
             return null;
         }
     }
+
+    bool DefinesModuleBase(Assembly assembly) =>
+        TypesOf(assembly).Any(t => t is { IsClass: true, IsAbstract: true } && t.IsSubclassOf(typeof(Module)));
 
     sealed record AssemblyFile(string Name, bool References);
 }

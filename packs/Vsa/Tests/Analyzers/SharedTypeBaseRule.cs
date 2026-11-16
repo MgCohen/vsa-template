@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 // UMP1007: the types of a <Module>.Domain.Shared project have only permitted bases. The rule checks each base type
 // and each interface in the base list of a type. A permitted base is in a .Domain.Shared assembly (this project or
-// another one) or in Umpire.Markers (for example ITypeArgument), or its metadata name is in the option
+// another one) or in Umpire.Markers (for example a marker interface), or its metadata name is in the option
 // allowed_bases, for example System.IEquatable`1.
 // The rule compares the original definition, so IEquatable<Money> matches System.IEquatable`1.
 // Option: umpire.UMP1007.allowed_bases = Card.TypeKeys.TypeKey, System.IEquatable`1. This rule is a trial (decision D-37).

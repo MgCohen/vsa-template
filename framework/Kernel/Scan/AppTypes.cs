@@ -1,24 +1,40 @@
 namespace Umpire.Kernel;
 
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Umpire.Architecture;
 
-public sealed class AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
+public sealed class AppTypes {
+    readonly IKeySource keys;
+    readonly AppAssemblies scan = new();
+    readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
+    IReadOnlyList<Module>? modules;
+    IReadOnlyList<ModuleRoot>? roots;
     Assembly[]? assemblies;
     Type[]? loaded;
     Type[]? registered;
     Type[]? typeArguments;
 
+    public AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
+        this.keys = keys;
+        this.modules = InOrder(modules);
+    }
+
     public AppTypes(IReadOnlyList<Module> modules) : this(modules, new ConstraintKeys()) {
     }
 
-    public IReadOnlyList<Module> Modules { get; } = InOrder(modules);
+    AppTypes(IKeySource keys) {
+        this.keys = keys;
+    }
 
-    public static IReadOnlyList<Module> FindModules() => InOrder(Roots().Select(root => root.Create()));
+    public IReadOnlyList<Module> Modules => modules ??= InOrder(Roots.Select(root => root.Create()));
 
-    public static IReadOnlyList<ModuleRoot> Roots() => [.. AppAssemblies.OfModules()
-        .SelectMany(ModuleRoot.In)
+    public IReadOnlyList<ModuleRoot> Roots => roots ??= [.. scan.OfModules()
+        .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
         .OrderBy(root => root.Name, StringComparer.Ordinal)];
+
+    public static AppTypes Find(IKeySource keys) => new(keys);
 
     public static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
         .OrderBy(module => module.Order)
@@ -27,16 +43,10 @@ public sealed class AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
     public static string NameOf(Type rootClass) =>
         rootClass.Namespace is { } name ? name[(name.LastIndexOf('.') + 1)..] : rootClass.Name;
 
-    public static IEnumerable<Type> Types(Assembly assembly) {
-        try {
-            return assembly.GetTypes();
-        } catch (ReflectionTypeLoadException e) {
-            return e.Types.OfType<Type>();
-        }
-    }
+    public static IEnumerable<Type> Types(Assembly assembly) => LoadedTypes.Of(assembly);
 
-    public static IReadOnlyList<Assembly> AssembliesThatReference(Assembly referenced) =>
-        AppAssemblies.ThatReference(referenced);
+    public IReadOnlyList<Type> ConcreteTypesOf(Type baseType) =>
+        concreteTypes.GetOrAdd(baseType, FindConcreteTypes);
 
     public IReadOnlyList<Type> Registered() => registered ??= [.. Loaded()
         .Where(MarkedTypes.IsAutoRegistered)
@@ -75,8 +85,12 @@ public sealed class AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
         return keys.KeysFor(parameters[0], TypeArguments()).Select(key => definition.MakeGenericType(key));
     }
 
+    IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. scan.ThatReference(baseType.Assembly)
+        .SelectMany(scan.TypesOf)
+        .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(baseType))];
+
     Type[] Loaded() => loaded ??= [.. Assemblies()
-        .SelectMany(Types)
+        .SelectMany(scan.TypesOf)
         .Where(t => !t.IsDefined(typeof(CompilerGeneratedAttribute)))];
 
     Assembly[] Assemblies() => assemblies ??= [.. Modules.Select(module => module.GetType().Assembly).Distinct()];

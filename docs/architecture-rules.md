@@ -128,7 +128,7 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `CA1052`, `CA1012` | A class with only static members is `static`. An abstract class has no public constructor | `dotnet_code_quality.<ID>.api_surface` |
 | `CA2000` | Dispose each `IDisposable` object | |
 | `CA1849` | No blocking call, such as `.Result`, in an `async` method | |
-| `CA1812` | An internal or private class that no code creates | A type with a reflection base is not reported. Handlers and the types that dependency injection creates give false warnings until issue #41 is closed |
+| `CA1812` | An internal or private class that no code creates | Handlers and the types that dependency injection creates give false warnings until issue #41 is closed |
 | `UMP1008` | Characters in a line | `umpire.UMP1008.max` |
 | `UMP1009` | Lines in a method | `umpire.UMP1009.max` |
 | `UMP1010` | Lines in a file | `umpire.UMP1010.max` |
@@ -147,40 +147,6 @@ A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `ki
 The analyzer tests read the real `Umpire.Rules.globalconfig`. A test config overrides a value, because the rules file has `global_level = -1`.
 
 EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them as generated code (`Umpire.Migrations.globalconfig` in `obj/`), so no rule checks them.
-
-## Reflection bases: `ReflectionBaseSuppressor`
-
-Reflection can call a private member that no code calls, for example a method that a base class finds by its name. It can also set a field that no code writes. The rules for unused code then give false warnings.
-
-Put `[ReflectionBase]` (package `Umpire.Markers`, namespace `Umpire.Markers`) on the base class or the interface. `ReflectionBaseSuppressor`, a Roslyn `DiagnosticSuppressor` in Umpire.Vsa.Analyzers, then hides the rules in the table below on each type that derives from it or implements it. The base can be indirect or generic, and an interface can inherit the marked interface. A nested type that derives from the base is also covered.
-
-The suppression applies to all private members of the type. A private member that is really not used also gets no warning.
-
-The suppressor finds the attribute by its name, `ReflectionBaseAttribute`. A project that cannot reference the package, or a third-party base, can declare its own attribute with that name.
-
-```csharp
-[ReflectionBase]
-public abstract class Screen { }
-
-public sealed class MainMenu : Screen
-{
-    private void OnShow() { }   // no IDE0051
-}
-```
-
-| Suppression | Hides |
-|---|---|
-| `UMP9001` | `IDE0051`: a private member that no code uses |
-| `UMP9002` | `IDE0052`: a private member that no code reads |
-| `UMP9003` | `CS0649`: a field that no code writes |
-| `UMP9004` | `CS0169`: a field that no code uses |
-| `UMP9005` | `IDE0060`: a parameter that no code uses |
-| `UMP9006` | `CA1822`: a member that can be static. Reflection that uses `BindingFlags.Instance` cannot find a static member |
-| `UMP9007` | `CA1812`: an internal class that no code creates. `Activator` creates it |
-
-A suppressor can hide a warning that `TreatWarningsAsErrors` makes an error, for example CS0649.
-
-Each layer references `Umpire.Markers`. It is a separate package because Umpire.Vsa.Analyzers is private (`PrivateAssets="all"`): a DLL in it does not reach the host at runtime.
 
 ## Architecture: the rule engine
 

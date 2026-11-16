@@ -4,19 +4,20 @@ using Bare;
 using Shelf;
 using Toolbox;
 using Twin;
+using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernel;
 
 public sealed class AppTypesTests {
     [Test]
     public void RootsAreInOrdinalOrderOfName() {
-        var roots = AppTypes.Roots();
+        var roots = AppTypes.Find(new ConstraintKeys()).Roots;
 
         Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Answers", "Bare", "Battle", "Cards", "Echo", "Resources", "Shelf", "Signals", "Toolbox", "Twin" }));
     }
 
     [Test]
     public void TheScanSkipsTheModulesOfATestAssembly() {
-        Assert.That(AppTypes.Roots().Select(root => root.Name), Has.None.EqualTo("TestOnly"));
+        Assert.That(AppTypes.Find(new ConstraintKeys()).Roots.Select(root => root.Name), Has.None.EqualTo("TestOnly"));
         var testRoots = ModuleRoot.In(typeof(TestOnly.TestOnlyModule).Assembly).Select(root => root.Name);
 
         Assert.That(testRoots, Does.Contain("TestOnly"));
@@ -62,7 +63,43 @@ public sealed class AppTypesTests {
     }
 
     [Test]
+    public void OneInstanceKeepsItsScan() {
+        var types = new AppTypes([new ShelfModule()]);
+        var roots = types.Roots;
+        var modules = types.ConcreteTypesOf(typeof(Module));
+
+        Assert.That(types.Roots, Is.SameAs(roots));
+        Assert.That(types.ConcreteTypesOf(typeof(Module)), Is.SameAs(modules));
+    }
+
+    [Test]
+    public void ConcreteTypesOfFindsTheClassesInEachAssemblyThatReferencesTheBase() {
+        var types = new AppTypes([new ShelfModule()]).ConcreteTypesOf(typeof(Module));
+
+        Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Contain(typeof(BareModule)));
+        Assert.That(types, Has.None.Matches<Type>(type => type.IsAbstract));
+    }
+
+    [Test]
+    public void RootWithNoEmptyConstructorIsAnError() {
+        var root = new ModuleRoot("Valued", typeof(ValuedModule).Assembly, [typeof(ValuedModule)]);
+
+        var error = Assert.Throws<InvalidOperationException>(() => root.Create());
+
+        Assert.That(error.Message, Does.StartWith("Module Valued cannot create ")
+            .And.Contain(nameof(ValuedModule))
+            .And.Contain("no public constructor with no parameters"));
+    }
+
+    [Test]
     public void ANestedModuleClassIsNotARoot() {
         Assert.That(ModuleRoot.In(typeof(AppTypesTests).Assembly).Select(root => root.Name), Is.EqualTo(new[] { "TestOnly" }));
+    }
+
+    public sealed class ValuedModule(int value) : Module {
+        public int Value => value;
+
+        public override void Configure(IServiceCollection services) {
+        }
     }
 }
