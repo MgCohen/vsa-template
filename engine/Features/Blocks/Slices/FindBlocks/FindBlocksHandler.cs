@@ -18,7 +18,8 @@ sealed class FindBlocksHandler : CommandHandler<FindBlocksCommand, FindBlocksRes
         var entries = reader.Entries().Concat(files.Select(f => f.Entry)).ToList();
         var folder = BlockSearch.Folder(project, command.Declared, entries);
         if (folder is not null) {
-            var below = EntryFiles.Below(folder).Concat(EntryFiles.Above(folder)).ToList();
+            IReadOnlyList<EntryFile> above = string.IsNullOrWhiteSpace(command.Declared) ? [] : EntryFiles.Above(folder);
+            var below = EntryFiles.Below(folder).Concat(above).ToList();
             files.AddRange(below);
             entries.AddRange(below.Select(f => f.Entry));
         }

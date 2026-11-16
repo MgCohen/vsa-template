@@ -1,12 +1,25 @@
 namespace Umpire.Architecture;
 
 static class BlockPlaces {
-    public static IReadOnlyList<BlockPlace> Covered(Architecture definition, string blockFolder, IReadOnlyList<string> innerBlocks) {
-        var parts = definition.Parts().Where(p => !p.IsExternal && !p.IsBlockPlace && (p.HasFolder || p.IsGroup)).ToList();
-        return [.. Relative(blockFolder, innerBlocks)
-            .SelectMany(inner => parts
-                .Where(part => Covers(part.Path.Split('/'), inner.Split('/')))
-                .Select(part => new BlockPlace(part, Full(blockFolder, inner), inner)))];
+    public static IReadOnlyList<BlockPlace> Covered(
+        Architecture definition, string blockFolder, IReadOnlyList<string> innerBlocks) {
+        var parts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup)).ToList();
+        var inner = Relative(blockFolder, innerBlocks).ToList();
+        var outermost = inner.Where(folder => !inner.Any(other => other != folder && Contains(other, folder)));
+        var covered = new List<BlockPlace>();
+        foreach (var folder in outermost) {
+            var segments = folder.Split('/');
+            if (parts.Any(p => p.IsBlockPlace && Same(p.Path.Split('/'), segments))) {
+                continue;
+            }
+            var part = parts.Where(p => !p.IsBlockPlace && Overlaps(p.Path.Split('/'), segments))
+                .OrderByDescending(p => p.Path.Split('/').Length)
+                .FirstOrDefault();
+            if (part is not null) {
+                covered.Add(new BlockPlace(part, Full(blockFolder, folder), folder));
+            }
+        }
+        return covered;
     }
 
     public static IReadOnlyList<BlockPlace> Empty(Architecture definition, string blockFolder, IReadOnlyList<string> innerBlocks) {
@@ -17,8 +30,12 @@ static class BlockPlaces {
                 .Select(folder => new BlockPlace(place, Full(blockFolder, folder), folder)))];
     }
 
-    static bool Covers(string[] pattern, string[] inner) =>
-        pattern.Length >= inner.Length && inner.Select((folder, i) => Fits(pattern[i], folder)).All(fits => fits);
+    static bool Overlaps(string[] pattern, string[] inner) =>
+        Enumerable.Range(0, Math.Min(pattern.Length, inner.Length)).All(i => Fits(pattern[i], inner[i]));
+
+    static bool Same(string[] pattern, string[] inner) => pattern.Length == inner.Length && Overlaps(pattern, inner);
+
+    static bool Contains(string outer, string inner) => inner.StartsWith(outer + "/", StringComparison.OrdinalIgnoreCase);
 
     static bool Fits(string pattern, string folder) =>
         pattern.StartsWith("{", StringComparison.Ordinal) || string.Equals(pattern, folder, StringComparison.OrdinalIgnoreCase);

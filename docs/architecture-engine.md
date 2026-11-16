@@ -367,13 +367,15 @@ A block is a folder tree of code with one check entry. The check entry names the
 | `umpire.json` | `{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }` | The folder of the file |
 
 - The engine reads the entries from the DLLs of the host output (with `MetadataLoadContext`, with no instance) and from the `umpire.json` files. The search for `umpire.json` skips `bin/`, `obj/` and each folder whose name ends with `~`.
-- The project folder of an assembly is the deepest common folder of its source files, or the first folder above it with a `.csproj` file.
+- The project folder of an assembly is the deepest common folder of its source files (not the generated files), or the first folder above it with a `.csproj` file.
+- For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).
 - A typed base counts only for a type that is not abstract. Thus `Pack` (abstract, in `framework/Kernel/`) gives no entry, and `Vsa<THost>` gives one. Two types of one form with one architecture in one folder are one entry.
 - The nearest block wins: a source file belongs to the deepest block folder above it.
 - The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
-- An outer part that covers the folder of an inner block gives `UMP020401`. A place with no check entry gives `UMP020402`.
+- An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part. A block in another inner block is a problem of that inner block. A place with no check entry gives `UMP020402`.
+- The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The engine does not check the types of these DLLs.
 
-`PackArchitecture` (Umpire.Kernel) is the shape of a pack: the pack class in the pack folder (`<Name>Pack.cs`, required), and the folders `Architecture/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`).
+`PackArchitecture` (Umpire.Kernel) is the shape of a pack: the pack class in the pack folder (`<Name>Pack.cs`, required), and the folders `Architecture/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`). The pack class uses `Architecture/` and `Kernel/`, `Architecture/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack.
 
 ## One version
 

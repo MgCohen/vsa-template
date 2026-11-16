@@ -103,6 +103,30 @@ public sealed class RunEngineTests {
         }
     }
 
+    [TestCase("packs", "Vsa")]
+    [TestCase("tests", "Fixtures", "Blocks", "Packs", "Alpha")]
+    public async Task A_pack_block_passes_its_own_check(params string[] folder) {
+        var result = await Run(project: Repo.Path(folder));
+
+        Assert.That(result.Lines, Has.None.Contains(": error "), string.Join(Environment.NewLine, result.Lines));
+    }
+
+    [Test]
+    public async Task An_unmarked_block_in_a_part_folder_gives_UMP020401() {
+        var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
+        Directory.CreateDirectory(store);
+        try {
+            File.WriteAllText(Path.Combine(store, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
+
+            var result = await Run(project: Notes);
+
+            Assert.That(result.Lines, Has.One.Contains("error UMP020401: Infrastructure (Features/{feature}/Infrastructure) covers "
+                + "the folder Features/Notebook/Infrastructure/Store"));
+        } finally {
+            Directory.Delete(store, recursive: true);
+        }
+    }
+
     [Test]
     public async Task The_engine_finds_no_errors_in_a_block_with_inner_blocks() {
         var result = await Run(project: Repo.Path("tests", "Fixtures", "Blocks"));

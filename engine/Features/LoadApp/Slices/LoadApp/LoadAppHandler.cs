@@ -28,7 +28,7 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         }
         var definition = found.Value;
         var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
-        var assemblies = app.Concat(loader.ExternalAssemblies(externals)).ToList();
+        var assemblies = app.Concat(loader.ExternalAssemblies(externals)).Concat(loader.ReferencedAssemblies(app)).Distinct().ToList();
         return new AppInput(definition, assemblies, root, blocks.InnerFolders);
     }
 

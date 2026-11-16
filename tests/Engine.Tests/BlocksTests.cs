@@ -111,6 +111,24 @@ public sealed class BlocksTests {
     }
 
     [Test]
+    public void Two_entry_forms_in_one_file_give_UMP030101() {
+        var app = Entry("C:/a", EntryForm.App);
+        var typed = app with { Form = EntryForm.Base, Architecture = VsaArchitecture };
+
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [app, typed], _ => null);
+
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030101"));
+    }
+
+    [Test]
+    public void An_architecture_with_no_empty_constructor_gives_its_reason() {
+        using var reader = new EntryReader(AppContext.BaseDirectory);
+
+        Assert.That(reader.Problem($"{typeof(NamedArchitecture).FullName}, Engine.Tests"),
+            Does.Contain("has no public constructor with no parameters"));
+    }
+
+    [Test]
     public void A_bad_name_in_an_inner_block_gives_UMP030102() {
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), Entry("C:/a/t", EntryForm.File)],
             entry => entry.Form == EntryForm.File ? "names \"X\", but the name has no assembly" : null);

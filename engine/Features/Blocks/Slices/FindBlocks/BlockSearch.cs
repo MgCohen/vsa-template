@@ -17,7 +17,7 @@ static class BlockSearch {
             return new Error(BlocksCodes.NoBlock, NoBlock(project));
         }
         var scoped = entries.Where(e => IsAtOrUnder(e.Folder, folder))
-            .DistinctBy(e => e.Source, StringComparer.OrdinalIgnoreCase)
+            .DistinctBy(e => $"{e.Source}|{e.Key}", StringComparer.OrdinalIgnoreCase)
             .ToList();
         var problems = Problems(scoped, problem);
         if (problems.FirstOrDefault(p => Same(p.Folder, folder)) is { } own) {

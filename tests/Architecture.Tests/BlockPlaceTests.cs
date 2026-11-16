@@ -68,6 +68,23 @@ public sealed class BlockPlaceTests {
     }
 
     [Test]
+    public void An_outer_part_that_contains_an_inner_block_is_a_problem() {
+        var covered = Resolved().CoveredBlocks(block, Inner("Boxes/a/Deep/Store"));
+
+        Assert.That(covered.Select(c => c.Part.Name), Is.EqualTo(new[] { "Box" }));
+    }
+
+    [Test]
+    public void A_block_in_an_inner_block_is_the_problem_of_that_block() {
+        Assert.That(Resolved().CoveredBlocks(block, Inner("Tools", "Tools/Boxes/a")), Is.Empty);
+    }
+
+    [Test]
+    public void A_block_out_of_each_part_folder_is_not_covered() {
+        Assert.That(Resolved().CoveredBlocks(block, Inner("Other/Store")), Is.Empty);
+    }
+
+    [Test]
     public void A_block_at_its_place_is_not_covered() {
         Directory.CreateDirectory(Path.Combine(block, "Packs", "Alpha"));
 

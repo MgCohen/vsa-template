@@ -36,7 +36,7 @@ public sealed class EntryReader : IDisposable {
         Assembly assembly;
         try {
             assembly = context.LoadFromAssemblyName(assemblyName);
-        } catch (FileNotFoundException) {
+        } catch (Exception e) when (e is FileNotFoundException or FileLoadException or BadImageFormatException) {
             return $"the build output has no assembly {assemblyName}";
         }
         var type = assembly.GetType(typeName);
@@ -46,7 +46,10 @@ public sealed class EntryReader : IDisposable {
         if (Base(type, ArchitectureBase) is null) {
             return $"{typeName} does not inherit {ArchitectureBase}";
         }
-        return type.IsAbstract ? $"{typeName} is abstract" : null;
+        if (type.IsAbstract) {
+            return $"{typeName} is abstract";
+        }
+        return type.GetConstructor(Type.EmptyTypes) is null ? $"{typeName} has no public constructor with no parameters" : null;
     }
 
     public void Dispose() => context.Dispose();
@@ -121,6 +124,7 @@ public sealed class EntryReader : IDisposable {
 
     static string? CommonFolder(IEnumerable<Source> sources) {
         var folders = sources
+            .Where(s => !IsGenerated(s.File))
             .Select(s => Path.GetDirectoryName(Path.GetFullPath(s.File))!.Split(Path.DirectorySeparatorChar))
             .ToList();
         if (folders.Count == 0) {
@@ -131,6 +135,9 @@ public sealed class EntryReader : IDisposable {
             .Count();
         return common == 0 ? null : string.Join(Path.DirectorySeparatorChar, folders[0][..common]);
     }
+
+    static bool IsGenerated(string file) =>
+        BuildOutput.Contains(file) || file.Split('/', '\\')[..^1].Any(folder => folder.EndsWith('~'));
 
     static string ProjectFolder(string start) {
         for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent) {
@@ -154,15 +161,13 @@ public sealed class EntryReader : IDisposable {
     static Version VersionOf(string folder) => Version.TryParse(Path.GetFileName(folder), out var version) ? version : new Version();
 
     IEnumerable<BlockEntry> Entries(string dll) {
-        Assembly assembly;
-        Dictionary<string, Source> sources;
         try {
-            assembly = context.LoadFromAssemblyPath(dll);
+            var assembly = context.LoadFromAssemblyPath(dll);
             using var symbols = new SymbolReader(dll);
-            sources = symbols.TypeSources().GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
-        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException) {
+            var sources = symbols.TypeSources().GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
+            return [.. TypeEntries(assembly, sources), .. MetadataEntries(assembly, sources)];
+        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException or TypeLoadException) {
             return [];
         }
-        return [.. TypeEntries(assembly, sources), .. MetadataEntries(assembly, sources)];
     }
 }
