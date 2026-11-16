@@ -2,6 +2,8 @@ namespace Umpire.Architecture;
 
 public sealed class RuleBook {
     internal readonly List<Rule> Rules = [];
+    internal readonly List<Count> Counts = [];
+    internal readonly List<Match> Matches = [];
     readonly Root root;
 
     internal RuleBook(Root root) {
@@ -13,6 +15,6 @@ public sealed class RuleBook {
             throw new InvalidOperationException(
                 $"Rules: For<{Concept.Display(typeof(T))}>() names a concept that the definition does not have. Add it in Define, or remove the rule.");
         }
-        return new From(typeof(T), depth, Rules);
+        return new From(typeof(T), depth, this);
     }
 }

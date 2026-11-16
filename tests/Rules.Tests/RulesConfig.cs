@@ -8,7 +8,7 @@ static class RulesConfig {
 
     public static string Text { get; } = File.ReadAllText(Path);
 
-    // The value of one key, for example Value("umpire.UMP1008.max").
+    // The value of one key, for example Value("umpire.UMP010101.max").
     public static string Value(string key) =>
         Text.Split('\n').Select(line => line.Split('=', 2))
             .Single(pair => pair.Length == 2 && pair[0].Trim() == key)[1].Trim();

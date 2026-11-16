@@ -11,9 +11,9 @@ using Microsoft.CodeAnalysis.Diagnostics;
 // so each DLL has one analyzer class that inherits RuleAnalyzer.
 // Roslyn skips an analyzer only when all of its IDs are off, so this class skips each rule that is off by itself.
 public abstract class RuleAnalyzer : DiagnosticAnalyzer {
-    // UMP1000: an option of a rule is missing or not valid. Each value is in Umpire.Rules.globalconfig, and no rule has a default.
+    // UMP010001: an option of a rule is missing or not valid. Each value is in Umpire.Rules.globalconfig, and no rule has a default.
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
-        "UMP1000",
+        "UMP010001",
         "An Umpire rule option is missing or not valid",
         "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in Umpire.Rules.globalconfig or .editorconfig. "
             + "{0} does not run until the option is valid.",
@@ -57,7 +57,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         });
     }
 
-    // One UMP1000 diagnostic for each option of the rule that the global config does not give, or gives with a bad value.
+    // One UMP010001 diagnostic for each option of the rule that the global config does not give, or gives with a bad value.
     static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, AnalyzerConfigOptions global) {
         var options = new UmpireOptions(rule.Id, global);
         return rule.RequiredOptions

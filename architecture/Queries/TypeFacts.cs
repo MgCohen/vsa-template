@@ -9,5 +9,8 @@ public sealed record TypeFacts(
     IReadOnlyList<string> Uses,
     IReadOnlyList<string> Mentions,
     IReadOnlyList<TypeExposure> Exposures) {
+    public IReadOnlyList<string> BaseArguments { get; init; } = [];
+    public bool IsAbstract { get; init; }
+
     public bool Is(Type target) => Bases.Contains(target.FullName!);
 }

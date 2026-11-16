@@ -1,6 +1,6 @@
 namespace Styled.Infrastructure;
 
-// UMP1009: Sum has 41 lines.
+// UMP010102: Sum has 41 lines.
 public static class LongMethod {
     public static int Sum() {
         var total = 0;

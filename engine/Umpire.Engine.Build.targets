@@ -33,7 +33,7 @@
   <Target Name="UmpireCheck" AfterTargets="Build" DependsOnTargets="_UmpireCheckInputs"
           Condition="'$(UmpireCheck)' == 'true' and '$(DesignTimeBuild)' != 'true'"
           Inputs="@(_UmpireCheckInput)" Outputs="$(_UmpireCheckStamp)">
-    <Error Condition="!Exists('$(_UmpireEngine)')" Code="UMP3003"
+    <Error Condition="!Exists('$(_UmpireEngine)')" Code="UMP030003"
            Text="The rule engine $(_UmpireEngine) does not exist. Restore the Umpire.Engine.Build package again." />
     <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
           Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(_UmpireEngine)&quot; --root &quot;$(_UmpireCheckRoot.TrimEnd('\').TrimEnd('/'))&quot; --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --mode $(UmpireCheckMode) --updatebaseline $(UmpireUpdateBaseline)">

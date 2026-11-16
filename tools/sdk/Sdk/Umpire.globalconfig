@@ -1,5 +1,5 @@
 # The built-in .NET rules of every Umpire.Sdk project: the editor and code style rules. A consumer can change a rule in its own .editorconfig.
-# The values of the Umpire rules (UMP1xxx) are in Umpire.Rules.globalconfig.
+# The values of the Umpire rules (UMP01xxxx) are in Umpire.Rules.globalconfig.
 # The built-in rules come from AnalysisLevel = latest-recommended in Sdk.props.
 # Set a severity with the standard key, for example: dotnet_diagnostic.CA1822.severity = none
 is_global = true

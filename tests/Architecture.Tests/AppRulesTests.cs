@@ -32,7 +32,7 @@ public sealed class AppRulesTests {
     static Permission PresentersUseEvents(Architecture definition) {
         var presenters = FeaturePart(definition, typeof(Vsa.Presenters));
         var events = FeaturePart(definition, typeof(Vsa.Contracts.Events));
-        return Decide.For(definition, presenters, NotesSlice, events, NotesSlice).Permission;
+        return MayUse.For(definition, presenters, NotesSlice, events, NotesSlice).Permission;
     }
 
     static Part FeaturePart(Architecture definition, Type layer) =>

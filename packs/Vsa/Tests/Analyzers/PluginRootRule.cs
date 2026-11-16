@@ -3,11 +3,11 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1014: the root class of a plugin module (UmpireRootFolder = Plugins) inherits Plugin, and the root class of a module
+// UMP010208: the root class of a plugin module (UmpireRootFolder = Plugins) inherits Plugin, and the root class of a module
 // (UmpireRootFolder = Features) does not. The host configures the plugin modules first, and the name of the base says which one it is.
 public sealed class PluginRootRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1014",
+        "UMP010208",
         "A plugin root inherits Plugin, and a module root inherits Module",
         "{0} is the root class of the {1} {2}, but it inherits {3}. Make it inherit {4}.",
         "Umpire",

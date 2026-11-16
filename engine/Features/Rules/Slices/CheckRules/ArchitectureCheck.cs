@@ -27,6 +27,8 @@ sealed class ArchitectureCheck {
     public IReadOnlyList<Finding> Findings() => [
         .. Bindings.All.Where(b => !b.External).SelectMany(checks.Of),
         .. Bindings.Unmapped.Select(RuleChecks.Unmapped),
+        .. checks.Counts(),
+        .. checks.Matches(),
         .. App.Warnings];
 
     public IReadOnlyList<Finding> Findings(string fullName) {

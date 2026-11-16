@@ -3,11 +3,11 @@ namespace Umpire.Vsa.Analyzers;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-// UMP1002: event handlers do not send requests. An event handler reacts to a fact. It does not use a request type
+// UMP010202: event handlers do not send requests. An event handler reacts to a fact. It does not use a request type
 // or IBus. Umpire.Sdk gives the Handlers/Events layer no reference to Contracts/Requests, so this rule catches the rest.
 public sealed class EventHandlerRequestRule() : ForbiddenUseRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1002",
+        "UMP010202",
         "Event handlers do not send requests",
         "Event handler {0} uses {1}. An event handler does not send requests. Move the work to a request handler, or publish an event.",
         "Umpire",

@@ -3,11 +3,11 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1010: a file has at most max lines. The diagnostic marks the first line after the limit.
-// Option: umpire.UMP1010.max, in Umpire.Rules.globalconfig.
+// UMP010103: a file has at most max lines. The diagnostic marks the first line after the limit.
+// Option: umpire.UMP010103.max, in Umpire.Rules.globalconfig.
 public sealed class FileLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1010",
+        "UMP010103",
         "A file has at most the maximum number of lines",
         "The file has {0} lines, and the limit is {1}. Move a type or a part of a type to a new file.",
         "Umpire",

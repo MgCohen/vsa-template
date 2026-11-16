@@ -3,24 +3,24 @@ using Umpire.Vsa.Analyzers;
 
 namespace Rules.Tests;
 
-// The formatting rules UMP1008 to UMP1012. Each test turns on only its own rule. The limits are small, so the code stays short.
+// The formatting rules UMP010101 to UMP010105. Each test turns on only its own rule. The limits are small, so the code stays short.
 public sealed class LineLengthRuleTests {
     static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
 
     [Test]
     public Task Line_at_the_limit_passes() => Analyzer.VerifyFormatting(Rule, """
         class Abc { int v; }
-        """, "umpire.UMP1008.max = 20");
+        """, "umpire.UMP010101.max = 20");
 
     [Test]
     public Task Line_over_the_limit_fails() => Analyzer.VerifyFormatting(Rule, """
         class Abc { int valu{|#0:e; }|}
-        """, "umpire.UMP1008.max = 20", Analyzer.Diagnostic(Rule, 0, 24, 20));
+        """, "umpire.UMP010101.max = 20", Analyzer.Diagnostic(Rule, 0, 24, 20));
 
     // The limit of Umpire.Rules.globalconfig applies when the test gives no limit.
     [Test]
     public Task Limit_comes_from_the_rules_config() {
-        var max = int.Parse(RulesConfig.Value("umpire.UMP1008.max"));
+        var max = int.Parse(RulesConfig.Value("umpire.UMP010101.max"));
         var comment = "// " + new string('x', max - 3);
         var source = string.Join("\n", "class A { }", comment, comment + "{|#0:x|}");
         return Analyzer.VerifyFormatting(Rule, source, "", Analyzer.Diagnostic(Rule, 0, max + 1, max));
@@ -41,11 +41,11 @@ public sealed class MethodLengthRuleTests {
 
     [Test]
     public Task Method_at_the_limit_passes() =>
-        Analyzer.VerifyFormatting(Rule, Method.Replace("{|#0:M|}", "M"), "umpire.UMP1009.max = 4");
+        Analyzer.VerifyFormatting(Rule, Method.Replace("{|#0:M|}", "M"), "umpire.UMP010102.max = 4");
 
     [Test]
     public Task Method_over_the_limit_fails() =>
-        Analyzer.VerifyFormatting(Rule, Method, "umpire.UMP1009.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
+        Analyzer.VerifyFormatting(Rule, Method, "umpire.UMP010102.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
 
     [Test]
     public Task Constructor_over_the_limit_fails() => Analyzer.VerifyFormatting(Rule, """
@@ -55,7 +55,7 @@ public sealed class MethodLengthRuleTests {
                 a = 1;
             }
         }
-        """, "umpire.UMP1009.max = 2", Analyzer.Diagnostic(Rule, 0, "Constructor A", 3, 2));
+        """, "umpire.UMP010102.max = 2", Analyzer.Diagnostic(Rule, 0, "Constructor A", 3, 2));
 
     // A global key applies to each rule that reads it, if no rule key is set. Umpire.Rules.globalconfig sets the rule keys.
     [Test]
@@ -71,7 +71,7 @@ public sealed class FileLengthRuleTests {
         class A {
         }
         // end
-        """, "umpire.UMP1010.max = 3");
+        """, "umpire.UMP010103.max = 3");
 
     [Test]
     public Task File_over_the_limit_fails() => Analyzer.VerifyFormatting(Rule, """
@@ -79,7 +79,7 @@ public sealed class FileLengthRuleTests {
         }
         // one
         {|#0:// two|}
-        """, "umpire.UMP1010.max = 3", Analyzer.Diagnostic(Rule, 0, 4, 3));
+        """, "umpire.UMP010103.max = 3", Analyzer.Diagnostic(Rule, 0, 4, 3));
 }
 
 public sealed class OneTypePerFileRuleTests {
@@ -118,7 +118,7 @@ public sealed class OneTypePerFileRuleTests {
     public Task Option_turns_off_the_same_name_exception() => Analyzer.VerifyFormatting(Rule, """
         abstract class Module { }
         abstract class {|#0:Module|}<TSettings> : Module { }
-        """, "umpire.UMP1011.allow_same_name = false", Analyzer.Diagnostic(Rule, 0, "Module", "Module"));
+        """, "umpire.UMP010104.allow_same_name = false", Analyzer.Diagnostic(Rule, 0, "Module", "Module"));
 }
 
 public sealed class MemberOrderRuleTests {
@@ -126,8 +126,8 @@ public sealed class MemberOrderRuleTests {
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Diagnostic(string name, string group, string previous,
         string order = "static before instance") =>
-        Analyzer.Diagnostic(Rule, 0, name, group, previous, RulesConfig.Value("umpire.UMP1012.kind_order"),
-            RulesConfig.Value("umpire.UMP1012.access_order"), order);
+        Analyzer.Diagnostic(Rule, 0, name, group, previous, RulesConfig.Value("umpire.UMP010105.kind_order"),
+            RulesConfig.Value("umpire.UMP010105.access_order"), order);
 
     [Test]
     public Task Members_in_order_pass() => Analyzer.VerifyFormatting(Rule, """
@@ -186,7 +186,7 @@ public sealed class MemberOrderRuleTests {
             void M() { }
             int value;
         }
-        """, "umpire.UMP1012.kind_order = method, field");
+        """, "umpire.UMP010105.kind_order = method, field");
 
     [Test]
     public Task Static_first_option_changes_the_order() => Analyzer.VerifyFormatting(Rule, """
@@ -194,7 +194,7 @@ public sealed class MemberOrderRuleTests {
             static void M() { }
             void {|#0:N|}() { }
         }
-        """, "umpire.UMP1012.static_first = false",
+        """, "umpire.UMP010105.static_first = false",
         Diagnostic("N", "private method", "private static method", "instance before static"));
 }
 
@@ -274,7 +274,7 @@ public sealed class CommentRuleTests {
         """, "");
 }
 
-// UMP1000: each option of a rule has a valid value, else the rule does not run.
+// UMP010001: each option of a rule has a valid value, else the rule does not run.
 public sealed class RuleOptionTests {
     static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
 
@@ -286,16 +286,16 @@ public sealed class RuleOptionTests {
     [Test]
     public Task Missing_option_fails_and_the_rule_does_not_run() =>
         Analyzer.VerifyFormattingWithoutRulesConfig(Rule, LongLine, "",
-            Option("UMP1008", "max", "a whole number more than 0", "missing"));
+            Option("UMP010101", "max", "a whole number more than 0", "missing"));
 
     [Test]
     public Task Option_that_is_not_valid_fails() =>
-        Analyzer.VerifyFormatting(Rule, LongLine, "umpire.UMP1008.max = many",
-            Option("UMP1008", "max", "a whole number more than 0", "many"));
+        Analyzer.VerifyFormatting(Rule, LongLine, "umpire.UMP010101.max = many",
+            Option("UMP010101", "max", "a whole number more than 0", "many"));
 
     [Test]
     public Task Option_from_the_test_config_is_enough() =>
-        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP1008.max = 20",
+        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP010101.max = 20",
             Analyzer.Diagnostic(Rule, 0, 24, 20));
 
     // Each option of each rule is in Umpire.Rules.globalconfig, with a valid value.

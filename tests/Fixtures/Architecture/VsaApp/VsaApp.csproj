@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- An app in the VSA layout, with one case for each check of VsaArchitecture. VsaAppTests lists the findings that it expects. -->
+  <ItemGroup>
+    <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernel.csproj" />
+    <ProjectReference Include="../../../../packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />
+    <ProjectReference Include="../../../../packs/Vsa/Kernel/Contracts/Requests/Umpire.Vsa.Contracts.Requests.csproj" />
+    <ProjectReference Include="../../../../packs/Vsa/Kernel/Contracts/Commands/Umpire.Vsa.Contracts.Commands.csproj" />
+    <ProjectReference Include="../../../../packs/Vsa/Kernel/Handlers/Requests/Umpire.Vsa.Handlers.Requests.csproj" />
+    <ProjectReference Include="../../../../packs/Vsa/Kernel/Handlers/Commands/Umpire.Vsa.Handlers.Commands.csproj" />
+  </ItemGroup>
+</Project>

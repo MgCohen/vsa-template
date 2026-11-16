@@ -26,11 +26,11 @@ public sealed class PartGroup : IPartChain {
         return this;
     }
 
-    public PartGroup OfType<T>() => OfType(typeof(T));
+    public PartGroup OfType<T>(bool? required = null) => OfType(typeof(T), required);
 
-    public PartGroup OfType(Type type) {
+    public PartGroup OfType(Type type, bool? required = null) {
         foreach (var part in parts) {
-            part.OfType(type);
+            part.OfType(type, required);
         }
         return this;
     }
@@ -39,7 +39,7 @@ public sealed class PartGroup : IPartChain {
 
     IPartChain IPartChain.InParentFolder() => InParentFolder();
 
-    IPartChain IPartChain.OfType<T>() => OfType<T>();
+    IPartChain IPartChain.OfType<T>(bool? required) => OfType<T>(required);
 
-    IPartChain IPartChain.OfType(Type type) => OfType(type);
+    IPartChain IPartChain.OfType(Type type, bool? required) => OfType(type, required);
 }

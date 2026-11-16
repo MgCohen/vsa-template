@@ -7,10 +7,6 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBaselineResult> {
-    public const string StaleEntry = "UMP3005";
-    public const string UnreadableEntry = "UMP3006";
-    public const string NotUpdated = "UMP3007";
-    const string EngineCodePrefix = "UMP3";
     const string UpdateSwitch = "build with -p:UmpireUpdateBaseline=true";
 
     public override Task<Result<ApplyBaselineResult>> HandleAsync(Envelope<ApplyBaselineCommand> envelope) =>
@@ -31,7 +27,7 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
                 continue;
             }
             if (BaselineEntry.Parse(lines[index]) is not { } entry) {
-                return new Error(UnreadableEntry, $"{path}({index + 1},1): this baseline line does not have "
+                return new Error(BaselineCodes.UnreadableEntry, $"{path}({index + 1},1): this baseline line does not have "
                     + $"the form CODE|path|message. Fix the line, or {UpdateSwitch}.");
             }
             if (!open.TryGetValue(entry, out var numbers)) {
@@ -50,14 +46,14 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
 
     static bool IsBaselineError(Finding finding) =>
         finding.Severity == FindingSeverity.Error
-        && !finding.Code.StartsWith(EngineCodePrefix, StringComparison.Ordinal);
+        && !finding.Code.StartsWith(StepCode.Prefix, StringComparison.Ordinal);
 
     static bool IsIncompleteRun(Finding finding) =>
-        finding.Code.StartsWith(EngineCodePrefix, StringComparison.Ordinal)
+        finding.Code.StartsWith(StepCode.Prefix, StringComparison.Ordinal)
         && finding.Severity is FindingSeverity.Error or FindingSeverity.Info;
 
     static Finding NotUpdatedWarning(string path) => new(
-        NotUpdated,
+        BaselineCodes.NotUpdated,
         FindingSeverity.Warning,
         $"{path} was not updated, because a step failed or was skipped, so the run has not found each error. "
             + "Fix the engine error, then build with -p:UmpireUpdateBaseline=true again.");
@@ -69,7 +65,7 @@ sealed class ApplyBaselineHandler : CommandHandler<ApplyBaselineCommand, ApplyBa
         BaselineEntry.Of(finding.Code, finding.File, finding.Message, root);
 
     static Finding Stale(BaselineEntry entry, string path, int line) => new(
-        StaleEntry,
+        BaselineCodes.StaleEntry,
         FindingSeverity.Warning,
         $"the baseline entry {entry.Code} in {(entry.File.Length == 0 ? "the app" : entry.File)} has no error. "
             + $"Remove the line, or {UpdateSwitch}.",

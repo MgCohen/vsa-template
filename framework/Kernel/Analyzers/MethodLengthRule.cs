@@ -5,12 +5,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1009: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
+// UMP010102: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
 // The rule checks methods, constructors, finalizers, operators, accessors and local functions.
-// Option: umpire.UMP1009.max, in Umpire.Rules.globalconfig.
+// Option: umpire.UMP010102.max, in Umpire.Rules.globalconfig.
 public sealed class MethodLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1009",
+        "UMP010102",
         "A method has at most the maximum number of lines",
         "{0} has {1} lines, and the limit is {2}. Move a part of it to a new method.",
         "Umpire",

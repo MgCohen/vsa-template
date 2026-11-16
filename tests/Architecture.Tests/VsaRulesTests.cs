@@ -17,13 +17,13 @@ public sealed class VsaRulesTests {
         var user = Place("Feature", from);
         var target = Place("Feature", to, slice: "other");
 
-        Assert.That(Decide(user, target).Permission, Is.EqualTo(expected));
+        Assert.That(MayUse(user, target).Permission, Is.EqualTo(expected));
     }
 
-    [TestCase(typeof(Umpire.Vsa.Handlers.Commands.BeforeCommandHook<>), "Handlers.Commands")]
-    [TestCase(typeof(Umpire.Vsa.Handlers.Commands.AfterCommandHook<,>), "Handlers.Commands")]
-    [TestCase(typeof(Umpire.Vsa.Handlers.Events.BeforeEventHook<>), "Handlers.Events")]
-    [TestCase(typeof(Umpire.Vsa.Handlers.Events.AfterEventHook<>), "Handlers.Events")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Commands.BeforeCommandHook<>), "Handlers.Commands.Hooks")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Commands.AfterCommandHook<,>), "Handlers.Commands.Hooks")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Events.BeforeEventHook<>), "Handlers.Events.Hooks")]
+    [TestCase(typeof(Umpire.Vsa.Handlers.Events.AfterEventHook<>), "Handlers.Events.Hooks")]
     public void A_hook_binds_to_the_handlers_of_its_target_kind(Type hookBase, string part) {
         var owners = Definition.Parts().Where(p => p.Types.Contains(hookBase)).Select(p => p.Name).Distinct();
 
@@ -44,7 +44,7 @@ public sealed class VsaRulesTests {
     [TestCase("Feature", "Module", Permission.Deny)]
     [TestCase("Plugin", "Module", Permission.Deny)]
     public void The_app_host_uses_only_the_framework_entry(string group, string to, Permission expected) {
-        Assert.That(Decide(Place("App", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
+        Assert.That(MayUse(Place("App", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
     }
 
     [TestCase("Presenters", "Feature", "Domain.Shared", "A")]
@@ -54,20 +54,60 @@ public sealed class VsaRulesTests {
     [TestCase("Module", "Feature", "Domain.Shared", "B")]
     [TestCase("Module", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
-        var (permission, pair) = Decide(Place("Feature", from), Place(group, to, feature));
+        var (permission, pair) = MayUse(Place("Feature", from), Place(group, to, feature));
 
         Assert.That((permission, pair?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Internal)));
     }
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var (permission, pair) = Decide(Place("Feature", "Module"), Place("Kernel", "Domain"));
+        var (permission, pair) = MayUse(Place("Feature", "Module"), Place("Kernel", "Domain"));
 
         Assert.That((permission, pair?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
 
-    static Decision Decide(PartPlace from, PartPlace to) =>
-        Umpire.Architecture.Decide.For(Definition, from.Part, from.Values, to.Part, to.Values);
+    [TestCase("Contracts.Requests", "Handlers.Requests")]
+    [TestCase("Contracts.Commands", "Handlers.Commands")]
+    [TestCase("Contracts.Events", "Handlers.Events")]
+    public void A_contract_does_not_use_a_handler_of_its_own_slice(string contract, string handler) {
+        Assert.That(MayUse(Place("Feature", contract), Place("Feature", handler)).Permission, Is.EqualTo(Permission.Deny));
+    }
+
+    [TestCase("Infrastructure")]
+    [TestCase("Presenters")]
+    [TestCase("Contracts.Events")]
+    [TestCase("Handlers.Commands")]
+    public void A_plugin_layer_uses_the_same_layer_of_another_plugin(string layer) {
+        var part = Definition.Parts().Single(p => p.Name == layer && p.Groups.Any(g => g.Name == "Plugin"));
+
+        var decision = Umpire.Architecture.MayUse.For(Definition,
+            part, new Dictionary<string, string> { ["Plugin"] = "A" }, part, new Dictionary<string, string> { ["Plugin"] = "B" });
+
+        Assert.That(decision.Permission, Is.EqualTo(Permission.Allow));
+    }
+
+    [Test]
+    public void The_pack_assembly_binds_to_the_kernel_and_the_app_host_uses_it() {
+        var kernel = new ResolvedArchitecture(Definition).ExternalPart("Umpire.Vsa");
+
+        Assert.That(kernel?.Name, Is.EqualTo("Kernel"));
+        Assert.That(MayUse(Place("App", "Host"), new PartPlace(kernel!, new Dictionary<string, string>())).Permission,
+            Is.EqualTo(Permission.Allow));
+    }
+
+    [TestCase("Contracts.Requests")]
+    [TestCase("Contracts.Events")]
+    [TestCase("Handlers.Commands")]
+    [TestCase("Handlers.Commands.Hooks")]
+    public void A_slice_uses_the_Slices_Shared_folder_of_its_own_feature_only(string user) {
+        Assert.Multiple(() => {
+            Assert.That(MayUse(Place("Feature", user), Place("Feature", "Slice.Shared")).Permission, Is.EqualTo(Permission.Allow));
+            Assert.That(MayUse(Place("Feature", user), Place("Feature", "Slice.Shared", feature: "B")).Permission, Is.EqualTo(Permission.Deny));
+        });
+    }
+
+    static Decision MayUse(PartPlace from, PartPlace to) =>
+        Umpire.Architecture.MayUse.For(Definition, from.Part, from.Values, to.Part, to.Values);
 
     static PartPlace Place(string group, string name, string feature = "A", string slice = "s1") {
         var part = Definition.Parts().Single(p => p.Name == name && p.SelfAndAncestors().Any(a => a.Name == group));

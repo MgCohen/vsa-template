@@ -1,6 +1,6 @@
 namespace Umpire.Architecture;
 
-public static class Decide {
+public static class MayUse {
     public static Decision For(Architecture definition,
         Part fromPart, IReadOnlyDictionary<string, string> fromValues,
         Part toPart, IReadOnlyDictionary<string, string> toValues) {

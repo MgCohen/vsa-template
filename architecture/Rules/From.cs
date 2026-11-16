@@ -1,10 +1,10 @@
 namespace Umpire.Architecture;
 
 public sealed class From : Chain<From> {
-    readonly List<Rule> rules;
+    readonly RuleBook book;
 
-    internal From(Type concept, Depth? depth, List<Rule> rules) {
-        this.rules = rules;
+    internal From(Type concept, Depth? depth, RuleBook book) {
+        this.book = book;
         Begin(concept, depth);
     }
 
@@ -16,10 +16,22 @@ public sealed class From : Chain<From> {
 
     public Rule Denies<T>(Depth? depth = null) where T : Concept => Start(typeof(T), Permission.Deny, depth, null, null);
 
+    public Count Has<T>(Depth? depth = null) where T : Concept {
+        var count = new Count(Entries, typeof(T), depth);
+        book.Counts.Add(count);
+        return count;
+    }
+
+    public Match Takes<T>() where T : Concept {
+        var match = new Match(Entries, typeof(T));
+        book.Matches.Add(match);
+        return match;
+    }
+
     Rule Start(Type to, Permission permission, Depth? depth, Access? access, Boundary? boundary) {
         var rule = new Rule { Permission = permission, From = Entries };
         rule.Begin(to, depth, access, boundary);
-        rules.Add(rule);
+        book.Rules.Add(rule);
         return rule;
     }
 }

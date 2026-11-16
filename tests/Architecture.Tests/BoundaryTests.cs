@@ -5,10 +5,10 @@ using Umpire.Architecture;
 public enum CrossRule { Plain, Open, InOther }
 
 public sealed class BoundaryArchitecture(Boundary options, Boundary? group, CrossRule rule) : Architecture {
-    public Permission Decide(string fromPackage, string toPackage) {
+    public Permission MayUse(string fromPackage, string toPackage) {
         var user = Parts().Single(p => p.Is(typeof(User)));
         var target = Parts().Single(p => p.Is(typeof(Target)));
-        return Umpire.Architecture.Decide.For(this,
+        return Umpire.Architecture.MayUse.For(this,
             user, new Dictionary<string, string> { ["Package"] = fromPackage },
             target, new Dictionary<string, string> { ["Package"] = toPackage }).Permission;
     }
@@ -49,13 +49,13 @@ public sealed class BoundaryTests {
         Boundary options, Boundary? group, CrossRule rule, Permission expected) {
         var definition = new BoundaryArchitecture(options, group, rule);
 
-        Assert.That(definition.Decide("a", "b"), Is.EqualTo(expected));
+        Assert.That(definition.MayUse("a", "b"), Is.EqualTo(expected));
     }
 
     [Test]
     public void A_closed_group_instance_uses_its_own_parts() {
         var definition = new BoundaryArchitecture(Boundary.Closed, null, CrossRule.Plain);
 
-        Assert.That(definition.Decide("a", "a"), Is.EqualTo(Permission.Allow));
+        Assert.That(definition.MayUse("a", "a"), Is.EqualTo(Permission.Allow));
     }
 }

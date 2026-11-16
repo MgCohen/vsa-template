@@ -11,7 +11,7 @@ public interface IPartChain {
 
     IPartChain InParentFolder();
 
-    IPartChain OfType<T>();
+    IPartChain OfType<T>(bool? required = null);
 
-    IPartChain OfType(Type type);
+    IPartChain OfType(Type type, bool? required = null);
 }

@@ -46,7 +46,7 @@ static class Analyzer {
     public static Task VerifyFormatting(DiagnosticDescriptor rule, string source, string config, params DiagnosticResult[] expected) =>
         Verify(source, config, null, expected, formatting: rule);
 
-    // The same, but without Umpire.Rules.globalconfig: config gives all options of the rule, or a test of UMP1000 leaves one out.
+    // The same, but without Umpire.Rules.globalconfig: config gives all options of the rule, or a test of UMP010001 leaves one out.
     public static Task VerifyFormattingWithoutRulesConfig(DiagnosticDescriptor rule, string source, string config,
         params DiagnosticResult[] expected) =>
         Verify(source, config, null, expected, formatting: rule, rulesConfig: false);
@@ -121,21 +121,21 @@ public sealed class SealedRecordRuleTests {
     public Task Rule_option_turns_off_the_response_check() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, "umpire.UMP1001.check_responses = false");
+        """, "umpire.UMP010201.check_responses = false");
 
     // A global option applies to each VSA rule that reads the key. A rule option wins over it.
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, "umpire.check_responses = false\nvsa.UMP1001.check_responses = true", Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "Items", "the response of GetItems"));
+        """, "umpire.check_responses = false\nvsa.UMP010201.check_responses = true", Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "Items", "the response of GetItems"));
 
     // Severity none: VsaAnalyzer does not register the rule, so the rule reports nothing.
     [Test]
     public Task Rule_with_severity_none_reports_nothing() => Analyzer.Verify($$"""
         public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, "dotnet_diagnostic.UMP1001.severity = none");
+        """, "dotnet_diagnostic.UMP010201.severity = none");
 }
 
 public sealed class EventHandlerRequestRuleTests {
@@ -284,7 +284,7 @@ public sealed class ContractTypeRuleTests {
 public sealed class VsaAnalyzerTests {
     [Test]
     public void The_analyzer_has_each_rule_of_the_assembly() =>
-        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "UMP1001", "UMP1002", "UMP1003", "UMP1004", "UMP1005", "UMP1006", "UMP1007" }));
+        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "UMP010201", "UMP010202", "UMP010203", "UMP010204", "UMP010205", "UMP010206", "UMP010207" }));
 
     [Test]
     public void Each_rule_has_a_unique_ID() =>

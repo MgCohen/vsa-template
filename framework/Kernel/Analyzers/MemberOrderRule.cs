@@ -7,19 +7,19 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP1012: the members of a type are in order: first by kind, then by access, then static before instance.
+// UMP010105: the members of a type are in order: first by kind, then by access, then static before instance.
 // The diagnostic marks each member that comes after a member of a later group. An explicit interface implementation is public.
 // Options, in Umpire.Rules.globalconfig. A kind or an access that a list does not name comes after the named ones.
-//   umpire.UMP1012.kind_order     constant, field, constructor, finalizer, property, event, method, nested_type
-//   umpire.UMP1012.access_order   public, internal, protected_internal, protected, private_protected, private
-//   umpire.UMP1012.static_first   true: static before instance
+//   umpire.UMP010105.kind_order     constant, field, constructor, finalizer, property, event, method, nested_type
+//   umpire.UMP010105.access_order   public, internal, protected_internal, protected, private_protected, private
+//   umpire.UMP010105.static_first   true: static before instance
 public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
     public const string KindOrderKey = "kind_order";
     public const string AccessOrderKey = "access_order";
     public const string StaticFirstKey = "static_first";
 
     public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP1012",
+        "UMP010105",
         "Members are ordered by kind, then by access, then static before instance",
         "{0} is a {1}, and it comes after a {2}. Move {0} up. The order is: by kind ({3}), then by access ({4}), then {5}.",
         "Umpire",

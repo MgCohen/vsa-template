@@ -31,7 +31,10 @@ A component can have a layer shape. That does not make it a plugin. "Component" 
 | Module | The root part of a group instance, for example a feature folder |
 | External | A part that is a DLL, not a folder, for example `Kernel` |
 | Rule | Who may use whom (`rules.For<A>().Uses<B>()`) |
-| Resolution | The answers of the rules on plain facts: `Match` (which part) and `Decide` (allow or deny) |
+| Queries | The answers of the rules on plain facts: `PartOf` (which part), `MayUse` (allow or deny), `Counts` and `Matches` (`architecture/Queries/`) |
+| Count | A rule statement that counts the types of a concept in each instance of a group, or the types that take each type of a part (`Has<T>()`) |
+| Match | A rule statement that a type takes a type argument of a concept, in the same instance of a group (`Takes<T>().InSame<G>()`) |
+| Hook | A Before or After step of one message kind. Its parts are `Handlers.Commands.Hooks` and `Handlers.Events.Hooks`, and a hook is in its own slice |
 
 ## Engine terms
 
@@ -40,4 +43,4 @@ A component can have a layer shape. That does not make it a plugin. "Component" 
 | Step | One feature module of the engine with one command (`EngineStep<TResult>`) |
 | Finding | One result line: code, severity, message, file and line |
 | Baseline | The errors that `umpire-baseline.txt` accepts |
-| Rule ID | `UMP` and four digits. `UMP1xxx` analyzers, `UMP2xxx` engine rules, `UMP3xxx` engine run, `UMP9xxx` suppressors |
+| Rule ID | `UMP` and six digits: block (2), group (2), case (2). Block `01` analyzers, `02` rule findings, `03` engine run |
