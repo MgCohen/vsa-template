@@ -28,7 +28,8 @@
   <ItemGroup>
     <_UmpireFramework Include="Umpire.Kernel" Path="framework/Kernel" />
     <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
-    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" />
+    <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
+    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)Umpire.Pack.targets" />
 

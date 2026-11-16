@@ -57,7 +57,7 @@ The root project of a new app has the package `Umpire.Engine.Build`. So the rule
 
 ## Packages of an app
 
-`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers, Umpire.Kernel.Analyzers) and the pack. `UmpirePack` selects the pack, and its default is `Vsa`: the SDK adds `Umpire.Vsa` and `Umpire.Vsa.Analyzers` with its own version. `Umpire.Vsa` depends on each VSA layer base. To change a rule value or a severity, set the key in the `.editorconfig` of the app.
+`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers) and the pack. `UmpirePack` selects the pack, and its default is `Vsa`: the SDK adds `Umpire.Vsa` and `Umpire.Vsa.Analyzers` with its own version. `Umpire.Vsa` depends on each VSA layer base. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.editorconfig` of the app.
 
 ## Consumer repos
 
