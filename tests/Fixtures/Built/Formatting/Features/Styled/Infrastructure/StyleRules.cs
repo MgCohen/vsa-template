@@ -40,7 +40,7 @@ internal sealed class StyleRules
     // IDE0023: a conversion operator with a block body that fits on one line.
     public static implicit operator int(StyleRules rules) { return rules.Count; }
 
-    // IDE0022: a method with an expression body.
+    // IDE0022 (relaxed until 0.1.0, no warning): a method with an expression body.
     public int Next() => ++Count;
 
     // IDE0049 (editor only, the build does not report it): Int32, not int.

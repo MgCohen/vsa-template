@@ -12,12 +12,14 @@ dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CA1863.severity = none
 
 # Formatting: the built-in rules. IDE0055 checks the format options below and the default format options.
-# Each brace is on its own line (Allman), and else, catch and finally are on a new line.
+# Relaxed until 0.1.0: each brace is on the line of its statement, and else, catch and finally are on the line of the closing brace.
+# Target values: csharp_new_line_before_open_brace = all (each brace on its own line, Allman),
+# and csharp_new_line_before_else, csharp_new_line_before_catch and csharp_new_line_before_finally = true.
 dotnet_diagnostic.IDE0055.severity = warning
-csharp_new_line_before_open_brace = all
-csharp_new_line_before_else = true
-csharp_new_line_before_catch = true
-csharp_new_line_before_finally = true
+csharp_new_line_before_open_brace = none
+csharp_new_line_before_else = false
+csharp_new_line_before_catch = false
+csharp_new_line_before_finally = false
 # Each if, else, for, foreach, while, using and lock has braces.
 csharp_prefer_braces = true
 dotnet_diagnostic.IDE0011.severity = warning
@@ -26,16 +28,18 @@ dotnet_diagnostic.IDE0161.severity = none
 # No two blank lines in a row.
 dotnet_style_allow_multiple_blank_lines_experimental = false
 dotnet_diagnostic.IDE2000.severity = warning
-# var only where the line shows the type, for example var x = new Foo(). A built-in type is explicit: int x = 5.
-# IDE0008 asks for the explicit type. IDE0007 is off, so an explicit type is also correct where the type is apparent.
-csharp_style_var_for_built_in_types = false
+# Relaxed until 0.1.0: var is correct everywhere, and IDE0007 is off, so an explicit type is also correct.
+# Target values: var only where the line shows the type, for example var x = new Foo(). A built-in type is explicit: int x = 5.
+# csharp_style_var_for_built_in_types = false, csharp_style_var_when_type_is_apparent = true, csharp_style_var_elsewhere = false.
+csharp_style_var_for_built_in_types = true
 csharp_style_var_when_type_is_apparent = true
-csharp_style_var_elsewhere = false
+csharp_style_var_elsewhere = true
 dotnet_diagnostic.IDE0007.severity = none
 dotnet_diagnostic.IDE0008.severity = warning
 # Each member of a class or struct, and each type, has an access modifier. In an interface, a modifier is optional.
+# Relaxed until 0.1.0: the code has members with no modifier. Target severity: warning.
 dotnet_style_require_accessibility_modifiers = for_non_interface_members
-dotnet_diagnostic.IDE0040.severity = warning
+dotnet_diagnostic.IDE0040.severity = none
 # One statement on each line: no A(); B(); on one line. A one-line block such as { get; set; } is correct.
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
@@ -66,8 +70,9 @@ csharp_style_prefer_not_pattern = true
 dotnet_diagnostic.IDE0083.severity = warning
 
 # Bodies: a block for methods, constructors and local functions. => for the other members when the body fits on one line.
+# Relaxed until 0.1.0: the code has methods with a block body and methods with =>. Target severity: warning.
 csharp_style_expression_bodied_methods = false
-dotnet_diagnostic.IDE0022.severity = warning
+dotnet_diagnostic.IDE0022.severity = none
 csharp_style_expression_bodied_constructors = false
 dotnet_diagnostic.IDE0021.severity = warning
 csharp_style_expression_bodied_local_functions = false
