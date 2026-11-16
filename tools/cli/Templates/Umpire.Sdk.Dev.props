@@ -1,4 +1,4 @@
 <Project>
   <!-- The template projects find Umpire.Sdk from source through this file. The tool does not copy this file. -->
-  <Import Project="$(MSBuildThisFileDirectory)../../../samples/Umpire.Sdk.Dev.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../../sdk/Umpire.Sdk.Dev.props" />
 </Project>

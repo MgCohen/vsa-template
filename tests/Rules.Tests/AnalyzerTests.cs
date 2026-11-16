@@ -11,8 +11,6 @@ sealed class AllRulesTest : CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
         [new VsaAnalyzer(), new KernelAnalyzer()];
 }
 
-// The test code compiles against .NET 10 and the VSA layer assemblies. Each test runs VsaAnalyzer and KernelAnalyzer, so all rules run,
-// except the formatting rules. A VerifyFormatting test runs only its one rule.
 static class Analyzer {
     public static readonly IReadOnlyList<UmpireAnalyzerRule> AllRules = [.. new VsaAnalyzer().Rules, .. new KernelAnalyzer().Rules];
 
@@ -24,29 +22,24 @@ static class Analyzer {
 
     public static Task Verify(string source, params DiagnosticResult[] expected) => Verify(source, "", expected);
 
-    // config: lines of a .globalconfig, for the VSA analyzer options.
     public static Task Verify(string source, string config, params DiagnosticResult[] expected) =>
         Verify(source, config, null, expected);
 
-    // assembly: the assembly name of the test code, for the rules that depend on the layer, for example Notes.Contracts.Requests.
     public static Task VerifyIn(string assembly, string source, params DiagnosticResult[] expected) =>
         Verify(source, "", assembly, expected);
 
     public static Task VerifyIn(string assembly, string source, string config, params DiagnosticResult[] expected) =>
         Verify(source, config, assembly, expected);
 
-    // reference: a second project that the test code references. Its assembly name is its project name.
     public static Task VerifyIn(string assembly, string source, (string Assembly, string Source) reference, params DiagnosticResult[] expected) =>
         Verify(source, "", assembly, expected, test => {
             test.TestState.AdditionalProjects[reference.Assembly].Sources.Add(reference.Source);
             test.TestState.AdditionalProjectReferences.Add(reference.Assembly);
         });
 
-    // rule: the one formatting rule that the test checks. The test code gets no usings.
     public static Task VerifyFormatting(DiagnosticDescriptor rule, string source, string config, params DiagnosticResult[] expected) =>
         Verify(source, config, null, expected, formatting: rule);
 
-    // The same, but without Umpire.Rules.globalconfig: config gives all options of the rule, or a test of UMP010001 leaves one out.
     public static Task VerifyFormattingWithoutRulesConfig(DiagnosticDescriptor rule, string source, string config,
         params DiagnosticResult[] expected) =>
         Verify(source, config, null, expected, formatting: rule, rulesConfig: false);
@@ -69,21 +62,17 @@ static class Analyzer {
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }
-        // A formatting test turns off each other VSA rule. Another test turns off the formatting rules.
         var others = formatting is null ? Formatting : Analyzer.AllRules.Select(r => r.Rule).Where(r => r.Id != formatting.Id);
         var off = others.Select(r => $"dotnet_diagnostic.{r.Id}.severity = none\n");
         var globalConfig = "is_global = true\n" + string.Concat(off) + config;
-        // The test config has the default global_level, so it wins over Umpire.Rules.globalconfig (global_level = -1).
         test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", globalConfig));
         if (rulesConfig) {
             test.TestState.AnalyzerConfigFiles.Add(("/Umpire.Rules.globalconfig", RulesConfig.Text));
         }
         if (formatting is not null) {
-            // The library also checks the code with added lines (#pragma, a generated header). A line or file rule sees those lines.
             test.TestBehaviors |= TestBehaviors.SkipSuppressionCheck | TestBehaviors.SkipGeneratedCodeCheck;
         }
         configure?.Invoke(test);
-        // A referenced project gets the same config, so the formatting rules are off there too.
         foreach (var project in test.TestState.AdditionalProjects.Values) {
             project.AnalyzerConfigFiles.Add(($"/{project.Name}/.globalconfig", globalConfig));
             project.AnalyzerConfigFiles.Add(($"/{project.Name}/Umpire.Rules.globalconfig", RulesConfig.Text));
@@ -123,14 +112,12 @@ public sealed class SealedRecordRuleTests {
         public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
         """, "umpire.UMP010201.check_responses = false");
 
-    // A global option applies to each VSA rule that reads the key. A rule option wins over it.
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
         """, "umpire.check_responses = false\nvsa.UMP010201.check_responses = true", Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "Items", "the response of GetItems"));
 
-    // Severity none: VsaAnalyzer does not register the rule, so the rule reports nothing.
     [Test]
     public Task Rule_with_severity_none_reports_nothing() => Analyzer.Verify($$"""
         public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
@@ -180,7 +167,6 @@ public sealed class EventHandlerRequestRuleTests {
         }
         """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "IRequest"));
 
-    // The rule is only for event handlers. Other classes can send requests.
     [Test]
     public Task Other_class_that_sends_a_request_passes() => Analyzer.Verify(Types + """
         sealed class Sender(Umpire.Vsa.Presenters.IBus bus) {
@@ -215,7 +201,6 @@ public sealed class PresenterPublishRuleTests {
         sealed class DonePresenter(Umpire.Vsa.Presenters.IBus bus, Umpire.Vsa.Presenters.LivePresenters {|#0:views|}) : Umpire.Vsa.Presenters.Presenter(bus);
         """, Analyzer.Diagnostic(PresenterPublishRule.Descriptor, 0, "DonePresenter", "LivePresenters"));
 
-    // The rule is only for presenters. Request handlers publish events.
     [Test]
     public Task Other_class_that_publishes_passes() => Analyzer.Verify(Types + """
         sealed class Finisher(Umpire.Vsa.Contracts.Events.IIntegrationEventPublisher events) {
@@ -255,7 +240,6 @@ public sealed class ContractTypeRuleTests {
         static class TitleRules { public static bool IsValid(string title) => title.Length > 0; }
         """);
 
-    // The test code declares the command marker, because the layer assembly is not referenced here.
     const string Command = """
         namespace Umpire.Vsa.Contracts.Commands { interface ICommand<TResult> { } }
 
@@ -274,7 +258,6 @@ public sealed class ContractTypeRuleTests {
         public static class {|#0:TitleRules|} { public static bool IsValid(string title) => title.Length > 0; }
         """, Analyzer.Diagnostic(ContractTypeRule.Descriptor, 0, "TitleRules", "Notes.Contracts.Commands"));
 
-    // The rule is only for the contracts projects. A handlers project can have public types.
     [Test]
     public Task Public_helper_in_another_project_passes() => Analyzer.VerifyIn("Notes.Handlers.Requests", """
         public static class TitleRules { public static bool IsValid(string title) => title.Length > 0; }

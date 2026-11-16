@@ -6,7 +6,6 @@ using Tests.Shared;
 
 namespace Cli.Tests;
 
-// Uses the packed tool as a consumer does: new app, add module, add request, add command, add plugin, doctor, update. Then builds and runs the app.
 public sealed class UmpireToolTests {
     string root = "";
     Dictionary<string, string> env = [];
@@ -14,8 +13,6 @@ public sealed class UmpireToolTests {
     [SetUp]
     public void SetUp() {
         root = TempFolder.Stable(TestContext.CurrentContext.Test.FullName);
-        // Each test run packs the same test version with new content. So the test uses its own NuGet cache, and its own
-        // DOTNET_CLI_HOME: the tool resolver cache in it remembers the path of a local tool for each version.
         env = new Dictionary<string, string> {
             ["NUGET_PACKAGES"] = Path.Combine(root, "nuget"),
             ["DOTNET_CLI_HOME"] = Path.Combine(root, "home"),
@@ -28,7 +25,6 @@ public sealed class UmpireToolTests {
         var app = NewApp();
         Dotnet.Run(app, env, "umpire", "add", "module", "Billing").EnsureSuccess();
         Dotnet.Run(app, env, "umpire", "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
-        // A module, a request and a command add only source files. The root project of the app compiles them.
         Dotnet.Run(app, env, "umpire", "add", "command", "ChangeLimit", "-m", "Billing").EnsureSuccess();
         Dotnet.Run(app, env, "umpire", "add", "command", "CloseInvoice", "-m", "Billing").EnsureSuccess();
         Assert.That(Directory.GetFiles(Path.Combine(app, "Features"), "*.csproj", SearchOption.AllDirectories), Is.Empty);
@@ -85,7 +81,6 @@ public sealed class UmpireToolTests {
         Assert.That(Dotnet.Run(app, env, "umpire", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use Umpire {LocalFeed.Version}."));
     }
 
-    // A new app has an empty Features/ folder. It must build and start before the first add module.
     [Test]
     [CancelAfter(600_000)]
     public async Task NewAppWithNoModuleBuildsAndRuns(CancellationToken ct) {
@@ -170,9 +165,7 @@ public sealed class UmpireToolTests {
         Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
     }
 
-    // umpire new app <name>, with the packed tool from the local feed. Returns the folder of the app.
     string NewApp(string name = "Hello") {
-        // The global packages folder of the user is also a feed, so restore does not download each package again.
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
         Dotnet.Run(root, env, "tool", "exec", $"Umpire.Cli@{LocalFeed.Version}", "--add-source", LocalFeed.Path, "-y", "--",
@@ -180,8 +173,6 @@ public sealed class UmpireToolTests {
         return Path.Combine(root, name);
     }
 
-    // Starts the built app on a free port, waits until "/" answers, then calls the app. The output of the app is for
-    // the failure messages.
     async Task RunAndCall(string app, CancellationToken ct, Func<HttpClient, StringBuilder, Task> calls) {
         var url = $"http://127.0.0.1:{FreePort()}";
         var dll = Directory.GetFiles(Path.Combine(app, "artifacts~", "bin", "Hello", "release"), "Hello.dll", SearchOption.AllDirectories).Single();

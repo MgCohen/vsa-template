@@ -38,7 +38,7 @@ public sealed class NotebookModule : Module {
 }
 ```
 
-The sample `samples/Notes` keeps its notes in memory (`Infrastructure/NoteRepository.cs`). Unit tests use `InMemoryRepository<T, TId>` from `Umpire.Vsa.Testing.Unit`. `VsaUnitTest` registers it for each `IRepository<T, TId>`. `Add` and `Remove` have no effect before `SaveChangesAsync`, as in a real adapter.
+The test app `tests/Fixtures/Notes` keeps its notes in memory (`Infrastructure/NoteStore.cs`, `Infrastructure/NoteRepository.cs`). Unit tests use `InMemoryRepository<T, TId>` from `Umpire.Vsa.Testing.Unit`. `VsaUnitTest` registers it for each `IRepository<T, TId>`. `Add` and `Remove` have no effect before `SaveChangesAsync`, as in a real adapter.
 
 ## Non-goals
 

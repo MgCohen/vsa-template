@@ -7,12 +7,11 @@ using Tests.Shared;
 
 namespace Consumer.Tests;
 
-// Builds samples/Notes as a consumer does: from the packed framework packages and Umpire.Sdk, not from the source.
 public sealed partial class NotesConsumerTests {
     [Test]
     [CancelAfter(10 * 60 * 1000)]
     public async Task NotesBuildsFromThePackagesAndRuns(CancellationToken ct) {
-        using var workspace = Workspace.Create(Repo.Path("samples", "Notes"));
+        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
         UsePackages(workspace.Src);
 
         workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
@@ -43,9 +42,6 @@ public sealed partial class NotesConsumerTests {
         }
     }
 
-    // Changes the projects from the source mode of this repository to the consumer form.
-    // A project becomes <Project Sdk="Umpire.Sdk">, or gets <Sdk Name="Umpire.Sdk" /> after another SDK (the web root project).
-    // A reference to a framework project becomes a package reference.
     internal static void UsePackages(string root) {
         foreach (var file in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)) {
             var text = File.ReadAllText(file);
@@ -63,7 +59,6 @@ public sealed partial class NotesConsumerTests {
         }
     }
 
-    // The first start after a cold restore can be slow, so the wait is long. Each request has its own short timeout.
     static async Task WaitUntilStarted(HttpClient client, System.Diagnostics.Process app, StringBuilder output, CancellationToken ct) {
         var until = DateTime.UtcNow.AddMinutes(3);
         var last = "no response";

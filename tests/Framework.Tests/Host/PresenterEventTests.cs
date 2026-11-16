@@ -9,7 +9,6 @@ using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Presenters;
 
-// The web test app with the Signals fixture: an event, its handler, a helper class next to the handler, and a presenter of the event.
 public sealed class PresenterEventTests {
     [Test]
     public void HostRegistersTheEventHandlerAndNotTheHelperClass() {
@@ -19,7 +18,6 @@ public sealed class PresenterEventTests {
         Assert.That(registrations.Any(s => s.ServiceType != typeof(RingLog) && s.ImplementationType == typeof(RingLog)), Is.False);
     }
 
-    // Bottom up with no view: the services connect the presenter when they make it.
     [Test]
     public async Task APresenterGetsTheEventAfterItsHandlersWithNoView() {
         using var app = await Start();
@@ -35,7 +33,6 @@ public sealed class PresenterEventTests {
         Assert.That(changed, Is.EqualTo(1));
     }
 
-    // The event is published in another scope, for example a request. Each presenter that exists gets it.
     [Test]
     public async Task APresenterInAnotherScopeGetsTheEvent() {
         using var app = await Start();
@@ -49,7 +46,6 @@ public sealed class PresenterEventTests {
         Assert.That(presenter.Last, Is.EqualTo("door"));
     }
 
-    // The end of the scope disposes the presenter, so it gets no more events.
     [Test]
     public async Task APresenterOfAScopeThatEndedGetsNothing() {
         using var app = await Start();
@@ -64,7 +60,6 @@ public sealed class PresenterEventTests {
         Assert.That(presenter.Last, Is.Null);
     }
 
-    // An app can give a dispatcher to the scope, for example the main thread in Unity.
     [Test]
     public async Task AScopeDispatcherRunsTheEvent() {
         var dispatched = 0;

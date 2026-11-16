@@ -2,8 +2,6 @@ namespace Rules.Tests;
 
 using Umpire.Vsa.Analyzers;
 
-// The rules of a Domain.Shared project: UMP010205, UMP010206 and UMP010207. The test code is in Cards.Domain.Shared,
-// so all three rules check each type.
 static class Shared {
     public const string Assembly = "Cards.Domain.Shared";
 }
@@ -46,13 +44,11 @@ public sealed class ImmutableSharedTypeRuleTests {
         public sealed class Card { public event Action? {|#0:Changed|}; }
         """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Card", "Changed", "a field event", "Remove the event: a Domain.Shared type holds only data"));
 
-    // A type outside a Domain.Shared project is not checked.
     [Test]
     public Task Type_in_another_project_passes() => Analyzer.VerifyIn("Cards.Domain", """
         public sealed class Card { public string Name { get; set; } = ""; public int count; }
         """);
 
-    // The MSBuild property UmpireLayer wins over the assembly name.
     [Test]
     public Task Layer_property_selects_the_project() => Analyzer.VerifyIn("Cards.Domain.Shared", """
         public sealed class Card { public string Name { get; set; } = ""; }
@@ -169,7 +165,6 @@ public sealed class SharedTypeBaseRuleTests {
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"),
         Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 1, "Rank", "System.IEquatable<int>", "System.IEquatable`1"));
 
-    // A rule key wins over a global key.
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
@@ -182,7 +177,6 @@ public sealed class SharedTypeBaseRuleTests {
         """);
 }
 
-// A list option. A config file line ends at a semicolon, so a config file uses a comma. Other sources can use a semicolon.
 public sealed class UmpireOptionsTests {
     sealed class Config(Dictionary<string, string> values) : Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptions {
         public override bool TryGetValue(string key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value) =>

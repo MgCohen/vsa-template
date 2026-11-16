@@ -1,8 +1,8 @@
 namespace LoadApp.Infrastructure;
 
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Runtime.Loader;
+using BuiltApp.Infrastructure;
 using Umpire.Architecture;
 
 public sealed class AppLoader : AssemblyLoadContext {
@@ -19,11 +19,10 @@ public sealed class AppLoader : AssemblyLoadContext {
     }
 
     public List<Assembly> AppAssemblies(string blockFolder, IReadOnlyList<string> skip) {
-        var prefix = Path.TrimEndingDirectorySeparator(blockFolder) + Path.DirectorySeparatorChar;
         return [.. Directory.GetFiles(bin, "*.dll")
             .Where(dll => !Shared.Contains(Path.GetFileNameWithoutExtension(dll)))
             .Where(dll => !skip.Contains(Path.GetFileNameWithoutExtension(dll), StringComparer.OrdinalIgnoreCase))
-            .Where(dll => HasSourceUnder(dll, prefix))
+            .Where(dll => SourceFiles.HasSourceUnder(dll, blockFolder))
             .Select(LoadFromAssemblyPath)];
     }
 
@@ -57,22 +56,4 @@ public sealed class AppLoader : AssemblyLoadContext {
         name is "netstandard" or "mscorlib"
         || name.StartsWith("System", StringComparison.Ordinal)
         || name.StartsWith("Microsoft.", StringComparison.Ordinal);
-
-    static bool HasSourceUnder(string dll, string prefix) {
-        var pdb = Path.ChangeExtension(dll, ".pdb");
-        if (!File.Exists(pdb)) {
-            return false;
-        }
-        try {
-            using var stream = File.OpenRead(pdb);
-            using var provider = MetadataReaderProvider.FromPortablePdbStream(stream);
-            var reader = provider.GetMetadataReader();
-            return reader.Documents
-                .Select(handle => reader.GetString(reader.GetDocument(handle).Name))
-                .Where(Path.IsPathRooted)
-                .Any(file => Path.GetFullPath(file).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-        } catch (Exception e) when (e is BadImageFormatException or IOException) {
-            return false;
-        }
-    }
 }

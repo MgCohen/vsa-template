@@ -1,22 +1,15 @@
-// Writes Umpire.slnx with each project in this repository. Git ignores Umpire.slnx: run this script again after you add,
-// move or remove a project.
-//
-//   dotnet run solution.cs
-//
-// The solution has one folder for each top-level folder (architecture, framework, packs, engine, tools, samples, tests).
-
 using System.Runtime.CompilerServices;
 using System.Text;
 
 var root = Path.GetDirectoryName(Here())!;
 
-// The tests build these projects themselves, in a copy. They are not part of the solution.
-string[] excluded = ["tests/Fixtures/"];
+string[] builtByTheirTests = ["tests/Fixtures/"];
+string[] fixturesWithOwnTests = ["tests/Fixtures/Notes/"];
 
 var projects = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
     .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/'))
     .Where(path => !path.Split('/').Any(part => part.StartsWith('.') || part is "bin" or "obj"))
-    .Where(path => !excluded.Any(path.StartsWith))
+    .Where(path => fixturesWithOwnTests.Any(path.StartsWith) || !builtByTheirTests.Any(path.StartsWith))
     .Order(StringComparer.Ordinal)
     .ToList();
 

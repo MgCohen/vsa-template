@@ -6,7 +6,6 @@ using Umpire.Cli.Scaffolding;
 
 namespace Cli.Tests;
 
-// The template engine, the name checks and the file writer, in this process.
 public sealed class ScaffoldingTests {
     const string Version = "9.9.9";
     const string GitHubFeed = "https://nuget.pkg.github.com/MgCohen/index.json";
@@ -56,7 +55,6 @@ public sealed class ScaffoldingTests {
     [TestCase("SampleModule", "sample-module")]
     public void KebabFormIsForRoutes(string name, string kebab) => Assert.That(Names.Kebab(name), Is.EqualTo(kebab));
 
-    // Each template file and its command. A new template file must be added here, so its command shows in the diff.
     [Test]
     public void EachTemplateFileHasOneCommand() {
         const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command,
@@ -102,8 +100,6 @@ public sealed class ScaffoldingTests {
         Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
     }
 
-    // The embedded resources exclude build output and local files. They must not drop a template file that git tracks.
-    // Only the two props files at the top are for source mode.
     [Test]
     public void EachTrackedTemplateFileIsInTheTool() {
         var git = Process.Start(new ProcessStartInfo("git", "ls-files") {
@@ -196,7 +192,6 @@ public sealed class ScaffoldingTests {
         Assert.That(config, Does.Not.Contain("packageSourceCredentials"));
     }
 
-    // A new app has no central package versions, so the test template sets each version. Keep them the same as this repository.
     [Test]
     public void TheTestTemplateUsesThePackageVersionsOfTheRepository() {
         var versions = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Packages.props")).Descendants("PackageVersion")

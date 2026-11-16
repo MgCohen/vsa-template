@@ -2,10 +2,10 @@ namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
 
-static class UnityLayout {
+public static class UnityLayout {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
-    public const string AssetsFolder = "Assets";
-    public const string PluginsFolder = "Plugins";
+    internal const string AssetsFolder = "Assets";
+    internal const string PluginsFolder = "Plugins";
 
     static readonly string AppFolder = new App().Folder;
 
@@ -13,7 +13,7 @@ static class UnityLayout {
 
     public static bool Is(string blockFolder) => File.Exists(Path.Combine(blockFolder, VersionFile));
 
-    public static IReadOnlyList<FolderAlias> Aliases(string blockFolder, string? unityApp, string unitySource) {
+    internal static IReadOnlyList<FolderAlias> Aliases(string blockFolder, string? unityApp, string unitySource) {
         if (!Is(blockFolder)) {
             return [];
         }

@@ -1,6 +1,5 @@
 namespace Tests.Shared;
 
-// A short folder in the temporary folder. Windows has a 260-character path limit, so the names are short.
 public static class TempFolder {
     public static string Create() {
         var path = Path.Combine(Path.GetTempPath(), "umpire", Guid.NewGuid().ToString("N")[..8]);
@@ -18,7 +17,6 @@ public static class TempFolder {
         return path;
     }
 
-    // A process can keep a file open for a short time after it stops. Then the folder stays until the next clean.
     public static void Delete(string path) {
         try {
             Directory.Delete(path, recursive: true);
@@ -26,7 +24,6 @@ public static class TempFolder {
         }
     }
 
-    // Copies a source folder without its build output: the bin, obj and artifacts~ folders.
     public static void Copy(string from, string to) {
         Directory.CreateDirectory(to);
         foreach (var file in Directory.EnumerateFiles(from)) {

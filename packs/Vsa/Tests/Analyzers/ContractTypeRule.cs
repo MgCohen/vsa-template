@@ -5,12 +5,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP010203: a contracts project holds only contracts. In <Module>.Contracts.Requests, <Module>.Contracts.Commands and
-// <Module>.Contracts.Events, each public type is a request, a response, a command, an event, or a type that one of
-// them uses (a DTO). A command result has no marker. It passes because its command uses it.
-// In a slice module, Umpire.Sdk selects the project of each file by its types (VsaSliceRouter.cs).
-// This rule checks the result, so a helper type that is in the same file as a contract cannot become public API.
-// A plugin module (UmpireRootFolder = Plugins) is not checked: its public types are bases for the modules.
 public sealed class ContractTypeRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "UMP010203",
@@ -50,7 +44,6 @@ public sealed class ContractTypeRule() : UmpireAnalyzerRule(Descriptor) {
         }, SymbolKind.NamedType);
     }
 
-    // The marked types of the assembly and each type of the assembly that they use, to any depth.
     static HashSet<INamedTypeSymbol> Contracts(IAssemblySymbol assembly, INamedTypeSymbol[] markers) {
         var all = Types(assembly.GlobalNamespace).ToList();
         var found = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
@@ -76,7 +69,6 @@ public sealed class ContractTypeRule() : UmpireAnalyzerRule(Descriptor) {
         return type.AllInterfaces.Any(i => markers.Any(m => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, m)));
     }
 
-    // The types in the signature of a type: its bases, and its public fields, properties and method parameters.
     static IEnumerable<ITypeSymbol> Uses(INamedTypeSymbol type) {
         if (type.BaseType is { } baseType) {
             yield return baseType;
@@ -105,7 +97,6 @@ public sealed class ContractTypeRule() : UmpireAnalyzerRule(Descriptor) {
         }
     }
 
-    // A type and its element and type arguments: IReadOnlyList<NoteDto> gives IReadOnlyList and NoteDto.
     static IEnumerable<INamedTypeSymbol> Named(ITypeSymbol type) {
         switch (type) {
             case IArrayTypeSymbol array:

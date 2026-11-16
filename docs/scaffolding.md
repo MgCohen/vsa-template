@@ -110,7 +110,7 @@ The suffix `.template` keeps a file inactive in this repository, for example a `
 
 ## Source mode and package mode
 
-The templates build in this repository in source mode, as `samples/` does. The tool changes each `.csproj` to package mode:
+The templates build in this repository in source mode, as the fixtures do. The tool changes each `.csproj` to package mode:
 
 | Source mode (repository) | Package mode (consumer) |
 |---|---|

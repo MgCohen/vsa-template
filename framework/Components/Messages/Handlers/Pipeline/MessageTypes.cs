@@ -6,8 +6,7 @@ static class MessageTypes {
             .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandler<>))
             ?.GetGenericArguments()[0]
         ?? throw new InvalidOperationException(
-            $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, "
-            + "for example through CommandHandler<,>, RequestHandler<,> or IntegrationEventHandler<>.");
+            $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, directly or through a handler base.");
 
     internal static Type OfStep(Type step, Type typedStepBase) => OfBase(step, typedStepBase) ?? typeof(object);
 

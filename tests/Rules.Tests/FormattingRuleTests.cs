@@ -3,7 +3,6 @@ using Umpire.Vsa.Analyzers;
 
 namespace Rules.Tests;
 
-// The formatting rules UMP010101 to UMP010105. Each test turns on only its own rule. The limits are small, so the code stays short.
 public sealed class LineLengthRuleTests {
     static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
 
@@ -17,7 +16,6 @@ public sealed class LineLengthRuleTests {
         class Abc { int valu{|#0:e; }|}
         """, "umpire.UMP010101.max = 20", Analyzer.Diagnostic(Rule, 0, 24, 20));
 
-    // The limit of Umpire.Rules.globalconfig applies when the test gives no limit.
     [Test]
     public Task Limit_comes_from_the_rules_config() {
         var max = int.Parse(RulesConfig.Value("umpire.UMP010101.max"));
@@ -57,7 +55,6 @@ public sealed class MethodLengthRuleTests {
         }
         """, "umpire.UMP010102.max = 2", Analyzer.Diagnostic(Rule, 0, "Constructor A", 3, 2));
 
-    // A global key applies to each rule that reads it, if no rule key is set. Umpire.Rules.globalconfig sets the rule keys.
     [Test]
     public Task Global_max_option_applies() =>
         Analyzer.VerifyFormattingWithoutRulesConfig(Rule, Method, "umpire.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
@@ -107,7 +104,6 @@ public sealed class OneTypePerFileRuleTests {
         delegate void {|#0:Done|}();
         """, "", Analyzer.Diagnostic(Rule, 0, "Done", "A"));
 
-    // Module and Module<TSettings> share a file by default.
     [Test]
     public Task Types_with_the_same_name_pass() => Analyzer.VerifyFormatting(Rule, """
         abstract class Module { }
@@ -171,7 +167,6 @@ public sealed class MemberOrderRuleTests {
         }
         """, "", Diagnostic("N", "private static method", "private method"));
 
-    // Interface members are public by default.
     [Test]
     public Task Interface_members_are_public() => Analyzer.VerifyFormatting(Rule, """
         interface I {
@@ -274,7 +269,6 @@ public sealed class CommentRuleTests {
         """, "");
 }
 
-// UMP010001: each option of a rule has a valid value, else the rule does not run.
 public sealed class RuleOptionTests {
     static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
 
@@ -298,7 +292,6 @@ public sealed class RuleOptionTests {
         Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP010101.max = 20",
             Analyzer.Diagnostic(Rule, 0, 24, 20));
 
-    // Each option of each rule is in Umpire.Rules.globalconfig, with a valid value.
     [Test]
     public void Rules_config_has_each_option() {
         var missing = Analyzer.AllRules.SelectMany(rule => rule.RequiredOptions

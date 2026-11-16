@@ -5,13 +5,13 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Echo/Echo.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Arena/Arena.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Answers/Answers.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Signals/Signals.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Host/Features/Meters/Meters.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/Cards/Cards.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/CommandApp/Features/Resources/Resources.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/ConsoleApp/Features/Greet/Greet.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Echo/Echo.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Arena/Arena.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Answers/Answers.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Signals/Signals.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Meters/Meters.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Greet/Greet.csproj" />
   </ItemGroup>
 </Project>

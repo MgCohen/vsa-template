@@ -6,7 +6,6 @@ using NSubstitute;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Testing.Unit;
 
-// The unit test base on the Good fixture: it finds the handler of a request in the module and runs it.
 public sealed class UnitBaseTests : VsaUnitTest {
     [Test]
     public async Task Handle_runs_the_handler_of_the_request() {
@@ -26,7 +25,6 @@ public sealed class UnitBaseTests : VsaUnitTest {
     }
 }
 
-// Configure runs before each test, so each test gets a new mock in the field.
 public sealed class UnitBaseConfigureTests : VsaUnitTest {
     IClock clock = null!;
     IIntegrationEventPublisher publisher = null!;
@@ -46,7 +44,6 @@ public sealed class UnitBaseConfigureTests : VsaUnitTest {
     [Test]
     public void Each_test_gets_a_new_mock() => Assert.That(clock.Now, Is.EqualTo(42));
 
-    // A mock replaces a default fake: the last registration wins.
     [Test]
     public void A_mock_replaces_a_default_fake() =>
         Assert.That(Provider.GetRequiredService<IIntegrationEventPublisher>(), Is.SameAs(publisher));

@@ -1,8 +1,9 @@
 <Project>
-  <!-- The templates build against the framework source, as the samples do. The tool does not copy this file. -->
-  <Import Project="$(MSBuildThisFileDirectory)../../../samples/Directory.Build.props" />
+  <!-- The templates build against the framework source in this repository (Umpire.Sdk source mode). The tool does not copy this file. -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../Directory.Build.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <UmpireFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..'))</UmpireFrameworkSourceDir>
     <!-- The templates are one app. The tool writes a global.json in the root of a new app, so a new app does not set this. -->
     <UmpireBlock>$(MSBuildThisFileDirectory)</UmpireBlock>
     <ArtifactsPath>$(UmpireBlock)artifacts~</ArtifactsPath>

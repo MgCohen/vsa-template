@@ -15,7 +15,7 @@ Features/Notebook/
    └─ LogNoteCreated/   NoteCreatedHandler.cs
 ```
 
-A module with commands and a published domain (`tests/Fixtures/CommandApp`):
+A module with commands and a published domain (the modules `Battle`, `Cards` and `Resources` in `tests/Fixtures/Modules/Features/`):
 
 ```
 Features/Cards/
@@ -55,7 +55,7 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 An app has one root project in the block folder. It compiles each file in its folder tree, so a module, a slice or a plugin needs no project of its own. All other projects are optional, for example a test project or a separate assembly.
 
 ```
-samples/Notes/
+tests/Fixtures/Notes/
 ├─ Notes.csproj                 root project: App/, Features/, Plugins/
 ├─ App/Host/  App/Views/
 ├─ Features/Notebook/  Features/Ping/
@@ -83,7 +83,7 @@ A web root project uses the Web SDK first, then Umpire.Sdk:
 
 A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Vsa.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030101`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
-A module in its own assembly (for example the fixture modules in `tests/Fixtures/Host/`) has its own project in the module folder. It then references the other modules that it uses.
+A module in its own assembly (for example the fixture modules in `tests/Fixtures/Modules/`) has its own project in the module folder. It then references the other modules that it uses.
 
 The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notebook`. One assembly can have many modules.
 

@@ -7,12 +7,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP010105: the members of a type are in order: first by kind, then by access, then static before instance.
-// The diagnostic marks each member that comes after a member of a later group. An explicit interface implementation is public.
-// Options, in Umpire.Rules.globalconfig. A kind or an access that a list does not name comes after the named ones.
-//   umpire.UMP010105.kind_order     constant, field, constructor, finalizer, property, event, method, nested_type
-//   umpire.UMP010105.access_order   public, internal, protected_internal, protected, private_protected, private
-//   umpire.UMP010105.static_first   true: static before instance
 public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
     public const string KindOrderKey = "kind_order";
     public const string AccessOrderKey = "access_order";
@@ -58,7 +52,6 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
         }
     }
 
-    // The token that names a member, for the location and the message.
     static SyntaxToken Name(MemberDeclarationSyntax member) => member switch {
         FieldDeclarationSyntax field => field.Declaration.Variables[0].Identifier,
         EventFieldDeclarationSyntax field => field.Declaration.Variables[0].Identifier,
@@ -75,13 +68,11 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
         _ => member.GetFirstToken(),
     };
 
-    // The group of one member: its kind, its access, and static or instance.
     readonly struct Group(string kind, string access, bool isStatic) {
         public string Kind { get; } = kind;
         public string Access { get; } = access;
         public bool IsStatic { get; } = isStatic;
 
-        // Null for a member that the rule does not order.
         public static Group? Of(MemberDeclarationSyntax member, bool inInterface) {
             string? kind = member switch {
                 FieldDeclarationSyntax field => field.Modifiers.Any(SyntaxKind.ConstKeyword) ? "constant" : "field",
@@ -125,13 +116,11 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
         };
     }
 
-    // The order from the options of one file.
     sealed class Order(IReadOnlyList<string> kinds, IReadOnlyList<string> accesses, bool staticFirst) {
         public IReadOnlyList<string> Kinds { get; } = kinds;
         public IReadOnlyList<string> Accesses { get; } = accesses;
         public bool StaticFirst { get; } = staticFirst;
 
-        // Null if a value of this file is not valid.
         public static Order? Read(UmpireOptions options) =>
             options.List(KindOrderKey) is { } kinds && options.List(AccessOrderKey) is { } accesses
             && options.Bool(StaticFirstKey) is { } staticFirst
@@ -150,7 +139,6 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
             return StaticFirst ? b.IsStatic.CompareTo(a.IsStatic) : a.IsStatic.CompareTo(b.IsStatic);
         }
 
-        // A name that the list does not have comes after all names of the list.
         static int Index(IReadOnlyList<string> list, string name) {
             var index = list.ToList().IndexOf(name);
             return index < 0 ? list.Count : index;

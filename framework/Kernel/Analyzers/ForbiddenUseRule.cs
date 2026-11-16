@@ -7,14 +7,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
-// The base of a rule that forbids some types in the classes that inherit one base class.
-// It checks fields, properties, parameters (also of a primary constructor), object creations, calls and locals.
-// The message gets two arguments: the class name and the forbidden type name.
 public abstract class ForbiddenUseRule(DiagnosticDescriptor rule) : UmpireAnalyzerRule(rule) {
-    // The base class of the checked classes. Null: the compilation does not have it, and the rule does nothing.
     protected abstract INamedTypeSymbol? Subject(Compilation compilation);
 
-    // The forbidden types: each type, its subtypes and the types that implement it. Null entries are ignored.
     protected abstract IEnumerable<INamedTypeSymbol?> ForbiddenTypes(Compilation compilation);
 
     protected internal sealed override void Register(CompilationStartAnalysisContext start) {
@@ -34,8 +29,6 @@ public abstract class ForbiddenUseRule(DiagnosticDescriptor rule) : UmpireAnalyz
         }, SymbolKind.NamedType);
     }
 
-    // Two members can have the same location, for example a primary constructor parameter in the constructor and in
-    // another member that the compiler makes from it. The rule reports each location one time.
     void CheckMembers(INamedTypeSymbol type, Forbidden forbidden, SymbolStartAnalysisContext context) {
         var reported = new HashSet<Location>();
         foreach (var member in type.GetMembers()) {
@@ -78,7 +71,6 @@ public abstract class ForbiddenUseRule(DiagnosticDescriptor rule) : UmpireAnalyz
     sealed class Forbidden(ImmutableArray<INamedTypeSymbol> types) {
         public bool IsEmpty => types.IsEmpty;
 
-        // The forbidden type in this type, its element type or its type arguments, or null.
         public ITypeSymbol? Find(ITypeSymbol? type) {
             switch (type) {
                 case null:

@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the rule engine app. They run the engine modules in the test process on samples/Notes,
+  <!-- Tests of the rule engine app. They run the engine modules in the test process on tests/Fixtures/Notes,
        whose assemblies are in the test output. -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -7,7 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
-    <ProjectReference Include="$(RepoRoot)samples/Notes/Notes.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Notes/Notes.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/TwoApps/TwoApps.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/NoConstructorApp/NoConstructorApp.csproj" />
   </ItemGroup>

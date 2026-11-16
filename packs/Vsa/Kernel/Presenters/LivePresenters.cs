@@ -3,19 +3,10 @@ namespace Umpire.Vsa.Presenters;
 using Microsoft.Extensions.Logging;
 using Umpire.Vsa.Contracts.Events;
 
-// The presenters that exist now, for the whole app. PresenterInstaller adds each presenter when the services make it,
-// and the scope removes it when it ends. A view is not needed.
-// After each publish, each live presenter that implements IPresenterEvent<TEvent> gets the event one time.
-// The events of one presenter run one at a time, on the dispatcher of its scope if the app gives one
-// (a LivePresenters.Dispatch service), then the presenter raises Changed.
-// The publisher does not wait for the views, and the token of the publisher does not go to the presenters:
-// the handlers are done when the observer runs. An error in one presenter goes to the log.
 public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegrationEventObserver {
     readonly object gate = new();
     readonly Dictionary<Presenter, List<Dispatch>> live = [];
 
-    // Runs work on a thread that the app selects, for example the main thread in Unity. With no dispatcher,
-    // the work runs on the thread of the publisher.
     public delegate Task Dispatch(Func<Task> work);
 
     public void Connect(Presenter presenter, Dispatch? dispatch = null) {
@@ -33,7 +24,6 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegratio
         return new Removal(this, presenter, entry);
     }
 
-    // Starts the delivery to each live presenter and returns. The views get the event on their own dispatchers.
     public Task OnPublishedAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
         (Presenter Presenter, Dispatch Dispatch)[] targets;
         lock (gate) {

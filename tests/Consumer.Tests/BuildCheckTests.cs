@@ -8,7 +8,7 @@ public sealed class BuildCheckTests {
     [Test]
     [CancelAfter(20 * 60 * 1000)]
     public void The_build_of_the_host_runs_the_rule_engine(CancellationToken ct) {
-        using var workspace = Workspace.Create(Repo.Path("samples", "Notes"));
+        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
         NotesConsumerTests.UsePackages(workspace.Src);
         AddBuildHook(workspace.Src, "Notes.csproj");
 
