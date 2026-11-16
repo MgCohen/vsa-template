@@ -32,6 +32,19 @@ public sealed class AppTests {
     }
 
     [Test]
+    public void Stop_before_the_host_starts_makes_Run_return_and_the_app_can_run_again() {
+        var app = new StopOnStartApp();
+
+        var first = app.Run([]);
+        var second = app.Run([]);
+
+        Assert.That(first, Is.Zero);
+        Assert.That(second, Is.Zero);
+        Assert.That(app.IsRunning, Is.False);
+        Assert.That(app.Stops, Is.EqualTo(2));
+    }
+
+    [Test]
     public void A_returning_host_returns_from_Run_and_Stop_stops_the_app() {
         var app = new ReturningApp();
         app.Run([]);
@@ -161,6 +174,16 @@ public sealed class AppTests {
 
     sealed class WaitingApp : App<Vsa<VsaHost>> {
         protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+    }
+
+    sealed class StopOnStartApp : App<Vsa<VsaHost>> {
+        public int Stops { get; private set; }
+
+        protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+
+        protected override void OnStart() => Stop();
+
+        protected override void OnStop() => Stops++;
     }
 
     sealed class ReturningApp : App<Vsa<ReturningHost>> {
