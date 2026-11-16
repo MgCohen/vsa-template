@@ -2,7 +2,6 @@ namespace Resources.Domain;
 
 using Resources.Domain.Shared;
 
-// The private rules of Resources. Each key starts at 10.
 public sealed class Wallet {
     readonly Dictionary<ResourceKey, int> amounts = [];
 

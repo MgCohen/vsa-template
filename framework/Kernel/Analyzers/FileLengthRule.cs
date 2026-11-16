@@ -3,8 +3,6 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP010103: a file has at most max lines. The diagnostic marks the first line after the limit.
-// Option: umpire.UMP010103.max, in Umpire.Rules.globalconfig.
 public sealed class FileLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "UMP010103",
@@ -22,7 +20,6 @@ public sealed class FileLengthRule() : LimitRule(Descriptor) {
             return;
         }
         var lines = context.Tree.GetText(context.CancellationToken).Lines;
-        // The empty line after the last line break is not a line of the file.
         var count = lines.Count > 0 && lines[lines.Count - 1].Span.IsEmpty ? lines.Count - 1 : lines.Count;
         if (count <= max) {
             return;

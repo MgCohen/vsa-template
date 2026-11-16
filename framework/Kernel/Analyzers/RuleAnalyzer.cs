@@ -7,11 +7,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// The base of each analyzer DLL. It runs each UmpireAnalyzerRule of the assembly of the derived class,
-// so each DLL has one analyzer class that inherits RuleAnalyzer.
-// Roslyn skips an analyzer only when all of its IDs are off, so this class skips each rule that is off by itself.
 public abstract class RuleAnalyzer : DiagnosticAnalyzer {
-    // UMP010001: an option of a rule is missing or not valid. Each value is in Umpire.Rules.globalconfig, and no rule has a default.
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
         "UMP010001",
         "An Umpire rule option is missing or not valid",
@@ -30,7 +26,6 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         SupportedDiagnostics = [OptionDescriptor, .. Rules.Select(r => r.Rule)];
     }
 
-    // Each non-abstract UmpireAnalyzerRule of the assembly of the derived class, in ID order.
     public ImmutableArray<UmpireAnalyzerRule> Rules { get; }
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
@@ -57,7 +52,6 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         });
     }
 
-    // One UMP010001 diagnostic for each option of the rule that the global config does not give, or gives with a bad value.
     static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, AnalyzerConfigOptions global) {
         var options = new UmpireOptions(rule.Id, global);
         return rule.RequiredOptions
@@ -67,11 +61,8 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
                 rule.Id, pair.Option.Key, pair.Option.Kind, pair.Value ?? "missing"));
     }
 
-    // A rule is off if its severity is none in each file: from .editorconfig, .globalconfig, a rule set or NoWarn.
     static bool IsOff(DiagnosticDescriptor rule, Compilation compilation, System.Threading.CancellationToken ct) {
         var provider = compilation.Options.SyntaxTreeOptionsProvider;
-        // The global config wins over the project options. Roslyn also drops each diagnostic of a rule that is off,
-        // so this check only prevents work, and if it is not sure, the rule runs.
         var project = provider?.TryGetGlobalDiagnosticValue(rule.Id, ct, out var global) == true ? global
             : compilation.Options.SpecificDiagnosticOptions.TryGetValue(rule.Id, out var specific) ? specific
             : rule.IsEnabledByDefault ? ReportDiagnostic.Default : ReportDiagnostic.Suppress;

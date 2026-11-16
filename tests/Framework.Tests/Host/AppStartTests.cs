@@ -22,7 +22,6 @@ public sealed class AppStartTests {
 
     [Test]
     public async Task AppWithAModuleWithoutRequestHandlersStarts() {
-        // Shelf has a Presenters layer and no Handlers/Requests layer.
         using var app = await WebApps.OnTestServer(new ShelfModule()).Start();
 
         Assert.That(Endpoints(app), Is.Empty);

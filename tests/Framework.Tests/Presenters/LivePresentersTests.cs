@@ -42,7 +42,6 @@ public sealed class LivePresentersTests {
         Assert.That(presenter.Total, Is.Zero);
     }
 
-    // Two views that show the same presenter: the presenter gets each event one time, until the last view goes away.
     [Test]
     public async Task APresenterInTwoViewsGetsEachEventOneTime() {
         var presenter = new CountPresenter();
@@ -83,7 +82,6 @@ public sealed class LivePresentersTests {
         Assert.That(dispatched, Is.EqualTo(1));
     }
 
-    // The publisher does not wait for a view that is busy: the event waits on the dispatcher of that view.
     [Test]
     public async Task ThePublisherDoesNotWaitForABusyView() {
         var presenter = new CountPresenter();
@@ -110,7 +108,6 @@ public sealed class LivePresentersTests {
         Assert.That(presenter.Total, Is.EqualTo(1));
     }
 
-    // Two events at the same time: the presenter handles one, then the other.
     [Test]
     public async Task TheEventsOfOnePresenterRunOneAtATime() {
         var presenter = new SlowPresenter();

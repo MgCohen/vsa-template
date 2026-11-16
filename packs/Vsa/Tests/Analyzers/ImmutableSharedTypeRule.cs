@@ -3,9 +3,6 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP010205: the types of a <Module>.Domain.Shared project are immutable. Other modules read these values,
-// so a value does not change after it is made. A property has no set accessor (init is permitted).
-// A field is readonly or const. A type has no field event. This rule is a trial (decision D-37).
 public sealed class ImmutableSharedTypeRule() : UmpireAnalyzerRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "UMP010205",
@@ -28,7 +25,6 @@ public sealed class ImmutableSharedTypeRule() : UmpireAnalyzerRule(Descriptor) {
             return;
         }
         var (problem, fix) = member switch {
-            // A positional record struct that is not readonly gives each parameter a set accessor.
             IPropertySymbol { SetMethod: { IsInitOnly: false }, ContainingType: { IsRecord: true, IsValueType: true, IsReadOnly: false } } property
                 when property.Locations[0].SourceTree?.GetRoot().FindNode(property.Locations[0].SourceSpan) is Microsoft.CodeAnalysis.CSharp.Syntax.ParameterSyntax =>
                 ("a property of a record struct that is not readonly", "Make it a readonly record struct"),

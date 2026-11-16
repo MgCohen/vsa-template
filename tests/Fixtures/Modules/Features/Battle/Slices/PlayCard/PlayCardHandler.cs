@@ -7,7 +7,6 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Requests;
 
-// A request handler that sends a command of Cards, with the published domain of Cards and of Resources.
 sealed class PlayCardHandler(ICommandSender commands) : RequestHandler<PlayCardRequest, PlayCardResponse> {
     public override async Task<Result<PlayCardResponse>> HandleAsync(Envelope<PlayCardRequest> envelope) {
         var cost = new Cost(ResourceKeys.Mana.Name, envelope.Message.Mana);

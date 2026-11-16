@@ -5,9 +5,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-// UMP010102: a method has at most max lines, from its first line to its last line. Comments and blank lines count.
-// The rule checks methods, constructors, finalizers, operators, accessors and local functions.
-// Option: umpire.UMP010102.max, in Umpire.Rules.globalconfig.
 public sealed class MethodLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "UMP010102",
@@ -38,7 +35,6 @@ public sealed class MethodLengthRule() : LimitRule(Descriptor) {
         context.ReportDiagnostic(Create(location, name, lines, max));
     }
 
-    // The name and the location of the diagnostic: the identifier, or the keyword of an operator or an accessor.
     static (string Name, Location Location) Name(SyntaxNode node) => node switch {
         MethodDeclarationSyntax method => (method.Identifier.Text, method.Identifier.GetLocation()),
         ConstructorDeclarationSyntax ctor => ($"Constructor {ctor.Identifier.Text}", ctor.Identifier.GetLocation()),

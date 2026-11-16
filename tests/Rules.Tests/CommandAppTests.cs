@@ -9,7 +9,6 @@ using Resources.Slices.ChangeResource;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Testing.Unit;
 
-// The unit test base runs a command handler. The handler sends a command of Resources, so the test mocks ICommandSender.
 public sealed class UnitBaseCommandTests : VsaUnitTest {
     ICommandSender commands = null!;
 

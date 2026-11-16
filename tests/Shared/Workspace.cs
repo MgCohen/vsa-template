@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 
-// A copy of a folder in a short temporary folder, prepared as a consumer of the local feed.
-// global.json names the Umpire.Sdk version, and restore uses its own NuGet cache.
 public sealed class Workspace : IDisposable {
     Workspace(string root) {
         Root = root;
@@ -14,7 +12,6 @@ public sealed class Workspace : IDisposable {
 
     public string Root { get; }
 
-    // The copy of the folder, the block folder, with global.json. The other consumer files are in Root, one level above.
     public string Src => Path.Combine(Root, "src");
 
     public IReadOnlyDictionary<string, string> Env { get; }
@@ -35,10 +32,8 @@ public sealed class Workspace : IDisposable {
     void WriteConsumerFiles() {
         var globalJson = JsonNode.Parse(File.ReadAllText(Repo.Path("global.json")))!;
         globalJson["msbuild-sdks"] = new JsonObject { ["Umpire.Sdk"] = LocalFeed.Version };
-        // In Src, the block folder, as in an app that the umpire tool makes: the rule engine finds the block folder from global.json.
         File.WriteAllText(Path.Combine(Src, "global.json"), globalJson.ToJsonString());
 
-        // The global packages folder of the user is also a feed, so restore does not download each package again.
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
         File.WriteAllText(Path.Combine(Root, "nuget.config"), $"""
@@ -66,7 +61,6 @@ public sealed class Workspace : IDisposable {
             </Project>
             """);
 
-        // The package versions of the repository, and the VSA packages at the test version.
         var packages = XDocument.Load(Repo.Path("Directory.Packages.props"));
         var items = packages.Root!.Element("ItemGroup")!;
         foreach (var id in LocalFeed.Packages.Where(id => id != "Umpire.Sdk")) {

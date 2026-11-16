@@ -11,7 +11,6 @@ sealed partial class NoteCreatedHandler(ILogger<NoteCreatedHandler> logger) : In
         return Done;
     }
 
-    // A LoggerMessage method: the analyzers (CA1848) require it.
     [LoggerMessage(LogLevel.Information, "Note {NoteId} created: {Title}")]
     partial void LogCreated(Guid noteId, string title);
 }

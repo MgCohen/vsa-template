@@ -4,8 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
-// UMP010101: a line has at most max characters. The diagnostic marks the characters after the limit.
-// Option: umpire.UMP010101.max, in Umpire.Rules.globalconfig.
 public sealed class LineLengthRule() : LimitRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "UMP010101",

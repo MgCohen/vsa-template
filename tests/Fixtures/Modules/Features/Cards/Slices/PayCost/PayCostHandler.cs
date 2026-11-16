@@ -7,7 +7,6 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Handlers.Commands;
 
-// A command handler that sends a command of another module, and publishes an event of its own module.
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events)
     : CommandHandler<PayCostCommand, PayCostResult> {
     public override async Task<Result<PayCostResult>> HandleAsync(Envelope<PayCostCommand> envelope) {

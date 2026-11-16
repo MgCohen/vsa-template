@@ -15,8 +15,6 @@ using Resources;
 using Resources.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
 
-// The host registers ICommandSender and the one handler of each command (tests/Fixtures/CommandApp).
-// Battle PlayCard sends PayCost to Cards. Cards sends ChangeResource to Resources. Each mana pool starts at 10.
 public sealed class CommandTests {
     [Test]
     public async Task A_request_handler_sends_commands_through_two_modules() {
@@ -40,7 +38,6 @@ public sealed class CommandTests {
         Assert.That(result.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }
 
-    // Cards sends a command of Resources, but the app has no Resources module.
     [Test]
     public async Task A_command_with_no_handler_is_an_error() {
         using var app = await Start(new CardsModule());
