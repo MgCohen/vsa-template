@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The base of the unit tests: send a request or a command to its handler, with default fakes for the framework services and NSubstitute mocks for other services. -->
+  <!-- The base of the unit tests: send a request or a command to its handler, with default fakes for the framework services and NSubstitute mocks for other services. VsaArchitectureTest: the base of the tests of a VSA definition. -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../../architecture/Umpire.Architecture.csproj" />
+    <ProjectReference Include="../../Architecture/Umpire.Vsa.csproj" />
     <ProjectReference Include="../../Kernel/Handlers/Requests/Umpire.Vsa.Handlers.Requests.csproj" />
     <ProjectReference Include="../../Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
     <ProjectReference Include="../../Kernel/Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />

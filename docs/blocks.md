@@ -76,7 +76,7 @@ protected override void Install(IServiceCollection services, AppTypes types) {
 
 | Kind | Folder shape | Mark |
 |---|---|---|
-| Pack | `<Name>Pack.cs`, `Architecture/`, `Kernel/`, `Tests/` | Checked (`PackArchitecture`) |
+| Pack | `<Name>Pack.cs`, `Architecture/`, `Kernel/`, `Tests/` (the tests of the definition, on `ArchitectureTest<TArchitecture>`, see `architecture-engine.md`) | Checked (`PackArchitecture`) |
 | Framework kernel | Free: one folder for each topic | Not enforced in 0.1.0 |
 | Component | Free | Not enforced in 0.1.0 |
 | Library | Fully free | Not enforced in 0.1.0 |

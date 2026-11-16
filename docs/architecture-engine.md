@@ -444,3 +444,41 @@ The Report step sorts the findings: the findings with no file first, then by pat
 ## Tests of the engine
 
 `tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. `BadApp` has one known problem for each rule ID. `VsaApp` is in the VSA layout and uses `VsaArchitecture`: it has one case for each VSA check, and `VsaAppTests` lists each finding that it expects. `CountTests` and `MatchTests` check the counts, the matches and `Required` on plain type facts, with no DLL.
+
+## Tests of a definition
+
+A consumer tests its own definition with the base `ArchitectureTest<TArchitecture>` (`architecture/Testing/`, in `Umpire.Architecture`). A test names a type and a folder of the block. The base binds the type to a part, and it gives the decision of a use. A VSA app uses `VsaArchitectureTest` (`Umpire.Vsa.Testing.Unit`), with the folder helpers `Feature`, `Slice` and `Plugin`.
+
+```csharp
+public sealed class NotesArchitectureTests : VsaArchitectureTest {
+    [Test]
+    public void The_presenter_uses_an_event_of_its_module() {
+        var presenter = At<NotebookPresenter>(Feature("Notebook") + "/Presenters");
+        var noteCreated = At<NoteCreated>(Slice("Notebook", "CreateNote"));
+
+        Assert.That(MayUse(presenter, noteCreated).Permission, Is.EqualTo(Permission.Allow));
+    }
+}
+```
+
+| Member | Gives |
+|---|---|
+| `Definition` | The `TArchitecture` instance |
+| `At<T>(folder, neighbors)`, `At(type, folder, neighbors)` | A `Place`: the binding of the type in that folder. The neighbors are the other types of the folder, so a helper can follow its user |
+| `At(folder)` | A `Place` of a type with no base type in that folder |
+| `MayUse(from, to)` | The `Decision`: `Permission` and the rule. If a place is not mapped, it throws |
+| `Place.Part` | The part name, for example `Handlers.Requests`, or `None` |
+| `Place.Path`, `Place.Values` | The path of the part instance and the group values, for example `Feature` = `Notebook` |
+| `Place.IsMapped` | `false` if the engine does not bind the type: `UMP020202`, a folder outside the block, a build output folder, or an inner block folder with no block place |
+
+The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
+
+The folder is the path in the block with no Unity alias. In a Unity project, write `Features/Notebook`, not `Assets/<App>/Features/Notebook`.
+
+The base has no test framework, and a test asserts with NUnit. It needs no build of the app and no DLL: only the type. An internal type is not visible to a test project, so name a public type of the same base, or a plain type with `At(folder)`.
+
+| Consumer | Test |
+|---|---|
+| An app | `Tests/<App>ArchitectureTests.cs`, written by `umpire new app` |
+| A pack variant | `Packs/<Name>/Tests/`, the `Tests` part of `PackArchitecture`, for example `tests/Fixtures/PackVariant/Packs/Ecs/Tests` |
+| The repository | `tests/Architecture.Tests/ArchitectureTest*Tests.cs`, on the VSA definition, the pack variant and `LayeredArchitecture` |
