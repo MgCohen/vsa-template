@@ -55,6 +55,10 @@ If `GITHUB_TOKEN` is not set, restore fails with 401.
 
 The root project of a new app has the package `Umpire.Engine.Build`. So the rule engine checks the architecture after each build, and an error fails the build. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning. `umpire doctor` and `umpire update` include this package in the one version.
 
+## Packages of an app
+
+`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers, Umpire.Kernel.Analyzers) and the pack. `UmpirePack` selects the pack, and its default is `Vsa`: the SDK adds `Umpire.Vsa` and `Umpire.Vsa.Analyzers` with its own version. `Umpire.Vsa` depends on each VSA layer base. To change a rule value or a severity, set the key in the `.editorconfig` of the app.
+
 ## Consumer repos
 
 | Repo | Contains | Gets VSA | Check |

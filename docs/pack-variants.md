@@ -26,7 +26,7 @@ PackVariant/                             app block: check entry PackVariantApp, 
    └─ Tests/                             Ecs.Tests: the tests of EcsArchitecture
 ```
 
-The pack class is the check entry of the pack block (`Pack : Block<PackArchitecture>`):
+A pack variant is not a package, so the app keeps `UmpirePack` at its default (`Vsa`). The pack class is the check entry of the pack block (`Pack : Block<PackArchitecture>`):
 
 ```csharp
 public class Ecs<THost> : Vsa<EcsArchitecture, THost> where THost : VsaHost, new();

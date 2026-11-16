@@ -1,5 +1,6 @@
-# The severities of every Umpire.Sdk project: the built-in .NET rules (the editor and code style rules) and the disabled Umpire rules.
-# A consumer can change a rule in its own .editorconfig. The values of the Umpire rules (UMP01xxxx) are in Umpire.Rules.globalconfig.
+# The severities of every Umpire.Sdk project: the built-in .NET rules (the editor and code style rules).
+# A consumer can change a rule in its own .editorconfig. The values and the disabled severities of the Umpire rules (UMP01xxxx)
+# are in the globalconfig file of each analyzer package.
 # The built-in rules come from AnalysisLevel = latest-recommended in Sdk.props.
 # Set a severity with the standard key, for example: dotnet_diagnostic.CA1822.severity = none
 is_global = true
@@ -9,13 +10,6 @@ global_level = -1
 # CA1863: CompositeFormat does not exist in netstandard2.1, so the Unity projects cannot use it.
 dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CA1863.severity = none
-
-# Disabled Umpire rules: the design is not clear, so they wait for the review in issue #143 before 0.1.0.
-# The list is the table "Disabled rules" in docs/architecture-rules.md. A consumer can turn a rule on in its own .editorconfig.
-dotnet_diagnostic.UMP010203.severity = none
-dotnet_diagnostic.UMP010205.severity = none
-dotnet_diagnostic.UMP010206.severity = none
-dotnet_diagnostic.UMP010207.severity = none
 
 # Formatting: the built-in rules. IDE0055 checks the format options below and the default format options.
 # Each brace is on its own line (Allman), and else, catch and finally are on a new line.

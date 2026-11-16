@@ -1,17 +1,11 @@
-# The values of the Umpire analyzer rules (UMP01xxxx). This file is the only place of these values: no rule has a default.
+# The values of the rules of Umpire.Kernel.Analyzers (UMP0101xx). This file is the only place of these values: no rule has a default.
+# The package ships this file, and its build props give it to each project that references the package.
 # If a value is missing or not valid, the build reports UMP010001, and that rule does not run.
-# A consumer changes a value in its own .editorconfig. Severity uses the standard key: dotnet_diagnostic.UMP010201.severity = none
+# A consumer changes a value in its own .editorconfig. Severity uses the standard key: dotnet_diagnostic.UMP010101.severity = none
 # Keys: umpire.<rule ID>.<key> for one rule, umpire.<key> for all rules that read the key. A rule key wins.
 # In a list, write a comma between the items: a semicolon starts a comment.
 is_global = true
 global_level = -1
-
-# UMP010201: true checks the responses too, false checks only the requests.
-umpire.UMP010201.check_responses = true
-# UMP010207: the bases that a Domain.Shared type can use, apart from the Domain.Shared projects.
-# Empty: an interface such as IComparable<T> needs a method, and UMP010206 does not permit methods.
-# An app adds its own bases, for example: umpire.UMP010207.allowed_bases = Card.TypeKeys.TypeKey, Card.Entities.IComponent
-umpire.UMP010207.allowed_bases =
 
 # Formatting (warnings): the maximum characters in a line, lines in a method and lines in a file.
 umpire.UMP010101.max = 120

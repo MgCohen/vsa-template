@@ -67,7 +67,9 @@ static class Analyzer {
         var globalConfig = "is_global = true\n" + string.Concat(off) + config;
         test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", globalConfig));
         if (rulesConfig) {
-            test.TestState.AnalyzerConfigFiles.Add(("/Umpire.Rules.globalconfig", RulesConfig.Text));
+            foreach (var rules in RulesConfig.All) {
+                test.TestState.AnalyzerConfigFiles.Add(($"/{rules.FileName}", rules.OptionText));
+            }
         }
         if (formatting is not null) {
             test.TestBehaviors |= TestBehaviors.SkipSuppressionCheck | TestBehaviors.SkipGeneratedCodeCheck;
@@ -75,7 +77,9 @@ static class Analyzer {
         configure?.Invoke(test);
         foreach (var project in test.TestState.AdditionalProjects.Values) {
             project.AnalyzerConfigFiles.Add(($"/{project.Name}/.globalconfig", globalConfig));
-            project.AnalyzerConfigFiles.Add(($"/{project.Name}/Umpire.Rules.globalconfig", RulesConfig.Text));
+            foreach (var rules in RulesConfig.All) {
+                project.AnalyzerConfigFiles.Add(($"/{project.Name}/{rules.FileName}", rules.OptionText));
+            }
         }
         test.ExpectedDiagnostics.AddRange(expected);
         return test.RunAsync(TestContext.CurrentContext.CancellationToken);

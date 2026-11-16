@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The attributes that the Umpire analyzers read. Each layer references this package, and it ships with Umpire.Vsa.Analyzers. -->
+  <!-- The attributes that the Umpire analyzers read. Each layer references this package. It is its own package, and Umpire.Sdk adds it to each project. -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>

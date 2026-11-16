@@ -12,5 +12,6 @@
   <ItemGroup Condition="'$(UsingUmpireSdk)' != 'true' and '$(MSBuildProjectName)' != 'Umpire.Vsa.Analyzers' and '$(MSBuildProjectName)' != 'Umpire.Kernel.Analyzers' and '$(MSBuildProjectName)' != 'Rules.Tests'">
     <ProjectReference Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig" />
   </ItemGroup>
 </Project>

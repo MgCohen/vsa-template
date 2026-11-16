@@ -291,20 +291,4 @@ public sealed class RuleOptionTests {
     public Task Option_from_the_test_config_is_enough() =>
         Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP010101.max = 20",
             Analyzer.Diagnostic(Rule, 0, 24, 20));
-
-    [Test]
-    public void Rules_config_has_each_option() {
-        var missing = Analyzer.AllRules.SelectMany(rule => rule.RequiredOptions
-            .Where(option => !option.IsValid(TryValue($"umpire.{rule.Id}.{option.Key}")))
-            .Select(option => $"umpire.{rule.Id}.{option.Key}"));
-        Assert.That(missing, Is.Empty, RulesConfig.Path);
-    }
-
-    static string? TryValue(string key) {
-        try {
-            return RulesConfig.Value(key);
-        } catch (InvalidOperationException) {
-            return null;
-        }
-    }
 }

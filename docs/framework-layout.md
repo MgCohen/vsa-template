@@ -1,6 +1,6 @@
 # Repository layout: architecture, framework, packs, engine and tools
 
-Umpire has five groups of code, and each group has one top folder. The definition API references no other C# project (its build gets the polyfill and the rule values of Umpire.Sdk, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
+Umpire has five groups of code, and each group has one top folder. The definition API references no other C# project (its build gets the polyfill of Umpire.Sdk and the rule values of the kernel analyzers, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
 
 ## Groups
 
@@ -101,7 +101,6 @@ See `composition.md` for each step.
 ## Open questions
 
 - The engine app as a bootstrap: built on the last released Umpire, not on the source.
-- The generic part of Umpire.Sdk: the folder rules and the version pins, apart from the list of Umpire packages.
 - The place of `Versions` (library or plugin).
 - A pack variant in this repository: `packs/<Base>.<Variant>/`, or another folder.
 - The checks that only one pack needs: `packs/<Name>/Checks/`.

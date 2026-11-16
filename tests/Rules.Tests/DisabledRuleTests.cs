@@ -6,7 +6,7 @@ using Umpire.Vsa.Analyzers;
 namespace Rules.Tests;
 
 public sealed partial class DisabledRuleTests {
-    static readonly string Config = File.ReadAllText(Repo.Path("tools", "sdk", "Sdk", "Umpire.globalconfig"));
+    static readonly string Config = RulesConfig.Vsa.Text;
     static readonly string Rules = File.ReadAllText(Repo.Path("docs", "architecture-rules.md"));
 
     [Test]
