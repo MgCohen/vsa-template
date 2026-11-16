@@ -68,6 +68,17 @@ Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity
 
 Umpire.Vsa.Analyzers references Roslyn 4.10, the compiler of Unity 6. A newer compiler also runs it. An analyzer that references a newer Roslyn does not run in Unity (`CS9057`).
 
+### Build output
+
+An app that `umpire new app` makes writes all build output to `artifacts~/` in the app root. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
+
+| Need | Do this in `Directory.Build.props` |
+|------|-------------------------------------|
+| Another output folder | Set `ArtifactsPath` to that folder |
+| Output next to each project (`bin/`, `obj/`) | Set `UseArtifactsOutput` to `false` |
+
+The .NET SDK reads these two properties only from `Directory.Build.props` or the command line. A value in a project file gives `NETSDK1199`.
+
 ### Layers that Unity can use
 
 | Layer | Package | Unity |

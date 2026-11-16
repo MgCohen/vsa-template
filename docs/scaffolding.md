@@ -25,7 +25,8 @@ Rules for all commands:
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
 - `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
-- `new app` writes a `.gitignore` for the build folders and the local files (`bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
+- `new app` writes a `Directory.Build.props` that puts all build output in `artifacts~/` in the app root (`UseArtifactsOutput`, `ArtifactsPath`). No `bin/` or `obj/` folder is next to the code, and Unity does not import the DLLs a second time: it skips each folder whose name ends with `~`. The .NET SDK reads this setting only from `Directory.Build.props` or the command line (`NETSDK1199`), so the setting is not in Umpire.Sdk.
+- `new app` writes a `.gitignore` for the build folders and the local files (`artifacts~/`, `bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
 
 ## Add a command
@@ -74,6 +75,7 @@ tools/cli/Templates/
 ├─ global.json.template, dotnet-tools.json.template   new app (the version token {{UmpireVersion}})
 ├─ nuget.config.template             new app (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               new app
+├─ Directory.Build.props.template    new app (the build output in artifacts~/)
 ├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
 ├─ App/Views/Pages/SampleModulePage.razor          add module

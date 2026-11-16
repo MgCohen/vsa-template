@@ -39,6 +39,8 @@ dotnet test SampleApp.slnx                   # the unit tests
 
 The rule engine checks each type against the VSA definition after each build of the root project, if the root project has the package `Umpire.Engine.Build`. It gives `UMP2001` (a use that the definition denies), `UMP2101` (a type that is not the type of its part) and `UMP2102` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebVsaHost>>`.
 
+All build output goes to `artifacts~/` in the app root (`Directory.Build.props`). No `bin/` or `obj/` folder is next to the code. To get a clean build, delete `artifacts~/`.
+
 The Umpire packages come from GitHub Packages. Set `GITHUB_TOKEN` before a restore, for example to the output of `gh auth token`.
 
 To update Umpire, change the version in `global.json`, `dotnet-tools.json` and the `Umpire.*` package references, then run `dotnet umpire doctor`.

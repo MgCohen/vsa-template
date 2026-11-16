@@ -128,6 +128,22 @@ public sealed class UmpireToolTests {
         Dotnet.Run(app, env, "build", "Shop.slnx", "-nodeReuse:false").EnsureSuccess();
     }
 
+    [Test]
+    [CancelAfter(600_000)]
+    public void ANewAppWritesItsBuildOutputOnlyToArtifacts() {
+        var app = NewApp();
+
+        Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
+
+        var artifacts = Path.Combine(app, "artifacts~");
+        Assert.That(File.Exists(Path.Combine(artifacts, "bin", "Hello", "debug", "Hello.dll")), Is.True);
+        var outputFoldersNextToCode = Directory.EnumerateDirectories(app, "*", SearchOption.AllDirectories)
+            .Select(folder => Path.GetRelativePath(app, folder).Replace('\\', '/'))
+            .Where(folder => !folder.StartsWith("artifacts~", StringComparison.Ordinal))
+            .Where(folder => Path.GetFileName(folder) is "bin" or "obj");
+        Assert.That(outputFoldersNextToCode, Is.Empty);
+    }
+
     // umpire new app <name>, with the packed tool from the local feed. Returns the folder of the app.
     string NewApp(string name = "Hello") {
         // The global packages folder of the user is also a feed, so restore does not download each package again.
@@ -142,7 +158,7 @@ public sealed class UmpireToolTests {
     // the failure messages.
     async Task RunAndCall(string app, CancellationToken ct, Func<HttpClient, StringBuilder, Task> calls) {
         var url = $"http://127.0.0.1:{FreePort()}";
-        var dll = Directory.GetFiles(Path.Combine(app, "bin", "Release"), "Hello.dll", SearchOption.AllDirectories).Single();
+        var dll = Directory.GetFiles(Path.Combine(app, "artifacts~", "bin", "Hello", "release"), "Hello.dll", SearchOption.AllDirectories).Single();
         using var process = Dotnet.Start(app, env, dll, "--urls", url);
         var output = new StringBuilder();
         process.OutputDataReceived += (_, e) => { lock (output) { output.AppendLine(e.Data); } };

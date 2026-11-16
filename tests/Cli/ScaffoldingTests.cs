@@ -71,6 +71,7 @@ public sealed class ScaffoldingTests {
             ("App/Views/Pages/SampleModulePage.razor", Module),
             ("App/Views/Routes.razor", App),
             ("App/Views/_Imports.razor", App),
+            ("Directory.Build.props.template", App),
             ("Features/.gitkeep", App),
             ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
             ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
@@ -135,7 +136,15 @@ public sealed class ScaffoldingTests {
     public void NewAppIgnoresTheBuildAndLocalFolders() {
         var gitIgnore = NewApp("Hello").Single(f => f.Path == ".gitignore").Content;
 
-        Assert.That(gitIgnore.Split('\n', StringSplitOptions.TrimEntries), Is.SupersetOf(new[] { "bin/", "obj/", "TestResults/", "*.user", ".vs/" }));
+        Assert.That(gitIgnore.Split('\n', StringSplitOptions.TrimEntries), Is.SupersetOf(new[] { "artifacts~/", "bin/", "obj/", "TestResults/", "*.user", ".vs/" }));
+    }
+
+    [Test]
+    public void NewAppWritesItsBuildOutputToArtifacts() {
+        var props = NewApp("Hello").Single(f => f.Path == "Directory.Build.props").Content;
+
+        Assert.That(props, Does.Contain("<UseArtifactsOutput>true</UseArtifactsOutput>"));
+        Assert.That(props, Does.Contain("<ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>"));
     }
 
     [Test]
