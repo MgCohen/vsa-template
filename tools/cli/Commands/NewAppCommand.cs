@@ -2,6 +2,7 @@ namespace Umpire.Cli.Commands;
 
 using Umpire.Cli.Commands.Bases;
 using Umpire.Cli.Scaffolding;
+using Umpire.Cli.Scaffolding.Setup;
 
 sealed class NewAppCommand : ToolCommand {
     static readonly CommandOption Source = new(["--source"], "feed", Many: true);
@@ -20,16 +21,26 @@ sealed class NewAppCommand : ToolCommand {
         input.EnsureRequiredOptions();
         var block = Path.GetFullPath(name);
         var version = ToolVersion.Current;
-        var files = Files(name, input.All(Source), version);
-        Console.WriteLine($"Making the app {name} (Umpire {version}):");
-        FileWriter.WriteAllOrNone(block, files);
-
-        var (code, output) = Dotnet.Run(block, "tool", "restore");
-        if (code != 0) {
+        var context = Context(name, block, input.All(Source), version);
+        var existing = SetupPipeline.Default.SelectMany(step => step.Files(context))
+            .Distinct()
+            .Where(context.OnDisk)
+            .ToList();
+        if (existing is not []) {
+            var list = string.Join(Environment.NewLine + "  ", existing);
             throw new UmpireException(
-                $"The app is written, but 'dotnet tool restore' failed. Fix the error, then run it in {name}."
-                + $"{Environment.NewLine}{output}");
+                $"These files exist. The tool does not write over a file:{Environment.NewLine}  {list}"
+                + $"{Environment.NewLine}To add Umpire to an existing app, run 'umpire init' in its folder.");
         }
+        var plan = SetupPipeline.Plan(context);
+        if (plan.ByHand is [var first, ..]) {
+            throw new UmpireException(
+                $"The folder {name} has a setup that the tool cannot complete ({first}). "
+                + "To add Umpire to an existing app, run 'umpire init' in its folder.");
+        }
+        Console.WriteLine($"Making the app {name} (Umpire {version}):");
+        FileWriter.WriteAllOrNone(block, plan.Files);
+        Dotnet.RestoreTools(block, name);
         Console.WriteLine($"""
 
             Next:
@@ -40,9 +51,14 @@ sealed class NewAppCommand : ToolCommand {
     }
 
     internal static IReadOnlyList<TemplateFile> Files(string name, IReadOnlyList<string> sources, string version) =>
-        Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = name }, version)
-            .Select(file => file.Path == NugetConfig.FileName
-                ? file with { Content = NugetConfig.Write(file.Content, sources) }
-                : file)
-            .ToList();
+        SetupPipeline.Plan(Context(name, Path.GetFullPath(name), sources, version)).Files;
+
+    static SetupContext Context(string name, string block, IReadOnlyList<string> sources, string version) {
+        var context = new SetupContext(block, $"{name}.csproj", version, sources, keepsParentFiles: false);
+        var names = new Dictionary<string, string> { [Templates.App] = name };
+        foreach (var file in Templates.Files(Templates.Kind.App, names, version)) {
+            context.Add(file);
+        }
+        return context;
+    }
 }
