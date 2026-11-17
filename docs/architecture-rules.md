@@ -111,22 +111,21 @@ umpire.UMP010201.check_responses = true             # rule option
 
 | File | Holds |
 |---|---|
-| `tools/sdk/Sdk/Umpire.globalconfig` | The built-in .NET rules: editor and code style options, severities. No `UMP` key |
-| `tools/sdk/Sdk/Umpire.Tests.globalconfig` | The built-in rules that are off in a project whose name ends with `.Tests` (CA1707, underscores in test names) |
+| `.editorconfig` (repository root) | The style of this repository: the built-in .NET rules, editor and code style options, severities. A test section turns off CA1707 (underscores in test names). No `UMP` key |
 | `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` | The values of the kernel rules (`UMP0101xx`). No rule has a default in code |
 | `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig` | The values of the VSA rules (`UMP0102xx`) and the severities of the disabled VSA rules |
-| `tools/sdk/Sdk/Umpire.Rules.props` | The MSBuild setup: the two general files, `EnforceCodeStyleInBuild`, the formatting rules as warnings |
+| `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings |
 | `framework/Kernel/Analyzers/Umpire.RuleValues.targets` | The one place that knows how the rule values reach a compile |
 
 Each analyzer package holds `build/<PackageId>.globalconfig` and `build/<PackageId>.props`. NuGet imports the props file in each project that references the package, and it gives the values to the compiler. In source mode, `Sdk.targets` and `Directory.Build.targets` add the same files from the analyzer folders. The definition holds no analyzer value, and the analyzer files hold no definition option.
 
-`Sdk.props` imports `Umpire.Rules.props` for each Umpire.Sdk project. The root `Directory.Build.props` imports it for the framework and its tests, so this repository follows the same rules. `Directory.Build.targets` gives the framework projects the kernel analyzer and its rule values, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
+Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer and its rule values, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 
 A rule lists its options in `RequiredOptions`. At the start of a compilation, `RuleAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in its own `.editorconfig`.
 
 ## Formatting rules
 
-The formatting rules are warnings, so a build does not fail on them (`WarningsNotAsErrors` in `Umpire.Rules.props`).
+In this repository, the formatting rules are warnings, so a build does not fail on them (`WarningsNotAsErrors` in the root `Directory.Build.props`).
 
 | Rule | Checks | Option |
 |---|---|---|
@@ -148,7 +147,7 @@ The formatting rules are warnings, so a build does not fail on them (`WarningsNo
 | `IDE0051`, `IDE0052` | No private member that no code uses, or that code writes and never reads | |
 | `IDE0059` | No value that no code reads. Fix: `_ = Save(order);` | `csharp_style_unused_value_assignment_preference` |
 | `IDE0060` | No parameter that no code uses | `dotnet_code_quality_unused_parameters` |
-| `IDE0005` | No `using` that the file does not need | `GenerateDocumentationFile` in `Umpire.Rules.props` |
+| `IDE0005` | No `using` that the file does not need | `GenerateDocumentationFile` in the root `Directory.Build.props` |
 | `IDE0004` | No cast to the type that the value already has | |
 | `IDE0079` | No suppression that hides no warning (editor only) | |
 | `CA1052`, `CA1012` | A class with only static members is `static`. An abstract class has no public constructor | `dotnet_code_quality.<ID>.api_surface` |
@@ -235,7 +234,7 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 ## Add a rule
 
-1. If a built-in .NET rule does the check, set its severity in `tools/sdk/Sdk/Umpire.globalconfig`.
+1. If a built-in .NET rule does the check, set its severity in the root `.editorconfig`. This is the style of this repository only: Umpire.Sdk ships no native style, and a consumer sets its own.
 2. If one file shows the problem, write a rule class that inherits `UmpireAnalyzerRule`. Use the next free ID in the group of its DLL: `UMP0101xx` for Umpire.Kernel.Analyzers, `UMP0102xx` for Umpire.Vsa.Analyzers, and add it to `AnalyzerReleases.Unshipped.md`.
 3. Else change the rules of the VSA definition (`packs/Vsa/Architecture/VsaArchitecture.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.

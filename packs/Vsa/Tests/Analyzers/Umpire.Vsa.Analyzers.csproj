@@ -10,8 +10,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <!-- Unity 6 runs Roslyn 4.10, and an analyzer that references a newer compiler does not run there (CS9057). A newer compiler runs it. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="4.10.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(UmpireAnalyzerRoslynVersion)" PrivateAssets="all" />
     <AdditionalFiles Include="AnalyzerReleases.Shipped.md;AnalyzerReleases.Unshipped.md" />
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <ProjectReference Include="../../../../framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.csproj" PrivateAssets="all" />

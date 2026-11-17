@@ -126,7 +126,7 @@ public sealed record Cost(string Resource, int Amount);
 
 "Shared" is the name of two things in one module: `Slices/Shared/` and `Domain/Shared/`. A base of the whole app is a plugin module, not a Shared one.
 
-The namespace of the published domain is `<App>.Features.<Module>.Domain.Shared`. `Shared` is a VB keyword, but `Umpire.globalconfig` turns off CA1716, because the code is C# only.
+The namespace of the published domain is `<App>.Features.<Module>.Domain.Shared`. `Shared` is a VB keyword. The `.editorconfig` of this repository turns off CA1716, because the code is C# only. A consumer app with CA1716 on turns it off in its own `.editorconfig`.
 
 ## Commands
 

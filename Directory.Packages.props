@@ -1,6 +1,8 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Unity 6 runs Roslyn 4.10, and an analyzer that references a newer compiler does not run there (CS9057). A newer compiler runs it. -->
+    <UmpireAnalyzerRoslynVersion>4.10.0</UmpireAnalyzerRoslynVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.14.28" />

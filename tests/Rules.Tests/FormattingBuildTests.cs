@@ -1,15 +1,18 @@
+using System.Xml.Linq;
 using Tests.Shared;
 
 namespace Rules.Tests;
 
 [NonParallelizable]
 public sealed class FormattingBuildTests {
+    static readonly string[] styleFiles = ["Directory.Build.props", "tools/sdk/Umpire.Sdk.Dev.props"];
+    static readonly string[] styleSwitches = ["AnalysisLevel", "EnforceCodeStyleInBuild", "GenerateDocumentationFile", "NoWarn"];
     DotnetResult build = null!;
 
     [OneTimeSetUp]
     public void Build() {
-        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
-        build = workspace.Dotnet("build", "Features/Styled/Styled.csproj", "-nodeReuse:false");
+        using var workspace = StyledWorkspace();
+        build = workspace.Dotnet(["build", "Features/Styled/Styled.csproj", "-nodeReuse:false", .. RepositoryStyle()]);
     }
 
     [Test]
@@ -81,11 +84,35 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Test_project_may_have_underscores_in_names()
     {
-        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
-        var result = workspace.Dotnet("build", "Styled.Tests/Styled.Tests.csproj", "-nodeReuse:false");
+        using var workspace = StyledWorkspace();
+        var result = workspace.Dotnet(["build", "Styled.Tests/Styled.Tests.csproj", "-nodeReuse:false", .. RepositoryStyle()]);
         Assert.That(result.Succeeded, Is.True, result.Output);
         Assert.That(result.Output, Does.Not.Contain("CA1707"), result.Output);
     }
+
+    [Test]
+    public void Umpire_Sdk_gives_a_consumer_no_style() {
+        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
+        var result = workspace.Dotnet("build", "Features/Styled/Styled.csproj", "-nodeReuse:false");
+        var style = result.Output.Split('\n').Where(line => line.Contains(" warning IDE", StringComparison.Ordinal));
+        Assert.That(style, Is.Empty, result.Output);
+    }
+
+    static Workspace StyledWorkspace() {
+        var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
+        File.Copy(Repo.Path(".editorconfig"), Path.Combine(workspace.Src, ".editorconfig"));
+        return workspace;
+    }
+
+    static IEnumerable<string> RepositoryStyle() {
+        var settings = styleFiles.SelectMany(file => XDocument.Load(Repo.Path(file)).Descendants())
+            .Where(element => styleSwitches.Contains(element.Name.LocalName))
+            .Select(element => Switch(element.Name.LocalName, element.Value));
+        return [.. settings, "-p:TreatWarningsAsErrors=false"];
+    }
+
+    static string Switch(string name, string value) =>
+        $"-p:{name}={value.Replace($"$({name});", "", StringComparison.Ordinal)}";
 
     IEnumerable<string> Lines(string text) =>
         build.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));

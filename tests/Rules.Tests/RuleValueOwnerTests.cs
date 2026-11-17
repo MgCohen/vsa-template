@@ -37,14 +37,15 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
-    public void The_general_files_have_no_Umpire_rule_key() {
-        var keys = Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"), "*.globalconfig")
-            .SelectMany(file => File.ReadAllLines(file)
-                .Where(line => UmpireKey().IsMatch(line))
-                .Select(line => $"{Path.GetFileName(file)}: {line}"));
+    public void The_repository_style_has_no_Umpire_rule_key() {
+        var keys = File.ReadAllLines(Repo.Path(".editorconfig")).Where(line => UmpireKey().IsMatch(line));
 
         Assert.That(keys, Is.Empty);
     }
+
+    [Test]
+    public void Umpire_Sdk_ships_no_style_file() =>
+        Assert.That(Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"), "*.globalconfig"), Is.Empty);
 
     [Test]
     public void The_general_build_files_name_no_pack_package() {
@@ -52,6 +53,16 @@ public sealed partial class RuleValueOwnerTests {
             .Where(file => Path.GetExtension(file) is ".props" or ".targets")
             .SelectMany(file => File.ReadAllLines(file)
                 .Where(line => line.Contains("Umpire.Vsa", StringComparison.Ordinal))
+                .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));
+
+        Assert.That(lines, Is.Empty);
+    }
+
+    [Test]
+    public void The_general_build_files_name_no_analyzer_rule() {
+        var lines = Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"))
+            .SelectMany(file => File.ReadAllLines(file)
+                .Where(line => AnalyzerRuleCode().IsMatch(line))
                 .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));
 
         Assert.That(lines, Is.Empty);
@@ -82,4 +93,7 @@ public sealed partial class RuleValueOwnerTests {
 
     [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP)")]
     private static partial Regex UmpireKey();
+
+    [GeneratedRegex(@"UMP01\d{4}")]
+    private static partial Regex AnalyzerRuleCode();
 }
