@@ -11,6 +11,7 @@ public static class PackSelection {
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
     const string AppType = "Umpire.Kernel.App`1";
     const string BlockType = "Umpire.Architecture.Block`1";
+    const string PackType = "Umpire.Kernel.Pack`2";
 
     public static bool Selects(Compilation compilation, AnalyzerConfigOptions global, string packAssembly) {
         var entries = CodeEntries(compilation).ToList();
@@ -23,10 +24,10 @@ public static class PackSelection {
     }
 
     static IEnumerable<IReadOnlyList<string>> CodeEntries(Compilation compilation) {
-        var bases = new[] { compilation.GetTypeByMetadataName(AppType), compilation.GetTypeByMetadataName(BlockType) };
+        var bases = new[] { AppType, PackType, BlockType }.Select(compilation.GetTypeByMetadataName).ToArray();
         foreach (var type in SourceTypes(compilation.Assembly.GlobalNamespace)) {
-            if (EntryBase(type, bases) is { } entry) {
-                yield return [.. Assemblies(type), .. entry.TypeArguments.SelectMany(Assemblies)];
+            if (EntryBase(type, bases) is { } entry && entry.TypeArguments[0].TypeKind != TypeKind.TypeParameter) {
+                yield return Assemblies(entry.TypeArguments[0]);
             }
         }
         foreach (var attribute in compilation.Assembly.GetAttributes()) {
@@ -65,6 +66,9 @@ public static class PackSelection {
     }
 
     static IEnumerable<INamedTypeSymbol> SourceTypes(INamespaceSymbol space) =>
-        space.GetTypeMembers().Where(type => type.TypeKind == TypeKind.Class)
+        space.GetTypeMembers().SelectMany(WithNested).Where(type => type.TypeKind == TypeKind.Class)
             .Concat(space.GetNamespaceMembers().SelectMany(SourceTypes));
+
+    static IEnumerable<INamedTypeSymbol> WithNested(INamedTypeSymbol type) =>
+        new[] { type }.Concat(type.GetTypeMembers().SelectMany(WithNested));
 }

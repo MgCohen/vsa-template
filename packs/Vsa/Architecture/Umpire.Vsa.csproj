@@ -24,4 +24,10 @@
   <ItemGroup Condition="'$(_IsPacking)' == 'true'">
     <ProjectReference Include="../Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" Private="false" PrivateAssets="none" />
   </ItemGroup>
+  <!-- NuGet takes the dependencies from the restore. A restore with no _IsPacking (dotnet pack with its no-restore switch)
+       has no analyzer reference, so the package would have no analyzers. -->
+  <Target Name="_UmpireCheckAnalyzerDependency" BeforeTargets="GenerateNuspec">
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Umpire.Vsa.Analyzers'))"
+           Text="The restore of Umpire.Vsa has no reference to Umpire.Vsa.Analyzers, so the package would have no analyzers. Run dotnet pack with its own restore, or restore with -p:_IsPacking=true first." />
+  </Target>
 </Project>

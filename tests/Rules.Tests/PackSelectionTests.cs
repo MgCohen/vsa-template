@@ -64,6 +64,25 @@ public sealed class PackSelectionTests {
         public sealed class ShopApp : Umpire.Kernel.App<Umpire.Vsa.Vsa<Umpire.Vsa.Composition.ConsoleVsaHost>>;
         """, OtherArchitecture, Found());
 
+    [Test]
+    public Task A_nested_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherPack + """
+        public static class Hosts {
+            public sealed class ShopApp : Umpire.Kernel.App<OtherPack>;
+        }
+        """);
+
+    [Test]
+    public Task An_open_generic_app_base_is_no_entry() => Analyzer.Verify(Request + """
+        public abstract class GameApp<TPack> : Umpire.Kernel.App<TPack> where TPack : Umpire.Kernel.Pack, new();
+        """, Found());
+
+    [Test]
+    public Task An_app_class_on_an_open_generic_base_selects_the_pack_of_its_argument() =>
+        Analyzer.Verify(QuietRequest + OtherPack + """
+        public abstract class GameApp<TPack> : Umpire.Kernel.App<TPack> where TPack : Umpire.Kernel.Pack, new();
+        public sealed class ShopApp : GameApp<OtherPack>;
+        """);
+
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Found() =>
         Analyzer.Diagnostic(SealedRecordRule.Descriptor, 0, "GetItems", "a request");
 }
