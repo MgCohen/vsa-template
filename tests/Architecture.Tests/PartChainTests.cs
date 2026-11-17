@@ -34,6 +34,16 @@ public sealed class PartChainTests {
     }
 
     [Test]
+    public void A_change_to_the_options_of_a_part_does_not_change_the_part() {
+        var block = new ResolvedArchitecture(new InlineArchitecture(block => block.AddGroup<Group>(Boundary.Closed))).Block;
+        var group = PartsOf<Group>(block).Single();
+
+        group.Options.Boundary = Boundary.Open;
+
+        Assert.That(group.Options.Boundary, Is.EqualTo(Boundary.Closed));
+    }
+
+    [Test]
     public void A_part_and_a_part_group_have_the_same_chain() {
         IPartChain? fromPart = null;
         IPartChain? fromGroup = null;

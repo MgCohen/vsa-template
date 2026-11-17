@@ -29,7 +29,7 @@ public class Part : IPartChain {
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
     public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
-    public Options Options => options;
+    public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
 
     public string Path {
