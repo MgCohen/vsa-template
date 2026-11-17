@@ -6,7 +6,8 @@ namespace Rules.Tests;
 [NonParallelizable]
 public sealed class FormattingBuildTests {
     static readonly string[] styleFiles = ["Directory.Build.props", "tools/sdk/Umpire.Sdk.Dev.props"];
-    static readonly string[] styleSwitches = ["AnalysisLevel", "EnforceCodeStyleInBuild", "GenerateDocumentationFile", "NoWarn"];
+    static readonly string[] styleSwitches =
+        ["AnalysisLevel", "EnforceCodeStyleInBuild", "GenerateDocumentationFile", "NoWarn"];
     DotnetResult build = null!;
 
     [OneTimeSetUp]

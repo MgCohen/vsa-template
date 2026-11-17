@@ -70,7 +70,24 @@ The root project of a new app has the package `Umpire.Engine.Build`. So the rule
 
 ## Packages of an app
 
-`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers) and the pack. `UmpirePack` selects the pack, and its default is `Vsa`: the SDK adds `Umpire.Vsa` and `Umpire.Vsa.Analyzers` with its own version. `Umpire.Vsa` depends on each VSA layer base. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.editorconfig` of the app.
+`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers) and the pack. `UmpirePack` selects the pack, and its default is `Vsa`: the SDK adds `Umpire.Vsa` and `Umpire.Vsa.Analyzers` with its own version. `Umpire.Vsa` depends on each VSA layer base. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
+
+There are two Umpire SDKs, one for each platform SDK of .NET:
+
+| SDK | Platform SDK | Root project |
+|---|---|---|
+| `Umpire.Sdk` | `Microsoft.NET.Sdk` | `<Project Sdk="Umpire.Sdk/0.2.0" />` |
+| `Umpire.Sdk.Web` | `Microsoft.NET.Sdk.Web` | `<Project Sdk="Umpire.Sdk.Web/0.2.0" />` |
+
+An Umpire SDK must be the main SDK of the project, because it sets the output folder before the platform SDK does. It also does these things:
+
+- **Block root.** The block root is the folder of the nearest `.umpireconfig` file at or above the project. With no `.umpireconfig` file, it is the project folder. A block with more than one project needs a `.umpireconfig` file, also an empty one.
+- **Output.** Each project writes to one `artifacts~` folder in the block root, in the .NET artifacts layout (`artifacts~/bin/<Project>/`, `artifacts~/obj/<Project>/`). No `bin/` or `obj/` folder is next to the code. A `Directory.Build.props` file that sets `ArtifactsPath` wins.
+- **Rule values.** The SDK gives the top-level keys of `.umpireconfig` to the compiler (a copy in `obj/` with `is_global = true` and `global_level = 100`), so a value there wins over the value of the analyzer package.
+- **Rule engine.** The root project of the app (an executable that is not a test project) gets `Umpire.Engine.Build`. `-p:UmpireEngine=false` turns it off. A project that references the package itself keeps its own reference.
+- **Test project.** A project whose name ends with `.Tests` gets NUnit on Microsoft.Testing.Platform, `using NUnit.Framework` and the test bases of the pack. It references the projects that it tests itself.
+
+Umpire.Sdk ships no native .NET style. The app sets its own style in its `.editorconfig`.
 
 ## Consumer repos
 

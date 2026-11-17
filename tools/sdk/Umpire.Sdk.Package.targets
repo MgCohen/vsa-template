@@ -1,0 +1,35 @@
+<Project>
+  <!-- The package settings of Umpire.Sdk and Umpire.Sdk.Web. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageType>MSBuildSdk</PackageType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Polyfills/**" Pack="true" PackagePath="Polyfills" />
+    <!-- Polyfills/ holds sources for the module projects and the framework projects, not for this project. -->
+    <Compile Remove="Sdk/**;Web/**;Polyfills/**" />
+  </ItemGroup>
+  <!-- The SDK adds the Umpire.* packages with its own version, so all packages stay at one version.
+       The NUnit versions of a test project come from Directory.Packages.props of this repository. -->
+  <Target Name="_UmpireWriteVersion" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <_UmpireVersionFile>$([MSBuild]::NormalizePath('$(ProjectDir)', '$(IntermediateOutputPath)', 'Umpire.Version.props'))</_UmpireVersionFile>
+      <_UmpireNUnitVersion>@(PackageVersion->WithMetadataValue('Identity', 'NUnit')->'%(Version)')</_UmpireNUnitVersion>
+      <_UmpireNUnitAdapterVersion>@(PackageVersion->WithMetadataValue('Identity', 'NUnit3TestAdapter')->'%(Version)')</_UmpireNUnitAdapterVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireVersionLine Include="&lt;Project&gt;&lt;PropertyGroup&gt;" />
+      <_UmpireVersionLine Include="&lt;UmpireVersion Condition=&quot;'%24(UmpireVersion)' == ''&quot;&gt;$(Version)&lt;/UmpireVersion&gt;" />
+      <_UmpireVersionLine Include="&lt;UmpireNUnitVersion Condition=&quot;'%24(UmpireNUnitVersion)' == ''&quot;&gt;$(_UmpireNUnitVersion)&lt;/UmpireNUnitVersion&gt;" />
+      <_UmpireVersionLine Include="&lt;UmpireNUnitAdapterVersion Condition=&quot;'%24(UmpireNUnitAdapterVersion)' == ''&quot;&gt;$(_UmpireNUnitAdapterVersion)&lt;/UmpireNUnitAdapterVersion&gt;" />
+      <_UmpireVersionLine Include="&lt;/PropertyGroup&gt;&lt;/Project&gt;" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_UmpireVersionFile)" Overwrite="true" WriteOnlyWhenDifferent="true" Lines="@(_UmpireVersionLine)" />
+    <ItemGroup>
+      <None Include="$(_UmpireVersionFile)" Pack="true" PackagePath="Sdk" Visible="false" />
+    </ItemGroup>
+  </Target>
+</Project>

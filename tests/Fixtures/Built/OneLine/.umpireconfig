@@ -1,0 +1,2 @@
+# The rule values of this block. A value here wins over the value of the analyzer package.
+umpire.UMP010101.max = 60

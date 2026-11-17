@@ -1,0 +1,5 @@
+<Project Sdk="Umpire.Sdk/0.0.0-test">
+  <ItemGroup>
+    <ProjectReference Include="../OneLine.csproj" />
+  </ItemGroup>
+</Project>
