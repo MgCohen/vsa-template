@@ -283,6 +283,21 @@ public sealed class RuleOptionTests {
             Analyzer.Diagnostic(Rule, 0, 121, 120));
 
     [Test]
+    public Task Option_with_no_default_and_no_value_fails_and_the_rule_does_not_run() =>
+        new NoDefaultTest {
+            TestCode = "class Abc { }",
+            ExpectedDiagnostics = { Option("UMP010199", NoDefaultRule.Key, "a whole number more than 0", "missing") },
+        }.RunAsync(TestContext.CurrentContext.CancellationToken);
+
+    [Test]
+    public Task Option_with_no_default_runs_with_a_value_from_the_config() =>
+        new NoDefaultTest {
+            TestCode = "{|#0:class Abc { }|}",
+            TestState = { AnalyzerConfigFiles = { ("/.globalconfig", "is_global = true\numpire.UMP010199.size = 2") } },
+            ExpectedDiagnostics = { new Microsoft.CodeAnalysis.Testing.DiagnosticResult(new NoDefaultRule().Rule).WithLocation(0).WithArguments(2) },
+        }.RunAsync(TestContext.CurrentContext.CancellationToken);
+
+    [Test]
     public void Option_with_no_default_and_no_value_is_not_valid() =>
         Assert.That(UmpireOption.Int(LimitRule.MaxKey).IsValid(null), Is.False);
 
@@ -299,4 +314,33 @@ public sealed class RuleOptionTests {
     public Task Option_from_the_test_config_is_enough() =>
         Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP010101.max = 20",
             Analyzer.Diagnostic(Rule, 0, 24, 20));
+}
+
+sealed class NoDefaultTest
+    : Microsoft.CodeAnalysis.CSharp.Testing.CSharpAnalyzerTest<NoDefaultAnalyzer, Microsoft.CodeAnalysis.Testing.DefaultVerifier> {
+    public NoDefaultTest() => ReferenceAssemblies = Microsoft.CodeAnalysis.Testing.ReferenceAssemblies.Net.Net80;
+}
+
+[Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer(Microsoft.CodeAnalysis.LanguageNames.CSharp)]
+public sealed class NoDefaultAnalyzer : RuleAnalyzer;
+
+public sealed class NoDefaultRule : KernelRule {
+    public const string Key = "size";
+
+    public override int Number => 99;
+
+    public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Int(Key)];
+
+    public override bool IsModuleRule => false;
+
+    protected override string Title => "A test rule with an option that has no default";
+
+    protected override string Message => "The size is {0}.";
+
+    protected override void Register(Microsoft.CodeAnalysis.Diagnostics.CompilationStartAnalysisContext start) =>
+        start.RegisterSyntaxTreeAction(context => {
+            if (Values(context.Options, context.Tree).Int(Key) is { } size) {
+                context.ReportDiagnostic(Create(context.Tree.GetRoot().GetLocation(), size));
+            }
+        });
 }

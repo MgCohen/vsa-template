@@ -11,7 +11,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
         "UMP010001",
         "An Umpire rule option is missing or not valid",
-        "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in the globalconfig file of the analyzer package or in .umpireconfig. "
+        "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in the .umpireconfig file of the block. "
             + "{0} does not run until the option is valid.",
         "Umpire",
         DiagnosticSeverity.Error,
@@ -59,11 +59,13 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
 
     static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, AnalyzerConfigOptions global) {
         var options = new UmpireOptions(rule.Id, global, rule.Options);
-        return rule.Options
-            .Select(option => (Option: option, Value: options.Configured(option.Key)))
-            .Where(pair => !pair.Option.IsValid(pair.Value))
-            .Select(pair => Diagnostic.Create(OptionDescriptor, Location.None,
-                rule.Id, pair.Option.Key, pair.Option.Kind, pair.Value ?? "missing"));
+        foreach (var option in rule.Options) {
+            var value = options.Configured(option.Key);
+            if (!option.IsValid(value)) {
+                yield return Diagnostic.Create(OptionDescriptor, Location.None,
+                    rule.Id, option.Key, option.Kind, value ?? "missing");
+            }
+        }
     }
 
     static bool IsOff(DiagnosticDescriptor rule, Compilation compilation, System.Threading.CancellationToken ct) {

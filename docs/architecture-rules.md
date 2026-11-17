@@ -132,7 +132,7 @@ Each analyzer package holds `build/<PackageId>.globalconfig` and `build/<Package
 
 Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer and its rule values, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 
-Each analyzer rule is one class on a group base: `KernelRule` (group `01`) or `VsaRule` (group `02`). The rule sets only its `Number`, its `Title`, its `Message` and the defaults of its options. The base makes the ID (`UMP01` + group + number) and the descriptor. Tests and other code find a rule by its type, for example `new LineLengthRule().Rule`.
+Each analyzer rule is one class on a group base: `KernelRule` (group `01`) or `VsaRule` (group `02`). The rule sets only its `Number`, its `Title`, its `Message` and the defaults of its options. The base makes the ID (`UMP01` + group + number) and the descriptor. Roslyn release tracking reads only a constant ID, so `AnalyzerReleases.Unshipped.md` lists only `UMP010001`; `CodeTests` checks that the rules table of this file lists each rule ID. Tests and other code find a rule by its type, for example `new LineLengthRule().Rule`.
 
 A rule lists its options in `Options`, each with its default on the class. The lookup is: `umpire.<rule ID>.<key>`, then `umpire.<key>`, then the default. At the start of a compilation, `RuleAnalyzer` checks each option. If a value is not valid, or an option has no default and no value, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
 
@@ -176,7 +176,7 @@ In this repository, the formatting rules are warnings, so a build does not fail 
 
 A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list.
 
-A rule key wins over a global key, for example `umpire.UMP010201.check_responses` over `umpire.check_responses`. In a config file line, a semicolon starts a comment, so a list option uses commas between its items.
+A rule key wins over a global key, for example `umpire.UMP010201.check_responses` over `umpire.check_responses`. A global key, for example `umpire.max`, applies to each rule that reads the key and has no rule key of its own, also when the rule has a default. In a config file line, a semicolon starts a comment, so a list option uses commas between its items.
 
 `RuleAnalyzer` skips each rule that is off by itself, because Roslyn skips an analyzer only when all of its IDs are off. If it cannot tell that a rule is off, the rule runs, and Roslyn drops its diagnostics.
 
