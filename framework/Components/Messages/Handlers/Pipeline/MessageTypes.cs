@@ -1,5 +1,7 @@
 namespace Umpire.Messages.Handlers;
 
+using Umpire.Architecture;
+
 static class MessageTypes {
     internal static Type OfHandler(Type handler) =>
         handler.GetInterfaces()
@@ -8,17 +10,10 @@ static class MessageTypes {
         ?? throw new InvalidOperationException(
             $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, directly or through a handler base.");
 
-    internal static Type OfStep(Type step, Type typedStepBase) => OfBase(step, typedStepBase) ?? typeof(object);
+    internal static Type OfStep(Type step, Type typedStepBase) => ArgumentOf(step, typedStepBase) ?? typeof(object);
 
     internal static bool DerivesFrom(Type type, Type baseType) =>
-        baseType.IsAssignableFrom(type) || OfBase(type, baseType) is not null;
+        baseType.IsAssignableFrom(type) || ClosedBase.Of(type, baseType) is not null;
 
-    internal static Type? OfBase(Type type, Type genericBase) {
-        for (var b = type; b is not null; b = b.BaseType) {
-            if (b.IsGenericType && b.GetGenericTypeDefinition() == genericBase) {
-                return b.GetGenericArguments()[0];
-            }
-        }
-        return null;
-    }
+    static Type? ArgumentOf(Type type, Type genericBase) => ClosedBase.Of(type, genericBase)?.GetGenericArguments()[0];
 }

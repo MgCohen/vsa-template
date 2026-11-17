@@ -174,7 +174,7 @@ public sealed class BinReader : IDisposable {
     }
 
     static bool IsGenerated(string relative) =>
-        relative.Split('/', '\\')[..^1].Any(folder => BuildOutput.IsFolder(folder) || folder.EndsWith('~'));
+        relative.Split('/', '\\')[..^1].Any(BuildOutput.IsIgnored);
 
     static string ProjectFolder(string start) {
         for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent) {

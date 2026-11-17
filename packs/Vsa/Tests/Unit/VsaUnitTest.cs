@@ -77,12 +77,5 @@ public abstract class VsaUnitTest {
             : throw new InvalidOperationException($"{message.FullName} has {found.Count} handlers in {message.Assembly.GetName().Name}. It must have one.");
     }
 
-    static Type? HandledMessage(Type type, Type handlerBase) {
-        for (var b = type.BaseType; b is not null; b = b.BaseType) {
-            if (b.IsGenericType && b.GetGenericTypeDefinition() == handlerBase) {
-                return b.GetGenericArguments()[0];
-            }
-        }
-        return null;
-    }
+    static Type? HandledMessage(Type type, Type handlerBase) => ClosedBase.Of(type, handlerBase)?.GetGenericArguments()[0];
 }

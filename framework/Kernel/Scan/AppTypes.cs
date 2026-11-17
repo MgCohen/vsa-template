@@ -53,12 +53,7 @@ public sealed class AppTypes {
         if (!baseType.IsGenericTypeDefinition) {
             return baseType.IsAssignableFrom(type) && type != baseType ? baseType : null;
         }
-        for (var b = type.BaseType; b is not null; b = b.BaseType) {
-            if (b.IsGenericType && b.GetGenericTypeDefinition() == baseType) {
-                return b;
-            }
-        }
-        return type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == baseType);
+        return ClosedBase.Of(type, baseType);
     }
 
     IEnumerable<Type> Close(Type definition) {

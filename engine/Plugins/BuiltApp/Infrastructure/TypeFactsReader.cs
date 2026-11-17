@@ -9,9 +9,12 @@ static class TypeFactsReader {
         IReadOnlyList<IType> types, IReadOnlyDictionary<string, Source> sources, ResolvedArchitecture architecture) {
         var loaded = types.ToHashSet();
         bool IsExternalPartType(IType type) =>
-            loaded.Contains(type) && !type.Name.StartsWith('<') && architecture.ExternalPart(AssemblyName(type)) is not null;
+            loaded.Contains(type) && !LoadedTypes.IsCompilerGenerated(type.Name)
+            && architecture.ExternalPart(AssemblyName(type)) is not null;
         return [.. types.Select(type => Facts(type, sources.GetValueOrDefault(type.FullName), loaded, IsExternalPartType))];
     }
+
+    internal static string AssemblyName(IType type) => type.Assembly.Name.Split(',')[0];
 
     static TypeFacts Facts(IType type, Source? source, HashSet<IType> loaded, Func<IType, bool> isExternalPartType) => new(
         type.FullName,
@@ -43,6 +46,4 @@ static class TypeFactsReader {
 
     static IEnumerable<IType> Mentions(IType type) =>
         type.Dependencies.SelectMany(d => new[] { d.Target }.Concat(d.TargetGenericArguments.Select(g => g.Type)));
-
-    static string AssemblyName(IType type) => type.Assembly.Name.Split(',')[0];
 }

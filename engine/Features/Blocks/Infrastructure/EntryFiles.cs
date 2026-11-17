@@ -45,8 +45,5 @@ public static class EntryFiles {
     static IEnumerable<string> Tree(string folder) =>
         new[] { folder }.Concat(Directory.GetDirectories(folder).Where(IsSource).SelectMany(Tree));
 
-    static bool IsSource(string folder) {
-        var name = Path.GetFileName(folder);
-        return !BuildOutput.IsFolder(name) && !name.StartsWith('.') && !name.EndsWith('~');
-    }
+    static bool IsSource(string folder) => !BuildOutput.IsIgnored(Path.GetFileName(folder));
 }
