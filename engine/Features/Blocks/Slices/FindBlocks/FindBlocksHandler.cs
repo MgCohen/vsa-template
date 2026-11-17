@@ -18,6 +18,14 @@ sealed class FindBlocksHandler : CommandHandler<FindBlocksCommand, FindBlocksRes
         var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
         var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
         IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
-        return BlockSearch.Find(project, folder, [.. bin.Entries, .. files.Select(reader.Check)], bin);
+        var found = BlockSearch.Find(project, folder, [.. bin.Entries, .. files.Select(reader.Check)], bin);
+        return found.IsSuccess ? WithProjects(found.Value) : found;
+    }
+
+    static FindBlocksResult WithProjects(FindBlocksResult found) {
+        var folder = found.Blocks.Current.Folder;
+        var projects = BlockProjects.In(folder, found.Blocks.InnerFolders);
+        var checks = ProjectCheck.Findings(folder, projects, BlockProjects.HasConfigFile(folder));
+        return found with { Findings = [.. found.Findings, .. checks] };
     }
 }

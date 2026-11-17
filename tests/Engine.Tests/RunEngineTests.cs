@@ -1,4 +1,3 @@
-using Baseline;
 using Blocks;
 using LoadApp;
 using BuiltApp.Domain.Shared;
@@ -32,7 +31,7 @@ public sealed class RunEngineTests {
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Baseline", "Blocks", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -81,7 +80,7 @@ public sealed class RunEngineTests {
     public async Task With_no_block_the_engine_uses_the_nearest_check_entry_above_the_project() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
+            File.WriteAllText(Path.Combine(root, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
             var project = Directory.CreateDirectory(Path.Combine(root, "App", "Host")).FullName;
 
             var result = await Run(project: project);
@@ -120,7 +119,7 @@ public sealed class RunEngineTests {
         var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
         Directory.CreateDirectory(store);
         try {
-            File.WriteAllText(Path.Combine(store, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
+            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
 
             var result = await Run(project: Notes);
 
@@ -135,16 +134,17 @@ public sealed class RunEngineTests {
     public async Task A_severity_of_none_in_the_umpireconfig_of_the_block_turns_a_rule_off() {
         var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
         var config = Path.Combine(Notes, ".umpireconfig");
+        var original = File.ReadAllText(config);
         Directory.CreateDirectory(store);
         try {
-            File.WriteAllText(Path.Combine(store, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
-            File.WriteAllText(config, "dotnet_diagnostic.UMP020401.severity = none");
+            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
+            File.WriteAllText(config, original + "dotnet_diagnostic.UMP020401.severity = none\n");
 
             var result = await Run(project: Notes);
 
             Assert.That(result.Lines, Has.None.Contains("UMP020401"));
         } finally {
-            File.Delete(config);
+            File.WriteAllText(config, original);
             Directory.Delete(store, recursive: true);
         }
     }
@@ -221,7 +221,7 @@ public sealed class RunEngineTests {
         string? block = null, string? bin = null, bool failFast = false, string? project = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BlocksModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
-            new BaselineModule(), new ReportModule()).Build();
+            new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;

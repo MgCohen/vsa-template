@@ -42,10 +42,15 @@ public sealed partial class NotesConsumerTests {
         }
     }
 
+    const string WebProject = "<Project Sdk=\"Microsoft.NET.Sdk.Web\">";
+
     internal static void UsePackages(string root) {
         foreach (var file in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)) {
             var text = File.ReadAllText(file);
-            if (text.Contains("Umpire.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
+            if (text.Contains("Umpire.Sdk.Dev.props") && text.StartsWith(WebProject, StringComparison.Ordinal)) {
+                text = DevImport().Replace(text, "");
+                text = "<Project Sdk=\"Umpire.Sdk.Web\">" + text[WebProject.Length..];
+            } else if (text.Contains("Umpire.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
                 text = DevImport().Replace(text, "");
                 text = text.Insert(text.IndexOf('>') + 1, "\n  <Sdk Name=\"Umpire.Sdk\" />");
             } else if (text.Contains("Umpire.Sdk.Dev.props")) {

@@ -31,7 +31,10 @@ public sealed class Workspace : IDisposable {
 
     void WriteConsumerFiles() {
         var globalJson = JsonNode.Parse(File.ReadAllText(Repo.Path("global.json")))!;
-        globalJson["msbuild-sdks"] = new JsonObject { ["Umpire.Sdk"] = LocalFeed.Version };
+        globalJson["msbuild-sdks"] = new JsonObject {
+            ["Umpire.Sdk"] = LocalFeed.Version,
+            ["Umpire.Sdk.Web"] = LocalFeed.Version,
+        };
         File.WriteAllText(Path.Combine(Src, "global.json"), globalJson.ToJsonString());
 
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
