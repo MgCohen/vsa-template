@@ -1,6 +1,5 @@
 namespace Composition.Tests;
 
-using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
@@ -16,10 +15,7 @@ public sealed class OneAssemblyModuleTests {
         Assert.That(handlers, Does.Contain(typeof(OneAssemblyHandler)));
     }
 
-    public sealed class OneAssemblyModule : Module {
-        public override void Configure(IServiceCollection services) {
-        }
-    }
+    public sealed class OneAssemblyModule : Module;
 
     public sealed record OneAssemblyCommand : ICommand<int>;
 

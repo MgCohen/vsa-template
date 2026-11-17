@@ -8,15 +8,9 @@ using Umpire.Kernel;
 
 public class TestApp<THost>(params Module[] modules) : App<Vsa<THost>> where THost : VsaHost, new() {
     readonly List<Action<IServiceCollection>> configure = [];
-    IKeySource keys = new ConstraintKeys();
 
     public TestApp<THost> With(Action<IServiceCollection> services) {
         configure.Add(services);
-        return this;
-    }
-
-    public TestApp<THost> WithKeys(IKeySource source) {
-        keys = source;
         return this;
     }
 
@@ -24,11 +18,9 @@ public class TestApp<THost>(params Module[] modules) : App<Vsa<THost>> where THo
 
     public IServiceCollection Compose(IServiceCollection services) => Pack.CreateHost().Compose(services, this);
 
-    protected override IReadOnlyList<Module> Modules() => modules;
+    protected internal override IReadOnlyList<Module> Modules() => modules;
 
-    protected override IKeySource Keys() => keys;
-
-    protected override void ConfigureServices(IServiceCollection services) {
+    protected internal override void ConfigureServices(IServiceCollection services) {
         foreach (var add in configure) {
             add(services);
         }

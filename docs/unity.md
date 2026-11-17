@@ -25,7 +25,7 @@ The reasons for the limits:
 
 | Unity replaces | Extension point | Doc |
 |---|---|---|
-| The type source of the modules | `App.Modules()`, `new AppTypes(modules, keys)` | `docs/composition.md` |
+| The type source of the modules | `App.Modules()`, `new AppTypes(modules)` | `docs/composition.md` |
 | The host | The host type argument: `App<Vsa<UnityVsaHost>>` | `docs/composition.md` |
 | The container | `CreateHost().Compose(services, app)`, with no `Run` | `docs/composition.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |

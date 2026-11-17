@@ -2,8 +2,8 @@ namespace Umpire.Kernel;
 
 using System.Reflection;
 
-public sealed class ConstraintKeys : IKeySource {
-    public IEnumerable<Type> KeysFor(Type genericParameter, IReadOnlyList<Type> candidates) {
+static class ConstraintTypeArguments {
+    internal static IEnumerable<Type> For(Type genericParameter, IReadOnlyList<Type> candidates) {
         var constraints = genericParameter.GetGenericParameterConstraints();
         return [.. candidates.Where(c => MeetsEachConstraint(genericParameter, constraints, c))];
     }
