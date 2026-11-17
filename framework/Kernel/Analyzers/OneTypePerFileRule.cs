@@ -11,8 +11,6 @@ public sealed class OneTypePerFileRule : KernelRule {
 
     public override int Number => 4;
 
-    public override bool IsModuleRule => false;
-
     public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(AllowSameNameKey, true)];
 
     protected override string Title => "A file has one top-level type";

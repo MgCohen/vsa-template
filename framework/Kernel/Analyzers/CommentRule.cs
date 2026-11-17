@@ -8,8 +8,6 @@ using Microsoft.CodeAnalysis.Text;
 public sealed class CommentRule : KernelRule {
     public override int Number => 6;
 
-    public override bool IsModuleRule => false;
-
     protected override string Title => "The code has no comments";
 
     protected override string Message =>

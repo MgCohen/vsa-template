@@ -23,17 +23,23 @@ public sealed class ImmutableSharedTypeRule : VsaRule {
         if (member.IsImplicitlyDeclared || member.Locations.Length == 0 || !member.Locations[0].IsInSource) {
             return;
         }
-        var (problem, fix) = member switch {
+        var problem = member switch {
             IPropertySymbol { SetMethod: { IsInitOnly: false }, ContainingType: { IsRecord: true, IsValueType: true, IsReadOnly: false } } property
                 when property.Locations[0].SourceTree?.GetRoot().FindNode(property.Locations[0].SourceSpan) is Microsoft.CodeAnalysis.CSharp.Syntax.ParameterSyntax =>
-                ("a property of a record struct that is not readonly", "Make it a readonly record struct"),
-            IPropertySymbol { SetMethod: { IsInitOnly: false } } => ("a property with a set accessor", "Use init in place of set"),
-            IEventSymbol { AddMethod.IsImplicitlyDeclared: true } => ("a field event", "Remove the event: a Domain.Shared type holds only data"),
-            IFieldSymbol { IsReadOnly: false, IsConst: false } => ("a field that is not readonly", "Make the field readonly"),
-            _ => (null, null),
+                new Problem("a property of a record struct that is not readonly", "Make it a readonly record struct"),
+            IPropertySymbol { SetMethod: { IsInitOnly: false } } => new Problem("a property with a set accessor", "Use init in place of set"),
+            IEventSymbol { AddMethod.IsImplicitlyDeclared: true } => new Problem("a field event", "Remove the event: a Domain.Shared type holds only data"),
+            IFieldSymbol { IsReadOnly: false, IsConst: false } => new Problem("a field that is not readonly", "Make the field readonly"),
+            _ => null,
         };
         if (problem is not null) {
-            context.ReportDiagnostic(Create(member.Locations[0], member.ContainingType.Name, DomainShared.Name(member), problem, fix!));
+            context.ReportDiagnostic(Create(member.Locations[0], member.ContainingType.Name, DomainShared.Name(member), problem.Text, problem.Fix));
         }
+    }
+
+    sealed class Problem(string text, string fix) {
+        public string Text { get; } = text;
+
+        public string Fix { get; } = fix;
     }
 }

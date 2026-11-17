@@ -308,8 +308,7 @@ packs/Vsa/
     Handlers/Requests/                 RequestHandler, AddRequestHandlers
     Presenters/                        AddPresenters
     Views/                             ViewsRoot, AddViews, MapViews
-    Composition/                       Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>
-      Hosts/Console/                   ConsoleVsaHost, ConsoleEntry, ConsoleExit
+    Composition/                       Umpire.Vsa.Composition: VsaHost, ConsoleVsaHost, ConsoleEntry, ConsoleExit, Plugin, Plugin<TSettings>
     Hosts/                             Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
 ```
 
