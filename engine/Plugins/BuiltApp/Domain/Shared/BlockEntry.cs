@@ -1,14 +1,14 @@
 namespace BuiltApp.Domain.Shared;
 
-public sealed record BlockEntry(string Folder, EntryForm Form, string? Architecture, string Source) {
-    public string Key => Form == EntryForm.App ? nameof(EntryForm.App) : $"{Form}: {Architecture}";
+public sealed record BlockEntry(string Folder, EntryForm Form, TypeName? Type, string Source, string? Problem = null) {
+    public string Key => Form == EntryForm.App ? nameof(EntryForm.App) : $"{Form}: {Type}";
+
+    public BlockEntry Names(string name, string problem) => this with { Problem = $"names \"{name}\", but {problem}" };
 
     public override string ToString() => Form switch {
         EntryForm.App => $"the app class in {Source}",
-        EntryForm.Base => $"the Block<{Short(Architecture)}> type in {Source}",
+        EntryForm.Base => $"the Block<{Type?.Name}> type in {Source}",
         EntryForm.Metadata => $"the AssemblyMetadata Umpire.Architecture of {Source}",
         _ => $"the file {Source}",
     };
-
-    static string Short(string? name) => name?.Split(',')[0].Split('.')[^1] ?? "";
 }

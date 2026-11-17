@@ -14,7 +14,6 @@ public sealed class StepsPlugin : Plugin {
         services.AddPipeline(new PipelineBuilder<IEngineStep>()
             .HandlersOf(typeof(CommandHandler<,>))
             .Runner<StepRunner>()
-            .BeforeStep<MissingInput>()
             .AfterStep<RecordStep>());
     }
 }

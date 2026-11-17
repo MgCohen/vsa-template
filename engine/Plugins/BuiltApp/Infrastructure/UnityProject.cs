@@ -4,11 +4,7 @@ using Steps.Domain.Shared;
 using Umpire.Vsa.Definition;
 
 static class UnityProject {
-    public const string LibraryFolder = "Library";
     public const string ScriptAssembliesFolder = "Library/ScriptAssemblies";
-
-    public static bool IsInLibrary(string relativePath) =>
-        relativePath.Replace('\\', '/').StartsWith(LibraryFolder + "/", StringComparison.OrdinalIgnoreCase);
 
     public static IReadOnlyList<string> Scripts(string blockFolder, IEnumerable<string> loaded, out Finding? warning) {
         warning = null;

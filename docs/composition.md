@@ -254,7 +254,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `HttpApi` (Hosts.Web) | `MakeGenericMethod` | Reads the static `Route` and `Method` of each request |
 | `ConsoleEntry` (Composition) | `MakeGenericMethod`, `Task.Result` | Sends the entry command. It reads the result through `IMessageResult` |
 | `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `MakeGenericType` | Finds the handler of a request or a command |
-| `DefinitionFinder` (engine) | `LoadedTypes.Of`, `Activator`, `GetProperty` | Finds the app class and reads its architecture |
+| `AppLoader` (engine) | `AssemblyLoadContext`, `Activator`, `GetProperty` | Creates the one definition type: the app class (then reads its architecture) or the architecture |
 | `RuleAnalyzer` (Kernel.Analyzers) | `GetTypes`, `Activator` | Finds the rule classes in its own assembly, in the compiler |
 
 The table does not list the uses that only read metadata, for example `IsAssignableFrom`, `GetInterfaces` and `GetGenericArguments`.

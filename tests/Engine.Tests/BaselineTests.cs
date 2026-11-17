@@ -122,7 +122,7 @@ public sealed class BaselineTests {
         WriteBaseline("UMP020101|App/Host/Probe.cs|Probe in Host", "UMP020101|App/Host/Other.cs|Other in Host");
         Finding[] findings = [
             Error("UMP020101", "App/Host/Probe.cs", 4, "Probe in Host"),
-            new Finding("UMP030002", FindingSeverity.Info, "CheckRules skipped: App is missing"),
+            new Finding("UMP030002", FindingSeverity.Info, "CheckRules skipped, because an earlier step failed."),
         ];
 
         var result = await Apply(findings, update: true);

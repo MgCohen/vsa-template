@@ -2,6 +2,7 @@ namespace Engine.Slices.RunEngine;
 
 using Baseline.Slices.ApplyBaseline;
 using Blocks.Slices.FindBlocks;
+using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
 using Report.Domain.Shared;
 using Report.Slices.WriteReport;
@@ -26,10 +27,17 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHan
         if (!blocks.IsSuccess) {
             return [.. log.Findings];
         }
-        var block = blocks.Value.Blocks.Current.Folder;
-        var version = await commands.SendAsync(new CheckVersionsCommand(block, run.Bin), ct);
-        var app = await commands.SendAsync(new LoadAppCommand(blocks.Value.Blocks, run.Bin, run.Skip, version.Value), ct);
-        await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
+        var tree = blocks.Value.Blocks;
+        var block = tree.Current.Folder;
+        var versions = await commands.SendAsync(new CheckVersionsCommand(block, run.Bin), ct);
+        var app = versions.IsSuccess
+            ? await commands.SendAsync(new LoadAppCommand(tree, blocks.Value.Bin, run.Skip), ct)
+            : log.Skip<LoadAppCommand, AppInput>();
+        if (app.IsSuccess) {
+            await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
+        } else {
+            log.Skip<CheckRulesCommand, CheckRulesResult>();
+        }
         var found = log.Findings.ToList();
         var baseline = await commands.SendAsync(new ApplyBaselineCommand(block, run.UpdateBaseline, found), ct);
         return [.. log.Findings.Except(baseline.IsSuccess ? baseline.Value.Accepted : [])];

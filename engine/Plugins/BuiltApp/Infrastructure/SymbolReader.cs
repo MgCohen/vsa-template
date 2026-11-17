@@ -3,6 +3,7 @@ namespace BuiltApp.Infrastructure;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 
 sealed class SymbolReader : IDisposable {
@@ -13,22 +14,40 @@ sealed class SymbolReader : IDisposable {
     static readonly char[] Separators = ['/', Path.DirectorySeparatorChar];
 
     readonly PEReader image;
-    readonly MetadataReaderProvider symbols;
+    readonly MetadataReaderProvider? symbols;
     readonly MetadataReader metadata;
-    readonly MetadataReader pdb;
+    readonly MetadataReader? pdbOrNull;
     readonly Lazy<IReadOnlyList<string>> sourceFolders;
 
     public SymbolReader(string dll) {
         image = new PEReader(File.OpenRead(dll));
-        symbols = MetadataReaderProvider.FromPortablePdbStream(File.OpenRead(Path.ChangeExtension(dll, ".pdb")));
-        metadata = image.GetMetadataReader();
-        pdb = symbols.GetMetadataReader();
+        try {
+            if (!image.HasMetadata) {
+                throw new BadImageFormatException($"{dll} has no .NET metadata.");
+            }
+            metadata = image.GetMetadataReader();
+        } catch {
+            image.Dispose();
+            throw;
+        }
+        symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb"));
+        pdbOrNull = symbols?.GetMetadataReader();
         sourceFolders = new(SourceFoldersAndParents);
     }
 
-    public IReadOnlyList<string> Documents() => [.. pdb.Documents.Select(DocumentName)];
+    public bool HasSymbols => pdbOrNull is not null;
+
+    MetadataReader pdb => pdbOrNull!;
+
+    public IReadOnlyList<string> References() =>
+        [.. metadata.AssemblyReferences.Select(r => metadata.GetString(metadata.GetAssemblyReference(r).Name))];
+
+    public IReadOnlyList<string> Documents() => HasSymbols ? [.. pdb.Documents.Select(DocumentName)] : [];
 
     public IEnumerable<TypeSource> TypeSources() {
+        if (!HasSymbols) {
+            yield break;
+        }
         foreach (var handle in metadata.TypeDefinitions.Where(h => !IsEmbedded(h))) {
             if (Find(handle) is { } source) {
                 yield return new TypeSource(FullName(handle), source);
@@ -37,8 +56,22 @@ sealed class SymbolReader : IDisposable {
     }
 
     public void Dispose() {
-        symbols.Dispose();
+        symbols?.Dispose();
         image.Dispose();
+    }
+
+    static MetadataReaderProvider? PortablePdb(string file) {
+        if (!File.Exists(file)) {
+            return null;
+        }
+        var provider = MetadataReaderProvider.FromPortablePdbStream(File.OpenRead(file));
+        try {
+            provider.GetMetadataReader();
+            return provider;
+        } catch (BadImageFormatException) {
+            provider.Dispose();
+            return null;
+        }
     }
 
     bool IsEmbedded(TypeDefinitionHandle handle) =>

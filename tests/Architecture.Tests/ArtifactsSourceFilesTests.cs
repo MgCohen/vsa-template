@@ -8,7 +8,7 @@ public sealed class ArtifactsSourceFilesTests {
     const string Generator = "Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator";
 
     UnityProjectFolder project = null!;
-    Dictionary<string, Source> sources = null!;
+    IReadOnlyDictionary<string, Source> sources = null!;
 
     [OneTimeSetUp]
     public void CompileGeneratedFilesInArtifacts() {
@@ -18,7 +18,7 @@ public sealed class ArtifactsSourceFilesTests {
         var page = project.Write($"{ProjectOutput}/{Generator}/App/Views/Pages/NotesPage_razor.g.cs", "namespace Views; public sealed class NotesPage { }");
         var info = project.Write($"{ProjectOutput}/Host.AssemblyInfo.cs", "namespace Host; public sealed class Info { public int Value() => 1; }");
         project.Compile("Host", project.Output, code, page, info);
-        sources = SourceFiles.Read([Path.Combine(project.Output, "Host.dll")]);
+        sources = BinReader.Sources([Path.Combine(project.Output, "Host.dll")]);
     }
 
     [OneTimeTearDown]
