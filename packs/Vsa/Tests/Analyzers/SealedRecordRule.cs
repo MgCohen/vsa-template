@@ -5,18 +5,17 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class SealedRecordRule() : UmpireAnalyzerRule(Descriptor) {
+public sealed class SealedRecordRule : VsaRule {
     public const string CheckResponsesKey = "check_responses";
 
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010201",
-        "Requests and responses are sealed records",
-        "{0} is {1}. Make it a sealed record.",
-        "Umpire",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+    public override int Number => 1;
 
-    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.Bool(CheckResponsesKey)];
+    public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(CheckResponsesKey, true)];
+
+    protected override string Title => "Requests and responses are sealed records";
+
+    protected override string Message =>
+        "{0} is {1}. Make it a sealed record.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (start.Compilation.GetTypeByMetadataName("Umpire.Vsa.Contracts.Requests.IRequest`1") is not { } request) {
@@ -34,7 +33,7 @@ public sealed class SealedRecordRule() : UmpireAnalyzerRule(Descriptor) {
             return;
         }
         Report(type, "a request", context);
-        if (Options(context.Options, type.Locations[0].SourceTree!).Bool(CheckResponsesKey) != true) {
+        if (Values(context.Options, type.Locations[0].SourceTree!).Bool(CheckResponsesKey) != true) {
             return;
         }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)

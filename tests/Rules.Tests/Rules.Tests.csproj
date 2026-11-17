@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the formatting build of Umpire.Sdk and the unit test base.
        The architecture engine has its own tests in tests/Architecture.Tests. NUnit comes from tests/Directory.Build.props. -->
+  <PropertyGroup>
+    <!-- NoDefaultAnalyzer is a test analyzer: it runs only in the test library, not in a compiler. -->
+    <NoWarn>$(NoWarn);RS1036;RS1038;RS1041</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
     <!-- The test library asks for old versions. These are the versions that Umpire.Vsa.Analyzers uses, and a version with no known vulnerability. -->

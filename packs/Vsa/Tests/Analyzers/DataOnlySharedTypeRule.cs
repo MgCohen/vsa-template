@@ -7,14 +7,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
-public sealed class DataOnlySharedTypeRule() : UmpireAnalyzerRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010206",
-        "Domain.Shared types hold only data",
-        "{0}.{1} is {2}. A type in a Domain.Shared project holds only data. Move the logic to the module that owns it.",
-        "Umpire",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+public sealed class DataOnlySharedTypeRule : VsaRule {
+    public override int Number => 6;
+
+    protected override string Title => "Domain.Shared types hold only data";
+
+    protected override string Message =>
+        "{0}.{1} is {2}. A type in a Domain.Shared project holds only data. Move the logic to the module that owns it.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (!DomainShared.Is(start.Compilation, start.Options)) {

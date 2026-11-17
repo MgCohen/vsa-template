@@ -6,20 +6,19 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class OneTypePerFileRule() : UmpireAnalyzerRule(Descriptor) {
+public sealed class OneTypePerFileRule : KernelRule {
     public const string AllowSameNameKey = "allow_same_name";
 
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010104",
-        "A file has one top-level type",
-        "{0} is a second top-level type in the file of {1}. Move {0} to its own file, {0}.cs.",
-        "Umpire",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+    public override int Number => 4;
 
     public override bool IsModuleRule => false;
 
-    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.Bool(AllowSameNameKey)];
+    public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(AllowSameNameKey, true)];
+
+    protected override string Title => "A file has one top-level type";
+
+    protected override string Message =>
+        "{0} is a second top-level type in the file of {1}. Move {0} to its own file, {0}.cs.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(Check);
@@ -29,7 +28,7 @@ public sealed class OneTypePerFileRule() : UmpireAnalyzerRule(Descriptor) {
         if (types.Count < 2) {
             return;
         }
-        if (Options(context.Options, context.Tree).Bool(AllowSameNameKey) is not { } allowSameName) {
+        if (Values(context.Options, context.Tree).Bool(AllowSameNameKey) is not { } allowSameName) {
             return;
         }
         var first = Identifier(types[0]).Text;
