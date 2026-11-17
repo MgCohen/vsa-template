@@ -27,22 +27,22 @@ public sealed class ImmutableSharedTypeRuleTests {
     [Test]
     public Task Set_property_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class CardId { public string {|#0:Name|} { get; set; } = ""; }
-        """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "CardId", "Name", "a property with a set accessor", "Use init in place of set"));
+        """, Analyzer.Diagnostic(new ImmutableSharedTypeRule().Rule, 0, "CardId", "Name", "a property with a set accessor", "Use init in place of set"));
 
     [Test]
     public Task Field_that_is_not_readonly_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class CardId { public static int {|#0:Count|}; }
-        """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "CardId", "Count", "a field that is not readonly", "Make the field readonly"));
+        """, Analyzer.Diagnostic(new ImmutableSharedTypeRule().Rule, 0, "CardId", "Count", "a field that is not readonly", "Make the field readonly"));
 
     [Test]
     public Task Record_struct_that_is_not_readonly_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public record struct Slot(int {|#0:Index|});
-        """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Slot", "Index", "a property of a record struct that is not readonly", "Make it a readonly record struct"));
+        """, Analyzer.Diagnostic(new ImmutableSharedTypeRule().Rule, 0, "Slot", "Index", "a property of a record struct that is not readonly", "Make it a readonly record struct"));
 
     [Test]
     public Task Field_event_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Card { public event Action? {|#0:Changed|}; }
-        """, Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Card", "Changed", "a field event", "Remove the event: a Domain.Shared type holds only data"));
+        """, Analyzer.Diagnostic(new ImmutableSharedTypeRule().Rule, 0, "Card", "Changed", "a field event", "Remove the event: a Domain.Shared type holds only data"));
 
     [Test]
     public Task Type_in_another_project_passes() => Analyzer.VerifyIn("Cards.Domain", """
@@ -58,7 +58,7 @@ public sealed class ImmutableSharedTypeRuleTests {
     public Task Layer_property_Domain_Shared_is_checked() => Analyzer.VerifyIn("Cards.Published", """
         public sealed class Card { public string {|#0:Name|} { get; set; } = ""; }
         """, "build_property.UmpireLayer = Domain/Shared",
-        Analyzer.Diagnostic(ImmutableSharedTypeRule.Descriptor, 0, "Card", "Name", "a property with a set accessor", "Use init in place of set"));
+        Analyzer.Diagnostic(new ImmutableSharedTypeRule().Rule, 0, "Card", "Name", "a property with a set accessor", "Use init in place of set"));
 }
 
 public sealed class DataOnlySharedTypeRuleTests {
@@ -82,37 +82,37 @@ public sealed class DataOnlySharedTypeRuleTests {
     [Test]
     public Task Method_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record CardId(Guid Value) { public bool {|#0:IsEmpty|}() => Value == Guid.Empty; }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "CardId", "IsEmpty", "a method"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "CardId", "IsEmpty", "a method"));
 
     [Test]
     public Task Record_override_written_by_hand_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record CardId(Guid Value) { public override string {|#0:ToString|}() => "card"; }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "CardId", "ToString", "a method"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "CardId", "ToString", "a method"));
 
     [Test]
     public Task Operator_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record Rank(int Value) { public static Rank operator {|#0:+|}(Rank a, Rank b) => new(a.Value + b.Value); }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "Rank", "operator +", "an operator"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "Rank", "operator +", "an operator"));
 
     [Test]
     public Task Conversion_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record Rank(int Value) { public static implicit operator {|#0:int|}(Rank rank) => rank.Value; }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "Rank", "implicit operator int", "a conversion"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "Rank", "implicit operator int", "a conversion"));
 
     [Test]
     public Task Constructor_with_a_body_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Rank { public int Value { get; } public {|#0:Rank|}(int value) { Value = value; } }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "Rank", "Rank", "a constructor with a body"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "Rank", "Rank", "a constructor with a body"));
 
     [Test]
     public Task Computed_property_with_a_call_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record CardId(Guid Value) { public string {|#0:Text|} => Value.ToString(); }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "CardId", "Text", "a property with a body that calls ToString"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "CardId", "Text", "a property with a body that calls ToString"));
 
     [Test]
     public Task Indexer_with_a_call_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record Hand(string Cards) { public string {|#0:this|}[int i] { get { return Cards.Substring(i, 1); } } }
-        """, Analyzer.Diagnostic(DataOnlySharedTypeRule.Descriptor, 0, "Hand", "this", "an indexer with a body that calls Substring"));
+        """, Analyzer.Diagnostic(new DataOnlySharedTypeRule().Rule, 0, "Hand", "this", "an indexer with a body that calls Substring"));
 
     [Test]
     public Task Type_in_another_project_passes() => Analyzer.VerifyIn("Cards.Domain", """
@@ -142,7 +142,7 @@ public sealed class SharedTypeBaseRuleTests {
     public Task Base_from_another_assembly_fails() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed record CardKey(string Name) : {|#0:Card.TypeKeys.TypeKey|}(Name);
         """, ("Keys.Domain", Other),
-        Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "CardKey", "Card.TypeKeys.TypeKey", "Card.TypeKeys.TypeKey"));
+        Analyzer.Diagnostic(new SharedTypeBaseRule().Rule, 0, "CardKey", "Card.TypeKeys.TypeKey", "Card.TypeKeys.TypeKey"));
 
     [Test]
     public Task Marker_interface_of_VSA_passes() => Analyzer.VerifyIn(Shared.Assembly, """
@@ -162,14 +162,14 @@ public sealed class SharedTypeBaseRuleTests {
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
         public sealed record Rank(int Value) : {|#1:IEquatable<int>|} { public bool Equals(int other) => Value == other; }
         """, "umpire.UMP010207.allowed_bases = System.IComparable`1\ndotnet_diagnostic.UMP010206.severity = none",
-        Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"),
-        Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 1, "Rank", "System.IEquatable<int>", "System.IEquatable`1"));
+        Analyzer.Diagnostic(new SharedTypeBaseRule().Rule, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"),
+        Analyzer.Diagnostic(new SharedTypeBaseRule().Rule, 1, "Rank", "System.IEquatable<int>", "System.IEquatable`1"));
 
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.VerifyIn(Shared.Assembly, """
         public sealed class Pile : {|#0:System.Collections.Generic.List<int>|} { }
-        """, "umpire.allowed_bases = System.Collections.Generic.List`1\nvsa.UMP010207.allowed_bases = System.IEquatable`1",
-        Analyzer.Diagnostic(SharedTypeBaseRule.Descriptor, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"));
+        """, "umpire.allowed_bases = System.Collections.Generic.List`1\numpire.UMP010207.allowed_bases = System.IEquatable`1",
+        Analyzer.Diagnostic(new SharedTypeBaseRule().Rule, 0, "Pile", "System.Collections.Generic.List<int>", "System.Collections.Generic.List`1"));
 
     [Test]
     public Task Type_in_another_project_passes() => Analyzer.VerifyIn("Cards.Domain", """
@@ -184,7 +184,7 @@ public sealed class UmpireOptionsTests {
     }
 
     static UmpireOptions Of(params (string Key, string Value)[] values) =>
-        new("UMP010207", new Config(values.ToDictionary(v => v.Key, v => v.Value)));
+        new("UMP010207", new Config(values.ToDictionary(v => v.Key, v => v.Value)), new SharedTypeBaseRule().Options);
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>
@@ -195,6 +195,10 @@ public sealed class UmpireOptionsTests {
         Assert.That(Of(("umpire.allowed_bases", "A"), ("umpire.UMP010207.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
 
     [Test]
-    public void Missing_key_gives_null() =>
-        Assert.That(Of().List("allowed_bases"), Is.Null);
+    public void Missing_key_gives_the_default_of_the_rule() =>
+        Assert.That(Of().List("allowed_bases"), Is.Empty);
+
+    [Test]
+    public void Unknown_key_gives_null() =>
+        Assert.That(Of().List("unknown"), Is.Null);
 }

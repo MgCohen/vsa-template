@@ -80,11 +80,10 @@ tests/Fixtures/Notes/
 | `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
 | Framework references | Each project gets the base of each layer |
 
-A web root project uses the Web SDK first, then Umpire.Sdk:
+A web root project uses Umpire.Sdk.Web, with the version:
 
 ```xml
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <Sdk Name="Umpire.Sdk" />
+<Project Sdk="Umpire.Sdk.Web/0.2.0">
   <ItemGroup>
     <PackageReference Include="Umpire.Vsa.Hosts.Web" />
     <PackageReference Include="Umpire.Vsa.Views" />

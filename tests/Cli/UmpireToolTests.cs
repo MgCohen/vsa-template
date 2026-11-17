@@ -23,38 +23,38 @@ public sealed class UmpireToolTests {
     [CancelAfter(600_000)]
     public async Task ScaffoldedAppBuildsAndRuns(CancellationToken ct) {
         var app = NewApp();
-        Dotnet.Run(app, env, "umpire", "add", "module", "Billing").EnsureSuccess();
-        Dotnet.Run(app, env, "umpire", "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
-        Dotnet.Run(app, env, "umpire", "add", "command", "ChangeLimit", "-m", "Billing").EnsureSuccess();
-        Dotnet.Run(app, env, "umpire", "add", "command", "CloseInvoice", "-m", "Billing").EnsureSuccess();
+        Tool(app, "add", "module", "Billing").EnsureSuccess();
+        Tool(app, "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
+        Tool(app, "add", "command", "ChangeLimit", "-m", "Billing").EnsureSuccess();
+        Tool(app, "add", "command", "CloseInvoice", "-m", "Billing").EnsureSuccess();
         Assert.That(Directory.GetFiles(Path.Combine(app, "Features"), "*.csproj", SearchOption.AllDirectories), Is.Empty);
-        Assert.That(Dotnet.Run(app, env, "umpire", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use Umpire {LocalFeed.Version}."));
+        Assert.That(Tool(app, "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use Umpire {LocalFeed.Version}."));
 
-        var again = Dotnet.Run(app, env, "umpire", "add", "request", "CreateInvoice", "-m", "Billing");
+        var again = Tool(app, "add", "request", "CreateInvoice", "-m", "Billing");
         Assert.That(again.Succeeded, Is.False);
         Assert.That(again.Output, Does.Contain("does not write over a file"));
 
-        var command = Dotnet.Run(app, env, "umpire", "add", "command", "ChangeLimit", "-m", "Billing");
+        var command = Tool(app, "add", "command", "ChangeLimit", "-m", "Billing");
         Assert.That(command.Succeeded, Is.False);
         Assert.That(command.Output, Does.Contain("does not write over a file"));
 
-        var unknown = Dotnet.Run(app, env, "umpire", "add", "command", "ChangeLimit", "-m", "Shipping");
+        var unknown = Tool(app, "add", "command", "ChangeLimit", "-m", "Shipping");
         Assert.That(unknown.Succeeded, Is.False);
         Assert.That(unknown.Output, Does.Contain("The module Shipping does not exist"));
 
         Directory.CreateDirectory(Path.Combine(app, "Plugins", "Pipeline"));
-        var plugin = Dotnet.Run(app, env, "umpire", "add", "module", "Pipeline");
+        var plugin = Tool(app, "add", "module", "Pipeline");
         Assert.That(plugin.Succeeded, Is.False);
         Assert.That(plugin.Output, Does.Contain("The plugin module Pipeline exists"));
         Directory.Delete(Path.Combine(app, "Plugins", "Pipeline"), recursive: true);
 
-        Dotnet.Run(app, env, "umpire", "add", "plugin", "Game").EnsureSuccess();
+        Tool(app, "add", "plugin", "Game").EnsureSuccess();
         Assert.That(File.Exists(Path.Combine(app, "Plugins", "Game", "GamePlugin.cs")), Is.True);
         Assert.That(File.Exists(Path.Combine(app, "Plugins", "Game", "Contracts", "Commands", "GameStep.cs")), Is.True);
-        var pluginAgain = Dotnet.Run(app, env, "umpire", "add", "plugin", "Game");
+        var pluginAgain = Tool(app, "add", "plugin", "Game");
         Assert.That(pluginAgain.Succeeded, Is.False);
         Assert.That(pluginAgain.Output, Does.Contain("The plugin module Game exists"));
-        var pluginOfModule = Dotnet.Run(app, env, "umpire", "add", "plugin", "Billing");
+        var pluginOfModule = Tool(app, "add", "plugin", "Billing");
         Assert.That(pluginOfModule.Succeeded, Is.False);
         Assert.That(pluginOfModule.Output, Does.Contain("The module Billing exists"));
 
@@ -70,15 +70,15 @@ public sealed class UmpireToolTests {
             Assert.That(page, Does.Contain("Status: Ready"));
         });
 
-        var globalJson = Path.Combine(app, "global.json");
-        File.WriteAllText(globalJson, File.ReadAllText(globalJson).Replace($"\"Umpire.Sdk\": \"{LocalFeed.Version}\"", "\"Umpire.Sdk\": \"0.0.1\""));
-        var doctor = Dotnet.Run(app, env, "umpire", "doctor");
+        var rootProject = Path.Combine(app, "Hello.csproj");
+        File.WriteAllText(rootProject, File.ReadAllText(rootProject).Replace($"Umpire.Sdk.Web/{LocalFeed.Version}", "Umpire.Sdk.Web/0.0.1"));
+        var doctor = Tool(app, "doctor");
         Assert.That(doctor.Succeeded, Is.False, doctor.Output);
         Assert.That(doctor.Output, Does.Contain("The versions are not the same"));
 
-        var update = Dotnet.Run(app, env, "umpire", "update", "--version", LocalFeed.Version).EnsureSuccess();
-        Assert.That(update.Output, Does.Contain("global.json"));
-        Assert.That(Dotnet.Run(app, env, "umpire", "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use Umpire {LocalFeed.Version}."));
+        var update = Tool(app, "update", "--version", LocalFeed.Version).EnsureSuccess();
+        Assert.That(update.Output, Does.Contain("Hello.csproj"));
+        Assert.That(Tool(app, "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use Umpire {LocalFeed.Version}."));
     }
 
     [Test]
@@ -144,8 +144,8 @@ public sealed class UmpireToolTests {
     [CancelAfter(600_000)]
     public void NewAppChecksTheArchitecture() {
         var app = NewApp();
-        Dotnet.Run(app, env, "umpire", "add", "module", "Billing").EnsureSuccess();
-        Dotnet.Run(app, env, "umpire", "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
+        Tool(app, "add", "module", "Billing").EnsureSuccess();
+        Tool(app, "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
 
         var clean = Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
         Assert.That(clean.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
@@ -169,10 +169,12 @@ public sealed class UmpireToolTests {
     string NewApp(string name = "Hello") {
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
-        Dotnet.Run(root, env, "tool", "exec", $"Umpire.Cli@{LocalFeed.Version}", "--add-source", LocalFeed.Path, "-y", "--",
-            "new", "app", name, "--source", LocalFeed.Path, "--source", globalPackages).EnsureSuccess();
+        Tool(root, "new", "app", name, "--source", LocalFeed.Path, "--source", globalPackages).EnsureSuccess();
         return Path.Combine(root, name);
     }
+
+    DotnetResult Tool(string folder, params string[] args) =>
+        Dotnet.Run(folder, env, ["tool", "exec", $"Umpire.Cli@{LocalFeed.Version}", "--add-source", LocalFeed.Path, "-y", "--", .. args]);
 
     async Task RunAndCall(string app, CancellationToken ct, Func<HttpClient, StringBuilder, Task> calls) {
         var url = $"http://127.0.0.1:{FreePort()}";

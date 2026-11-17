@@ -65,12 +65,12 @@ public sealed class RunEngineTests {
     public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030201_and_skips_the_load() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, "global.json"), """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
+            File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Umpire.Sdk/0.0.1" />""");
 
             var result = await Run(block: root);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030201").And.Contains("global.json: Umpire.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030201").And.Contains("Old.csproj: Umpire.Sdk 0.0.1"));
             Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier step failed."));
         } finally {
             TempFolder.Delete(root);

@@ -40,20 +40,20 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 
 Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). Umpire.Sdk does not compile `Assets/` (`UmpireExcludedFolders`).
 
-The Umpire analyzers read their rule values from two globalconfig files: `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` and `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig`. Each analyzer package ships its file as `build/<PackageId>.globalconfig`, and `Umpire.Vsa.Analyzers` also ships the kernel file. Unity reads a global config only as `Assets/Default.globalconfig` or `<AsmdefName>.globalconfig`, so the Unity package must copy both files there. If a value is missing, the analyzer reports `UMP010001`.
+Each Umpire analyzer rule has the defaults of its values on its class. Two globalconfig files hold the disabled severities and the help text: `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` and `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig`. Each analyzer package ships its file as `build/<PackageId>.globalconfig`, and `Umpire.Vsa.Analyzers` also ships the kernel file. Unity reads a global config only as `Assets/Default.globalconfig` or `<AsmdefName>.globalconfig`, so the Unity package must copy both files there. If a value is not valid, the analyzer reports `UMP010001`.
 
 The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernel.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` and both values files in `build/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). A Unity project puts both DLLs in one folder. Umpire.Sdk does not add the Umpire.Kernel.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
 
 ## Build output
 
-An app that `umpire new app` makes writes all build output to `artifacts~/` in the block folder. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
+An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
 
 | Need | Do this in `Directory.Build.props` |
 |------|-------------------------------------|
 | Another output folder | Set `ArtifactsPath` to that folder |
 | Output next to each project (`bin/`, `obj/`) | Set `UseArtifactsOutput` to `false` |
 
-The .NET SDK reads these two properties only from `Directory.Build.props` or the command line. A value in a project file gives `NETSDK1199`.
+The .NET SDK reads these two properties only before its own props: from the Umpire SDK, from `Directory.Build.props` or from the command line. A value in a project file gives `NETSDK1199`.
 
 ## Layers that Unity can use
 
