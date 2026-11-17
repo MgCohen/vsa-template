@@ -97,7 +97,7 @@ AppHost.Compose(services, app)                 fixed order
 │  ├─ AddRequestHandlers                       Umpire.Vsa.Handlers.Requests (each kind adds its sender and calls AddPipeline)
 │  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
 │  ├─ AddPresenters                            Umpire.Vsa.Presenters
-│  └─ the platform                             WebVsaHost: HTTP API, views. ConsoleVsaHost: entry command
+│  └─ the platform                             WebVsaHost: AddViews. ConsoleVsaHost: entry command
 ├─ Module.Compose(services, configuration)     each module, in Order, then by name
 │  ├─ Module                                   Configure(services)
 │  └─ Module<TSettings>, Plugin<TSettings>     bind the settings, then Configure(services, settings)
@@ -252,7 +252,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
 | `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter one time, and connects each presenter with events |
-| `ViewsInstaller` (Views) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
+| `ViewsServiceCollectionExtensions` (Views) | `MakeGenericMethod` | `MapViews` calls `MapRazorComponents<TRoot>` for the views root |
 | `HttpApi` (Hosts.Web) | `MakeGenericMethod` | Reads the static `Route` and `Method` of each request |
 | `ConsoleEntry` (Composition) | `MakeGenericMethod`, `Task.Result` | Sends the entry command. It reads the result through `IMessageResult` |
 | `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `MakeGenericType` | Finds the handler of a request or a command |
@@ -273,6 +273,8 @@ The checks read the registered types. They do not find types.
 ## The HTTP API
 
 The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core minimal APIs (`MapMethods`).
+
+`WebVsaHost` keeps no state. `Install` calls `services.AddViews(types)`. `Build` calls `app.MapRequests()` and `app.MapViews()`. Both map methods read the `AppTypes` singleton, so an app with its own `WebApplication` can call them too. With no `ViewsRoot`, `AddViews` and `MapViews` do nothing.
 
 | Step | Source |
 |---|---|
@@ -305,7 +307,7 @@ packs/Vsa/
     Handlers/Commands/                 AddCommandHandlers, InProcessCommandSender
     Handlers/Requests/                 RequestHandler, AddRequestHandlers
     Presenters/                        AddPresenters
-    Views/                             ViewsRoot, ViewsInstaller
+    Views/                             ViewsRoot, AddViews, MapViews
     Composition/                       Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>
       Hosts/Console/                   ConsoleVsaHost, ConsoleEntry, ConsoleExit
     Hosts/                             Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
