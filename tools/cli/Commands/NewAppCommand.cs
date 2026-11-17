@@ -3,6 +3,7 @@ namespace Umpire.Cli.Commands;
 using Umpire.Cli.Commands.Bases;
 using Umpire.Cli.Scaffolding;
 using Umpire.Cli.Scaffolding.Setup;
+using Umpire.Files;
 
 sealed class NewAppCommand : ToolCommand {
     static readonly CommandOption Source = new(["--source"], "feed", Many: true);
@@ -21,25 +22,12 @@ sealed class NewAppCommand : ToolCommand {
         input.EnsureRequiredOptions();
         var block = Path.GetFullPath(name);
         var version = ToolVersion.Current;
-        var context = Context(name, block, input.All(Source), version);
-        var existing = SetupTasks.Default.SelectMany(task => task.Files(context))
-            .Distinct()
-            .Where(context.OnDisk)
-            .ToList();
-        if (existing is not []) {
-            var list = string.Join(Environment.NewLine + "  ", existing);
-            throw new UmpireException(
-                $"These files exist. The tool does not write over a file:{Environment.NewLine}  {list}"
-                + $"{Environment.NewLine}To add Umpire to an existing app, run 'umpire init' in its folder.");
-        }
-        var plan = SetupTasks.Plan(context);
-        if (plan.ByHand is [var first, ..]) {
-            throw new UmpireException(
-                $"The folder {name} has a setup that the tool cannot complete ({first}). "
-                + "To add Umpire to an existing app, run 'umpire init' in its folder.");
-        }
+        var plan = SetupTasks.Plan(Context(name, block, input.All(Source), version));
         Console.WriteLine($"Making the app {name} (Umpire {version}):");
-        FileWriter.WriteAllOrNone(block, plan.Files);
+        NewFiles.Write(
+            block,
+            plan.Files,
+            $"{Environment.NewLine}To add Umpire to an existing app, run 'umpire init' in its folder.");
         Console.WriteLine($"""
 
             Next:
@@ -49,11 +37,11 @@ sealed class NewAppCommand : ToolCommand {
         return 0;
     }
 
-    internal static IReadOnlyList<TemplateFile> Files(string name, IReadOnlyList<string> sources, string version) =>
+    internal static IReadOnlyList<TextFile> Files(string name, IReadOnlyList<string> sources, string version) =>
         SetupTasks.Plan(Context(name, Path.GetFullPath(name), sources, version)).Files;
 
     static SetupContext Context(string name, string block, IReadOnlyList<string> sources, string version) {
-        var context = new SetupContext(block, $"{name}.csproj", version, sources, keepsParentFiles: false);
+        var context = new SetupContext(block, $"{name}.csproj", version, sources, existingApp: false);
         var names = new Dictionary<string, string> { [Templates.App] = name };
         foreach (var file in Templates.Files(TemplateGroup.App, names, version)) {
             context.Add(file);

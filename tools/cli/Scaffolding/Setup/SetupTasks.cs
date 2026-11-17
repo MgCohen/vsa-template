@@ -16,7 +16,7 @@ static class SetupTasks {
         foreach (var task in Default) {
             var result = task.Plan(context);
             if (result is SetupResult.Change change) {
-                context.Add(new TemplateFile(change.File, change.Content));
+                context.Add(change.File);
             }
             results.Add(new TaskResult(task.Id, result));
         }

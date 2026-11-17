@@ -251,13 +251,13 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void AFileWithMixedLineEndingsKeepsTheEndingOfEachLine() {
+    public void AFileWithMixedLineEndingsGetsItsDominantEnding() {
         Write(".gitignore", "bin/\r\nobj/\r\nnode_modules/\n");
 
         Plan().Write();
 
         Assert.That(File.ReadAllText(Path.Combine(block, ".gitignore")),
-            Is.EqualTo("bin/\r\nobj/\r\nnode_modules/\nartifacts~/\r\nTestResults/\r\n*.user\r\n.vs/\r\n"));
+            Is.EqualTo("bin/\r\nobj/\r\nnode_modules/\r\nartifacts~/\r\nTestResults/\r\n*.user\r\n.vs/\r\n"));
     }
 
     [Test]
@@ -304,10 +304,29 @@ public sealed class SetupTests {
     }
 
     [Test]
+    public void NewAppStopsIfASetupFileExistsWithTheFullSetup() {
+        File.Delete(Path.Combine(block, Project));
+        Write(".gitignore", Templates.SetupFile(".gitignore", V));
+
+        Assert.That(() => RunIn(parent, "new", "app", "Shop"),
+            Throws.TypeOf<UmpireException>().With.Message.Contain(".gitignore").And.Message.Contain("umpire init"));
+        Assert.That(Directory.GetFiles(block), Is.EqualTo(new[] { Path.Combine(block, ".gitignore") }));
+    }
+
+    [Test]
+    public void ANewAppPlanReadsNoFileOnDisk() {
+        Write(".gitignore", "bin/\n");
+
+        var plan = Plan(existingApp: false);
+
+        Assert.That(plan.Files.Single(file => file.Path == ".gitignore").Content, Is.EqualTo(Templates.SetupFile(".gitignore", V)));
+    }
+
+    [Test]
     public void NewAppDoesNotReadTheParentFiles() {
         File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" } }");
 
-        Assert.That(Plan(keepsParentFiles: false).Files.Single(file => file.Path == "global.json").Content,
+        Assert.That(Plan(existingApp: false).Files.Single(file => file.Path == "global.json").Content,
             Is.EqualTo(Templates.SetupFile("global.json", V)));
     }
 
@@ -344,8 +363,8 @@ public sealed class SetupTests {
     public void InitRejectsACheckValueThatIsNotABoolean() =>
         Assert.That(() => RunInit("init", "--check", "yes"), Throws.TypeOf<UmpireException>().With.Message.Contain("--check true"));
 
-    SetupPlan Plan(bool keepsParentFiles = true, params string[] sources) =>
-        SetupTasks.Plan(new SetupContext(block, Project, V, sources, keepsParentFiles));
+    SetupPlan Plan(bool existingApp = true, params string[] sources) =>
+        SetupTasks.Plan(new SetupContext(block, Project, V, sources, existingApp));
 
     SetupResult Result(string id) => Plan().Tasks.Single(task => task.Id == id).Result;
 

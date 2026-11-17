@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The one text file writer of the umpire tool: a new file is LF with no BOM, a changed file keeps its BOM and
+       its dominant line ending. The tool bundles the DLL. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

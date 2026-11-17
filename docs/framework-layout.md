@@ -12,7 +12,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
 | Engine | `engine/` | The rule engine app and the build hook | The build hook package |
-| Tools | `tools/` | The `umpire` tool and Umpire.Sdk | The developer |
+| Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`) and Umpire.Sdk | The developer |
 
 ```mermaid
 flowchart BT
@@ -23,6 +23,7 @@ flowchart BT
     Vsa --> Architecture
     Engine["engine/"] --> Vsa
     Cli["tools/cli"] --> Versions["engine/Versions"]
+    Cli --> Files["tools/Files"]
 ```
 
 ## Kinds of block
