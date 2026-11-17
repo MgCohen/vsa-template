@@ -217,7 +217,7 @@ public sealed class RunEngineTests {
         Assert.ThrowsAsync<DirectoryNotFoundException>(() => Run(bin: bin, failFast: true));
     }
 
-    static async Task<ReportResult> Run(
+    static async Task<RunEngineResult> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BlocksModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
