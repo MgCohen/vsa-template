@@ -1,13 +1,34 @@
 namespace Umpire.Architecture;
 
 public sealed class RuleBook {
-    internal readonly List<Rule> Rules = [];
-    internal readonly List<Count> Counts = [];
-    internal readonly List<Match> Matches = [];
+    internal readonly List<Rule> Rules;
+    internal readonly List<Count> Counts;
+    internal readonly List<Match> Matches;
     readonly Block block;
 
-    internal RuleBook(Block block) {
+    internal RuleBook(Block block) : this(block, null, [], [], []) { }
+
+    RuleBook(Block block, Type? scope, List<Rule> rules, List<Count> counts, List<Match> matches) {
         this.block = block;
+        Scope = scope;
+        Rules = rules;
+        Counts = counts;
+        Matches = matches;
+    }
+
+    internal Type? Scope { get; }
+
+    internal RuleBook Of(Type concept) => new(block, concept, Rules, Counts, Matches);
+
+    internal void RefuseOutOfScope(Type subject) {
+        if (Scope is not { } concept || subject == concept || block.Walk().Any(p => p.Is(subject) && p.Under(concept))) {
+            return;
+        }
+        var scope = Concept.Display(concept);
+        throw new InvalidOperationException(
+            $"Rules of {scope}: For<{Concept.Display(subject)}>() names no part under {scope}. "
+            + $"A concept rule has an implicit Under<{scope}>(). "
+            + $"Move the rule to the Rules of the architecture, or name a part of {scope}.");
     }
 
     public From For<T>(Depth? depth = null) where T : Concept {

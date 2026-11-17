@@ -197,20 +197,22 @@ The rule engine binds each type of the app to a part of the VSA definition. Its 
 
 ### Counts and matches
 
-The VSA definition has these count and match lines in `Rules` (see "Counts and matches" in `architecture-engine.md`):
+The VSA definition has these count and match lines. S1 to S3 are in `Slice.Rules`, so each one has an implicit `Under<Slice>()`. M1 is in `VsaArchitecture.Rules` (see "Counts and matches" in `architecture-engine.md`):
 
 | ID | Rule | Line | Code |
 |---|---|---|---|
 | S1 | A slice has at least one handler or hook | `For<Slice>().Has<Handlers>().AtLeast(1)` | `UMP020301` |
 | S2 | The handlers of one slice are of one kind. A hook is a kind | `For<Slice>().Has<Handlers>().OfOneKind()` | `UMP020301` |
-| S3a | A request handler handles a request of its own slice | `For<Handlers.Requests>().Under<Feature>().Takes<Contracts.Requests>().InSame<Slice>()` | `UMP020302` |
-| S3b | Each request and each response of a feature has exactly one handler | `For<Contracts.Requests>().Under<Feature>().Has<Handlers.Requests>(Depth.Self).Exactly(1)` | `UMP020301` |
+| S3a | A request handler handles a request of its own slice | `For<Handlers.Requests>().Takes<Contracts.Requests>().InSame<Slice>()` | `UMP020302` |
+| S3b | Each request and each response of a feature has exactly one handler | `For<Contracts.Requests>().Has<Handlers.Requests>(Depth.Self).Exactly(1)` | `UMP020301` |
 | S3c, S3d | The same two lines for the commands | `Handlers.Commands`, `Contracts.Commands` | `UMP020302`, `UMP020301` |
 | M1 | A feature module and a plugin module have exactly one root class | `For<Feature>().Has<Module>().Exactly(1)`, the same for `Plugin` | `UMP020301` |
 
-An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d have `Under<Feature>()`, so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
+An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d are slice rules (implicit `Under<Slice>()`), so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 
 The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). A hook has each use of the handlers of its kind. In a slice, the hook parts are siblings of the handler parts in the slice folder. In a plugin module, `Handlers.Commands.Hooks` is a child of `Handlers.Commands` (and the same for the events), with `InParentFolder()`. Reason: a plugin has one folder for each layer, so its hooks are in `Handlers/Commands/`, and only a child part can share that folder. A sibling with `InParentFolder()` would be in `Handlers/`.
+
+A validator (`Validator<T>`) in a slice is the optional part `Slice.Validators`, next to the handler. No part uses it: the pipeline finds it by type. It uses the kernel and plugin handlers and contracts, the contracts of its own slice, `Slice.Shared` of its feature, `Domain` (internal) and `Domain.Shared`. It does not use the infrastructure or the contracts of another slice. It is not a handler, so S1 and S2 do not count it.
 
 `Slices/Shared/` is the part `Slice.Shared`, not a slice, so S1, S2 and S3 do not count it. It has the uses of a slice contract, and the slices and the presenters of its own feature use it.
 

@@ -142,10 +142,15 @@ sealed class PartOf {
         if (shared.Count == 0) {
             return null;
         }
-        var users = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path && b.Type.Mentions.Contains(helper.Type.FullName))
-            .Select(b => b.Part).Distinct();
-        return users.OrderBy(p => p.Types.Count == 0).ThenBy(shared.IndexOf).FirstOrDefault();
+        var neighbors = bound.Where(b => shared.Contains(b.Part) && b.Path == helper.Path).ToList();
+        var users = neighbors.Where(b => b.Type.Mentions.Contains(helper.Type.FullName)).Select(b => b.Part).Distinct();
+        return users.OrderBy(p => p.Types.Count == 0).ThenBy(shared.IndexOf).FirstOrDefault() ?? BasePart(neighbors, helper);
     }
+
+    static Part? BasePart(IReadOnlyList<Binding> neighbors, Binding helper) => helper.Type.Bases
+        .Skip(1)
+        .Select(name => neighbors.FirstOrDefault(b => b.Type.FullName == name))
+        .FirstOrDefault(b => b is not null)?.Part;
 
     static IEnumerable<Part> ParentFolderChildren(Part part) =>
         part.Children.Where(c => !c.HasFolder && !c.IsGroup).SelectMany(c => new[] { c }.Concat(ParentFolderChildren(c)));

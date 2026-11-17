@@ -17,21 +17,32 @@ public sealed class From : Chain<From> {
     public Rule Denies<T>(Depth? depth = null) where T : Concept => Start(typeof(T), Permission.Deny, depth, null, null);
 
     public Count Has<T>(Depth? depth = null) where T : Concept {
-        var count = new Count(Entries, typeof(T), depth);
+        var count = new Count(Subjects(), typeof(T), depth);
         book.Counts.Add(count);
         return count;
     }
 
     public Match Takes<T>() where T : Concept {
-        var match = new Match(Entries, typeof(T));
+        var match = new Match(Subjects(), typeof(T));
         book.Matches.Add(match);
         return match;
     }
 
     Rule Start(Type to, Permission permission, Depth? depth, Access? access, Boundary? boundary) {
-        var rule = new Rule { Permission = permission, From = Entries };
+        var rule = new Rule { Permission = permission, From = Subjects() };
         rule.Begin(to, depth, access, boundary);
         book.Rules.Add(rule);
         return rule;
+    }
+
+    List<Entry> Subjects() {
+        if (book.Scope is { } concept) {
+            var under = new Filter(FilterKind.Under, concept);
+            foreach (var entry in Entries.Where(e => e.Target != concept && !e.Filters.Contains(under))) {
+                book.RefuseOutOfScope(entry.Target);
+                entry.Filters.Add(under);
+            }
+        }
+        return Entries;
     }
 }

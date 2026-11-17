@@ -48,6 +48,7 @@ App -> Feature/Slice/Handlers.Events [any] Deny
 App -> Feature/Slice/Handlers.Commands [any] Deny
 App -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+App -> Feature/Slice/Slice.Validators [any] Deny
 App/Host -> Kernel [any] Allow Public
 App/Host -> Kernel/Domain [any] Deny
 App/Host -> Kernel/Infrastructure [any] Deny
@@ -98,6 +99,7 @@ App/Host -> Feature/Slice/Handlers.Events [any] Deny
 App/Host -> Feature/Slice/Handlers.Commands [any] Deny
 App/Host -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App/Host -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+App/Host -> Feature/Slice/Slice.Validators [any] Deny
 App/Views -> Kernel [any] Deny
 App/Views -> Kernel/Domain [any] Deny
 App/Views -> Kernel/Infrastructure [any] Deny
@@ -148,6 +150,7 @@ App/Views -> Feature/Slice/Handlers.Events [any] Deny
 App/Views -> Feature/Slice/Handlers.Commands [any] Deny
 App/Views -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App/Views -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+App/Views -> Feature/Slice/Slice.Validators [any] Deny
 Pack -> Kernel [any] Deny
 Pack -> Kernel/Domain [any] Deny
 Pack -> Kernel/Infrastructure [any] Deny
@@ -199,6 +202,7 @@ Pack -> Feature/Slice/Handlers.Events [any] Deny
 Pack -> Feature/Slice/Handlers.Commands [any] Deny
 Pack -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Pack -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Pack -> Feature/Slice/Slice.Validators [any] Deny
 Plugin -> Kernel [any] Deny
 Plugin -> Kernel/Domain [any] Deny
 Plugin -> Kernel/Infrastructure [any] Deny
@@ -250,6 +254,7 @@ Plugin -> Feature/Slice/Handlers.Events [any] Deny
 Plugin -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Module -> Kernel [any] Allow Public
 Plugin/Module -> Kernel/Domain [any] Allow Public
 Plugin/Module -> Kernel/Infrastructure [any] Allow Public
@@ -301,6 +306,7 @@ Plugin/Module -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Module -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Module -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Module -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Module -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Domain -> Kernel [any] Deny
 Plugin/Domain -> Kernel/Domain [any] Allow Public
 Plugin/Domain -> Kernel/Infrastructure [any] Deny
@@ -352,6 +358,7 @@ Plugin/Domain -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Domain -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Domain -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Domain -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Domain -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Domain/Domain.Shared -> Kernel [any] Deny
 Plugin/Domain/Domain.Shared -> Kernel/Domain [any] Deny
 Plugin/Domain/Domain.Shared -> Kernel/Infrastructure [any] Deny
@@ -403,6 +410,7 @@ Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Domain/Domain.Shared -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Infrastructure -> Kernel [any] Deny
 Plugin/Infrastructure -> Kernel/Domain [any] Allow Public
 Plugin/Infrastructure -> Kernel/Infrastructure [any] Allow Public
@@ -454,6 +462,7 @@ Plugin/Infrastructure -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Infrastructure -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Infrastructure -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Infrastructure -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Infrastructure -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Presenters -> Kernel [any] Deny
 Plugin/Presenters -> Kernel/Domain [any] Deny
 Plugin/Presenters -> Kernel/Infrastructure [any] Deny
@@ -505,6 +514,7 @@ Plugin/Presenters -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Presenters -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Presenters -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Presenters -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Presenters -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Contracts -> Kernel [any] Deny
 Plugin/Contracts -> Kernel/Domain [any] Deny
 Plugin/Contracts -> Kernel/Infrastructure [any] Deny
@@ -556,6 +566,7 @@ Plugin/Contracts -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Contracts -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Contracts/Contracts.Requests -> Kernel [any] Deny
 Plugin/Contracts/Contracts.Requests -> Kernel/Domain [any] Deny
 Plugin/Contracts/Contracts.Requests -> Kernel/Infrastructure [any] Deny
@@ -607,6 +618,7 @@ Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Contracts/Contracts.Requests -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Contracts/Contracts.Events -> Kernel [any] Deny
 Plugin/Contracts/Contracts.Events -> Kernel/Domain [any] Deny
 Plugin/Contracts/Contracts.Events -> Kernel/Infrastructure [any] Deny
@@ -658,6 +670,7 @@ Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Contracts/Contracts.Events -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Contracts/Contracts.Commands -> Kernel [any] Deny
 Plugin/Contracts/Contracts.Commands -> Kernel/Domain [any] Deny
 Plugin/Contracts/Contracts.Commands -> Kernel/Infrastructure [any] Deny
@@ -709,6 +722,7 @@ Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Contracts/Contracts.Commands -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Handlers -> Kernel [any] Deny
 Plugin/Handlers -> Kernel/Domain [any] Deny
 Plugin/Handlers -> Kernel/Infrastructure [any] Deny
@@ -760,6 +774,7 @@ Plugin/Handlers -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Handlers -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Handlers/Handlers.Requests -> Kernel [any] Deny
 Plugin/Handlers/Handlers.Requests -> Kernel/Domain [any] Allow Internal
 Plugin/Handlers/Handlers.Requests -> Kernel/Infrastructure [any] Allow Internal
@@ -811,6 +826,7 @@ Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Handlers/Handlers.Requests -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Handlers/Handlers.Events -> Kernel [any] Deny
 Plugin/Handlers/Handlers.Events -> Kernel/Domain [any] Allow Internal
 Plugin/Handlers/Handlers.Events -> Kernel/Infrastructure [any] Allow Internal
@@ -862,6 +878,7 @@ Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Handlers/Handlers.Events -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Domain [any] Allow Internal
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Infrastructure [any] Allow Internal
@@ -913,6 +930,7 @@ Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Handlers/Handlers.Commands -> Kernel [any] Deny
 Plugin/Handlers/Handlers.Commands -> Kernel/Domain [any] Allow Internal
 Plugin/Handlers/Handlers.Commands -> Kernel/Infrastructure [any] Allow Internal
@@ -964,6 +982,7 @@ Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Handlers/Handlers.Commands -> Feature/Slice/Slice.Validators [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Domain [any] Allow Internal
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Infrastructure [any] Allow Internal
@@ -1015,6 +1034,7 @@ Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handl
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Slice.Validators [any] Deny
 Feature -> Kernel [any] Deny
 Feature -> Kernel/Domain [any] Deny
 Feature -> Kernel/Infrastructure [any] Deny
@@ -1067,6 +1087,7 @@ Feature -> Feature/Slice/Handlers.Events [any] Deny
 Feature -> Feature/Slice/Handlers.Commands [any] Deny
 Feature -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Module -> Kernel [any] Allow Public
 Feature/Module -> Kernel/Domain [any] Allow Public
 Feature/Module -> Kernel/Infrastructure [any] Allow Public
@@ -1150,6 +1171,10 @@ Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [same Feature Slice a] A
 Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [same Feature Slice b] Allow Internal
 Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [other Feature Slice a] Deny
 Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [other Feature Slice b] Deny
+Feature/Module -> Feature/Slice/Slice.Validators [same Feature Slice a] Allow Internal
+Feature/Module -> Feature/Slice/Slice.Validators [same Feature Slice b] Allow Internal
+Feature/Module -> Feature/Slice/Slice.Validators [other Feature Slice a] Deny
+Feature/Module -> Feature/Slice/Slice.Validators [other Feature Slice b] Deny
 Feature/Domain -> Kernel [any] Deny
 Feature/Domain -> Kernel/Domain [any] Allow Public
 Feature/Domain -> Kernel/Infrastructure [any] Deny
@@ -1201,6 +1226,7 @@ Feature/Domain -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Domain -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Domain -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Domain -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Domain -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Domain/Domain.Shared -> Kernel [any] Deny
 Feature/Domain/Domain.Shared -> Kernel/Domain [any] Deny
 Feature/Domain/Domain.Shared -> Kernel/Infrastructure [any] Deny
@@ -1252,6 +1278,7 @@ Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Domain/Domain.Shared -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Infrastructure -> Kernel [any] Deny
 Feature/Infrastructure -> Kernel/Domain [any] Allow Public
 Feature/Infrastructure -> Kernel/Infrastructure [any] Allow Public
@@ -1304,6 +1331,7 @@ Feature/Infrastructure -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Infrastructure -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Infrastructure -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Infrastructure -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Infrastructure -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Presenters -> Kernel [any] Deny
 Feature/Presenters -> Kernel/Domain [any] Deny
 Feature/Presenters -> Kernel/Infrastructure [any] Deny
@@ -1362,6 +1390,7 @@ Feature/Presenters -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Presenters -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Presenters -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Presenters -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Presenters -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice.Shared -> Kernel [any] Deny
 Feature/Slice.Shared -> Kernel/Domain [any] Deny
 Feature/Slice.Shared -> Kernel/Infrastructure [any] Deny
@@ -1413,6 +1442,7 @@ Feature/Slice.Shared -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice.Shared -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice.Shared -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice.Shared -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice.Shared -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice -> Kernel [any] Deny
 Feature/Slice -> Kernel/Domain [any] Deny
 Feature/Slice -> Kernel/Infrastructure [any] Deny
@@ -1465,6 +1495,7 @@ Feature/Slice -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Contracts.Requests -> Kernel [any] Deny
 Feature/Slice/Contracts.Requests -> Kernel/Domain [any] Deny
 Feature/Slice/Contracts.Requests -> Kernel/Infrastructure [any] Deny
@@ -1517,6 +1548,7 @@ Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Contracts.Requests -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Contracts.Events -> Kernel [any] Deny
 Feature/Slice/Contracts.Events -> Kernel/Domain [any] Deny
 Feature/Slice/Contracts.Events -> Kernel/Infrastructure [any] Deny
@@ -1569,6 +1601,7 @@ Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Contracts.Events -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Contracts.Commands -> Kernel [any] Deny
 Feature/Slice/Contracts.Commands -> Kernel/Domain [any] Deny
 Feature/Slice/Contracts.Commands -> Kernel/Infrastructure [any] Deny
@@ -1621,6 +1654,7 @@ Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Contracts.Commands -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Handlers.Requests -> Kernel [any] Deny
 Feature/Slice/Handlers.Requests -> Kernel/Domain [any] Allow Internal
 Feature/Slice/Handlers.Requests -> Kernel/Infrastructure [any] Allow Internal
@@ -1679,6 +1713,7 @@ Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Handlers.Requests -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Handlers.Events -> Kernel [any] Deny
 Feature/Slice/Handlers.Events -> Kernel/Domain [any] Allow Internal
 Feature/Slice/Handlers.Events -> Kernel/Infrastructure [any] Allow Internal
@@ -1734,6 +1769,7 @@ Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Handlers.Events -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Handlers.Commands -> Kernel [any] Deny
 Feature/Slice/Handlers.Commands -> Kernel/Domain [any] Allow Internal
 Feature/Slice/Handlers.Commands -> Kernel/Infrastructure [any] Allow Internal
@@ -1789,6 +1825,7 @@ Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Handlers.Commands -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Kernel [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Kernel/Domain [any] Allow Internal
 Feature/Slice/Handlers.Events.Hooks -> Kernel/Infrastructure [any] Allow Internal
@@ -1847,6 +1884,7 @@ Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Events [other Feat
 Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Slice.Validators [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Kernel [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Kernel/Domain [any] Allow Internal
 Feature/Slice/Handlers.Commands.Hooks -> Kernel/Infrastructure [any] Allow Internal
@@ -1905,3 +1943,67 @@ Feature/Slice/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands [other 
 Feature/Slice/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands [other Feature other Slice] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Feature/Slice/Slice.Validators [any] Deny
+Feature/Slice/Slice.Validators -> Kernel [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Domain [any] Allow Internal
+Feature/Slice/Slice.Validators -> Kernel/Infrastructure [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Presenters [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Handlers [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Views [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Composition [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Host [any] Deny
+Feature/Slice/Slice.Validators -> App [any] Deny
+Feature/Slice/Slice.Validators -> App/Host [any] Deny
+Feature/Slice/Slice.Validators -> App/Views [any] Deny
+Feature/Slice/Slice.Validators -> Pack [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Module [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Domain [any] Allow Internal
+Feature/Slice/Slice.Validators -> Plugin/Domain/Domain.Shared [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Infrastructure [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Presenters [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Contracts [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Handlers [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Commands [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Slice.Validators -> Feature [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Module [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Domain [same Feature] Allow Internal
+Feature/Slice/Slice.Validators -> Feature/Domain [other Feature] Deny
+Feature/Slice/Slice.Validators -> Feature/Domain/Domain.Shared [any] Allow Public
+Feature/Slice/Slice.Validators -> Feature/Infrastructure [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Presenters [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice.Shared [same Feature] Allow Public
+Feature/Slice/Slice.Validators -> Feature/Slice.Shared [other Feature] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Requests [same Feature same Slice] Allow Public
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Requests [same Feature other Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Requests [other Feature same Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Requests [other Feature other Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Events [same Feature same Slice] Allow Public
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Events [same Feature other Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Events [other Feature same Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Events [other Feature other Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Commands [same Feature same Slice] Allow Public
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Commands [same Feature other Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Commands [other Feature same Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Contracts.Commands [other Feature other Slice] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Handlers.Requests [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Handlers.Events [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Handlers.Commands [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Handlers.Events.Hooks [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Feature/Slice/Slice.Validators -> Feature/Slice/Slice.Validators [any] Deny

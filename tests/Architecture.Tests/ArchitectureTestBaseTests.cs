@@ -69,6 +69,63 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     [Test]
+    public void A_validator_in_a_slice_binds_to_the_validators() {
+        Assert.That(At<SampleValidator>(Slice).Part, Is.EqualTo("Slice.Validators"));
+    }
+
+    [Test]
+    public void A_validator_uses_the_request_of_its_slice() {
+        var validator = At<SampleValidator>(Slice);
+        var request = At<SampleRequest>(Slice);
+
+        Assert.That(MayUse(validator, request).Permission, Is.EqualTo(Permission.Allow));
+    }
+
+    [Test]
+    public void A_validator_does_not_use_a_request_of_another_slice() {
+        var validator = At<SampleValidator>(Slice);
+        var request = At<SampleRequest>("Features/Notebook/Slices/GetNote");
+
+        Assert.That(MayUse(validator, request).Permission, Is.EqualTo(Permission.Deny));
+    }
+
+    [Test]
+    public void A_validator_does_not_use_the_infrastructure() {
+        var validator = At<SampleValidator>(Slice);
+
+        Assert.That(MayUse(validator, At("Features/Notebook/Infrastructure")).Permission, Is.EqualTo(Permission.Deny));
+    }
+
+    [Test]
+    public void A_validator_uses_a_base_command_of_a_plugin() {
+        var validator = At<SampleValidator>(Slice);
+        var baseCommand = At<SampleCommand>("Plugins/Journal/Contracts/Commands");
+
+        Assert.That(baseCommand.Part, Is.EqualTo("Contracts.Commands"));
+        Assert.That(MayUse(validator, baseCommand).Permission, Is.EqualTo(Permission.Allow));
+    }
+
+    [Test]
+    public void A_validator_uses_a_request_handler_of_a_plugin() {
+        var validator = At<SampleValidator>(Slice);
+        var handler = At<SampleRequestHandler>("Plugins/Journal/Handlers/Requests");
+
+        Assert.That(MayUse(validator, handler).Permission, Is.EqualTo(Permission.Allow));
+    }
+
+    [Test]
+    public void A_subclass_with_no_user_follows_its_base_class() {
+        var place = At<SampleCheck>(Slice, typeof(SampleCheckBase), typeof(SampleCheckingHandler));
+
+        Assert.That(place.Part, Is.EqualTo("Handlers.Requests"));
+    }
+
+    [Test]
+    public void A_subclass_with_no_base_class_in_its_folder_binds_to_its_folder() {
+        Assert.That(At<SampleCheck>(Slice).Part, Is.EqualTo("Slice"));
+    }
+
+    [Test]
     public void A_use_of_a_place_that_is_not_mapped_throws() {
         var notMapped = At("Features/Notebook/Contracts");
 
@@ -95,6 +152,24 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     public sealed class SampleCommandHandler : CommandHandler<SampleCommand, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
             Umpire.Messages.Contracts.Envelope<SampleCommand> envelope) => throw new NotSupportedException();
+    }
+
+    public sealed class SampleValidator : Umpire.Messages.Handlers.Validator<SampleRequest> {
+        public override Umpire.Messages.Contracts.Error? Validate(Umpire.Messages.Contracts.IEnvelope<SampleRequest> envelope) => null;
+    }
+
+    public abstract class SampleCheckBase {
+        public abstract bool Passes(SampleRequest request);
+    }
+
+    public sealed class SampleCheck : SampleCheckBase {
+        public override bool Passes(SampleRequest request) => true;
+    }
+
+    public sealed class SampleCheckingHandler(SampleCheckBase check) : RequestHandler<SampleRequest, SampleResponse> {
+        public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
+            Umpire.Messages.Contracts.Envelope<SampleRequest> envelope) =>
+            check.Passes(envelope.Message) ? throw new NotSupportedException() : throw new InvalidOperationException();
     }
 
     public sealed class SampleHook : BeforeCommandHook<SampleCommand> {

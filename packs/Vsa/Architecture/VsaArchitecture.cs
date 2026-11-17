@@ -61,9 +61,7 @@ public class VsaArchitecture : Architecture {
         DefineSlice(feature.AddGroup<Slice>());
     }
 
-    protected virtual void DefineSlice(PartGroup slice) {
-        AndHandlerParts(AddContractParts(slice)).InParentFolder();
-    }
+    protected virtual void DefineSlice(PartGroup slice) { }
 
     protected override void Rules(RuleBook rules) {
         rules.For<Domain>().Uses<Domain.Shared>();
@@ -101,21 +99,11 @@ public class VsaArchitecture : Architecture {
         rules.For<Host>().Under<App>().Uses<Pack>();
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
-        rules.For<Slice>().Has<Handlers>().AtLeast(1);
-        rules.For<Slice>().Has<Handlers>().OfOneKind();
-        rules.For<Handlers.Requests>().Under<Feature>().Takes<Contracts.Requests>().InSame<Slice>();
-        rules.For<Contracts.Requests>().Under<Feature>().Has<Handlers.Requests>(Depth.Self).Exactly(1);
-        rules.For<Handlers.Commands>().Under<Feature>().Takes<Contracts.Commands>().InSame<Slice>();
-        rules.For<Contracts.Commands>().Under<Feature>().Has<Handlers.Commands>(Depth.Self).Exactly(1);
         rules.For<Feature>().Has<Module>().Exactly(1);
         rules.For<Plugin>().Has<Module>().Exactly(1);
     }
     protected static PartGroup AddContractParts(IPartChain parent) =>
         parent.Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
-
-    protected static PartGroup AndHandlerParts(PartGroup parts) =>
-        parts.And<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
-            .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>();
 
     protected static From ForContractParts(RuleBook rules) =>
         rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
