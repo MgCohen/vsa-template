@@ -1,20 +1,17 @@
 namespace Umpire.Cli.Scaffolding.Setup;
 
-using System.Text;
+using Umpire.Files;
 
 sealed class SetupPlan(SetupContext context, IReadOnlyList<TaskResult> tasks) {
     public IReadOnlyList<TaskResult> Tasks => tasks;
 
-    public IReadOnlyList<TemplateFile> Files =>
-        [.. context.Planned.Select(file => new TemplateFile(file.Key, file.Value))];
+    public IReadOnlyList<TextFile> Files => [.. context.Planned];
 
     public IReadOnlyList<string> ByHand =>
         [.. tasks.Select(task => task.Result is SetupResult.ByHand hand ? $"{task.Id}: {hand.Message}" : null)
             .OfType<string>()];
 
     public bool IsComplete => tasks.All(task => task.Result is SetupResult.Done);
-
-    public bool Writes(string path) => context.Planned.ContainsKey(path);
 
     public void Show() {
         var width = tasks.Max(task => task.Id.Length) + 2;
@@ -24,22 +21,14 @@ sealed class SetupPlan(SetupContext context, IReadOnlyList<TaskResult> tasks) {
     }
 
     public void Write() {
-        foreach (var (path, content) in context.Planned) {
-            var full = context.FullPath(path);
-            var exists = File.Exists(full);
-            if (exists) {
-                var bom = File.ReadAllBytes(full) is [0xEF, 0xBB, 0xBF, ..];
-                File.WriteAllText(full, LineEndings.Keep(File.ReadAllText(full), content), new UTF8Encoding(bom));
-            } else {
-                Directory.CreateDirectory(Path.GetDirectoryName(full)!);
-                File.WriteAllText(full, content);
-            }
-            Console.WriteLine($"  {(exists ? "changed" : "created")} {path}");
+        foreach (var file in context.Planned) {
+            Console.WriteLine($"  {(file.Write(context.Block) ? "created" : "changed")} {file.Path}");
         }
     }
 
     string Shown(SetupResult result) => result switch {
-        SetupResult.Change change => $"{(context.OnDisk(change.File) ? "changes" : "creates")} {change.File}",
+        SetupResult.Change change =>
+            $"{(context.OnDisk(change.File.Path) ? "changes" : "creates")} {change.File.Path}",
         SetupResult.ByHand hand => $"by hand: {hand.Message}",
         _ => "done",
     };

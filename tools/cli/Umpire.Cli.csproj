@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../engine/Versions/Umpire.Engine.Versions.csproj" />
+    <ProjectReference Include="../Files/Umpire.Files.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Templates/**" Exclude="Templates/*.props;Templates/**/artifacts~/**;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"

@@ -3,6 +3,7 @@ using Tests.Shared;
 using Umpire.Cli;
 using Umpire.Cli.Commands;
 using Umpire.Cli.Scaffolding;
+using Umpire.Files;
 
 namespace Cli.Tests;
 
@@ -275,7 +276,7 @@ public sealed class ScaffoldingTests {
         try {
             File.WriteAllText(Path.Combine(root, "b.txt"), "mine");
 
-            Assert.That(() => FileWriter.WriteAllOrNone(root, [new TemplateFile("a.txt", "new"), new TemplateFile("b.txt", "new")]),
+            Assert.That(() => NewFiles.Write(root, [new TextFile("a.txt", "new"), new TextFile("b.txt", "new")]),
                 Throws.TypeOf<UmpireException>().With.Message.Contain("b.txt"));
 
             Assert.That(File.ReadAllText(Path.Combine(root, "b.txt")), Is.EqualTo("mine"));
@@ -299,5 +300,5 @@ public sealed class ScaffoldingTests {
         }));
     }
 
-    static IReadOnlyList<TemplateFile> NewApp(string name, params string[] sources) => NewAppCommand.Files(name, sources, Version);
+    static IReadOnlyList<TextFile> NewApp(string name, params string[] sources) => NewAppCommand.Files(name, sources, Version);
 }

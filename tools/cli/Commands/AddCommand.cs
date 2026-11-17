@@ -31,7 +31,7 @@ sealed class AddCommand(AddKind kind) : AppCommand {
         }
         var inModule = module is null ? "" : $" to the module {module}";
         Console.WriteLine($"Adding the {kind.Shown} {name}{inModule}:");
-        FileWriter.WriteAllOrNone(block, Templates.Files(kind.Template, names, ToolVersion.Current));
+        NewFiles.Write(block, Templates.Files(kind.Template, names, ToolVersion.Current));
         if (kind.NextStep?.Invoke(name) is string next) {
             Console.WriteLine(next);
         }

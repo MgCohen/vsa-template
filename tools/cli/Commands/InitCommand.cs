@@ -27,7 +27,7 @@ sealed class InitCommand : ToolCommand {
         var project = RootProject.Name(block);
         var version = ToolVersion.Current;
         var plan = SetupTasks.Plan(
-            new SetupContext(block, $"{project}.csproj", version, input.All(Source), keepsParentFiles: true));
+            new SetupContext(block, $"{project}.csproj", version, input.All(Source), existingApp: true));
         Console.WriteLine($"Setup of {project} (Umpire {version}):");
         plan.Show();
         if (checkOnly) {

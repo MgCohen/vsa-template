@@ -2,6 +2,7 @@ namespace Umpire.Cli.Scaffolding;
 
 using System.Text.RegularExpressions;
 using Umpire.Engine.Versions;
+using Umpire.Files;
 
 static partial class Templates {
     public const string App = "SampleApp";
@@ -22,12 +23,12 @@ static partial class Templates {
         "nuget.config.template",
     ];
 
-    public static IReadOnlyList<TemplateFile> Files(
+    public static IReadOnlyList<TextFile> Files(
         TemplateGroup group,
         IReadOnlyDictionary<string, string> names,
         string version) {
         var assembly = typeof(Templates).Assembly;
-        var files = new List<TemplateFile>();
+        var files = new List<TextFile>();
         foreach (var resource in Resources().Where(resource => GroupOf(PathOf(resource)) == group)) {
             var path = PathOf(resource);
             using var reader = new StreamReader(assembly.GetManifestResourceStream(resource)!);
@@ -40,7 +41,7 @@ static partial class Templates {
             if (target.EndsWith(".csproj", StringComparison.Ordinal)) {
                 content = ToPackageMode(content, version, target);
             }
-            files.Add(new TemplateFile(Replace(target, names), Replace(content, names)));
+            files.Add(new TextFile(Replace(target, names), Replace(content, names)));
         }
         return files;
     }

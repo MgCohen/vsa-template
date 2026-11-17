@@ -1,5 +1,7 @@
 namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
+using Umpire.Files;
+
 sealed class NugetConfigTask : SetupTask {
     const string FileName = NugetConfig.FileName;
     const string Clear = "    <clear />\n";
@@ -7,19 +9,20 @@ sealed class NugetConfigTask : SetupTask {
 
     public override string Id => "nuget-config";
 
-    public override IReadOnlyList<string> Files(SetupContext context) => [FileName];
-
     public override SetupResult Plan(SetupContext context) {
         var template = Templates.SetupFile(FileName, context.Version);
         if (context.Read(FileName) is not string text) {
             var config = NugetConfig.Write(template, context.Sources);
-            return Change(FileName, context.ParentFile(FileName) is null ? config : config.Replace(Clear, ""));
+            var kept = context.ParentFile(FileName) is null ? config : config.Replace(Clear, "");
+            return new SetupResult.Change(new TextFile(FileName, kept));
         }
         if (XmlText.Parse(text) is not { } document) {
-            return ByHand($"{FileName} is not valid XML. {ByHandFeed}");
+            return new SetupResult.ByHand($"{FileName} is not valid XML. {ByHandFeed}");
         }
         return NugetConfig.HasFeeds(document, context.Sources)
-            ? Done()
-            : ChangeOrByHand(FileName, NugetConfig.AddFeeds(text, document, template, context.Sources), ByHandFeed);
+            ? new SetupResult.Done()
+            : NugetConfig.AddFeeds(text, document, template, context.Sources) is string added
+                ? new SetupResult.Change(new TextFile(FileName, added))
+                : new SetupResult.ByHand(ByHandFeed);
     }
 }

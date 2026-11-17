@@ -26,7 +26,7 @@ Rules for all commands:
 - `add request -m` and `add command -m` use the module name as its folder has it, so `-m billing` gives `Billing`.
 - An option that takes one value stops the command if you give it two times, for example `-m A -m B`.
 - Each command writes only new files, except `init` and `update`. `init` adds the missing setup to existing files, and `update` changes only the Umpire versions.
-- Each command writes all files or no files, except `init` and `update`. If one file exists, the command stops and writes nothing. `new app` also stops if a setup file of `init` exists in the new folder.
+- Each command writes all files or no files, except `init` and `update`. If one file exists, the command stops and writes nothing. For `new app`, this includes each setup file of `init`, also a file that already has the full setup.
 - `add request` and `add command` stop if the module does not exist.
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
 - `add pack` stops if `Packs/<Name>/` exists.
@@ -138,7 +138,7 @@ The rule engine checks the architecture after each build of the host (see [archi
 
 ## Setup tasks
 
-`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` writes its app files, then runs the same setup tasks. The tasks are the list `SetupTasks.Default` in `tools/cli/Scaffolding/Setup/`, with one class for each task in `Tasks/`.
+`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` plans its app files, then runs the same setup tasks on the planned files only: it reads no file on disk, so each task gives the full template. Then one check (`TextFile.WriteAllOrNone`) stops if a file of the plan exists. The tasks are the list `SetupTasks.Default` in `tools/cli/Scaffolding/Setup/`, with one class for each task in `Tasks/`.
 
 ```
 umpire init                          umpire new app <Name>
@@ -157,14 +157,14 @@ SetupTasks.Plan ──► each task: Done | Change(file, content) | ByHand(messa
 | `nuget-config` | `nuget.config` | A source has the key `umpire`. With `--source`: each source path is a source | The template | Adds the `umpire` source and its credentials. With `--source`: each missing source, with a free key | Not valid XML |
 | `git-ignore` | `.gitignore` | Each line of the template is in the file | The template | Adds the missing lines | None |
 | `umpire-sdk` | The root project | The main SDK is `Umpire.Sdk` or `Umpire.Sdk.Web` with the tool version | Not possible | `Microsoft.NET.Sdk` becomes `Umpire.Sdk/<version>`, `Microsoft.NET.Sdk.Web` becomes `Umpire.Sdk.Web/<version>`, an Umpire SDK with no version gets it | Another version (`umpire update`), an `<Sdk>` element, another main SDK, not valid XML |
-| `umpire-config` | `.umpireconfig` | The file exists, or the app has one project | Writes the template if the app has more than one project | Nothing | None |
+| `umpire-config` | `.umpireconfig` | The file exists, or the app has one project | Writes the template. In `init`, only if the app has more than one project | Nothing | None |
 
 Rules of a task:
 
 1. A task only plans. The tool writes all changes after all tasks.
 2. A task adds. It does not remove, reorder or change a value of the app.
 3. A conflict is a by-hand task, with the fix in its message.
-4. A changed file keeps its byte order mark and the line ending of each line. A new line gets the most frequent line ending of the file.
+4. The tool writes each file with `TextFile` (`tools/Files/`). A new file is LF with no byte order mark. A changed file keeps its byte order mark and gets its dominant line ending: CRLF if the file has more CRLF lines than LF lines, else LF.
 5. A new XML element gets the indent of the first child element of the file.
 6. A changed JSON file keeps its indent, but the tool writes all of the JSON again in the indented form. So a JSON file with comments is a by-hand task.
 7. Two tasks can change one file. A task plans on the planned content of the tasks before it.

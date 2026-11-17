@@ -18,7 +18,7 @@ Block                    core meaning                                   example
  ├─ Kernel               owns the host                                  framework/Kernel (AppHost) -> packs/Vsa/Kernel (VsaHost)
  ├─ Component            installed by name by the kernel that uses it   framework/Components/Messages (AddPipeline)
  │   └─ Module           a component that the host finds in the app     a VSA feature (Module), a VSA plugin (Plugin)
- └─ Library              no install point                               engine/Versions/
+ └─ Library              no install point                               engine/Versions/, tools/Files/
 ```
 
 - An **independent block** has its own definition and its own check entry, for example an app or a pack.

@@ -1,0 +1,13 @@
+<Project>
+  <!-- The one text file writer of the umpire tool: a new file is LF with no BOM, a changed file keeps its BOM and
+       its dominant line ending. The tool bundles the DLL. It is a library with no pack, so it has no default pack. -->
+  <PropertyGroup>
+    <UmpireFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</UmpireFrameworkSourceDir>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../sdk/Umpire.Sdk.Dev.props" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <UmpireDefaultPack>false</UmpireDefaultPack>
+  </PropertyGroup>
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>
