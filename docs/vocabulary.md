@@ -4,16 +4,28 @@ Each term has one meaning in the code, the docs and the messages. Umpire is the 
 
 To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
 
+Some code names in this page are targets of the names pass (D1): they come with the next PRs. Such a name has a mark: "(new)" for a name that replaces an old name, and "(D6)" for the sender rename of the D6 work package. The old name is in the same row.
+
 ## Product and packs
 
-| Term | Meaning | Example |
+| Term | Meaning | Code names |
 |---|---|---|
 | Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernel`, `umpire` tool |
+| Framework | The Umpire code in `framework/`: the framework kernel and the components. Not a .NET assembly, and not an external part | `framework/Kernel/`, `framework/Components/` |
 | Pack | One architecture with its definition, bases and rules | `packs/Vsa/`, `Vsa<THost>` |
 | Pack variant | A pack whose architecture inherits the architecture of another pack and adds parts and rules | `Packs/Ecs/`, `EcsArchitecture : VsaArchitecture` |
 | VSA | The Vertical Slice Architecture pack | `Umpire.Vsa.*`, `VsaArchitecture` |
 | Architecture | A definition: concepts, parts and rules | `VsaArchitecture : Architecture` |
-| Host | The startup of one app kind | `WebVsaHost`, `ConsoleVsaHost` |
+
+## Apps and hosts
+
+| Term | Meaning | Code names |
+|---|---|---|
+| App | A block that runs. Its app class is the check entry and the install point. Not the built host | `App`, `App<TPack>`, `IApp`, `NotesApp`, `EngineApp`; the concept record `App` |
+| Host | The code that starts one kind of app. The host class makes, runs and stops the built host. The VSA layer `Host` holds this code and the app class | `AppHost`, `VsaHost`, `WebVsaHost`, `ConsoleVsaHost`; the layer record `Host` |
+| Built host | The Microsoft host object that a host class builds | `IHost` (Microsoft.Extensions.Hosting) |
+| Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `PipelineRegistration`, the `Add<Name>(services, types)` extensions |
+| Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation` (new, old `Registration`), `AppTypes.Implementations` |
 
 ## Block kinds
 
@@ -31,32 +43,67 @@ A component can have a layer shape. That does not make it a module. A plugin is 
 
 ## Definition terms
 
-| Term | Meaning |
-|---|---|
-| Block | A folder tree of code with one entry. The top part of a definition (`Define(Block block)`) |
-| Independent block | A block with its own definition and check entry, for example an app or a pack |
-| Owned block | A block that gets its shape from the definition around it, for example a feature module |
-| Install point | The class or method that tells the host what to install from a block, for example `Pack.CreateHost()` |
-| Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` (`UmpireBlock`) |
-| Check entry | The pointer from a block to its architecture: an app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, or an `umpire.json` file. Each block has one |
-| Block place | A folder that an outer definition marks with `AddBlock<T>()` or `AddBlockGroup<T>()` as the place of another block. The outer definition sees that block as one part |
-| Concept | A kind of part that a definition names, for example a layer (`record Domain : Layer`) |
-| Part | One place in the folder tree of a definition |
-| Module (definition) | The record `Module`: the root part of a group instance, for example a feature folder. The block kind is in "Block kinds" |
-| Module kind | A group of modules with one shape, for example `Feature`, `Plugin` or the `EcsFeature` of a pack variant |
-| Define method | A `virtual` method of `VsaArchitecture.Define` for one base group, for example `DefineFeature(PartGroup feature)` |
-| External | A part that is a DLL, not a folder, for example `Kernel` |
-| Rule | Who may use whom (`rules.For<A>().Uses<B>()`) |
-| Queries | The answers of the rules on plain facts: `PartOf` (which part), `MayUse` (allow or deny), `Counts` and `Matches` (`architecture/Queries/`) |
-| Count | A rule statement that counts the types of a concept in each instance of a group, or the types that take each type of a part (`Has<T>()`) |
-| Match | A rule statement that a type takes a type argument of a concept, in the same instance of a group (`Takes<T>().InSame<G>()`) |
-| Hook | A Before or After step of one message kind. Its parts are `Handlers.Commands.Hooks` and `Handlers.Events.Hooks`, and a hook is in its own slice |
+| Term | Meaning | Code names |
+|---|---|---|
+| Block | A folder tree of code with one entry. Also the top part of a definition | `Block` (the top part), `Block<TArchitecture>`, `BlockKind` (new, the base of the block kind records) |
+| Independent block | A block with its own definition and check entry, for example an app or a pack | |
+| Owned block | A block that gets its shape from the definition around it, for example a feature module | |
+| Install point | The class or method that tells the host what to install from a block | `Pack.CreateHost()` |
+| Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
+| Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, an `umpire.json` file |
+| Block place | A folder that an outer definition marks as the place of another block. The outer definition sees that block as one part | `AddBlock<T>()`, `AddBlockGroup<T>()` |
+| Concept | A kind of part that a definition names | `Concept`, `External`, `BlockKind` (new), `Layer` |
+| Part | One place in the folder tree of a definition | `Part`, `PartGroup` |
+| Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture` (new) |
+| Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Host`, `Composition`, `Slice` |
+| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Module`, the classes `Umpire.Kernel.Module` and `Plugin` |
+| Module kind | A group of modules with one shape. Each module kind record inherits `Module` | `Feature`, `Plugin`, the `EcsFeature` of a pack variant |
+| External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` (new, old `IsFramework` in `TypeFactsReader`) |
+| System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` (new, old `IsFramework` in `AppLoader`) |
+| Define method | A `virtual` method of `VsaArchitecture.Define` for one base group | `DefineFeature(PartGroup feature)` |
+| Rule | Who may use whom | `rules.For<A>().Uses<B>()` |
+| Queries | The answers of the rules on plain facts (`architecture/Queries/`) | `PartOf` (which part), `MayUse` (allow or deny), `Counts`, `Matches` |
+| Count | A rule statement that counts the types of a concept in each instance of a group, or the types that take each type of a part | `Has<T>()` |
+| Match | A rule statement that a type takes a type argument of a concept, in the same instance of a group | `Takes<T>().InSame<G>()` |
+
+The concept records of the block kinds go to the namespace `Umpire.Architecture.Blocks` in the next PR of the names pass.
+
+## Messages
+
+| Term | Meaning | Code names |
+|---|---|---|
+| Kind | Always "kind of X": one of a fixed set of shapes of X. Write the noun: block kind, module kind, message kind | `Add<Kind>Handlers`, the block kind records, `Feature`, `Plugin` |
+| Message kind | Request, command or event | `IRequest`, `ICommand<T>`, `IntegrationEvent` |
+| Send | Give a command or a request to its one handler | `ICommandSender.SendAsync`, `IRequestSender.SendAsync` (D6, old `IBus.Send`) |
+| Publish | Give an event to each of its handlers | `IIntegrationEventPublisher.PublishAsync` |
+| Pipeline step | A Before or After stage of one pipeline, for each message of that pipeline | `BeforeStep`, `AfterStep`, `BeforeStep<T>`, `AfterStep<T>` |
+| Hook | A Before or After hook of one message kind. It is in its own slice | `BeforeCommandHook<T>`, `AfterEventHook<T>`; the parts `Handlers.Commands.Hooks`, `Handlers.Events.Hooks` |
+
+"Bus" has no meaning. `IBus` is an old name, and D6 removes it.
 
 ## Engine terms
 
-| Term | Meaning |
+| Term | Meaning | Code names |
+|---|---|---|
+| Engine step | One feature module of the engine with one command | `EngineStep<TResult>` |
+| Finding | One result line: code, severity, message, file and line | `Finding` |
+| Baseline | The errors that `umpire-baseline.txt` accepts | |
+| Rule ID | `UMP` and six digits: area (2), group (2), case (2). Area `01` analyzers, `02` rule findings, `03` engine run | `UMP030201` |
+
+## Tool terms
+
+| Term | Meaning | Code names |
+|---|---|---|
+| Template group | The template files of one `umpire` command | `TemplateGroup` (new, old `Templates.Kind`) |
+| Setup task | One change that `umpire init` and `umpire new app` make to an app | `SetupTask` (new, old `SetupStep`) |
+
+## Terms with no own entry
+
+| Word | Use instead |
 |---|---|
-| Step | One feature module of the engine with one command (`EngineStep<TResult>`) |
-| Finding | One result line: code, severity, message, file and line |
-| Baseline | The errors that `umpire-baseline.txt` accepts |
-| Rule ID | `UMP` and six digits: area (2), group (2), case (2). Area `01` analyzers, `02` rule findings, `03` engine run |
+| Step, alone | "Engine step" or "pipeline step" |
+| Framework, for a .NET assembly | "System assembly" |
+| Framework, for a DLL part of a definition | "External part" |
+| App, for the `IHost` | "Built host" |
+| Registration, for a found type pair | "Service implementation" |
+| Bus | "Send" with the sender of the message kind |
