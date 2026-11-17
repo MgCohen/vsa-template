@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Umpire.Vsa.Composition;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Requests;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
@@ -185,7 +186,7 @@ public sealed class PipelineTests {
         using var app = new TestApp(new GreetModule(), new AnswersModule()).Build();
         await using var appScope = app.Services.CreateAsyncScope();
 
-        var answer = await appScope.ServiceProvider.GetRequiredService<IBus>().Send(new AnswerRequest(null));
+        var answer = await appScope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(new AnswerRequest(null));
         var greet = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
             .SendAsync(new GreetCommand("Ada"), default);
 

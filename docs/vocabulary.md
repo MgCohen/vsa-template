@@ -72,12 +72,10 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 |---|---|---|
 | Kind | Always "kind of X": one of a fixed set of shapes of X. Write the noun: block kind, module kind, message kind | `Add<Kind>Handlers`, the block kind records, `Feature`, `Plugin` |
 | Message kind | Request, command or event | `IRequest`, `ICommand<T>`, `IntegrationEvent` |
-| Send | Give a command or a request to its one handler | `ICommandSender.SendAsync`, `IRequestSender.SendAsync` (D6, old `IBus.Send`) |
+| Send | Give a command or a request to its one handler | `ICommandSender.SendAsync`, `IRequestSender.SendAsync` |
 | Publish | Give an event to each of its handlers | `IIntegrationEventPublisher.PublishAsync` |
 | Pipeline step | A Before or After stage of one pipeline, for each message of that pipeline | `BeforeStep`, `AfterStep`, `BeforeStep<T>`, `AfterStep<T>` |
 | Hook | A Before or After hook of one message kind. It is in its own slice | `BeforeCommandHook<T>`, `AfterEventHook<T>`; the parts `Handlers.Commands.Hooks`, `Handlers.Events.Hooks` |
-
-"Bus" has no meaning. `IBus` is an old name, and D6 removes it.
 
 ## Engine terms
 
@@ -104,4 +102,3 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | Framework, for a DLL part of a definition | "External part" |
 | App, for the `IHost` | "Built host" |
 | Registration, for a found type pair | "Service implementation" |
-| Bus | "Send" with the sender of the message kind |

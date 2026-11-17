@@ -2,6 +2,8 @@ namespace Framework.Tests.Host;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Shelf;
+using Shelf.Presenters;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
@@ -16,6 +18,15 @@ public sealed class PresenterEventTests {
 
         Assert.That(registrations.Any(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.True);
         Assert.That(registrations.Any(s => s.ServiceType != typeof(RingLog) && s.ImplementationType == typeof(RingLog)), Is.False);
+    }
+
+    [Test]
+    public void EachPresenterIsRegisteredOneTime() {
+        var registrations = WebApps.OnTestServer(new SignalsModule(), new ShelfModule()).Registrations();
+
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(BellPresenter)), Is.EqualTo(1));
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(ShelfPresenter)), Is.EqualTo(1));
+        Assert.That(registrations.Any(s => s.ServiceType == typeof(Presenter)), Is.False);
     }
 
     [Test]

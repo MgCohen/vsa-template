@@ -9,9 +9,12 @@ public static class PresenterServiceCollectionExtensions {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
-        var presenters = types.Implementations(typeof(Presenter)).Select(p => p.Implementation).Where(ShowsEvents);
-        foreach (var presenter in presenters) {
-            services.AddScoped(presenter, provider => Connected(provider, presenter));
+        foreach (var presenter in types.ConcreteTypesOf(typeof(Presenter))) {
+            if (ShowsEvents(presenter)) {
+                services.AddScoped(presenter, provider => Connected(provider, presenter));
+            } else {
+                services.AddScoped(presenter);
+            }
         }
         return services;
     }
@@ -22,8 +25,7 @@ public static class PresenterServiceCollectionExtensions {
 
     static Presenter Connected(IServiceProvider provider, Type presenter) {
         var instance = (Presenter)ActivatorUtilities.CreateInstance(provider, presenter);
-        var dispatch = provider.GetService<LivePresenters.Dispatch>();
-        provider.GetRequiredService<LivePresenters>().Connect(instance, dispatch);
+        provider.GetRequiredService<LivePresenters>().Connect(instance, provider.GetService<LivePresenters.Dispatch>());
         return instance;
     }
 }

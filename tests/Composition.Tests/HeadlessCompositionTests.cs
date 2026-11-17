@@ -19,6 +19,7 @@ using Umpire.Vsa.Composition;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Presenters;
 using Umpire.Kernel;
 
@@ -72,7 +73,7 @@ public sealed class HeadlessCompositionTests {
         await using var scope = host.Services.CreateAsyncScope();
         var id = Guid.NewGuid();
 
-        var response = await scope.ServiceProvider.GetRequiredService<IBus>().Send(new GetItemRequest(id, 2, false));
+        var response = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(new GetItemRequest(id, 2, false));
 
         Assert.That(response.Value, Is.EqualTo(new GetItemResponse(id, 2, false)));
     }
@@ -81,9 +82,9 @@ public sealed class HeadlessCompositionTests {
     public async Task A_request_error_comes_back_in_the_result() {
         using var host = App(new AnswersModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
-        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+        var requests = scope.ServiceProvider.GetRequiredService<IRequestSender>();
 
-        var result = await bus.Send(new AnswerRequest("answers.not_found"));
+        var result = await requests.SendAsync(new AnswerRequest("answers.not_found"));
 
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.EqualTo(new Error("answers.not_found", "The test error.")));
@@ -94,9 +95,9 @@ public sealed class HeadlessCompositionTests {
     public async Task A_request_with_no_handler_is_an_error() {
         using var host = App().Build();
         await using var scope = host.Services.CreateAsyncScope();
-        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+        var requests = scope.ServiceProvider.GetRequiredService<IRequestSender>();
 
-        var error = Assert.ThrowsAsync<InvalidOperationException>(() => bus.Send(new ListAllRequest()));
+        var error = Assert.ThrowsAsync<InvalidOperationException>(() => requests.SendAsync(new ListAllRequest()));
 
         Assert.That(error!.Message, Does.StartWith("Answers.Slices.ListAll.ListAllRequest has no handler"));
     }

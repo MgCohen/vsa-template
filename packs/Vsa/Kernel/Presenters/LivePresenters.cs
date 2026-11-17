@@ -5,45 +5,37 @@ using Umpire.Vsa.Contracts.Events;
 
 public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegrationEventObserver {
     readonly object gate = new();
-    readonly Dictionary<Presenter, List<Dispatch>> live = [];
+    readonly Dictionary<Presenter, Live> live = [];
 
     public delegate Task Dispatch(Func<Task> work);
 
     public void Connect(Presenter presenter, Dispatch? dispatch = null) {
-        presenter.Connect(Add(presenter, dispatch));
-    }
-
-    public IDisposable Add(Presenter presenter, Dispatch? dispatch = null) {
-        var entry = dispatch ?? (work => work());
+        var entry = new Live(dispatch ?? (work => work()), new SemaphoreSlim(1, 1));
         lock (gate) {
-            if (!live.TryGetValue(presenter, out var dispatchers)) {
-                live[presenter] = dispatchers = [];
-            }
-            dispatchers.Add(entry);
+            live[presenter] = entry;
         }
-        return new Removal(this, presenter, entry);
+        presenter.Connect(() => Disconnect(presenter, entry));
     }
 
     public Task OnPublishedAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
-        (Presenter Presenter, Dispatch Dispatch)[] targets;
+        KeyValuePair<Presenter, Live>[] targets;
         lock (gate) {
-            targets = [.. live.Where(p => p.Key is IPresenterEvent<TEvent>).Select(p => (p.Key, p.Value[0]))];
+            targets = [.. live.Where(p => p.Key is IPresenterEvent<TEvent>)];
         }
-        foreach (var (presenter, dispatch) in targets) {
-            _ = Deliver((IPresenterEvent<TEvent>)presenter, presenter, dispatch, integrationEvent);
+        foreach (var target in targets) {
+            _ = Deliver(target.Key, target.Value, integrationEvent);
         }
         return Task.CompletedTask;
     }
 
-    async Task Deliver<TEvent>(IPresenterEvent<TEvent> target, Presenter presenter, Dispatch dispatch, TEvent integrationEvent)
-        where TEvent : IntegrationEvent {
+    async Task Deliver<TEvent>(Presenter presenter, Live entry, TEvent integrationEvent) where TEvent : IntegrationEvent {
         try {
-            await dispatch(async () => {
-                await presenter.Serial.WaitAsync();
+            await entry.Dispatch(async () => {
+                await entry.Gate.WaitAsync();
                 try {
-                    await target.OnEventAsync(integrationEvent, CancellationToken.None);
+                    await ((IPresenterEvent<TEvent>)presenter).OnEventAsync(integrationEvent, CancellationToken.None);
                 } finally {
-                    presenter.Serial.Release();
+                    entry.Gate.Release();
                 }
                 presenter.RaiseChanged();
             });
@@ -52,21 +44,13 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegratio
         }
     }
 
-    void Remove(Presenter presenter, Dispatch dispatch) {
+    void Disconnect(Presenter presenter, Live entry) {
         lock (gate) {
-            if (live.TryGetValue(presenter, out var dispatchers) && dispatchers.Remove(dispatch) && dispatchers.Count == 0) {
+            if (live.TryGetValue(presenter, out var current) && current == entry) {
                 live.Remove(presenter);
             }
         }
     }
 
-    sealed class Removal(LivePresenters owner, Presenter presenter, Dispatch dispatch) : IDisposable {
-        int disposed;
-
-        public void Dispose() {
-            if (Interlocked.Exchange(ref disposed, 1) == 0) {
-                owner.Remove(presenter, dispatch);
-            }
-        }
-    }
+    sealed record Live(Dispatch Dispatch, SemaphoreSlim Gate);
 }

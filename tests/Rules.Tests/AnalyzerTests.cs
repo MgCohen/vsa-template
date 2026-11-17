@@ -56,7 +56,7 @@ static class Analyzer {
             test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
         }
         Type[] layers = [typeof(Umpire.Messages.Contracts.IMessage), typeof(Umpire.Vsa.Contracts.Requests.IRequest<>), typeof(Umpire.Vsa.Contracts.Events.IntegrationEvent),
-            typeof(Umpire.Vsa.Handlers.Events.IntegrationEventHandler<>), typeof(Umpire.Vsa.Presenters.IBus), typeof(Umpire.Kernel.Module), typeof(Umpire.Vsa.Composition.Plugin),
+            typeof(Umpire.Vsa.Handlers.Events.IntegrationEventHandler<>), typeof(Umpire.Vsa.Contracts.Requests.IRequestSender), typeof(Umpire.Vsa.Presenters.Presenter), typeof(Umpire.Kernel.Module), typeof(Umpire.Vsa.Composition.Plugin),
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection), typeof(Umpire.Vsa.Handlers.Commands.CommandHandler<,>),
             typeof(Umpire.Messages.Handlers.IHandler), typeof(Umpire.Vsa.Contracts.Commands.ICommand),
             typeof(Umpire.Vsa.Vsa<>), typeof(Umpire.Architecture.Architecture)];
@@ -149,11 +149,11 @@ public sealed class EventHandlerRequestRuleTests {
         """);
 
     [Test]
-    public Task Event_handler_with_IBus_fails() => Analyzer.Verify(Types + """
-        sealed class DoneHandler(Umpire.Vsa.Presenters.IBus {|#0:bus|}) : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
+    public Task Event_handler_with_the_request_sender_fails() => Analyzer.Verify(Types + """
+        sealed class DoneHandler(Umpire.Vsa.Contracts.Requests.IRequestSender {|#0:requests|}) : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
             public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
         }
-        """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "IBus"));
+        """, Analyzer.Diagnostic(EventHandlerRequestRule.Descriptor, 0, "DoneHandler", "IRequestSender"));
 
     [Test]
     public Task Event_handler_that_makes_a_request_fails() => Analyzer.Verify(Types + """
@@ -174,8 +174,8 @@ public sealed class EventHandlerRequestRuleTests {
 
     [Test]
     public Task Other_class_that_sends_a_request_passes() => Analyzer.Verify(Types + """
-        sealed class Sender(Umpire.Vsa.Presenters.IBus bus) {
-            public Task<Umpire.Messages.Contracts.Result<Pong>> Send() => bus.Send(new Ping());
+        sealed class Sender(Umpire.Vsa.Contracts.Requests.IRequestSender requests) {
+            public Task<Umpire.Messages.Contracts.Result<Pong>> Send() => requests.SendAsync(new Ping());
         }
         """);
 }
@@ -188,14 +188,14 @@ public sealed class PresenterPublishRuleTests {
 
     [Test]
     public Task Presenter_that_shows_an_event_passes() => Analyzer.Verify(Types + """
-        sealed class DonePresenter(Umpire.Vsa.Presenters.IBus bus) : Umpire.Vsa.Presenters.Presenter(bus), Umpire.Vsa.Presenters.IPresenterEvent<Done> {
+        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests) : Umpire.Vsa.Presenters.Presenter(requests), Umpire.Vsa.Presenters.IPresenterEvent<Done> {
             public Task OnEventAsync(Done integrationEvent, CancellationToken ct) => Task.CompletedTask;
         }
         """);
 
     [Test]
     public Task Presenter_with_a_publisher_fails() => Analyzer.Verify(Types + """
-        sealed class DonePresenter(Umpire.Vsa.Presenters.IBus bus, Umpire.Vsa.Contracts.Events.IIntegrationEventPublisher {|#0:events|}) : Umpire.Vsa.Presenters.Presenter(bus) {
+        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests, Umpire.Vsa.Contracts.Events.IIntegrationEventPublisher {|#0:events|}) : Umpire.Vsa.Presenters.Presenter(requests) {
             public Task Finish() => {|#1:events.PublishAsync(new Done(), CancellationToken.None)|};
         }
         """, Analyzer.Diagnostic(PresenterPublishRule.Descriptor, 0, "DonePresenter", "IIntegrationEventPublisher"),
@@ -203,7 +203,7 @@ public sealed class PresenterPublishRuleTests {
 
     [Test]
     public Task Presenter_with_the_live_presenters_fails() => Analyzer.Verify(Types + """
-        sealed class DonePresenter(Umpire.Vsa.Presenters.IBus bus, Umpire.Vsa.Presenters.LivePresenters {|#0:views|}) : Umpire.Vsa.Presenters.Presenter(bus);
+        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests, Umpire.Vsa.Presenters.LivePresenters {|#0:views|}) : Umpire.Vsa.Presenters.Presenter(requests);
         """, Analyzer.Diagnostic(PresenterPublishRule.Descriptor, 0, "DonePresenter", "LivePresenters"));
 
     [Test]

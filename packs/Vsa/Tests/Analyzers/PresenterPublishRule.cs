@@ -7,7 +7,7 @@ public sealed class PresenterPublishRule() : ForbiddenUseRule(Descriptor) {
     public static readonly DiagnosticDescriptor Descriptor = new(
         "UMP010204",
         "Presenters do not publish events",
-        "Presenter {0} uses {1}. A presenter does not publish events. Send a request with IBus, and publish the event in its handler.",
+        "Presenter {0} uses {1}. A presenter does not publish events. Send a request with IRequestSender, and publish the event in its handler.",
         "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);

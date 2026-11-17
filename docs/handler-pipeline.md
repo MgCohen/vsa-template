@@ -1,6 +1,6 @@
 # The handler pipeline
 
-Each message (a command, a request or an event) goes through a pipeline on its way to its handler. Call sites send as before: `ICommandSender.SendAsync`, `IIntegrationEventPublisher.PublishAsync`, `IBus.Send`, or HTTP on the web host. The pipeline decides when the message runs, and what runs before and after the handler. An app that defines nothing gets the default pipelines: they run each message at once, with no steps.
+Each message (a command, a request or an event) goes through a pipeline on its way to its handler. Call sites send as before: `ICommandSender.SendAsync`, `IIntegrationEventPublisher.PublishAsync`, `IRequestSender.SendAsync`, or HTTP on the web host. The pipeline decides when the message runs, and what runs before and after the handler. An app that defines nothing gets the default pipelines: they run each message at once, with no steps.
 
 ## One run
 
@@ -124,7 +124,7 @@ public sealed class ArenaModule : Module {
 | `.Runner<TRunner>()` | The runner. Default: `InlineRunner` |
 | `.BeforeStep<T>()`, `.AfterStep<T>()` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep`. Add each step one time |
 | `.Build(services)` | A new `Pipeline` with its own runner. `pipeline.SendAsync<TResult>(message)` runs a message of `TMessage` on it, and a message of another type fails. Keep the builder to build more instances, for example one for each match |
-| `services.AddPipeline(builder)` | The app instance: `ICommandSender`, `IBus` and the publisher send each message of `TMessage` to it, if the handler bases of the builder select it |
+| `services.AddPipeline(builder)` | The app instance: `ICommandSender`, `IRequestSender` and the publisher send each message of `TMessage` to it, if the handler bases of the builder select it |
 
 The handler bases select the pipeline. Each sender gives the handler base of its kind, for example `typeof(CommandHandler<,>)`. A send goes to the pipeline that:
 
