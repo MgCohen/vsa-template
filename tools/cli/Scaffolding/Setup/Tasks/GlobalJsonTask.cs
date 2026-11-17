@@ -12,7 +12,6 @@ sealed class GlobalJsonTask : SetupTask {
 
     public override string Id => "global-json";
 
-
     public override SetupResult Plan(SetupContext context) {
         if (context.Read(FileName) is not string text) {
             return new SetupResult.Change(new TextFile(FileName, New(context)));

@@ -9,7 +9,6 @@ sealed class NugetConfigTask : SetupTask {
 
     public override string Id => "nuget-config";
 
-
     public override SetupResult Plan(SetupContext context) {
         var template = Templates.SetupFile(FileName, context.Version);
         if (context.Read(FileName) is not string text) {

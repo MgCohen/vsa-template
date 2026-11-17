@@ -7,7 +7,6 @@ sealed class GitIgnoreTask : SetupTask {
 
     public override string Id => "git-ignore";
 
-
     public override SetupResult Plan(SetupContext context) {
         var template = Templates.SetupFile(FileName, context.Version);
         if (context.Read(FileName) is not string text) {

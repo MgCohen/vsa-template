@@ -9,7 +9,6 @@ sealed class UmpireConfigTask : SetupTask {
 
     public override string Id => "umpire-config";
 
-
     public override SetupResult Plan(SetupContext context) =>
         context.Read(FileName) is not null || Projects(context) < 2
             ? new SetupResult.Done()

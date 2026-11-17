@@ -11,7 +11,6 @@ sealed partial class UmpireSdkTask : SetupTask {
 
     public override string Id => "umpire-sdk";
 
-
     public override SetupResult Plan(SetupContext context) {
         var project = context.RootProject;
         var version = context.Version;
