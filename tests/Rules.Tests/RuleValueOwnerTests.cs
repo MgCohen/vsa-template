@@ -45,11 +45,11 @@ public sealed partial class RuleValueOwnerTests {
 
     [Test]
     public void Umpire_Sdk_ships_no_style_file() =>
-        Assert.That(Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"), "*.globalconfig"), Is.Empty);
+        Assert.That(SdkFiles().Where(file => file.EndsWith(".globalconfig", StringComparison.Ordinal)), Is.Empty);
 
     [Test]
     public void The_general_build_files_name_no_pack_package() {
-        var lines = Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"))
+        var lines = SdkFiles()
             .Where(file => Path.GetExtension(file) is ".props" or ".targets")
             .SelectMany(file => File.ReadAllLines(file)
                 .Where(line => line.Contains("Umpire.Vsa", StringComparison.Ordinal))
@@ -60,7 +60,7 @@ public sealed partial class RuleValueOwnerTests {
 
     [Test]
     public void The_general_build_files_name_no_analyzer_rule() {
-        var lines = Directory.EnumerateFiles(Repo.Path("tools", "sdk", "Sdk"))
+        var lines = SdkFiles()
             .SelectMany(file => File.ReadAllLines(file)
                 .Where(line => AnalyzerRuleCode().IsMatch(line))
                 .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));
@@ -89,11 +89,15 @@ public sealed partial class RuleValueOwnerTests {
         analyzer.Rules.Any(rule => rule.RequiredOptions.Any(option => Key(rule, option) == key))
         || analyzer.Rules.Any(rule => key == $"dotnet_diagnostic.{rule.Id}.severity");
 
+    static IEnumerable<string> SdkFiles() =>
+        new[] { Repo.Path("tools", "sdk", "Sdk"), Repo.Path("tools", "sdk", "Web", "Sdk") }
+            .SelectMany(Directory.EnumerateFiles);
+
     static string Plain(string name) => name.Replace("_", "", StringComparison.Ordinal).ToUpperInvariant();
 
     [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP)")]
     private static partial Regex UmpireKey();
 
-    [GeneratedRegex(@"UMP01\d{4}")]
+    [GeneratedRegex(@"UMP01(?!00)\d{4}")]
     private static partial Regex AnalyzerRuleCode();
 }

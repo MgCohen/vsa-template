@@ -1,7 +1,7 @@
 # The values of the rules of Umpire.Kernel.Analyzers (UMP0101xx). This file is the only place of these values: no rule has a default.
 # The package ships this file, and its build props give it to each project that references the package.
 # If a value is missing or not valid, the build reports UMP010001, and that rule does not run.
-# A consumer changes a value in its own .editorconfig. Severity uses the standard key: dotnet_diagnostic.UMP010101.severity = none
+# A consumer changes a value in the .umpireconfig file of its block. Severity uses the standard key: dotnet_diagnostic.UMP010101.severity = none
 # Keys: umpire.<rule ID>.<key> for one rule, umpire.<key> for all rules that read the key. A rule key wins.
 # In a list, write a comma between the items: a semicolon starts a comment.
 is_global = true

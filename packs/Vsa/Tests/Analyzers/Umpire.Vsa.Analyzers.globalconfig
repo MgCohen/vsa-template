@@ -1,7 +1,7 @@
 # The values and the disabled severities of the rules of Umpire.Vsa.Analyzers (UMP0102xx). This file is the only place of these
 # values: no rule has a default. The package ships this file, and its build props give it to each project that references the package.
 # If a value is missing or not valid, the build reports UMP010001, and that rule does not run.
-# A consumer changes a value or a severity in its own .editorconfig. Keys: umpire.<rule ID>.<key> for one rule.
+# A consumer changes a value or a severity in the .umpireconfig file of its block. Keys: umpire.<rule ID>.<key> for one rule.
 # In a list, write a comma between the items: a semicolon starts a comment.
 is_global = true
 global_level = -1
@@ -14,7 +14,7 @@ umpire.UMP010201.check_responses = true
 umpire.UMP010207.allowed_bases =
 
 # Disabled rules: the design is not clear, so they wait for the review in issue #143 before 0.1.0.
-# The list is the table "Disabled rules" in docs/architecture-rules.md. A consumer can turn a rule on in its own .editorconfig.
+# The list is the table "Disabled rules" in docs/architecture-rules.md. A consumer can turn a rule on in the .umpireconfig file of its block.
 dotnet_diagnostic.UMP010203.severity = none
 dotnet_diagnostic.UMP010205.severity = none
 dotnet_diagnostic.UMP010206.severity = none

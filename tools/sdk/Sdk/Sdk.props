@@ -1,18 +1,13 @@
 <Project>
-  <!-- Umpire.Sdk: the .NET SDK, the Umpire packages, the analyzers and the rule values. A project is one line: <Project Sdk="Umpire.Sdk" />. -->
+  <!-- Umpire.Sdk: the .NET SDK, the Umpire packages, the analyzers and the rule values. A project is one line:
+       <Project Sdk="Umpire.Sdk/<version>" />. A web app uses Umpire.Sdk.Web. -->
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Sdk.Output.props" />
 
-  <!-- A web app uses <Project Sdk="Microsoft.NET.Sdk.Web"> with <Sdk Name="Umpire.Sdk" />. That SDK imports the .NET SDK, so Umpire.Sdk does not. -->
+  <!-- Source mode in this repository: a project of Microsoft.NET.Sdk or Microsoft.NET.Sdk.Web imports this file after its SDK,
+       so Umpire.Sdk does not import the .NET SDK a second time. -->
   <PropertyGroup Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
     <_UmpireImportsNetSdk>true</_UmpireImportsNetSdk>
   </PropertyGroup>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="'$(_UmpireImportsNetSdk)' == 'true'" />
-  <Import Project="$(MSBuildThisFileDirectory)Umpire.Version.props" Condition="Exists('$(MSBuildThisFileDirectory)Umpire.Version.props')" />
-
-  <PropertyGroup>
-    <UsingUmpireSdk>true</UsingUmpireSdk>
-    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Sdk.Core.props" />
 </Project>

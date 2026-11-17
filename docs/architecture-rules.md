@@ -25,6 +25,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
 | `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Vsa.Analyzers.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
 | `UMP010001` | Analyzers | Each option of each running VSA rule is in the config, with a valid value. |
+| `UMP010002` | Build (warning) | The `.umpireconfig` file has no section. The analyzers read only the keys above the first section. |
 | `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
 | `UMP010102` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
 | `UMP010103` | Analyzers | A file has at most `max` lines. Formatting, warning. |
@@ -47,7 +48,7 @@ Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). A
 
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. The globalconfig file of its analyzer package sets the severity of each one to `none`, and `RuleAnalyzer` does not run a rule with severity `none`. The code and the tests of each rule stay. A consumer can turn a rule on in its own `.editorconfig`.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. The globalconfig file of its analyzer package sets the severity of each one to `none`, and `RuleAnalyzer` does not run a rule with severity `none`. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block.
 
 | Code | Class | Why disabled | Issue |
 |---|---|---|---|
@@ -121,7 +122,7 @@ Each analyzer package holds `build/<PackageId>.globalconfig` and `build/<Package
 
 Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer and its rule values, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 
-A rule lists its options in `RequiredOptions`. At the start of a compilation, `RuleAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in its own `.editorconfig`.
+A rule lists its options in `RequiredOptions`. At the start of a compilation, `RuleAnalyzer` checks each one in the global config. If an option is missing or not valid, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
 
 ## Formatting rules
 

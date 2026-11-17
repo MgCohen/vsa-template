@@ -14,11 +14,10 @@
   <PropertyGroup>
     <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true'">net10.0</TargetFramework>
     <TargetFrameworks Condition="'$(UmpirePortableLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+  <!-- The general build settings of each Umpire project: the same file as in Umpire.Sdk. -->
+  <Import Project="$(MSBuildThisFileDirectory)tools/sdk/Sdk/Umpire.Common.props" />
 
   <!-- All Umpire packages ship together with one version. -->
   <PropertyGroup>

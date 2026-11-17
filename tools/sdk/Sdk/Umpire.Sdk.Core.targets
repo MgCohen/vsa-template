@@ -1,0 +1,132 @@
+<Project>
+  <!-- The Umpire part of Umpire.Sdk and Umpire.Sdk.Web, after the targets of the platform SDK. -->
+  <!-- An app has one root project in the app root. It compiles each file in its folder tree. A nested project is optional,
+       for example a test project or a separate assembly. The parent project does not compile the files of a nested project,
+       so no file compiles two times. The build output of each project (bin/, obj/) and the folders in UmpireExcludedFolders
+       (for example Assets/ of a Unity project) are not source folders. -->
+  <PropertyGroup>
+    <UmpireExcludedFolders Condition="'$(UmpireExcludedFolders)' == ''">Assets;Library;Temp;Logs;UserSettings;node_modules</UmpireExcludedFolders>
+    <_UmpireNotSource>**/bin/**;**/obj/**;$([MSBuild]::Unescape($(UmpireExcludedFolders.Replace(';', '/**;'))))/**</_UmpireNotSource>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(_UmpireNotSource)</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <_UmpireNestedProject Include="**/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource)" />
+    <Compile Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
+    <Content Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
+    <None Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
+    <EmbeddedResource Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
+  </ItemGroup>
+
+  <!-- The general packages that each app needs, with no layer. The pack of the app adds its own packages (Umpire.Pack.targets).
+       Path is the project folder under the repository root in source mode. An Analyzer item is a Roslyn analyzer, not a library. -->
+  <ItemDefinitionGroup>
+    <_UmpireFramework>
+      <Analyzer>false</Analyzer>
+    </_UmpireFramework>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <_UmpireFramework Include="Umpire.Kernel" Path="framework/Kernel" />
+    <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
+    <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
+    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
+  </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Pack.targets" />
+
+  <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set. -->
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
+    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
+    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <EditorConfigFiles Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).globalconfig')" />
+  </ItemGroup>
+
+  <!-- Package mode (consumers): package references with the version of this SDK.
+       With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
+       A Umpire.* package that the project adds itself, for example a web host of the pack, gives its own version. The rule engine checks it (UMP030201). -->
+  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
+    <_UmpireV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireVersion)</_UmpireV>
+    <_UmpireVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireVersion)</_UmpireVO>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
+    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The root project of the app gets the rule engine: an executable that is not a test project. UmpireEngine=false turns it off.
+       A project that references Umpire.Engine.Build itself keeps its own reference. -->
+  <PropertyGroup Condition="'$(UmpireEngine)' == ''">
+    <UmpireEngine>false</UmpireEngine>
+    <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests'))">true</UmpireEngine>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngine)' == 'true'">
+    <PackageReference Include="Umpire.Engine.Build" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all"
+                      Condition="'@(PackageReference->WithMetadataValue('Identity', 'Umpire.Engine.Build')->Count())' == '0'" />
+  </ItemGroup>
+
+  <!-- A test project (UmpireTestProject, Umpire.Sdk.Core.props) gets NUnit and the test bases of the pack.
+       It references the projects that it tests itself. -->
+  <PropertyGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' == ''">
+    <_UmpireNUnitV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireNUnitVersion)</_UmpireNUnitV>
+    <_UmpireNUnitVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireNUnitVersion)</_UmpireNUnitVO>
+    <_UmpireNUnitAdapterV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireNUnitAdapterVersion)</_UmpireNUnitAdapterV>
+    <_UmpireNUnitAdapterVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireNUnitAdapterVersion)</_UmpireNUnitAdapterVO>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireTestProject)' == 'true'">
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' == ''">
+    <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
+    <PackageReference Include="Umpire.$(UmpirePack).Testing.Unit" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+  </ItemGroup>
+
+  <!-- The rule values of the block: the top-level keys of the .umpireconfig file in the block root (UmpireConfigFile,
+       Umpire.Sdk.Output.props). The analyzers read a rule value only from a global config, so a copy in obj/ starts with
+       is_global = true. A global config has no section for a file pattern, so the copy stops at the first section, and the
+       build gives UMP010002. global_level = 101 is above the analyzer packages (0) and a .globalconfig file of the app (100),
+       so a value in .umpireconfig wins. -->
+  <Target Name="_UmpireBlockConfig" BeforeTargets="CoreCompile" DependsOnTargets="_UmpireBlockConfigFile"
+          Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_UmpireBlockConfigCopy)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_UmpireBlockConfigFile" Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
+    <PropertyGroup>
+      <_UmpireBlockConfigCopy>$(IntermediateOutputPath)Umpire.Block.globalconfig</_UmpireBlockConfigCopy>
+    </PropertyGroup>
+    <PropertyGroup>
+      <_UmpireBlockConfigText>$([System.IO.File]::ReadAllText('$(UmpireConfigFile)'))</_UmpireBlockConfigText>
+      <_UmpireBlockConfigHasSection>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireBlockConfigText)', '(?m)^[ \t]*\['))</_UmpireBlockConfigHasSection>
+      <_UmpireBlockConfigTop>$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireBlockConfigText)', '(?ms)^[ \t]*\[.*', ''))</_UmpireBlockConfigTop>
+    </PropertyGroup>
+    <Warning Condition="'$(_UmpireBlockConfigHasSection)' == 'True'" Code="UMP010002" File="$(UmpireConfigFile)"
+             Text="The .umpireconfig file has a section, for example [*.cs]. The analyzers read only the keys above the first section, so the keys in a section have no effect. Move each key above the first section, and remove the section." />
+    <WriteLinesToFile File="$(_UmpireBlockConfigCopy)" Lines="is_global = true;global_level = 101;$([MSBuild]::Escape('$(_UmpireBlockConfigTop)'))"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Include="$(MSBuildThisFileDirectory)../Polyfills/*.cs" Visible="false" />
+  </ItemGroup>
+
+  <!-- EF Core writes the files in Infrastructure/Migrations/, so they are generated code: the style rules do not check them.
+       EF does not mark each file as generated, so a global config in obj/ marks each one (generated_code = true). -->
+  <Target Name="_UmpireGeneratedMigrations" BeforeTargets="CoreCompile" DependsOnTargets="_UmpireMigrationConfig">
+    <ItemGroup>
+      <EditorConfigFiles Include="$(_UmpireMigrationConfig)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_UmpireMigrationConfig">
+    <PropertyGroup>
+      <_UmpireMigrationConfig>$(IntermediateOutputPath)Umpire.Migrations.globalconfig</_UmpireMigrationConfig>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireMigration Include="@(Compile->'%(FullPath)')" Condition="$([System.String]::Copy('%(Compile.FullPath)').Replace('\', '/').Contains('/Infrastructure/Migrations/'))" />
+      <_UmpireMigrationLine Include="is_global = true" />
+      <_UmpireMigrationLine Include="@(_UmpireMigration->'[%(FullPath)]%0Agenerated_code = true'->Replace('\', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_UmpireMigrationConfig)" Lines="@(_UmpireMigrationLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+</Project>
