@@ -1,6 +1,6 @@
 namespace Umpire.Cli.Scaffolding.Setup;
 
-abstract class SetupStep {
+abstract class SetupTask {
     public abstract string Id { get; }
 
     public abstract IReadOnlyList<string> Files(SetupContext context);

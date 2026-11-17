@@ -1,9 +1,9 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
 using System.Text.Json.Nodes;
 using Umpire.Engine.Versions;
 
-sealed class ToolManifestStep : SetupStep {
+sealed class ToolManifestTask : SetupTask {
     public const string FileName = "dotnet-tools.json";
     public const string InConfigFolder = ".config/dotnet-tools.json";
     const string ToolsKey = "tools";

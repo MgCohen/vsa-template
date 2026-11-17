@@ -10,7 +10,7 @@ sealed class AddPluginCommand : AddCommand {
 
     protected override string Noun => "plugin";
 
-    protected override Templates.Kind Kind => Templates.Kind.Plugin;
+    protected override TemplateGroup Group => TemplateGroup.Plugin;
 
     protected override void CheckFree(string block, string name) =>
         ModuleFolder.EnsureFree(block, name, ModuleKind.Plugin);

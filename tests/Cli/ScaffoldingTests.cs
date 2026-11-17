@@ -60,9 +60,9 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void EachTemplateFileHasOneCommand() {
-        const Templates.Kind App = Templates.Kind.App, Module = Templates.Kind.Module, Request = Templates.Kind.Request, Command = Templates.Kind.Command,
-            Plugin = Templates.Kind.Plugin, Pack = Templates.Kind.Pack, Setup = Templates.Kind.Setup;
-        (string, Templates.Kind)[] expected = [
+        const TemplateGroup App = TemplateGroup.App, Module = TemplateGroup.Module, Request = TemplateGroup.Request, Command = TemplateGroup.Command,
+            Plugin = TemplateGroup.Plugin, Pack = TemplateGroup.Pack, Setup = TemplateGroup.Setup;
+        (string, TemplateGroup)[] expected = [
             (".gitignore.template", Setup),
             ("AGENTS.md.template", App),
             ("App/Host/Program.cs", App),
@@ -103,7 +103,7 @@ public sealed class ScaffoldingTests {
             ("nuget.config.template", Setup),
         ];
 
-        Assert.That(Templates.All().Select(path => (path, Templates.KindOf(path))), Is.EqualTo(expected));
+        Assert.That(Templates.All().Select(path => (path, Templates.GroupOf(path))), Is.EqualTo(expected));
     }
 
     [Test]
@@ -120,7 +120,7 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewAppHasTheAppFilesOnly() {
-        var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
+        var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
         var paths = files.Select(f => f.Path).ToList();
 
         Assert.That(paths, Does.Contain("AGENTS.md"));
@@ -170,7 +170,7 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewAppHasOneRootProjectWithTheWebSdkAndVsaSdk() {
-        var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
+        var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
         var projects = files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Path).Order(StringComparer.Ordinal);
 
         Assert.That(projects, Is.EqualTo(["Hello.csproj", "Tests/App.Tests.csproj"]));
@@ -213,7 +213,7 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewModuleHasAUnitTest() {
-        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "Billing", [Templates.App] = "Shop" }, Version);
+        var files = Templates.Files(TemplateGroup.Module, new Dictionary<string, string> { [Templates.Module] = "Billing", [Templates.App] = "Shop" }, Version);
         var test = files.Single(f => f.Path == "Tests/BillingStatusTests.cs").Content;
 
         Assert.That(test, Does.Contain("using Shop.Features.Billing.Slices.GetStatus;"));
@@ -222,7 +222,7 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void AppProjectsUsePackagesWithTheToolVersion() {
-        var files = Templates.Files(Templates.Kind.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
+        var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
         var root = files.Single(f => f.Path == "Hello.csproj").Content;
         Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Vsa.Hosts.Web\" Version=\"{Version}\" />"));
@@ -232,7 +232,7 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void NewModuleHasNoProjectAndAPage() {
-        var files = Templates.Files(Templates.Kind.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory", [Templates.App] = "Shop" }, Version);
+        var files = Templates.Files(TemplateGroup.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory", [Templates.App] = "Shop" }, Version);
 
         Assert.That(files.Select(f => f.Path), Has.None.EndsWith(".csproj"));
         Assert.That(files.Single(f => f.Path == "Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory;"));
@@ -244,7 +244,7 @@ public sealed class ScaffoldingTests {
     [Test]
     public void NewRequestHasRequestResponseAndHandler() {
         var names = new Dictionary<string, string> { [Templates.Request] = "CreateInvoice", [Templates.Module] = "Billing", [Templates.App] = "Shop" };
-        var files = Templates.Files(Templates.Kind.Request, names, Version);
+        var files = Templates.Files(TemplateGroup.Request, names, Version);
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
@@ -259,7 +259,7 @@ public sealed class ScaffoldingTests {
     [Test]
     public void NewCommandHasCommandResultAndHandler() {
         var names = new Dictionary<string, string> { [Templates.Command] = "ChangeLimit", [Templates.Module] = "Billing", [Templates.App] = "Shop" };
-        var files = Templates.Files(Templates.Kind.Command, names, Version);
+        var files = Templates.Files(TemplateGroup.Command, names, Version);
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),

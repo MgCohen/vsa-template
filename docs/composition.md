@@ -233,7 +233,7 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 | No type argument fits | The open class gets no closed type. A send of that command fails with "has no handler". |
 | Owner | A layer registration can register a class first, for example a presenter with a factory. The core step does not replace it. |
 
-`AppTypes` is a singleton service. `Implementations(typeof(TBase))` gives a `Registration(Service, Implementation)` for each registered type that derives from `TBase`, with that base as the service. A plugin reads its own types with it.
+`AppTypes` is a singleton service. `Implementations(typeof(TBase))` gives a `ServiceImplementation(Service, Implementation)` for each registered type that derives from `TBase`, with that base as the service. A plugin reads its own types with it.
 
 The type argument source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, override `Keys()` in the app class:
 
@@ -296,7 +296,7 @@ framework/Kernel/                      Umpire.Kernel
   Modules/                             Module, Module<TSettings>, the settings
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
   Hosting/                             AppHost, the core step (AutoRegistration, ComposedConfiguration)
-  Scan/                                AppTypes, ModuleRoot, Registration, IKeySource, ConstraintKeys, MarkedTypes
+  Scan/                                AppTypes, ModuleRoot, ServiceImplementation, IKeySource, ConstraintKeys, MarkedTypes
   Factories/                           IFactory<T>, AddFactory
 architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/

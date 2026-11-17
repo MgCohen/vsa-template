@@ -24,12 +24,12 @@ static partial class Templates {
     ];
 
     public static IReadOnlyList<TemplateFile> Files(
-        Kind kind,
+        TemplateGroup group,
         IReadOnlyDictionary<string, string> names,
         string version) {
         var assembly = typeof(Templates).Assembly;
         var files = new List<TemplateFile>();
-        foreach (var resource in Resources().Where(resource => KindOf(PathOf(resource)) == kind)) {
+        foreach (var resource in Resources().Where(resource => GroupOf(PathOf(resource)) == group)) {
             var path = PathOf(resource);
             using var reader = new StreamReader(assembly.GetManifestResourceStream(resource)!);
             var content = reader.ReadToEnd()
@@ -47,18 +47,18 @@ static partial class Templates {
     }
 
     public static string SetupFile(string path, string version) =>
-        Files(Kind.Setup, new Dictionary<string, string>(), version).Single(file => file.Path == path).Content;
+        Files(TemplateGroup.Setup, new Dictionary<string, string>(), version).Single(file => file.Path == path).Content;
 
-    public static Kind KindOf(string pathInTemplates) {
+    public static TemplateGroup GroupOf(string pathInTemplates) {
         var inModuleFolder = pathInTemplates.StartsWith($"Features/{Module}/", StringComparison.Ordinal)
             || Path.GetFileName(pathInTemplates).Contains(Module, StringComparison.Ordinal);
-        return pathInTemplates.Contains(Request, StringComparison.Ordinal) ? Kind.Request
-            : pathInTemplates.Contains(Command, StringComparison.Ordinal) ? Kind.Command
-            : pathInTemplates.Contains(Plugin, StringComparison.Ordinal) ? Kind.Plugin
-            : pathInTemplates.Contains(Pack, StringComparison.Ordinal) ? Kind.Pack
-            : inModuleFolder ? Kind.Module
-            : SetupTemplates.Contains(pathInTemplates) ? Kind.Setup
-            : Kind.App;
+        return pathInTemplates.Contains(Request, StringComparison.Ordinal) ? TemplateGroup.Request
+            : pathInTemplates.Contains(Command, StringComparison.Ordinal) ? TemplateGroup.Command
+            : pathInTemplates.Contains(Plugin, StringComparison.Ordinal) ? TemplateGroup.Plugin
+            : pathInTemplates.Contains(Pack, StringComparison.Ordinal) ? TemplateGroup.Pack
+            : inModuleFolder ? TemplateGroup.Module
+            : SetupTemplates.Contains(pathInTemplates) ? TemplateGroup.Setup
+            : TemplateGroup.App;
     }
 
     public static IEnumerable<string> All() => Resources().Select(PathOf);
@@ -105,5 +105,4 @@ static partial class Templates {
     [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex SourceReference();
 
-    public enum Kind { App, Setup, Module, Request, Command, Plugin, Pack }
 }

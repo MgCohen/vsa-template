@@ -9,18 +9,18 @@ sealed record Exposure(IType Target, Access Access, string Member);
 static class Exposures {
     static readonly Dictionary<string, GenericArgument> NoArguments = [];
 
-    public static IEnumerable<Exposure> Of(IType type, Func<IType, bool> isFramework) {
+    public static IEnumerable<Exposure> Of(IType type, Func<IType, bool> isExternalPartType) {
         var typeAccess = AccessOf(type.Visibility);
-        var frameworkInterfaces = new List<ImplementedInterface>();
+        var externalInterfaces = new List<ImplementedInterface>();
         foreach (var dependency in type.Dependencies) {
             if (dependency is not (InheritsBaseClassDependency or ImplementsInterfaceDependency)) {
                 continue;
             }
             var arguments = (dependency as ITypeDependency)?.TargetGenericArguments.ToList() ?? [];
-            if (isFramework(dependency.Target)) {
+            if (isExternalPartType(dependency.Target)) {
                 if (dependency is ImplementsInterfaceDependency) {
                     var byParameter = ArgumentsByParameter(dependency.Target, arguments);
-                    frameworkInterfaces.Add(new ImplementedInterface(dependency.Target, byParameter));
+                    externalInterfaces.Add(new ImplementedInterface(dependency.Target, byParameter));
                 }
                 continue;
             }
@@ -28,7 +28,7 @@ static class Exposures {
                 yield return new Exposure(target, typeAccess, "base type");
             }
         }
-        var members = type.Members.Where(m => !m.IsCompilerGenerated && !frameworkInterfaces.Any(f => Implements(m, f)));
+        var members = type.Members.Where(m => !m.IsCompilerGenerated && !externalInterfaces.Any(f => Implements(m, f)));
         foreach (var member in members) {
             var access = typeAccess.Narrowest(AccessOf(member.Visibility));
             foreach (var target in SignatureTypes(member)) {

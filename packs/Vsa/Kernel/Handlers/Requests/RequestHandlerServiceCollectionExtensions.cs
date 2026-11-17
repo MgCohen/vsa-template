@@ -13,7 +13,7 @@ public static class RequestHandlerServiceCollectionExtensions {
         return services;
     }
 
-    static void EnsureOneHandlerForEachRequest(IReadOnlyList<Registration> handlers) {
+    static void EnsureOneHandlerForEachRequest(IReadOnlyList<ServiceImplementation> handlers) {
         foreach (var request in handlers.GroupBy(h => h.Service).Where(g => g.Count() > 1)) {
             var names = request.Select(h => h.Implementation.FullName).ToArray();
             throw new InvalidOperationException(

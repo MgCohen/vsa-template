@@ -8,9 +8,9 @@ using Umpire.Vsa.Handlers.Commands;
 using Umpire.Kernel;
 
 public sealed class ConsoleVsaHost : VsaHost {
-    public override int Run(IHost app) {
-        var exit = app.Services.GetRequiredService<ConsoleExit>();
-        app.Run();
+    public override int Run() {
+        var exit = Built.Services.GetRequiredService<ConsoleExit>();
+        Built.Run();
         return exit.Code;
     }
 

@@ -13,7 +13,7 @@ sealed class AddPackCommand : AddCommand {
 
     protected override string Noun => "pack";
 
-    protected override Templates.Kind Kind => Templates.Kind.Pack;
+    protected override TemplateGroup Group => TemplateGroup.Pack;
 
     protected override void CheckFree(string block, string name) {
         if (name == RootProject.Name(block)) {

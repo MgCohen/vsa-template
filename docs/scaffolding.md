@@ -9,7 +9,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Command | Writes | Edits |
 |---|---|---|
 | `new app <Name>` | The root project `<Name>.csproj`, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/`, then the setup files of `init` | None |
-| `init [--source <feed>] [--check true]` | Each missing setup file | Each setup file that has no Umpire setup: it adds the missing entry, element or line. See "Setup pipeline" |
+| `init [--source <feed>] [--check true]` | Each missing setup file | Each setup file that has no Umpire setup: it adds the missing entry, element or line. See "Setup tasks" |
 | `add module <Name>` | Module root, published domain, status request, presenter, page, unit test | None |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler | None |
@@ -46,7 +46,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
 └─ AppCommand                    finds the block folder, then Run(root, CommandInput)
    ├─ DoctorCommand              umpire doctor
    ├─ UpdateCommand              umpire update [--version <version>]
-   └─ AddCommand                 checks the name, writes the template files of one Templates.Kind
+   └─ AddCommand                 checks the name, writes the template files of one TemplateGroup
       ├─ AddModuleCommand        umpire add module <Name>
       ├─ AddPluginCommand        umpire add plugin <Name>
       ├─ AddPackCommand          umpire add pack <Name>
@@ -59,7 +59,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
 |---|---|---|
 | A command outside an app | `ToolCommand` | `Words`, `Summary`, `Run` |
 | A command in an app | `AppCommand` | `Words`, `Summary`, `Run(root, input)` |
-| A command that writes template files | `AddCommand` | `Noun`, `Kind`, `TemplateNames`, `Heading`. Optional: `ForbiddenSuffixes`, `CheckFree`, `NextStep` |
+| A command that writes template files | `AddCommand` | `Noun`, `Group`, `TemplateNames`, `Heading`. Optional: `ForbiddenSuffixes`, `CheckFree`, `NextStep` |
 | A slice kind with the shape of a request or a command | No class | A new `SliceKind` value in `SliceKind.All` |
 
 To add a command:
@@ -143,25 +143,25 @@ The rule engine checks the architecture after each build of the host (see [archi
 </ItemGroup>
 ```
 
-The templates build in source mode, so the template `.csproj` does not have this line. The setup step `build-package` adds it to the root project. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
+The templates build in source mode, so the template `.csproj` does not have this line. The setup task `build-package` adds it to the root project. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
 
-## Setup pipeline
+## Setup tasks
 
-`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` writes its app files, then runs the same pipeline. The pipeline is the list `SetupPipeline.Default` in `tools/cli/Scaffolding/Setup/`, with one class for each step in `Steps/`.
+`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` writes its app files, then runs the same setup tasks. The tasks are the list `SetupTasks.Default` in `tools/cli/Scaffolding/Setup/`, with one class for each task in `Tasks/`.
 
 ```
 umpire init                          umpire new app <Name>
    │                                     ├─ the app files (root project, App/, Tests/, slnx, AGENTS.md)
    ▼                                     ▼
-SetupPipeline.Plan ──► each step: Done | Change(file, content) | ByHand(message)
-   ├─ show each step, with the message of each by-hand step
-   ├─ --check true: write nothing, exit 1 if a step is not done
-   ├─ write each change ("created" or "changed"), then list the by-hand steps
+SetupTasks.Plan ──► each task: Done | Change(file, content) | ByHand(message)
+   ├─ show each task, with the message of each by-hand task
+   ├─ --check true: write nothing, exit 1 if a task is not done
+   ├─ write each change ("created" or "changed"), then list the by-hand tasks
    ├─ dotnet tool restore, if the tool manifest changed
-   └─ exit 1 if a by-hand step is left
+   └─ exit 1 if a by-hand task is left
 ```
 
-| Step | File | Done when | No file | A file without the setup | By hand |
+| Task | File | Done when | No file | A file without the setup | By hand |
 |---|---|---|---|---|---|
 | `global-json` | `global.json` | `msbuild-sdks` has `Umpire.Sdk` | The template | Adds `msbuild-sdks` → `Umpire.Sdk` | Another version (`umpire update`), comments |
 | `nuget-config` | `nuget.config` | A source has the key `umpire`. With `--source`: each source path is a source | The template | Adds the `umpire` source and its credentials. With `--source`: each missing source, with a free key | Not valid XML |
@@ -171,16 +171,16 @@ SetupPipeline.Plan ──► each step: Done | Change(file, content) | ByHand(me
 | `umpire-sdk` | The root project | `Umpire.Sdk` is in `Sdk` or in an `<Sdk>` element | Not possible | Adds `<Sdk Name="Umpire.Sdk" />` | Not valid XML |
 | `build-package` | The root project | A `PackageReference` to `Umpire.Engine.Build` | Not possible | Adds the package, with the tool version | Central package versions (`ManagePackageVersionsCentrally` in the project, `Directory.Packages.props` or `Directory.Build.props`, in the block or the nearest parent folder) |
 
-Rules of a step:
+Rules of a task:
 
-1. A step only plans. The pipeline writes all changes after all steps.
-2. A step adds. It does not remove, reorder or change a value of the app.
-3. A conflict is a by-hand step, with the fix in its message.
+1. A task only plans. The tool writes all changes after all tasks.
+2. A task adds. It does not remove, reorder or change a value of the app.
+3. A conflict is a by-hand task, with the fix in its message.
 4. A changed file keeps its byte order mark and the line ending of each line. A new line gets the most frequent line ending of the file.
 5. A new XML element gets the indent of the first child element of the file.
-6. A changed JSON file keeps its indent, but the tool writes all of the JSON again in the indented form. So a JSON file with comments is a by-hand step.
-7. Two steps can change one file. A step plans on the planned content of the steps before it.
-8. A second run of `init` gives "done" for each step.
+6. A changed JSON file keeps its indent, but the tool writes all of the JSON again in the indented form. So a JSON file with comments is a by-hand task.
+7. Two tasks can change one file. A task plans on the planned content of the tasks before it.
+8. A second run of `init` gives "done" for each task.
 
 `init` needs exactly one `.csproj` in the current folder: the root project. It writes only in that folder. A file in a parent folder stays, and the new file does not hide it:
 
@@ -191,15 +191,15 @@ Rules of a step:
 
 `new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030302`.
 
-To add a step:
+To add a task:
 
-1. Write a class in `Scaffolding/Setup/Steps/` that inherits `SetupStep`. Give it an `Id` and `Plan(SetupContext)`.
+1. Write a class in `Scaffolding/Setup/Tasks/` that inherits `SetupTask`. Give it an `Id` and `Plan(SetupContext)`.
 2. Read each file with `context.Read(path)`. It gives the planned content, or the file on disk.
 3. Return `Done()`, `Change(file, content)` or `ByHand(message)`.
-4. Add the step to `SetupPipeline.Default`, in its order.
-5. Add tests to `tests/Cli/SetupTests.cs`. `ASecondRunOfEachStepChangesNothing` runs each step two times.
+4. Add the task to `SetupTasks.Default`, in its order.
+5. Add tests to `tests/Cli/SetupTests.cs`. `ASecondRunOfEachTaskChangesNothing` runs each task two times.
 
-The step ids are stable. A later version can let a consumer skip or add a step by its id.
+The task ids are stable. A later version can let a consumer skip or add a task by its id.
 
 ## One version
 

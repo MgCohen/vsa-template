@@ -69,7 +69,7 @@ public class ShopApp : App<Vsa<ConsoleVsaHost>>;
 return new Shop.App.Host.ShopApp().Run(args);
 ```
 
-The setup steps are in [scaffolding.md](scaffolding.md) ("Setup pipeline").
+The setup tasks are in [scaffolding.md](scaffolding.md) ("Setup tasks").
 
 ## What the app has
 

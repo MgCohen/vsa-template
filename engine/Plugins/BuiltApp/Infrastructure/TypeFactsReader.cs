@@ -8,12 +8,12 @@ static class TypeFactsReader {
     public static IReadOnlyList<TypeFacts> Read(
         IReadOnlyList<IType> types, IReadOnlyDictionary<string, Source> sources, ResolvedArchitecture architecture) {
         var loaded = types.ToHashSet();
-        bool IsFramework(IType type) =>
+        bool IsExternalPartType(IType type) =>
             loaded.Contains(type) && !type.Name.StartsWith('<') && architecture.ExternalPart(AssemblyName(type)) is not null;
-        return [.. types.Select(type => Facts(type, sources.GetValueOrDefault(type.FullName), loaded, IsFramework))];
+        return [.. types.Select(type => Facts(type, sources.GetValueOrDefault(type.FullName), loaded, IsExternalPartType))];
     }
 
-    static TypeFacts Facts(IType type, Source? source, HashSet<IType> loaded, Func<IType, bool> isFramework) => new(
+    static TypeFacts Facts(IType type, Source? source, HashSet<IType> loaded, Func<IType, bool> isExternalPartType) => new(
         type.FullName,
         type.Name,
         AssemblyName(type),
@@ -21,7 +21,7 @@ static class TypeFactsReader {
         [.. Bases(type).Select(b => b.FullName)],
         [.. type.Dependencies.Select(d => d.Target).Distinct().Where(loaded.Contains).Select(t => t.FullName)],
         [.. Mentions(type).Where(loaded.Contains).Select(t => t.FullName).Distinct()],
-        [.. Exposures.Of(type, isFramework)
+        [.. Exposures.Of(type, isExternalPartType)
             .DistinctBy(e => new { e.Target, e.Member })
             .Where(e => loaded.Contains(e.Target))
             .Select(e => new TypeExposure(e.Target.FullName, e.Access, e.Member))]) {

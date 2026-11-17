@@ -110,6 +110,26 @@ public sealed class AppTests {
     }
 
     [Test]
+    public void A_host_keeps_the_host_that_it_builds() {
+        var app = new ReturningApp();
+        var host = app.Pack.CreateHost();
+
+        var built = host.Create([], app);
+
+        Assert.That(host.Services, Is.SameAs(built.Services));
+    }
+
+    [Test]
+    public void Run_of_a_host_with_no_built_host_is_an_error() {
+        var host = new ReturningApp().Pack.CreateHost();
+
+        var error = Assert.Throws<InvalidOperationException>(() => host.Run());
+
+        Assert.That(error!.Message, Is.EqualTo("ReturningHost has no built host. Call Create before Run or Stop."));
+        Assert.That(host.Services, Is.Null);
+    }
+
+    [Test]
     public void An_app_of_the_VSA_pack_has_the_VSA_rules() {
         Assert.That(Rules(new WebApp().Pack.Architecture), Is.EqualTo(Rules(new VsaArchitecture())));
     }

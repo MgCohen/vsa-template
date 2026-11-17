@@ -10,7 +10,7 @@ sealed class AddModuleCommand : AddCommand {
 
     protected override string Noun => "module";
 
-    protected override Templates.Kind Kind => Templates.Kind.Module;
+    protected override TemplateGroup Group => TemplateGroup.Module;
 
     protected override void CheckFree(string block, string name) =>
         ModuleFolder.EnsureFree(block, name, ModuleKind.Module);

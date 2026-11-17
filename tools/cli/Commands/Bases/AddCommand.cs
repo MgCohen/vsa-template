@@ -7,7 +7,7 @@ abstract class AddCommand : AppCommand {
 
     protected abstract string Noun { get; }
 
-    protected abstract Templates.Kind Kind { get; }
+    protected abstract TemplateGroup Group { get; }
 
     protected virtual IReadOnlyList<string> ForbiddenSuffixes => [];
 
@@ -30,7 +30,7 @@ abstract class AddCommand : AppCommand {
         var names = new Dictionary<string, string>(TemplateNames(block, name, input));
         names[Templates.App] = RootProject.Name(block);
         Console.WriteLine(Heading(name, names));
-        FileWriter.WriteAllOrNone(block, Templates.Files(Kind, names, ToolVersion.Current));
+        FileWriter.WriteAllOrNone(block, Templates.Files(Group, names, ToolVersion.Current));
         if (NextStep(name) is string next) {
             Console.WriteLine(next);
         }

@@ -37,7 +37,7 @@ public sealed class AppLoader : AssemblyLoadContext {
         var next = new Queue<Assembly>(app);
         while (next.TryDequeue(out var assembly)) {
             foreach (var reference in assembly.GetReferencedAssemblies().Select(r => r.Name!)) {
-                if (Shared.Contains(reference) || IsFramework(reference) || found.ContainsKey(reference)
+                if (Shared.Contains(reference) || IsSystemAssembly(reference) || found.ContainsKey(reference)
                     || skip.Contains(reference, StringComparer.OrdinalIgnoreCase)
                     || app.Any(a => a.GetName().Name == reference) || !File.Exists(Path.Combine(bin, reference + ".dll"))) {
                     continue;
@@ -64,13 +64,13 @@ public sealed class AppLoader : AssemblyLoadContext {
 
     static HashSet<string> SharedClosure(Assembly root) {
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { root.GetName().Name! };
-        foreach (var reference in root.GetReferencedAssemblies().Where(r => !IsFramework(r.Name!))) {
+        foreach (var reference in root.GetReferencedAssemblies().Where(r => !IsSystemAssembly(r.Name!))) {
             names.UnionWith(SharedClosure(Assembly.Load(reference)));
         }
         return names;
     }
 
-    static bool IsFramework(string name) =>
+    static bool IsSystemAssembly(string name) =>
         name is "netstandard" or "mscorlib"
         || name.StartsWith("System", StringComparison.Ordinal)
         || name.StartsWith("Microsoft.", StringComparison.Ordinal);
