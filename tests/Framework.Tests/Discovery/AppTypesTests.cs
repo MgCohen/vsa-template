@@ -72,10 +72,10 @@ public sealed class AppTypesTests {
     }
 
     [Test]
-    public void ConcreteTypesOfFindsTheClassesInEachAssemblyThatReferencesTheBase() {
+    public void ConcreteTypesOfFindsTheClassesInTheModuleAssemblies() {
         var types = new AppTypes([new ShelfModule()]).ConcreteTypesOf(typeof(Module));
 
-        Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Contain(typeof(BareModule)));
+        Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Not.Contain(typeof(BareModule)));
         Assert.That(types, Has.None.Matches<Type>(type => type.IsAbstract));
     }
 

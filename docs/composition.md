@@ -163,13 +163,13 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 |---|---|
 | `new AppTypes(modules)` | The one constructor. With `null`, the instance finds the modules itself |
 | `Modules` | One module for each module root, or the given modules, in order |
-| `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in each assembly that references the assembly of `baseType` |
+| `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in the assemblies of the modules. A type in a test assembly with no module is not found |
 | `Registered()`, `Implementations(baseType)` | The marked types (see "One discovery path") |
 
 | Part | Scan for | Rule |
 |---|---|---|
 | Module root | A reference to `Umpire.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `Umpire.Vsa.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
-| Views root | A reference to `Umpire.Vsa.Views` (`ConcreteTypesOf(typeof(ViewsRoot))`) | One component that inherits `ViewsRoot` |
+| Views root | The assemblies of the modules (`ConcreteTypesOf(typeof(ViewsRoot))`) | One component that inherits `ViewsRoot` |
 
 The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
 

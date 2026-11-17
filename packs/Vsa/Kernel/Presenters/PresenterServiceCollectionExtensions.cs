@@ -1,7 +1,6 @@
 namespace Umpire.Vsa.Presenters;
 
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Architecture;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Kernel;
 
@@ -10,7 +9,7 @@ public static class PresenterServiceCollectionExtensions {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
-        foreach (var presenter in PresentersOf(types)) {
+        foreach (var presenter in types.ConcreteTypesOf(typeof(Presenter))) {
             if (ShowsEvents(presenter)) {
                 services.AddScoped(presenter, provider => Connected(provider, presenter));
             } else {
@@ -19,11 +18,6 @@ public static class PresenterServiceCollectionExtensions {
         }
         return services;
     }
-
-    static IEnumerable<Type> PresentersOf(AppTypes types) =>
-        types.Modules.Select(module => module.GetType().Assembly).Distinct()
-            .SelectMany(LoadedTypes.Of)
-            .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } && t.IsSubclassOf(typeof(Presenter)));
 
     static bool ShowsEvents(Type presenter) =>
         presenter.GetInterfaces()

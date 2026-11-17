@@ -68,9 +68,9 @@ public sealed class AppTypes {
             .Select(argument => definition.MakeGenericType(argument));
     }
 
-    IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. scan.ThatReference(baseType.Assembly)
+    IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Assemblies()
         .SelectMany(scan.TypesOf)
-        .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(baseType))];
+        .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } && t.IsSubclassOf(baseType))];
 
     Type[] Loaded() => loaded ??= [.. Assemblies()
         .SelectMany(scan.TypesOf)
