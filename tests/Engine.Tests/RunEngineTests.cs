@@ -6,6 +6,7 @@ using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
 using Report.Domain.Shared;
+using Report.Slices.WriteReport;
 using Rules;
 using Steps;
 using Steps.Domain.Shared;
@@ -215,6 +216,18 @@ public sealed class RunEngineTests {
         var bin = Path.Combine(Notes, "missing-bin");
 
         Assert.ThrowsAsync<DirectoryNotFoundException>(() => Run(bin: bin, failFast: true));
+    }
+
+    [Test]
+    public async Task The_report_line_has_the_line_and_the_column_of_the_finding() {
+        using var host = new EngineTestApp(new StepsPlugin(), new ReportModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var finding = new Finding("UMP020101", FindingSeverity.Error, "Probe in Host", "Probe.cs", 4, 9);
+
+        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new WriteReportCommand(ReportMode.Error, [finding]), default);
+
+        Assert.That(result.Value.Lines, Is.EqualTo(new[] { "Probe.cs(4,9): error UMP020101: Probe in Host" }));
     }
 
     static async Task<RunEngineResult> Run(

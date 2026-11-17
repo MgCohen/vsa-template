@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using Tests.Shared;
 
 namespace Cli.Tests;
@@ -161,7 +162,7 @@ public sealed class UmpireToolTests {
             """);
         var denied = Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(denied.Succeeded, Is.False, denied.Output);
-        Assert.That(denied.Output, Does.Contain($"{probe}(4,1): error UMP020101: Probe in Host"));
+        Assert.That(denied.Output, Does.Match(Regex.Escape(probe) + @"\(4,\d+\): error UMP020101: Probe in Host"));
 
         Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
     }

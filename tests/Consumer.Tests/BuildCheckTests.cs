@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Tests.Shared;
 
 namespace Consumer.Tests;
@@ -26,15 +27,15 @@ public sealed class BuildCheckTests {
                 public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
             }
             """);
-        var finding = $"{probe}(4,1): error UMP020101: Probe in Host";
+        var finding = Regex.Escape(probe) + @"\(4,\d+\): error UMP020101: Probe in Host";
 
         var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(build.Succeeded, Is.False, build.Output);
-        Assert.That(build.Output, Does.Contain(finding));
+        Assert.That(build.Output, Does.Match(finding));
 
         var warned = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Warn")
             .EnsureSuccess();
-        Assert.That(warned.Output, Does.Contain($"{probe}(4,1): warning UMP020101: Probe in Host"));
+        Assert.That(warned.Output, Does.Match(Regex.Escape(probe) + @"\(4,\d+\): warning UMP020101: Probe in Host"));
 
         File.Delete(probe);
         workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
