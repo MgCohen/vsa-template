@@ -33,7 +33,8 @@ abstract class ArchitectureRule {
 
     protected abstract IEnumerable<Finding> Find(ArchitectureCheck check, RuleValues values);
 
-    protected Finding At(Source source, string text) => new(Code, Severity, text, source.File, source.Line);
+    protected Finding At(Source source, string text) =>
+        new(Code, Severity, text, source.File, source.Line, source.Column);
 
     protected Finding At(string? file, string text) => new(Code, Severity, text, file);
 }

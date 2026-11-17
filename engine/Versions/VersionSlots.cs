@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml;
 using System.Xml.Linq;
+using Umpire.Architecture;
 
 public static class VersionSlots {
     public const string PackagePrefix = "Umpire.";
@@ -73,7 +74,7 @@ public static class VersionSlots {
         [.. Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
             .Concat(Directory.EnumerateFiles(root, "Directory.*.props", SearchOption.AllDirectories))
             .Select(file => Path.GetRelativePath(root, file).Replace('\\', '/'))
-            .Where(file => !file.Split('/').Any(part => part is "bin" or "obj"))
+            .Where(file => !file.Split('/')[..^1].Any(BuildOutput.IsIgnored))
             .Order(StringComparer.Ordinal)];
 
     static bool NamesUmpireSdk(XElement element) =>

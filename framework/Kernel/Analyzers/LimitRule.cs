@@ -7,8 +7,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 public abstract class LimitRule : KernelRule {
     public const string MaxKey = "max";
 
-    public override bool IsModuleRule => false;
-
     public override IReadOnlyList<UmpireOption> Options => [UmpireOption.Int(MaxKey, DefaultMax)];
 
     protected abstract int DefaultMax { get; }

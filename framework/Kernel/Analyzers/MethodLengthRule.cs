@@ -32,18 +32,24 @@ public sealed class MethodLengthRule : LimitRule {
         if (lines <= max) {
             return;
         }
-        var (name, location) = Name(node);
-        context.ReportDiagnostic(Create(location, name, lines, max));
+        var named = Name(node);
+        context.ReportDiagnostic(Create(named.Location, named.Name, lines, max));
     }
 
-    static (string Name, Location Location) Name(SyntaxNode node) => node switch {
-        MethodDeclarationSyntax method => (method.Identifier.Text, method.Identifier.GetLocation()),
-        ConstructorDeclarationSyntax ctor => ($"Constructor {ctor.Identifier.Text}", ctor.Identifier.GetLocation()),
-        DestructorDeclarationSyntax dtor => ($"Finalizer {dtor.Identifier.Text}", dtor.Identifier.GetLocation()),
-        OperatorDeclarationSyntax op => ($"Operator {op.OperatorToken.Text}", op.OperatorToken.GetLocation()),
-        ConversionOperatorDeclarationSyntax conversion => ($"Conversion to {conversion.Type}", conversion.Type.GetLocation()),
-        LocalFunctionStatementSyntax local => (local.Identifier.Text, local.Identifier.GetLocation()),
-        AccessorDeclarationSyntax accessor => ($"Accessor {accessor.Keyword.Text}", accessor.Keyword.GetLocation()),
-        _ => (node.Kind().ToString(), node.GetLocation()),
+    static NamedNode Name(SyntaxNode node) => node switch {
+        MethodDeclarationSyntax method => new(method.Identifier.Text, method.Identifier.GetLocation()),
+        ConstructorDeclarationSyntax ctor => new($"Constructor {ctor.Identifier.Text}", ctor.Identifier.GetLocation()),
+        DestructorDeclarationSyntax dtor => new($"Finalizer {dtor.Identifier.Text}", dtor.Identifier.GetLocation()),
+        OperatorDeclarationSyntax op => new($"Operator {op.OperatorToken.Text}", op.OperatorToken.GetLocation()),
+        ConversionOperatorDeclarationSyntax conversion => new($"Conversion to {conversion.Type}", conversion.Type.GetLocation()),
+        LocalFunctionStatementSyntax local => new(local.Identifier.Text, local.Identifier.GetLocation()),
+        AccessorDeclarationSyntax accessor => new($"Accessor {accessor.Keyword.Text}", accessor.Keyword.GetLocation()),
+        _ => new(node.Kind().ToString(), node.GetLocation()),
     };
+
+    sealed class NamedNode(string name, Location location) {
+        public string Name { get; } = name;
+
+        public Location Location { get; } = location;
+    }
 }

@@ -12,10 +12,9 @@ public sealed class UmpireOptions(string ruleId, AnalyzerConfigOptions options, 
 
     public string? Value(string key) => Configured(key) ?? declared.FirstOrDefault(option => option.Key == key)?.Default;
 
-    public int? Int(string key) => int.TryParse(Value(key), out var value) && value > 0 ? value : null;
+    public int? Int(string key) => UmpireOption.ParseInt(Value(key));
 
-    public bool? Bool(string key) => bool.TryParse(Value(key), out var value) ? value : null;
+    public bool? Bool(string key) => UmpireOption.ParseBool(Value(key));
 
-    public IReadOnlyList<string>? List(string key) =>
-        Value(key)?.Split(',', ';').Select(item => item.Trim()).Where(item => item.Length > 0).ToArray();
+    public IReadOnlyList<string>? List(string key) => UmpireOption.ParseList(Value(key));
 }

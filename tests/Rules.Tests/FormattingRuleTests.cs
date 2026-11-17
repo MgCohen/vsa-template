@@ -331,8 +331,6 @@ public sealed class NoDefaultRule : KernelRule {
 
     public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Int(Key)];
 
-    public override bool IsModuleRule => false;
-
     protected override string Title => "A test rule with an option that has no default";
 
     protected override string Message => "The size is {0}.";

@@ -18,6 +18,7 @@ sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResul
             .OrderBy(f => f.File is not null)
             .ThenBy(f => f.File, StringComparer.Ordinal)
             .ThenBy(f => f.Line ?? 0)
+            .ThenBy(f => f.Column ?? 0)
             .ThenBy(f => f.Code, StringComparer.Ordinal)
             .ThenBy(f => f.Message, StringComparer.Ordinal)
             .ToList();
@@ -37,7 +38,7 @@ sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResul
     }
 
     static string Line(Finding finding) {
-        var origin = finding.File is null ? Origin : $"{finding.File}({finding.Line ?? 1},1)";
+        var origin = finding.File is null ? Origin : $"{finding.File}({finding.Line ?? 1},{finding.Column ?? 1})";
         var severity = finding.Severity switch {
             FindingSeverity.Error => "error",
             FindingSeverity.Warning => "warning",

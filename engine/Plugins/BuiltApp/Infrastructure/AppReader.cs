@@ -33,10 +33,8 @@ public static class AppReader {
     static List<IType> Distinct(ArchUnitNET.Domain.Architecture architecture, IReadOnlyList<string> files) {
         var order = files.Select(Path.GetFileNameWithoutExtension).OfType<string>().ToList();
         return [.. architecture.Types
-            .Where(t => order.Contains(NameOf(t)))
-            .OrderBy(t => order.IndexOf(NameOf(t)))
+            .Where(t => order.Contains(TypeFactsReader.AssemblyName(t)))
+            .OrderBy(t => order.IndexOf(TypeFactsReader.AssemblyName(t)))
             .DistinctBy(t => t.FullName)];
     }
-
-    static string NameOf(IType type) => type.Assembly.Name.Split(',')[0];
 }

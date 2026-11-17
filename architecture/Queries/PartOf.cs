@@ -28,7 +28,7 @@ sealed class PartOf {
     }
 
     void Place(TypeFacts type, List<Binding> bound, List<UnmappedType> unmapped) {
-        if (type.Name.StartsWith('<')) {
+        if (LoadedTypes.IsCompilerGenerated(type.Name)) {
             return;
         }
         if (resolved.ExternalPart(type.Assembly) is { } external) {

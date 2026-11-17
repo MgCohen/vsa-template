@@ -4,7 +4,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Composition/Umpire.Vsa.Composition.csproj" />
-    <ProjectReference Include="../Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
     <ProjectReference Include="../Contracts/Requests/Umpire.Vsa.Contracts.Requests.csproj" />
     <ProjectReference Include="../Handlers/Requests/Umpire.Vsa.Handlers.Requests.csproj" />
     <ProjectReference Include="../Presenters/Umpire.Vsa.Presenters.csproj" />

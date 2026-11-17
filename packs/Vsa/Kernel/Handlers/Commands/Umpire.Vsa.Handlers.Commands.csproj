@@ -10,7 +10,4 @@
   <ItemGroup>
     <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
   </ItemGroup>
-  <ItemGroup>
-    
-  </ItemGroup>
 </Project>

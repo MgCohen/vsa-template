@@ -17,6 +17,20 @@ public sealed class BuildOutputTests {
         Assert.That(BuildOutput.Contains(path), Is.False);
     }
 
+    [TestCase("bin")]
+    [TestCase("OBJ")]
+    [TestCase(".git")]
+    [TestCase("artifacts~")]
+    public void A_build_output_folder_a_dot_folder_and_a_tilde_folder_are_ignored(string folder) {
+        Assert.That(BuildOutput.IsIgnored(folder), Is.True);
+    }
+
+    [TestCase("Src")]
+    [TestCase("binders")]
+    public void A_source_folder_is_not_ignored(string folder) {
+        Assert.That(BuildOutput.IsIgnored(folder), Is.False);
+    }
+
     [Test]
     public void The_folder_name_ignores_case() {
         Assert.That(BuildOutput.Contains("Src/OBJ/X.cs"), Is.True);

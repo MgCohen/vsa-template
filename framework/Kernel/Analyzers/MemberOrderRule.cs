@@ -14,8 +14,6 @@ public sealed class MemberOrderRule : KernelRule {
 
     public override int Number => 5;
 
-    public override bool IsModuleRule => false;
-
     public override IReadOnlyList<UmpireOption> Options { get; } =
         [UmpireOption.List(KindOrderKey, ["constant", "field", "constructor", "finalizer", "property", "event", "method", "nested_type"]),
             UmpireOption.List(AccessOrderKey, ["public", "internal", "protected_internal", "protected", "private_protected", "private"]),

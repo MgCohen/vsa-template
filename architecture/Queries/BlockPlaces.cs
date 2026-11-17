@@ -60,7 +60,7 @@ static class BlockPlaces {
         return Directory.GetDirectories(full)
             .Select(Path.GetFileName)
             .OfType<string>()
-            .Where(name => !BuildOutput.IsFolder(name) && !name.StartsWith(".", StringComparison.Ordinal) && !name.EndsWith("~", StringComparison.Ordinal))
+            .Where(name => !BuildOutput.IsIgnored(name))
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .Select(name => Join(folder, name));
     }
