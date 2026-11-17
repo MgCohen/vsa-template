@@ -39,7 +39,7 @@ public sealed class RunEngineTests {
     public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
         var app = new TypeName(typeof(EngineApp).FullName!, typeof(EngineApp).Assembly.GetName().Name!);
 
-        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app);
+        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
 
         Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
     }

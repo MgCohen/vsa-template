@@ -240,6 +240,63 @@ public sealed class BlocksTests {
         }
     }
 
+    [Test]
+    public void A_native_dll_in_the_bin_is_not_in_the_index_and_stays_free() {
+        var bin = TempFolder.Create();
+        try {
+            var native = Path.Combine(bin, "native.dll");
+            File.Copy(NativeRuntimeFile(), native);
+            File.Copy(typeof(Repo).Assembly.Location, Path.Combine(bin, "Tests.Shared.dll"));
+
+            using (var reader = new BinReader(bin)) {
+                Assert.That(reader.Index().Dlls.Select(d => d.Name), Is.EqualTo(new[] { "Tests.Shared" }));
+            }
+
+            Assert.DoesNotThrow(() => File.Delete(native));
+        } finally {
+            TempFolder.Delete(bin);
+        }
+    }
+
+    [Test]
+    public void A_dll_with_a_pdb_that_is_not_portable_keeps_its_references() {
+        var bin = TempFolder.Create();
+        try {
+            File.Copy(typeof(Repo).Assembly.Location, Path.Combine(bin, "Tests.Shared.dll"));
+            File.WriteAllText(Path.Combine(bin, "Tests.Shared.pdb"), "not a portable pdb");
+
+            using var reader = new BinReader(bin);
+            var dll = reader.Index().Dlls.Single();
+
+            Assert.That(dll.References, Is.Not.Empty);
+            Assert.That(dll.Documents, Is.Empty);
+            Assert.That(dll.Types, Is.Empty);
+        } finally {
+            TempFolder.Delete(bin);
+        }
+    }
+
+    [Test]
+    public void An_entry_file_has_the_path_case_of_the_disk() {
+        if (!OperatingSystem.IsWindows()) {
+            Assert.Ignore("Only Windows has paths that ignore the case.");
+        }
+        var root = TempFolder.Create();
+        try {
+            var file = Path.Combine(root, EntryFiles.Name);
+            File.WriteAllText(file, $$"""{ "architecture": "{{VsaArchitecture}}" }""");
+
+            Assert.That(EntryFiles.Read(file.ToUpperInvariant()), Is.EqualTo(EntryFiles.Read(file.ToLowerInvariant())));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    static string NativeRuntimeFile() {
+        var name = OperatingSystem.IsWindows() ? "coreclr.dll" : OperatingSystem.IsMacOS() ? "libcoreclr.dylib" : "libcoreclr.so";
+        return Path.Combine(System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory(), name);
+    }
+
     static BlockEntry Entry(string folder, EntryForm form) =>
         new(Path.GetFullPath(folder), form, form == EntryForm.App ? null : TypeName.Parse(VsaArchitecture),
             Path.Combine(Path.GetFullPath(folder), form.ToString()));

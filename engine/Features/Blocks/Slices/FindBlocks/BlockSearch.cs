@@ -2,6 +2,7 @@ namespace Blocks.Slices.FindBlocks;
 
 using Blocks.Domain.Shared;
 using BuiltApp.Domain.Shared;
+using BuiltApp.Infrastructure;
 using Steps.Domain.Shared;
 using Umpire.Messages.Contracts;
 
@@ -63,7 +64,7 @@ static class BlockSearch {
 
     static bool Same(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
-    static string Full(string path) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+    static string Full(string path) => DiskPath.Of(path);
 
     static string Capital(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 }

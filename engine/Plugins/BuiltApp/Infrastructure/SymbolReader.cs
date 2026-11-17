@@ -21,9 +21,16 @@ sealed class SymbolReader : IDisposable {
 
     public SymbolReader(string dll) {
         image = new PEReader(File.OpenRead(dll));
-        metadata = image.GetMetadataReader();
-        var pdbFile = Path.ChangeExtension(dll, ".pdb");
-        symbols = File.Exists(pdbFile) ? MetadataReaderProvider.FromPortablePdbStream(File.OpenRead(pdbFile)) : null;
+        try {
+            if (!image.HasMetadata) {
+                throw new BadImageFormatException($"{dll} has no .NET metadata.");
+            }
+            metadata = image.GetMetadataReader();
+        } catch {
+            image.Dispose();
+            throw;
+        }
+        symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb"));
         pdbOrNull = symbols?.GetMetadataReader();
         sourceFolders = new(SourceFoldersAndParents);
     }
@@ -51,6 +58,20 @@ sealed class SymbolReader : IDisposable {
     public void Dispose() {
         symbols?.Dispose();
         image.Dispose();
+    }
+
+    static MetadataReaderProvider? PortablePdb(string file) {
+        if (!File.Exists(file)) {
+            return null;
+        }
+        var provider = MetadataReaderProvider.FromPortablePdbStream(File.OpenRead(file));
+        try {
+            provider.GetMetadataReader();
+            return provider;
+        } catch (BadImageFormatException) {
+            provider.Dispose();
+            return null;
+        }
     }
 
     bool IsEmbedded(TypeDefinitionHandle handle) =>

@@ -40,7 +40,8 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         if (AppClassError(classes) is { } error) {
             return error;
         }
-        return loader.ArchitectureOfApp(classes[0].Type);
+        var appClass = classes[0];
+        return loader.ArchitectureOfApp(appClass.Type, app.First(d => d.AppClasses.Contains(appClass)).Path);
     }
 
     static Error? AppClassError(IReadOnlyList<AppClass> classes) {

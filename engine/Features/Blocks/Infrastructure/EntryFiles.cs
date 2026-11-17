@@ -2,6 +2,7 @@ namespace Blocks.Infrastructure;
 
 using System.Text.Json;
 using BuiltApp.Domain.Shared;
+using BuiltApp.Infrastructure;
 using Umpire.Architecture;
 
 public static class EntryFiles {
@@ -30,7 +31,7 @@ public static class EntryFiles {
     }
 
     public static BlockEntry Read(string file) {
-        var full = Path.GetFullPath(file);
+        var full = DiskPath.Of(file);
         var entry = new BlockEntry(Path.GetDirectoryName(full)!, EntryForm.File, null, full);
         try {
             using var json = JsonDocument.Parse(File.ReadAllText(file));

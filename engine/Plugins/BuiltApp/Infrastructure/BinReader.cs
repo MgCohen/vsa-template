@@ -157,6 +157,9 @@ public sealed class BinReader : IDisposable {
         return null;
     }
 
+    static BlockEntry OnDisk(BlockEntry entry) =>
+        entry with { Folder = DiskPath.Of(entry.Folder), Source = DiskPath.Of(entry.Source) };
+
     static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);
 
     static string? CommonFolder(IReadOnlyList<string> files) {
@@ -195,21 +198,30 @@ public sealed class BinReader : IDisposable {
     static Version VersionOf(string folder) => Version.TryParse(Path.GetFileName(folder), out var version) ? version : new Version();
 
     DllRead? Read(string dll) {
+        SymbolReader symbols;
         try {
-            using var symbols = new SymbolReader(dll);
-            var name = Path.GetFileNameWithoutExtension(dll);
-            if (!symbols.HasSymbols) {
-                return new DllRead(new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], []), []);
-            }
-            var assembly = context.LoadFromAssemblyPath(dll);
-            var types = symbols.TypeSources().ToList();
-            var sources = types.GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
-            var apps = AppClasses(assembly, sources);
-            var entries = apps.Select(AppEntry).Concat(TypeEntries(assembly, sources)).Concat(MetadataEntries(assembly, sources)).Select(Check);
-            var read = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), symbols.Documents(), types, apps);
-            return new DllRead(read, [.. entries]);
-        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException or TypeLoadException or InvalidOperationException) {
+            symbols = new SymbolReader(dll);
+        } catch (Exception e) when (e is BadImageFormatException or IOException or InvalidOperationException) {
             return null;
+        }
+        using (symbols) {
+            var name = Path.GetFileNameWithoutExtension(dll);
+            var plain = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], []);
+            if (!symbols.HasSymbols) {
+                return new DllRead(plain, []);
+            }
+            try {
+                var assembly = context.LoadFromAssemblyPath(dll);
+                var types = symbols.TypeSources().ToList();
+                var sources = types.GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
+                var apps = AppClasses(assembly, sources);
+                var entries = apps.Select(AppEntry).Concat(TypeEntries(assembly, sources))
+                    .Concat(MetadataEntries(assembly, sources)).Select(OnDisk).Select(Check).ToList();
+                return new DllRead(plain with { Documents = symbols.Documents(), Types = types, AppClasses = apps }, entries);
+            } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException
+                or TypeLoadException or InvalidOperationException) {
+                return new DllRead(plain, []);
+            }
         }
     }
 
