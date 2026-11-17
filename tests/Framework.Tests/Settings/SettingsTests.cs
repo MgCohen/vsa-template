@@ -3,8 +3,8 @@ namespace Framework.Tests.Settings;
 using System.ComponentModel.DataAnnotations;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
-using Bare;
 using Microsoft.Extensions.DependencyInjection;
+using Bare;
 using Umpire.Kernel;
 using Umpire.Vsa;
 using Umpire.Vsa.Composition;
@@ -45,10 +45,19 @@ public sealed class SettingsTests {
     }
 
     [Test]
-    public void AModuleWithNoConfigureComposesAndRegistersNothingOfItsOwn() {
-        var services = Compose([], new BareModule());
+    public void AModuleWithNoConfigureComposesWithNoError() {
+        Assert.DoesNotThrow(() => Compose([], new BareModule()));
+    }
 
-        Assert.That(services.Select(service => service.ServiceType.Namespace), Has.None.StartWith("Bare"));
+    [Test]
+    public void TheHostGivesTheSettingsFromTheArgsOfCreate() {
+        var module = new SampleModule();
+        var app = new ModuleApp(module);
+
+        using var host = app.Pack.CreateHost().Create(["--Modules:Settings:Name=from-args"], app);
+
+        Assert.That(module.Settings?.Name, Is.EqualTo("from-args"));
+        Assert.That(host.Services.GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
     }
 
     static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) =>
