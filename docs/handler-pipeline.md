@@ -129,7 +129,7 @@ public sealed class ArenaModule : Module {
 The handler bases select the pipeline. Each sender gives the handler base of its kind, for example `typeof(CommandHandler<,>)`. A send goes to the pipeline that:
 
 1. Has a message base that matches the message.
-2. Selects the handler base of the sender, with `HandlersOf` or with a listed handler that derives from it.
+2. Selects the handler base of the sender: a base in `HandlersOf` or a listed handler is that base or derives from it. For example, `HandlersOf(typeof(FinisherHandler<>))` takes the sends of `ICommandSender` if `FinisherHandler<T>` derives from `CommandHandler<T, int>`.
 3. Has a handler for the message. An event pipeline always runs the event. If no pipeline has a handler, the send goes to a pipeline that matches only items 1 and 2.
 
 If more than one pipeline is left, the send goes to the pipeline with the most specific message base. If the bases do not derive from each other, the send goes to the pipeline that was added last. A module adds its pipelines after the defaults, so a module pipeline wins.
@@ -142,7 +142,9 @@ Each kind adds its default pipeline with `AddPipeline`, as a module does:
 | Events | `IntegrationEventHandler<>` | `BeforeEventHook<>`, `AfterEventHook<>` |
 | Requests | `RequestHandler<,>` | None |
 
-A message base has one pipeline for each handler base: a second `AddPipeline` with the same base and a common handler base fails. The command and the request defaults both have the base `IMessage`, with different handler bases.
+A message base has one pipeline for each handler base: a second `AddPipeline` with the same message base and a related handler base fails. Two handler bases are related if one derives from the other. A listed handler counts as a handler base. The command and the request defaults both have the base `IMessage`, with different handler bases.
+
+The default of each kind already has its message base and handler base. Thus a module pipeline with `PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>))` fails, and it does not replace the default. Give a module pipeline a narrower message base, for example `ArenaMove`.
 
 ## Projects
 

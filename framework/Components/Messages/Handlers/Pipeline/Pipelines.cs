@@ -1,12 +1,16 @@
 namespace Umpire.Messages.Handlers;
 
+using System.Collections.Concurrent;
 using Umpire.Messages.Contracts;
 
 public sealed class Pipelines {
-    readonly Lazy<IReadOnlyList<Pipeline>> all;
+    readonly IServiceProvider root;
+    readonly IReadOnlyList<PipelineDefinition> definitions;
+    readonly ConcurrentDictionary<PipelineDefinition, Pipeline> built = new();
 
     internal Pipelines(IServiceProvider root, IEnumerable<PipelineDefinition> definitions) {
-        all = new(() => [.. definitions.Select(d => new Pipeline(d, root))]);
+        this.root = root;
+        this.definitions = [.. definitions];
     }
 
     internal async Task<Result<TResult>> SendAsync<TResult>(
@@ -24,8 +28,9 @@ public sealed class Pipelines {
     static bool IsNarrower(Type message, Type than) => message != than && than.IsAssignableFrom(message);
 
     Pipeline For(Type handlerBase, Type message) {
-        var candidates = all.Value
-            .Where(p => p.Definition.Message.IsAssignableFrom(message) && p.Selects(handlerBase))
+        var candidates = definitions
+            .Where(d => d.Message.IsAssignableFrom(message) && d.Selects(handlerBase))
+            .Select(Instance)
             .ToList();
         return MostSpecific([.. candidates.Where(p => p.Runs(message))])
             ?? MostSpecific(candidates)
@@ -33,4 +38,6 @@ public sealed class Pipelines {
                 $"No pipeline runs the handlers of {handlerBase.Name.Split('`')[0]}, "
                 + $"so {message.Name} has no pipeline.");
     }
+
+    Pipeline Instance(PipelineDefinition definition) => built.GetOrAdd(definition, d => new Pipeline(d, root));
 }

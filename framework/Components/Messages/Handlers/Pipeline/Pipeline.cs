@@ -27,10 +27,6 @@ public sealed class Pipeline {
     public async Task<Result<TResult>> SendAsync<TResult>(object message, CancellationToken ct = default) =>
         EnvelopeResults.Of<TResult>(await RunAsync(message, services, ct));
 
-    internal bool Selects(Type handlerBase) =>
-        Definition.HandlerBases.Contains(handlerBase)
-        || Definition.Handlers.Any(handler => MessageTypes.OfBase(handler, handlerBase) is not null);
-
     internal bool Runs(Type message) => many || handlers.ContainsKey(message);
 
     internal async Task<Envelope> RunAsync(object message, IServiceProvider scope, CancellationToken ct) {

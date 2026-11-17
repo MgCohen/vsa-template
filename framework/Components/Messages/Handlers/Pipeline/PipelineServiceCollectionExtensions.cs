@@ -10,13 +10,12 @@ public static class PipelineServiceCollectionExtensions {
             throw new ArgumentNullException(nameof(builder));
         }
         var definition = builder.Definition();
-        if (services.Any(d => d.ImplementationInstance is PipelineDefinition other
-                && other.Message == definition.Message
-                && (other.HandlerBases.Intersect(definition.HandlerBases).Any()
-                    || (other.HandlerBases.Count == 0 && definition.HandlerBases.Count == 0)))) {
+        if (services.Any(d => d.ImplementationInstance is PipelineDefinition other && other.Overlaps(definition))) {
             throw new InvalidOperationException(
-                $"Two pipelines are registered for {typeof(TMessage).FullName}. "
-                + "A message base has one pipeline for each handler base.");
+                $"Two pipelines are registered for {typeof(TMessage).FullName} with the same handler base. "
+                + "A message base has one pipeline for each handler base. "
+                + "The default pipeline of each kind already has its message base (IMessage or IntegrationEvent) "
+                + "with its handler base, so give a module pipeline a narrower message base.");
         }
         services.AddSingleton(definition);
         services.TryAddSingleton(provider => new Pipelines(provider, provider.GetServices<PipelineDefinition>()));
