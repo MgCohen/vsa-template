@@ -1,22 +1,18 @@
 namespace BuiltApp.Infrastructure;
 
-using Steps.Domain.Shared;
 using Umpire.Vsa.Definition;
 
 static class UnityProject {
     public const string ScriptAssembliesFolder = "Library/ScriptAssemblies";
 
-    public static IReadOnlyList<string> Scripts(string blockFolder, IEnumerable<string> loaded, out Finding? warning) {
-        warning = null;
+    public static IReadOnlyList<string> Scripts(string blockFolder, IEnumerable<string> loaded, out bool missingScriptAssemblies) {
+        missingScriptAssemblies = false;
         if (!UnityLayout.Is(blockFolder)) {
             return [];
         }
         var folder = Path.Combine(blockFolder, ScriptAssembliesFolder);
         if (!Directory.Exists(folder)) {
-            warning = new Finding("UMP020203", FindingSeverity.Warning,
-                $"{blockFolder} is a Unity project, but it has no {ScriptAssembliesFolder} folder. "
-                + "The checks read only the .NET build, so they do not check the code that only Unity compiles. "
-                + "Open the project in Unity to compile its scripts, then build again.");
+            missingScriptAssemblies = true;
             return [];
         }
         var names = loaded.Select(Path.GetFileNameWithoutExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);

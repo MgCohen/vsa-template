@@ -11,6 +11,7 @@ using Umpire.Kernel;
 public sealed class StepsPlugin : Plugin {
     public override void Configure(IServiceCollection services) {
         services.AddScoped<StepLog>();
+        services.AddScoped<RunOptions>();
         services.AddPipeline(new PipelineBuilder<IEngineStep>()
             .HandlersOf(typeof(CommandHandler<,>))
             .Runner<StepRunner>()

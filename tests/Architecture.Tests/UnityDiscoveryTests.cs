@@ -31,7 +31,7 @@ public sealed class UnityDiscoveryTests {
     [Test]
     public void The_loader_reads_the_script_assemblies_of_Unity_and_the_dotnet_build() {
         Assert.That(map.App.Files.Select(Path.GetFileNameWithoutExtension), Is.EquivalentTo(new[] { "Assembly-CSharp", "Game.Modules" }));
-        Assert.That(map.App.Warnings, Is.Empty);
+        Assert.That(map.App.MissingScriptAssemblies, Is.False);
     }
 
     [Test]
@@ -59,9 +59,9 @@ public sealed class UnityDiscoveryTests {
 
     [Test]
     public void The_checks_read_the_uses_of_a_view_in_the_Unity_build() {
-        var board = map.App.Types.Single(t => t.FullName == "Game.Views.Board");
+        var file = map.Bindings.Of("Game.Views.Board")!.Source!.File;
 
-        Assert.That(map.Findings(board.FullName).Select(f => f.Code), Has.Some.EqualTo("UMP020101"));
+        Assert.That(map.Findings().Where(f => f.File == file).Select(f => f.Code), Has.Some.EqualTo("UMP020101"));
     }
 
     [Test]

@@ -68,6 +68,12 @@ sealed class ConsoleEntry(
                 : throw new InvalidOperationException($"{command.Name} needs --{parameter.Name}. Add it to the command line.");
         }
         var type = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
+        if (type.IsEnum) {
+            return Enum.GetNames(type).FirstOrDefault(name => string.Equals(name, text, StringComparison.OrdinalIgnoreCase)) is { } name
+                ? Enum.Parse(type, name)
+                : throw new InvalidOperationException(
+                    $"--{parameter.Name} must be one of {string.Join(", ", Enum.GetNames(type))}. The value is '{text}'.");
+        }
         return Convert.ChangeType(text, type, CultureInfo.InvariantCulture);
     }
 }
