@@ -24,7 +24,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 | App | A block that runs. Its app class is the check entry and the install point. Not the built host | `App`, `App<TPack>`, `IApp`, `NotesApp`, `EngineApp`; the concept record `App` |
 | Host | The code that starts one kind of app. The host class makes, runs and stops the built host. The VSA layer `Host` holds this code and the app class | `AppHost`, `VsaHost`, `WebVsaHost`, `ConsoleVsaHost`; the layer record `Host` |
 | Built host | The Microsoft host object that a host class builds | `IHost` (Microsoft.Extensions.Hosting) |
-| Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `PipelineRegistration`, the `Add<Name>(services, types)` extensions |
+| Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `AddPipeline`, the `Add<Name>(services, types)` extensions |
 | Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation`, `AppTypes.Implementations` |
 
 ## Block kinds

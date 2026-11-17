@@ -95,7 +95,7 @@ AppHost.Compose(services, app)                 fixed order
 │  ├─ AppTypes                                 a singleton
 │  └─ auto-register                            each [AutoRegister] type
 ├─ Install(services, types)                    VsaHost:
-│  ├─ AddPipelines, AddRequestHandlers         Umpire.Messages.Handlers, Umpire.Vsa.Handlers.Requests
+│  ├─ AddRequestHandlers                       Umpire.Vsa.Handlers.Requests (each kind calls AddPipeline)
 │  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
 │  ├─ AddPresenters, IBus                      Umpire.Vsa.Presenters, Umpire.Vsa.Composition
 │  └─ the platform                             WebVsaHost: HTTP API, views. ConsoleVsaHost: entry command
@@ -300,7 +300,7 @@ framework/Kernel/                      Umpire.Kernel
   Factories/                           IFactory<T>, AddFactory
 architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/
-  Handlers/                            PipelineBuilder, Pipelines, the runners, Validator, Before, After, AddPipelines
+  Handlers/                            PipelineBuilder, Pipeline, Pipelines, InlineRunner, Validator, Before, After, AddPipeline
 packs/Vsa/
   VsaPack.cs                           Umpire.Vsa: Vsa<THost>, Vsa<TArchitecture, THost>
   Architecture/                        Umpire.Vsa.Definition: VsaArchitecture, the VSA layers, Feature and Plugin

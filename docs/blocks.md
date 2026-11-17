@@ -16,7 +16,7 @@ Block                    core meaning                                   example
  ├─ App                  it runs; the app class is both entries         tests/Fixtures/Notes, engine/
  ├─ Pack                 an architecture with its kernel                packs/Vsa (Vsa<THost>)
  ├─ Kernel               owns the host                                  framework/Kernel (AppHost) -> packs/Vsa/Kernel (VsaHost)
- ├─ Component            installed by name by the kernel that uses it   framework/Components/Messages (AddPipelines)
+ ├─ Component            installed by name by the kernel that uses it   framework/Components/Messages (AddPipeline)
  │   └─ Module           a component that the host finds in the app     a VSA feature (Module), a VSA plugin (Plugin)
  └─ Library              no install point                               engine/Versions/
 ```
@@ -63,12 +63,12 @@ The check entry has four forms. The kinds above give the default form. Each form
 - A check entry names a type that loads and that is an `Architecture`. **Checked** (`UMP030102`).
 - A typed base counts only for a type that is not abstract. **Checked** (`FindBlocks`).
 
-A component installs with a public extension that the kernel calls by name, as `VsaHost.Install` does:
+A component installs with a public extension that the kernel calls by name. `VsaHost.Install` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
 
 ```csharp
 protected override void Install(IServiceCollection services, AppTypes types) {
-    services.AddPipelines(types);
     services.AddRequestHandlers(types);
+    services.AddCommandHandlers(types);
 }
 ```
 

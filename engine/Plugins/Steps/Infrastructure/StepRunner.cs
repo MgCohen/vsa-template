@@ -13,7 +13,5 @@ public sealed class StepRunner : IRunner {
         }
     }
 
-    public Task StartAsync() => Task.CompletedTask;
-
     static bool FailFast(Envelope envelope) => envelope.Services.GetRequiredService<StepLog>().FailFast;
 }

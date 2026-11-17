@@ -5,7 +5,7 @@ Each message (a command, a request or an event) goes through a pipeline on its w
 ## One run
 
 ```text
-SendAsync ──▶ Envelope (id, parent, depth) ──▶ Runner: run now, or keep in a queue or a stack
+SendAsync ──▶ Envelope (id, parent, depth) ──▶ Runner: run now, or keep the envelope
                                                  │
    Validate ─▶ before steps ─▶ Before hooks ─▶ Handle ─▶ After hooks ─▶ after steps ─▶ Outcome
                                                  │
@@ -93,11 +93,10 @@ A handler base of a plugin module implements `IHandler<TMessage>` one time, as `
 
 | Runner | Behavior |
 |---|---|
-| `InlineRunner` | The default. Each send runs at once |
-| `QueuedRunner` | Each send waits in a queue. `pipeline.StartAsync()` runs the queue until it is empty, for example one time in each frame of a game loop |
-| `StackRunner` | The first send runs, then each message that is sent during the run, until the queue is empty. A send from a validator, a before stage or a handler runs at once. A send from an After hook or an after step goes on a stack and runs before the queue, newest first |
+| `InlineRunner` | The default. Each send runs at once. A send from a hook or a step runs inside the run of its parent |
+| A custom `IRunner` | `RunAsync(envelope, run)` decides when `run` starts, for example in a `try` block that records a fault (the `StepRunner` of the engine) |
 
-The runner of the pipeline of the message decides where a send goes. A `SendAsync` task completes when its own message has run. With `StackRunner`, a handler or a hook must not await a message that it sends to the same pipeline and that the runner keeps: that message runs after the current one. Do not await it (`_ = sender.SendAsync(...)`), or send it to an inline pipeline.
+The runner of the pipeline of the message decides when a send runs. A `SendAsync` task completes when its own message has run. Runners that keep a message in a queue or a stack until a later start (for example one time in each frame of a game loop) belong to the `vsa-unity` package.
 
 ## Define a pipeline
 
@@ -110,7 +109,6 @@ public sealed class ArenaModule : Module {
         services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))
             .HooksOf(typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>))
-            .Runner<StackRunner>()
             .BeforeStep<TagStep>()
             .AfterStep<AuditStep>());
     }
@@ -125,10 +123,18 @@ public sealed class ArenaModule : Module {
 | `.HooksOf(typeof(A<>), typeof(B<,>))` | Each hook of the modules that derives from these bases. A step base is not a hook base. With no `HooksOf`, no hook runs |
 | `.Runner<TRunner>()` | The runner. Default: `InlineRunner` |
 | `.BeforeStep<T>()`, `.AfterStep<T>()` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep`. Add each step one time |
-| `.Build(services)` | A new instance with its own runner. Keep the builder to build more instances, for example one for each match |
-| `services.AddPipeline(builder)` | The module instance: `ICommandSender`, `IBus` and the publisher send each message of `TMessage` to it, and the services give it as `Pipeline<TMessage>` |
+| `.Build(services)` | A new `Pipeline` with its own runner. `pipeline.SendAsync<TResult>(message)` runs a message of `TMessage` on it, and a message of another type fails. Keep the builder to build more instances, for example one for each match |
+| `services.AddPipeline(builder)` | The app instance: `ICommandSender`, `IBus` and the publisher send each message of `TMessage` to it, if the handler bases of the builder select it |
 
-A send goes to the most specific pipeline whose message base matches the message and that has a handler for it (an event pipeline always runs the event). If none matches, it goes to the default pipeline of its kind. The key of a default pipeline is its handler base, for example `typeof(CommandHandler<,>)`.
+The handler bases select the pipeline. Each sender gives the handler base of its kind, for example `typeof(CommandHandler<,>)`. A send goes to the pipeline that:
+
+1. Has a message base that matches the message.
+2. Selects the handler base of the sender, with `HandlersOf` or with a listed handler that derives from it.
+3. Has a handler for the message. An event pipeline always runs the event. If no pipeline has a handler, the send goes to a pipeline that matches only items 1 and 2.
+
+If more than one pipeline is left, the send goes to the pipeline with the most specific message base. If the bases do not derive from each other, the send goes to the pipeline that was added last. A module adds its pipelines after the defaults, so a module pipeline wins.
+
+Each kind adds its default pipeline with `AddPipeline`, as a module does:
 
 | Default pipeline | Handlers | Hook bases |
 |---|---|---|
@@ -136,18 +142,18 @@ A send goes to the most specific pipeline whose message base matches the message
 | Events | `IntegrationEventHandler<>` | `BeforeEventHook<>`, `AfterEventHook<>` |
 | Requests | `RequestHandler<,>` | None |
 
-A message base has one pipeline: a second `AddPipeline` for the same base fails.
+A message base has one pipeline for each handler base: a second `AddPipeline` with the same base and a common handler base fails. The command and the request defaults both have the base `IMessage`, with different handler bases.
 
 ## Projects
 
 | Project | Types |
 |---|---|
 | Umpire.Messages.Contracts | `IMessage`, `IBroadcastMessage`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
-| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline<T>`, `Pipelines`, `IHandler<T>`, `IRunner` and the runners, `Validator<T>`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipelines` |
+| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `IHandler<T>`, `IRunner`, `InlineRunner`, `Validator<T>`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
 | Umpire.Vsa.Handlers.Commands, .Events, .Requests | The handler bases, the hook bases, the senders, and the default pipeline of each kind |
 
 The folders of Umpire.Messages.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`.
 
-`VsaHost.Install` calls `AddPipelines` before the handler registrations. It finds the validators of the modules and registers `Pipelines`. Each pipeline finds the hooks of its hook bases. All these projects also target `netstandard2.1`, for Unity.
+`AddPipeline` registers the pipeline and `Pipelines`, the one service that selects a pipeline for each send. Each pipeline reads `AppTypes` from the services: it finds its handlers, the validators and the hooks of its hook bases. A pipeline built from services with no `AppTypes` takes only listed handlers, and `HandlersOf` fails. All these projects also target `netstandard2.1`, for Unity.
 
 Later, on the same envelope: typed metadata (`Envelope<TMessage, TMeta>`), limits on depth and loops, queries over the call chain, subscriptions at run time, and runs that suspend and resume.
