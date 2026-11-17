@@ -12,11 +12,7 @@ public sealed class AppFilesTests {
     string root = "";
 
     [SetUp]
-    public void SetUp() {
-        root = TempFolder.Create();
-        Write("global.json", $$"""{ "msbuild-sdks": { "Umpire.Sdk": "{{V}}" } }""");
-        Write("dotnet-tools.json", $$"""{ "version": 1, "tools": { "umpire.cli": { "version": "{{V}}", "commands": ["umpire"] } } }""");
-    }
+    public void SetUp() => root = TempFolder.Create();
 
     [TearDown]
     public void TearDown() => TempFolder.Delete(root);
@@ -28,21 +24,6 @@ public sealed class AppFilesTests {
 
         Assert.That(Slots(), Does.Contain($"App/Host/App.Host.csproj Umpire.Vsa.Hosts.Web {V}"));
         Assert.That(DoctorCommand.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
-    }
-
-    [Test]
-    public void DoctorReadsTheToolManifestInDotConfig() {
-        File.Delete(Path.Combine(root, "dotnet-tools.json"));
-        Write(".config/dotnet-tools.json", """{ "version": 1, "tools": { "umpire.cli": { "version": "0.0.1", "commands": ["umpire"] } } }""");
-
-        Assert.That(Slots(), Does.Contain(".config/dotnet-tools.json umpire.cli 0.0.1"));
-    }
-
-    [Test]
-    public void AnAppWithNoToolManifestHasNoToolManifestSlot() {
-        File.Delete(Path.Combine(root, "dotnet-tools.json"));
-
-        Assert.That(Slots(), Is.EqualTo(new[] { $"this tool Umpire.Cli {V}", $"global.json Umpire.Sdk {V}" }));
     }
 
     [Test]
@@ -108,14 +89,11 @@ public sealed class AppFilesTests {
     }
 
     [Test]
-    public void UpdateChangesOnlyTheVersionTextOfGlobalJson() {
-        var text = "{\r\n  // The SDK of the app.\r\n  \"msbuild-sdks\": {\r\n    \"Umpire.Sdk\": \"0.0.1\",\r\n  },\r\n}\r\n";
-        File.WriteAllBytes(Path.Combine(root, "global.json"), [0xEF, 0xBB, 0xBF, .. Encoding.UTF8.GetBytes(text)]);
+    public void DoctorReadsTheWebSdkPinAndNotGlobalJson() {
+        Write("global.json", """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
+        Write("App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.2" />""");
 
-        Assert.That(Slots(), Does.Contain("global.json Umpire.Sdk 0.0.1"));
-        Assert.That(UpdateCommand.SetVersion(root, V), Is.EqualTo(new[] { "global.json" }));
-        byte[] expected = [0xEF, 0xBB, 0xBF, .. Encoding.UTF8.GetBytes(text.Replace("0.0.1", V, StringComparison.Ordinal))];
-        Assert.That(File.ReadAllBytes(Path.Combine(root, "global.json")), Is.EqualTo(expected));
+        Assert.That(Slots(), Is.EqualTo(new[] { $"this tool Umpire.Cli {V}", "App.csproj Umpire.Sdk.Web 0.0.2" }));
     }
 
     [Test]
@@ -148,17 +126,19 @@ public sealed class AppFilesTests {
     public void UpdateWritesTheVersionToEachPlaceThatDoctorReads() {
         Write("Directory.Packages.props", """<Project><ItemGroup><PackageVersion Include="Umpire.Vsa.Hosts.Web" Version="0.0.1" /><PackageVersion Include="NUnit" Version="4.0.0" /></ItemGroup></Project>""");
         Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Vsa.Hosts.Web" /><PackageReference Include="Umpire.Vsa.Views" VersionOverride="0.0.2" /><PackageReference Include="Umpire.Engine.Build" Version="0.0.3" PrivateAssets="all" /></ItemGroup></Project>""");
-        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/0.2.0" />""");
-        Write("Features/B/B.csproj", """<Project><Sdk Name="Umpire.Sdk" Version="0.3.0" /></Project>""");
+        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/0.0.5" />""");
+        Write("Features/B/B.csproj", """<Project><Sdk Name="Umpire.Sdk" Version="0.0.6" /></Project>""");
         Write("Features/C/C.csproj", """<Project Sdk="Umpire.Sdk" />""");
-        Write("global.json", """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
+        Write("Features/W/W.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.4" />""");
 
         var changed = UpdateCommand.SetVersion(root, V);
 
-        Assert.That(changed, Is.EqualTo(new[] { "global.json", "App/Host/App.Host.csproj", "Directory.Packages.props", "Features/A/A.csproj", "Features/B/B.csproj" }));
+        Assert.That(changed, Is.EqualTo(new[] {
+            "App/Host/App.Host.csproj", "Directory.Packages.props", "Features/A/A.csproj", "Features/B/B.csproj", "Features/W/W.csproj" }));
         Assert.That(DoctorCommand.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
         Assert.That(File.ReadAllText(Path.Combine(root, "Directory.Packages.props")), Does.Contain("""<PackageVersion Include="NUnit" Version="4.0.0" />"""));
         Assert.That(File.ReadAllText(Path.Combine(root, "Features/A/A.csproj")), Does.Contain($"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/{V}"));
+        Assert.That(File.ReadAllText(Path.Combine(root, "Features/W/W.csproj")), Does.Contain($"Umpire.Sdk.Web/{V}"));
         Assert.That(UpdateCommand.SetVersion(root, V), Is.Empty);
     }
 

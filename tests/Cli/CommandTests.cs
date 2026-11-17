@@ -119,8 +119,7 @@ public sealed class CommandTests {
         var current = Environment.CurrentDirectory;
         try {
             if (app is not null) {
-                File.WriteAllText(Path.Combine(folder, "global.json"), $$"""{ "msbuild-sdks": { "Umpire.Sdk": "{{ToolVersion.Current}}" } }""");
-                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), "<Project Sdk=\"Umpire.Sdk\" />");
+                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), $"<Project Sdk=\"Umpire.Sdk/{ToolVersion.Current}\" />");
             }
             prepare?.Invoke(folder);
             Environment.CurrentDirectory = folder;

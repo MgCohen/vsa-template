@@ -385,16 +385,14 @@ A block is a folder tree of code with one check entry. The check entry names the
 
 ## One version
 
-The engine, Umpire.Sdk, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030201` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
+The engine, the Umpire SDKs, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030201` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|
-| `dotnet-tools.json`, `.config/dotnet-tools.json` | `umpire.cli` |
-| `global.json` | `msbuild-sdks` → `Umpire.Sdk` |
-| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire.Sdk` pin and each `Umpire.*` package, also `Umpire.Engine.Build` |
+| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin and each `Umpire.*` package, also `Umpire.Engine.Build` |
 | `*.deps.json` of the host output (engine only) | Each `Umpire.*` package library |
 
-A file that does not exist gives no slot. The JSON files can have comments and trailing commas, as dotnet reads them.
+A file that does not exist gives no slot. `global.json` and a tool manifest give no slot: the version of the Umpire SDK is on the first line of each project. The `*.deps.json` files can have comments and trailing commas, as dotnet reads them.
 
 | Value | Result |
 |---|---|

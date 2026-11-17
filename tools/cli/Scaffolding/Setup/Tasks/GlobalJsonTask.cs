@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 using Umpire.Engine.Versions;
 
 sealed class GlobalJsonTask : SetupTask {
-    const string FileName = VersionSlots.GlobalJsonFile;
+    const string FileName = "global.json";
     const string SdksKey = "msbuild-sdks";
     const string TestKey = "test";
     static readonly string[] KeptParentKeys = ["sdk", SdksKey, TestKey];
@@ -14,25 +14,18 @@ sealed class GlobalJsonTask : SetupTask {
     public override IReadOnlyList<string> Files(SetupContext context) => [FileName];
 
     public override SetupResult Plan(SetupContext context) {
-        var version = context.Version;
         if (context.Read(FileName) is not string text) {
             return Change(FileName, New(context));
         }
         if (JsonText.Parse(text) is not JsonObject json) {
             return ByHand($"{FileName} has comments or is not valid JSON. "
-                + $"Add \"{SdksKey}\": {{ \"{VersionSlots.Sdk}\": \"{version}\" }} to it.");
+                + $"Make sure that it has no \"{SdksKey}\" entry for {VersionSlots.Sdk}.");
         }
-        var pin = JsonText.Text(json[SdksKey]?[VersionSlots.Sdk]);
-        if (pin == version) {
-            return Done();
-        }
-        if (pin is not null) {
-            return ByHand($"{FileName} pins {VersionSlots.Sdk} {pin}, and the tool is {version}. Run 'umpire update'.");
-        }
-        return WithPin(json, version)
-            ? Change(FileName, JsonText.Write(json, text))
-            : ByHand($"\"{SdksKey}\" in {FileName} is not an object. "
-                + $"Add \"{VersionSlots.Sdk}\": \"{version}\" to it.");
+        return json[SdksKey]?[VersionSlots.Sdk] is null
+            ? Done()
+            : ByHand($"{FileName} pins {VersionSlots.Sdk} in \"{SdksKey}\". The version of the Umpire SDK is "
+                + "on the first line of each project, for example "
+                + $"<Project Sdk=\"{VersionSlots.Sdk}/{context.Version}\">. Remove the entry.");
     }
 
     static string New(SetupContext context) {
@@ -48,19 +41,7 @@ sealed class GlobalJsonTask : SetupTask {
                 json[key] = kept.DeepClone();
             }
         }
-        return WithPin(json, context.Version) ? JsonText.Write(json) : template;
-    }
-
-    static bool WithPin(JsonObject json, string version) {
-        switch (json[SdksKey]) {
-            case null:
-                json[SdksKey] = new JsonObject { [VersionSlots.Sdk] = version };
-                return true;
-            case JsonObject sdks:
-                sdks[VersionSlots.Sdk] = version;
-                return true;
-            default:
-                return false;
-        }
+        (json[SdksKey] as JsonObject)?.Remove(VersionSlots.Sdk);
+        return JsonText.Write(json);
     }
 }

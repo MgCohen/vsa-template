@@ -30,10 +30,10 @@ public sealed class SetupTests {
     public void AFolderWithOnlyAProjectGetsEachSetupFile() {
         var plan = Plan();
 
-        Assert.That(plan.Tasks.Select(task => task.Result), Has.All.TypeOf<SetupResult.Change>());
-        Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] {
-            "global.json", "nuget.config", "dotnet-tools.json", "Directory.Build.props", ".gitignore", Project }));
-        foreach (var path in new[] { "global.json", "nuget.config", "dotnet-tools.json", "Directory.Build.props", ".gitignore" }) {
+        Assert.That(plan.Tasks.Where(task => task.Id != "umpire-config").Select(task => task.Result),
+            Has.All.TypeOf<SetupResult.Change>());
+        Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] { "global.json", "nuget.config", ".gitignore", Project }));
+        foreach (var path in new[] { "global.json", "nuget.config", ".gitignore" }) {
             Assert.That(plan.Files.Single(file => file.Path == path).Content, Is.EqualTo(Templates.SetupFile(path, V)), path);
         }
     }
@@ -55,21 +55,17 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void AGlobalJsonWithOnlyTheSdkGetsThePinAndNoTestRunner() {
+    public void AGlobalJsonWithNoUmpirePinIsDone() {
         Write("global.json", "{\n  \"sdk\": {\n    \"version\": \"9.0.100\"\n  }\n}\n");
 
-        var json = Written("global.json");
-
-        Assert.That(json, Does.Contain("\"version\": \"9.0.100\""));
-        Assert.That(json, Does.Contain($"\"Umpire.Sdk\": \"{V}\""));
-        Assert.That(json, Does.Not.Contain("test"));
+        Assert.That(Result("global-json"), Is.TypeOf<SetupResult.Done>());
     }
 
     [Test]
-    public void APinOfAnotherVersionIsByHand() {
+    public void AnUmpirePinInGlobalJsonIsByHand() {
         Write("global.json", "{ \"msbuild-sdks\": { \"Umpire.Sdk\": \"0.0.1\" } }");
 
-        Assert.That(Result("global-json"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("umpire update"));
+        Assert.That(Result("global-json"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("Remove the entry"));
     }
 
     [Test]
@@ -104,36 +100,6 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void AToolManifestInDotConfigGetsTheTool() {
-        Write(".config/dotnet-tools.json", "{\n  \"version\": 1,\n  \"isRoot\": true,\n  \"tools\": {\n    \"other\": { \"version\": \"1.0.0\", \"commands\": [\"other\"] }\n  }\n}\n");
-
-        var plan = Plan();
-        plan.Write();
-
-        Assert.That(plan.Writes("dotnet-tools.json"), Is.False);
-        var manifest = File.ReadAllText(Path.Combine(block, ".config", "dotnet-tools.json"));
-        Assert.That(manifest, Does.Contain("\"other\""));
-        Assert.That(manifest, Does.Contain($"\"umpire.cli\": {{\n      \"version\": \"{V}\""));
-    }
-
-    [Test]
-    public void ADirectoryBuildPropsKeepsItsPropertiesAndGetsTheArtifactsOutput() {
-        Write("Directory.Build.props", "<Project>\n  <PropertyGroup>\n    <LangVersion>latest</LangVersion>\n  </PropertyGroup>\n</Project>\n");
-
-        var props = Written("Directory.Build.props");
-
-        Assert.That(props, Does.StartWith("<Project>\n  <PropertyGroup>\n    <LangVersion>latest</LangVersion>\n  </PropertyGroup>\n  <PropertyGroup>\n    <UseArtifactsOutput>true</UseArtifactsOutput>\n"));
-        Assert.That(props, Does.EndWith("  </PropertyGroup>\n</Project>\n"));
-    }
-
-    [Test]
-    public void AnAppThatTurnsOffTheArtifactsOutputKeepsIt() {
-        Write("Directory.Build.props", "<Project>\n  <PropertyGroup>\n    <UseArtifactsOutput>false</UseArtifactsOutput>\n  </PropertyGroup>\n</Project>\n");
-
-        Assert.That(Result("build-output"), Is.TypeOf<SetupResult.Done>());
-    }
-
-    [Test]
     public void AGitIgnoreGetsOnlyTheMissingLines() {
         Write(".gitignore", "bin/\nnode_modules/");
 
@@ -152,34 +118,56 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void APlainWebProjectGetsTheUmpireSdkAndTheBuildPackage() {
-        Assert.That(Written(Project), Is.EqualTo(
-            "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"Umpire.Sdk\" />\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n  </PropertyGroup>\n"
-            + $"  <ItemGroup>\n    <PackageReference Include=\"Umpire.Engine.Build\" Version=\"{V}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>\n"));
-    }
+    public void APlainWebProjectGetsTheUmpireWebSdkWithTheVersion() =>
+        Assert.That(Written(Project), Is.EqualTo(WebProject.Replace("Microsoft.NET.Sdk.Web", $"Umpire.Sdk.Web/{V}")));
 
     [Test]
-    public void AnEmptyUmpireProjectGetsOnlyTheBuildPackage() {
+    public void AnUmpireProjectWithNoVersionGetsTheVersion() {
         Write(Project, "<Project Sdk=\"Umpire.Sdk\" />\n");
 
+        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk=\"Umpire.Sdk/{V}\" />\n"));
+    }
+
+    [Test]
+    public void AnUmpireProjectWithTheVersionIsDone() {
+        Write(Project, $"<Project Sdk=\"Umpire.Sdk.Web/{V}\" />\n");
+
         Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.Done>());
-        Assert.That(Written(Project), Is.EqualTo(
-            $"<Project Sdk=\"Umpire.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Engine.Build\" Version=\"{V}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>\n"));
     }
 
     [Test]
-    public void CentralPackageVersionsAreByHand() {
-        File.WriteAllText(Path.Combine(parent, "Directory.Packages.props"), "<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>\n  </PropertyGroup>\n</Project>\n");
+    public void AProjectPinOfAnotherVersionIsByHand() {
+        Write(Project, "<Project Sdk=\"Umpire.Sdk/0.0.1\" />\n");
 
-        Assert.That(Result("build-package"), Is.TypeOf<SetupResult.ByHand>()
-            .With.Property("Message").Contain("<PackageVersion Include=\"Umpire.Engine.Build\""));
+        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("umpire update"));
     }
 
     [Test]
-    public void ANewDirectoryBuildPropsImportsTheParentOne() {
-        File.WriteAllText(Path.Combine(parent, "Directory.Build.props"), "<Project />\n");
+    public void AnUmpireSdkElementIsByHand() {
+        Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"Umpire.Sdk\" />\n</Project>\n");
 
-        Assert.That(Written("Directory.Build.props"), Does.StartWith("<Project>\n  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))\" />\n"));
+        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("main SDK"));
+    }
+
+    [Test]
+    public void AnotherMainSdkIsByHand() {
+        Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk.Razor\" />\n");
+
+        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("Microsoft.NET.Sdk.Razor"));
+    }
+
+    [Test]
+    public void ABlockWithASecondProjectGetsAnUmpireconfigFile() {
+        Write("Tests/Shop.Tests.csproj", "<Project Sdk=\"Umpire.Sdk\" />\n");
+
+        Assert.That(Written(".umpireconfig"), Is.EqualTo(Templates.SetupFile(".umpireconfig", V)));
+    }
+
+    [Test]
+    public void ABlockWithOneProjectGetsNoUmpireconfigFile() {
+        Plan().Write();
+
+        Assert.That(File.Exists(Path.Combine(block, ".umpireconfig")), Is.False);
     }
 
     [Test]
@@ -190,14 +178,15 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void ANewGlobalJsonKeepsTheSdkOfTheParentAndAddsNoTestRunner() {
-        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" }, \"msbuild-sdks\": { \"Other.Sdk\": \"1.2.3\" } }");
+    public void ANewGlobalJsonKeepsTheSdksOfTheParentWithNoUmpirePinAndAddsNoTestRunner() {
+        File.WriteAllText(Path.Combine(parent, "global.json"),
+            "{ \"sdk\": { \"version\": \"10.0.200\" }, \"msbuild-sdks\": { \"Other.Sdk\": \"1.2.3\", \"Umpire.Sdk\": \"0.0.1\" } }");
 
         var json = Written("global.json");
 
         Assert.That(json, Does.Contain("\"version\": \"10.0.200\""));
         Assert.That(json, Does.Contain("\"Other.Sdk\": \"1.2.3\""));
-        Assert.That(json, Does.Contain($"\"Umpire.Sdk\": \"{V}\""));
+        Assert.That(json, Does.Not.Contain("Umpire.Sdk"));
         Assert.That(json, Does.Not.Contain("test"));
     }
 
@@ -209,26 +198,11 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void CentralVersionsInADirectoryBuildPropsAreByHand() {
-        Write("Directory.Build.props", "<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>\n  </PropertyGroup>\n</Project>\n");
-
-        Assert.That(Result("build-package"), Is.TypeOf<SetupResult.ByHand>());
-    }
-
-    [Test]
-    public void CentralVersionsInAParentDirectoryBuildPropsAreByHand() {
-        File.WriteAllText(Path.Combine(parent, "Directory.Build.props"), "<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>\n  </PropertyGroup>\n</Project>\n");
-
-        Assert.That(Result("build-package"), Is.TypeOf<SetupResult.ByHand>());
-    }
-
-    [Test]
-    public void AProjectWithTabsGetsTabs() {
+    public void AProjectWithTabsKeepsItsTabs() {
         Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n</Project>\n");
 
         Assert.That(Written(Project), Is.EqualTo(
-            "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<Sdk Name=\"Umpire.Sdk\" />\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n"
-            + $"\t<ItemGroup>\n\t\t<PackageReference Include=\"Umpire.Engine.Build\" Version=\"{V}\" PrivateAssets=\"all\" />\n\t</ItemGroup>\n</Project>\n"));
+            $"<Project Sdk=\"Umpire.Sdk/{V}\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n</Project>\n"));
     }
 
     [Test]
@@ -239,13 +213,6 @@ public sealed class SetupTests {
 
         Assert.That(config, Does.Contain("\n        <add key=\"umpire\" value=\"https://nuget.pkg.github.com/MgCohen/index.json\" />\n    </packageSources>"));
         Assert.That(config, Does.Contain("\n    <packageSourceCredentials>\n        <umpire>\n            <add key=\"Username\" value=\"umpire\" />"));
-    }
-
-    [Test]
-    public void AToolManifestKeepsItsIndent() {
-        Write("dotnet-tools.json", "{\n    \"version\": 1,\n    \"tools\": {}\n}\n");
-
-        Assert.That(Written("dotnet-tools.json"), Does.StartWith("{\n    \"version\": 1,\n    \"tools\": {\n        \"umpire.cli\": {"));
     }
 
     [Test]
@@ -288,7 +255,7 @@ public sealed class SetupTests {
             Console.SetOut(console);
         }
 
-        Assert.That(output.ToString(), Does.Contain("by hand: global.json pins Umpire.Sdk 0.0.1"));
+        Assert.That(output.ToString(), Does.Contain("by hand: global.json pins Umpire.Sdk in"));
     }
 
     [Test]
@@ -302,18 +269,11 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void ANewToolManifestUnderAParentManifestIsNotTheRoot() {
-        File.WriteAllText(Path.Combine(parent, "dotnet-tools.json"), "{ \"version\": 1, \"isRoot\": true, \"tools\": {} }");
-
-        Assert.That(Written("dotnet-tools.json"), Does.Contain("\"isRoot\": false"));
-    }
-
-    [Test]
     public void NewAppDoesNotReadTheParentFiles() {
-        File.WriteAllText(Path.Combine(parent, "Directory.Build.props"), "<Project />\n");
+        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" } }");
 
-        Assert.That(Plan(keepsParentFiles: false).Files.Single(file => file.Path == "Directory.Build.props").Content,
-            Is.EqualTo(Templates.SetupFile("Directory.Build.props", V)));
+        Assert.That(Plan(keepsParentFiles: false).Files.Single(file => file.Path == "global.json").Content,
+            Is.EqualTo(Templates.SetupFile("global.json", V)));
     }
 
     [Test]

@@ -4,10 +4,10 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <UmpireFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..'))</UmpireFrameworkSourceDir>
-    <!-- The templates are one app. The tool writes a global.json in the root of a new app, so a new app does not set this. -->
+    <!-- The templates are one app. A new app has its own .umpireconfig file, so it does not set this. -->
     <UmpireBlock>$(MSBuildThisFileDirectory)</UmpireBlock>
     <ArtifactsPath>$(UmpireBlock)artifacts~</ArtifactsPath>
-    <!-- A new app has no central package versions, so the templates set each version (Tests/App.Tests.csproj). -->
+    <!-- A new app has no central package versions, so the SDK sets the version of each package that it adds. -->
     <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
   </PropertyGroup>
 </Project>

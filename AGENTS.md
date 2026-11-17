@@ -147,15 +147,15 @@ Fifteen framework projects also target `netstandard2.1`, for Unity: Umpire.Vsa.D
 The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, packs, requests and commands. Each command, except `init` and `update`, writes only new files: it does not write over a file, it does not edit a file, and it stops if one of its files exists. The two exceptions change files: `umpire init` adds the missing setup to an existing app (one list of setup tasks in `tools/cli/Scaffolding/Setup/`, also used by `new app`), and `umpire update` changes only the Umpire versions. Each command is a class in `tools/cli/Commands/` that inherits one base in `Commands/Bases/` (`ToolCommand`, `AppCommand` or `AddCommand`). See "Add a command" in `docs/scaffolding.md`.
 
 ```bash
-dotnet tool exec Umpire.Cli new app <Name>          # global.json, nuget.config, .gitignore, Directory.Build.props (the build output in artifacts~/), dotnet-tools.json, <Name>.slnx, AGENTS.md, <Name>.csproj (with Umpire.Engine.Build: the check after each build), App/, Features/, Plugins/, Tests/
-dotnet tool exec Umpire.Cli init                    # an existing app: adds the missing setup, Umpire.Sdk and Umpire.Engine.Build. --check true writes nothing
-dotnet umpire add module <Name>                     # the module root, the published domain key, a status request, a presenter, a page and a unit test
-dotnet umpire add request <Name> -m <Module>        # the request, the response and the handler
-dotnet umpire add command <Name> -m <Module>        # the command, the result and the handler
-dotnet umpire add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
-dotnet umpire add pack <Name>                       # a pack variant in Packs/<Name>: the pack class and its architecture
-dotnet umpire doctor                                # the version check of the engine (UMP030201), with the tool version
-dotnet umpire update                                # the tool, Umpire.Sdk and the Umpire.* packages move to the latest version
+dotnet tool exec Umpire.Cli@<version> -y -- new app <Name>   # global.json, nuget.config, .gitignore, .umpireconfig, <Name>.slnx, AGENTS.md, <Name>.csproj (<Project Sdk="Umpire.Sdk.Web/<version>">), App/, Features/, Plugins/, Tests/
+dotnet tool exec Umpire.Cli@<version> -y -- init             # an existing app: adds the missing setup and makes the Umpire SDK the main SDK. --check true writes nothing
+dotnet tool exec Umpire.Cli@<version> -y -- add module <Name>                     # the module root, the published domain key, a status request, a presenter, a page and a unit test
+dotnet tool exec Umpire.Cli@<version> -y -- add request <Name> -m <Module>        # the request, the response and the handler
+dotnet tool exec Umpire.Cli@<version> -y -- add command <Name> -m <Module>        # the command, the result and the handler
+dotnet tool exec Umpire.Cli@<version> -y -- add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
+dotnet tool exec Umpire.Cli@<version> -y -- add pack <Name>                       # a pack variant in Packs/<Name>: the pack class and its architecture
+dotnet tool exec Umpire.Cli@<version> -y -- doctor                                # the version check of the engine (UMP030201), with the tool version
+dotnet tool exec Umpire.Cli@<version> -y -- update                                # the Umpire SDK pins and the Umpire.* packages move to the version of the tool
 ```
 
 The templates are in `tools/cli/Templates/`. They are one app that builds in `Umpire.slnx`, with the sample names `SampleApp`, `SampleModule`, `SampleAction`, `SampleChange`, `SamplePlugin` and `SamplePack`. The tool replaces these names. A template file with `SampleAction` in its path belongs to `add request`. A template file with `SampleChange` in its path belongs to `add command`. A template file with `SamplePlugin` in its path belongs to `add plugin`. A template file with `SamplePack` in its path belongs to `add pack`. Any other file under `Features/SampleModule/`, or with `SampleModule` in its file name, belongs to `add module`. All other files belong to `new app`. `tests/Cli` lists each template file with its command. If you change a template, build `Umpire.slnx` and run the tests in `tests/Cli`. See `docs/scaffolding.md`.

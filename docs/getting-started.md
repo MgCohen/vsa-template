@@ -43,13 +43,15 @@ The Umpire packages are on GitHub Packages. GitHub Packages needs the token also
    cd Hello
    ```
 
-Each version before 0.1.0 is a preview, so the command names the version. The tool writes each file, then runs `dotnet tool restore`. It ends with this text:
+The command names the version. The tool writes each file. It ends with this text:
 
 ```text
 Next:
   cd Hello
-  dotnet umpire add module <Name>
+  dotnet tool exec Umpire.Cli@<version> -y -- add module <Name>
 ```
+
+Each later command of the tool runs the same way, with the version on the first line of `Hello.csproj`.
 
 To add Umpire to an existing app, run `init` in the folder of its root project: `dotnet tool exec Umpire.Cli@<version> -y -- init`. It adds only the missing setup, and a second run changes nothing. It does not write the app class. Without an app class, the rule engine gives `UMP030302`. For a console app `Shop`, write these two files:
 
@@ -75,7 +77,7 @@ The setup tasks are in [scaffolding.md](scaffolding.md) ("Setup tasks").
 
 ```text
 Hello/
-├─ Hello.csproj            the one root project: it compiles each file in its folder tree
+├─ Hello.csproj            the one root project: <Project Sdk="Umpire.Sdk.Web/<version>">, it compiles each file in its folder tree
 ├─ Hello.slnx              the root project and Tests/
 ├─ appsettings.json        the settings of the web host
 ├─ Properties/             launchSettings.json: the start settings
@@ -84,10 +86,9 @@ Hello/
 ├─ Features/  Plugins/     the feature modules and the plugin modules (empty)
 ├─ Tests/                  App.Tests.csproj: the unit tests and HelloArchitectureTests.cs
 ├─ AGENTS.md               the instructions for an agent in this app
-├─ global.json             the Umpire.Sdk version and the test runner
+├─ .umpireconfig           the Umpire file: the anchor of artifacts~/ and the rule values
+├─ global.json             the .NET SDK and the test runner
 ├─ nuget.config            the Umpire feed, with the token in GITHUB_TOKEN
-├─ dotnet-tools.json       the umpire tool
-├─ Directory.Build.props   all build output in artifacts~/
 └─ .gitignore              the build folders and the local files
 ```
 
@@ -99,9 +100,9 @@ The root project gets its packages from two places:
 | `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
 | `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, and their rule values |
 | `Umpire.Vsa.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the views |
-| `Umpire.Engine.Build` | `Hello.csproj` | The architecture check after each build |
+| `Umpire.Engine.Build` | Umpire.Sdk, for the root project | The architecture check after each build |
 
-Each Umpire package has the version of Umpire.Sdk. The rule engine checks it on each build (`UMP030201`), and `dotnet umpire doctor` does the same check.
+Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each build (`UMP030201`), and the `doctor` command of the tool does the same check.
 
 ## Build the app
 
@@ -126,13 +127,13 @@ The build can also show .NET warnings, for example `IDE0005` (an unused `using`)
 1. Add the module `Billing`:
 
    ```bash
-   dotnet umpire add module Billing
+   dotnet tool exec Umpire.Cli@<version> -y -- add module Billing
    ```
 
 2. Add the request `CreateInvoice` to the module:
 
    ```bash
-   dotnet umpire add request CreateInvoice -m Billing
+   dotnet tool exec Umpire.Cli@<version> -y -- add request CreateInvoice -m Billing
    ```
 
 3. Build again. The engine gives `0 errors`.

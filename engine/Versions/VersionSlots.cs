@@ -3,18 +3,15 @@ namespace Umpire.Engine.Versions;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-public static partial class VersionSlots {
+public static class VersionSlots {
     public const string PackagePrefix = "Umpire.";
     public const string Sdk = "Umpire.Sdk";
-    public const string Tool = "umpire.cli";
-    public const string GlobalJsonFile = "global.json";
+    public const string WebSdk = "Umpire.Sdk.Web";
     const string CentralFile = "Directory.Packages.props";
     const LoadOptions KeepLayout = LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo;
-    static readonly string[] ManifestFiles = ["dotnet-tools.json", ".config/dotnet-tools.json"];
     static readonly JsonDocumentOptions JsonAsDotnetReadsIt = new() {
         CommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
@@ -28,13 +25,7 @@ public static partial class VersionSlots {
             .Select(file => new ProjectDocument(file, XDocument.Load(Path.Combine(root, file), KeepLayout)))
             .ToList();
         var central = CentralVersions(projects.Select(project => project.Document).Concat(CentralAbove(root)));
-        var files = new List<VersionFile>();
-        files.AddRange(ToolManifests(root).Select(manifest => ToolManifest(root, manifest)));
-        if (GlobalJson(root) is VersionFile globalJson) {
-            files.Add(globalJson);
-        }
-        files.AddRange(projects.Select(project => ProjectFile(root, project, central)));
-        return files;
+        return [.. projects.Select(project => ProjectFile(root, project, central))];
     }
 
     public static IReadOnlyList<VersionSlot> InBin(string bin) =>
@@ -42,14 +33,18 @@ public static partial class VersionSlots {
             ? [.. Directory.GetFiles(bin, "*.deps.json").Order(StringComparer.Ordinal).SelectMany(PackagesOfDeps)]
             : [];
 
-    public static IReadOnlyList<string> ToolManifests(string root) =>
-        [.. ManifestFiles.Where(manifest => File.Exists(Path.Combine(root, manifest)))];
+    public static bool PinsUmpireSdk(string projectFile) {
+        try {
+            var document = XDocument.Load(projectFile, KeepLayout);
+            return document.Descendants().SelectMany(element => SdkPins(projectFile, element)).Any();
+        } catch (XmlException) {
+            return false;
+        }
+    }
 
-    public static string? ManifestToolVersion(string manifestFile) =>
-        Json(manifestFile)?["tools"]?[Tool]?["version"]?.GetValue<string>();
-
-    public static string? SdkVersion(string globalJsonFile) =>
-        (Json(globalJsonFile) as JsonObject)?["msbuild-sdks"]?[Sdk]?.GetValue<string>();
+    public static bool IsSdk(string? name) =>
+        string.Equals(name, Sdk, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(name, WebSdk, StringComparison.OrdinalIgnoreCase);
 
     public static IReadOnlyList<string> ProjectFiles(string root) =>
         [.. Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
@@ -72,23 +67,6 @@ public static partial class VersionSlots {
         }
     }
 
-    static VersionFile ToolManifest(string root, string manifest) {
-        var version = ManifestToolVersion(Path.Combine(root, manifest));
-        VersionSlot[] slots = version is null ? [] : [new VersionSlot(manifest, Tool, version)];
-        return new VersionFile(manifest, slots, () => { });
-    }
-
-    static VersionFile? GlobalJson(string root) {
-        var path = Path.Combine(root, GlobalJsonFile);
-        if (!File.Exists(path) || SdkVersion(path) is not string version) {
-            return null;
-        }
-        var content = TextContent.Read(path);
-        var slot = new VersionSlot(GlobalJsonFile, Sdk, version, write: value =>
-            content = content with { Text = WithSdkEntry(content.Text, value) });
-        return new VersionFile(GlobalJsonFile, [slot], () => content.Write(path));
-    }
-
     static VersionFile ProjectFile(string root, ProjectDocument project, IReadOnlyDictionary<string, string> central) {
         var slots = project.Document.Descendants()
             .SelectMany(element => SdkPins(project.File, element).Concat(Packages(project.File, element, central)))
@@ -98,8 +76,9 @@ public static partial class VersionSlots {
 
     static IEnumerable<VersionSlot> SdkPins(string file, XElement element) {
         if (element.Name.LocalName == "Sdk") {
-            if (IsSdk((string?)element.Attribute("Name")) && element.Attribute("Version") is XAttribute version) {
-                yield return new VersionSlot(file, Sdk, version.Value, Line(element), value => version.Value = value);
+            var name = (string?)element.Attribute("Name");
+            if (IsSdk(name) && element.Attribute("Version") is XAttribute version) {
+                yield return new VersionSlot(file, name!, version.Value, Line(element), value => version.Value = value);
             }
             yield break;
         }
@@ -110,13 +89,10 @@ public static partial class VersionSlots {
         foreach (var part in parts) {
             if (part.Split('/') is [var name, var version] && IsSdk(name)) {
                 yield return new VersionSlot(
-                    file, Sdk, version, Line(element), value => sdk.Value = WithSdk(sdk.Value, value));
+                    file, name, version, Line(element), value => sdk.Value = WithSdk(sdk.Value, value));
             }
         }
     }
-
-    static string WithSdkEntry(string json, string version) =>
-        SdkEntry().Replace(json, entry => entry.Groups[1].Value + version + "\"", 1);
 
     static string WithSdk(string sdks, string version) =>
         string.Join(';', sdks.Split(';').Select(part => SdkPinName(part) is string name ? $"{name}/{version}" : part));
@@ -165,8 +141,6 @@ public static partial class VersionSlots {
         document.Save(writer);
     }
 
-    static bool IsSdk(string? name) => string.Equals(name, Sdk, StringComparison.OrdinalIgnoreCase);
-
     static bool IsVsa(string id) => id.StartsWith(PackagePrefix, StringComparison.OrdinalIgnoreCase);
 
     static bool IsPackage(XElement element) => element.Name.LocalName is "PackageReference" or "PackageVersion";
@@ -179,15 +153,10 @@ public static partial class VersionSlots {
 
     static int? Line(XElement element) => element is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : null;
 
-    [GeneratedRegex("(\"Umpire\\.Sdk\"\\s*:\\s*\")[^\"]*\"")]
-    private static partial Regex SdkEntry();
-
     sealed record ProjectDocument(string File, XDocument Document);
 
     sealed record TextContent(string Text, bool Bom) {
         public static TextContent Read(string path) =>
             new(File.ReadAllText(path), File.ReadAllBytes(path) is [0xEF, 0xBB, 0xBF, ..]);
-
-        public void Write(string path) => File.WriteAllText(path, Text, new UTF8Encoding(Bom));
     }
 }

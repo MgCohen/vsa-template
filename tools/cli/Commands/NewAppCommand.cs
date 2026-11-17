@@ -40,12 +40,11 @@ sealed class NewAppCommand : ToolCommand {
         }
         Console.WriteLine($"Making the app {name} (Umpire {version}):");
         FileWriter.WriteAllOrNone(block, plan.Files);
-        Dotnet.RestoreTools(block, name);
         Console.WriteLine($"""
 
             Next:
               cd {name}
-              dotnet umpire add module <Name>
+              dotnet tool exec Umpire.Cli@{version} -y -- add module <Name>
             """);
         return 0;
     }

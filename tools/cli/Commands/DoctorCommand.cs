@@ -6,7 +6,7 @@ using Umpire.Cli.Commands.Bases;
 sealed class DoctorCommand : AppCommand {
     public override IReadOnlyList<string> Words => ["doctor"];
 
-    public override string Summary => "Makes sure that the tool, Umpire.Sdk and the packages have one version.";
+    public override string Summary => "Makes sure that the tool, the Umpire SDKs and the Umpire packages of the app have one version.";
 
     internal static IReadOnlyList<VersionSlot> Slots(string block) {
         var tool = new VersionSlot("this tool", "Umpire.Cli", ToolVersion.Current);

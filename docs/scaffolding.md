@@ -80,10 +80,10 @@ tools/cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
 ├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
-├─ global.json.template, dotnet-tools.json.template   setup (the version token {{UmpireVersion}})
+├─ global.json.template              setup (the .NET SDK and the test runner)
+├─ .umpireconfig                     setup (only for an app with more than one project)
 ├─ nuget.config.template             setup (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               setup
-├─ Directory.Build.props.template    setup (the build output in artifacts~/)
 ├─ appsettings.json, Properties/       new app
 ├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
 ├─ App/Views/Pages/SampleModulePage.razor          add module
@@ -110,7 +110,7 @@ The path of a template file gives its command. The tool uses the first rule that
 | 3 | Contains `SamplePlugin` | `add plugin` | `SamplePlugin` |
 | 4 | Contains `SamplePack` | `add pack` | `SamplePack` |
 | 5 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
-| 6 | One of the five setup templates (`SetupTemplates` in `Templates.cs`) | The setup pipeline (`init`, `new app`) | None |
+| 6 | One of the four setup templates (`SetupTemplates` in `Templates.cs`) | The setup pipeline (`init`, `new app`) | None |
 | 7 | Other | `new app` | `SampleApp` |
 
 `ScaffoldingTests.EachTemplateFileHasOneCommand` lists each template file with its command. If you add a template file, add it to this test.
@@ -125,25 +125,17 @@ The templates build in this repository in source mode, as the fixtures do. The t
 
 | Source mode (repository) | Package mode (consumer) |
 |---|---|
-| `<Project>` with `<Import ... Umpire.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="Umpire.Sdk" />` |
-| `<Project Sdk="Microsoft.NET.Sdk.Web">` with the same imports | `<Project Sdk="Microsoft.NET.Sdk.Web">` with `<Sdk Name="Umpire.Sdk" />` |
+| `<Project>` with `<Import ... Umpire.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="Umpire.Sdk/<tool version>">` (one line if it has nothing else) |
+| `<Project Sdk="Microsoft.NET.Sdk.Web">` with the same imports | `<Project Sdk="Umpire.Sdk.Web/<tool version>">` |
 | `<ProjectReference Include="$(UmpireFrameworkSourceDir).../Umpire.Vsa.Hosts.Web.csproj" />` | `<PackageReference Include="Umpire.Vsa.Hosts.Web" Version="<tool version>" />` |
 
 If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
 
 ## Tests of a new app
 
-`Tests/App.Tests.csproj` runs NUnit on Microsoft.Testing.Platform: `new app` writes the `test` runner in `global.json`. A new app has no central package versions, so the template sets the NUnit versions. They must be the same as in `Directory.Packages.props` (`ScaffoldingTests.TheTestTemplateUsesThePackageVersionsOfTheRepository`). The templates do not import `Directory.Packages.props`.
+`Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform, and `new app` writes the `test` runner in `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
 
-The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). `new app` writes the build package in the root project only:
-
-```xml
-<ItemGroup>
-  <PackageReference Include="Umpire.Engine.Build" Version="<tool version>" PrivateAssets="all" />
-</ItemGroup>
-```
-
-The templates build in source mode, so the template `.csproj` does not have this line. The setup task `build-package` adds it to the root project. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
+The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). Umpire.Sdk adds the build package `Umpire.Engine.Build` to the root project (an executable that is not a test project), so no project has this line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
 
 ## Setup tasks
 
@@ -157,19 +149,16 @@ SetupTasks.Plan ──► each task: Done | Change(file, content) | ByHand(messa
    ├─ show each task, with the message of each by-hand task
    ├─ --check true: write nothing, exit 1 if a task is not done
    ├─ write each change ("created" or "changed"), then list the by-hand tasks
-   ├─ dotnet tool restore, if the tool manifest changed
    └─ exit 1 if a by-hand task is left
 ```
 
 | Task | File | Done when | No file | A file without the setup | By hand |
 |---|---|---|---|---|---|
-| `global-json` | `global.json` | `msbuild-sdks` has `Umpire.Sdk` | The template | Adds `msbuild-sdks` → `Umpire.Sdk` | Another version (`umpire update`), comments |
+| `global-json` | `global.json` | The file exists with no `msbuild-sdks` → `Umpire.Sdk` | The template | Nothing | A pin of `Umpire.Sdk` (the version is on the project line), comments |
 | `nuget-config` | `nuget.config` | A source has the key `umpire`. With `--source`: each source path is a source | The template | Adds the `umpire` source and its credentials. With `--source`: each missing source, with a free key | Not valid XML |
-| `tool-manifest` | `dotnet-tools.json` or `.config/dotnet-tools.json` | `tools` has `umpire.cli` | The template | Adds the `umpire.cli` entry | Another version (`umpire update`), two manifests |
-| `build-output` | `Directory.Build.props` | `UseArtifactsOutput` is set, to any value | The template | Adds the `PropertyGroup` of the template | Not valid XML |
 | `git-ignore` | `.gitignore` | Each line of the template is in the file | The template | Adds the missing lines | None |
-| `umpire-sdk` | The root project | `Umpire.Sdk` is in `Sdk` or in an `<Sdk>` element | Not possible | Adds `<Sdk Name="Umpire.Sdk" />` | Not valid XML |
-| `build-package` | The root project | A `PackageReference` to `Umpire.Engine.Build` | Not possible | Adds the package, with the tool version | Central package versions (`ManagePackageVersionsCentrally` in the project, `Directory.Packages.props` or `Directory.Build.props`, in the block or the nearest parent folder) |
+| `umpire-sdk` | The root project | The main SDK is `Umpire.Sdk` or `Umpire.Sdk.Web` with the tool version | Not possible | `Microsoft.NET.Sdk` becomes `Umpire.Sdk/<version>`, `Microsoft.NET.Sdk.Web` becomes `Umpire.Sdk.Web/<version>`, an Umpire SDK with no version gets it | Another version (`umpire update`), an `<Sdk>` element, another main SDK, not valid XML |
+| `umpire-config` | `.umpireconfig` | The file exists, or the app has one project | Writes the template if the app has more than one project | Nothing | None |
 
 Rules of a task:
 
@@ -184,10 +173,8 @@ Rules of a task:
 
 `init` needs exactly one `.csproj` in the current folder: the root project. It writes only in that folder. A file in a parent folder stays, and the new file does not hide it:
 
-- The new `Directory.Build.props` imports the parent one.
 - The new `nuget.config` has no `<clear />`.
-- The new `global.json` keeps the `sdk`, `msbuild-sdks` and `test` sections of the parent one. It adds no `test` section of its own.
-- The new tool manifest is not the root.
+- The new `global.json` keeps the `sdk`, `msbuild-sdks` (with no `Umpire.Sdk`) and `test` sections of the parent one. It adds no `test` section of its own.
 
 `new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030302`.
 
@@ -203,16 +190,14 @@ The task ids are stable. A later version can let a consumer skip or add a task b
 
 ## One version
 
-`new app` writes the version of the tool to these files. `umpire doctor` runs the version check of the rule engine (`VersionCheck`, see "One version" in [architecture-engine.md](architecture-engine.md)) with the version of the running tool. It fails if a slot has a different version. `umpire update` writes one version to all of them, and checks nothing.
+`new app` writes the version of the tool to these files. The `doctor` command runs the version check of the rule engine (`VersionCheck`, see "One version" in [architecture-engine.md](architecture-engine.md)) with the version of the running tool. It fails if a slot has a different version. The `update` command writes the version of the tool (or `--version`) to all of them, and checks nothing.
 
 | File | Item |
 |---|---|
 | The running tool | `Umpire.Cli` |
-| `dotnet-tools.json`, `.config/dotnet-tools.json` | `umpire.cli` |
-| `global.json` | `msbuild-sdks` → `Umpire.Sdk` |
-| Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` pin (`Sdk="Umpire.Sdk/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference, also `Umpire.Engine.Build`. A reference with no version uses its `PackageVersion` |
+| Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin (`Sdk="Umpire.Sdk.Web/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference, also `Umpire.Engine.Build`. A reference with no version uses its `PackageVersion` |
 
-A missing tool manifest gives no slot, so `umpire doctor` does not fail for it. `umpire update` needs one tool manifest.
+The tool runs with `dotnet tool exec Umpire.Cli@<version> -y -- <command>`, so the app has no tool manifest. The commands that need an app (`add`, `doctor`, `update`) find the app folder: the nearest `.umpireconfig` at or above the current folder, else the nearest folder with a project that names an Umpire SDK and its version.
 
 ## Update
 
