@@ -56,7 +56,7 @@
        A project that references Umpire.Engine.Build itself keeps its own reference. -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
-    <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true'">true</UmpireEngine>
+    <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests'))">true</UmpireEngine>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngine)' == 'true'">
     <PackageReference Include="Umpire.Engine.Build" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all"
@@ -80,9 +80,11 @@
     <PackageReference Include="Umpire.$(UmpirePack).Testing.Unit" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
   </ItemGroup>
 
-  <!-- The rule values of the block: the .umpireconfig file in the block root (UmpireConfigFile, Umpire.Sdk.Output.props).
-       The compiler reads a rule value only from a global config, so a copy in obj/ starts with is_global = true.
-       global_level = 100 is above the level of the analyzer packages, so a value in .umpireconfig wins over the package value. -->
+  <!-- The rule values of the block: the top-level keys of the .umpireconfig file in the block root (UmpireConfigFile,
+       Umpire.Sdk.Output.props). The analyzers read a rule value only from a global config, so a copy in obj/ starts with
+       is_global = true. A global config has no section for a file pattern, so the copy stops at the first section, and the
+       build gives UMP010002. global_level = 101 is above the analyzer packages (0) and a .globalconfig file of the app (100),
+       so a value in .umpireconfig wins. -->
   <Target Name="_UmpireBlockConfig" BeforeTargets="CoreCompile" DependsOnTargets="_UmpireBlockConfigFile"
           Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
     <ItemGroup>
@@ -93,10 +95,14 @@
     <PropertyGroup>
       <_UmpireBlockConfigCopy>$(IntermediateOutputPath)Umpire.Block.globalconfig</_UmpireBlockConfigCopy>
     </PropertyGroup>
-    <ReadLinesFromFile File="$(UmpireConfigFile)">
-      <Output TaskParameter="Lines" ItemName="_UmpireBlockConfigLine" />
-    </ReadLinesFromFile>
-    <WriteLinesToFile File="$(_UmpireBlockConfigCopy)" Lines="is_global = true;global_level = 100;@(_UmpireBlockConfigLine)"
+    <PropertyGroup>
+      <_UmpireBlockConfigText>$([System.IO.File]::ReadAllText('$(UmpireConfigFile)'))</_UmpireBlockConfigText>
+      <_UmpireBlockConfigHasSection>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireBlockConfigText)', '(?m)^[ \t]*\['))</_UmpireBlockConfigHasSection>
+      <_UmpireBlockConfigTop>$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireBlockConfigText)', '(?ms)^[ \t]*\[.*', ''))</_UmpireBlockConfigTop>
+    </PropertyGroup>
+    <Warning Condition="'$(_UmpireBlockConfigHasSection)' == 'True'" Code="UMP010002" File="$(UmpireConfigFile)"
+             Text="The .umpireconfig file has a section, for example [*.cs]. The analyzers read only the keys above the first section, so the keys in a section have no effect. Move each key above the first section, and remove the section." />
+    <WriteLinesToFile File="$(_UmpireBlockConfigCopy)" Lines="is_global = true;global_level = 101;$([MSBuild]::Escape('$(_UmpireBlockConfigTop)'))"
                       Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 

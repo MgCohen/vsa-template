@@ -98,6 +98,6 @@ public sealed partial class RuleValueOwnerTests {
     [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP)")]
     private static partial Regex UmpireKey();
 
-    [GeneratedRegex(@"UMP01\d{4}")]
+    [GeneratedRegex(@"UMP01(?!00)\d{4}")]
     private static partial Regex AnalyzerRuleCode();
 }

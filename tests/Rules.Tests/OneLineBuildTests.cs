@@ -52,13 +52,50 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_compiler_gets_the_umpireconfig_file_as_a_global_config() {
+    public void The_compiler_gets_the_top_level_keys_of_the_umpireconfig_file() {
         var obj = Path.Combine(workspace.Src, "artifacts~", "obj", "OneLine");
         var copy = Directory.EnumerateFiles(obj, "Umpire.Block.globalconfig", SearchOption.AllDirectories).Single();
-        var source = File.ReadAllLines(Path.Combine(workspace.Src, ".umpireconfig"));
-        var header = new[] { "is_global = true", "global_level = 100" };
-        Assert.That(File.ReadAllLines(copy), Is.EqualTo(header.Concat(source)));
+        var source = File.ReadAllLines(Path.Combine(workspace.Src, ".umpireconfig"))
+            .TakeWhile(line => !line.TrimStart().StartsWith('['));
+        var header = new[] { "is_global = true", "global_level = 101" };
+        Assert.That(NotBlank(File.ReadAllLines(copy)), Is.EqualTo(NotBlank(header.Concat(source))));
     }
+
+    [Test]
+    public void A_section_in_the_umpireconfig_file_gives_a_warning_and_no_value() {
+        Assert.That(Lines("warning UMP010002"), Is.Not.Empty, build.Output);
+        Assert.That(Lines("warning UMP010102"), Is.Empty, build.Output);
+    }
+
+    [Test]
+    public void An_artifacts_path_of_a_Directory_Build_props_file_wins() {
+        var props = Path.Combine(workspace.Src, "Tests", "Directory.Build.props");
+        File.WriteAllText(props, """
+            <Project>
+              <PropertyGroup>
+                <ArtifactsPath>$(MSBuildThisFileDirectory)out~</ArtifactsPath>
+              </PropertyGroup>
+            </Project>
+            """);
+        try {
+            var path = Evaluate("Tests/OneLine.Tests.csproj", "-getProperty:ArtifactsPath");
+            Assert.That(path.Output.Trim(), Does.EndWith("out~"), path.Output);
+        } finally {
+            File.Delete(props);
+        }
+    }
+
+    [TestCase("OneLine.csproj", "-p:UmpireEngine=false")]
+    [TestCase("Tests/OneLine.Tests.csproj", "-p:UmpireEngine=")]
+    public void A_project_gets_no_rule_engine(string project, string engine) {
+        var references = Evaluate(project, "-getItem:PackageReference", engine);
+        Assert.That(references.Output, Does.Not.Contain("Umpire.Engine.Build"), references.Output);
+    }
+
+    static IEnumerable<string> NotBlank(IEnumerable<string> lines) => lines.Where(line => line.Trim().Length > 0);
+
+    DotnetResult Evaluate(params string[] args) =>
+        workspace.Dotnet(["msbuild", .. args, "-nodeReuse:false"]).EnsureSuccess();
 
     IEnumerable<string> Lines(string text) =>
         build.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));

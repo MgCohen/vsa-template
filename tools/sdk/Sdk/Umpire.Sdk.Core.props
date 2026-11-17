@@ -8,7 +8,8 @@
     <UsingUmpireSdk>true</UsingUmpireSdk>
   </PropertyGroup>
 
-  <!-- A project whose name ends with ".Tests" is a test project: NUnit on Microsoft.Testing.Platform (Umpire.Sdk.Core.targets). -->
+  <!-- A project whose name ends with ".Tests" is a test project: NUnit on Microsoft.Testing.Platform (Umpire.Sdk.Core.targets).
+       The platform SDK reads OutputType before the project body, so UmpireTestProject=false goes in a Directory.Build.props file. -->
   <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
     <UmpireTestProject Condition="'$(UmpireTestProject)' == ''">true</UmpireTestProject>
   </PropertyGroup>

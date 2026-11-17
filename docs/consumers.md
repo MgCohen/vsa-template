@@ -83,9 +83,9 @@ An Umpire SDK must be the main SDK of the project, because it sets the output fo
 
 - **Block root.** The block root is the folder of the nearest `.umpireconfig` file at or above the project. With no `.umpireconfig` file, it is the project folder. A block with more than one project needs a `.umpireconfig` file, also an empty one.
 - **Output.** Each project writes to one `artifacts~` folder in the block root, in the .NET artifacts layout (`artifacts~/bin/<Project>/`, `artifacts~/obj/<Project>/`). No `bin/` or `obj/` folder is next to the code. A `Directory.Build.props` file that sets `ArtifactsPath` wins.
-- **Rule values.** The SDK gives the top-level keys of `.umpireconfig` to the compiler (a copy in `obj/` with `is_global = true` and `global_level = 100`), so a value there wins over the value of the analyzer package.
+- **Rule values.** The SDK gives the top-level keys of `.umpireconfig` to the compiler, as a copy in `obj/` with `is_global = true` and `global_level = 101`. A value there wins over the value of the analyzer package (level 0) and over a `.globalconfig` file of the app (level 100). A key in a section, for example `[*.cs]`, has no effect, and the build gives `UMP010002`.
 - **Rule engine.** The root project of the app (an executable that is not a test project) gets `Umpire.Engine.Build`. `-p:UmpireEngine=false` turns it off. A project that references the package itself keeps its own reference.
-- **Test project.** A project whose name ends with `.Tests` gets NUnit on Microsoft.Testing.Platform, `using NUnit.Framework` and the test bases of the pack. It references the projects that it tests itself.
+- **Test project.** A project whose name ends with `.Tests` gets NUnit on Microsoft.Testing.Platform, `using NUnit.Framework` and the test bases of the pack. It references the projects that it tests itself. To make such a project a normal project, set `UmpireTestProject=false` in a `Directory.Build.props` file: the project body is too late, because the platform SDK reads `OutputType` first. A `*.Tests` project never gets the rule engine.
 
 Umpire.Sdk ships no native .NET style. The app sets its own style in its `.editorconfig`.
 

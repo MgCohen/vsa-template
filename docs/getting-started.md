@@ -223,12 +223,11 @@ Build switches of the check:
 | `-p:UmpireCheckMode=Warn` | Each error of the check is a warning |
 | `-p:UmpireUpdateBaseline=true` | Writes the errors to `umpire-baseline.txt`, and the next builds accept them |
 
-The analyzers check one file in the compile, for example the line length (`UMP010101`). Each analyzer package ships the values of its rules in its globalconfig file. To change a value, write it in the `.editorconfig` of the app:
+The analyzers check one file in the compile, for example the line length (`UMP010101`). Each analyzer package ships the values of its rules in its globalconfig file. To change a value, write it in the `.umpireconfig` file in the root of the app, with no section:
 
 ```ini
-[*.cs]
 umpire.UMP010101.max = 140
-dotnet_diagnostic.UMP010101.severity = none
+dotnet_diagnostic.UMP010104.severity = none
 ```
 
 | To learn | Read |
