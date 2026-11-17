@@ -64,6 +64,7 @@ public sealed class ScaffoldingTests {
             Plugin = TemplateGroup.Plugin, Pack = TemplateGroup.Pack, Setup = TemplateGroup.Setup;
         (string, TemplateGroup)[] expected = [
             (".gitignore.template", Setup),
+            (".umpireconfig", Setup),
             ("AGENTS.md.template", App),
             ("App/Host/Program.cs", App),
             ("App/Host/SampleAppApp.cs", App),
@@ -72,7 +73,6 @@ public sealed class ScaffoldingTests {
             ("App/Views/Pages/SampleModulePage.razor", Module),
             ("App/Views/Routes.razor", App),
             ("App/Views/_Imports.razor", App),
-            ("Directory.Build.props.template", Setup),
             ("Features/.gitkeep", App),
             ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
             ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
@@ -98,7 +98,6 @@ public sealed class ScaffoldingTests {
             ("Tests/SampleAppArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
             ("appsettings.json", App),
-            ("dotnet-tools.json.template", Setup),
             ("global.json.template", Setup),
             ("nuget.config.template", Setup),
         ];
@@ -142,30 +141,29 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
-    public void NewAppWritesItsBuildOutputToArtifacts() {
-        var props = NewApp("Hello").Single(f => f.Path == "Directory.Build.props").Content;
+    public void NewAppHasAnUmpireconfigFileAndNoBuildProps() {
+        var paths = NewApp("Hello").Select(f => f.Path).ToList();
 
-        Assert.That(props, Does.Contain("<UseArtifactsOutput>true</UseArtifactsOutput>"));
-        Assert.That(props, Does.Contain("<ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>"));
+        Assert.That(paths, Does.Contain(".umpireconfig"));
+        Assert.That(paths, Has.None.EqualTo("Directory.Build.props").And.None.EqualTo("dotnet-tools.json"));
     }
 
     [Test]
-    public void NewAppWritesTheToolVersionToTheRootFiles() {
+    public void NewAppWritesTheToolVersionToTheFirstLineOfEachProject() {
         var files = NewApp("Hello");
 
-        Assert.That(files.Single(f => f.Path == "global.json").Content, Does.Contain($"\"Umpire.Sdk\": \"{Version}\""));
-        Assert.That(files.Single(f => f.Path == "dotnet-tools.json").Content, Does.Contain($"\"version\": \"{Version}\""));
+        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\">"));
+        Assert.That(files.Single(f => f.Path == "Tests/App.Tests.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk/{Version}\">"));
+        Assert.That(files.Single(f => f.Path == "global.json").Content, Does.Not.Contain("msbuild-sdks"));
         Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
     }
 
     [Test]
-    public void TheRootProjectOfANewAppHasTheBuildPackageOfTheRuleEngine() {
-        var files = NewApp("Hello");
+    public void ANewAppGetsTheRuleEngineAndNUnitFromTheSdk() {
+        var projects = NewApp("Hello").Where(f => f.Path.EndsWith(".csproj", StringComparison.Ordinal)).Select(f => f.Content);
 
-        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
-            Does.Contain($"<PackageReference Include=\"Umpire.Engine.Build\" Version=\"{Version}\" PrivateAssets=\"all\" />"));
-        Assert.That(files.Single(f => f.Path == "Tests/App.Tests.csproj").Content, Does.Not.Contain("Umpire.Engine.Build"));
+        Assert.That(projects, Has.None.Contains("Umpire.Engine.Build").And.None.Contains("NUnit"));
     }
 
     [Test]
@@ -175,7 +173,7 @@ public sealed class ScaffoldingTests {
 
         Assert.That(projects, Is.EqualTo(["Hello.csproj", "Tests/App.Tests.csproj"]));
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
-            Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"Umpire.Sdk\" />\n").And.Not.Contain("Sdk.targets"));
+            Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\">\n").And.Not.Contain("Sdk.targets").And.Not.Contain("Dev.props"));
     }
 
     [Test]

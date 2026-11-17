@@ -3,7 +3,6 @@ namespace Umpire.Cli.Commands;
 using Umpire.Cli.Commands.Bases;
 using Umpire.Cli.Scaffolding;
 using Umpire.Cli.Scaffolding.Setup;
-using Umpire.Cli.Scaffolding.Setup.Tasks;
 
 sealed class InitCommand : ToolCommand {
     static readonly CommandOption Source = new(["--source"], "feed", Many: true);
@@ -39,9 +38,6 @@ sealed class InitCommand : ToolCommand {
         }
         plan.Write();
         ShowByHand(plan);
-        if (plan.Writes(ToolManifestTask.FileName) || plan.Writes(ToolManifestTask.InConfigFolder)) {
-            Dotnet.RestoreTools(block, block);
-        }
         if (plan.ByHand is not []) {
             return 1;
         }

@@ -1,6 +1,7 @@
 namespace Umpire.Cli.Scaffolding;
 
 using System.Text.RegularExpressions;
+using Umpire.Engine.Versions;
 
 static partial class Templates {
     public const string App = "SampleApp";
@@ -14,11 +15,9 @@ static partial class Templates {
     const string InactiveSuffix = ".template";
     const string DevProps = "  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))\" />\n";
     const string DevTargets = "  <Import Project=\"$(UmpireSdkDir)Sdk.targets\" />\n";
-    const string AddedSdk = "  <Sdk Name=\"Umpire.Sdk\" />\n";
     static readonly string[] SetupTemplates = [
         ".gitignore.template",
-        "Directory.Build.props.template",
-        "dotnet-tools.json.template",
+        ".umpireconfig",
         "global.json.template",
         "nuget.config.template",
     ];
@@ -64,14 +63,13 @@ static partial class Templates {
     public static IEnumerable<string> All() => Resources().Select(PathOf);
 
     internal static string ToPackageMode(string content, string version, string path) {
-        var hasDevProps = content.Contains(DevProps, StringComparison.Ordinal);
-        if (hasDevProps && !content.StartsWith("<Project>", StringComparison.Ordinal)) {
-            content = content.Replace(DevProps, AddedSdk).Replace(DevTargets, "");
-        } else if (hasDevProps) {
-            content = content.Replace(DevProps, "")
-                .Replace(DevTargets, "")
-                .Replace("<Project>", "<Project Sdk=\"Umpire.Sdk\">");
-            content = Empty().Replace(content, "<Project Sdk=\"Umpire.Sdk\" />");
+        if (content.Contains(DevProps, StringComparison.Ordinal)) {
+            var sdk = content.StartsWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">", StringComparison.Ordinal)
+                ? $"{VersionSlots.WebSdk}/{version}"
+                : $"{VersionSlots.Sdk}/{version}";
+            content = $"<Project Sdk=\"{sdk}\">" + content[(content.IndexOf('>') + 1)..];
+            content = content.Replace(DevProps, "").Replace(DevTargets, "");
+            content = Empty().Replace(content, $"<Project Sdk=\"{sdk}\" />");
         }
         content = SourceReference().Replace(
             content,
@@ -99,7 +97,7 @@ static partial class Templates {
         return text;
     }
 
-    [GeneratedRegex(@"^<Project Sdk=""Umpire.Sdk"">\s*</Project>")]
+    [GeneratedRegex(@"^<Project Sdk=""Umpire\.Sdk[^""]*"">\s*</Project>")]
     private static partial Regex Empty();
 
     [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]

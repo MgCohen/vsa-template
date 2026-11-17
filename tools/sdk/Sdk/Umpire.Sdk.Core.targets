@@ -76,7 +76,7 @@
 
   <!-- A test project (UmpireTestProject, Umpire.Sdk.Core.props) gets NUnit and the test bases of the pack.
        It references the projects that it tests itself. -->
-  <PropertyGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' == ''">
+  <PropertyGroup Condition="'$(UmpireTestProject)' == 'true'">
     <_UmpireNUnitV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireNUnitVersion)</_UmpireNUnitV>
     <_UmpireNUnitVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireNUnitVersion)</_UmpireNUnitVO>
     <_UmpireNUnitAdapterV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireNUnitAdapterVersion)</_UmpireNUnitAdapterV>
@@ -89,6 +89,11 @@
     <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
     <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
     <PackageReference Include="@(_UmpireTestBase)" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' != ''">
+    <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
+    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
   </ItemGroup>
 
   <!-- The rule values of the block: the top-level keys of the .umpireconfig file in the block root (UmpireConfigFile,

@@ -6,11 +6,9 @@ static class SetupTasks {
     public static IReadOnlyList<SetupTask> Default { get; } = [
         new GlobalJsonTask(),
         new NugetConfigTask(),
-        new ToolManifestTask(),
-        new BuildOutputTask(),
         new GitIgnoreTask(),
         new UmpireSdkTask(),
-        new BuildPackageTask(),
+        new UmpireConfigTask(),
     ];
 
     public static SetupPlan Plan(SetupContext context) {

@@ -46,14 +46,14 @@ The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base t
 
 ## Build output
 
-An app that `umpire new app` makes writes all build output to `artifacts~/` in the block folder. Its `Directory.Build.props` sets `UseArtifactsOutput` and `ArtifactsPath`. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
+An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
 
 | Need | Do this in `Directory.Build.props` |
 |------|-------------------------------------|
 | Another output folder | Set `ArtifactsPath` to that folder |
 | Output next to each project (`bin/`, `obj/`) | Set `UseArtifactsOutput` to `false` |
 
-The .NET SDK reads these two properties only from `Directory.Build.props` or the command line. A value in a project file gives `NETSDK1199`.
+The .NET SDK reads these two properties only before its own props: from the Umpire SDK, from `Directory.Build.props` or from the command line. A value in a project file gives `NETSDK1199`.
 
 ## Layers that Unity can use
 

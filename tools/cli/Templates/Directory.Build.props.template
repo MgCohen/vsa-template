@@ -1,8 +1,0 @@
-<Project>
-  <!-- All build output goes to artifacts~ in the block folder, so no bin/ or obj/ folder is next to the code.
-       Unity skips each folder whose name ends with ~, so it does not import the DLLs a second time. -->
-  <PropertyGroup>
-    <UseArtifactsOutput>true</UseArtifactsOutput>
-    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
-  </PropertyGroup>
-</Project>
