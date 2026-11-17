@@ -1,6 +1,7 @@
 namespace Umpire.Vsa.Presenters;
 
 using Microsoft.Extensions.DependencyInjection;
+using Umpire.Architecture;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Kernel;
 
@@ -9,12 +10,20 @@ public static class PresenterServiceCollectionExtensions {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
-        var presenters = types.Implementations(typeof(Presenter)).Select(p => p.Implementation).Where(ShowsEvents);
-        foreach (var presenter in presenters) {
-            services.AddScoped(presenter, provider => Connected(provider, presenter));
+        foreach (var presenter in PresentersOf(types)) {
+            if (ShowsEvents(presenter)) {
+                services.AddScoped(presenter, provider => Connected(provider, presenter));
+            } else {
+                services.AddScoped(presenter);
+            }
         }
         return services;
     }
+
+    static IEnumerable<Type> PresentersOf(AppTypes types) =>
+        types.Modules.Select(module => module.GetType().Assembly).Distinct()
+            .SelectMany(LoadedTypes.Of)
+            .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } && t.IsSubclassOf(typeof(Presenter)));
 
     static bool ShowsEvents(Type presenter) =>
         presenter.GetInterfaces()
@@ -22,8 +31,7 @@ public static class PresenterServiceCollectionExtensions {
 
     static Presenter Connected(IServiceProvider provider, Type presenter) {
         var instance = (Presenter)ActivatorUtilities.CreateInstance(provider, presenter);
-        var dispatch = provider.GetService<LivePresenters.Dispatch>();
-        provider.GetRequiredService<LivePresenters>().Connect(instance, dispatch);
+        provider.GetRequiredService<LivePresenters>().Connect(instance, provider.GetService<LivePresenters.Dispatch>());
         return instance;
     }
 }

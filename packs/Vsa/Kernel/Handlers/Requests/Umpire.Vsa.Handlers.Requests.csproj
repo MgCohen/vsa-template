@@ -11,8 +11,4 @@
   <ItemGroup>
     <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
   </ItemGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="Umpire.Vsa.Composition" />
-    <InternalsVisibleTo Include="Umpire.Vsa.Hosts.Web" />
-  </ItemGroup>
 </Project>

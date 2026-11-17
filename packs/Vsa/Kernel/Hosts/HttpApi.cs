@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using System.Reflection;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
-using Umpire.Vsa.Handlers.Requests;
 
 static class HttpApi {
     internal static void Map(WebApplication app, IEnumerable<Type> handlerServices) {
@@ -34,7 +33,7 @@ static class HttpApi {
             return Results.Problem(
                 title: "request.not_valid", detail: e.Message, statusCode: StatusCodes.Status400BadRequest);
         }
-        var result = await RequestDispatch.SendAsync(http.RequestServices, request, http.RequestAborted);
+        var result = await http.RequestServices.GetRequiredService<IRequestSender>().SendAsync(request, http.RequestAborted);
         return result.Error is { } error ? Problem(error) : Results.Ok(result.Value);
     }
 

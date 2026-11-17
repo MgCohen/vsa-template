@@ -94,9 +94,9 @@ AppHost.Compose(services, app)                 fixed order
 │  ├─ AppTypes                                 a singleton
 │  └─ auto-register                            each [AutoRegister] type
 ├─ Install(services, types)                    VsaHost:
-│  ├─ AddRequestHandlers                       Umpire.Vsa.Handlers.Requests (each kind calls AddPipeline)
+│  ├─ AddRequestHandlers                       Umpire.Vsa.Handlers.Requests (each kind adds its sender and calls AddPipeline)
 │  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
-│  ├─ AddPresenters, IBus                      Umpire.Vsa.Presenters, Umpire.Vsa.Composition
+│  ├─ AddPresenters                            Umpire.Vsa.Presenters
 │  └─ the platform                             WebVsaHost: HTTP API, views. ConsoleVsaHost: entry command
 ├─ Module.Compose(services, configuration)     each module, in Order, then by name
 │  ├─ Module                                   Configure(services)
@@ -114,17 +114,17 @@ A module defines its requests, commands, events, handlers and presenters one tim
 |---|---|---|---|
 | Definition | Events (`IntegrationEventHandler<T>`), in-process publisher | Yes | Yes |
 | Definition | Commands (`CommandHandler<,>`), in-process sender | Yes | Yes |
-| Definition | Requests (`RequestHandler<,>`), `InProcessBus` (`IBus`) | Yes | Yes |
+| Definition | Requests (`RequestHandler<,>`), in-process sender (`IRequestSender`) | Yes | Yes |
 | Definition | Presenters, `LivePresenters` | Yes | Yes |
 | Transport | HTTP API: one route for each request | No | Yes |
 | Transport | Views (`ViewsRoot`): Razor components | No | Yes |
 
 ```
-Presenter → IBus.Send(request) → InProcessBus → RequestHandler<,>       every host
+Presenter → IRequestSender.SendAsync(request) → RequestHandler<,>      every host
 API client → HTTP → route of the request → RequestHandler<,>            web host
 ```
 
-A request is a message (`IMessage`), as a command is. It goes to its handler in process (`IBus`), or over HTTP on the web host. Each request gives its `Method` and `Route` as static members on the type itself. Only the HTTP API reads them, to map the route. On `netstandard2.1`, `IRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
+A request is a message (`IMessage`), as a command is. It goes to its handler in process (`IRequestSender`), or over HTTP on the web host. Each request gives its `Method` and `Route` as static members on the type itself. Only the HTTP API reads them, to map the route. On `netstandard2.1`, `IRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
 
 ```csharp
 public interface IRequest : IMessage {
@@ -139,7 +139,7 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 
 - `IRequest` is an interface, because only an interface can make each request give the static members.
 - On `net10.0`, an interface with static abstract members cannot be a type argument (CS8920). Name it with `typeof(IRequest)`, for example in the definition.
-- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IBus` require it, so the compiler finds a response with no marker. Umpire.Sdk also uses it to find the contract files of a slice.
+- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IRequestSender` require it, so the compiler finds a response with no marker. Umpire.Sdk also uses it to find the contract files of a slice.
 
 ## AppTypes finds the parts of the app
 
@@ -195,13 +195,13 @@ The markers are in `Umpire.Markers`. The same package has the stripping markers 
 
 | Marker | Target | The linker keeps | VSA puts it on |
 |---|---|---|---|
-| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, `Module`, `App`, `Pack`, `AppHost` |
+| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, `Module`, `App`, `Pack`, `AppHost` |
 | `[RequireImplementors]` | Interface | Each implementor | `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
-| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
+| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
 
 The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernel uses the markers assembly in code.
 
-The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, the four hook bases and `Presenter`. A class that derives from one of them needs no marker.
+The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>` and the four hook bases. A class that derives from one of them needs no marker.
 
 ```csharp
 [TypeArgument]
@@ -251,7 +251,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
-| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter for its events |
+| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter one time, and connects each presenter with events |
 | `ViewsInstaller` (Views) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
 | `HttpApi` (Hosts.Web) | `MakeGenericMethod` | Reads the static `Route` and `Method` of each request |
 | `ConsoleEntry` (Composition) | `MakeGenericMethod`, `Task.Result` | Sends the entry command. It reads the result through `IMessageResult` |
@@ -282,6 +282,8 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 | Error of the handler | A problem response: 404 if the code ends with `.not_found`, else 400 |
 | Value that does not bind | A problem response, 400, title `request.not_valid` |
 
+The HTTP API sends each request with the registered `IRequestSender`. If a module replaces `IRequestSender`, for example with a remote sender, the HTTP API uses that replacement too. A remote sender that calls the same app makes a loop.
+
 ## Projects
 
 ```
@@ -304,7 +306,7 @@ packs/Vsa/
     Handlers/Requests/                 RequestHandler, AddRequestHandlers
     Presenters/                        AddPresenters
     Views/                             ViewsRoot, ViewsInstaller
-    Composition/                       Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>, InProcessBus
+    Composition/                       Umpire.Vsa.Composition: VsaHost, Plugin, Plugin<TSettings>
       Hosts/Console/                   ConsoleVsaHost, ConsoleEntry, ConsoleExit
     Hosts/                             Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
 ```
@@ -370,7 +372,7 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 | Service | `WebVsaHost` | `VsaHost`, `ConsoleVsaHost` | `Compose` (no host run) |
 |---|---|---|---|
-| `IBus` | `InProcessBus` | `InProcessBus` | `InProcessBus` |
+| `ICommandSender`, `IRequestSender`, `IIntegrationEventPublisher` | In process | In process | In process |
 | `ILogger<T>` | Yes, host providers | Yes, host providers | Yes, no providers. The app adds them |
 | `IConfiguration` | `appsettings.json`, environment, `args` | `appsettings.json`, environment, `args` | The one in the services, else an empty one |
 | Lifetime, environment, `IHostedService` start | Yes | Yes | None |
@@ -411,7 +413,7 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 
 ## Open questions
 
-- Remote bus: an `IBus` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
+- Remote request sender: an `IRequestSender` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
 - IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
 - Hosting DLLs in Unity: Umpire.Kernel references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.

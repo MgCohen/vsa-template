@@ -12,7 +12,7 @@ public sealed class LivePresentersTests {
         var presenter = new CountPresenter();
         var changed = 0;
         presenter.Changed += () => changed++;
-        using var _ = live.Add(presenter);
+        live.Connect(presenter);
 
         await live.OnPublishedAsync(new Counted(3), CancellationToken.None);
 
@@ -25,7 +25,7 @@ public sealed class LivePresentersTests {
         var presenter = new CountPresenter();
         var changed = 0;
         presenter.Changed += () => changed++;
-        using var _ = live.Add(presenter);
+        live.Connect(presenter);
 
         await live.OnPublishedAsync(new Other(), CancellationToken.None);
 
@@ -33,9 +33,10 @@ public sealed class LivePresentersTests {
     }
 
     [Test]
-    public async Task ARemovedPresenterGetsNothing() {
+    public async Task ADisposedPresenterGetsNothing() {
         var presenter = new CountPresenter();
-        live.Add(presenter).Dispose();
+        live.Connect(presenter);
+        presenter.Dispose();
 
         await live.OnPublishedAsync(new Counted(3), CancellationToken.None);
 
@@ -43,25 +44,25 @@ public sealed class LivePresentersTests {
     }
 
     [Test]
-    public async Task APresenterInTwoViewsGetsEachEventOneTime() {
+    public async Task APresenterConnectedTwoTimesGetsEachEventOneTime() {
         var presenter = new CountPresenter();
-        var first = live.Add(presenter);
-        using var second = live.Add(presenter);
+        live.Connect(presenter);
+        live.Connect(presenter);
 
         await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        first.Dispose();
-        first.Dispose();
+        presenter.Dispose();
+        presenter.Dispose();
         await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
 
-        Assert.That(presenter.Total, Is.EqualTo(2));
+        Assert.That(presenter.Total, Is.EqualTo(1));
     }
 
     [Test]
     public async Task AnErrorInOnePresenterDoesNotStopTheOthers() {
         var broken = new BrokenPresenter();
         var presenter = new CountPresenter();
-        using var a = live.Add(broken);
-        using var b = live.Add(presenter);
+        live.Connect(broken);
+        live.Connect(presenter);
 
         await live.OnPublishedAsync(new Counted(2), CancellationToken.None);
 
@@ -72,7 +73,7 @@ public sealed class LivePresentersTests {
     public async Task TheEventRunsOnTheDispatcherOfTheView() {
         var presenter = new CountPresenter();
         var dispatched = 0;
-        using var _ = live.Add(presenter, work => {
+        live.Connect(presenter, work => {
             dispatched++;
             return work();
         });
@@ -86,7 +87,7 @@ public sealed class LivePresentersTests {
     public async Task ThePublisherDoesNotWaitForABusyView() {
         var presenter = new CountPresenter();
         var view = new TaskCompletionSource();
-        using var _ = live.Add(presenter, async work => {
+        live.Connect(presenter, async work => {
             await view.Task;
             await work();
         });
@@ -101,7 +102,7 @@ public sealed class LivePresentersTests {
     [Test]
     public async Task ACanceledPublisherTokenDoesNotStopTheDelivery() {
         var presenter = new CountPresenter();
-        using var _ = live.Add(presenter);
+        live.Connect(presenter);
 
         await live.OnPublishedAsync(new Counted(1), new CancellationToken(canceled: true));
 
@@ -111,11 +112,26 @@ public sealed class LivePresentersTests {
     [Test]
     public async Task TheEventsOfOnePresenterRunOneAtATime() {
         var presenter = new SlowPresenter();
-        using var _ = live.Add(presenter);
+        live.Connect(presenter);
 
         await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
         await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
         Assert.That(presenter.Running, Is.EqualTo(1));
+        presenter.Release();
+        presenter.Release();
+        await presenter.Done.Task;
+
+        Assert.That(presenter.MostAtOnce, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task ASecondConnectKeepsTheGateOfThePresenter() {
+        var presenter = new SlowPresenter();
+        live.Connect(presenter);
+
+        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
+        live.Connect(presenter);
+        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
         presenter.Release();
         presenter.Release();
         await presenter.Done.Task;

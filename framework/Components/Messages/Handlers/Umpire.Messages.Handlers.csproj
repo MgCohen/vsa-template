@@ -16,6 +16,5 @@
     <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Commands" />
     <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Events" />
     <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Requests" />
-    <InternalsVisibleTo Include="Umpire.Vsa.Composition" />
   </ItemGroup>
 </Project>

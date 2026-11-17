@@ -72,6 +72,7 @@ public class VsaArchitecture : Architecture {
         rules.For<Presenters>().Uses<Contracts>()
             .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal)
             .And<Slice.Shared>(Access.Internal);
+        rules.For<Presenters>().Uses<Contracts.Requests>().Under<Kernel>();
         ForContractParts(rules).And<Slice.Shared>()
             .Uses<Contracts>().And<Domain.Shared>().And<Slice.Shared>();
         UsesContractParts(rules.For<Slice.Shared>()).Under<Kernel>();

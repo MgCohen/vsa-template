@@ -6,7 +6,7 @@ Changes go in two directions:
 
 | Direction | Path |
 |---|---|
-| Top down | A view calls a presenter method. The presenter sends a request with `IBus` (`Run`), and changes its state from the result. `Run` puts the message of the `Error` of the result on the `OpState` |
+| Top down | A view calls a presenter method. The presenter sends a request with `IRequestSender` (`Run`), and changes its state from the result. `Run` puts the message of the `Error` of the result on the `OpState` |
 | Bottom up | A handler publishes an event. The presenter gets it (`IPresenterEvent<TEvent>`), changes its state, and raises `Changed` |
 
 The bottom-up path works at the presenter level. It does not need a view: a view only listens to `Changed` and renders.
@@ -29,8 +29,8 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 |---|---|---|
 | `IIntegrationEventObserver` | `Umpire.Vsa.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `Umpire.Vsa.Handlers.Events` needs no reference to `Umpire.Vsa.Presenters` (it also targets `netstandard2.1`). |
 | `IPresenterEvent<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. |
-| `LivePresenters` | `Umpire.Vsa.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. `Connect` adds a presenter. |
-| `AddPresenters` | `Umpire.Vsa.Presenters` | Registers each presenter as scoped. When the services make a presenter with `IPresenterEvent`, they connect it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. |
+| `LivePresenters` | `Umpire.Vsa.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. `Connect` adds a presenter. `Dispose` of the presenter removes it. |
+| `AddPresenters` | `Umpire.Vsa.Presenters` | Registers each presenter one time, as scoped. `Presenter` has no `[AutoRegister]`. When the services make a presenter with `IPresenterEvent`, they connect it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. |
 | `LivePresenters.Dispatch` | `Umpire.Vsa.Presenters` | Optional scoped service. The app sets the thread of the events, for example the main thread in Unity. |
 | `PresenterWatcher` | `Umpire.Vsa.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` listens to `Changed` of each presenter and renders. |
 | `PresenterComponent<T>` | `Umpire.Vsa.Views` | A `PresenterWatcher` for one presenter, given as the `Presenter` parameter. |
@@ -44,13 +44,13 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 - The publisher does not wait for the presenters, and the token of the publisher does not go to the presenters. An error in one presenter goes to the log.
 - The observer runs after the handlers, in the scope of the publisher. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
 - A presenter that sends a request can get the event of that request before the response. Make `OnEventAsync` safe for a change that the presenter has already applied, for example replace by ID.
-- A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`UMP010204`). To change state, it sends a request with `IBus`, and the request handler publishes the event.
+- A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`UMP010204`). To change state, it sends a request with `IRequestSender`, and the request handler publishes the event.
 - A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP020101`).
 
 ## Example
 
 ```csharp
-public sealed class BellPresenter(IBus bus) : Presenter(bus), IPresenterEvent<Rang> {
+public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IPresenterEvent<Rang> {
     public string? Last { get; private set; }
 
     public Task OnEventAsync(Rang integrationEvent, CancellationToken ct) {

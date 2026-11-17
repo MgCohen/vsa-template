@@ -13,6 +13,5 @@ public class VsaHost : AppHost {
         services.AddEventHandlers();
         services.AddCommandHandlers(types);
         services.AddPresenters(types);
-        services.AddScoped<IBus>(provider => new InProcessBus(provider));
     }
 }
