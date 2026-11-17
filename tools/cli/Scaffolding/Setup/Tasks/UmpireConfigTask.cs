@@ -10,9 +10,9 @@ sealed class UmpireConfigTask : SetupTask {
     public override string Id => "umpire-config";
 
     public override SetupResult Plan(SetupContext context) =>
-        context.Read(FileName) is not null || Projects(context) < 2
-            ? new SetupResult.Done()
-            : new SetupResult.Change(new TextFile(FileName, Templates.SetupFile(FileName, context.Version)));
+        context.Read(FileName) is null && (!context.ExistingApp || Projects(context) >= 2)
+            ? new SetupResult.Change(new TextFile(FileName, Templates.SetupFile(FileName, context.Version)))
+            : new SetupResult.Done();
 
     static int Projects(SetupContext context) {
         IEnumerable<string> onDisk = Directory.Exists(context.Block)

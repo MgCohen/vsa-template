@@ -314,6 +314,25 @@ public sealed class SetupTests {
     }
 
     [Test]
+    public void ANewAppPlanHasNoByHandTaskAndPlansEachSetupFile() {
+        var plan = NewAppCommand.Plan("Shop", [], V);
+
+        Assert.That(plan.ByHand, Is.Empty);
+        Assert.That(plan.Files.Select(file => file.Path),
+            Is.SupersetOf(new[] { "global.json", "nuget.config", ".gitignore", ".umpireconfig", Project }));
+    }
+
+    [Test]
+    public void NewAppStopsOnAStrayUmpireConfig() {
+        File.Delete(Path.Combine(block, Project));
+        Write(".umpireconfig", "");
+
+        Assert.That(() => RunIn(parent, "new", "app", "Shop"),
+            Throws.TypeOf<UmpireException>().With.Message.Contain(".umpireconfig").And.Message.Contain("umpire init"));
+        Assert.That(Directory.GetFiles(block), Is.EqualTo(new[] { Path.Combine(block, ".umpireconfig") }));
+    }
+
+    [Test]
     public void ANewAppPlanReadsNoFileOnDisk() {
         Write(".gitignore", "bin/\n");
 

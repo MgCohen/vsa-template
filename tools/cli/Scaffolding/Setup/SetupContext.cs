@@ -18,6 +18,8 @@ sealed class SetupContext(
 
     public IReadOnlyList<string> Sources => sources;
 
+    public bool ExistingApp => existingApp;
+
     public IReadOnlyCollection<TextFile> Planned => planned.Values;
 
     public string? Read(string path) {

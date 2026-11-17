@@ -38,7 +38,10 @@ sealed class NewAppCommand : ToolCommand {
     }
 
     internal static IReadOnlyList<TextFile> Files(string name, IReadOnlyList<string> sources, string version) =>
-        SetupTasks.Plan(Context(name, Path.GetFullPath(name), sources, version)).Files;
+        Plan(name, sources, version).Files;
+
+    internal static SetupPlan Plan(string name, IReadOnlyList<string> sources, string version) =>
+        SetupTasks.Plan(Context(name, Path.GetFullPath(name), sources, version));
 
     static SetupContext Context(string name, string block, IReadOnlyList<string> sources, string version) {
         var context = new SetupContext(block, $"{name}.csproj", version, sources, existingApp: false);

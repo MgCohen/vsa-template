@@ -43,6 +43,15 @@ public sealed class TextFileTests {
     }
 
     [Test]
+    public void WriteAllOrNoneDeletesTheFilesItMadeIfALaterWriteFails() {
+        File.WriteAllText(Path.Combine(root, "x"), "a file, not a folder");
+
+        Assert.That(() => TextFile.WriteAllOrNone(root, [new("a.txt", "new"), new("x/b.txt", "new")]), Throws.InstanceOf<IOException>());
+
+        Assert.That(File.Exists(Path.Combine(root, "a.txt")), Is.False);
+    }
+
+    [Test]
     public void WriteAllOrNoneWritesNothingIfOneFileExistsAndListsEachExistingFile() {
         File.WriteAllText(Path.Combine(root, "b.txt"), "mine");
         File.WriteAllText(Path.Combine(root, "c.txt"), "mine");
