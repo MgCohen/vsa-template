@@ -96,8 +96,8 @@ The root project gets its packages from two places:
 | Package | From | Contains |
 |---|---|---|
 | `Umpire.Kernel`, `Umpire.Markers` | Umpire.Sdk | The app start, the markers |
-| `Umpire.Vsa` | Umpire.Sdk, by `UmpirePack` (default `Vsa`) | The VSA pack and the base of each layer |
-| `Umpire.Vsa.Analyzers` | Umpire.Sdk, by `UmpirePack` | The VSA and kernel analyzers, and their rule values |
+| `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
+| `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, and their rule values |
 | `Umpire.Vsa.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the views |
 | `Umpire.Engine.Build` | `Hello.csproj` | The architecture check after each build |
 

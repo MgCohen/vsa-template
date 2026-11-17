@@ -8,7 +8,7 @@
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_UmpireKernelAnalyzerInPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)Umpire.Kernel.Analyzers.globalconfig" Pack="true" PackagePath="build" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)Umpire.Kernel.Analyzers.globalconfig" Pack="true" PackagePath="build;buildTransitive" Visible="false" />
   </ItemGroup>
   <Target Name="_UmpireKernelAnalyzerInPackage" DependsOnTargets="ResolveReferences">
     <ItemGroup>

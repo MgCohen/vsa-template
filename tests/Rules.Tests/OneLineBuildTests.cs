@@ -94,6 +94,13 @@ public sealed class OneLineBuildTests {
 
     static IEnumerable<string> NotBlank(IEnumerable<string> lines) => lines.Where(line => line.Trim().Length > 0);
 
+    [TestCase("OneLine.csproj", "Umpire.Vsa")]
+    [TestCase("Tests/OneLine.Tests.csproj", "Umpire.Vsa.Testing.Unit")]
+    public void The_default_pack_can_be_left_out(string project, string package) {
+        var references = Evaluate(project, "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
+        Assert.That(references.Output, Does.Not.Contain($"\"{package}\""), references.Output);
+    }
+
     DotnetResult Evaluate(params string[] args) =>
         workspace.Dotnet(["msbuild", .. args, "-nodeReuse:false"]).EnsureSuccess();
 

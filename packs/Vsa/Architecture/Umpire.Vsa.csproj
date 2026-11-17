@@ -18,4 +18,10 @@
     <ProjectReference Include="../Kernel/Handlers/Events/Umpire.Vsa.Handlers.Events.csproj" />
     <ProjectReference Include="../Kernel/Handlers/Commands/Umpire.Vsa.Handlers.Commands.csproj" />
   </ItemGroup>
+  <!-- The package depends on the VSA analyzers and their rule values, so each app that references it gets them. The analyzers
+       run only in a compilation that selects the VSA pack (RuleAnalyzer.PackAssembly). The reference is only for the pack:
+       a build does not copy the analyzer DLL, and source mode adds the analyzers in Umpire.Sdk.Core.targets. -->
+  <ItemGroup Condition="'$(_IsPacking)' == 'true'">
+    <ProjectReference Include="../Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" Private="false" PrivateAssets="none" />
+  </ItemGroup>
 </Project>

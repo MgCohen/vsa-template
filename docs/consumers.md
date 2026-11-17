@@ -70,7 +70,7 @@ The root project of a new app has the package `Umpire.Engine.Build`. So the rule
 
 ## Packages of an app
 
-`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers) and the pack. `UmpirePack` selects the pack, and its default is `Vsa`: the SDK adds `Umpire.Vsa` and `Umpire.Vsa.Analyzers` with its own version. `Umpire.Vsa` depends on each VSA layer base. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
+`<Project Sdk="Umpire.Sdk" />` gives the general packages (Umpire.Kernel, Umpire.Markers) and the default pack `Umpire.Vsa`, with its own version. The code selects the pack: the app class names it (`App<Vsa<...>>`). A package only makes a pack available. Another pack is a normal `PackageReference`, and `-p:UmpireDefaultPack=false` (or the property in the project) leaves out `Umpire.Vsa` and its test bases. `Umpire.Vsa` depends on each VSA layer base and on `Umpire.Vsa.Analyzers`. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to the pack assembly. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
 
 There are two Umpire SDKs, one for each platform SDK of .NET:
 
