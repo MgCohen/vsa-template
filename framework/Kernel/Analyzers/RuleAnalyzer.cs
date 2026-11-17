@@ -58,9 +58,9 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     }
 
     static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, AnalyzerConfigOptions global) {
-        var options = new UmpireOptions(rule.Id, global);
-        return rule.RequiredOptions
-            .Select(option => (Option: option, Value: options.Value(option.Key)))
+        var options = new UmpireOptions(rule.Id, global, rule.Options);
+        return rule.Options
+            .Select(option => (Option: option, Value: options.Configured(option.Key)))
             .Where(pair => !pair.Option.IsValid(pair.Value))
             .Select(pair => Diagnostic.Create(OptionDescriptor, Location.None,
                 rule.Id, pair.Option.Key, pair.Option.Kind, pair.Value ?? "missing"));

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
-public abstract class ForbiddenUseRule(DiagnosticDescriptor rule) : UmpireAnalyzerRule(rule) {
+public abstract class ForbiddenUseRule : VsaRule {
     protected abstract INamedTypeSymbol? Subject(Compilation compilation);
 
     protected abstract IEnumerable<INamedTypeSymbol?> ForbiddenTypes(Compilation compilation);

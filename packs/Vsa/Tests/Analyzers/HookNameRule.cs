@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class HookNameRule() : UmpireAnalyzerRule(Descriptor) {
+public sealed class HookNameRule : VsaRule {
     const string Suffix = "Hook";
 
     static readonly string[] HookBases = [
@@ -15,13 +15,12 @@ public sealed class HookNameRule() : UmpireAnalyzerRule(Descriptor) {
         "Umpire.Vsa.Handlers.Events.AfterEventHook`1",
     ];
 
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010209",
-        "The name of a hook ends with Hook",
-        "{0} inherits {1}, so it is a hook. Rename it to {2}.",
-        "Umpire",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+    public override int Number => 9;
+
+    protected override string Title => "The name of a hook ends with Hook";
+
+    protected override string Message =>
+        "{0} inherits {1}, so it is a hook. Rename it to {2}.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         List<INamedTypeSymbol> bases =

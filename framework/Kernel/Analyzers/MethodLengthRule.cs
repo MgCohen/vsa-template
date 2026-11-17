@@ -5,14 +5,15 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class MethodLengthRule() : LimitRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010102",
-        "A method has at most the maximum number of lines",
-        "{0} has {1} lines, and the limit is {2}. Move a part of it to a new method.",
-        "Umpire",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+public sealed class MethodLengthRule : LimitRule {
+    public override int Number => 2;
+
+    protected override int DefaultMax => 40;
+
+    protected override string Title => "A method has at most the maximum number of lines";
+
+    protected override string Message =>
+        "{0} has {1} lines, and the limit is {2}. Move a part of it to a new method.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxNodeAction(Check,

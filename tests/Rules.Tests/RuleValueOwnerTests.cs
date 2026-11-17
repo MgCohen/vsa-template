@@ -9,22 +9,21 @@ public sealed partial class RuleValueOwnerTests {
     static readonly RuleAnalyzer[] Analyzers = [new KernelAnalyzer(), new VsaAnalyzer()];
 
     [Test]
-    public void Each_option_has_a_value_in_the_file_of_its_package() {
-        var missing = Analyzers.SelectMany(analyzer => analyzer.Rules.SelectMany(rule => rule.RequiredOptions
-            .Where(option => !option.IsValid(ConfigOf(analyzer).TryValue(Key(rule, option))))
-            .Select(option => $"{ConfigOf(analyzer).FileName}: {Key(rule, option)}")));
+    public void Each_option_has_a_valid_default_on_its_rule() {
+        var missing = Analyzers.SelectMany(analyzer => analyzer.Rules.SelectMany(rule => rule.Options
+            .Where(option => !option.IsValid(null))
+            .Select(option => $"{rule.GetType().Name}: {option.Key}")));
 
         Assert.That(missing, Is.Empty);
     }
 
     [Test]
-    public void No_option_is_in_the_file_of_another_package() {
-        var misplaced = Analyzers.SelectMany(analyzer => analyzer.Rules.SelectMany(rule => rule.RequiredOptions
-            .SelectMany(option => RulesConfig.All
-                .Where(config => config != ConfigOf(analyzer) && config.TryValue(Key(rule, option)) is not null)
-                .Select(config => $"{config.FileName}: {Key(rule, option)}"))));
+    public void No_package_file_has_an_option_value() {
+        var values = RulesConfig.All.SelectMany(config => config.Keys
+            .Where(key => key.StartsWith("umpire.", StringComparison.Ordinal))
+            .Select(key => $"{config.FileName}: {key}"));
 
-        Assert.That(misplaced, Is.Empty);
+        Assert.That(values, Is.Empty);
     }
 
     [Test]
@@ -88,7 +87,7 @@ public sealed partial class RuleValueOwnerTests {
     static string Key(UmpireAnalyzerRule rule, UmpireOption option) => $"umpire.{rule.Id}.{option.Key}";
 
     static bool Owns(RuleAnalyzer analyzer, string key) =>
-        analyzer.Rules.Any(rule => rule.RequiredOptions.Any(option => Key(rule, option) == key))
+        analyzer.Rules.Any(rule => rule.Options.Any(option => Key(rule, option) == key))
         || analyzer.Rules.Any(rule => key == $"dotnet_diagnostic.{rule.Id}.severity");
 
     static IEnumerable<string> SdkFiles() =>

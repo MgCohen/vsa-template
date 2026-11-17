@@ -11,7 +11,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(UmpireAnalyzerRoslynVersion)" PrivateAssets="all" />
-    <AdditionalFiles Include="AnalyzerReleases.Shipped.md;AnalyzerReleases.Unshipped.md" />
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <ProjectReference Include="../../../../framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.csproj" PrivateAssets="all" />
   </ItemGroup>

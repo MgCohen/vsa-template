@@ -4,7 +4,7 @@ using Umpire.Vsa.Analyzers;
 namespace Rules.Tests;
 
 public sealed class LineLengthRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new LineLengthRule().Rule;
 
     [Test]
     public Task Line_at_the_limit_passes() => Analyzer.VerifyFormatting(Rule, """
@@ -17,8 +17,8 @@ public sealed class LineLengthRuleTests {
         """, "umpire.UMP010101.max = 20", Analyzer.Diagnostic(Rule, 0, 24, 20));
 
     [Test]
-    public Task Limit_comes_from_the_rules_config() {
-        var max = int.Parse(RulesConfig.Value("umpire.UMP010101.max"));
+    public Task Limit_comes_from_the_default_of_the_rule() {
+        var max = int.Parse(RulesConfig.Default(new LineLengthRule(), LimitRule.MaxKey));
         var comment = "// " + new string('x', max - 3);
         var source = string.Join("\n", "class A { }", comment, comment + "{|#0:x|}");
         return Analyzer.VerifyFormatting(Rule, source, "", Analyzer.Diagnostic(Rule, 0, max + 1, max));
@@ -26,7 +26,7 @@ public sealed class LineLengthRuleTests {
 }
 
 public sealed class MethodLengthRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = MethodLengthRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new MethodLengthRule().Rule;
 
     const string Method = """
         class A {
@@ -61,7 +61,7 @@ public sealed class MethodLengthRuleTests {
 }
 
 public sealed class FileLengthRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = FileLengthRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new FileLengthRule().Rule;
 
     [Test]
     public Task File_at_the_limit_passes() => Analyzer.VerifyFormatting(Rule, """
@@ -80,7 +80,7 @@ public sealed class FileLengthRuleTests {
 }
 
 public sealed class OneTypePerFileRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = OneTypePerFileRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new OneTypePerFileRule().Rule;
 
     [Test]
     public Task One_type_with_nested_types_passes() => Analyzer.VerifyFormatting(Rule, """
@@ -118,12 +118,12 @@ public sealed class OneTypePerFileRuleTests {
 }
 
 public sealed class MemberOrderRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = MemberOrderRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new MemberOrderRule().Rule;
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Diagnostic(string name, string group, string previous,
         string order = "static before instance") =>
-        Analyzer.Diagnostic(Rule, 0, name, group, previous, RulesConfig.Value("umpire.UMP010105.kind_order"),
-            RulesConfig.Value("umpire.UMP010105.access_order"), order);
+        Analyzer.Diagnostic(Rule, 0, name, group, previous, RulesConfig.Default(new MemberOrderRule(), MemberOrderRule.KindOrderKey),
+            RulesConfig.Default(new MemberOrderRule(), MemberOrderRule.AccessOrderKey), order);
 
     [Test]
     public Task Members_in_order_pass() => Analyzer.VerifyFormatting(Rule, """
@@ -194,7 +194,7 @@ public sealed class MemberOrderRuleTests {
 }
 
 public sealed class CommentRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = CommentRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new CommentRule().Rule;
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Comment(int location) => Analyzer.Diagnostic(Rule, location);
 
@@ -270,7 +270,7 @@ public sealed class CommentRuleTests {
 }
 
 public sealed class RuleOptionTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = LineLengthRule.Descriptor;
+    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new LineLengthRule().Rule;
 
     const string LongLine = "class Abc { int value; }";
 
@@ -278,9 +278,17 @@ public sealed class RuleOptionTests {
         new Microsoft.CodeAnalysis.Testing.DiagnosticResult(VsaAnalyzer.OptionDescriptor).WithArguments(rule, key, kind, value);
 
     [Test]
-    public Task Missing_option_fails_and_the_rule_does_not_run() =>
-        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, LongLine, "",
-            Option("UMP010101", "max", "a whole number more than 0", "missing"));
+    public Task Missing_option_takes_the_default_of_the_rule() =>
+        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "// " + new string('y', 117) + "{|#0:x|}", "",
+            Analyzer.Diagnostic(Rule, 0, 121, 120));
+
+    [Test]
+    public void Option_with_no_default_and_no_value_is_not_valid() =>
+        Assert.That(UmpireOption.Int(LimitRule.MaxKey).IsValid(null), Is.False);
+
+    [Test]
+    public void Option_with_a_default_and_no_value_is_valid() =>
+        Assert.That(UmpireOption.Int(LimitRule.MaxKey, 5).IsValid(null), Is.True);
 
     [Test]
     public Task Option_that_is_not_valid_fails() =>

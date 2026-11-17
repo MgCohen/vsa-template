@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public abstract class LimitRule(DiagnosticDescriptor rule) : UmpireAnalyzerRule(rule) {
+public abstract class LimitRule : KernelRule {
     public const string MaxKey = "max";
 
     public override bool IsModuleRule => false;
 
-    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.Int(MaxKey)];
+    public override IReadOnlyList<UmpireOption> Options => [UmpireOption.Int(MaxKey, DefaultMax)];
 
-    protected int? Max(AnalyzerOptions options, SyntaxTree tree) => Options(options, tree).Int(MaxKey);
+    protected abstract int DefaultMax { get; }
+
+    protected int? Max(AnalyzerOptions options, SyntaxTree tree) => Values(options, tree).Int(MaxKey);
 }

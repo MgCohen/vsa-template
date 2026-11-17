@@ -33,6 +33,14 @@ public sealed partial class CodeTests {
     }
 
     [Test]
+    public void Each_analyzer_rule_is_in_the_rules_table_of_the_docs() {
+        var docs = File.ReadAllText(Repo.Path("docs", "architecture-rules.md"));
+        var ids = new KernelAnalyzer().SupportedDiagnostics.Concat(new VsaAnalyzer().SupportedDiagnostics).Select(d => d.Id);
+
+        Assert.That(ids.Where(id => !docs.Contains($"| `{id}` |", StringComparison.Ordinal)), Is.Empty);
+    }
+
+    [Test]
     public void Each_Umpire_code_in_the_repository_has_six_digits() {
         var wrong = RepositoryFiles()
             .SelectMany(file => File.ReadLines(file).Select((line, index) => new { file, line, index }))

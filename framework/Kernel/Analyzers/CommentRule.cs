@@ -5,16 +5,15 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
-public sealed class CommentRule() : UmpireAnalyzerRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010106",
-        "The code has no comments",
-        "The code has a comment. Remove it. Put the information in a name: a type, a member, a variable or a test.",
-        "Umpire",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+public sealed class CommentRule : KernelRule {
+    public override int Number => 6;
 
     public override bool IsModuleRule => false;
+
+    protected override string Title => "The code has no comments";
+
+    protected override string Message =>
+        "The code has a comment. Remove it. Put the information in a name: a type, a member, a variable or a test.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(Check);
