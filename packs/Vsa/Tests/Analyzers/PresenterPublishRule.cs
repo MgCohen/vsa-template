@@ -9,7 +9,7 @@ public sealed class PresenterPublishRule : ForbiddenUseRule {
     protected override string Title => "Presenters do not publish events";
 
     protected override string Message =>
-        "Presenter {0} uses {1}. A presenter does not publish events. Send a request with IBus, and publish the event in its handler.";
+        "Presenter {0} uses {1}. A presenter does not publish events. Send a request with IRequestSender, and publish the event in its handler.";
 
     protected override INamedTypeSymbol? Subject(Compilation compilation) =>
         compilation.GetTypeByMetadataName("Umpire.Vsa.Presenters.Presenter");

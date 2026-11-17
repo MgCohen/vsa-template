@@ -3,7 +3,6 @@ namespace Umpire.Vsa.Testing.Unit;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
-using System.Reflection;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
@@ -56,15 +55,13 @@ public abstract class VsaUnitTest {
     protected Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
         where TResponse : IResponse {
         ArgumentNullException.ThrowIfNull(request);
-        var pipeline = new PipelineBuilder<IMessage>().Handlers(HandlerOf(request.GetType())).Build(Provider);
+        var pipeline = new PipelineBuilder<IMessage>().Handlers(HandlerOf(typeof(RequestHandler<,>), request.GetType())).Build(Provider);
         return pipeline.SendAsync<TResponse>(request, ct);
     }
 
     protected Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
         ArgumentNullException.ThrowIfNull(command);
-        var service = typeof(CommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
-        var handler = CommandHandlerOf(command.GetType(), service);
-        var pipeline = new PipelineBuilder<IMessage>().Handlers(handler).Build(Provider);
+        var pipeline = new PipelineBuilder<IMessage>().Handlers(HandlerOf(typeof(CommandHandler<,>), command.GetType())).Build(Provider);
         return pipeline.SendAsync<TResult>(command, ct);
     }
 
@@ -74,25 +71,15 @@ public abstract class VsaUnitTest {
         return all.BuildServiceProvider();
     }
 
-    static Type HandlerOf(Type request) {
-        var name = request.Assembly.GetName().Name!;
-        var handlers = Assembly.Load(name.Replace(".Contracts.Requests", ".Handlers.Requests", StringComparison.Ordinal));
-        var found = LoadedTypes.Of(handlers).Where(t => !t.IsAbstract && HandledRequest(t) == request).ToList();
+    static Type HandlerOf(Type handlerBase, Type message) {
+        var found = LoadedTypes.Of(message.Assembly).Where(t => !t.IsAbstract && HandledMessage(t, handlerBase) == message).ToList();
         return found.Count == 1 ? found[0]
-            : throw new InvalidOperationException($"{request.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
+            : throw new InvalidOperationException($"{message.FullName} has {found.Count} handlers in {message.Assembly.GetName().Name}. It must have one.");
     }
 
-    static Type CommandHandlerOf(Type command, Type service) {
-        var name = command.Assembly.GetName().Name!;
-        var handlers = Assembly.Load(name.Replace(".Contracts.Commands", ".Handlers.Commands", StringComparison.Ordinal));
-        var found = LoadedTypes.Of(handlers).Where(t => !t.IsAbstract && service.IsAssignableFrom(t)).ToList();
-        return found.Count == 1 ? found[0]
-            : throw new InvalidOperationException($"{command.FullName} has {found.Count} handlers in {handlers.GetName().Name}. It must have one.");
-    }
-
-    static Type? HandledRequest(Type type) {
+    static Type? HandledMessage(Type type, Type handlerBase) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {
-            if (b.IsGenericType && b.GetGenericTypeDefinition() == typeof(RequestHandler<,>)) {
+            if (b.IsGenericType && b.GetGenericTypeDefinition() == handlerBase) {
                 return b.GetGenericArguments()[0];
             }
         }

@@ -10,4 +10,4 @@ public sealed record RunEngineCommand(
     ReportMode Mode = ReportMode.Error,
     string Skip = "",
     bool FailFast = false)
-    : IConsoleCommand<ReportResult>;
+    : IConsoleCommand<RunEngineResult>;

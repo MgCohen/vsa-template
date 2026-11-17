@@ -2,6 +2,8 @@ namespace Framework.Tests.Host;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Shelf;
+using Shelf.Presenters;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
@@ -16,6 +18,29 @@ public sealed class PresenterEventTests {
 
         Assert.That(registrations.Any(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.True);
         Assert.That(registrations.Any(s => s.ServiceType != typeof(RingLog) && s.ImplementationType == typeof(RingLog)), Is.False);
+    }
+
+    [Test]
+    public void AnAppWithNoViewsRootGetsNoViewServices() {
+        var registrations = WebApps.OnTestServer(new ShelfModule()).Registrations();
+
+        Assert.That(registrations.Any(s => s.ServiceType.Namespace?.StartsWith("Microsoft.AspNetCore.Components", StringComparison.Ordinal) == true), Is.False);
+    }
+
+    [Test]
+    public void EachPresenterIsRegisteredOneTime() {
+        var registrations = WebApps.OnTestServer(new SignalsModule(), new ShelfModule()).Registrations();
+
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(BellPresenter)), Is.EqualTo(1));
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(ShelfPresenter)), Is.EqualTo(1));
+        Assert.That(registrations.Any(s => s.ServiceType == typeof(Presenter)), Is.False);
+    }
+
+    [Test]
+    public void OnlyThePresentersOfTheModulesAreRegistered() {
+        var registrations = WebApps.OnTestServer(new ShelfModule()).Registrations();
+
+        Assert.That(registrations.Any(s => s.ServiceType.Assembly == typeof(OpenPresenter<>).Assembly), Is.False);
     }
 
     [Test]
@@ -78,4 +103,6 @@ public sealed class PresenterEventTests {
 
     static Task<IHost> Start(Action<IServiceCollection>? configure = null) =>
         WebApps.OnTestServer(new SignalsModule()).With(configure ?? (_ => { })).Start();
+
+    sealed class OpenPresenter<T>() : Presenter(null!);
 }

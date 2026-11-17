@@ -2,24 +2,22 @@ namespace Umpire.Vsa.Presenters;
 
 using Umpire.Markers;
 using Umpire.Messages.Contracts;
+using Umpire.Vsa.Contracts.Requests;
 
-[AutoRegister]
 [RequireDerived]
 [Preserve]
-public abstract class Presenter(IBus bus) : IDisposable {
-    IDisposable? live;
+public abstract class Presenter(IRequestSender requests) : IDisposable {
+    Action? disconnect;
 
     public event Action? Changed;
 
-    protected IBus Bus => bus;
-
-    internal SemaphoreSlim Serial { get; } = new(1, 1);
+    protected IRequestSender Requests => requests;
 
     internal void RaiseChanged() => Changed?.Invoke();
 
-    internal void Connect(IDisposable connection) {
-        live?.Dispose();
-        live = connection;
+    internal void Connect(Action disconnectFromLive) {
+        disconnect?.Invoke();
+        disconnect = disconnectFromLive;
     }
 
     protected async Task Run(OpState op, Func<Task<Error?>> body) {
@@ -41,8 +39,8 @@ public abstract class Presenter(IBus bus) : IDisposable {
 
     protected virtual void Dispose(bool disposing) {
         if (disposing) {
-            live?.Dispose();
-            live = null;
+            disconnect?.Invoke();
+            disconnect = null;
         }
     }
 }

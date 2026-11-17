@@ -459,7 +459,7 @@ Plugin/Presenters -> Kernel/Domain [any] Deny
 Plugin/Presenters -> Kernel/Infrastructure [any] Deny
 Plugin/Presenters -> Kernel/Presenters [any] Allow Public
 Plugin/Presenters -> Kernel/Contracts [any] Allow Public
-Plugin/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Internal
+Plugin/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Public
 Plugin/Presenters -> Kernel/Contracts/Contracts.Events [any] Allow Internal
 Plugin/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
 Plugin/Presenters -> Kernel/Handlers [any] Deny
@@ -1309,7 +1309,7 @@ Feature/Presenters -> Kernel/Domain [any] Deny
 Feature/Presenters -> Kernel/Infrastructure [any] Deny
 Feature/Presenters -> Kernel/Presenters [any] Allow Public
 Feature/Presenters -> Kernel/Contracts [any] Allow Public
-Feature/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Internal
+Feature/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Public
 Feature/Presenters -> Kernel/Contracts/Contracts.Events [any] Allow Internal
 Feature/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
 Feature/Presenters -> Kernel/Handlers [any] Deny

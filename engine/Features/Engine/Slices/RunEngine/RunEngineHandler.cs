@@ -3,7 +3,6 @@ namespace Engine.Slices.RunEngine;
 using Blocks.Slices.FindBlocks;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
-using Report.Domain.Shared;
 using Report.Slices.WriteReport;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
@@ -13,12 +12,13 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
 using Versions.Slices.CheckVersions;
 
-sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : CommandHandler<RunEngineCommand, ReportResult> {
-    public override async Task<Result<ReportResult>> HandleAsync(Envelope<RunEngineCommand> envelope) {
+sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : CommandHandler<RunEngineCommand, RunEngineResult> {
+    public override async Task<Result<RunEngineResult>> HandleAsync(Envelope<RunEngineCommand> envelope) {
         var run = envelope.Message;
         options.FailFast = run.FailFast;
         var findings = await Run(run, envelope.Cancellation);
-        return await commands.SendAsync(new WriteReportCommand(run.Mode, findings), envelope.Cancellation);
+        var report = await commands.SendAsync(new WriteReportCommand(run.Mode, findings), envelope.Cancellation);
+        return report.IsSuccess ? new RunEngineResult(report.Value.ExitCode, report.Value.Lines) : report.Error!;
     }
 
     async Task<IReadOnlyList<Finding>> Run(RunEngineCommand run, CancellationToken ct) {

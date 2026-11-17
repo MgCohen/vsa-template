@@ -97,7 +97,7 @@ A module in its own assembly (for example the fixture modules in `tests/Fixtures
 
 The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notebook`. One assembly can have many modules.
 
-`IResponse` is a marker interface. `IRequest`, `RequestHandler`, `IBus.Send` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
+`IResponse` is a marker interface. `IRequest`, `RequestHandler`, `IRequestSender.SendAsync` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
 
 ## The published domain (Domain/Shared/)
 
@@ -133,7 +133,7 @@ A command goes from one module to another in the same process. It has one handle
 
 | Message | Sent by | Handlers | Result | Transport |
 |---|---|---|---|---|
-| Request (`IRequest<T>`) | A client or a module | One `RequestHandler` | `IResponse` | In process (`IBus.Send`), or HTTP on the web host |
+| Request (`IRequest<T>`) | A client or a module | One `RequestHandler` | `IResponse` | In process (`IRequestSender.SendAsync`), or HTTP on the web host |
 | Command (`ICommand<T>`) | A handler of a module | One `CommandHandler` | Any type of the slice | In process, `ICommandSender` |
 | Event (`IntegrationEvent`) | A handler, after a change | Zero or more | `Unit` | `IIntegrationEventPublisher` |
 

@@ -134,16 +134,17 @@ public sealed class RunEngineTests {
     public async Task A_severity_of_none_in_the_umpireconfig_of_the_block_turns_a_rule_off() {
         var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
         var config = Path.Combine(Notes, ".umpireconfig");
+        var original = File.ReadAllText(config);
         Directory.CreateDirectory(store);
         try {
-            File.WriteAllText(Path.Combine(store, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
-            File.WriteAllText(config, "dotnet_diagnostic.UMP020401.severity = none");
+            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
+            File.WriteAllText(config, original + "dotnet_diagnostic.UMP020401.severity = none\n");
 
             var result = await Run(project: Notes);
 
             Assert.That(result.Lines, Has.None.Contains("UMP020401"));
         } finally {
-            File.Delete(config);
+            File.WriteAllText(config, original);
             Directory.Delete(store, recursive: true);
         }
     }
@@ -216,7 +217,7 @@ public sealed class RunEngineTests {
         Assert.ThrowsAsync<DirectoryNotFoundException>(() => Run(bin: bin, failFast: true));
     }
 
-    static async Task<ReportResult> Run(
+    static async Task<RunEngineResult> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BlocksModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
