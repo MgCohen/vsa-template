@@ -193,13 +193,13 @@ public sealed class AppTests {
     sealed class RulesApp : App<Vsa<RulesArchitecture, WebVsaHost>>;
 
     sealed class WaitingApp : App<Vsa<VsaHost>> {
-        protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+        protected internal override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
     }
 
     sealed class StopOnStartApp : App<Vsa<VsaHost>> {
         public int Stops { get; private set; }
 
-        protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+        protected internal override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
 
         protected override void OnStart() => Stop();
 
@@ -213,12 +213,12 @@ public sealed class AppTests {
 
         public int Composes { get; private set; }
 
-        protected override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+        protected internal override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+
+        protected internal override void ConfigureServices(IServiceCollection services) => Composes++;
 
         protected override void OnStart() => Marker = Services!.GetRequiredService<IConfiguration>()["name"];
 
         protected override void OnStop() => Stops++;
-
-        protected override void ConfigureServices(IServiceCollection services) => Composes++;
     }
 }

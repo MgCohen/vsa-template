@@ -4,20 +4,19 @@ using Bare;
 using Shelf;
 using Toolbox;
 using Twin;
-using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernel;
 
 public sealed class AppTypesTests {
     [Test]
     public void RootsAreInOrdinalOrderOfName() {
-        var roots = AppTypes.Find(new ConstraintKeys()).Roots;
+        var roots = new AppTypes(null).Roots;
 
         Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Answers", "Bare", "Battle", "Cards", "Echo", "Resources", "Shelf", "Signals", "Toolbox", "Twin" }));
     }
 
     [Test]
     public void TheScanSkipsTheModulesOfATestAssembly() {
-        Assert.That(AppTypes.Find(new ConstraintKeys()).Roots.Select(root => root.Name), Has.None.EqualTo("TestOnly"));
+        Assert.That(new AppTypes(null).Roots.Select(root => root.Name), Has.None.EqualTo("TestOnly"));
         var testRoots = ModuleRoot.In(typeof(TestOnly.TestOnlyModule).Assembly).Select(root => root.Name);
 
         Assert.That(testRoots, Does.Contain("TestOnly"));
@@ -98,8 +97,5 @@ public sealed class AppTypesTests {
 
     public sealed class ValuedModule(int value) : Module {
         public int Value => value;
-
-        public override void Configure(IServiceCollection services) {
-        }
     }
 }

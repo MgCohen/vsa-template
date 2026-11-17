@@ -1,7 +1,6 @@
 namespace Composition.Tests;
 
 using Greet;
-using Microsoft.Extensions.DependencyInjection;
 using Umpire.Vsa.Composition;
 using Umpire.Kernel;
 
@@ -34,8 +33,5 @@ public sealed class ConsoleHostTests {
 
     static int Run(params string[] args) => new TestApp<ConsoleVsaHost>(new GreetModule()).Run(args);
 
-    sealed class EchoModuleStub : Module {
-        public override void Configure(IServiceCollection services) {
-        }
-    }
+    sealed class EchoModuleStub : Module;
 }

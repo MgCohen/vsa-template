@@ -31,9 +31,9 @@ sealed class WebTestApp(params Module[] modules) : App<Vsa<WebVsaHost>> {
         return registrations!;
     }
 
-    protected override IReadOnlyList<Module> Modules() => modules;
+    protected internal override IReadOnlyList<Module> Modules() => modules;
 
-    protected override void ConfigureServices(IServiceCollection services) {
+    protected internal override void ConfigureServices(IServiceCollection services) {
         services.AddSingleton<IServer, TestServer>();
         foreach (var add in configure) {
             add(services);

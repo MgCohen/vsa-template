@@ -1,5 +1,6 @@
 namespace Umpire.Kernel;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Markers;
 
@@ -11,5 +12,8 @@ public abstract class Module {
 
     protected internal virtual string Section => "Modules";
 
-    public abstract void Configure(IServiceCollection services);
+    public virtual void Configure(IServiceCollection services) {
+    }
+
+    internal virtual void Compose(IServiceCollection services, IConfiguration configuration) => Configure(services);
 }
