@@ -1,5 +1,6 @@
 namespace Umpire.Cli.Scaffolding.Setup;
 
+using Umpire.Engine.Versions;
 using Umpire.Files;
 
 sealed class SetupContext(
@@ -32,18 +33,10 @@ sealed class SetupContext(
 
     public bool OnDisk(string path) => File.Exists(FullPath(path));
 
-    public string? ParentFile(string path) {
-        if (!existingApp) {
-            return null;
-        }
-        for (var folder = Directory.GetParent(Path.GetFullPath(block)); folder is not null; folder = folder.Parent) {
-            var file = Path.Combine(folder.FullName, path);
-            if (File.Exists(file)) {
-                return file;
-            }
-        }
-        return null;
-    }
+    public string? ParentFile(string path) =>
+        existingApp && Directory.GetParent(Path.GetFullPath(block)) is { } parent
+            ? VersionSlots.FileAbove(parent.FullName, path)
+            : null;
 
     public void Add(TextFile file) => planned[file.Path] = file;
 

@@ -10,6 +10,8 @@ public static class VersionSlots {
     public const string PackagePrefix = "Umpire.";
     public const string Sdk = "Umpire.Sdk";
     public const string WebSdk = "Umpire.Sdk.Web";
+    public const string MsbuildSdks = "msbuild-sdks";
+    const string GlobalJson = "global.json";
     const string CentralFile = "Directory.Packages.props";
     const string DevProps = "Umpire.Sdk.Dev.props";
     const LoadOptions KeepLayout = LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo;
@@ -26,7 +28,7 @@ public static class VersionSlots {
             .Select(file => new ProjectDocument(file, XDocument.Load(Path.Combine(root, file), KeepLayout)))
             .ToList();
         var central = CentralVersions(projects.Select(project => project.Document).Concat(CentralAbove(root)));
-        return [.. projects.Select(project => ProjectFile(root, project, central))];
+        return [.. projects.Select(project => ProjectFile(project, central))];
     }
 
     public static IReadOnlyList<VersionSlot> InBin(string bin) =>
@@ -38,8 +40,7 @@ public static class VersionSlots {
         if (ParsedOrNull(projectFile)?.Root is not { } root) {
             return false;
         }
-        var main = ((string?)root.Attribute("Sdk") ?? "").Split(';', StringSplitOptions.TrimEntries);
-        return main.Any(part => IsSdk(part.Split('/')[0].Trim()))
+        return SdkPart.AllOf((string?)root.Attribute("Sdk")).Any(part => part.IsUmpire)
             || root.Elements().Any(element => element.Name.LocalName == "Import"
                 && ((string?)element.Attribute("Project") ?? "").Contains(DevProps, StringComparison.Ordinal));
     }
@@ -52,22 +53,35 @@ public static class VersionSlots {
             return [];
         }
         var projects = ProjectFiles(root)
-            .Where(file => ParsedOrNull(Path.Combine(root, file))?.Root?.Attribute("Sdk") is XAttribute sdk
-                && sdk.Value.Split(';', StringSplitOptions.TrimEntries).Any(IsSdk))
+            .Where(file => SdkPart.AllOf((string?)ParsedOrNull(Path.Combine(root, file))?.Root?.Attribute("Sdk"))
+                .Any(part => part.IsUmpire && part.Version is null))
             .Select(file => $"{file}: an Umpire SDK with no version. Write the version after the SDK name, "
                 + $"for example Sdk=\"{Sdk}/<version>\"");
-        var globalJson = GlobalJsonAbove(root) is string file
-            && Json(file)?["msbuild-sdks"] is JsonObject sdks
-            && sdks.Any(pair => IsSdk(pair.Key))
-                ? [$"{file}: an Umpire pin in msbuild-sdks. "
-                    + "Remove the entry, and write the version in each project file"]
-                : Array.Empty<string>();
+        var globalJson = FileAbove(root, GlobalJson) is string file && Json(file) is JsonObject json && PinsSdk(json)
+            ? [$"{file}: an Umpire pin in {MsbuildSdks}. "
+                + "Remove the entry, and write the version in each project file"]
+            : Array.Empty<string>();
         return [.. globalJson, .. projects];
     }
 
     public static bool IsSdk(string? name) =>
         string.Equals(name, Sdk, StringComparison.OrdinalIgnoreCase)
         || string.Equals(name, WebSdk, StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsSdkElement(XElement element) =>
+        element.Name.LocalName == "Sdk" && IsSdk((string?)element.Attribute("Name"));
+
+    public static bool PinsSdk(JsonObject globalJson) =>
+        globalJson[MsbuildSdks] is JsonObject sdks && sdks.Any(pair => IsSdk(pair.Key));
+
+    public static IEnumerable<string> FoldersAbove(string start) {
+        for (var folder = new DirectoryInfo(Path.GetFullPath(start)); folder is not null; folder = folder.Parent) {
+            yield return folder.FullName;
+        }
+    }
+
+    public static string? FileAbove(string start, string fileName) =>
+        FoldersAbove(start).Select(folder => Path.Combine(folder, fileName)).FirstOrDefault(File.Exists);
 
     public static IReadOnlyList<string> ProjectFiles(string root) =>
         [.. Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
@@ -77,9 +91,7 @@ public static class VersionSlots {
             .Order(StringComparer.Ordinal)];
 
     static bool NamesUmpireSdk(XElement element) =>
-        element.Name.LocalName == "Sdk"
-            ? IsSdk((string?)element.Attribute("Name"))
-            : element.Attribute("Sdk")?.Value.Split(';').Any(part => IsSdk(part.Split('/')[0].Trim())) ?? false;
+        IsSdkElement(element) || SdkPart.AllOf((string?)element.Attribute("Sdk")).Any(part => part.IsUmpire);
 
     static XDocument? ParsedOrNull(string file) {
         try {
@@ -87,16 +99,6 @@ public static class VersionSlots {
         } catch (XmlException) {
             return null;
         }
-    }
-
-    static string? GlobalJsonAbove(string root) {
-        for (var folder = new DirectoryInfo(Path.GetFullPath(root)); folder is not null; folder = folder.Parent) {
-            var file = Path.Combine(folder.FullName, "global.json");
-            if (File.Exists(file)) {
-                return file;
-            }
-        }
-        return null;
     }
 
     static JsonNode? Json(string file) => JsonNode.Parse(File.ReadAllText(file), documentOptions: JsonAsDotnetReadsIt);
@@ -113,37 +115,34 @@ public static class VersionSlots {
         }
     }
 
-    static VersionFile ProjectFile(string root, ProjectDocument project, IReadOnlyDictionary<string, string> central) {
+    static VersionFile ProjectFile(ProjectDocument project, IReadOnlyDictionary<string, string> central) {
         var slots = project.Document.Descendants()
             .SelectMany(element => SdkPins(project.File, element).Concat(Packages(project.File, element, central)))
             .ToList();
-        return new VersionFile(project.File, slots, () => Save(project.Document, Path.Combine(root, project.File)));
+        return new VersionFile(project.File, slots, () => Text(project.Document));
     }
 
     static IEnumerable<VersionSlot> SdkPins(string file, XElement element) {
-        if (element.Name.LocalName == "Sdk") {
-            var name = (string?)element.Attribute("Name");
-            if (IsSdk(name) && element.Attribute("Version") is XAttribute version) {
-                yield return new VersionSlot(file, name!, version.Value, Line(element), value => version.Value = value);
+        if (IsSdkElement(element)) {
+            if (element.Attribute("Version") is XAttribute version) {
+                var name = (string)element.Attribute("Name")!;
+                yield return new VersionSlot(file, name, version.Value, Line(element), value => version.Value = value);
             }
             yield break;
         }
         if (element.Attribute("Sdk") is not XAttribute sdk) {
             yield break;
         }
-        var parts = sdk.Value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        foreach (var part in parts) {
-            if (part.Split('/') is [var name, var version] && IsSdk(name)) {
-                yield return new VersionSlot(
-                    file, name, version, Line(element), value => sdk.Value = WithSdk(sdk.Value, value));
-            }
+        foreach (var part in SdkPart.AllOf(sdk.Value).Where(part => part.IsUmpire && part.Version is not null)) {
+            yield return new VersionSlot(
+                file, part.Name, part.Version, Line(element), value => sdk.Value = WithSdk(sdk.Value, value));
         }
     }
 
     static string WithSdk(string sdks, string version) =>
-        string.Join(';', sdks.Split(';').Select(part => SdkPinName(part) is string name ? $"{name}/{version}" : part));
-
-    static string? SdkPinName(string part) => part.Trim().Split('/') is [var name, _] && IsSdk(name) ? name : null;
+        string.Join(';', sdks.Split(';').Select(part => SdkPart.Parse(part) is { IsUmpire: true, Version: not null } pin
+            ? $"{pin.Name}/{version}"
+            : part));
 
     static IEnumerable<VersionSlot> Packages(
         string file, XElement element, IReadOnlyDictionary<string, string> central) {
@@ -157,15 +156,11 @@ public static class VersionSlots {
         }
     }
 
-    static IEnumerable<XDocument> CentralAbove(string root) {
-        for (var folder = Directory.GetParent(Path.GetFullPath(root)); folder is not null; folder = folder.Parent) {
-            var file = Path.Combine(folder.FullName, CentralFile);
-            if (File.Exists(file)) {
-                return [XDocument.Load(file)];
-            }
-        }
-        return [];
-    }
+    static IEnumerable<XDocument> CentralAbove(string root) =>
+        Directory.GetParent(Path.GetFullPath(root)) is { } parent
+        && FileAbove(parent.FullName, CentralFile) is string file
+            ? [XDocument.Load(file)]
+            : [];
 
     static Dictionary<string, string> CentralVersions(IEnumerable<XDocument> documents) =>
         documents.SelectMany(document => document.Descendants())
@@ -175,16 +170,18 @@ public static class VersionSlots {
             .ToDictionary(
                 group => group.Key, group => VersionAttribute(group.First())!.Value, StringComparer.OrdinalIgnoreCase);
 
-    static void Save(XDocument document, string path) {
-        var content = TextContent.Read(path);
+    static string Text(XDocument document) {
         var settings = new XmlWriterSettings {
             OmitXmlDeclaration = document.Declaration is null,
-            Encoding = new UTF8Encoding(content.Bom),
-            NewLineChars = content.Text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n",
+            Encoding = new UTF8Encoding(false),
+            NewLineChars = "\n",
             NewLineHandling = NewLineHandling.Replace,
         };
-        using var writer = XmlWriter.Create(path, settings);
-        document.Save(writer);
+        using var stream = new MemoryStream();
+        using (var writer = XmlWriter.Create(stream, settings)) {
+            document.Save(writer);
+        }
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     static bool IsVsa(string id) => id.StartsWith(PackagePrefix, StringComparison.OrdinalIgnoreCase);
@@ -200,9 +197,4 @@ public static class VersionSlots {
     static int? Line(XElement element) => element is IXmlLineInfo info && info.HasLineInfo() ? info.LineNumber : null;
 
     sealed record ProjectDocument(string File, XDocument Document);
-
-    sealed record TextContent(string Text, bool Bom) {
-        public static TextContent Read(string path) =>
-            new(File.ReadAllText(path), File.ReadAllBytes(path) is [0xEF, 0xBB, 0xBF, ..]);
-    }
 }

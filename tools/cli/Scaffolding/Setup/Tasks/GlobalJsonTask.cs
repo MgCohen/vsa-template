@@ -6,9 +6,8 @@ using Umpire.Files;
 
 sealed class GlobalJsonTask : SetupTask {
     const string FileName = "global.json";
-    const string SdksKey = "msbuild-sdks";
     const string TestKey = "test";
-    static readonly string[] KeptParentKeys = ["sdk", SdksKey, TestKey];
+    static readonly string[] KeptParentKeys = ["sdk", VersionSlots.MsbuildSdks, TestKey];
 
     public override string Id => "global-json";
 
@@ -18,11 +17,11 @@ sealed class GlobalJsonTask : SetupTask {
         }
         if (JsonText.Parse(text) is not JsonObject json) {
             return new SetupResult.ByHand($"{FileName} has comments or is not valid JSON. "
-                + $"Make sure that it has no \"{SdksKey}\" entry for {VersionSlots.Sdk}.");
+                + $"Make sure that it has no \"{VersionSlots.MsbuildSdks}\" entry for an Umpire SDK.");
         }
-        return json[SdksKey]?[VersionSlots.Sdk] is null
+        return !VersionSlots.PinsSdk(json)
             ? new SetupResult.Done()
-            : new SetupResult.ByHand($"{FileName} pins {VersionSlots.Sdk} in \"{SdksKey}\". "
+            : new SetupResult.ByHand($"{FileName} pins an Umpire SDK in \"{VersionSlots.MsbuildSdks}\". "
                 + "The version of the Umpire SDK is "
                 + "on the first line of each project, for example "
                 + $"<Project Sdk=\"{VersionSlots.Sdk}/{context.Version}\">. Remove the entry.");
@@ -41,7 +40,11 @@ sealed class GlobalJsonTask : SetupTask {
                 json[key] = kept.DeepClone();
             }
         }
-        (json[SdksKey] as JsonObject)?.Remove(VersionSlots.Sdk);
+        if (json[VersionSlots.MsbuildSdks] is JsonObject sdks) {
+            foreach (var pin in sdks.Select(pair => pair.Key).Where(VersionSlots.IsSdk).ToList()) {
+                sdks.Remove(pin);
+            }
+        }
         return JsonText.Write(json);
     }
 }

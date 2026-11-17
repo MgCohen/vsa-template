@@ -69,6 +69,13 @@ public sealed class SetupTests {
     }
 
     [Test]
+    public void AnUmpireWebSdkPinInGlobalJsonIsByHand() {
+        Write("global.json", "{ \"msbuild-sdks\": { \"Umpire.Sdk.Web\": \"0.0.1\" } }");
+
+        Assert.That(Result("global-json"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("Remove the entry"));
+    }
+
+    [Test]
     public void AGlobalJsonWithACommentIsByHand() {
         Write("global.json", "{\n  // the SDK\n  \"sdk\": { \"version\": \"10.0.100\" }\n}\n");
 
@@ -290,7 +297,7 @@ public sealed class SetupTests {
             Console.SetOut(console);
         }
 
-        Assert.That(output.ToString(), Does.Contain("by hand: global.json pins Umpire.Sdk in"));
+        Assert.That(output.ToString(), Does.Contain("by hand: global.json pins an Umpire SDK in"));
     }
 
     [Test]

@@ -425,7 +425,7 @@ A file that does not exist gives no slot. `global.json` and a tool manifest give
 | A `PackageReference` with no version | Uses its `PackageVersion` in the block folder, else in the nearest `Directory.Packages.props` above it. With none, the check fails: the package has no version |
 | A value with an MSBuild property, for example `$(UmpireVersion)` | Not checked, not written. `umpire doctor` shows it as "not checked" |
 
-`umpire update` changes only the version text. A project file keeps its BOM and its line endings.
+`umpire update` changes only the version text. `VersionSlots` only reads; the tool writes each changed file with `TextFile` (`tools/Files/`): the file keeps its BOM and gets its dominant line ending.
 
 The app class (`MyApp : App<Vsa<TArchitecture, THost>>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Call `base.Rules` first: a later rule wins.
 

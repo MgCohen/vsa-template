@@ -2,6 +2,7 @@ namespace Umpire.Cli.Commands;
 
 using Umpire.Engine.Versions;
 using Umpire.Cli.Commands.Bases;
+using Umpire.Files;
 
 sealed class UpdateCommand : AppCommand {
     static readonly CommandOption Version = new(["--version"], "version");
@@ -17,6 +18,7 @@ sealed class UpdateCommand : AppCommand {
         var changed = new List<string>();
         foreach (var file in VersionSlots.InApp(app)) {
             if (file.SetVersion(version)) {
+                new TextFile(file.File, file.Content).Write(app);
                 changed.Add(file.File);
             }
         }
