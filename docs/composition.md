@@ -282,6 +282,8 @@ The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core mini
 | Error of the handler | A problem response: 404 if the code ends with `.not_found`, else 400 |
 | Value that does not bind | A problem response, 400, title `request.not_valid` |
 
+The HTTP API sends each request with the registered `IRequestSender`. If a module replaces `IRequestSender`, for example with a remote sender, the HTTP API uses that replacement too. A remote sender that calls the same app makes a loop.
+
 ## Projects
 
 ```

@@ -124,6 +124,21 @@ public sealed class LivePresentersTests {
         Assert.That(presenter.MostAtOnce, Is.EqualTo(1));
     }
 
+    [Test]
+    public async Task ASecondConnectKeepsTheGateOfThePresenter() {
+        var presenter = new SlowPresenter();
+        live.Connect(presenter);
+
+        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
+        live.Connect(presenter);
+        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
+        presenter.Release();
+        presenter.Release();
+        await presenter.Done.Task;
+
+        Assert.That(presenter.MostAtOnce, Is.EqualTo(1));
+    }
+
     sealed record Counted(int By) : IntegrationEvent;
 
     sealed record Other : IntegrationEvent;

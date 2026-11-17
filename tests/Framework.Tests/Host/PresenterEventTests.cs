@@ -30,6 +30,13 @@ public sealed class PresenterEventTests {
     }
 
     [Test]
+    public void OnlyThePresentersOfTheModulesAreRegistered() {
+        var registrations = WebApps.OnTestServer(new ShelfModule()).Registrations();
+
+        Assert.That(registrations.Any(s => s.ServiceType.Assembly == typeof(OpenPresenter<>).Assembly), Is.False);
+    }
+
+    [Test]
     public async Task APresenterGetsTheEventAfterItsHandlersWithNoView() {
         using var app = await Start();
         using var scope = app.Services.CreateScope();
@@ -89,4 +96,6 @@ public sealed class PresenterEventTests {
 
     static Task<IHost> Start(Action<IServiceCollection>? configure = null) =>
         WebApps.OnTestServer(new SignalsModule()).With(configure ?? (_ => { })).Start();
+
+    sealed class OpenPresenter<T>() : Presenter(null!);
 }

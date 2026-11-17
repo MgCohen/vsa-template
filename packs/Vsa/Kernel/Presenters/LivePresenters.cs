@@ -10,8 +10,10 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegratio
     public delegate Task Dispatch(Func<Task> work);
 
     public void Connect(Presenter presenter, Dispatch? dispatch = null) {
-        var entry = new Live(dispatch ?? (work => work()), new SemaphoreSlim(1, 1));
+        Live entry;
         lock (gate) {
+            var serial = live.TryGetValue(presenter, out var current) ? current.Gate : new SemaphoreSlim(1, 1);
+            entry = new Live(dispatch ?? (work => work()), serial);
             live[presenter] = entry;
         }
         presenter.Connect(() => Disconnect(presenter, entry));
@@ -46,7 +48,7 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegratio
 
     void Disconnect(Presenter presenter, Live entry) {
         lock (gate) {
-            if (live.TryGetValue(presenter, out var current) && current == entry) {
+            if (live.TryGetValue(presenter, out var current) && ReferenceEquals(current, entry)) {
                 live.Remove(presenter);
             }
         }
