@@ -20,6 +20,17 @@ public sealed class RuleBook {
 
     internal RuleBook Of(Type concept) => new(block, concept, Rules, Counts, Matches);
 
+    internal void RefuseOutOfScope(Type subject) {
+        if (Scope is not { } concept || subject == concept || block.Walk().Any(p => p.Is(subject) && p.Under(concept))) {
+            return;
+        }
+        var scope = Concept.Display(concept);
+        throw new InvalidOperationException(
+            $"Rules of {scope}: For<{Concept.Display(subject)}>() names no part under {scope}. "
+            + $"A concept rule has an implicit Under<{scope}>(). "
+            + $"Move the rule to the Rules of the architecture, or name a part of {scope}.");
+    }
+
     public From For<T>(Depth? depth = null) where T : Concept {
         if (!block.Walk().Any(p => p.Is(typeof(T)))) {
             throw new InvalidOperationException(

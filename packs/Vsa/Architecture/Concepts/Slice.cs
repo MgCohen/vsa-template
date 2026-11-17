@@ -1,6 +1,7 @@
 namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 using Umpire.Messages.Handlers;
 
 public record Slice : Layer {
@@ -25,7 +26,13 @@ public record Slice : Layer {
             .And<Domain>(Access.Internal).And<Domain.Shared>();
         rules.For<Validators>().Uses<Contracts.Requests>().And<Contracts.Commands>().And<Contracts.Events>()
             .InSame<Slice>();
+        UsesLayerParts(rules.For<Validators>()).Under<Kernel>();
+        UsesLayerParts(rules.For<Validators>()).Under<Plugin>();
     }
+
+    static Rule UsesLayerParts(From from) =>
+        from.Uses<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
+            .And<Handlers.Requests>(Depth.Self).And<Handlers.Events>(Depth.Self).And<Handlers.Commands>(Depth.Self);
 
     public record Shared : Layer {
         public override string Folder => "Slices/Shared";

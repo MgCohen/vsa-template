@@ -97,6 +97,23 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     [Test]
+    public void A_validator_uses_a_base_command_of_a_plugin() {
+        var validator = At<SampleValidator>(Slice);
+        var baseCommand = At<SampleCommand>("Plugins/Journal/Contracts/Commands");
+
+        Assert.That(baseCommand.Part, Is.EqualTo("Contracts.Commands"));
+        Assert.That(MayUse(validator, baseCommand).Permission, Is.EqualTo(Permission.Allow));
+    }
+
+    [Test]
+    public void A_validator_uses_a_request_handler_of_a_plugin() {
+        var validator = At<SampleValidator>(Slice);
+        var handler = At<SampleRequestHandler>("Plugins/Journal/Handlers/Requests");
+
+        Assert.That(MayUse(validator, handler).Permission, Is.EqualTo(Permission.Allow));
+    }
+
+    [Test]
     public void A_subclass_with_no_user_follows_its_base_class() {
         var place = At<SampleCheck>(Slice, typeof(SampleCheckBase), typeof(SampleCheckingHandler));
 

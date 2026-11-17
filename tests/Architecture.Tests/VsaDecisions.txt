@@ -1949,13 +1949,13 @@ Feature/Slice/Slice.Validators -> Kernel/Domain [any] Allow Internal
 Feature/Slice/Slice.Validators -> Kernel/Infrastructure [any] Deny
 Feature/Slice/Slice.Validators -> Kernel/Presenters [any] Deny
 Feature/Slice/Slice.Validators -> Kernel/Contracts [any] Allow Public
-Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Contracts/Contracts.Commands [any] Allow Public
 Feature/Slice/Slice.Validators -> Kernel/Handlers [any] Allow Public
-Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Kernel/Handlers/Handlers.Commands [any] Allow Public
 Feature/Slice/Slice.Validators -> Kernel/Views [any] Deny
 Feature/Slice/Slice.Validators -> Kernel/Composition [any] Deny
 Feature/Slice/Slice.Validators -> Kernel/Host [any] Deny
@@ -1970,14 +1970,14 @@ Feature/Slice/Slice.Validators -> Plugin/Domain/Domain.Shared [any] Allow Public
 Feature/Slice/Slice.Validators -> Plugin/Infrastructure [any] Deny
 Feature/Slice/Slice.Validators -> Plugin/Presenters [any] Deny
 Feature/Slice/Slice.Validators -> Plugin/Contracts [any] Allow Public
-Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Events [any] Deny
-Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Commands [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Contracts/Contracts.Commands [any] Allow Public
 Feature/Slice/Slice.Validators -> Plugin/Handlers [any] Allow Public
-Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Requests [any] Allow Public
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Events [any] Allow Public
 Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
-Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Commands [any] Allow Public
 Feature/Slice/Slice.Validators -> Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
 Feature/Slice/Slice.Validators -> Feature [any] Deny
 Feature/Slice/Slice.Validators -> Feature/Module [any] Deny

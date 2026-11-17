@@ -18,6 +18,20 @@ public record LostRoom : Concept {
     }
 }
 
+public record StrayRoom : Concept {
+    protected override void Rules(RuleBook rules) {
+        rules.For<Target>().Uses<User>();
+    }
+}
+
+public sealed class StrayRoomArchitecture : Architecture {
+    protected override void Define(Block block) {
+        block.Add<Target>();
+        block.Add<User>();
+        block.AddGroup<StrayRoom>();
+    }
+}
+
 public sealed class RoomArchitecture(bool denyInRooms) : Architecture {
     public Permission Decision(string fromPath, string toPath) {
         var resolved = new ResolvedArchitecture(this);
@@ -71,5 +85,12 @@ public sealed class ConceptRulesTests {
         var error = Assert.Throws<InvalidOperationException>(() => _ = new ResolvedArchitecture(new LostRoomArchitecture()));
 
         Assert.That(error!.Message, Does.Contain("For<Package>()"));
+    }
+
+    [Test]
+    public void A_concept_rule_about_a_part_outside_its_concept_names_the_implicit_filter() {
+        var error = Assert.Throws<InvalidOperationException>(() => _ = new ResolvedArchitecture(new StrayRoomArchitecture()));
+
+        Assert.That(error!.Message, Does.Contain("implicit Under<StrayRoom>()"));
     }
 }
