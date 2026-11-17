@@ -27,11 +27,13 @@ public static class ViewsServiceCollectionExtensions {
         return app;
     }
 
-    static Type? RootOf(AppTypes types) =>
-        types.ConcreteTypesOf(typeof(ViewsRoot)) switch {
+    static Type? RootOf(AppTypes types) => FindRoot(types.ConcreteTypesOf(typeof(ViewsRoot)));
+
+    internal static Type? FindRoot(IReadOnlyList<Type> roots) =>
+        roots switch {
             [] => null,
             [var root] => root,
-            var roots => throw new InvalidOperationException(
+            _ => throw new InvalidOperationException(
                 $"The app has {roots.Count} views roots: {string.Join(", ", roots.Select(t => t.FullName))}. "
                 + "Keep one component that inherits ViewsRoot."),
         };
