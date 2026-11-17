@@ -98,7 +98,9 @@ AppHost.Compose(services, app)                 fixed order
 │  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
 │  ├─ AddPresenters, IBus                      Umpire.Vsa.Presenters, Umpire.Vsa.Composition
 │  └─ the platform                             WebVsaHost: HTTP API, views. ConsoleVsaHost: entry command
-├─ Module.Configure(services)                  each module, in Order, then by name (with no override: nothing)
+├─ Module.Compose(services, configuration)     each module, in Order, then by name
+│  ├─ Module                                   Configure(services)
+│  └─ Module<TSettings>, Plugin<TSettings>     bind the settings, then Configure(services, settings)
 └─ app.ConfigureServices(services)             last
 ```
 
