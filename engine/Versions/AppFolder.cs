@@ -1,7 +1,7 @@
 namespace Umpire.Engine.Versions;
 
 public static class AppFolder {
-    public const string ConfigFile = UmpireConfigFile.Name;
+    public const string ConfigFile = ".umpireconfig";
 
     public static string? Find(string start) {
         var folders = Above(start).ToList();

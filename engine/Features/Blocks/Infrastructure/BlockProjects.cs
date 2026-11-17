@@ -12,7 +12,7 @@ public static class BlockProjects {
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(file => new BlockProject(DiskPath.Of(file), VersionSlots.HasUmpireMainSdk(file)))];
 
-    public static bool HasConfigFile(string folder) => File.Exists(Path.Combine(folder, UmpireConfigFile.Name));
+    public static bool HasConfigFile(string folder) => File.Exists(Path.Combine(folder, UmpireConfigFile.FileName));
 
     static bool IsAtOrUnder(string path, string folder) =>
         string.Equals(path, folder, StringComparison.OrdinalIgnoreCase)

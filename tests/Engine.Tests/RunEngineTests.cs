@@ -131,6 +131,24 @@ public sealed class RunEngineTests {
     }
 
     [Test]
+    public async Task A_severity_of_none_in_the_umpireconfig_of_the_block_turns_a_rule_off() {
+        var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
+        var config = Path.Combine(Notes, ".umpireconfig");
+        Directory.CreateDirectory(store);
+        try {
+            File.WriteAllText(Path.Combine(store, "umpire.json"), """{ "architecture": "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" }""");
+            File.WriteAllText(config, "dotnet_diagnostic.UMP020401.severity = none");
+
+            var result = await Run(project: Notes);
+
+            Assert.That(result.Lines, Has.None.Contains("UMP020401"));
+        } finally {
+            File.Delete(config);
+            Directory.Delete(store, recursive: true);
+        }
+    }
+
+    [Test]
     public async Task The_engine_finds_no_errors_in_a_block_with_inner_blocks() {
         var result = await Run(project: Repo.Path("tests", "Fixtures", "Blocks"));
 

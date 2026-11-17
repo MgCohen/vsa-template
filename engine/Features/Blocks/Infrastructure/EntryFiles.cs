@@ -3,11 +3,10 @@ namespace Blocks.Infrastructure;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using Umpire.Architecture;
-using Umpire.Engine.Versions;
 
 public static class EntryFiles {
-    public const string Name = UmpireConfigFile.Name;
-    public const string Key = UmpireConfigFile.ArchitectureKey;
+    public const string Name = UmpireConfigFile.FileName;
+    public const string Key = "umpire.architecture";
 
     public static IReadOnlyList<BlockEntry> Above(string folder) {
         var found = new List<BlockEntry>();
@@ -26,7 +25,7 @@ public static class EntryFiles {
             : [];
 
     public static BlockEntry? Read(string file) {
-        if (!File.Exists(file) || UmpireConfigFile.Read(file)[Key] is not string name) {
+        if (!File.Exists(file) || ArchitectureName(file) is not string name) {
             return null;
         }
         var full = DiskPath.Of(file);
@@ -36,6 +35,9 @@ public static class EntryFiles {
         }
         return TypeName.Parse(name) is { } type ? entry with { Type = type } : entry.Names(name, TypeName.NoAssembly);
     }
+
+    static string? ArchitectureName(string file) =>
+        UmpireConfigFile.Values(File.ReadLines(file)).GetValueOrDefault(Key);
 
     public static IEnumerable<string> SourceFolders(string folder) =>
         Directory.Exists(folder) ? Tree(folder) : [];
