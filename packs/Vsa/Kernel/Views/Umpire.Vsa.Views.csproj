@@ -9,4 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Framework.Tests" />
+  </ItemGroup>
 </Project>

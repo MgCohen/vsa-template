@@ -1,7 +1,11 @@
 namespace Composition.Tests;
 
+using Answers;
 using Greet;
+using Umpire.Messages.Contracts;
 using Umpire.Vsa.Composition;
+using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Handlers.Commands;
 using Umpire.Kernel;
 
 [NonParallelizable]
@@ -17,6 +21,10 @@ public sealed class ConsoleHostTests {
     [Test]
     public void An_error_result_gives_exit_code_one() =>
         Assert.That(Run("--name", ""), Is.EqualTo(1));
+
+    [Test]
+    public void A_result_with_no_exit_code_gives_exit_code_zero() =>
+        Assert.That(new TestApp<ConsoleVsaHost>(new QuietModule()).Run(["--code", "7"]), Is.Zero);
 
     [Test]
     public void A_missing_parameter_gives_exit_code_one() =>
@@ -44,7 +52,7 @@ public sealed class ConsoleHostTests {
 
     [Test]
     public void An_app_with_no_entry_command_stops_the_build() {
-        var app = new TestApp<ConsoleVsaHost>(new EchoModuleStub());
+        var app = new TestApp<ConsoleVsaHost>(new AnswersModule());
 
         var error = Assert.Throws<InvalidOperationException>(() => app.Build());
 
@@ -53,5 +61,14 @@ public sealed class ConsoleHostTests {
 
     static int Run(params string[] args) => new TestApp<ConsoleVsaHost>(new GreetModule()).Run(args);
 
-    sealed class EchoModuleStub : Module;
+    public sealed class QuietModule : Module;
+
+    public sealed record QuietCommand(int Code) : IConsoleCommand<QuietResult>;
+
+    public sealed record QuietResult(int Code);
+
+    public sealed class QuietHandler : CommandHandler<QuietCommand, QuietResult> {
+        public override Task<Result<QuietResult>> HandleAsync(Envelope<QuietCommand> envelope) =>
+            Task.FromResult<Result<QuietResult>>(new QuietResult(envelope.Message.Code));
+    }
 }
