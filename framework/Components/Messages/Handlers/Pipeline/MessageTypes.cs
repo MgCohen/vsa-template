@@ -10,6 +10,9 @@ static class MessageTypes {
 
     internal static Type OfStep(Type step, Type typedStepBase) => OfBase(step, typedStepBase) ?? typeof(object);
 
+    internal static bool DerivesFrom(Type type, Type baseType) =>
+        baseType.IsAssignableFrom(type) || OfBase(type, baseType) is not null;
+
     internal static Type? OfBase(Type type, Type genericBase) {
         for (var b = type; b is not null; b = b.BaseType) {
             if (b.IsGenericType && b.GetGenericTypeDefinition() == genericBase) {

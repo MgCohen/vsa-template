@@ -5,20 +5,12 @@ using Umpire.Messages.Contracts;
 
 public sealed class Pipelines {
     readonly IServiceProvider root;
-    readonly IReadOnlyList<PipelineRegistration> registrations;
-    readonly ConcurrentDictionary<PipelineRegistration, IPipelineRun> built = new();
+    readonly IReadOnlyList<PipelineDefinition> definitions;
+    readonly ConcurrentDictionary<PipelineDefinition, Pipeline> built = new();
 
-    internal Pipelines(IServiceProvider root, IEnumerable<PipelineRegistration> registrations) {
+    internal Pipelines(IServiceProvider root, IEnumerable<PipelineDefinition> definitions) {
         this.root = root;
-        this.registrations = [.. registrations];
-    }
-
-    public Pipeline<TMessage> Of<TMessage>() where TMessage : class {
-        var registration = registrations.FirstOrDefault(r => r.HandlerBase is null && r.Message == typeof(TMessage))
-            ?? throw new InvalidOperationException(
-                $"No pipeline is registered for {typeof(TMessage).FullName}. "
-                + $"Call services.AddPipeline(new PipelineBuilder<{typeof(TMessage).Name}>()...) in Configure.");
-        return (Pipeline<TMessage>)Instance(registration);
+        this.definitions = [.. definitions];
     }
 
     internal async Task<Result<TResult>> SendAsync<TResult>(
@@ -26,21 +18,26 @@ public sealed class Pipelines {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
-        var envelope = await Instance(For(handlerBase, message.GetType())).RunAsync(message, services, ct);
+        var envelope = await For(handlerBase, message.GetType()).RunAsync(message, services, ct);
         return EnvelopeResults.Of<TResult>(envelope);
     }
 
-    PipelineRegistration For(Type handlerBase, Type message) {
-        var custom = registrations
-            .Where(r => r.HandlerBase is null && r.Message.IsAssignableFrom(message) && Instance(r).Runs(message))
+    static Pipeline? MostSpecific(List<Pipeline> pipelines) =>
+        pipelines.LastOrDefault(p => !pipelines.Exists(o => IsNarrower(o.Definition.Message, p.Definition.Message)));
+
+    static bool IsNarrower(Type message, Type than) => message != than && than.IsAssignableFrom(message);
+
+    Pipeline For(Type handlerBase, Type message) {
+        var candidates = definitions
+            .Where(d => d.Message.IsAssignableFrom(message) && d.Selects(handlerBase))
+            .Select(Instance)
             .ToList();
-        return custom.FirstOrDefault(c => custom.TrueForAll(o => o.Message.IsAssignableFrom(c.Message)))
-            ?? registrations.FirstOrDefault(r => r.HandlerBase == handlerBase)
+        return MostSpecific([.. candidates.Where(p => p.Runs(message))])
+            ?? MostSpecific(candidates)
             ?? throw new InvalidOperationException(
                 $"No pipeline runs the handlers of {handlerBase.Name.Split('`')[0]}, "
                 + $"so {message.Name} has no pipeline.");
     }
 
-    IPipelineRun Instance(PipelineRegistration registration) =>
-        built.GetOrAdd(registration, r => r.Build(root));
+    Pipeline Instance(PipelineDefinition definition) => built.GetOrAdd(definition, d => new Pipeline(d, root));
 }

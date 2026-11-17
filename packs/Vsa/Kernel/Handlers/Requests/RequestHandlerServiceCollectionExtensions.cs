@@ -8,8 +8,7 @@ using Umpire.Messages.Handlers;
 public static class RequestHandlerServiceCollectionExtensions {
     public static IServiceCollection AddRequestHandlers(this IServiceCollection services, AppTypes types) {
         EnsureOneHandlerForEachRequest(types.Implementations(typeof(RequestHandler<,>)));
-        services.AddDefaultPipeline(
-            typeof(RequestHandler<,>), new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));
+        services.AddPipeline(new PipelineBuilder<IMessage>().HandlersOf(typeof(RequestHandler<,>)));
         return services;
     }
 

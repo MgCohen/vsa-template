@@ -1,8 +1,12 @@
 namespace Composition.Tests.Pipeline;
 
 using Arena;
+using Answers;
 using Answers.Slices.Answer;
 using Arena.Slices.Duel;
+using Arena.Slices.Finisher;
+using Greet;
+using Greet.Slices.Greet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Umpire.Vsa.Composition;
@@ -11,6 +15,7 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
+using Umpire.Vsa.Presenters;
 using Umpire.Kernel;
 
 public sealed class PipelineTests {
@@ -67,13 +72,14 @@ public sealed class PipelineTests {
     }
 
     [Test]
-    public async Task A_send_from_an_After_hook_waits_on_the_stack() {
+    public async Task A_send_from_an_After_hook_runs_inline() {
         var result = await Sender.SendAsync(new StrikeCommand(11), default);
 
         Assert.That(result.Value, Is.EqualTo(10));
         Assert.That(Log, Is.EqualTo(new[] {
-            "handle:Strike:10:arena", "counter", "after:StrikeCommand:Accepted:0:none", "audit:StrikeCommand:Accepted",
+            "handle:Strike:10:arena", "counter",
             "handle:Strike:0:arena", "after:StrikeCommand:Accepted:1:StrikeCommand", "audit:StrikeCommand:Accepted",
+            "after:StrikeCommand:Accepted:0:none", "audit:StrikeCommand:Accepted",
         }));
     }
 
@@ -97,36 +103,6 @@ public sealed class PipelineTests {
         Assert.That(result.Envelope?.State, Is.EqualTo(EnvelopeState.Faulted));
     }
 
-    sealed class CatchRunner : IRunner {
-        public async Task RunAsync(Envelope envelope, Func<Envelope, Task> run) {
-            try {
-                await run(envelope);
-            } catch (InvalidOperationException) {
-                return;
-            }
-        }
-
-        public Task StartAsync() => Task.CompletedTask;
-    }
-
-    [Test]
-    public async Task Each_build_is_a_new_instance_with_its_own_queue() {
-        var builder = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>)).Runner<QueuedRunner>();
-        var first = builder.Build(scope.ServiceProvider);
-        var second = builder.Build(scope.ServiceProvider);
-
-        var firstSent = first.SendAsync<int>(new StrikeCommand(3));
-        var secondSent = second.SendAsync<int>(new StrikeCommand(3));
-        Assert.That(firstSent.IsCompleted, Is.False);
-
-        await first.StartAsync();
-
-        Assert.That((await firstSent).Value, Is.EqualTo(3));
-        Assert.That(secondSent.IsCompleted, Is.False);
-        await second.StartAsync();
-        Assert.That((await secondSent).Value, Is.EqualTo(3));
-    }
-
     [Test]
     public void A_synchronous_run_completes_at_once() {
         var inline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>)).Build(scope.ServiceProvider);
@@ -135,14 +111,6 @@ public sealed class PipelineTests {
 
         Assert.That(sent.IsCompleted, Is.True);
         Assert.That(sent.Result.Value, Is.EqualTo(3));
-    }
-
-    [Test]
-    public void The_module_instance_is_one_service() {
-        var pipeline = host.Services.GetRequiredService<Pipeline<ArenaMove>>();
-
-        Assert.That(pipeline, Is.SameAs(host.Services.GetRequiredService<Pipelines>().Of<ArenaMove>()));
-        Assert.That(pipeline.Runner, Is.TypeOf<StackRunner>());
     }
 
     [Test]
@@ -213,11 +181,96 @@ public sealed class PipelineTests {
     }
 
     [Test]
+    public async Task Two_kinds_with_one_message_base_have_their_own_pipelines() {
+        using var app = new TestApp(new GreetModule(), new AnswersModule()).Build();
+        await using var appScope = app.Services.CreateAsyncScope();
+
+        var answer = await appScope.ServiceProvider.GetRequiredService<IBus>().Send(new AnswerRequest(null));
+        var greet = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new GreetCommand("Ada"), default);
+
+        Assert.That(answer.Value, Is.EqualTo(new AnswerResponse("done")));
+        Assert.That(greet.Value, Is.EqualTo(new GreetResult("Hello, Ada", 0)));
+    }
+
+    [Test]
+    public async Task A_pipeline_of_a_derived_handler_base_takes_the_sends_of_its_kind() {
+        using var app = FinisherApp();
+        await using var appScope = app.Services.CreateAsyncScope();
+
+        var result = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new UppercutCommand(), default);
+
+        Assert.That(result.Value, Is.EqualTo(9));
+        Assert.That(app.Services.GetRequiredService<ArenaLog>().Lines, Is.EqualTo(new[] { "handle:Uppercut" }));
+    }
+
+    [Test]
+    public async Task A_send_with_no_handler_in_the_narrow_pipeline_goes_to_the_wider_pipeline() {
+        using var app = FinisherApp();
+        await using var appScope = app.Services.CreateAsyncScope();
+
+        var result = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new FeintCommand(), default);
+
+        Assert.That(result.Value, Is.EqualTo(1));
+        Assert.That(app.Services.GetRequiredService<ArenaLog>().Lines, Is.EqualTo(new[] {
+            "handle:Feint", "after:FeintCommand:Accepted:0:none", "audit:FeintCommand:Accepted",
+        }));
+    }
+
+    [Test]
+    public void A_module_pipeline_with_the_base_and_handler_base_of_a_default_fails() {
+        var error = Assert.Throws<InvalidOperationException>(() => new TestApp(new ArenaModule())
+            .With(services => services.AddPipeline(
+                new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>))))
+            .Build());
+
+        Assert.That(error!.Message, Does.Contain("The default pipeline of each kind already has its message base"));
+    }
+
+    [Test]
+    public void A_listed_handler_counts_as_its_handler_base_in_the_duplicate_check() {
+        var feintHandler = typeof(FeintCommand).Assembly
+            .GetType("Arena.Slices.Finisher.FeintHandler", throwOnError: true)!;
+        var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>().Handlers(feintHandler));
+
+        Assert.Throws<InvalidOperationException>(
+            () => services.AddPipeline(new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>))));
+    }
+
+    [Test]
+    public void A_pipeline_rejects_a_message_that_is_not_of_its_base() {
+        var pipeline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>))
+            .Build(scope.ServiceProvider);
+
+        var error = Assert.ThrowsAsync<ArgumentException>(() => pipeline.SendAsync<int>(new AnswerRequest(null)));
+
+        Assert.That(error!.Message, Does.StartWith("Answers.Slices.Answer.AnswerRequest is not a ArenaMove"));
+    }
+
+    [Test]
     public void A_message_base_has_one_pipeline() {
         var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>());
 
         var error = Assert.Throws<InvalidOperationException>(() => services.AddPipeline(new PipelineBuilder<ArenaMove>()));
 
-        Assert.That(error!.Message, Does.StartWith("Two pipelines are registered for Arena.Slices.Duel.ArenaMove."));
+        Assert.That(error!.Message,
+            Does.StartWith("Two pipelines are registered for Arena.Slices.Duel.ArenaMove with the same handler base."));
+    }
+
+    static IHost FinisherApp() => new TestApp(new ArenaModule())
+        .With(services => services.AddPipeline(
+            new PipelineBuilder<FinisherMove>().HandlersOf(typeof(FinisherHandler<>))))
+        .Build();
+
+    sealed class CatchRunner : IRunner {
+        public async Task RunAsync(Envelope envelope, Func<Envelope, Task> run) {
+            try {
+                await run(envelope);
+            } catch (InvalidOperationException) {
+                return;
+            }
+        }
     }
 }

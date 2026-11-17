@@ -10,7 +10,7 @@ public static class CommandHandlerServiceCollectionExtensions {
     public static IServiceCollection AddCommandHandlers(this IServiceCollection services, AppTypes types) {
         EnsureOneHandlerForEachCommand(types.Implementations(typeof(CommandHandler<,>)));
         services.AddScoped<ICommandSender, InProcessCommandSender>();
-        services.AddDefaultPipeline(typeof(CommandHandler<,>), new PipelineBuilder<IMessage>()
+        services.AddPipeline(new PipelineBuilder<IMessage>()
             .HandlersOf(typeof(CommandHandler<,>))
             .HooksOf(typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>)));
         return services;

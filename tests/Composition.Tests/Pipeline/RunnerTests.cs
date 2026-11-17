@@ -7,12 +7,10 @@ using Umpire.Messages.Handlers;
 public sealed class RunnerTests {
     [Test]
     public void A_runner_that_the_pipeline_cannot_create_gives_its_name_and_the_fix() {
-        var services = new ServiceCollection();
-        services.AddPipeline(new PipelineBuilder<Lonely>().Runner<NeedyRunner>());
-        using var provider = services.BuildServiceProvider();
-        var pipelines = provider.GetRequiredService<Pipelines>();
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        var builder = new PipelineBuilder<Lonely>().Runner<NeedyRunner>();
 
-        var error = Assert.Throws<InvalidOperationException>(() => pipelines.Of<Lonely>());
+        var error = Assert.Throws<InvalidOperationException>(() => builder.Build(provider));
 
         var start = $"The pipeline of {nameof(Lonely)} cannot create its runner {typeof(NeedyRunner).FullName}: ";
         Assert.That(error.Message, Does.StartWith(start)
@@ -27,7 +25,5 @@ public sealed class RunnerTests {
         public Missing Missing => missing;
 
         public Task RunAsync(Envelope envelope, Func<Envelope, Task> run) => run(envelope);
-
-        public Task StartAsync() => Task.CompletedTask;
     }
 }

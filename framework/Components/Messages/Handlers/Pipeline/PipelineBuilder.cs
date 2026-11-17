@@ -53,8 +53,12 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         return this;
     }
 
-    public Pipeline<TMessage> Build(IServiceProvider services) =>
+    public Pipeline Build(IServiceProvider services) =>
         new(Definition(), services ?? throw new ArgumentNullException(nameof(services)));
+
+    internal PipelineDefinition Definition() =>
+        new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases], runner,
+            [.. beforeSteps], [.. afterSteps]);
 
     static bool IsHookBase(Type? type) =>
         type is not null
@@ -72,8 +76,4 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         }
         steps.Add(step);
     }
-
-    PipelineDefinition Definition() =>
-        new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases], runner,
-            [.. beforeSteps], [.. afterSteps]);
 }
