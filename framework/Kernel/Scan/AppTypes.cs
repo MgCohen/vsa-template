@@ -8,6 +8,7 @@ using Umpire.Architecture;
 public sealed class AppTypes {
     readonly AppAssemblies scan = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
+    readonly Assembly? appAssembly;
     IReadOnlyList<Module>? modules;
     IReadOnlyList<ModuleRoot>? roots;
     Assembly[]? assemblies;
@@ -15,8 +16,9 @@ public sealed class AppTypes {
     Type[]? registered;
     Type[]? typeArguments;
 
-    public AppTypes(IReadOnlyList<Module>? modules) {
+    public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null) {
         this.modules = modules is null ? null : InOrder(modules);
+        this.appAssembly = appAssembly;
     }
 
     public IReadOnlyList<Module> Modules => modules ??= InOrder(Roots.Select(root => root.Create()));
@@ -53,7 +55,7 @@ public sealed class AppTypes {
         if (!baseType.IsGenericTypeDefinition) {
             return baseType.IsAssignableFrom(type) && type != baseType ? baseType : null;
         }
-        return ClosedBase.Of(type, baseType);
+        return ClosedBase.Of(type, baseType) ?? ClosedBase.InterfaceOf(type, baseType);
     }
 
     IEnumerable<Type> Close(Type definition) {
@@ -69,8 +71,12 @@ public sealed class AppTypes {
     }
 
     IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Assemblies()
+        .Append(appAssembly)
+        .OfType<Assembly>()
+        .Distinct()
         .SelectMany(scan.TypesOf)
-        .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } && t.IsSubclassOf(baseType))];
+        .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false })
+        .Where(t => t.IsSubclassOf(baseType))];
 
     Type[] Loaded() => loaded ??= [.. Assemblies()
         .SelectMany(scan.TypesOf)

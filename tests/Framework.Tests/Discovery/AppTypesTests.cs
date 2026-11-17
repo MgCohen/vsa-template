@@ -80,6 +80,13 @@ public sealed class AppTypesTests {
     }
 
     [Test]
+    public void ConcreteTypesOfAlsoFindsTheClassesInTheAssemblyOfTheAppClass() {
+        var types = new AppTypes([new ShelfModule()], typeof(BareModule).Assembly).ConcreteTypesOf(typeof(Module));
+
+        Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Contain(typeof(BareModule)));
+    }
+
+    [Test]
     public void RootWithNoEmptyConstructorIsAnError() {
         var root = new ModuleRoot("Valued", typeof(ValuedModule).Assembly, [typeof(ValuedModule)]);
 

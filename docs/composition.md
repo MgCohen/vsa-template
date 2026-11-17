@@ -156,20 +156,20 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
 - To select other modules, the app gives its modules in `Modules()`.
-- `Compose` makes one `AppTypes` instance: `new AppTypes(app.Modules())`. If `Modules()` gives `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Run` makes a new instance, so it also finds the assemblies that loaded later.
+- `Compose` makes one `AppTypes` instance: `new AppTypes(app.Modules(), app.GetType().Assembly)`. If `Modules()` gives `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Run` makes a new instance, so it also finds the assemblies that loaded later.
 - `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |
 |---|---|
-| `new AppTypes(modules)` | The one constructor. With `null`, the instance finds the modules itself |
+| `new AppTypes(modules, appAssembly)` | The one constructor. With `null` modules, the instance finds the modules itself. `AppHost` gives the assembly of the app class (the root project) |
 | `Modules` | One module for each module root, or the given modules, in order |
-| `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in the assemblies of the modules. A type in a test assembly with no module is not found |
+| `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in the assemblies of the modules and the assembly of the app class. A type in another assembly, for example a test assembly, is not found |
 | `Registered()`, `Implementations(baseType)` | The marked types (see "One discovery path") |
 
 | Part | Scan for | Rule |
 |---|---|---|
 | Module root | A reference to `Umpire.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `Umpire.Vsa.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
-| Views root | The assemblies of the modules (`ConcreteTypesOf(typeof(ViewsRoot))`) | One component that inherits `ViewsRoot` |
+| Views root | The assemblies of the modules and of the app class (`ConcreteTypesOf(typeof(ViewsRoot))`) | One component that inherits `ViewsRoot` |
 
 The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
 

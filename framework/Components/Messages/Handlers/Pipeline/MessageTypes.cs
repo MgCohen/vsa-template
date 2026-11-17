@@ -13,7 +13,7 @@ static class MessageTypes {
     internal static Type OfStep(Type step, Type typedStepBase) => ArgumentOf(step, typedStepBase) ?? typeof(object);
 
     internal static bool DerivesFrom(Type type, Type baseType) =>
-        baseType.IsAssignableFrom(type) || ClosedBase.Of(type, baseType) is not null;
+        baseType.IsAssignableFrom(type) || ClosedBase.OfSelfOrBase(type, baseType) is not null;
 
-    static Type? ArgumentOf(Type type, Type genericBase) => ClosedBase.Of(type, genericBase)?.GetGenericArguments()[0];
+    static Type? ArgumentOf(Type type, Type genericBase) => ClosedBase.OfSelfOrBase(type, genericBase)?.GetGenericArguments()[0];
 }

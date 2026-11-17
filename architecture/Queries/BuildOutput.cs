@@ -6,7 +6,8 @@ public static class BuildOutput {
 
     public static bool IsFolder(string name) => Folders.Contains(name, StringComparer.OrdinalIgnoreCase);
 
-    public static bool IsIgnored(string folder) => IsFolder(folder) || folder.StartsWith('.') || folder.EndsWith('~');
+    public static bool IsIgnored(string folderName) =>
+        IsFolder(folderName) || folderName.StartsWith('.') || folderName.EndsWith('~');
 
     public static bool Contains(string path) => path.Split(Separators)[..^1].Any(IsFolder);
 }
