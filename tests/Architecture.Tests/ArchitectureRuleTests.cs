@@ -1,7 +1,7 @@
 namespace EngineCore.Tests;
 
 using Rules.Domain;
-using Rules.Infrastructure;
+using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
 
@@ -62,13 +62,17 @@ public sealed class ArchitectureRuleTests {
     }
 
     [Test]
+    public void The_config_file_takes_a_colon_as_the_separator() =>
+        Assert.That(UmpireConfigFile.Values(["umpire.max: 3"])["umpire.max"], Is.EqualTo("3"));
+
+    [Test]
     public void The_engine_reads_the_nearest_config_file_above_the_block_folder() {
         var root = Directory.CreateTempSubdirectory("umpire-config").FullName;
         try {
             var block = Directory.CreateDirectory(Path.Combine(root, "App", "Block")).FullName;
             File.WriteAllText(Path.Combine(root, "App", UmpireConfigFile.FileName), "dotnet_diagnostic.UMP020101.severity = none");
 
-            var values = UmpireConfigFile.Read(block).For("UMP020101");
+            var values = new RuleConfig(UmpireConfigFile.Read(block)).For("UMP020101");
 
             Assert.That(values.Severity(FindingSeverity.Error), Is.Null);
         } finally {

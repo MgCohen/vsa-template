@@ -1,19 +1,19 @@
-namespace Rules.Infrastructure;
-
-using Rules.Domain;
+namespace BuiltApp.Infrastructure;
 
 public static class UmpireConfigFile {
     public const string FileName = ".umpireconfig";
 
-    public static RuleConfig Read(string blockFolder) =>
-        Find(blockFolder) is { } file ? new RuleConfig(Values(File.ReadLines(file))) : RuleConfig.Empty;
+    static readonly char[] Separators = ['=', ':'];
 
-    public static Dictionary<string, string> Values(IEnumerable<string> lines) {
+    public static IReadOnlyDictionary<string, string> Read(string blockFolder) =>
+        Find(blockFolder) is { } file ? Values(File.ReadLines(file)) : new Dictionary<string, string>();
+
+    public static IReadOnlyDictionary<string, string> Values(IEnumerable<string> lines) {
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var line in lines.Select(Text).TakeWhile(text => !text.StartsWith('['))) {
-            var pair = line.Split('=', 2);
-            if (pair.Length == 2 && pair[0].Trim().Length > 0) {
-                values[pair[0].Trim()] = pair[1].Trim();
+            var separator = line.IndexOfAny(Separators);
+            if (separator > 0 && line[..separator].Trim().Length > 0) {
+                values[line[..separator].Trim()] = line[(separator + 1)..].Trim();
             }
         }
         return values;

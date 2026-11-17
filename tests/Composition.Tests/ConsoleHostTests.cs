@@ -31,6 +31,14 @@ public sealed class ConsoleHostTests {
         Assert.That(Run("--name", "Ann", "--style", "quiet"), Is.EqualTo(1));
 
     [Test]
+    public void A_list_of_enum_members_gives_exit_code_one() =>
+        Assert.That(Run("--name", "Ann", "--style", "Plain,Loud"), Is.EqualTo(1));
+
+    [Test]
+    public void An_enum_number_gives_exit_code_one() =>
+        Assert.That(Run("--name", "Ann", "--style", "1"), Is.EqualTo(1));
+
+    [Test]
     public void An_enum_number_that_is_not_a_member_gives_exit_code_one() =>
         Assert.That(Run("--name", "Ann", "--style", "7"), Is.EqualTo(1));
 
