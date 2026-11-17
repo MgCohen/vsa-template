@@ -1,7 +1,7 @@
 namespace PackVariant.Packs.Ecs.Architecture;
 
-using Umpire.Vsa.Definition;
+using Umpire.Architecture.Blocks;
 
-public record EcsFeature : Layer {
+public record EcsFeature : Module {
     public override string GroupFolder => "EcsFeatures";
 }

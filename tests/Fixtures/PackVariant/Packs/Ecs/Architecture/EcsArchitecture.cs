@@ -2,6 +2,7 @@ namespace PackVariant.Packs.Ecs.Architecture;
 
 using PackVariant.Packs.Ecs.Kernel;
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class EcsArchitecture : VsaArchitecture {

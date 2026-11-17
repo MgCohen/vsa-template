@@ -1,5 +1,7 @@
 namespace Umpire.Vsa.Definition;
 
-public record Feature : Layer {
+using Umpire.Architecture.Blocks;
+
+public record Feature : Module {
     public override string GroupFolder => "Features";
 }

@@ -25,17 +25,17 @@ The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (
 
 ## Definition API
 
-A concept is a record that inherits `Concept`. A definition is a class that inherits `Architecture`. It adds the concepts to a tree in `Define`, and gives the rules in `Rules`. VSA calls its concepts layers: each VSA layer inherits `Layer : Concept`. A `Module` is the concept of the root part of a group instance: it is in the folder of its parent, for example the root class of each feature.
+A concept is a record that inherits `Concept`. A definition is a class that inherits `Architecture`. It adds the concepts to a tree in `Define`, and gives the rules in `Rules`. The block kinds of `blocks.md` are concept records in `Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `Module` and `Library`, on the base `BlockKind`. `Kernel` is an external part: the `Umpire.*` DLLs. Each VSA layer inherits `Layer : Concept`, and only a real layer inherits it. A module kind, for example `Feature` or `Plugin`, inherits `Module`. The part `Add<Module>()` holds the module class: it is in the folder of its parent, for example the root class of each feature. A rule on `Module` selects only these parts, because a rule compares the exact concept type, not its base.
 
 ```csharp
-public record Feature : Layer { public override string GroupFolder => "Features"; }
+public record Feature : Module { public override string GroupFolder => "Features"; }
 public record Kernel : External { public override string Assembly => "Umpire"; }
 
 public class VsaArchitecture : Architecture {
     protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
 
     protected override void Define(Block block) {
-        block.Add<Framework>().Add<Kernel>();
+        block.Add<Kernel>();
         var feature = block.AddGroup<Feature>();
         feature.Add<Module>().OfType<Umpire.Kernel.Module>();
         feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
@@ -95,13 +95,13 @@ A definition file writes each real type with its full name, for example `OfType<
 C# finds a name level by level, from the innermost namespace to the outermost. At each level, it examines the members of the namespace first, then the `using` directives of that level. A concept record has the name of a folder, and a folder is a part of a namespace. In app code, a `using` inside the namespace wins over the outer app namespaces:
 
 ```csharp
-using Umpire.Vsa.Definition;
+using Umpire.Architecture.Blocks;
 namespace Shop.App.Host {
     rules.For<App>();          // CS0118: 'App' is a namespace (Shop.App)
 }
 
 namespace Shop.App.Host {
-    using Umpire.Vsa.Definition;
+    using Umpire.Architecture.Blocks;
     rules.For<App>();          // the record App
 }
 ```

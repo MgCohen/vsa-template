@@ -27,7 +27,7 @@ public class ToolApp : App<Vsa<ToolArchitecture, ConsoleVsaHost>>;
 new Vsa<UnityVsaHost>().CreateHost().Compose(services, app);
 ```
 
-The app class file imports `Umpire.Kernel` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host. `Umpire.Vsa` also has the concept record `App`. `App<…>` is not ambiguous, because the record has no type parameter. A use of `App` with no type argument in the same file is ambiguous (CS0104).
+The app class file imports `Umpire.Kernel` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host. The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernel.App`.
 
 ## The kernel types
 
@@ -303,7 +303,7 @@ framework/Components/Messages/
   Handlers/                            PipelineBuilder, Pipelines, the runners, Validator, Before, After, AddPipelines
 packs/Vsa/
   VsaPack.cs                           Umpire.Vsa: Vsa<THost>, Vsa<TArchitecture, THost>
-  Architecture/                        Umpire.Vsa.Definition: VsaArchitecture, the VSA layers
+  Architecture/                        Umpire.Vsa.Definition: VsaArchitecture, the VSA layers, Feature and Plugin
   Kernel/
     Handlers/Events/                   AddEventHandlers, InProcessEventPublisher
     Handlers/Commands/                 AddCommandHandlers, InProcessCommandSender

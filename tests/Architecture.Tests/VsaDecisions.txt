@@ -1,70 +1,18 @@
-Framework -> Framework/Kernel [any] Deny
-Framework -> Framework/Kernel/Domain [any] Deny
-Framework -> Framework/Kernel/Infrastructure [any] Deny
-Framework -> Framework/Kernel/Presenters [any] Deny
-Framework -> Framework/Kernel/Contracts [any] Deny
-Framework -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Framework -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Framework -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Framework -> Framework/Kernel/Handlers [any] Deny
-Framework -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Framework -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Framework -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Framework -> Framework/Kernel/Views [any] Deny
-Framework -> Framework/Kernel/Composition [any] Deny
-Framework -> Framework/Kernel/Host [any] Deny
-Framework -> App [any] Deny
-Framework -> App/Host [any] Deny
-Framework -> App/Views [any] Deny
-Framework -> Pack [any] Deny
-Framework -> Plugin [any] Deny
-Framework -> Plugin/Module [any] Deny
-Framework -> Plugin/Domain [any] Deny
-Framework -> Plugin/Domain/Domain.Shared [any] Deny
-Framework -> Plugin/Infrastructure [any] Deny
-Framework -> Plugin/Presenters [any] Deny
-Framework -> Plugin/Contracts [any] Deny
-Framework -> Plugin/Contracts/Contracts.Requests [any] Deny
-Framework -> Plugin/Contracts/Contracts.Events [any] Deny
-Framework -> Plugin/Contracts/Contracts.Commands [any] Deny
-Framework -> Plugin/Handlers [any] Deny
-Framework -> Plugin/Handlers/Handlers.Requests [any] Deny
-Framework -> Plugin/Handlers/Handlers.Events [any] Deny
-Framework -> Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
-Framework -> Plugin/Handlers/Handlers.Commands [any] Deny
-Framework -> Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
-Framework -> Feature [any] Deny
-Framework -> Feature/Module [any] Deny
-Framework -> Feature/Domain [any] Deny
-Framework -> Feature/Domain/Domain.Shared [any] Deny
-Framework -> Feature/Infrastructure [any] Deny
-Framework -> Feature/Presenters [any] Deny
-Framework -> Feature/Slice.Shared [any] Deny
-Framework -> Feature/Slice [any] Deny
-Framework -> Feature/Slice/Contracts.Requests [any] Deny
-Framework -> Feature/Slice/Contracts.Events [any] Deny
-Framework -> Feature/Slice/Contracts.Commands [any] Deny
-Framework -> Feature/Slice/Handlers.Requests [any] Deny
-Framework -> Feature/Slice/Handlers.Events [any] Deny
-Framework -> Feature/Slice/Handlers.Commands [any] Deny
-Framework -> Feature/Slice/Handlers.Events.Hooks [any] Deny
-Framework -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-App -> Framework [any] Deny
-App -> Framework/Kernel [any] Deny
-App -> Framework/Kernel/Domain [any] Deny
-App -> Framework/Kernel/Infrastructure [any] Deny
-App -> Framework/Kernel/Presenters [any] Deny
-App -> Framework/Kernel/Contracts [any] Deny
-App -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-App -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-App -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-App -> Framework/Kernel/Handlers [any] Deny
-App -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-App -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-App -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-App -> Framework/Kernel/Views [any] Deny
-App -> Framework/Kernel/Composition [any] Deny
-App -> Framework/Kernel/Host [any] Deny
+App -> Kernel [any] Deny
+App -> Kernel/Domain [any] Deny
+App -> Kernel/Infrastructure [any] Deny
+App -> Kernel/Presenters [any] Deny
+App -> Kernel/Contracts [any] Deny
+App -> Kernel/Contracts/Contracts.Requests [any] Deny
+App -> Kernel/Contracts/Contracts.Events [any] Deny
+App -> Kernel/Contracts/Contracts.Commands [any] Deny
+App -> Kernel/Handlers [any] Deny
+App -> Kernel/Handlers/Handlers.Requests [any] Deny
+App -> Kernel/Handlers/Handlers.Events [any] Deny
+App -> Kernel/Handlers/Handlers.Commands [any] Deny
+App -> Kernel/Views [any] Deny
+App -> Kernel/Composition [any] Deny
+App -> Kernel/Host [any] Deny
 App -> App/Host [any] Deny
 App -> App/Views [any] Deny
 App -> Pack [any] Deny
@@ -100,22 +48,21 @@ App -> Feature/Slice/Handlers.Events [any] Deny
 App -> Feature/Slice/Handlers.Commands [any] Deny
 App -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-App/Host -> Framework [any] Deny
-App/Host -> Framework/Kernel [any] Allow Public
-App/Host -> Framework/Kernel/Domain [any] Deny
-App/Host -> Framework/Kernel/Infrastructure [any] Deny
-App/Host -> Framework/Kernel/Presenters [any] Deny
-App/Host -> Framework/Kernel/Contracts [any] Deny
-App/Host -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-App/Host -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-App/Host -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-App/Host -> Framework/Kernel/Handlers [any] Deny
-App/Host -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-App/Host -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-App/Host -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-App/Host -> Framework/Kernel/Views [any] Deny
-App/Host -> Framework/Kernel/Composition [any] Allow Public
-App/Host -> Framework/Kernel/Host [any] Allow Public
+App/Host -> Kernel [any] Allow Public
+App/Host -> Kernel/Domain [any] Deny
+App/Host -> Kernel/Infrastructure [any] Deny
+App/Host -> Kernel/Presenters [any] Deny
+App/Host -> Kernel/Contracts [any] Deny
+App/Host -> Kernel/Contracts/Contracts.Requests [any] Deny
+App/Host -> Kernel/Contracts/Contracts.Events [any] Deny
+App/Host -> Kernel/Contracts/Contracts.Commands [any] Deny
+App/Host -> Kernel/Handlers [any] Deny
+App/Host -> Kernel/Handlers/Handlers.Requests [any] Deny
+App/Host -> Kernel/Handlers/Handlers.Events [any] Deny
+App/Host -> Kernel/Handlers/Handlers.Commands [any] Deny
+App/Host -> Kernel/Views [any] Deny
+App/Host -> Kernel/Composition [any] Allow Public
+App/Host -> Kernel/Host [any] Allow Public
 App/Host -> App [any] Deny
 App/Host -> App/Views [any] Deny
 App/Host -> Pack [any] Allow Public
@@ -151,22 +98,21 @@ App/Host -> Feature/Slice/Handlers.Events [any] Deny
 App/Host -> Feature/Slice/Handlers.Commands [any] Deny
 App/Host -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App/Host -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-App/Views -> Framework [any] Deny
-App/Views -> Framework/Kernel [any] Deny
-App/Views -> Framework/Kernel/Domain [any] Deny
-App/Views -> Framework/Kernel/Infrastructure [any] Deny
-App/Views -> Framework/Kernel/Presenters [any] Allow Public
-App/Views -> Framework/Kernel/Contracts [any] Deny
-App/Views -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-App/Views -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-App/Views -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-App/Views -> Framework/Kernel/Handlers [any] Deny
-App/Views -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-App/Views -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-App/Views -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-App/Views -> Framework/Kernel/Views [any] Allow Public
-App/Views -> Framework/Kernel/Composition [any] Deny
-App/Views -> Framework/Kernel/Host [any] Deny
+App/Views -> Kernel [any] Deny
+App/Views -> Kernel/Domain [any] Deny
+App/Views -> Kernel/Infrastructure [any] Deny
+App/Views -> Kernel/Presenters [any] Allow Public
+App/Views -> Kernel/Contracts [any] Deny
+App/Views -> Kernel/Contracts/Contracts.Requests [any] Deny
+App/Views -> Kernel/Contracts/Contracts.Events [any] Deny
+App/Views -> Kernel/Contracts/Contracts.Commands [any] Deny
+App/Views -> Kernel/Handlers [any] Deny
+App/Views -> Kernel/Handlers/Handlers.Requests [any] Deny
+App/Views -> Kernel/Handlers/Handlers.Events [any] Deny
+App/Views -> Kernel/Handlers/Handlers.Commands [any] Deny
+App/Views -> Kernel/Views [any] Allow Public
+App/Views -> Kernel/Composition [any] Deny
+App/Views -> Kernel/Host [any] Deny
 App/Views -> App [any] Deny
 App/Views -> App/Host [any] Deny
 App/Views -> Pack [any] Deny
@@ -202,22 +148,21 @@ App/Views -> Feature/Slice/Handlers.Events [any] Deny
 App/Views -> Feature/Slice/Handlers.Commands [any] Deny
 App/Views -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 App/Views -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Pack -> Framework [any] Deny
-Pack -> Framework/Kernel [any] Deny
-Pack -> Framework/Kernel/Domain [any] Deny
-Pack -> Framework/Kernel/Infrastructure [any] Deny
-Pack -> Framework/Kernel/Presenters [any] Deny
-Pack -> Framework/Kernel/Contracts [any] Deny
-Pack -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Pack -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Pack -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Pack -> Framework/Kernel/Handlers [any] Deny
-Pack -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Pack -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Pack -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Pack -> Framework/Kernel/Views [any] Deny
-Pack -> Framework/Kernel/Composition [any] Deny
-Pack -> Framework/Kernel/Host [any] Deny
+Pack -> Kernel [any] Deny
+Pack -> Kernel/Domain [any] Deny
+Pack -> Kernel/Infrastructure [any] Deny
+Pack -> Kernel/Presenters [any] Deny
+Pack -> Kernel/Contracts [any] Deny
+Pack -> Kernel/Contracts/Contracts.Requests [any] Deny
+Pack -> Kernel/Contracts/Contracts.Events [any] Deny
+Pack -> Kernel/Contracts/Contracts.Commands [any] Deny
+Pack -> Kernel/Handlers [any] Deny
+Pack -> Kernel/Handlers/Handlers.Requests [any] Deny
+Pack -> Kernel/Handlers/Handlers.Events [any] Deny
+Pack -> Kernel/Handlers/Handlers.Commands [any] Deny
+Pack -> Kernel/Views [any] Deny
+Pack -> Kernel/Composition [any] Deny
+Pack -> Kernel/Host [any] Deny
 Pack -> App [any] Deny
 Pack -> App/Host [any] Deny
 Pack -> App/Views [any] Deny
@@ -254,22 +199,21 @@ Pack -> Feature/Slice/Handlers.Events [any] Deny
 Pack -> Feature/Slice/Handlers.Commands [any] Deny
 Pack -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Pack -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin -> Framework [any] Deny
-Plugin -> Framework/Kernel [any] Deny
-Plugin -> Framework/Kernel/Domain [any] Deny
-Plugin -> Framework/Kernel/Infrastructure [any] Deny
-Plugin -> Framework/Kernel/Presenters [any] Deny
-Plugin -> Framework/Kernel/Contracts [any] Deny
-Plugin -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin -> Framework/Kernel/Handlers [any] Deny
-Plugin -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin -> Framework/Kernel/Views [any] Deny
-Plugin -> Framework/Kernel/Composition [any] Deny
-Plugin -> Framework/Kernel/Host [any] Deny
+Plugin -> Kernel [any] Deny
+Plugin -> Kernel/Domain [any] Deny
+Plugin -> Kernel/Infrastructure [any] Deny
+Plugin -> Kernel/Presenters [any] Deny
+Plugin -> Kernel/Contracts [any] Deny
+Plugin -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin -> Kernel/Handlers [any] Deny
+Plugin -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin -> Kernel/Views [any] Deny
+Plugin -> Kernel/Composition [any] Deny
+Plugin -> Kernel/Host [any] Deny
 Plugin -> App [any] Deny
 Plugin -> App/Host [any] Deny
 Plugin -> App/Views [any] Deny
@@ -306,22 +250,21 @@ Plugin -> Feature/Slice/Handlers.Events [any] Deny
 Plugin -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Module -> Framework [any] Deny
-Plugin/Module -> Framework/Kernel [any] Allow Public
-Plugin/Module -> Framework/Kernel/Domain [any] Allow Public
-Plugin/Module -> Framework/Kernel/Infrastructure [any] Allow Public
-Plugin/Module -> Framework/Kernel/Presenters [any] Allow Public
-Plugin/Module -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Module -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Plugin/Module -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Module -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Module -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Module -> Framework/Kernel/Handlers/Handlers.Requests [any] Allow Public
-Plugin/Module -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
-Plugin/Module -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
-Plugin/Module -> Framework/Kernel/Views [any] Allow Public
-Plugin/Module -> Framework/Kernel/Composition [any] Allow Public
-Plugin/Module -> Framework/Kernel/Host [any] Allow Public
+Plugin/Module -> Kernel [any] Allow Public
+Plugin/Module -> Kernel/Domain [any] Allow Public
+Plugin/Module -> Kernel/Infrastructure [any] Allow Public
+Plugin/Module -> Kernel/Presenters [any] Allow Public
+Plugin/Module -> Kernel/Contracts [any] Allow Public
+Plugin/Module -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Plugin/Module -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Module -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Module -> Kernel/Handlers [any] Allow Public
+Plugin/Module -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Plugin/Module -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Plugin/Module -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Plugin/Module -> Kernel/Views [any] Allow Public
+Plugin/Module -> Kernel/Composition [any] Allow Public
+Plugin/Module -> Kernel/Host [any] Allow Public
 Plugin/Module -> App [any] Deny
 Plugin/Module -> App/Host [any] Deny
 Plugin/Module -> App/Views [any] Deny
@@ -358,22 +301,21 @@ Plugin/Module -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Module -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Module -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Module -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Domain -> Framework [any] Deny
-Plugin/Domain -> Framework/Kernel [any] Deny
-Plugin/Domain -> Framework/Kernel/Domain [any] Allow Public
-Plugin/Domain -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Domain -> Framework/Kernel/Presenters [any] Deny
-Plugin/Domain -> Framework/Kernel/Contracts [any] Deny
-Plugin/Domain -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Domain -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Domain -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Domain -> Framework/Kernel/Handlers [any] Deny
-Plugin/Domain -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Domain -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Domain -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Domain -> Framework/Kernel/Views [any] Deny
-Plugin/Domain -> Framework/Kernel/Composition [any] Deny
-Plugin/Domain -> Framework/Kernel/Host [any] Deny
+Plugin/Domain -> Kernel [any] Deny
+Plugin/Domain -> Kernel/Domain [any] Allow Public
+Plugin/Domain -> Kernel/Infrastructure [any] Deny
+Plugin/Domain -> Kernel/Presenters [any] Deny
+Plugin/Domain -> Kernel/Contracts [any] Deny
+Plugin/Domain -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Domain -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Domain -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Domain -> Kernel/Handlers [any] Deny
+Plugin/Domain -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Domain -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Domain -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Domain -> Kernel/Views [any] Deny
+Plugin/Domain -> Kernel/Composition [any] Deny
+Plugin/Domain -> Kernel/Host [any] Deny
 Plugin/Domain -> App [any] Deny
 Plugin/Domain -> App/Host [any] Deny
 Plugin/Domain -> App/Views [any] Deny
@@ -410,22 +352,21 @@ Plugin/Domain -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Domain -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Domain -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Domain -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Domain/Domain.Shared -> Framework [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Domain [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Presenters [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Contracts [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Handlers [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Views [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Composition [any] Deny
-Plugin/Domain/Domain.Shared -> Framework/Kernel/Host [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Domain [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Infrastructure [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Presenters [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Contracts [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Handlers [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Views [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Composition [any] Deny
+Plugin/Domain/Domain.Shared -> Kernel/Host [any] Deny
 Plugin/Domain/Domain.Shared -> App [any] Deny
 Plugin/Domain/Domain.Shared -> App/Host [any] Deny
 Plugin/Domain/Domain.Shared -> App/Views [any] Deny
@@ -462,22 +403,21 @@ Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Infrastructure -> Framework [any] Deny
-Plugin/Infrastructure -> Framework/Kernel [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Domain [any] Allow Public
-Plugin/Infrastructure -> Framework/Kernel/Infrastructure [any] Allow Public
-Plugin/Infrastructure -> Framework/Kernel/Presenters [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Infrastructure -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Infrastructure -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Views [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Composition [any] Deny
-Plugin/Infrastructure -> Framework/Kernel/Host [any] Deny
+Plugin/Infrastructure -> Kernel [any] Deny
+Plugin/Infrastructure -> Kernel/Domain [any] Allow Public
+Plugin/Infrastructure -> Kernel/Infrastructure [any] Allow Public
+Plugin/Infrastructure -> Kernel/Presenters [any] Deny
+Plugin/Infrastructure -> Kernel/Contracts [any] Allow Public
+Plugin/Infrastructure -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Infrastructure -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Infrastructure -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Infrastructure -> Kernel/Handlers [any] Allow Public
+Plugin/Infrastructure -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Infrastructure -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Infrastructure -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Infrastructure -> Kernel/Views [any] Deny
+Plugin/Infrastructure -> Kernel/Composition [any] Deny
+Plugin/Infrastructure -> Kernel/Host [any] Deny
 Plugin/Infrastructure -> App [any] Deny
 Plugin/Infrastructure -> App/Host [any] Deny
 Plugin/Infrastructure -> App/Views [any] Deny
@@ -514,22 +454,21 @@ Plugin/Infrastructure -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Infrastructure -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Infrastructure -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Infrastructure -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Presenters -> Framework [any] Deny
-Plugin/Presenters -> Framework/Kernel [any] Deny
-Plugin/Presenters -> Framework/Kernel/Domain [any] Deny
-Plugin/Presenters -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Presenters -> Framework/Kernel/Presenters [any] Allow Public
-Plugin/Presenters -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Presenters -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Internal
-Plugin/Presenters -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Internal
-Plugin/Presenters -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Presenters -> Framework/Kernel/Handlers [any] Deny
-Plugin/Presenters -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Presenters -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Presenters -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Presenters -> Framework/Kernel/Views [any] Deny
-Plugin/Presenters -> Framework/Kernel/Composition [any] Deny
-Plugin/Presenters -> Framework/Kernel/Host [any] Deny
+Plugin/Presenters -> Kernel [any] Deny
+Plugin/Presenters -> Kernel/Domain [any] Deny
+Plugin/Presenters -> Kernel/Infrastructure [any] Deny
+Plugin/Presenters -> Kernel/Presenters [any] Allow Public
+Plugin/Presenters -> Kernel/Contracts [any] Allow Public
+Plugin/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Internal
+Plugin/Presenters -> Kernel/Contracts/Contracts.Events [any] Allow Internal
+Plugin/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Presenters -> Kernel/Handlers [any] Deny
+Plugin/Presenters -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Presenters -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Presenters -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Presenters -> Kernel/Views [any] Deny
+Plugin/Presenters -> Kernel/Composition [any] Deny
+Plugin/Presenters -> Kernel/Host [any] Deny
 Plugin/Presenters -> App [any] Deny
 Plugin/Presenters -> App/Host [any] Deny
 Plugin/Presenters -> App/Views [any] Deny
@@ -566,22 +505,21 @@ Plugin/Presenters -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Presenters -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Presenters -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Presenters -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Contracts -> Framework [any] Deny
-Plugin/Contracts -> Framework/Kernel [any] Deny
-Plugin/Contracts -> Framework/Kernel/Domain [any] Deny
-Plugin/Contracts -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Contracts -> Framework/Kernel/Presenters [any] Deny
-Plugin/Contracts -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Contracts -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Contracts -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Contracts -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Contracts -> Framework/Kernel/Handlers [any] Deny
-Plugin/Contracts -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Contracts -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Contracts -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Contracts -> Framework/Kernel/Views [any] Deny
-Plugin/Contracts -> Framework/Kernel/Composition [any] Deny
-Plugin/Contracts -> Framework/Kernel/Host [any] Deny
+Plugin/Contracts -> Kernel [any] Deny
+Plugin/Contracts -> Kernel/Domain [any] Deny
+Plugin/Contracts -> Kernel/Infrastructure [any] Deny
+Plugin/Contracts -> Kernel/Presenters [any] Deny
+Plugin/Contracts -> Kernel/Contracts [any] Allow Public
+Plugin/Contracts -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Contracts -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Contracts -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Contracts -> Kernel/Handlers [any] Deny
+Plugin/Contracts -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Contracts -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Contracts -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Contracts -> Kernel/Views [any] Deny
+Plugin/Contracts -> Kernel/Composition [any] Deny
+Plugin/Contracts -> Kernel/Host [any] Deny
 Plugin/Contracts -> App [any] Deny
 Plugin/Contracts -> App/Host [any] Deny
 Plugin/Contracts -> App/Views [any] Deny
@@ -618,22 +556,21 @@ Plugin/Contracts -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Domain [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Presenters [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Handlers [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Views [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Composition [any] Deny
-Plugin/Contracts/Contracts.Requests -> Framework/Kernel/Host [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Domain [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Infrastructure [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Presenters [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Contracts [any] Allow Public
+Plugin/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Plugin/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Handlers [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Views [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Composition [any] Deny
+Plugin/Contracts/Contracts.Requests -> Kernel/Host [any] Deny
 Plugin/Contracts/Contracts.Requests -> App [any] Deny
 Plugin/Contracts/Contracts.Requests -> App/Host [any] Deny
 Plugin/Contracts/Contracts.Requests -> App/Views [any] Deny
@@ -670,22 +607,21 @@ Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts/Contracts.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Domain [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Presenters [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Handlers [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Views [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Composition [any] Deny
-Plugin/Contracts/Contracts.Events -> Framework/Kernel/Host [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Domain [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Infrastructure [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Presenters [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Contracts [any] Allow Public
+Plugin/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Handlers [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Views [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Composition [any] Deny
+Plugin/Contracts/Contracts.Events -> Kernel/Host [any] Deny
 Plugin/Contracts/Contracts.Events -> App [any] Deny
 Plugin/Contracts/Contracts.Events -> App/Host [any] Deny
 Plugin/Contracts/Contracts.Events -> App/Views [any] Deny
@@ -722,22 +658,21 @@ Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts/Contracts.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Domain [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Presenters [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Handlers [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Views [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Composition [any] Deny
-Plugin/Contracts/Contracts.Commands -> Framework/Kernel/Host [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Domain [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Infrastructure [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Presenters [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Contracts [any] Allow Public
+Plugin/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Contracts/Contracts.Commands -> Kernel/Handlers [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Views [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Composition [any] Deny
+Plugin/Contracts/Contracts.Commands -> Kernel/Host [any] Deny
 Plugin/Contracts/Contracts.Commands -> App [any] Deny
 Plugin/Contracts/Contracts.Commands -> App/Host [any] Deny
 Plugin/Contracts/Contracts.Commands -> App/Views [any] Deny
@@ -774,22 +709,21 @@ Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Contracts/Contracts.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Handlers -> Framework [any] Deny
-Plugin/Handlers -> Framework/Kernel [any] Deny
-Plugin/Handlers -> Framework/Kernel/Domain [any] Deny
-Plugin/Handlers -> Framework/Kernel/Infrastructure [any] Deny
-Plugin/Handlers -> Framework/Kernel/Presenters [any] Deny
-Plugin/Handlers -> Framework/Kernel/Contracts [any] Deny
-Plugin/Handlers -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Handlers -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Plugin/Handlers -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Plugin/Handlers -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Handlers -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Handlers -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Handlers -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Handlers -> Framework/Kernel/Views [any] Deny
-Plugin/Handlers -> Framework/Kernel/Composition [any] Deny
-Plugin/Handlers -> Framework/Kernel/Host [any] Deny
+Plugin/Handlers -> Kernel [any] Deny
+Plugin/Handlers -> Kernel/Domain [any] Deny
+Plugin/Handlers -> Kernel/Infrastructure [any] Deny
+Plugin/Handlers -> Kernel/Presenters [any] Deny
+Plugin/Handlers -> Kernel/Contracts [any] Deny
+Plugin/Handlers -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Handlers -> Kernel/Contracts/Contracts.Events [any] Deny
+Plugin/Handlers -> Kernel/Contracts/Contracts.Commands [any] Deny
+Plugin/Handlers -> Kernel/Handlers [any] Allow Public
+Plugin/Handlers -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Handlers -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Handlers -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Handlers -> Kernel/Views [any] Deny
+Plugin/Handlers -> Kernel/Composition [any] Deny
+Plugin/Handlers -> Kernel/Host [any] Deny
 Plugin/Handlers -> App [any] Deny
 Plugin/Handlers -> App/Host [any] Deny
 Plugin/Handlers -> App/Views [any] Deny
@@ -826,22 +760,21 @@ Plugin/Handlers -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Domain [any] Allow Internal
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Infrastructure [any] Allow Internal
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Presenters [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Handlers/Handlers.Requests [any] Allow Public
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Views [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Composition [any] Deny
-Plugin/Handlers/Handlers.Requests -> Framework/Kernel/Host [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel/Domain [any] Allow Internal
+Plugin/Handlers/Handlers.Requests -> Kernel/Infrastructure [any] Allow Internal
+Plugin/Handlers/Handlers.Requests -> Kernel/Presenters [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel/Contracts [any] Allow Public
+Plugin/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Plugin/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Requests -> Kernel/Handlers [any] Allow Public
+Plugin/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Plugin/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel/Views [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Requests -> Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Requests -> App [any] Deny
 Plugin/Handlers/Handlers.Requests -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Requests -> App/Views [any] Deny
@@ -878,22 +811,21 @@ Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Domain [any] Allow Internal
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Infrastructure [any] Allow Internal
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Presenters [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Views [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Composition [any] Deny
-Plugin/Handlers/Handlers.Events -> Framework/Kernel/Host [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Domain [any] Allow Internal
+Plugin/Handlers/Handlers.Events -> Kernel/Infrastructure [any] Allow Internal
+Plugin/Handlers/Handlers.Events -> Kernel/Presenters [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Contracts [any] Allow Public
+Plugin/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Events -> Kernel/Handlers [any] Allow Public
+Plugin/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Plugin/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Views [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Events -> Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Events -> App [any] Deny
 Plugin/Handlers/Handlers.Events -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Events -> App/Views [any] Deny
@@ -930,22 +862,21 @@ Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Domain [any] Allow Internal
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Infrastructure [any] Allow Internal
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Presenters [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Views [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Composition [any] Deny
-Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Framework/Kernel/Host [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Domain [any] Allow Internal
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Infrastructure [any] Allow Internal
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Presenters [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Contracts [any] Allow Public
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Handlers [any] Allow Public
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Handlers/Handlers.Commands [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Views [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Views [any] Deny
@@ -982,22 +913,21 @@ Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Domain [any] Allow Internal
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Infrastructure [any] Allow Internal
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Presenters [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Views [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Composition [any] Deny
-Plugin/Handlers/Handlers.Commands -> Framework/Kernel/Host [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Domain [any] Allow Internal
+Plugin/Handlers/Handlers.Commands -> Kernel/Infrastructure [any] Allow Internal
+Plugin/Handlers/Handlers.Commands -> Kernel/Presenters [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Contracts [any] Allow Public
+Plugin/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Commands -> Kernel/Handlers [any] Allow Public
+Plugin/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Commands -> Kernel/Views [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Commands -> Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Commands -> App [any] Deny
 Plugin/Handlers/Handlers.Commands -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Commands -> App/Views [any] Deny
@@ -1034,22 +964,21 @@ Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Domain [any] Allow Internal
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Infrastructure [any] Allow Internal
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Presenters [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Contracts [any] Allow Public
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Handlers [any] Allow Public
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Views [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Composition [any] Deny
-Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Framework/Kernel/Host [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Domain [any] Allow Internal
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Infrastructure [any] Allow Internal
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Presenters [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Contracts [any] Allow Public
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Contracts/Contracts.Requests [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Handlers [any] Allow Public
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Handlers/Handlers.Requests [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Handlers/Handlers.Events [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Views [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel/Host [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Host [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Views [any] Deny
@@ -1086,22 +1015,21 @@ Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handl
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature -> Framework [any] Deny
-Feature -> Framework/Kernel [any] Deny
-Feature -> Framework/Kernel/Domain [any] Deny
-Feature -> Framework/Kernel/Infrastructure [any] Deny
-Feature -> Framework/Kernel/Presenters [any] Deny
-Feature -> Framework/Kernel/Contracts [any] Deny
-Feature -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature -> Framework/Kernel/Handlers [any] Deny
-Feature -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature -> Framework/Kernel/Views [any] Deny
-Feature -> Framework/Kernel/Composition [any] Deny
-Feature -> Framework/Kernel/Host [any] Deny
+Feature -> Kernel [any] Deny
+Feature -> Kernel/Domain [any] Deny
+Feature -> Kernel/Infrastructure [any] Deny
+Feature -> Kernel/Presenters [any] Deny
+Feature -> Kernel/Contracts [any] Deny
+Feature -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature -> Kernel/Handlers [any] Deny
+Feature -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature -> Kernel/Views [any] Deny
+Feature -> Kernel/Composition [any] Deny
+Feature -> Kernel/Host [any] Deny
 Feature -> App [any] Deny
 Feature -> App/Host [any] Deny
 Feature -> App/Views [any] Deny
@@ -1139,22 +1067,21 @@ Feature -> Feature/Slice/Handlers.Events [any] Deny
 Feature -> Feature/Slice/Handlers.Commands [any] Deny
 Feature -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Module -> Framework [any] Deny
-Feature/Module -> Framework/Kernel [any] Allow Public
-Feature/Module -> Framework/Kernel/Domain [any] Allow Public
-Feature/Module -> Framework/Kernel/Infrastructure [any] Allow Public
-Feature/Module -> Framework/Kernel/Presenters [any] Allow Public
-Feature/Module -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Module -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Feature/Module -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Module -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Module -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Module -> Framework/Kernel/Handlers/Handlers.Requests [any] Allow Public
-Feature/Module -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
-Feature/Module -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
-Feature/Module -> Framework/Kernel/Views [any] Allow Public
-Feature/Module -> Framework/Kernel/Composition [any] Deny
-Feature/Module -> Framework/Kernel/Host [any] Allow Public
+Feature/Module -> Kernel [any] Allow Public
+Feature/Module -> Kernel/Domain [any] Allow Public
+Feature/Module -> Kernel/Infrastructure [any] Allow Public
+Feature/Module -> Kernel/Presenters [any] Allow Public
+Feature/Module -> Kernel/Contracts [any] Allow Public
+Feature/Module -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Feature/Module -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Module -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Module -> Kernel/Handlers [any] Allow Public
+Feature/Module -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Feature/Module -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Feature/Module -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Feature/Module -> Kernel/Views [any] Allow Public
+Feature/Module -> Kernel/Composition [any] Deny
+Feature/Module -> Kernel/Host [any] Allow Public
 Feature/Module -> App [any] Deny
 Feature/Module -> App/Host [any] Deny
 Feature/Module -> App/Views [any] Deny
@@ -1223,22 +1150,21 @@ Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [same Feature Slice a] A
 Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [same Feature Slice b] Allow Internal
 Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [other Feature Slice a] Deny
 Feature/Module -> Feature/Slice/Handlers.Commands.Hooks [other Feature Slice b] Deny
-Feature/Domain -> Framework [any] Deny
-Feature/Domain -> Framework/Kernel [any] Deny
-Feature/Domain -> Framework/Kernel/Domain [any] Allow Public
-Feature/Domain -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Domain -> Framework/Kernel/Presenters [any] Deny
-Feature/Domain -> Framework/Kernel/Contracts [any] Deny
-Feature/Domain -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Domain -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Domain -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Domain -> Framework/Kernel/Handlers [any] Deny
-Feature/Domain -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Domain -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Domain -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Domain -> Framework/Kernel/Views [any] Deny
-Feature/Domain -> Framework/Kernel/Composition [any] Deny
-Feature/Domain -> Framework/Kernel/Host [any] Deny
+Feature/Domain -> Kernel [any] Deny
+Feature/Domain -> Kernel/Domain [any] Allow Public
+Feature/Domain -> Kernel/Infrastructure [any] Deny
+Feature/Domain -> Kernel/Presenters [any] Deny
+Feature/Domain -> Kernel/Contracts [any] Deny
+Feature/Domain -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Domain -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature/Domain -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Domain -> Kernel/Handlers [any] Deny
+Feature/Domain -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Domain -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Domain -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Domain -> Kernel/Views [any] Deny
+Feature/Domain -> Kernel/Composition [any] Deny
+Feature/Domain -> Kernel/Host [any] Deny
 Feature/Domain -> App [any] Deny
 Feature/Domain -> App/Host [any] Deny
 Feature/Domain -> App/Views [any] Deny
@@ -1275,22 +1201,21 @@ Feature/Domain -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Domain -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Domain -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Domain -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Domain/Domain.Shared -> Framework [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Domain [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Presenters [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Contracts [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Handlers [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Views [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Composition [any] Deny
-Feature/Domain/Domain.Shared -> Framework/Kernel/Host [any] Deny
+Feature/Domain/Domain.Shared -> Kernel [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Domain [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Infrastructure [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Presenters [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Contracts [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Handlers [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Views [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Composition [any] Deny
+Feature/Domain/Domain.Shared -> Kernel/Host [any] Deny
 Feature/Domain/Domain.Shared -> App [any] Deny
 Feature/Domain/Domain.Shared -> App/Host [any] Deny
 Feature/Domain/Domain.Shared -> App/Views [any] Deny
@@ -1327,22 +1252,21 @@ Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Domain/Domain.Shared -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Infrastructure -> Framework [any] Deny
-Feature/Infrastructure -> Framework/Kernel [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Domain [any] Allow Public
-Feature/Infrastructure -> Framework/Kernel/Infrastructure [any] Allow Public
-Feature/Infrastructure -> Framework/Kernel/Presenters [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Infrastructure -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Infrastructure -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Views [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Composition [any] Deny
-Feature/Infrastructure -> Framework/Kernel/Host [any] Deny
+Feature/Infrastructure -> Kernel [any] Deny
+Feature/Infrastructure -> Kernel/Domain [any] Allow Public
+Feature/Infrastructure -> Kernel/Infrastructure [any] Allow Public
+Feature/Infrastructure -> Kernel/Presenters [any] Deny
+Feature/Infrastructure -> Kernel/Contracts [any] Allow Public
+Feature/Infrastructure -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Infrastructure -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature/Infrastructure -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Infrastructure -> Kernel/Handlers [any] Allow Public
+Feature/Infrastructure -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Infrastructure -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Infrastructure -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Infrastructure -> Kernel/Views [any] Deny
+Feature/Infrastructure -> Kernel/Composition [any] Deny
+Feature/Infrastructure -> Kernel/Host [any] Deny
 Feature/Infrastructure -> App [any] Deny
 Feature/Infrastructure -> App/Host [any] Deny
 Feature/Infrastructure -> App/Views [any] Deny
@@ -1380,22 +1304,21 @@ Feature/Infrastructure -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Infrastructure -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Infrastructure -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Infrastructure -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Presenters -> Framework [any] Deny
-Feature/Presenters -> Framework/Kernel [any] Deny
-Feature/Presenters -> Framework/Kernel/Domain [any] Deny
-Feature/Presenters -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Presenters -> Framework/Kernel/Presenters [any] Allow Public
-Feature/Presenters -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Presenters -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Internal
-Feature/Presenters -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Internal
-Feature/Presenters -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Presenters -> Framework/Kernel/Handlers [any] Deny
-Feature/Presenters -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Presenters -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Presenters -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Presenters -> Framework/Kernel/Views [any] Deny
-Feature/Presenters -> Framework/Kernel/Composition [any] Deny
-Feature/Presenters -> Framework/Kernel/Host [any] Deny
+Feature/Presenters -> Kernel [any] Deny
+Feature/Presenters -> Kernel/Domain [any] Deny
+Feature/Presenters -> Kernel/Infrastructure [any] Deny
+Feature/Presenters -> Kernel/Presenters [any] Allow Public
+Feature/Presenters -> Kernel/Contracts [any] Allow Public
+Feature/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Internal
+Feature/Presenters -> Kernel/Contracts/Contracts.Events [any] Allow Internal
+Feature/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Presenters -> Kernel/Handlers [any] Deny
+Feature/Presenters -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Presenters -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Presenters -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Presenters -> Kernel/Views [any] Deny
+Feature/Presenters -> Kernel/Composition [any] Deny
+Feature/Presenters -> Kernel/Host [any] Deny
 Feature/Presenters -> App [any] Deny
 Feature/Presenters -> App/Host [any] Deny
 Feature/Presenters -> App/Views [any] Deny
@@ -1439,22 +1362,21 @@ Feature/Presenters -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Presenters -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Presenters -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Presenters -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice.Shared -> Framework [any] Deny
-Feature/Slice.Shared -> Framework/Kernel [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Domain [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice.Shared -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Feature/Slice.Shared -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice.Shared -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice.Shared -> Framework/Kernel/Handlers [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Views [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Composition [any] Deny
-Feature/Slice.Shared -> Framework/Kernel/Host [any] Deny
+Feature/Slice.Shared -> Kernel [any] Deny
+Feature/Slice.Shared -> Kernel/Domain [any] Deny
+Feature/Slice.Shared -> Kernel/Infrastructure [any] Deny
+Feature/Slice.Shared -> Kernel/Presenters [any] Deny
+Feature/Slice.Shared -> Kernel/Contracts [any] Allow Public
+Feature/Slice.Shared -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice.Shared -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice.Shared -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice.Shared -> Kernel/Handlers [any] Deny
+Feature/Slice.Shared -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice.Shared -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice.Shared -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice.Shared -> Kernel/Views [any] Deny
+Feature/Slice.Shared -> Kernel/Composition [any] Deny
+Feature/Slice.Shared -> Kernel/Host [any] Deny
 Feature/Slice.Shared -> App [any] Deny
 Feature/Slice.Shared -> App/Host [any] Deny
 Feature/Slice.Shared -> App/Views [any] Deny
@@ -1491,22 +1413,21 @@ Feature/Slice.Shared -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice.Shared -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice.Shared -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice.Shared -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice -> Framework [any] Deny
-Feature/Slice -> Framework/Kernel [any] Deny
-Feature/Slice -> Framework/Kernel/Domain [any] Deny
-Feature/Slice -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Slice -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice -> Framework/Kernel/Contracts [any] Deny
-Feature/Slice -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Slice -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Slice -> Framework/Kernel/Handlers [any] Deny
-Feature/Slice -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice -> Framework/Kernel/Views [any] Deny
-Feature/Slice -> Framework/Kernel/Composition [any] Deny
-Feature/Slice -> Framework/Kernel/Host [any] Deny
+Feature/Slice -> Kernel [any] Deny
+Feature/Slice -> Kernel/Domain [any] Deny
+Feature/Slice -> Kernel/Infrastructure [any] Deny
+Feature/Slice -> Kernel/Presenters [any] Deny
+Feature/Slice -> Kernel/Contracts [any] Deny
+Feature/Slice -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature/Slice -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Slice -> Kernel/Handlers [any] Deny
+Feature/Slice -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice -> Kernel/Views [any] Deny
+Feature/Slice -> Kernel/Composition [any] Deny
+Feature/Slice -> Kernel/Host [any] Deny
 Feature/Slice -> App [any] Deny
 Feature/Slice -> App/Host [any] Deny
 Feature/Slice -> App/Views [any] Deny
@@ -1544,22 +1465,21 @@ Feature/Slice -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Contracts.Requests -> Framework [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Domain [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Handlers [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Contracts.Requests -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Domain [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Infrastructure [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Presenters [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Contracts.Requests -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice/Contracts.Requests -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Handlers [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Views [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Composition [any] Deny
+Feature/Slice/Contracts.Requests -> Kernel/Host [any] Deny
 Feature/Slice/Contracts.Requests -> App [any] Deny
 Feature/Slice/Contracts.Requests -> App/Host [any] Deny
 Feature/Slice/Contracts.Requests -> App/Views [any] Deny
@@ -1597,22 +1517,21 @@ Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Contracts.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Contracts.Events -> Framework [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Domain [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Contracts.Events -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice/Contracts.Events -> Framework/Kernel/Contracts/Contracts.Commands [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Handlers [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Contracts.Events -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Contracts.Events -> Kernel [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Domain [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Infrastructure [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Presenters [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Contracts.Events -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Contracts.Events -> Kernel/Contracts/Contracts.Commands [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Handlers [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Views [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Composition [any] Deny
+Feature/Slice/Contracts.Events -> Kernel/Host [any] Deny
 Feature/Slice/Contracts.Events -> App [any] Deny
 Feature/Slice/Contracts.Events -> App/Host [any] Deny
 Feature/Slice/Contracts.Events -> App/Views [any] Deny
@@ -1650,22 +1569,21 @@ Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Contracts.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Contracts.Commands -> Framework [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Domain [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Infrastructure [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Contracts/Contracts.Events [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Handlers [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Contracts.Commands -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Domain [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Infrastructure [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Presenters [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Contracts.Commands -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Contracts/Contracts.Events [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Contracts.Commands -> Kernel/Handlers [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Views [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Composition [any] Deny
+Feature/Slice/Contracts.Commands -> Kernel/Host [any] Deny
 Feature/Slice/Contracts.Commands -> App [any] Deny
 Feature/Slice/Contracts.Commands -> App/Host [any] Deny
 Feature/Slice/Contracts.Commands -> App/Views [any] Deny
@@ -1703,22 +1621,21 @@ Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Contracts.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Handlers.Requests -> Framework [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Domain [any] Allow Internal
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Infrastructure [any] Allow Internal
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Contracts/Contracts.Requests [any] Allow Public
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Handlers/Handlers.Requests [any] Allow Public
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Handlers.Requests -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel/Domain [any] Allow Internal
+Feature/Slice/Handlers.Requests -> Kernel/Infrastructure [any] Allow Internal
+Feature/Slice/Handlers.Requests -> Kernel/Presenters [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Handlers.Requests -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Feature/Slice/Handlers.Requests -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Handlers.Requests -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Handlers.Requests -> Kernel/Handlers [any] Allow Public
+Feature/Slice/Handlers.Requests -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Feature/Slice/Handlers.Requests -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel/Views [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel/Composition [any] Deny
+Feature/Slice/Handlers.Requests -> Kernel/Host [any] Deny
 Feature/Slice/Handlers.Requests -> App [any] Deny
 Feature/Slice/Handlers.Requests -> App/Host [any] Deny
 Feature/Slice/Handlers.Requests -> App/Views [any] Deny
@@ -1762,22 +1679,21 @@ Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Requests -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Handlers.Events -> Framework [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Domain [any] Allow Internal
-Feature/Slice/Handlers.Events -> Framework/Kernel/Infrastructure [any] Allow Internal
-Feature/Slice/Handlers.Events -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Handlers.Events -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice/Handlers.Events -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice/Handlers.Events -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Slice/Handlers.Events -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
-Feature/Slice/Handlers.Events -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Handlers.Events -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Handlers.Events -> Kernel [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Domain [any] Allow Internal
+Feature/Slice/Handlers.Events -> Kernel/Infrastructure [any] Allow Internal
+Feature/Slice/Handlers.Events -> Kernel/Presenters [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Handlers.Events -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Handlers.Events -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Handlers.Events -> Kernel/Handlers [any] Allow Public
+Feature/Slice/Handlers.Events -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Feature/Slice/Handlers.Events -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Views [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Composition [any] Deny
+Feature/Slice/Handlers.Events -> Kernel/Host [any] Deny
 Feature/Slice/Handlers.Events -> App [any] Deny
 Feature/Slice/Handlers.Events -> App/Host [any] Deny
 Feature/Slice/Handlers.Events -> App/Views [any] Deny
@@ -1818,22 +1734,21 @@ Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Events -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Handlers.Commands -> Framework [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Domain [any] Allow Internal
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Infrastructure [any] Allow Internal
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Handlers.Commands -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Domain [any] Allow Internal
+Feature/Slice/Handlers.Commands -> Kernel/Infrastructure [any] Allow Internal
+Feature/Slice/Handlers.Commands -> Kernel/Presenters [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Handlers.Commands -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Handlers.Commands -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Handlers.Commands -> Kernel/Handlers [any] Allow Public
+Feature/Slice/Handlers.Commands -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Feature/Slice/Handlers.Commands -> Kernel/Views [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Composition [any] Deny
+Feature/Slice/Handlers.Commands -> Kernel/Host [any] Deny
 Feature/Slice/Handlers.Commands -> App [any] Deny
 Feature/Slice/Handlers.Commands -> App/Host [any] Deny
 Feature/Slice/Handlers.Commands -> App/Views [any] Deny
@@ -1874,22 +1789,21 @@ Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Commands -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Domain [any] Allow Internal
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Infrastructure [any] Allow Internal
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Handlers/Handlers.Events [any] Allow Public
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Handlers/Handlers.Commands [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Handlers.Events.Hooks -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Domain [any] Allow Internal
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Infrastructure [any] Allow Internal
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Presenters [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Handlers [any] Allow Public
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Handlers/Handlers.Commands [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Views [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Composition [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> Kernel/Host [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> App [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> App/Host [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> App/Views [any] Deny
@@ -1933,22 +1847,21 @@ Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Events [other Feat
 Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Events.Hooks [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Feature/Slice/Handlers.Commands.Hooks [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Domain [any] Allow Internal
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Infrastructure [any] Allow Internal
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Presenters [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Contracts [any] Allow Public
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Contracts/Contracts.Requests [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Contracts/Contracts.Events [any] Allow Public
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Contracts/Contracts.Commands [any] Allow Public
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Handlers [any] Allow Public
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Handlers/Handlers.Requests [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Handlers/Handlers.Events [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Handlers/Handlers.Commands [any] Allow Public
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Views [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Composition [any] Deny
-Feature/Slice/Handlers.Commands.Hooks -> Framework/Kernel/Host [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Domain [any] Allow Internal
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Infrastructure [any] Allow Internal
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Presenters [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Contracts [any] Allow Public
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Contracts/Contracts.Requests [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Handlers [any] Allow Public
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Handlers/Handlers.Requests [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Handlers/Handlers.Events [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Views [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Composition [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> Kernel/Host [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> App [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> App/Host [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> App/Views [any] Deny

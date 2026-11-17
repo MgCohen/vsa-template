@@ -1,6 +1,7 @@
 namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 
 public static class UnityLayout {
     public const string VersionFile = "ProjectSettings/ProjectVersion.txt";

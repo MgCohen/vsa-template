@@ -1,5 +1,7 @@
 namespace Umpire.Vsa.Definition;
 
-public record Plugin : Layer {
+using Umpire.Architecture.Blocks;
+
+public record Plugin : Module {
     public override string GroupFolder => "Plugins";
 }

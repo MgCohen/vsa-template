@@ -39,24 +39,24 @@ Some code names in this page are targets of the names pass (D1): they come with 
 | Module | A component that the host finds in the app. It ships with the app | A feature module, a plugin module |
 | Library | A block with no install point | `engine/Versions/` |
 
-A component can have a layer shape. That does not make it a module. A plugin is a VSA module kind: the base of the same layers in each module. See `blocks.md`.
+Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `Module` and `Library`, on the base `BlockKind`. A component can have a layer shape. That does not make it a module. A plugin is a VSA module kind: the base of the same layers in each module. See `blocks.md`.
 
 ## Definition terms
 
 | Term | Meaning | Code names |
 |---|---|---|
-| Block | A folder tree of code with one entry. Also the top part of a definition | `Block` (the top part), `Block<TArchitecture>`, `BlockKind` (new, the base of the block kind records) |
+| Block | A folder tree of code with one entry. Also the top part of a definition | `Block` (the top part), `Block<TArchitecture>`, `BlockKind` (the base of the block kind records) |
 | Independent block | A block with its own definition and check entry, for example an app or a pack | |
 | Owned block | A block that gets its shape from the definition around it, for example a feature module | |
 | Install point | The class or method that tells the host what to install from a block | `Pack.CreateHost()` |
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
 | Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, an `umpire.json` file |
 | Block place | A folder that an outer definition marks as the place of another block. The outer definition sees that block as one part | `AddBlock<T>()`, `AddBlockGroup<T>()` |
-| Concept | A kind of part that a definition names | `Concept`, `External`, `BlockKind` (new), `Layer` |
+| Concept | A kind of part that a definition names | `Concept`, `External`, `BlockKind`, `Layer` |
 | Part | One place in the folder tree of a definition | `Part`, `PartGroup` |
-| Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture` (new) |
+| Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture`: `AddContractParts`, `AndHandlerParts`, `ForContractParts`, `UsesContractParts`, `ForHandlerParts` |
 | Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Host`, `Composition`, `Slice` |
-| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Module`, the classes `Umpire.Kernel.Module` and `Plugin` |
+| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernel.Module` and `Plugin` |
 | Module kind | A group of modules with one shape. Each module kind record inherits `Module` | `Feature`, `Plugin`, the `EcsFeature` of a pack variant |
 | External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` (new, old `IsFramework` in `TypeFactsReader`) |
 | System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` (new, old `IsFramework` in `AppLoader`) |
@@ -65,8 +65,6 @@ A component can have a layer shape. That does not make it a module. A plugin is 
 | Queries | The answers of the rules on plain facts (`architecture/Queries/`) | `PartOf` (which part), `MayUse` (allow or deny), `Counts`, `Matches` |
 | Count | A rule statement that counts the types of a concept in each instance of a group, or the types that take each type of a part | `Has<T>()` |
 | Match | A rule statement that a type takes a type argument of a concept, in the same instance of a group | `Takes<T>().InSame<G>()` |
-
-The concept records of the block kinds go to the namespace `Umpire.Architecture.Blocks` in the next PR of the names pass.
 
 ## Messages
 
