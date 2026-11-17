@@ -88,6 +88,19 @@ public sealed class AppFilesTests {
         Assert.That(File.ReadAllText(Path.Combine(root, "App.csproj")), Does.Contain($"Version=\"[{V}]\""));
     }
 
+    [TestCase(true, "\r\n")]
+    [TestCase(false, "\n")]
+    public void UpdateKeepsTheBomAndTheLineEndingOfAProjectFile(bool bom, string ending) {
+        var project = "<Project Sdk=\"Umpire.Sdk/0.0.1\">\n  <PropertyGroup />\n</Project>\n".Replace("\n", ending);
+        File.WriteAllText(Path.Combine(root, "App.csproj"), project, new System.Text.UTF8Encoding(bom));
+
+        UpdateCommand.SetVersion(root, V);
+
+        var path = Path.Combine(root, "App.csproj");
+        Assert.That(File.ReadAllBytes(path) is [0xEF, 0xBB, 0xBF, ..], Is.EqualTo(bom));
+        Assert.That(File.ReadAllText(path), Is.EqualTo(project.Replace("0.0.1", V)));
+    }
+
     [Test]
     public void DoctorReadsTheWebSdkPinAndNotGlobalJson() {
         Write("global.json", """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
