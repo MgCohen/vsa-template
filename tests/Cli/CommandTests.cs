@@ -6,7 +6,7 @@ using Umpire.Cli.Commands.Bases;
 namespace Cli.Tests;
 
 public sealed class CommandTests {
-    static readonly Type[] Bases = [typeof(ToolCommand), typeof(AppCommand), typeof(AddCommand)];
+    static readonly Type[] Bases = [typeof(ToolCommand), typeof(AppCommand)];
 
     [Test]
     public void EachCommandInheritsOneBaseAndIsInTheList() {
@@ -102,6 +102,18 @@ public sealed class CommandTests {
     public void AddPackStopsIfThePackExists() =>
         Assert.That(() => RunInFolder(["add", "pack", "Ecs"], "Shop", folder => Directory.CreateDirectory(Path.Combine(folder, "Packs", "Ecs"))),
             Throws.TypeOf<UmpireException>().With.Message.Contain("The pack Ecs exists: Packs/Ecs."));
+
+    [TestCase("module", "Features", "The module Billing exists: Features/Billing. Use a different name.")]
+    [TestCase("plugin", "Plugins", "The plugin module Billing exists: Plugins/Billing. Use a different name.")]
+    [TestCase("module", "Plugins", "The plugin module Billing exists: Plugins/Billing. A module and a plugin module")]
+    [TestCase("plugin", "Features", "The module Billing exists: Features/Billing. A module and a plugin module")]
+    public void AModuleStopsIfItsFolderOrTheFolderOfTheOtherModuleKindExists(string kind, string folder, string message) =>
+        Assert.That(() => RunInFolder(["add", kind, "Billing"], "Shop", root => Directory.CreateDirectory(Path.Combine(root, folder, "Billing"))),
+            Throws.TypeOf<UmpireException>().With.Message.Contain(message));
+
+    [Test]
+    public void ASliceKindHasNoFolderCheck() =>
+        Assert.That(() => AddKind.Request.EnsureFree("no-folder", "Shop"), Throws.Nothing);
 
     static int RunOutsideAnApp(string[] args) => RunInFolder(args, app: null);
 

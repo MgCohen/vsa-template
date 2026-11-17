@@ -9,10 +9,7 @@ static class CommandList {
     public static IReadOnlyList<ToolCommand> All { get; } = [
         new NewAppCommand(),
         new InitCommand(),
-        new AddModuleCommand(),
-        new AddPluginCommand(),
-        new AddPackCommand(),
-        .. SliceKind.All.Select(kind => new AddSliceCommand(kind)),
+        .. AddKind.All.Select(kind => new AddCommand(kind)),
         new DoctorCommand(),
         new UpdateCommand(),
     ];
