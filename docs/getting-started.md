@@ -222,7 +222,6 @@ Build switches of the check:
 |---|---|
 | `-p:UmpireCheck=false` | No check in this build |
 | `-p:UmpireCheckMode=Warn` | Each error of the check is a warning |
-| `-p:UmpireUpdateBaseline=true` | Writes the errors to `umpire-baseline.txt`, and the next builds accept them |
 
 The analyzers check one file in the compile, for example the line length (`UMP010101`). Each rule has the defaults of its values on its class. To change a value, write it in the `.umpireconfig` file in the root of the app, with no section:
 

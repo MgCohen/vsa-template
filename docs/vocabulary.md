@@ -50,7 +50,7 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | Owned block | A block that gets its shape from the definition around it, for example a feature module | |
 | Install point | The class or method that tells the host what to install from a block | `Pack.CreateHost()` |
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
-| Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, an `umpire.json` file |
+| Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, the key `umpire.architecture` in a `.umpireconfig` file |
 | Block place | A folder that an outer definition marks as the place of another block. The outer definition sees that block as one part | `AddBlock<T>()`, `AddBlockGroup<T>()` |
 | Concept | A kind of part that a definition names | `Concept`, `External`, `BlockKind`, `Layer` |
 | Part | One place in the folder tree of a definition | `Part`, `PartGroup` |
@@ -85,7 +85,6 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 |---|---|---|
 | Engine step | One feature module of the engine with one command | `EngineStep<TResult>` |
 | Finding | One result line: code, severity, message, file and line | `Finding` |
-| Baseline | The errors that `umpire-baseline.txt` accepts | |
 | Rule ID | `UMP` and six digits: area (2), group (2), case (2). Area `01` analyzers, `02` rule findings, `03` engine run | `UMP030201` |
 
 ## Tool terms

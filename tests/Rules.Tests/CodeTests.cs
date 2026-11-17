@@ -6,7 +6,7 @@ using Umpire.Vsa.Analyzers;
 namespace Rules.Tests;
 
 public sealed partial class CodeTests {
-    static readonly string[] CodeFiles = ["*.cs", "*.md", "*.globalconfig", "*.targets", "*.props", "*.template", "umpire-baseline.txt"];
+    static readonly string[] CodeFiles = ["*.cs", "*.md", "*.globalconfig", "*.targets", "*.props", "*.template"];
     static readonly string[] SkippedFolders = ["artifacts~", "bin", "obj", ".git", ".claude", "proposals"];
 
     [Test]

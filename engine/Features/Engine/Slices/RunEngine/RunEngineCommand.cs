@@ -9,6 +9,5 @@ public sealed record RunEngineCommand(
     string Block = "",
     string Mode = "Error",
     string Skip = "",
-    bool FailFast = false,
-    bool UpdateBaseline = false)
+    bool FailFast = false)
     : IConsoleCommand<ReportResult>;

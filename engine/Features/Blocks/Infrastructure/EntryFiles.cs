@@ -1,54 +1,44 @@
 namespace Blocks.Infrastructure;
 
-using System.Text.Json;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using Umpire.Architecture;
+using Umpire.Engine.Versions;
 
 public static class EntryFiles {
-    public const string Name = "umpire.json";
-    const string ArchitectureProperty = "architecture";
+    public const string Name = UmpireConfigFile.Name;
+    public const string Key = UmpireConfigFile.ArchitectureKey;
 
     public static IReadOnlyList<BlockEntry> Above(string folder) {
         var found = new List<BlockEntry>();
         for (var current = new DirectoryInfo(folder); current is not null; current = current.Parent) {
-            var file = Path.Combine(current.FullName, Name);
-            if (File.Exists(file)) {
-                found.Add(Read(file));
+            if (Read(Path.Combine(current.FullName, Name)) is { } entry) {
+                found.Add(entry);
             }
         }
         return found;
     }
 
-    public static IReadOnlyList<BlockEntry> Below(string folder) {
-        if (!Directory.Exists(folder)) {
-            return [];
-        }
-        return [.. Directory.GetDirectories(folder).Where(IsSource).SelectMany(Tree)
-            .Select(sub => Path.Combine(sub, Name))
-            .Where(File.Exists)
-            .Select(Read)];
-    }
+    public static IReadOnlyList<BlockEntry> Below(string folder) =>
+        Directory.Exists(folder)
+            ? [.. Directory.GetDirectories(folder).Where(IsSource).SelectMany(Tree)
+                .Select(sub => Read(Path.Combine(sub, Name))).OfType<BlockEntry>()]
+            : [];
 
-    public static BlockEntry Read(string file) {
+    public static BlockEntry? Read(string file) {
+        if (!File.Exists(file) || UmpireConfigFile.Read(file)[Key] is not string name) {
+            return null;
+        }
         var full = DiskPath.Of(file);
         var entry = new BlockEntry(Path.GetDirectoryName(full)!, EntryForm.File, null, full);
-        try {
-            using var json = JsonDocument.Parse(File.ReadAllText(file));
-            if (json.RootElement.ValueKind == JsonValueKind.Object
-                && json.RootElement.TryGetProperty(ArchitectureProperty, out var value)
-                && value.ValueKind == JsonValueKind.String
-                && value.GetString() is { Length: > 0 } name) {
-                return TypeName.Parse(name) is { } type ? entry with { Type = type } : entry.Names(name, TypeName.NoAssembly);
-            }
-            return NoArchitecture(entry, $"it has no string property \"{ArchitectureProperty}\"");
-        } catch (JsonException e) {
-            return NoArchitecture(entry, $"it is not valid JSON ({e.Message})");
+        if (name.Length == 0) {
+            return entry with { Problem = $"does not name an architecture: the key {Key} has no value" };
         }
+        return TypeName.Parse(name) is { } type ? entry with { Type = type } : entry.Names(name, TypeName.NoAssembly);
     }
 
-    static BlockEntry NoArchitecture(BlockEntry entry, string reason) =>
-        entry with { Problem = $"does not name an architecture: {reason}" };
+    public static IEnumerable<string> SourceFolders(string folder) =>
+        Directory.Exists(folder) ? Tree(folder) : [];
 
     static IEnumerable<string> Tree(string folder) =>
         new[] { folder }.Concat(Directory.GetDirectories(folder).Where(IsSource).SelectMany(Tree));

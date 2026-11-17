@@ -5,5 +5,5 @@ using Steps.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
 
 public sealed record WriteReportCommand(string Mode, IReadOnlyList<Finding> Findings) : ICommand<ReportResult>, IStepGroup {
-    public static int Group => 6;
+    public static int Group => 5;
 }

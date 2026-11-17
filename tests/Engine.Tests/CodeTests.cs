@@ -1,5 +1,4 @@
 using System.Reflection;
-using Baseline.Slices.ApplyBaseline;
 using Blocks.Slices.FindBlocks;
 using LoadApp.Slices.LoadApp;
 using Rules.Slices.CheckRules;
@@ -30,8 +29,7 @@ public sealed class CodeTests {
             Assert.That(CheckVersionsCommand.Group, Is.EqualTo(2));
             Assert.That(LoadAppCommand.Group, Is.EqualTo(3));
             Assert.That(CheckRulesCommand.Group, Is.EqualTo(4));
-            Assert.That(ApplyBaselineCommand.Group, Is.EqualTo(5));
-            Assert.That(Report.Slices.WriteReport.WriteReportCommand.Group, Is.EqualTo(6));
+            Assert.That(Report.Slices.WriteReport.WriteReportCommand.Group, Is.EqualTo(5));
         });
     }
 
@@ -59,9 +57,9 @@ public sealed class CodeTests {
             Assert.That(BlocksCodes.TwoEntries, Is.EqualTo("UMP030101"));
             Assert.That(BlocksCodes.BadArchitecture, Is.EqualTo("UMP030102"));
             Assert.That(BlocksCodes.NoBlock, Is.EqualTo("UMP030103"));
-            Assert.That(BaselineCodes.StaleEntry, Is.EqualTo("UMP030501"));
-            Assert.That(BaselineCodes.UnreadableEntry, Is.EqualTo("UMP030502"));
-            Assert.That(BaselineCodes.NotUpdated, Is.EqualTo("UMP030503"));
+            Assert.That(BlocksCodes.CodeWins, Is.EqualTo("UMP030104"));
+            Assert.That(BlocksCodes.NoUmpireSdk, Is.EqualTo("UMP030105"));
+            Assert.That(BlocksCodes.NoConfigFile, Is.EqualTo("UMP030106"));
             Assert.That(RunCodes.CouldNotRun, Is.EqualTo("UMP030001"));
             Assert.That(RunCodes.Skipped, Is.EqualTo("UMP030002"));
         });
@@ -79,8 +77,8 @@ public sealed class CodeTests {
         string[] codes = [
             VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine,
             BlocksCodes.TwoEntries, BlocksCodes.BadArchitecture, BlocksCodes.NoBlock,
+            BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses, LoadAppCodes.NoEmptyConstructor,
-            BaselineCodes.StaleEntry, BaselineCodes.UnreadableEntry, BaselineCodes.NotUpdated,
         ];
 
         Assert.That(codes, Is.Unique.And.All.StartsWith(StepCode.Prefix));

@@ -11,6 +11,7 @@ public static class VersionSlots {
     public const string Sdk = "Umpire.Sdk";
     public const string WebSdk = "Umpire.Sdk.Web";
     const string CentralFile = "Directory.Packages.props";
+    const string DevProps = "Umpire.Sdk.Dev.props";
     const LoadOptions KeepLayout = LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo;
     static readonly JsonDocumentOptions JsonAsDotnetReadsIt = new() {
         CommentHandling = JsonCommentHandling.Skip,
@@ -32,6 +33,16 @@ public static class VersionSlots {
         Directory.Exists(bin)
             ? [.. Directory.GetFiles(bin, "*.deps.json").Order(StringComparer.Ordinal).SelectMany(PackagesOfDeps)]
             : [];
+
+    public static bool HasUmpireMainSdk(string projectFile) {
+        if (ParsedOrNull(projectFile)?.Root is not { } root) {
+            return false;
+        }
+        var main = ((string?)root.Attribute("Sdk") ?? "").Split(';', StringSplitOptions.TrimEntries);
+        return main.Any(part => IsSdk(part.Split('/')[0].Trim()))
+            || root.Elements().Any(element => element.Name.LocalName == "Import"
+                && ((string?)element.Attribute("Project") ?? "").Contains(DevProps, StringComparison.Ordinal));
+    }
 
     public static bool UsesUmpireSdk(string projectFile) =>
         ParsedOrNull(projectFile)?.Descendants().Any(NamesUmpireSdk) ?? false;

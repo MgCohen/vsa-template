@@ -32,23 +32,12 @@ public sealed class BuildCheckTests {
         Assert.That(build.Succeeded, Is.False, build.Output);
         Assert.That(build.Output, Does.Contain(finding));
 
-        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireUpdateBaseline=true")
+        var warned = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Warn")
             .EnsureSuccess();
-        var baseline = Path.Combine(workspace.Src, "umpire-baseline.txt");
-        Assert.That(File.ReadAllLines(baseline), Has.One.StartsWith("UMP020101|App/Host/Probe.cs|Probe in Host"));
-
-        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
-
-        var accepted = File.ReadAllText(baseline);
-        File.Delete(baseline);
-        var withoutBaseline = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
-        Assert.That(withoutBaseline.Succeeded, Is.False, "A delete of the baseline skips the check.");
-        Assert.That(withoutBaseline.Output, Does.Contain(finding));
-        File.WriteAllText(baseline, accepted);
+        Assert.That(warned.Output, Does.Contain($"{probe}(4,1): warning UMP020101: Probe in Host"));
 
         File.Delete(probe);
-        var fixedBuild = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(fixedBuild.Output, Does.Contain($"{baseline}(1,1): warning UMP030501"));
+        workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
     }
 
     static void AddBuildHook(string root, string project) {

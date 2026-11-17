@@ -1,16 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <!-- NUnit on Microsoft.Testing.Platform (global.json). -->
-    <EnableNUnitRunner>true</EnableNUnitRunner>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="NUnit" />
-    <PackageReference Include="NUnit3TestAdapter" />
-  </ItemGroup>
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
   <ItemGroup>
     <ProjectReference Include="../Notes.csproj" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" />
   </ItemGroup>
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

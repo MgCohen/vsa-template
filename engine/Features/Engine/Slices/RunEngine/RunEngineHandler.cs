@@ -1,6 +1,5 @@
 namespace Engine.Slices.RunEngine;
 
-using Baseline.Slices.ApplyBaseline;
 using Blocks.Slices.FindBlocks;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
@@ -38,8 +37,6 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHan
         } else {
             log.Skip<CheckRulesCommand, CheckRulesResult>();
         }
-        var found = log.Findings.ToList();
-        var baseline = await commands.SendAsync(new ApplyBaselineCommand(block, run.UpdateBaseline, found), ct);
-        return [.. log.Findings.Except(baseline.IsSuccess ? baseline.Value.Accepted : [])];
+        return [.. log.Findings];
     }
 }

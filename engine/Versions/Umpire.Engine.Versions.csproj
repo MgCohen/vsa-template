@@ -1,7 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
   <!-- The Umpire version check (UMP030201): each place of an app that gives an Umpire version, and the compare.
-       The engine step CheckVersions and the umpire tool (doctor, update) use it. The tool and the engine bundle the DLL. -->
+       The engine step CheckVersions and the umpire tool (doctor, update) use it. The tool and the engine bundle the DLL.
+       It also has UmpireConfigFile, the one reader of the .umpireconfig file for the engine and the tool.
+       It is a library with no pack, so it has no default pack. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <UmpireDefaultPack>false</UmpireDefaultPack>
   </PropertyGroup>
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

@@ -44,7 +44,6 @@ The rule engine checks each type against the VSA definition after each build of 
 |---|---|
 | `-p:UmpireCheck=false` | No check in this build |
 | `-p:UmpireCheckMode=Warn` | Each error of the check is a warning |
-| `-p:UmpireUpdateBaseline=true` | Writes the errors of this build to `umpire-baseline.txt`, so the next builds accept them |
 
 All build output goes to `artifacts~/` in the app folder, the folder of `.umpireconfig`. No `bin/` or `obj/` folder is next to the code. To get a clean build, delete `artifacts~/`.
 

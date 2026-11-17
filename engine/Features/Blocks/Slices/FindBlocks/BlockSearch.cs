@@ -1,6 +1,7 @@
 namespace Blocks.Slices.FindBlocks;
 
 using Blocks.Domain.Shared;
+using Blocks.Infrastructure;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using Steps.Domain.Shared;
@@ -18,19 +19,24 @@ static class BlockSearch {
         if (folder is null) {
             return new Error(BlocksCodes.NoBlock, NoBlock(project));
         }
-        var scoped = entries.Where(e => IsAtOrUnder(e.Folder, folder)).Distinct().ToList();
+        var found = entries.Where(e => IsAtOrUnder(e.Folder, folder)).Distinct().ToList();
+        var shadowed = found.Where(e => e.Form == EntryForm.File && found.Any(code => IsCodeIn(code, e.Folder)))
+            .ToList();
+        var scoped = found.Except(shadowed).ToList();
         var own = scoped.Where(e => Same(e.Folder, folder)).ToList();
         if (Problems(own) is [var stop, ..]) {
             return new Error(stop.Code, stop.Message);
         }
         var inner = scoped.Except(own).ToList();
         var current = own.FirstOrDefault() ?? new BlockEntry(folder, EntryForm.App, null, folder);
-        return new FindBlocksResult(Problems(inner), new BlockTree(current with { Folder = folder }, inner), bin);
+        Finding[] findings = [.. shadowed.Select(CodeWins), .. Problems(inner)];
+        return new FindBlocksResult(findings, new BlockTree(current with { Folder = folder }, inner), bin);
     }
 
     public static string NoBlock(string project) =>
         $"No check entry is in {Full(project)} or in a folder above it. "
-        + "Add an app class, a Block<TArchitecture> type, the AssemblyMetadata \"Umpire.Architecture\" or an umpire.json file, "
+        + "Add an app class, a Block<TArchitecture> type, the AssemblyMetadata \"Umpire.Architecture\" "
+        + $"or the key {EntryFiles.Key} in a {EntryFiles.Name} file, "
         + "or give the block folder with --block (MSBuild property UmpireBlock).";
 
     static IReadOnlyList<Finding> Problems(IReadOnlyList<BlockEntry> entries) => [
@@ -45,6 +51,13 @@ static class BlockSearch {
                 + "A block has exactly one check entry. Keep one, or move one to its own folder.")
             : null;
     }
+
+    static Finding CodeWins(BlockEntry file) =>
+        new(BlocksCodes.CodeWins, FindingSeverity.Warning,
+            $"The block {file.Folder} has a check entry in code and the key {EntryFiles.Key} in {file.Source}. "
+            + $"The entry in code wins. Remove the key {EntryFiles.Key}.", file.Source);
+
+    static bool IsCodeIn(BlockEntry entry, string folder) => entry.Form != EntryForm.File && Same(entry.Folder, folder);
 
     static Finding BadArchitecture(BlockEntry entry) =>
         Error(BlocksCodes.BadArchitecture, entry.Source,

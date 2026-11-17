@@ -57,10 +57,11 @@ The check entry has four forms. The kinds above give the default form. Each form
 | App class | `NotesApp : App<Vsa<WebVsaHost>>` |
 | Typed base | `public abstract class Pack : Block<PackArchitecture>` |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="<type>, <assembly>" />` |
-| `umpire.json` | `{ "architecture": "<type>, <assembly>" }` |
+| `.umpireconfig` | `umpire.architecture = <type>, <assembly>` |
 
 - Each independent block has exactly one check entry. **Checked** (`UMP030101`).
 - A check entry names a type that loads and that is an `Architecture`. **Checked** (`UMP030102`).
+- An entry in code wins over the key `umpire.architecture` in the same folder. **Checked** (`UMP030104`, a warning).
 - A typed base counts only for a type that is not abstract. **Checked** (`FindBlocks`).
 
 A component installs with a public extension that the kernel calls by name. `VsaHost.Install` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
