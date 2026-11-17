@@ -44,13 +44,13 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void RequestNamesCannotEndWithRequest() =>
-        Assert.That(() => Names.Check("CreateInvoiceRequest", "request", SliceKind.Request.Suffixes), Throws.TypeOf<UmpireException>().With.Message.Contain("CreateInvoice"));
+        Assert.That(() => Names.Check("CreateInvoiceRequest", "request", AddKind.Request.Suffixes), Throws.TypeOf<UmpireException>().With.Message.Contain("CreateInvoice"));
 
     [TestCase("ChangeLimitCommand")]
     [TestCase("ChangeLimitResult")]
     [TestCase("ChangeLimitHandler")]
     public void CommandNamesCannotEndWithASuffix(string name) =>
-        Assert.That(() => Names.Check(name, "command", SliceKind.Command.Suffixes), Throws.TypeOf<UmpireException>().With.Message.Contain("ChangeLimit"));
+        Assert.That(() => Names.Check(name, "command", AddKind.Command.Suffixes), Throws.TypeOf<UmpireException>().With.Message.Contain("ChangeLimit"));
 
     [TestCase("Billing", "billing")]
     [TestCase("CreateInvoice", "create-invoice")]
@@ -286,11 +286,17 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
-    public void ARequestAndACommandShareOneSliceCommand() {
-        var slices = CommandList.All.OfType<AddSliceCommand>().ToList();
+    public void EachAddKindHasOneAddCommand() {
+        var adds = CommandList.All.OfType<AddCommand>().ToList();
 
-        Assert.That(slices.Select(c => c.Usage), Is.EqualTo(new[] { "umpire add request <Name> -m <Module>", "umpire add command <Name> -m <Module>" }));
-        Assert.That(slices.Select(c => c.SliceKind), Is.EqualTo(SliceKind.All));
+        Assert.That(adds.Select(c => c.Kind), Is.EqualTo(AddKind.All));
+        Assert.That(adds.Select(c => c.Usage), Is.EqualTo(new[] {
+            "umpire add module <Name>",
+            "umpire add plugin <Name>",
+            "umpire add pack <Name>",
+            "umpire add request <Name> -m <Module>",
+            "umpire add command <Name> -m <Module>",
+        }));
     }
 
     static IReadOnlyList<TemplateFile> NewApp(string name, params string[] sources) => NewAppCommand.Files(name, sources, Version);
