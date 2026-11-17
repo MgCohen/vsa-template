@@ -100,7 +100,7 @@ The host finds `CombatModule`, because it inherits `Module`. A new module kind n
 | `DefineKernel(Part kernel)` | `Framework/Kernel` | The VSA DLLs |
 | `DefinePlugin(PartGroup plugin)` | `Plugins/{plugin}` | The plugin root and the layers |
 | `DefineFeature(PartGroup feature)` | `Features/{feature}` | The module root, the layers, `Slices/Shared/`, the slice group |
-| `DefineSlice(PartGroup slice)` | `Features/{feature}/Slices/{slice}` | The contracts, the handlers and the hooks |
+| `DefineSlice(PartGroup slice)` | `Features/{feature}/Slices/{slice}` | None. `Slice.Define` adds the contracts, the handlers, the hooks and the validators before this method |
 
 ```csharp
 protected override void DefineFeature(PartGroup feature) {

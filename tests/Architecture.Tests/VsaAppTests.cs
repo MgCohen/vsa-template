@@ -58,6 +58,15 @@ public sealed class VsaAppTests {
         Assert.That(Findings, Has.None.StartsWith(file));
     }
 
+    [TestCase("GetNoteValidator", "Slice.Validators")]
+    [TestCase("TitleCheck", "Handlers.Requests")]
+    [TestCase("ShortTitleCheck", "Handlers.Requests")]
+    public void A_type_in_a_slice_binds_to_its_part(string type, string part) {
+        var binding = VsaMap.Value.Bindings.All.Single(b => b.Type.Name == type);
+
+        Assert.That(binding.Part.Name, Is.EqualTo(part));
+    }
+
     [Test]
     public void The_VSA_app_gives_only_the_known_findings() {
         var actual = Findings.Select(line => line[..(line.IndexOf("error ", StringComparison.Ordinal) + "error UMP000000".Length)]);

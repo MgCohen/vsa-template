@@ -137,7 +137,7 @@ A command goes from one module to another in the same process. It has one handle
 | Command (`ICommand<T>`) | A handler of a module | One `CommandHandler` | Any type of the slice | In process, `ICommandSender` |
 | Event (`IntegrationEvent`) | A handler, after a change | Zero or more | `Unit` | `IIntegrationEventPublisher` |
 
-Each handler takes the envelope of its message and returns `Result<T>`, and each send returns `Result<T>`. A slice can also have validators for its messages. A Before or After hook is in its own slice: it is the part `Handlers.Commands.Hooks` or `Handlers.Events.Hooks`, and the engine checks that a slice has one kind of handler (`UMP020301`). See `docs/handler-pipeline.md`.
+Each handler takes the envelope of its message and returns `Result<T>`, and each send returns `Result<T>`. A slice can also have validators for its messages: each `Validator<T>` is the part `Slice.Validators`, in the slice folder. A type in a slice that no type uses, for example a subclass that code finds by reflection, follows its base class in the same folder. A Before or After hook is in its own slice: it is the part `Handlers.Commands.Hooks` or `Handlers.Events.Hooks`, and the engine checks that a slice has one kind of handler (`UMP020301`). See `docs/handler-pipeline.md`.
 
 A request and a command are messages (`IMessage`). An event is not a message. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`:
 

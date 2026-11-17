@@ -15,6 +15,9 @@ internal sealed class Compiler {
             partOptions[part] = part.Options.Over(Options);
         }
         book = new RuleBook(Block);
+        foreach (var concept in Parts.Select(p => p.Concept!).GroupBy(c => c.GetType()).Select(g => g.First())) {
+            concept.Rules(book.Of(concept.GetType()));
+        }
         architecture.Rules(book);
         UseRules = CompileUseRules();
         Counts = [.. book.Counts.Select(Of), .. Required()];

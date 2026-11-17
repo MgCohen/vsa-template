@@ -4,7 +4,11 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Requests;
 using VsaApp.Features.Notebook.Slices.Shared;
 
-sealed class GetNoteHandler : RequestHandler<GetNoteRequest, GetNoteResponse> {
-    public override Task<Result<GetNoteResponse>> HandleAsync(Envelope<GetNoteRequest> envelope) =>
-        Task.FromResult<Result<GetNoteResponse>>(new GetNoteResponse(new NoteTitle(envelope.Message.Title)));
+sealed class GetNoteHandler(IEnumerable<TitleCheck> checks) : RequestHandler<GetNoteRequest, GetNoteResponse> {
+    public override Task<Result<GetNoteResponse>> HandleAsync(Envelope<GetNoteRequest> envelope) {
+        var title = new NoteTitle(envelope.Message.Title);
+        return Task.FromResult<Result<GetNoteResponse>>(checks.All(check => check.Passes(title))
+            ? new GetNoteResponse(title)
+            : new Error("notes.title", "The title fails a check."));
+    }
 }

@@ -8,6 +8,8 @@ public abstract record Concept {
 
     protected internal virtual void Define(Part part) { }
 
+    protected internal virtual void Rules(RuleBook rules) { }
+
     internal static string Display(Type type) =>
         type.DeclaringType is null ? type.Name : $"{Display(type.DeclaringType)}.{type.Name}";
 }
