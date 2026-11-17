@@ -1,9 +1,9 @@
 namespace Umpire.Vsa.Composition;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Kernel;
 
@@ -19,18 +19,18 @@ public sealed class ConsoleVsaHost : VsaHost {
         var entry = EntryCommand(types);
         services.AddLogging(logging => logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning));
         services.AddSingleton<ConsoleExit>();
-        services.AddHostedService(provider => new ConsoleEntry(
-            entry,
-            provider,
-            provider.GetRequiredService<IConfiguration>(),
-            provider.GetRequiredService<IHostApplicationLifetime>(),
-            provider.GetRequiredService<ConsoleExit>()));
+        var entryType = typeof(ConsoleEntry<>).MakeGenericType(ResultOf(entry)!);
+        services.AddSingleton(typeof(IHostedService), provider => ActivatorUtilities.CreateInstance(provider, entryType, entry));
     }
+
+    static Type? ResultOf(Type type) => type.GetInterfaces()
+        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IConsoleCommand<>))?
+        .GetGenericArguments()[0];
 
     static Type EntryCommand(AppTypes types) {
         var entries = types.Implementations(typeof(CommandHandler<,>))
             .Select(handler => handler.Service.GetGenericArguments()[0])
-            .Where(ConsoleEntry.IsConsoleCommand)
+            .Where(command => ResultOf(command) is not null)
             .Distinct()
             .ToList();
         var names = string.Join(", ", entries.Select(e => e.FullName).OrderBy(n => n, StringComparer.Ordinal));

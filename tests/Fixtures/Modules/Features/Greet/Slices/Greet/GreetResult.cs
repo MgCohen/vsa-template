@@ -1,3 +1,5 @@
 namespace Greet.Slices.Greet;
 
-public sealed record GreetResult(string Text, int ExitCode);
+using Umpire.Vsa.Contracts.Commands;
+
+public sealed record GreetResult(string Text, int ExitCode) : IExitCode;

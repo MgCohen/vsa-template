@@ -69,7 +69,7 @@ Each `Run` makes a new host, so `Run` after `Stop` starts the app again in the s
 | Host | Package | Use |
 |---|---|---|
 | `VsaHost` | Umpire.Vsa.Composition | The .NET Generic Host with the VSA layers |
-| `ConsoleVsaHost` | Umpire.Vsa.Composition | A console app with one entry command (`IConsoleCommand<TResult>`) |
+| `ConsoleVsaHost` | Umpire.Vsa.Composition | A console app with one entry command (`IConsoleCommand<TResult>`). The exit code is 1 for an error result, `ExitCode` for a result that implements `IExitCode`, else 0 |
 | `WebVsaHost` | Umpire.Vsa.Hosts.Web | ASP.NET Core: the HTTP API of the requests, and the views |
 | `UnityVsaHost` | `vsa-unity` | A Unity app. `Run` returns |
 
@@ -254,7 +254,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter one time, and connects each presenter with events |
 | `ViewsInstaller` (Views) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
 | `HttpApi` (Hosts.Web) | `MakeGenericMethod` | Reads the static `Route` and `Method` of each request |
-| `ConsoleEntry` (Composition) | `MakeGenericMethod`, `Task.Result` | Sends the entry command. It reads the result through `IMessageResult` |
+| `ConsoleVsaHost` (Composition) | `MakeGenericType` | Makes one `ConsoleEntry<TResult>` for the result type of the entry command. The entry sends the command with a typed `SendAsync` |
 | `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `MakeGenericType` | Finds the handler of a request or a command |
 | `AppLoader` (engine) | `AssemblyLoadContext`, `Activator`, `GetProperty` | Creates the one definition type: the app class (then reads its architecture) or the architecture |
 | `RuleAnalyzer` (Kernel.Analyzers) | `GetTypes`, `Activator` | Finds the rule classes in its own assembly, in the compiler |

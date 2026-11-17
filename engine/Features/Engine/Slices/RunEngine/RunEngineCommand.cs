@@ -11,4 +11,4 @@ public sealed record RunEngineCommand(
     string Skip = "",
     bool FailFast = false,
     bool UpdateBaseline = false)
-    : IConsoleCommand<ReportResult>;
+    : IConsoleCommand<RunEngineResult>;
