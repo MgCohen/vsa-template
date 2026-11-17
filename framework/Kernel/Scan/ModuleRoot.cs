@@ -3,10 +3,10 @@ namespace Umpire.Kernel;
 using System.Reflection;
 using Umpire.Architecture;
 
-public sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<Type> Classes) {
-    public static IReadOnlyList<ModuleRoot> In(Assembly assembly) => In(assembly, LoadedTypes.Of(assembly));
+sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<Type> Classes) {
+    internal static IReadOnlyList<ModuleRoot> In(Assembly assembly) => In(assembly, LoadedTypes.Of(assembly));
 
-    public Module Create() => Classes switch {
+    internal Module Create() => Classes switch {
         [var type] when type.GetConstructor(Type.EmptyTypes) is null => throw new InvalidOperationException(
             $"Module {Name} cannot create {type.FullName}: it has no public constructor with no parameters. "
             + "Add one. Umpire creates the module class before the services exist."),

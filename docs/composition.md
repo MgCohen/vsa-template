@@ -52,7 +52,6 @@ The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (
 | `OnStart()` | Nothing | Run code after the build, before the host runs. `Services` is set |
 | `OnStop()` | Nothing | Run code when the host stops (`ApplicationStopped`) |
 | `Modules()` | `null`: `AppTypes` finds the modules | Give the modules, for example in a test |
-| `Keys()` | `new ConstraintKeys()` | Give the keys of the open module types |
 
 To add app rules, derive an architecture from `VsaArchitecture`, override `Rules`, and use `Vsa<TArchitecture, THost>` (see `architecture-engine.md`).
 
@@ -99,7 +98,7 @@ AppHost.Compose(services, app)                 fixed order
 │  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
 │  ├─ AddPresenters, IBus                      Umpire.Vsa.Presenters, Umpire.Vsa.Composition
 │  └─ the platform                             WebVsaHost: HTTP API, views. ConsoleVsaHost: entry command
-├─ Module.Configure(services)                  each module, in Order, then by name
+├─ Module.Configure(services)                  each module, in Order, then by name (with no override: nothing)
 └─ app.ConfigureServices(services)             last
 ```
 
@@ -155,16 +154,15 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
 - To select other modules, the app gives its modules in `Modules()`.
-- `Compose` makes one `AppTypes` instance: `AppTypes.Find(keys)`, or `new AppTypes(modules, keys)` if `Modules()` gives the modules. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Run` makes a new instance, so it also finds the assemblies that loaded later.
+- `Compose` makes one `AppTypes` instance: `new AppTypes(app.Modules())`. If `Modules()` gives `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Run` makes a new instance, so it also finds the assemblies that loaded later.
 - `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |
 |---|---|
-| `AppTypes.Find(keys)` | An instance that finds the modules itself |
-| `Roots` | The module roots of the module assemblies, in ordinal order of name |
-| `Modules` | One module for each root, or the modules of `Modules()`, in order |
+| `new AppTypes(modules)` | The one constructor. With `null`, the instance finds the modules itself |
+| `Modules` | One module for each module root, or the given modules, in order |
 | `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in each assembly that references the assembly of `baseType` |
-| `Registered()`, `Implementations(baseType)`, `TypeArguments()` | The marked types (see "One discovery path") |
+| `Registered()`, `Implementations(baseType)` | The marked types (see "One discovery path") |
 
 | Part | Scan for | Rule |
 |---|---|---|
@@ -235,13 +233,7 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 
 `AppTypes` is a singleton service. `Implementations(typeof(TBase))` gives a `ServiceImplementation(Service, Implementation)` for each registered type that derives from `TBase`, with that base as the service. A plugin reads its own types with it.
 
-The type argument source is `IKeySource`. The default is `ConstraintKeys`. To use a hand list or a generated list, override `Keys()` in the app class:
-
-```csharp
-public class ShopApp : App<Vsa<WebVsaHost>> {
-    protected override IKeySource Keys() => new GeneratedKeys();
-}
-```
+The type arguments of an open class are the marked types that meet each constraint of its generic parameter (`ConstraintTypeArguments`, internal). An app cannot replace this source.
 
 ### Reflection uses
 
@@ -252,7 +244,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `AppAssemblies` (Kernel) | `AppDomain.GetAssemblies`, `Assembly.Load`, `PEReader` | Finds the module assemblies. Only the `AppTypes` instance calls it |
 | `LoadedTypes.Of` (Architecture) | `GetTypes` | The one load-safe type read |
 | `ModuleRoot.Create` (Kernel) | `Activator.CreateInstance` | Creates the module class. A class with no public constructor with no parameters stops the start, with a message |
-| `AppTypes`, `ConstraintKeys` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class for each type argument |
+| `AppTypes`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class for each type argument |
 | `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[TypeArgument]` by name |
 | `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
@@ -295,8 +287,8 @@ framework/Kernel/                      Umpire.Kernel
   App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, THost>
   Modules/                             Module, Module<TSettings>, the settings
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
-  Hosting/                             AppHost, the core step (AutoRegistration, ComposedConfiguration)
-  Scan/                                AppTypes, ModuleRoot, ServiceImplementation, IKeySource, ConstraintKeys, MarkedTypes
+  Hosting/                             AppHost, the core step (AutoRegistration)
+  Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes
   Factories/                           IFactory<T>, AddFactory
 architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/
@@ -370,7 +362,7 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 ## Module settings
 
-`Module<TSettings>` and `Plugin<TSettings>` bind `{Section}:{Name}` to `TSettings` and check it with the data annotations and `Validate`. The section of a module is `Modules` (`Module.Section`), and the name is the last part of its namespace. The configuration comes from the core step of `Compose`. Then the module registers the instance as a singleton and calls `Configure(services, settings)`. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
+`Module<TSettings>` and `Plugin<TSettings>` bind `{Section}:{Name}` to `TSettings` and check it with the data annotations and `Validate`. The section of a module is `Modules` (`Module.Section`), and the name is the last part of its namespace. `Compose` gives its configuration to the module (internal `Module.Compose`). A direct call of `Configure(services)` on a settings module does nothing. Then the module registers the instance as a singleton and calls `Configure(services, settings)`. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
 
 ## What each host gives
 

@@ -87,20 +87,6 @@ public sealed class OpenGenericTests {
     }
 
     [Test]
-    public async Task A_key_source_of_the_app_replaces_the_constraint_scan() {
-        using var host = App().WithKeys(new OnlyHeat()).Build();
-        await using var scope = host.Services.CreateAsyncScope();
-        var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
-
-        var heat = await sender.SendAsync(new ChangeMeterCommand<Heat>(2), default);
-        var charge = Assert.ThrowsAsync<InvalidOperationException>(
-            () => sender.SendAsync(new ChangeMeterCommand<Charge>(1), default));
-
-        Assert.That(heat.Value, Is.EqualTo("Heat 2"));
-        Assert.That(charge!.Message, Does.Contain("has no handler"));
-    }
-
-    [Test]
     public void The_services_give_the_module_types_with_the_closed_types() {
         using var host = App().Build();
 
@@ -123,21 +109,21 @@ public sealed class OpenGenericTests {
     }
 
     [Test]
-    public void The_constraint_keys_are_the_candidates_that_meet_each_constraint() {
+    public void The_constraint_type_arguments_are_the_candidates_that_meet_each_constraint() {
         var parameter = typeof(OnlyMarkedStructs<>).GetGenericArguments()[0];
         Type[] candidates = [typeof(StructOfMarkedInterface), typeof(MarkedStruct), typeof(ClassOfMarkedBaseClass)];
 
-        var keys = new ConstraintKeys().KeysFor(parameter, candidates);
+        var keys = ConstraintTypeArguments.For(parameter, candidates);
 
         Assert.That(keys, Is.EquivalentTo(new[] { typeof(StructOfMarkedInterface) }));
     }
 
     [Test]
-    public void The_constraint_keys_meet_an_unmanaged_constraint_only_with_unmanaged_structs() {
+    public void The_constraint_type_arguments_meet_an_unmanaged_constraint_only_with_unmanaged_structs() {
         var parameter = typeof(OnlyUnmanaged<>).GetGenericArguments()[0];
         Type[] candidates = [typeof(MarkedStruct), typeof(MarkedStructWithText), typeof(MarkedStructWithNumbers)];
 
-        var keys = new ConstraintKeys().KeysFor(parameter, candidates);
+        var keys = ConstraintTypeArguments.For(parameter, candidates);
 
         Assert.That(keys, Is.EquivalentTo(new[] { typeof(MarkedStruct), typeof(MarkedStructWithNumbers) }));
     }
@@ -219,11 +205,6 @@ public sealed class OpenGenericTests {
     public abstract class MarkedBaseClass;
 
     public sealed class ClassOfMarkedBaseClass : MarkedBaseClass;
-
-    sealed class OnlyHeat : IKeySource {
-        public IEnumerable<Type> KeysFor(Type genericParameter, IReadOnlyList<Type> candidates) =>
-            candidates.Where(c => c == typeof(Heat));
-    }
 
     sealed class OnlyMarkedStructs<T> where T : struct, IMarked;
 

@@ -23,7 +23,7 @@ public abstract class AppHost {
     }
 
     public IServiceCollection Compose(IServiceCollection services, App app) =>
-        Compose(services, app, ComposedConfiguration.InstanceIn(services));
+        Compose(services, app, ConfigurationIn(services) ?? new ConfigurationBuilder().Build());
 
     public virtual int Run() {
         Built.Run();
@@ -42,18 +42,27 @@ public abstract class AppHost {
 
     static void InstallCore(IServiceCollection services, AppTypes types, IConfiguration configuration) {
         services.TryAddSingleton(configuration);
-        services.AddSingleton(new ComposedConfiguration(configuration));
         services.AddLogging();
         services.AddSingleton(types);
         AutoRegistration.Add(services, types);
     }
 
-    IServiceCollection Compose(IServiceCollection services, App app, IConfiguration? configuration) {
-        var types = app.Modules() is { } modules ? new AppTypes(modules, app.Keys()) : AppTypes.Find(app.Keys());
-        InstallCore(services, types, configuration ?? new ConfigurationBuilder().Build());
+    static IConfiguration? ConfigurationIn(IServiceCollection services) =>
+        services.LastOrDefault(service => service.ServiceType == typeof(IConfiguration)) switch {
+            null => null,
+            { ImplementationInstance: IConfiguration configuration } => configuration,
+            _ => throw new InvalidOperationException(
+                "The services register IConfiguration with a factory or a type, "
+                + "so Compose cannot read it before the build. "
+                + "Register the instance: services.AddSingleton<IConfiguration>(configuration)."),
+        };
+
+    IServiceCollection Compose(IServiceCollection services, App app, IConfiguration configuration) {
+        var types = new AppTypes(app.Modules());
+        InstallCore(services, types, configuration);
         Install(services, types);
         foreach (var module in types.Modules) {
-            module.Configure(services);
+            module.Compose(services, configuration);
         }
         app.ConfigureServices(services);
         return services;

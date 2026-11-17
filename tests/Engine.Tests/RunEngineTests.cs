@@ -29,7 +29,7 @@ public sealed class RunEngineTests {
     public void The_scan_finds_each_module_of_the_one_engine_assembly() {
         var engine = typeof(StepsPlugin).Assembly;
 
-        var modules = AppTypes.InOrder(AppTypes.Find(new ConstraintKeys()).Roots.Where(root => root.Assembly == engine).Select(root => root.Create()))
+        var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
         Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Baseline", "Blocks", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
