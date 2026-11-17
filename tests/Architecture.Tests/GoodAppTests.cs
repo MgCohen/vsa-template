@@ -75,7 +75,9 @@ public sealed class GoodAppTests {
     public void A_presenter_with_a_framework_interface_in_the_header_has_no_findings() {
         var presenter = Map.Bindings.BoundTypes.Single(t => t.Name == "BellPresenter");
 
-        Assert.That(Map.Findings(presenter.FullName), Is.Empty);
+        var file = Map.Bindings.Of(presenter.FullName)!.Source!.File;
+
+        Assert.That(Map.Findings().Where(f => f.File == file), Is.Empty);
     }
 
     static Binding External() => Map.Bindings.All.Single(b => b.Type.FullName == typeof(IEntity).FullName);

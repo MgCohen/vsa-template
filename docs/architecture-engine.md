@@ -8,7 +8,7 @@ flowchart LR
     A --> B["PartOf (Queries)"]
     D[Definition: Umpire.Architecture] --> B
     B --> S[Bindings]
-    S --> C["RuleChecks + DecisionFor"]
+    S --> C["ArchitectureRule.All + DecisionFor"]
     C --> F["Finding (code, severity, message, file, line)"]
 ```
 
@@ -295,19 +295,33 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
 
 ## The checks of the Rules step
 
-`RuleChecks.Of(type)` gives the use, exposure and type findings of one type. `ArchitectureCheck.Findings()` (the Rules step) gives the findings of all app types, the counts and the matches (`RuleChecks.Counts`, `RuleChecks.Matches`), the block places (`RuleChecks.Covered`, `RuleChecks.Empty`), and the warnings of the loader.
+Each architecture rule is one class in `engine/Features/Rules/Slices/CheckRules/` on a group base. The rule sets only its `Number` and, if it is not an error, its `Severity`. The group base sets the group, and `ArchitectureRule` makes the code: `UMP02` + group + number. `ArchitectureCheck.Findings()` (the Rules step) runs `ArchitectureRule.All`, so the engine knows no code. Other code finds a rule by its type: `ArchitectureRule.Of<DeniedUseRule>()`.
 
-| ID | Severity | Problem |
-|---|---|---|
-| `UMP020101` | Error | A type uses a part that the rules deny |
-| `UMP020102` | Error | A type exposes a part with more access than its rule allows |
-| `UMP020201` | Error | A type is not assignable to the `OfType` of its part |
-| `UMP020202` | Error | A type is in a folder that the definition does not have |
-| `UMP020203` | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
-| `UMP020301` | Error | A count of the definition is not in its limit (see "Counts and matches") |
-| `UMP020302` | Error | A match of the definition does not hold (see "Counts and matches") |
-| `UMP020401` | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
-| `UMP020402` | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
+```csharp
+sealed class DeniedUseRule : UseRule {
+    public override int Number => 1;
+
+    protected override IEnumerable<Finding> Find(ArchitectureCheck check, RuleValues values) => ...;
+}
+```
+
+| ID | Class | Group base | Severity | Problem |
+|---|---|---|---|---|
+| `UMP020101` | `DeniedUseRule` | `UseRule` (01) | Error | A type uses a part that the rules deny |
+| `UMP020102` | `WideExposureRule` | `UseRule` (01) | Error | A type exposes a part with more access than its rule allows |
+| `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
+| `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
+| `UMP020203` | `MissingScriptAssembliesRule` | `PlaceRule` (02) | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
+| `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
+| `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
+| `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
+| `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
+
+The Rules step reads the top-level keys of the nearest `.umpireconfig` file at or above the block folder (`UmpireConfigFile`). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
+
+```ini
+dotnet_diagnostic.UMP020101.severity = warning   # error, warning, suggestion, or none (the rule does not run)
+```
 
 Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
 

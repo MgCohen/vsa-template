@@ -9,6 +9,6 @@ sealed class GreetHandler : CommandHandler<GreetCommand, GreetResult> {
         if (command.Name.Length == 0) {
             return Task.FromResult<Result<GreetResult>>(new Error("greet.name", "The name is empty."));
         }
-        return Task.FromResult<Result<GreetResult>>(new GreetResult($"Hello, {command.Name}", command.Code));
+        return Task.FromResult<Result<GreetResult>>(new GreetResult($"Hello, {command.Name}", command.Style == GreetStyle.Loud ? 10 : command.Code));
     }
 }

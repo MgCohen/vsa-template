@@ -181,7 +181,7 @@ EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them 
 
 ## Architecture: the rule engine
 
-The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020301`, `UMP020302` and the warning `UMP020203`. The build hook package `Umpire.Engine.Build` on the host project runs it after each build. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules.
+The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020301`, `UMP020302` and the warning `UMP020203`. The build hook package `Umpire.Engine.Build` on the host project runs it after each build. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the analyzer key `dotnet_diagnostic.<code>.severity`.
 
 ### Counts and matches
 
