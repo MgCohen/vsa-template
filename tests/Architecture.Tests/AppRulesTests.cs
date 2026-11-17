@@ -22,7 +22,7 @@ public sealed class AppRulesTests {
 
     [Test]
     public void The_app_rules_come_after_the_VSA_rules() {
-        var last = new RulesArchitecture().Resolve()[^1];
+        var last = new ResolvedArchitecture(new RulesArchitecture()).UseRules[^1];
 
         Assert.That(last.From.Name, Is.EqualTo("Presenters"));
         Assert.That(last.To.Name, Is.EqualTo("Contracts.Events"));
@@ -30,11 +30,12 @@ public sealed class AppRulesTests {
     }
 
     static Permission PresentersUseEvents(Architecture definition) {
-        var presenters = FeaturePart(definition, typeof(Vsa.Presenters));
-        var events = FeaturePart(definition, typeof(Vsa.Contracts.Events));
-        return MayUse.For(definition, presenters, NotesSlice, events, NotesSlice).Permission;
+        var resolved = new ResolvedArchitecture(definition);
+        var presenters = FeaturePart(resolved, typeof(Vsa.Presenters));
+        var events = FeaturePart(resolved, typeof(Vsa.Contracts.Events));
+        return resolved.DecisionFor(presenters, NotesSlice, events, NotesSlice).Permission;
     }
 
-    static Part FeaturePart(Architecture definition, Type layer) =>
-        definition.Parts().Single(p => p.Is(layer) && p.Groups.Any(i => i.Is(typeof(Vsa.Feature))));
+    static Part FeaturePart(ResolvedArchitecture resolved, Type layer) =>
+        resolved.Parts.Single(p => p.Is(layer) && p.Groups.Any(i => i.Is(typeof(Vsa.Feature))));
 }

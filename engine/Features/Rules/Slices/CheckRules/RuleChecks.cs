@@ -48,7 +48,7 @@ sealed class RuleChecks(ResolvedArchitecture resolved, Bindings bindings) {
                 continue;
             }
             var why = decision.Rule is null
-                ? "no rule allows it (DefaultPermission = Deny)"
+                ? $"no rule allows it (DefaultPermission = {decision.Default})"
                 : $"the rule \"{decision.Rule.Text}\" denies it";
             yield return Error("UMP020101", from.Source!,
                 $"{type.Name} in {from.Where} uses {to.Type.Name} in {to.Where}: {why}. "

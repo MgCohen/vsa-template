@@ -50,8 +50,8 @@ public sealed class GoodAppTests {
         var handler = Map.Bindings.All.Single(b => b.Type.Name == "CreateInvoiceHandler");
         var kit = External();
 
-        Assert.That(MayUse.For(Map.Definition, domain.Part, domain.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Deny));
-        Assert.That(MayUse.For(Map.Definition, handler.Part, handler.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Allow));
+        Assert.That(Map.Resolved.DecisionFor(domain.Part, domain.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Deny));
+        Assert.That(Map.Resolved.DecisionFor(handler.Part, handler.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Allow));
     }
 
     [Test]

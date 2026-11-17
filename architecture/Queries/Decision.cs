@@ -1,3 +1,5 @@
 namespace Umpire.Architecture;
 
-public sealed record Decision(Permission Permission, PartRule? Rule);
+public sealed record Decision(PartRule? Rule, Permission Default) {
+    public Permission Permission => Rule?.Permission ?? Default;
+}

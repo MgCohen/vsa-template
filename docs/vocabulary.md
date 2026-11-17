@@ -62,7 +62,7 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` |
 | Define method | A `virtual` method of `VsaArchitecture.Define` for one base group | `DefineFeature(PartGroup feature)` |
 | Rule | Who may use whom | `rules.For<A>().Uses<B>()` |
-| Queries | The answers of the rules on plain facts (`architecture/Queries/`) | `PartOf` (which part), `MayUse` (allow or deny), `Counts`, `Matches` |
+| Queries | The answers of the rules on plain facts (`architecture/Queries/`) | `PartOf` (which part), `DecisionFor` (allow or deny), `Counts`, `Matches` |
 | Count | A rule statement that counts the types of a concept in each instance of a group, or the types that take each type of a part | `Has<T>()` |
 | Match | A rule statement that a type takes a type argument of a concept, in the same instance of a group | `Takes<T>().InSame<G>()` |
 
