@@ -31,7 +31,7 @@ public class VisibilityShapes {
 }
 
 public sealed class AccessArchitecture<TTarget>(Access options, Access? method) : Architecture where TTarget : Concept, new() {
-    public Access UserAccess => Resolve().Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
+    public Access UserAccess => new ResolvedArchitecture(this).UseRules.Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
 
     protected override void Configure(Options defaults) {
         defaults.Access = options;

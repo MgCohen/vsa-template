@@ -8,9 +8,9 @@ public record ClosedPackage : Concept {
     }
 }
 
-public record DenyingConcept : Concept {
+public record OpenConcept : Concept {
     protected override void Configure(Options defaults) {
-        defaults.DefaultPermission = Permission.Deny;
+        defaults.DefaultPermission = Permission.Allow;
     }
 }
 
@@ -22,9 +22,10 @@ public record SameConceptConcept : Concept {
 
 public sealed class OptionsArchitecture(Boundary? architecture, bool closedConcept, Boundary? part) : Architecture {
     public Permission MayUse() {
-        var user = Parts().Single(p => p.Is(typeof(User)));
-        var target = Parts().Single(p => p.Is(typeof(Target)));
-        return Umpire.Architecture.MayUse.For(this,
+        var resolved = new ResolvedArchitecture(this);
+        var user = resolved.Parts.Single(p => p.Is(typeof(User)));
+        var target = resolved.Parts.Single(p => p.Is(typeof(Target)));
+        return resolved.DecisionFor(
             user, new Dictionary<string, string> { [GroupName] = "a" },
             target, new Dictionary<string, string> { [GroupName] = "b" }).Permission;
     }
@@ -53,6 +54,8 @@ public sealed class EmptyArchitecture : Architecture {
 }
 
 public sealed class OptionsTests {
+    static readonly Dictionary<string, string> NoValues = [];
+
     [TestCase(null, false, null, Permission.Allow)]
     [TestCase(Boundary.Closed, false, null, Permission.Deny)]
     [TestCase(Boundary.Open, true, null, Permission.Deny)]
@@ -66,25 +69,41 @@ public sealed class OptionsTests {
 
     [Test]
     public void An_architecture_that_sets_no_value_has_the_built_in_options() {
-        var options = new EmptyArchitecture().Options;
+        var options = new ResolvedArchitecture(new EmptyArchitecture()).Options;
         var builtIn = Options.BuiltIn;
 
-        Assert.That(new object?[] { options.DefaultPermission, options.Boundary, options.UseSameConcept, options.Depth, options.Access },
-            Is.EqualTo(new object?[] { builtIn.DefaultPermission, builtIn.Boundary, builtIn.UseSameConcept, builtIn.Depth, builtIn.Access }));
+        Assert.That(new object?[] { options.DefaultPermission, options.Boundary, options.UseSameConcept, options.Depth, options.Access, options.Required },
+            Is.EqualTo(new object?[] { builtIn.DefaultPermission, builtIn.Boundary, builtIn.UseSameConcept, builtIn.Depth, builtIn.Access, builtIn.Required }));
     }
 
-    [TestCase(typeof(DenyingConcept), nameof(Options.DefaultPermission))]
-    [TestCase(typeof(SameConceptConcept), nameof(Options.UseSameConcept))]
-    public void A_concept_that_sets_an_option_of_the_architecture_stops_the_definition(Type concept, string option) {
-        var definition = new InlineArchitecture(block => {
-            if (concept == typeof(DenyingConcept)) {
-                block.Add<DenyingConcept>();
-            } else {
-                block.Add<SameConceptConcept>();
-            }
-        });
+    [TestCase(typeof(User), typeof(OpenConcept), Permission.Allow)]
+    [TestCase(typeof(User), typeof(Target), Permission.Deny)]
+    [TestCase(typeof(OpenConcept), typeof(Target), Permission.Deny)]
+    public void The_default_permission_of_a_use_comes_from_the_target(Type user, Type target, Permission expected) {
+        var resolved = new ResolvedArchitecture(new InlineArchitecture(block => {
+            block.Add<User>();
+            block.Add<OpenConcept>();
+            block.Add<Target>();
+        }));
+        var from = resolved.Parts.Single(p => p.Is(user));
+        var to = resolved.Parts.Single(p => p.Is(target));
 
-        Assert.That(() => definition.Block, Throws.InvalidOperationException.With.Message.EqualTo(
-            $"Define: the concept {concept.Name} sets {option}. Only the architecture sets {option}. Move it to Configure of the architecture."));
+        var decision = resolved.DecisionFor(from, NoValues, to, NoValues);
+
+        Assert.That(decision.Rule, Is.Null);
+        Assert.That(decision.Permission, Is.EqualTo(expected));
     }
+
+    [TestCase(typeof(SameConceptConcept), Permission.Allow)]
+    [TestCase(typeof(Target), Permission.Deny)]
+    public void A_concept_that_sets_UseSameConcept_lets_its_parts_use_each_other(Type concept, Permission expected) {
+        var resolved = new ResolvedArchitecture(new InlineArchitecture(block => block.AddGroup<Package>().Add<SameConceptConcept>().And<Target>()));
+        var part = resolved.Parts.Single(p => p.Is(concept));
+
+        var decision = resolved.DecisionFor(part, Package("a"), part, Package("b"));
+
+        Assert.That(decision.Permission, Is.EqualTo(expected));
+    }
+
+    static Dictionary<string, string> Package(string name) => new() { [nameof(EngineCore.Tests.Package)] = name };
 }

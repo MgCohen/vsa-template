@@ -13,31 +13,11 @@ sealed class FindBlocksHandler : CommandHandler<FindBlocksCommand, FindBlocksRes
 
     static Result<FindBlocksResult> Find(FindBlocksCommand command) {
         var project = Path.GetFullPath(command.Project);
-        using var reader = new EntryReader(Path.GetFullPath(command.Bin));
-        var files = EntryFiles.Above(project).ToList();
-        var entries = reader.Entries().Concat(files.Select(f => f.Entry)).ToList();
-        var folder = BlockSearch.Folder(project, command.Declared, entries);
-        if (folder is not null) {
-            IReadOnlyList<EntryFile> above = string.IsNullOrWhiteSpace(command.Declared) ? [] : EntryFiles.Above(folder);
-            var below = EntryFiles.Below(folder).Concat(above).ToList();
-            files.AddRange(below);
-            entries.AddRange(below.Select(f => f.Entry));
-        }
-        var fileProblems = files.Where(f => f.Problem is not null)
-            .GroupBy(f => f.Entry.Source, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.First().Problem!, StringComparer.OrdinalIgnoreCase);
-        return BlockSearch.Find(project, folder, entries, entry => Problem(entry, fileProblems, reader));
-    }
-
-    static string? Problem(BlockEntry entry, Dictionary<string, string> fileProblems, EntryReader reader) {
-        if (fileProblems.TryGetValue(entry.Source, out var file)) {
-            return $"does not name an architecture: {file}";
-        }
-        if (entry.Form is EntryForm.App or EntryForm.Base || entry.Architecture is null) {
-            return null;
-        }
-        return reader.Problem(entry.Architecture) is { } problem
-            ? $"names \"{entry.Architecture}\", but {problem}"
-            : null;
+        using var reader = new BinReader(Path.GetFullPath(command.Bin));
+        var bin = reader.Index();
+        var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
+        var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
+        IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
+        return BlockSearch.Find(project, folder, [.. bin.Entries, .. files.Select(reader.Check)], bin);
     }
 }

@@ -17,6 +17,12 @@ public sealed class Options {
     public Access? Access { get; set; }
     public bool? Required { get; set; }
 
+    internal static Options From(Action<Options> configure) {
+        var options = new Options();
+        configure(options);
+        return options;
+    }
+
     internal Options Over(Options fallback) => new() {
         DefaultPermission = DefaultPermission ?? fallback.DefaultPermission,
         Boundary = Boundary ?? fallback.Boundary,

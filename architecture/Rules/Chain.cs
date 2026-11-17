@@ -2,14 +2,12 @@ namespace Umpire.Architecture;
 
 public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
     internal readonly List<Entry> Entries = [];
-    int runStart;
-    bool filtered;
 
-    public TSelf And<T>(Depth? depth = null) where T : Concept => And<T>(depth, null, null);
+    public TSelf And<T>(Depth? depth = null) where T : Concept => Begin(typeof(T), depth);
 
-    public TSelf And<T>(Access? access) where T : Concept => And<T>(null, access, null);
+    public TSelf And<T>(Access? access) where T : Concept => Begin(typeof(T), null, access);
 
-    public TSelf And<T>(Boundary boundary) where T : Concept => And<T>(null, null, boundary);
+    public TSelf And<T>(Boundary boundary) where T : Concept => Begin(typeof(T), null, null, boundary);
 
     public TSelf Under<T>() where T : Concept => Filter(FilterKind.Under, typeof(T));
 
@@ -19,18 +17,9 @@ public abstract class Chain<TSelf> where TSelf : Chain<TSelf> {
     }
 
     internal TSelf Filter(FilterKind kind, Type concept) {
-        foreach (var entry in Entries.Skip(runStart)) {
+        foreach (var entry in Entries) {
             entry.Filters.Add(new Filter(kind, concept));
         }
-        filtered = true;
         return (TSelf)this;
-    }
-
-    TSelf And<T>(Depth? depth, Access? access, Boundary? boundary) where T : Concept {
-        if (filtered) {
-            runStart = Entries.Count;
-        }
-        filtered = false;
-        return Begin(typeof(T), depth, access, boundary);
     }
 }

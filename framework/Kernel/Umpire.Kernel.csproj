@@ -18,5 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Umpire.Vsa.Composition" />
+    <InternalsVisibleTo Include="Framework.Tests" />
+    <InternalsVisibleTo Include="Composition.Tests" />
   </ItemGroup>
 </Project>

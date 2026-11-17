@@ -62,8 +62,6 @@ public abstract class App : IApp {
     protected internal virtual void ConfigureServices(IServiceCollection services) {
     }
 
-    protected internal virtual IKeySource Keys() => new ConstraintKeys();
-
     protected internal virtual IReadOnlyList<Module>? Modules() => null;
 
     protected virtual void OnStart() {

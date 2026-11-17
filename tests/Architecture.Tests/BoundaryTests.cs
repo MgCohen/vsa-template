@@ -6,9 +6,10 @@ public enum CrossRule { Plain, Open, InOther }
 
 public sealed class BoundaryArchitecture(Boundary options, Boundary? group, CrossRule rule) : Architecture {
     public Permission MayUse(string fromPackage, string toPackage) {
-        var user = Parts().Single(p => p.Is(typeof(User)));
-        var target = Parts().Single(p => p.Is(typeof(Target)));
-        return Umpire.Architecture.MayUse.For(this,
+        var resolved = new ResolvedArchitecture(this);
+        var user = resolved.Parts.Single(p => p.Is(typeof(User)));
+        var target = resolved.Parts.Single(p => p.Is(typeof(Target)));
+        return resolved.DecisionFor(
             user, new Dictionary<string, string> { ["Package"] = fromPackage },
             target, new Dictionary<string, string> { ["Package"] = toPackage }).Permission;
     }
@@ -57,5 +58,55 @@ public sealed class BoundaryTests {
         var definition = new BoundaryArchitecture(Boundary.Closed, null, CrossRule.Plain);
 
         Assert.That(definition.MayUse("a", "a"), Is.EqualTo(Permission.Allow));
+    }
+
+    [TestCase(Boundary.Open, CrossRule.Plain, "always")]
+    [TestCase(Boundary.Closed, CrossRule.Plain, "same Package")]
+    [TestCase(Boundary.Closed, CrossRule.InOther, "other Package")]
+    public void The_condition_of_a_rule_names_its_groups(Boundary options, CrossRule rule, string expected) {
+        var resolved = new ResolvedArchitecture(new BoundaryArchitecture(options, null, rule));
+
+        Assert.That(resolved.UseRules.Single().Condition.ToString(), Is.EqualTo(expected));
+    }
+
+    [TestCase(false, "same Package, other Group")]
+    [TestCase(true, "other Package, same Group")]
+    public void The_condition_text_keeps_the_order_of_the_filters(bool otherPackage, string expected) {
+        var definition = new InlineRulesArchitecture(
+            block => block.AddGroup<Package>().AddGroup<Group>().Add<Target>().And<User>(),
+            rules => {
+                var uses = rules.For<User>().Uses<Target>();
+                if (otherPackage) {
+                    uses.InOther<Package>().InSame<Group>();
+                } else {
+                    uses.InOther<Group>();
+                }
+            });
+
+        Assert.That(new ResolvedArchitecture(definition).UseRules.Single().Condition.ToString(), Is.EqualTo(expected));
+    }
+
+
+    [Test]
+    public void A_filter_after_And_applies_to_each_earlier_target() {
+        var definition = new InlineRulesArchitecture(
+            block => {
+                block.AddGroup<Package>().Add<Target>().And<User>();
+                block.Add<Group>().Add<Child>();
+            },
+            rules => rules.For<User>().Uses<Target>().Under<Package>().And<Child>().Under<Group>());
+
+        Assert.That(() => new ResolvedArchitecture(definition), Throws.InvalidOperationException.With.Message.Contains(
+            "the target Target Under<Package> Under<Group> matches no part"));
+    }
+}
+
+public sealed class InlineRulesArchitecture(Action<Block> define, Action<RuleBook> rules) : Architecture {
+    protected override void Define(Block block) {
+        define(block);
+    }
+
+    protected override void Rules(RuleBook book) {
+        rules(book);
     }
 }

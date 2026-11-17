@@ -18,9 +18,6 @@ public sealed class RecordStep : AfterStep<IEngineStep> {
         if (envelope is Envelope { Exception: { } exception }) {
             return [new Finding(CouldNotRun, FindingSeverity.Error, $"{step} could not run: {exception.Message}")];
         }
-        if (envelope.Error is { } skipped && skipped.Code == MissingInput.Code) {
-            return [new Finding(skipped.Code, FindingSeverity.Info, skipped.Message)];
-        }
         if (envelope.Error is { } error) {
             return [new Finding(error.Code, FindingSeverity.Error, error.Message)];
         }

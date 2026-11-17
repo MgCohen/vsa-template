@@ -6,15 +6,22 @@ using Steps.Domain.Shared;
 using Umpire.Architecture;
 
 public static class AppReader {
-    public static LoadedApp Read(IEnumerable<string> dlls, string blockFolder, ResolvedArchitecture architecture) {
-        var root = Path.GetFullPath(blockFolder);
-        var given = dlls.Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        var unity = UnityProject.Scripts(root, given, out var warning);
-        var files = unity.Concat(given).ToList();
+    public static LoadedApp Read(
+        IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, string blockFolder, ResolvedArchitecture architecture) {
+        var unity = UnityProject.Scripts(blockFolder, dlls, out var warning);
+        var files = unity.Concat(dlls).ToList();
         var types = Distinct(Load(files), files);
-        var facts = TypeFactsReader.Read(types, SourceFiles.Read(files), architecture);
+        var facts = TypeFactsReader.Read(types, WithUnity(BinReader.Sources(unity), sources), architecture);
         var warnings = warning is null ? new List<Finding>() : [warning];
-        return new LoadedApp(root, files, types, facts, warnings);
+        return new LoadedApp(blockFolder, files, types, facts, warnings);
+    }
+
+    static Dictionary<string, Source> WithUnity(IReadOnlyDictionary<string, Source> unity, IReadOnlyDictionary<string, Source> sources) {
+        var all = new Dictionary<string, Source>(unity);
+        foreach (var source in sources) {
+            all.TryAdd(source.Key, source.Value);
+        }
+        return all;
     }
 
     static ArchUnitNET.Domain.Architecture Load(IReadOnlyList<string> files) {

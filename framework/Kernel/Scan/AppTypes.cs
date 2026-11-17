@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using Umpire.Architecture;
 
 public sealed class AppTypes {
-    readonly IKeySource keys;
     readonly AppAssemblies scan = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
     IReadOnlyList<Module>? modules;
@@ -16,34 +15,22 @@ public sealed class AppTypes {
     Type[]? registered;
     Type[]? typeArguments;
 
-    public AppTypes(IReadOnlyList<Module> modules, IKeySource keys) {
-        this.keys = keys;
-        this.modules = InOrder(modules);
-    }
-
-    public AppTypes(IReadOnlyList<Module> modules) : this(modules, new ConstraintKeys()) {
-    }
-
-    AppTypes(IKeySource keys) {
-        this.keys = keys;
+    public AppTypes(IReadOnlyList<Module>? modules) {
+        this.modules = modules is null ? null : InOrder(modules);
     }
 
     public IReadOnlyList<Module> Modules => modules ??= InOrder(Roots.Select(root => root.Create()));
 
-    public IReadOnlyList<ModuleRoot> Roots => roots ??= [.. scan.OfModules()
+    internal IReadOnlyList<ModuleRoot> Roots => roots ??= [.. scan.OfModules()
         .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
         .OrderBy(root => root.Name, StringComparer.Ordinal)];
 
-    public static AppTypes Find(IKeySource keys) => new(keys);
-
-    public static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
+    internal static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
         .OrderBy(module => module.Order)
         .ThenBy(module => module.Name, StringComparer.Ordinal)];
 
     public static string NameOf(Type rootClass) =>
         rootClass.Namespace is { } name ? name[(name.LastIndexOf('.') + 1)..] : rootClass.Name;
-
-    public static IEnumerable<Type> Types(Assembly assembly) => LoadedTypes.Of(assembly);
 
     public IReadOnlyList<Type> ConcreteTypesOf(Type baseType) =>
         concreteTypes.GetOrAdd(baseType, FindConcreteTypes);
@@ -57,7 +44,7 @@ public sealed class AppTypes {
             .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
             .OfType<ServiceImplementation>()];
 
-    public IReadOnlyList<Type> TypeArguments() => typeArguments ??= [.. Loaded()
+    internal IReadOnlyList<Type> TypeArguments() => typeArguments ??= [.. Loaded()
         .Where(MarkedTypes.IsTypeArgument)
         .Concat(Assemblies().SelectMany(MarkedTypes.TypeArgumentsOf))
         .Distinct()];
@@ -82,7 +69,8 @@ public sealed class AppTypes {
                 + "Umpire closes an open module type with one generic parameter only. "
                 + "Write one closed type for each type argument.");
         }
-        return keys.KeysFor(parameters[0], TypeArguments()).Select(key => definition.MakeGenericType(key));
+        return ConstraintTypeArguments.For(parameters[0], TypeArguments())
+            .Select(argument => definition.MakeGenericType(argument));
     }
 
     IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. scan.ThatReference(baseType.Assembly)

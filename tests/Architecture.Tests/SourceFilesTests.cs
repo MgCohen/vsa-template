@@ -7,7 +7,7 @@ public sealed class SourceFilesTests {
     const string Generator = "obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator";
 
     UnityProjectFolder project = null!;
-    Dictionary<string, Source> sources = null!;
+    IReadOnlyDictionary<string, Source> sources = null!;
 
     [OneTimeSetUp]
     public void CompileGeneratedFiles() {
@@ -20,7 +20,7 @@ public sealed class SourceFilesTests {
             namespace Validation { [Microsoft.CodeAnalysis.Embedded] internal sealed class ValidatableTypeAttribute : System.Attribute { } }
             """);
         project.Compile("Host", project.Output, page, info, flat, embedded);
-        sources = SourceFiles.Read([Path.Combine(project.Output, "Host.dll")]);
+        sources = BinReader.Sources([Path.Combine(project.Output, "Host.dll")]);
     }
 
     [OneTimeTearDown]

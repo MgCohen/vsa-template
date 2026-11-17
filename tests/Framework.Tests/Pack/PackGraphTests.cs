@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using Tests.Shared;
+using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
 namespace Framework.Tests.Pack;
@@ -9,7 +10,7 @@ public sealed class PackGraphTests {
 
     [Test]
     public void The_pack_references_each_kernel_layer_of_its_definition() {
-        var named = new VsaArchitecture().Parts()
+        var named = new ResolvedArchitecture(new VsaArchitecture()).Parts
             .Select(part => part.Assembly)
             .OfType<string>()
             .Where(assembly => assembly.StartsWith("Umpire.", StringComparison.Ordinal))

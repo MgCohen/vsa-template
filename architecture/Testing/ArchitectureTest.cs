@@ -50,7 +50,7 @@ public abstract class ArchitectureTest<TArchitecture> where TArchitecture : Arch
 
     IReadOnlyList<string> InnerBlocks(string folder) {
         var segments = Segments(folder);
-        return [.. Definition.Parts()
+        return [.. Resolved.Parts
             .Where(p => p.IsBlockPlace && !p.IsExternal && (p.HasFolder || p.IsGroup))
             .Select(p => p.Path.Split('/'))
             .Where(pattern => Covers(pattern, segments))

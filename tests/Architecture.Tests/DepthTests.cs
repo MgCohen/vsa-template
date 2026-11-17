@@ -21,7 +21,7 @@ public record WideTarget : Concept {
 public record TargetChild : Concept;
 
 public sealed class DepthArchitecture<TTarget>(Depth options, Depth? method) : Architecture where TTarget : Concept, new() {
-    public bool UserUsesTheChild => Resolve().Any(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TargetChild)));
+    public bool UserUsesTheChild => new ResolvedArchitecture(this).UseRules.Any(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TargetChild)));
 
     protected override void Configure(Options defaults) {
         defaults.Depth = options;

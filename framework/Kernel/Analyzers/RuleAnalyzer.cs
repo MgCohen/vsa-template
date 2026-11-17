@@ -30,11 +30,16 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
 
+    protected virtual string? PackAssembly => null;
+
     public sealed override void Initialize(AnalysisContext context) {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(start => {
             var global = start.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
+            if (PackAssembly is { } pack && !PackSelection.Selects(start.Compilation, global, pack)) {
+                return;
+            }
             var frameworkCode = global.TryGetValue("build_property.UmpireFrameworkCode", out var value)
                 && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
             var missing = new List<Diagnostic>();

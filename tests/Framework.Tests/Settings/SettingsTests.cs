@@ -4,7 +4,10 @@ using System.ComponentModel.DataAnnotations;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Bare;
 using Umpire.Kernel;
+using Umpire.Vsa;
+using Umpire.Vsa.Composition;
 
 public sealed class SettingsTests {
     [Test]
@@ -33,11 +36,49 @@ public sealed class SettingsTests {
         Assert.That(services.BuildServiceProvider().GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
     }
 
-    static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) {
+    [Test]
+    public void APluginWithSettingsGetsItsSettingsFromCompose() {
+        var plugin = new SamplePlugin();
+        Compose(new() { ["Modules:Settings:Name"] = "tools" }, plugin);
+
+        Assert.That(plugin.Settings?.Name, Is.EqualTo("tools"));
+    }
+
+    [Test]
+    public void AModuleWithNoConfigureComposesWithNoError() {
+        Assert.DoesNotThrow(() => Compose([], new BareModule()));
+    }
+
+    [Test]
+    public void TheHostGivesTheSettingsFromTheArgsOfCreate() {
+        var module = new SampleModule();
+        var app = new ModuleApp(module);
+
+        using var host = app.Pack.CreateHost().Create(["--Modules:Settings:Name=from-args"], app);
+
+        Assert.That(module.Settings?.Name, Is.EqualTo("from-args"));
+        Assert.That(host.Services.GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
+    }
+
+    static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) =>
+        Compose(values, module ?? new SampleModule());
+
+    static ServiceCollection Compose(Dictionary<string, string?> values, Module module) {
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
-        (module ?? new SampleModule()).Configure(services);
+        var app = new ModuleApp(module);
+        app.Pack.CreateHost().Compose(services, app);
         return services;
+    }
+
+    sealed class SamplePlugin : Plugin<SampleSettings> {
+        public SampleSettings? Settings { get; private set; }
+
+        public override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
+    }
+
+    sealed class ModuleApp(Module module) : App<Vsa<VsaHost>> {
+        protected internal override IReadOnlyList<Module> Modules() => [module];
     }
 
     public sealed class SampleSettings {

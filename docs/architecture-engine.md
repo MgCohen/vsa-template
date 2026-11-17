@@ -1,6 +1,6 @@
 # Architecture engine
 
-The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `architecture/Queries/` gives the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`MayUse`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `new ResolvedArchitecture(definition)` compiles the definition one time: the block, the options of each part, the use rules, the counts and the matches. If the definition has an error, the constructor throws. `architecture/Queries/` gives the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`ResolvedArchitecture.DecisionFor`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
 
 ```mermaid
 flowchart LR
@@ -8,7 +8,7 @@ flowchart LR
     A --> B["PartOf (Queries)"]
     D[Definition: Umpire.Architecture] --> B
     B --> S[Bindings]
-    S --> C["RuleChecks + MayUse"]
+    S --> C["RuleChecks + DecisionFor"]
     C --> F["Finding (code, severity, message, file, line)"]
 ```
 
@@ -19,7 +19,7 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030201`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET and `MetadataLoadContext`. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
+| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
@@ -59,14 +59,14 @@ public class VsaArchitecture : Architecture {
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
 | `Has<T>()`, `Takes<T>()` | A count (type `Count`) or a match (type `Match`). See "Counts and matches" |
-| `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target |
+| `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target. A filter applies to each entry before it in the chain |
 
 `Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth`, `Access` and `Required`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call, the group parameter or the `OfType` call), the concept, the architecture, then `Options.BuiltIn`.
 
 | Field | `Options.BuiltIn` | Set by |
 |---|---|---|
-| `DefaultPermission` | `Deny` | The architecture only |
-| `UseSameConcept` | `false` | The architecture only |
+| `DefaultPermission` | `Deny` | The architecture, a concept (of the target part) |
+| `UseSameConcept` | `false` | The architecture, a concept |
 | `Boundary` | `Open` | The architecture, a concept, a group |
 | `Depth` | `WithChildren` | The architecture, a concept, a rule call |
 | `Access` | `Public` | The architecture, a concept, a rule call |
@@ -74,7 +74,9 @@ public class VsaArchitecture : Architecture {
 
 The convention for a new option: if a concept or the architecture can also set it, it gets a nullable parameter at the call site and a nullable field in `Options`. The lookup reads the call site, then the concept, then the architecture, then `Options.BuiltIn`.
 
-A concept sets its values in `Configure(Options defaults)`. If a concept sets `DefaultPermission` or `UseSameConcept`, the definition stops: "Only the architecture sets <name>. Move it to Configure of the architecture."
+A concept sets its values in `Configure(Options defaults)`. `Part.Options` holds the values of the concept, with the values of the call site on top. `ResolvedArchitecture.OptionsOf(part)` gives the full values of a part. When no rule applies to a use, the decision takes `DefaultPermission` of the target part.
+
+A rule condition is a `Condition`: the groups that must have the same instance (`Same`) and the groups that must have another instance (`Other`). Its text is for example `same Feature, other Slice`, or `always`.
 
 `defaults.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
@@ -256,7 +258,7 @@ part.OfType(typeof(RequestHandler<,>), required: true);
 | Source file out of the block folder | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
-The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`SourceFiles`).
+The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`BinReader`, one time for each run).
 
 ## Unity projects
 

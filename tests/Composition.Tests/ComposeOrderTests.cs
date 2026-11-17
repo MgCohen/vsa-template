@@ -28,19 +28,20 @@ public sealed class ComposeOrderTests {
     public sealed class OrderApp(params Module[] modules) : App<Vsa<VsaArchitecture, OrderHost>> {
         public IServiceCollection Compose(IServiceCollection services) => Pack.CreateHost().Compose(services, this);
 
-        protected override IReadOnlyList<Module> Modules() => modules;
+        protected internal override IReadOnlyList<Module> Modules() => modules;
 
-        protected override void ConfigureServices(IServiceCollection services) => services.AddSingleton(new Step("app"));
+        protected internal override void ConfigureServices(IServiceCollection services) =>
+            services.AddSingleton(new Step("app"));
     }
 
     public sealed class FirstModule : Module {
-        protected override int Order => 1;
+        protected internal override int Order => 1;
 
         public override void Configure(IServiceCollection services) => services.AddSingleton(new Step("module:1"));
     }
 
     public sealed class LastModule : Module {
-        protected override int Order => 2;
+        protected internal override int Order => 2;
 
         public override void Configure(IServiceCollection services) => services.AddSingleton(new Step("module:2"));
     }
