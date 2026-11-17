@@ -17,7 +17,7 @@
     <EmbeddedResource Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
   </ItemGroup>
 
-  <!-- The general packages that each app needs, with no layer. The pack of the app adds its own packages (Umpire.Pack.targets).
+  <!-- The general packages that each app needs, with no layer, and the default pack.
        Path is the project folder under the repository root in source mode. An Analyzer item is a Roslyn analyzer, not a library. -->
   <ItemDefinitionGroup>
     <_UmpireFramework>
@@ -30,7 +30,18 @@
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
     <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)Umpire.Pack.targets" />
+  <!-- The code of the app selects its pack (App<Vsa<...>>). A package only makes a pack available. The SDK adds the default pack,
+       VSA, and its test bases for a test project. UmpireDefaultPack=false leaves them out: then the app references the package
+       of its pack and of its test bases itself. A pack package brings its analyzers. Source mode adds them here, because a
+       project reference does not bring analyzers. -->
+  <PropertyGroup>
+    <UmpireDefaultPack Condition="'$(UmpireDefaultPack)' == ''">true</UmpireDefaultPack>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireDefaultPack)' == 'true'">
+    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Architecture" />
+    <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
+    <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" />
+  </ItemGroup>
 
   <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set. -->
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
@@ -77,7 +88,7 @@
   <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' == ''">
     <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
     <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
-    <PackageReference Include="Umpire.$(UmpirePack).Testing.Unit" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+    <PackageReference Include="@(_UmpireTestBase)" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
   </ItemGroup>
 
   <!-- The rule values of the block: the top-level keys of the .umpireconfig file in the block root (UmpireConfigFile,

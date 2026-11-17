@@ -24,7 +24,7 @@ public sealed class ExternalTests {
     [Test]
     public void A_part_under_an_external_gets_its_DLL_name_from_the_parent() {
         Part? child = null;
-        _ = new InlineArchitecture(block => child = block.Add<Lib>().Add<Child>()).Block;
+        _ = new ResolvedArchitecture(new InlineArchitecture(block => child = block.Add<Lib>().Add<Child>()));
 
         Assert.That((child!.Assembly, child.IsExternal), Is.EqualTo(("Lib.Child", true)));
     }
@@ -33,10 +33,10 @@ public sealed class ExternalTests {
     public void A_part_under_an_external_can_name_its_own_DLL() {
         Part? child = null;
         Part? grandchild = null;
-        _ = new InlineArchitecture(block => {
+        _ = new ResolvedArchitecture(new InlineArchitecture(block => {
             child = block.Add<Lib>().Add<Child>().InAssembly("Other.Name");
             grandchild = child.Add<Group>();
-        }).Block;
+        }));
 
         Assert.That((child!.Assembly, grandchild!.Assembly), Is.EqualTo(("Other.Name", "Other.Name.Group")));
     }
@@ -74,6 +74,6 @@ public sealed class ExternalTests {
     static void Blocks(Action<Block> define, string message) {
         var definition = new InlineArchitecture(define);
 
-        Assert.That(() => definition.Block, Throws.InvalidOperationException.With.Message.Contains(message));
+        Assert.That(() => new ResolvedArchitecture(definition), Throws.InvalidOperationException.With.Message.Contains(message));
     }
 }

@@ -127,7 +127,7 @@ public sealed class BlockPlaceTests {
 
     [Test]
     public void A_block_place_takes_no_parts() {
-        var error = Assert.Throws<InvalidOperationException>(() => _ = new PlaceWithChild().Block);
+        var error = Assert.Throws<InvalidOperationException>(() => _ = new ResolvedArchitecture(new PlaceWithChild()));
 
         Assert.That(error!.Message, Does.Contain("Tool is the place of another block"));
     }

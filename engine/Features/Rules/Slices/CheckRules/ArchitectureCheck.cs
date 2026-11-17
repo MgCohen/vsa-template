@@ -8,19 +8,17 @@ using Umpire.Architecture;
 sealed class ArchitectureCheck {
     readonly RuleChecks checks;
 
-    readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<string> innerFolders;
 
     ArchitectureCheck(ResolvedArchitecture resolved, LoadedApp app, Bindings bindings, IReadOnlyList<string> innerFolders) {
-        Definition = resolved.Architecture;
+        Resolved = resolved;
         App = app;
         Bindings = bindings;
-        this.resolved = resolved;
         this.innerFolders = innerFolders;
         checks = new RuleChecks(resolved, bindings);
     }
 
-    public Architecture Definition { get; }
+    public ResolvedArchitecture Resolved { get; }
     public LoadedApp App { get; }
     public Bindings Bindings { get; }
 
@@ -35,8 +33,8 @@ sealed class ArchitectureCheck {
     public IReadOnlyList<Finding> Findings() => [
         .. Bindings.All.Where(b => !b.External && !b.Part.IsBlockPlace).SelectMany(checks.Of),
         .. Bindings.Unmapped.Select(RuleChecks.Unmapped),
-        .. resolved.CoveredBlocks(App.BlockFolder, innerFolders).Select(RuleChecks.Covered),
-        .. resolved.EmptyPlaces(App.BlockFolder, innerFolders).Select(RuleChecks.Empty),
+        .. Resolved.CoveredBlocks(App.BlockFolder, innerFolders).Select(RuleChecks.Covered),
+        .. Resolved.EmptyPlaces(App.BlockFolder, innerFolders).Select(RuleChecks.Empty),
         .. checks.Counts(),
         .. checks.Matches(),
         .. App.Warnings];

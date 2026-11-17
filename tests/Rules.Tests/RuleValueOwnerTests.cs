@@ -48,14 +48,16 @@ public sealed partial class RuleValueOwnerTests {
         Assert.That(SdkFiles().Where(file => file.EndsWith(".globalconfig", StringComparison.Ordinal)), Is.Empty);
 
     [Test]
-    public void The_general_build_files_name_no_pack_package() {
+    public void The_general_build_files_name_the_default_pack_in_one_group() {
         var lines = SdkFiles()
             .Where(file => Path.GetExtension(file) is ".props" or ".targets")
             .SelectMany(file => File.ReadAllLines(file)
-                .Where(line => line.Contains("Umpire.Vsa", StringComparison.Ordinal))
-                .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));
+                .Select((line, index) => new PackLine(Path.GetFileName(file), index, line))
+                .Where(line => line.Text.Contains("Umpire.Vsa", StringComparison.Ordinal)))
+            .ToList();
 
-        Assert.That(lines, Is.Empty);
+        Assert.That(lines.Select(line => line.File).Distinct(), Is.EqualTo(new[] { "Umpire.Sdk.Core.targets" }));
+        Assert.That(lines[^1].Index - lines[0].Index, Is.EqualTo(lines.Count - 1), "The pack lines are not one group.");
     }
 
     [Test]
@@ -100,4 +102,6 @@ public sealed partial class RuleValueOwnerTests {
 
     [GeneratedRegex(@"UMP01(?!00)\d{4}")]
     private static partial Regex AnalyzerRuleCode();
+
+    sealed record PackLine(string File, int Index, string Text);
 }

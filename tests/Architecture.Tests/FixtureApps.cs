@@ -21,7 +21,7 @@ static class FixtureApps {
     public static string Block(string app) => Path.Combine(Root, app);
 
     public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder) {
-        var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
+        var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         using var reader = new BinReader(bin);
         var index = reader.Index();
         var dlls = index.AppDlls(blockFolder, []).Concat(index.ExternalDlls(externals)).Distinct().ToList();
