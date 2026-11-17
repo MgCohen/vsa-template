@@ -4,7 +4,7 @@ Each term has one meaning in the code, the docs and the messages. Umpire is the 
 
 To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
 
-Some code names in this page are targets of the names pass (D1): they come with the next PRs. Such a name has a mark: "(new)" for a name that replaces an old name, and "(D6)" for the sender rename of the D6 work package. The old name is in the same row.
+A code name with the mark "(D6)" comes with the sender rename of the D6 work package. The old name is in the same row.
 
 ## Product and packs
 
@@ -25,7 +25,7 @@ Some code names in this page are targets of the names pass (D1): they come with 
 | Host | The code that starts one kind of app. The host class makes, runs and stops the built host. The VSA layer `Host` holds this code and the app class | `AppHost`, `VsaHost`, `WebVsaHost`, `ConsoleVsaHost`; the layer record `Host` |
 | Built host | The Microsoft host object that a host class builds | `IHost` (Microsoft.Extensions.Hosting) |
 | Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `PipelineRegistration`, the `Add<Name>(services, types)` extensions |
-| Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation` (new, old `Registration`), `AppTypes.Implementations` |
+| Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation`, `AppTypes.Implementations` |
 
 ## Block kinds
 
@@ -58,8 +58,8 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Host`, `Composition`, `Slice` |
 | Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernel.Module` and `Plugin` |
 | Module kind | A group of modules with one shape. Each module kind record inherits `Module` | `Feature`, `Plugin`, the `EcsFeature` of a pack variant |
-| External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` (new, old `IsFramework` in `TypeFactsReader`) |
-| System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` (new, old `IsFramework` in `AppLoader`) |
+| External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` |
+| System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` |
 | Define method | A `virtual` method of `VsaArchitecture.Define` for one base group | `DefineFeature(PartGroup feature)` |
 | Rule | Who may use whom | `rules.For<A>().Uses<B>()` |
 | Queries | The answers of the rules on plain facts (`architecture/Queries/`) | `PartOf` (which part), `MayUse` (allow or deny), `Counts`, `Matches` |
@@ -92,8 +92,8 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 
 | Term | Meaning | Code names |
 |---|---|---|
-| Template group | The template files of one `umpire` command | `TemplateGroup` (new, old `Templates.Kind`) |
-| Setup task | One change that `umpire init` and `umpire new app` make to an app | `SetupTask` (new, old `SetupStep`) |
+| Template group | The template files of one `umpire` command | `TemplateGroup` |
+| Setup task | One change that `umpire init` and `umpire new app` make to an app | `SetupTask`, the list `SetupTasks` |
 
 ## Terms with no own entry
 

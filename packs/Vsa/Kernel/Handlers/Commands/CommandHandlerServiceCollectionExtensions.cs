@@ -16,7 +16,7 @@ public static class CommandHandlerServiceCollectionExtensions {
         return services;
     }
 
-    static void EnsureOneHandlerForEachCommand(IReadOnlyList<Registration> handlers) {
+    static void EnsureOneHandlerForEachCommand(IReadOnlyList<ServiceImplementation> handlers) {
         foreach (var command in handlers.GroupBy(h => h.Service).Where(g => g.Count() > 1)) {
             var names = command.Select(h => h.Implementation.FullName).ToArray();
             throw new InvalidOperationException(

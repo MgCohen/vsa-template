@@ -1,6 +1,6 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
-sealed class GitIgnoreStep : SetupStep {
+sealed class GitIgnoreTask : SetupTask {
     const string FileName = ".gitignore";
 
     public override string Id => "git-ignore";

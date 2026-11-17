@@ -1,8 +1,8 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
 using System.Xml.Linq;
 
-sealed class BuildOutputStep : SetupStep {
+sealed class BuildOutputTask : SetupTask {
     const string FileName = "Directory.Build.props";
     const string Root = "Project";
     const string ByHandProperties = $"Add the PropertyGroup of the template to {FileName}.";

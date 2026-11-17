@@ -1,6 +1,6 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
-sealed class NugetConfigStep : SetupStep {
+sealed class NugetConfigTask : SetupTask {
     const string FileName = NugetConfig.FileName;
     const string Clear = "    <clear />\n";
     const string ByHandFeed = $"Add the umpire feed of the template to {FileName}.";

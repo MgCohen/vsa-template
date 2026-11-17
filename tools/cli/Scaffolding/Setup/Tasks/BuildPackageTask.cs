@@ -1,6 +1,6 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
-sealed class BuildPackageStep : SetupStep {
+sealed class BuildPackageTask : SetupTask {
     const string Package = "Umpire.Engine.Build";
     const string Root = "Project";
     const string CentralFile = "Directory.Packages.props";

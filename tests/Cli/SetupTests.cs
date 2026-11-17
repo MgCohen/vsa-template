@@ -13,7 +13,7 @@ public sealed class SetupTests {
     string parent = "";
     string block = "";
 
-    static IEnumerable<string> StepIds => SetupPipeline.Default.Select(step => step.Id);
+    static IEnumerable<string> TaskIds => SetupTasks.Default.Select(task => task.Id);
 
     [SetUp]
     public void SetUp() {
@@ -30,7 +30,7 @@ public sealed class SetupTests {
     public void AFolderWithOnlyAProjectGetsEachSetupFile() {
         var plan = Plan();
 
-        Assert.That(plan.Steps.Select(step => step.Result), Has.All.TypeOf<SetupResult.Change>());
+        Assert.That(plan.Tasks.Select(task => task.Result), Has.All.TypeOf<SetupResult.Change>());
         Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] {
             "global.json", "nuget.config", "dotnet-tools.json", "Directory.Build.props", ".gitignore", Project }));
         foreach (var path in new[] { "global.json", "nuget.config", "dotnet-tools.json", "Directory.Build.props", ".gitignore" }) {
@@ -38,8 +38,8 @@ public sealed class SetupTests {
         }
     }
 
-    [TestCaseSource(nameof(StepIds))]
-    public void ASecondRunOfEachStepChangesNothing(string id) {
+    [TestCaseSource(nameof(TaskIds))]
+    public void ASecondRunOfEachTaskChangesNothing(string id) {
         Plan().Write();
 
         Assert.That(Result(id), Is.TypeOf<SetupResult.Done>());
@@ -267,7 +267,7 @@ public sealed class SetupTests {
 
         var config = File.ReadAllText(Path.Combine(block, "nuget.config"));
         Assert.That(config, Does.Contain($"<add key=\"umpire2\" value=\"{Path.GetFullPath("feed")}\" />"));
-        Assert.That(Plan(sources: "feed").Steps.Single(step => step.Id == "nuget-config").Result, Is.TypeOf<SetupResult.Done>());
+        Assert.That(Plan(sources: "feed").Tasks.Single(task => task.Id == "nuget-config").Result, Is.TypeOf<SetupResult.Done>());
     }
 
     [Test]
@@ -350,9 +350,9 @@ public sealed class SetupTests {
         Assert.That(() => RunInit("init", "--check", "yes"), Throws.TypeOf<UmpireException>().With.Message.Contain("--check true"));
 
     SetupPlan Plan(bool keepsParentFiles = true, params string[] sources) =>
-        SetupPipeline.Plan(new SetupContext(block, Project, V, sources, keepsParentFiles));
+        SetupTasks.Plan(new SetupContext(block, Project, V, sources, keepsParentFiles));
 
-    SetupResult Result(string id) => Plan().Steps.Single(step => step.Id == id).Result;
+    SetupResult Result(string id) => Plan().Tasks.Single(task => task.Id == id).Result;
 
     string Written(string path) {
         Plan().Write();

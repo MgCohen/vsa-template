@@ -16,7 +16,7 @@ sealed class AddSliceCommand(SliceKind kind) : AddCommand {
 
     protected override string Noun => kind.Noun;
 
-    protected override Templates.Kind Kind => kind.Template;
+    protected override TemplateGroup Group => kind.Template;
 
     protected override IReadOnlyList<string> ForbiddenSuffixes => kind.Suffixes;
 

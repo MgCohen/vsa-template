@@ -7,7 +7,7 @@ using Umpire.Markers;
 [RequireDerived]
 public abstract class App : IApp {
     readonly object gate = new();
-    Running? running;
+    AppHost? running;
     bool starting;
 
     public abstract Pack Pack { get; }
@@ -23,7 +23,7 @@ public abstract class App : IApp {
     public IServiceProvider? Services {
         get {
             lock (gate) {
-                return running?.App.Services;
+                return running?.Services;
             }
         }
     }
@@ -37,11 +37,11 @@ public abstract class App : IApp {
             starting = true;
         }
         var started = Start(args);
-        var lifetime = started.App.Services.GetService<IHostApplicationLifetime>();
+        var lifetime = started.Services?.GetService<IHostApplicationLifetime>();
         lifetime?.ApplicationStopped.Register(() => Stopped(started));
         try {
             OnStart();
-            return started.Host.Run(started.App);
+            return started.Run();
         } catch (OperationCanceledException) when (lifetime?.ApplicationStopping.IsCancellationRequested == true) {
             Stopped(started);
             return 0;
@@ -52,11 +52,11 @@ public abstract class App : IApp {
     }
 
     public void Stop() {
-        Running? stopped;
+        AppHost? stopped;
         lock (gate) {
             stopped = running;
         }
-        stopped?.Host.Stop(stopped.App);
+        stopped?.Stop();
     }
 
     protected internal virtual void ConfigureServices(IServiceCollection services) {
@@ -72,14 +72,14 @@ public abstract class App : IApp {
     protected virtual void OnStop() {
     }
 
-    Running Start(string[] args) {
+    AppHost Start(string[] args) {
         try {
             var host = Pack.CreateHost();
-            var started = new Running(host, host.Create(args, this));
+            host.Create(args, this);
             lock (gate) {
-                running = started;
+                running = host;
             }
-            return started;
+            return host;
         } finally {
             lock (gate) {
                 starting = false;
@@ -87,7 +87,7 @@ public abstract class App : IApp {
         }
     }
 
-    void Stopped(Running stopped) {
+    void Stopped(AppHost stopped) {
         try {
             OnStop();
         } finally {
@@ -95,13 +95,11 @@ public abstract class App : IApp {
         }
     }
 
-    void Clear(Running stopped) {
+    void Clear(AppHost stopped) {
         lock (gate) {
             if (running == stopped) {
                 running = null;
             }
         }
     }
-
-    sealed record Running(AppHost Host, IHost App);
 }

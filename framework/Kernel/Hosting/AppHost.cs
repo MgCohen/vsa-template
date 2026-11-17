@@ -8,22 +8,30 @@ using Umpire.Markers;
 
 [RequireDerived]
 public abstract class AppHost {
+    IHost? built;
+
+    public IServiceProvider? Services => built?.Services;
+
+    protected IHost Built => built ?? throw new InvalidOperationException(
+        $"{GetType().Name} has no built host. Call Create before Run or Stop.");
+
     public IHost Create(string[] args, App app) {
         var builder = CreateBuilder(args);
         Compose(builder.Services, app, builder.Configuration);
-        return Build(builder);
+        built = Build(builder);
+        return built;
     }
 
     public IServiceCollection Compose(IServiceCollection services, App app) =>
         Compose(services, app, ComposedConfiguration.InstanceIn(services));
 
-    public virtual int Run(IHost app) {
-        app.Run();
+    public virtual int Run() {
+        Built.Run();
         return 0;
     }
 
-    public virtual void Stop(IHost app) =>
-        app.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
+    public virtual void Stop() =>
+        Built.Services.GetRequiredService<IHostApplicationLifetime>().StopApplication();
 
     protected virtual IHostApplicationBuilder CreateBuilder(string[] args) => Host.CreateApplicationBuilder(args);
 

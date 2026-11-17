@@ -3,7 +3,7 @@ namespace Umpire.Cli.Commands;
 using Umpire.Cli.Commands.Bases;
 using Umpire.Cli.Scaffolding;
 using Umpire.Cli.Scaffolding.Setup;
-using Umpire.Cli.Scaffolding.Setup.Steps;
+using Umpire.Cli.Scaffolding.Setup.Tasks;
 
 sealed class InitCommand : ToolCommand {
     static readonly CommandOption Source = new(["--source"], "feed", Many: true);
@@ -27,7 +27,7 @@ sealed class InitCommand : ToolCommand {
         }
         var project = RootProject.Name(block);
         var version = ToolVersion.Current;
-        var plan = SetupPipeline.Plan(
+        var plan = SetupTasks.Plan(
             new SetupContext(block, $"{project}.csproj", version, input.All(Source), keepsParentFiles: true));
         Console.WriteLine($"Setup of {project} (Umpire {version}):");
         plan.Show();
@@ -39,7 +39,7 @@ sealed class InitCommand : ToolCommand {
         }
         plan.Write();
         ShowByHand(plan);
-        if (plan.Writes(ToolManifestStep.FileName) || plan.Writes(ToolManifestStep.InConfigFolder)) {
+        if (plan.Writes(ToolManifestTask.FileName) || plan.Writes(ToolManifestTask.InConfigFolder)) {
             Dotnet.RestoreTools(block, block);
         }
         if (plan.ByHand is not []) {
@@ -53,9 +53,9 @@ sealed class InitCommand : ToolCommand {
         if (plan.ByHand is []) {
             return;
         }
-        Console.WriteLine("Do these steps by hand, then run 'umpire init' again:");
-        foreach (var step in plan.ByHand) {
-            Console.WriteLine($"  {step}");
+        Console.WriteLine("Do these tasks by hand, then run 'umpire init' again:");
+        foreach (var task in plan.ByHand) {
+            Console.WriteLine($"  {task}");
         }
     }
 

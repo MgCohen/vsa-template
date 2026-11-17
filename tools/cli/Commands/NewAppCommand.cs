@@ -22,7 +22,7 @@ sealed class NewAppCommand : ToolCommand {
         var block = Path.GetFullPath(name);
         var version = ToolVersion.Current;
         var context = Context(name, block, input.All(Source), version);
-        var existing = SetupPipeline.Default.SelectMany(step => step.Files(context))
+        var existing = SetupTasks.Default.SelectMany(task => task.Files(context))
             .Distinct()
             .Where(context.OnDisk)
             .ToList();
@@ -32,7 +32,7 @@ sealed class NewAppCommand : ToolCommand {
                 $"These files exist. The tool does not write over a file:{Environment.NewLine}  {list}"
                 + $"{Environment.NewLine}To add Umpire to an existing app, run 'umpire init' in its folder.");
         }
-        var plan = SetupPipeline.Plan(context);
+        var plan = SetupTasks.Plan(context);
         if (plan.ByHand is [var first, ..]) {
             throw new UmpireException(
                 $"The folder {name} has a setup that the tool cannot complete ({first}). "
@@ -51,12 +51,12 @@ sealed class NewAppCommand : ToolCommand {
     }
 
     internal static IReadOnlyList<TemplateFile> Files(string name, IReadOnlyList<string> sources, string version) =>
-        SetupPipeline.Plan(Context(name, Path.GetFullPath(name), sources, version)).Files;
+        SetupTasks.Plan(Context(name, Path.GetFullPath(name), sources, version)).Files;
 
     static SetupContext Context(string name, string block, IReadOnlyList<string> sources, string version) {
         var context = new SetupContext(block, $"{name}.csproj", version, sources, keepsParentFiles: false);
         var names = new Dictionary<string, string> { [Templates.App] = name };
-        foreach (var file in Templates.Files(Templates.Kind.App, names, version)) {
+        foreach (var file in Templates.Files(TemplateGroup.App, names, version)) {
             context.Add(file);
         }
         return context;

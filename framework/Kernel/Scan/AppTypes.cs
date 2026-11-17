@@ -52,10 +52,10 @@ public sealed class AppTypes {
         .Where(MarkedTypes.IsAutoRegistered)
         .SelectMany(type => type.IsGenericTypeDefinition ? Close(type) : [type])];
 
-    public IReadOnlyList<Registration> Implementations(Type baseType) =>
+    public IReadOnlyList<ServiceImplementation> Implementations(Type baseType) =>
         [.. Registered()
-            .Select(type => ServiceOf(type, baseType) is { } service ? new Registration(service, type) : null)
-            .OfType<Registration>()];
+            .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
+            .OfType<ServiceImplementation>()];
 
     public IReadOnlyList<Type> TypeArguments() => typeArguments ??= [.. Loaded()
         .Where(MarkedTypes.IsTypeArgument)

@@ -1,8 +1,8 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
 using Umpire.Engine.Versions;
 
-sealed class UmpireSdkStep : SetupStep {
+sealed class UmpireSdkTask : SetupTask {
     const string Root = "Project";
     const string SdkElement = "<Sdk Name=\"Umpire.Sdk\" />";
 

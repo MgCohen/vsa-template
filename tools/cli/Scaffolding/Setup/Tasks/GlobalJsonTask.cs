@@ -1,9 +1,9 @@
-namespace Umpire.Cli.Scaffolding.Setup.Steps;
+namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
 using System.Text.Json.Nodes;
 using Umpire.Engine.Versions;
 
-sealed class GlobalJsonStep : SetupStep {
+sealed class GlobalJsonTask : SetupTask {
     const string FileName = VersionSlots.GlobalJsonFile;
     const string SdksKey = "msbuild-sdks";
     const string TestKey = "test";
