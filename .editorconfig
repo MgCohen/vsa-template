@@ -1,11 +1,11 @@
-# The severities of every Umpire.Sdk project: the built-in .NET rules (the editor and code style rules).
-# A consumer can change a rule in its own .editorconfig. The values and the disabled severities of the Umpire rules (UMP01xxxx)
-# are in the globalconfig file of each analyzer package.
-# The built-in rules come from AnalysisLevel = latest-recommended in Sdk.props.
+# The style of this repository: the built-in .NET rules (the editor and code style rules).
+# Umpire.Sdk ships no style: each consumer app has its own .editorconfig. The values and the disabled severities of the
+# Umpire rules (UMP01xxxx) are in the globalconfig file of each analyzer package. The MSBuild switches of the style
+# (EnforceCodeStyleInBuild, AnalysisLevel, GenerateDocumentationFile, WarningsNotAsErrors) are in Directory.Build.props.
 # Set a severity with the standard key, for example: dotnet_diagnostic.CA1822.severity = none
-is_global = true
-global_level = -1
+root = true
 
+[*.cs]
 # Off by decision. CA1716: the code is C# only, so a VB keyword such as "to" or "Get" is a correct name.
 # CA1863: CompositeFormat does not exist in netstandard2.1, so the Unity projects cannot use it.
 dotnet_diagnostic.CA1716.severity = none
@@ -139,7 +139,7 @@ dotnet_diagnostic.IDE0059.severity = warning
 # A parameter that no code uses, in all methods. An override or an interface implementation is not checked.
 dotnet_code_quality_unused_parameters = all
 dotnet_diagnostic.IDE0060.severity = warning
-# A using directive that the file does not need. The build reports it only with GenerateDocumentationFile (Umpire.Rules.props).
+# A using directive that the file does not need. The build reports it only with GenerateDocumentationFile (Directory.Build.props).
 dotnet_diagnostic.IDE0005.severity = warning
 # A cast to the type that the value already has.
 dotnet_diagnostic.IDE0004.severity = warning
@@ -167,3 +167,8 @@ dotnet_diagnostic.CA2329.severity = none
 dotnet_diagnostic.CA2330.severity = none
 dotnet_diagnostic.CA2300.severity = none
 dotnet_diagnostic.CA2301.severity = none
+
+# The rules that do not apply to a test project, a project whose name ends with ".Tests" or a project in a Tests/ folder.
+[{**.Tests/**.cs,**/Tests/**.cs}]
+# Off by decision. CA1707: a test name has underscores, for example Build_passes.
+dotnet_diagnostic.CA1707.severity = none

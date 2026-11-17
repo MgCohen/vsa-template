@@ -1,7 +1,10 @@
 <Project>
   <!-- Takes the place of Sdk="Umpire.Sdk" inside this repository, so the engine, the fixtures and the templates use the SDK files from source.
        A consumer project is only <Project Sdk="Umpire.Sdk" />. -->
+  <!-- The apps of this repository (the engine, the fixtures and the templates) also check the recommended .NET rules.
+       The framework projects use the default analysis level. -->
   <PropertyGroup>
+    <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
     <UmpireSdkDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'Sdk'))</UmpireSdkDir>
   </PropertyGroup>
   <Import Project="$(UmpireSdkDir)Sdk.props" />

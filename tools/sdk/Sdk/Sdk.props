@@ -14,13 +14,5 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-
-  <!-- The built-in .NET analyzers and code style rules. The Umpire rules come from the analyzer packages (Sdk.targets, Umpire.Pack.targets). -->
-  <PropertyGroup>
-    <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
-  </PropertyGroup>
-  <!-- In the Umpire repository, the root Directory.Build.props imports the rules first. -->
-  <Import Project="$(MSBuildThisFileDirectory)Umpire.Rules.props" Condition="'$(_UmpireRulesImported)' != 'true'" />
 </Project>

@@ -23,15 +23,14 @@ public sealed class DesignTimeBuildTests {
     public void The_design_time_build_passes() => Assert.That(build.Succeeded, Is.True, build.Output);
 
     [Test]
-    public void The_editor_reads_the_severities_of_Umpire_globalconfig() =>
-        Assert.That(Arguments("/analyzerconfig:"), Has.Some.EndsWith("Umpire.globalconfig"), build.Output);
+    public void Umpire_Sdk_gives_the_editor_no_style_file() =>
+        Assert.That(Arguments("/analyzerconfig:").Select(Path.GetFileName), Has.No.Member("Umpire.globalconfig").And.No.Member("Umpire.Tests.globalconfig"), build.Output);
 
     [TestCase("Umpire.Kernel.Analyzers.globalconfig")]
     [TestCase("Umpire.Vsa.Analyzers.globalconfig")]
     public void The_editor_reads_the_rule_values_of_each_analyzer_package(string file) =>
         Assert.That(Arguments("/analyzerconfig:").Select(Path.GetFileName), Has.Member(file), build.Output);
 
-    [TestCase("Microsoft.CodeAnalysis.CSharp.CodeStyle.dll")]
     [TestCase("Umpire.Kernel.Analyzers.dll")]
     [TestCase("Umpire.Vsa.Analyzers.dll")]
     public void The_editor_runs_the_analyzer(string file) =>
