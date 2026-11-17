@@ -1,6 +1,7 @@
 namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 
 public class VsaArchitecture : Architecture {
     public const string DefaultUnitySource = "Source";
@@ -17,9 +18,9 @@ public class VsaArchitecture : Architecture {
     }
 
     protected override void Define(Block block) {
-        DefineKernel(block.Add<Framework>().Add<Kernel>());
+        DefineKernel(block.Add<Kernel>());
         block.Add<App>().Add<Host>().And<Views>();
-        block.AddBlockGroup<Pack>();
+        block.AddBlockGroup<Pack>("Packs");
         DefinePlugin(block.AddGroup<Plugin>(Boundary.Open));
         DefineFeature(block.AddGroup<Feature>());
     }
@@ -45,7 +46,7 @@ public class VsaArchitecture : Architecture {
         plugin.Add<Module>().OfType<Umpire.Vsa.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
-        plugin.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+        AddContractParts(plugin.Add<Contracts>());
         var pluginHandlers = plugin.Add<Handlers>();
         pluginHandlers.Add<Handlers.Requests>();
         pluginHandlers.Add<Handlers.Events>().Add<Handlers.Events.Hooks>().InParentFolder();
@@ -61,10 +62,7 @@ public class VsaArchitecture : Architecture {
     }
 
     protected virtual void DefineSlice(PartGroup slice) {
-        slice.Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>()
-            .And<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
-            .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>()
-            .InParentFolder();
+        AndHandlerParts(AddContractParts(slice)).InParentFolder();
     }
 
     protected override void Rules(RuleBook rules) {
@@ -74,12 +72,11 @@ public class VsaArchitecture : Architecture {
         rules.For<Presenters>().Uses<Contracts>()
             .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal)
             .And<Slice.Shared>(Access.Internal);
-        rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>().And<Slice.Shared>()
+        ForContractParts(rules).And<Slice.Shared>()
             .Uses<Contracts>().And<Domain.Shared>().And<Slice.Shared>();
-        rules.For<Slice.Shared>().Uses<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>().Under<Kernel>();
-        rules.For<Slice.Shared>().Uses<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>().Under<Plugin>();
-        rules.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
-            .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>()
+        UsesContractParts(rules.For<Slice.Shared>()).Under<Kernel>();
+        UsesContractParts(rules.For<Slice.Shared>()).Under<Plugin>();
+        ForHandlerParts(rules)
             .Uses<Handlers>().And<Contracts>().And<Contracts.Commands>().And<Contracts.Events>().And<Slice.Shared>()
             .And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
@@ -91,8 +88,7 @@ public class VsaArchitecture : Architecture {
 
         rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
         rules.For<Presenters>().And<Module>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
-        rules.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
-            .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>().Under<Feature>()
+        ForHandlerParts(rules).Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
         rules.For<Module>().Uses<Kernel>().And<Plugin>(Access.Internal);
@@ -113,4 +109,20 @@ public class VsaArchitecture : Architecture {
         rules.For<Feature>().Has<Module>().Exactly(1);
         rules.For<Plugin>().Has<Module>().Exactly(1);
     }
+    protected static PartGroup AddContractParts(IPartChain parent) =>
+        parent.Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+
+    protected static PartGroup AndHandlerParts(PartGroup parts) =>
+        parts.And<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
+            .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>();
+
+    protected static From ForContractParts(RuleBook rules) =>
+        rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+
+    protected static Rule UsesContractParts(From from) =>
+        from.Uses<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+
+    protected static From ForHandlerParts(RuleBook rules) =>
+        rules.For<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>()
+            .And<Handlers.Events.Hooks>().And<Handlers.Commands.Hooks>();
 }

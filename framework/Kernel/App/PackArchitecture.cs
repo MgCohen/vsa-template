@@ -1,7 +1,7 @@
 namespace Umpire.Kernel;
 
 using Umpire.Architecture;
-using PackClass = Umpire.Architecture.Module;
+using PackClass = Umpire.Architecture.Blocks.Module;
 
 public sealed class PackArchitecture : Architecture {
     protected override void Configure(Options defaults) {

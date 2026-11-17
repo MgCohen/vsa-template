@@ -1,6 +1,7 @@
 namespace UmpireEngine;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class EngineArchitecture : VsaArchitecture {

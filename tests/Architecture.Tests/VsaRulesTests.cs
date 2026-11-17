@@ -1,6 +1,7 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class VsaRulesTests {
@@ -129,6 +130,22 @@ public sealed class VsaRulesTests {
         var paths = new ExtraFeaturePart().Parts().Select(p => p.Path);
 
         Assert.That(paths, Does.Contain("Features/{feature}/Extra"));
+    }
+
+    [TestCase(typeof(Umpire.Vsa.Definition.Feature))]
+    [TestCase(typeof(Umpire.Vsa.Definition.Plugin))]
+    public void A_module_kind_is_a_module_and_not_a_layer(Type kind) {
+        Assert.That(kind.IsAssignableTo(typeof(Module)), Is.True);
+        Assert.That(kind.IsAssignableTo(typeof(Layer)), Is.False);
+    }
+
+    [Test]
+    public void The_module_rules_select_only_the_parts_of_the_module_classes() {
+        var modules = Definition.Parts().Where(p => p.Is(typeof(Module))).ToList();
+
+        Assert.That(modules.Any(p => p.IsGroup), Is.False);
+        Assert.That(modules.SelectMany(p => p.Types),
+            Is.EquivalentTo(new[] { typeof(Umpire.Kernel.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
     }
 
     static Decision MayUse(PartPlace from, PartPlace to) =>

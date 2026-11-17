@@ -99,13 +99,14 @@ public sealed class UmpireToolTests {
             namespace Shop.App.Host;
 
             using Umpire.Architecture;
+            using Umpire.Architecture.Blocks;
             using Umpire.Vsa;
             using Umpire.Vsa.Definition;
 
             public sealed class ShopArchitecture : VsaArchitecture {
                 protected override void Rules(RuleBook rules) {
                     base.Rules(rules);
-                    rules.For<App>().Uses<Framework>();
+                    rules.For<App>().Uses<Kernel>();
                     rules.For<Host>().Uses<Composition>().And<Kernel>();
                     rules.For<Views>().Uses<Presenters>();
                     rules.For<Feature>().And<Plugin>().Uses<Kernel>();

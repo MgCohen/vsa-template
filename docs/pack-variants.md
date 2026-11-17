@@ -72,7 +72,7 @@ public sealed class EcsArchitecture : VsaArchitecture {
 The concept records are in `Architecture/`, next to the architecture:
 
 ```csharp
-public record EcsFeature : Layer {
+public record EcsFeature : Module {
     public override string GroupFolder => "EcsFeatures";
 }
 public record Components : Layer;
@@ -146,14 +146,15 @@ namespace PackVariant.Packs.Ecs.Architecture;
 
 using PackVariant.Packs.Ecs.Kernel;
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 ```
 
 | Clash | Step |
 |---|---|
-| `Kernel` is the record and a folder of the pack | 1 |
+| `Kernel` is the record `Umpire.Architecture.Blocks.Kernel` and a folder of the pack | 1 |
 | `App` is the record and the namespace `<App>.App` | 1 |
-| `Pack` is the record and the class `Umpire.Kernel.Pack` | 3: `using Pack = Umpire.Vsa.Definition.Pack;` |
+| `Pack` is the record and the class `Umpire.Kernel.Pack` | 3: `using Pack = Umpire.Architecture.Blocks.Pack;` |
 | `Plugin` is the record and the class `Umpire.Vsa.Composition.Plugin` | 3: `using Plugin = Umpire.Vsa.Definition.Plugin;` |
 | A variant in `Umpire.Vsa.Definition.*` | 2 |
 

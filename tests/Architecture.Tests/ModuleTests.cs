@@ -1,6 +1,7 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 
 public record GroupRoot : Module;
 

@@ -67,8 +67,8 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Architecture`, `Concept`, `record Module : Concept` | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers | `Vsa<THost>`, `VsaHost`, `class Plugin : Module`, `WebVsaHost`, `ConsoleVsaHost` |
+| Generic | `Architecture`, `Concept`, the block kind records (`Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `record Module : Component`, `Library`) | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaHost`, `class Plugin : Module`, `WebVsaHost`, `ConsoleVsaHost` |
 
 - The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<Umpire.Kernel.Module>()`. Where two types have the same name, write the full name of the runtime class.
 - A definition `Module` is in the folder of its parent: it is the root part of a group instance.

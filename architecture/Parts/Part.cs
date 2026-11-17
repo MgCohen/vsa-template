@@ -1,5 +1,7 @@
 namespace Umpire.Architecture;
 
+using Umpire.Architecture.Blocks;
+
 public class Part : IPartChain {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
