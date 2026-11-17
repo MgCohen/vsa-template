@@ -4,14 +4,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
-public sealed class LineLengthRule() : LimitRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010101",
-        "A line has at most the maximum number of characters",
-        "The line has {0} characters, and the limit is {1}. Break the line.",
-        "Umpire",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+public sealed class LineLengthRule : LimitRule {
+    public override int Number => 1;
+
+    protected override int DefaultMax => 120;
+
+    protected override string Title => "A line has at most the maximum number of characters";
+
+    protected override string Message =>
+        "The line has {0} characters, and the limit is {1}. Break the line.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(Check);

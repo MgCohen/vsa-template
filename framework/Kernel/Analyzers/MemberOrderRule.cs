@@ -7,23 +7,24 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
+public sealed class MemberOrderRule : KernelRule {
     public const string KindOrderKey = "kind_order";
     public const string AccessOrderKey = "access_order";
     public const string StaticFirstKey = "static_first";
 
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010105",
-        "Members are ordered by kind, then by access, then static before instance",
-        "{0} is a {1}, and it comes after a {2}. Move {0} up. The order is: by kind ({3}), then by access ({4}), then {5}.",
-        "Umpire",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+    public override int Number => 5;
 
     public override bool IsModuleRule => false;
 
-    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } =
-        [UmpireOption.List(KindOrderKey), UmpireOption.List(AccessOrderKey), UmpireOption.Bool(StaticFirstKey)];
+    public override IReadOnlyList<UmpireOption> Options { get; } =
+        [UmpireOption.List(KindOrderKey, ["constant", "field", "constructor", "finalizer", "property", "event", "method", "nested_type"]),
+            UmpireOption.List(AccessOrderKey, ["public", "internal", "protected_internal", "protected", "private_protected", "private"]),
+            UmpireOption.Bool(StaticFirstKey, true)];
+
+    protected override string Title => "Members are ordered by kind, then by access, then static before instance";
+
+    protected override string Message =>
+        "{0} is a {1}, and it comes after a {2}. Move {0} up. The order is: by kind ({3}), then by access ({4}), then {5}.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxNodeAction(Check,
@@ -32,13 +33,13 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
 
     void Check(SyntaxNodeAnalysisContext context) {
         var type = (TypeDeclarationSyntax)context.Node;
-        if (Order.Read(Options(context.Options, type.SyntaxTree)) is not { } order) {
+        if (Order.Read(Values(context.Options, type.SyntaxTree)) is not { } order) {
             return;
         }
         var inInterface = type is InterfaceDeclarationSyntax;
-        Group? latest = null;
+        MemberGroup? latest = null;
         foreach (var member in type.Members) {
-            if (Group.Of(member, inInterface) is not { } group) {
+            if (MemberGroup.Of(member, inInterface) is not { } group) {
                 continue;
             }
             if (latest is { } previous && order.Compare(group, previous) < 0) {
@@ -68,12 +69,12 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
         _ => member.GetFirstToken(),
     };
 
-    readonly struct Group(string kind, string access, bool isStatic) {
+    readonly struct MemberGroup(string kind, string access, bool isStatic) {
         public string Kind { get; } = kind;
         public string Access { get; } = access;
         public bool IsStatic { get; } = isStatic;
 
-        public static Group? Of(MemberDeclarationSyntax member, bool inInterface) {
+        public static MemberGroup? Of(MemberDeclarationSyntax member, bool inInterface) {
             string? kind = member switch {
                 FieldDeclarationSyntax field => field.Modifiers.Any(SyntaxKind.ConstKeyword) ? "constant" : "field",
                 ConstructorDeclarationSyntax => "constructor",
@@ -88,7 +89,7 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
                 return null;
             }
             var isStatic = member.Modifiers.Any(SyntaxKind.StaticKeyword) || member.Modifiers.Any(SyntaxKind.ConstKeyword);
-            return new Group(kind, AccessOf(member, inInterface), isStatic);
+            return new MemberGroup(kind, AccessOf(member, inInterface), isStatic);
         }
 
         public override string ToString() =>
@@ -127,7 +128,7 @@ public sealed class MemberOrderRule() : UmpireAnalyzerRule(Descriptor) {
                 ? new Order(kinds, accesses, staticFirst)
                 : null;
 
-        public int Compare(Group a, Group b) {
+        public int Compare(MemberGroup a, MemberGroup b) {
             var kind = Index(Kinds, a.Kind).CompareTo(Index(Kinds, b.Kind));
             if (kind != 0) {
                 return kind;

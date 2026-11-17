@@ -14,10 +14,10 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
 using Versions.Slices.CheckVersions;
 
-sealed class RunEngineHandler(ICommandSender commands, StepLog log) : CommandHandler<RunEngineCommand, ReportResult> {
+sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : CommandHandler<RunEngineCommand, ReportResult> {
     public override async Task<Result<ReportResult>> HandleAsync(Envelope<RunEngineCommand> envelope) {
         var run = envelope.Message;
-        log.FailFast = run.FailFast;
+        options.FailFast = run.FailFast;
         var findings = await Run(run, envelope.Cancellation);
         return await commands.SendAsync(new WriteReportCommand(run.Mode, findings), envelope.Cancellation);
     }

@@ -7,7 +7,7 @@ public sealed record RunEngineCommand(
     string Project,
     string Bin,
     string Block = "",
-    string Mode = "Error",
+    ReportMode Mode = ReportMode.Error,
     string Skip = "",
     bool FailFast = false,
     bool UpdateBaseline = false)

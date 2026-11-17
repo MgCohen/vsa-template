@@ -5,14 +5,13 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class ContractTypeRule() : UmpireAnalyzerRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010203",
-        "Contracts projects hold only contract types",
-        "{0} is in {1}, but no request, response, command or event uses it. Move it to its own file in the slice, or use it in a contract.",
-        "Umpire",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+public sealed class ContractTypeRule : VsaRule {
+    public override int Number => 3;
+
+    protected override string Title => "Contracts projects hold only contract types";
+
+    protected override string Message =>
+        "{0} is in {1}, but no request, response, command or event uses it. Move it to its own file in the slice, or use it in a contract.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         var assembly = start.Compilation.AssemblyName ?? "";

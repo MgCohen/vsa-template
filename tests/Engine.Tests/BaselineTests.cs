@@ -2,6 +2,7 @@ using Baseline;
 using Baseline.Slices.ApplyBaseline;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
+using Report.Domain.Shared;
 using Report.Slices.WriteReport;
 using Steps;
 using Steps.Domain.Shared;
@@ -150,10 +151,20 @@ public sealed class BaselineTests {
             Error("UMP020101", "A.cs", 2, "a early"),
         ];
 
-        var report = await Send(new WriteReportCommand("Error", findings));
+        var report = await Send(new WriteReportCommand(ReportMode.Error, findings));
 
         Assert.That(report.Value.Lines.Select(line => line.Split(": ").Last()),
             Is.EqualTo(new[] { "skipped", "a early", "a late", "b" }));
+    }
+
+    [Test]
+    public async Task The_warn_mode_reports_each_error_as_a_warning() {
+        var report = await Send(new WriteReportCommand(ReportMode.Warn, [Error("UMP020101", "A.cs", 2, "a")]));
+
+        Assert.Multiple(() => {
+            Assert.That(report.Value.Lines, Has.One.Contains("warning UMP020101: a"));
+            Assert.That(report.Value.ExitCode, Is.Zero);
+        });
     }
 
     static async Task<Result<T>> Send<T>(ICommand<T> command) {

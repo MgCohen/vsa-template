@@ -2,18 +2,16 @@ namespace BuiltApp.Infrastructure;
 
 using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
-using Steps.Domain.Shared;
 using Umpire.Architecture;
 
 public static class AppReader {
     public static LoadedApp Read(
         IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, string blockFolder, ResolvedArchitecture architecture) {
-        var unity = UnityProject.Scripts(blockFolder, dlls, out var warning);
+        var unity = UnityProject.Scripts(blockFolder, dlls, out var missingScriptAssemblies);
         var files = unity.Concat(dlls).ToList();
         var types = Distinct(Load(files), files);
         var facts = TypeFactsReader.Read(types, WithUnity(BinReader.Sources(unity), sources), architecture);
-        var warnings = warning is null ? new List<Finding>() : [warning];
-        return new LoadedApp(blockFolder, files, types, facts, warnings);
+        return new LoadedApp(blockFolder, files, types, facts, missingScriptAssemblies);
     }
 
     static Dictionary<string, Source> WithUnity(IReadOnlyDictionary<string, Source> unity, IReadOnlyDictionary<string, Source> sources) {

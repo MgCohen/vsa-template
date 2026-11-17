@@ -7,18 +7,17 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class SharedTypeBaseRule() : UmpireAnalyzerRule(Descriptor) {
+public sealed class SharedTypeBaseRule : VsaRule {
     public const string AllowedBasesKey = "allowed_bases";
 
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010207",
-        "Domain.Shared types have only permitted bases",
-        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to umpire.UMP010207.allowed_bases.",
-        "Umpire",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+    public override int Number => 7;
 
-    public override IReadOnlyList<UmpireOption> RequiredOptions { get; } = [UmpireOption.List(AllowedBasesKey)];
+    public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.List(AllowedBasesKey, [])];
+
+    protected override string Title => "Domain.Shared types have only permitted bases";
+
+    protected override string Message =>
+        "{0} has the base {1}. A type in a Domain.Shared project uses only bases from Domain.Shared projects and from the option allowed_bases. Use such a base, or add {2} to umpire.UMP010207.allowed_bases.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (!DomainShared.Is(start.Compilation, start.Options)) {
@@ -32,7 +31,7 @@ public sealed class SharedTypeBaseRule() : UmpireAnalyzerRule(Descriptor) {
             || context.SemanticModel.GetDeclaredSymbol(declaration, context.CancellationToken) is not { } type) {
             return;
         }
-        if (Options(context.Options, context.Node.SyntaxTree).List(AllowedBasesKey) is not { } allowed) {
+        if (Values(context.Options, context.Node.SyntaxTree).List(AllowedBasesKey) is not { } allowed) {
             return;
         }
         foreach (var baseSyntax in ((BaseListSyntax)context.Node).Types) {

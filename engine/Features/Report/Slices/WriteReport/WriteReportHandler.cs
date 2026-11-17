@@ -11,7 +11,7 @@ sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResul
 
     public override Task<Result<ReportResult>> HandleAsync(Envelope<WriteReportCommand> envelope) {
         var command = envelope.Message;
-        var warnOnly = string.Equals(command.Mode, "Warn", StringComparison.OrdinalIgnoreCase);
+        var warnOnly = command.Mode == ReportMode.Warn;
         var findings = command.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error
             ? f with { Severity = FindingSeverity.Warning }
             : f)

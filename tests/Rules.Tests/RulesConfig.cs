@@ -27,7 +27,8 @@ sealed class RulesConfig {
     public IReadOnlyList<string> Keys =>
         [.. Pairs().Select(pair => pair[0].Trim()).Where(key => key is not "is_global" and not "global_level")];
 
-    public static string Value(string key) => All.Select(config => config.TryValue(key)).OfType<string>().Single();
+    public static string Default(Umpire.Vsa.Analyzers.UmpireAnalyzerRule rule, string key) =>
+        rule.Options.Single(option => option.Key == key).Default!;
 
     public string? TryValue(string key) =>
         Pairs().Where(pair => pair[0].Trim() == key).Select(pair => pair[1].Trim()).SingleOrDefault();

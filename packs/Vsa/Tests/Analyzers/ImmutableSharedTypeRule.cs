@@ -3,14 +3,13 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class ImmutableSharedTypeRule() : UmpireAnalyzerRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010205",
-        "Domain.Shared types are immutable",
-        "{0}.{1} is {2}. A type in a Domain.Shared project does not change after it is made. {3}.",
-        "Umpire",
-        DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+public sealed class ImmutableSharedTypeRule : VsaRule {
+    public override int Number => 5;
+
+    protected override string Title => "Domain.Shared types are immutable";
+
+    protected override string Message =>
+        "{0}.{1} is {2}. A type in a Domain.Shared project does not change after it is made. {3}.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (!DomainShared.Is(start.Compilation, start.Options)) {

@@ -3,14 +3,15 @@ namespace Umpire.Vsa.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class FileLengthRule() : LimitRule(Descriptor) {
-    public static readonly DiagnosticDescriptor Descriptor = new(
-        "UMP010103",
-        "A file has at most the maximum number of lines",
-        "The file has {0} lines, and the limit is {1}. Move a type or a part of a type to a new file.",
-        "Umpire",
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+public sealed class FileLengthRule : LimitRule {
+    public override int Number => 3;
+
+    protected override int DefaultMax => 300;
+
+    protected override string Title => "A file has at most the maximum number of lines";
+
+    protected override string Message =>
+        "The file has {0} lines, and the limit is {1}. Move a type or a part of a type to a new file.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(Check);
