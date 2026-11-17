@@ -5,80 +5,115 @@ using System.Runtime.InteropServices;
 using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 
-public sealed class EntryReader : IDisposable {
+public sealed class BinReader : IDisposable {
     public const string ArchitectureKey = "Umpire.Architecture";
     public const string RootKey = "Umpire.Root";
-    const string AppBase = "Umpire.Kernel.App`1";
     const string BlockBase = "Umpire.Architecture.Block`1";
     const string ArchitectureBase = "Umpire.Architecture.Architecture";
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
     const string AspNetCore = "Microsoft.AspNetCore.App";
 
+    readonly string bin;
+    readonly string[] dlls;
     readonly MetadataLoadContext context;
-    readonly IReadOnlyList<string> dlls;
 
-    public EntryReader(string bin) {
-        var all = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
+    public BinReader(string bin) {
+        this.bin = bin;
+        dlls = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
         var shared = SharedFrameworks().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
-        dlls = [.. all.Where(SourceFiles.HasSymbols)];
-        context = new MetadataLoadContext(new PathAssemblyResolver(all.Concat(shared)));
+        context = new MetadataLoadContext(new PathAssemblyResolver(dlls.Concat(shared)));
     }
 
-    public IReadOnlyList<BlockEntry> Entries() => [.. dlls.SelectMany(Entries)];
-
-    public string? Problem(string name) {
-        var comma = name.IndexOf(',');
-        if (comma < 0) {
-            return "the name has no assembly";
+    public static IReadOnlyDictionary<string, Source> Sources(IEnumerable<string> files) {
+        var sources = new Dictionary<string, Source>();
+        foreach (var file in files) {
+            using var symbols = new SymbolReader(file);
+            foreach (var type in symbols.TypeSources()) {
+                sources.TryAdd(type.FullName, type.Source);
+            }
         }
-        var typeName = name[..comma].Trim();
-        var assemblyName = name[(comma + 1)..].Trim();
+        return sources;
+    }
+
+    public static string? SourceFolder(IEnumerable<Source> sources) {
+        var files = sources.Select(s => Path.GetFullPath(s.File)).ToList();
+        if (CommonFolder(files) is not { } all) {
+            return null;
+        }
+        return CommonFolder([.. files.Where(file => !IsGenerated(Path.GetRelativePath(all, file)))]) ?? all;
+    }
+
+    public BinIndex Index() {
+        var read = dlls.Select(Read).OfType<DllRead>().ToList();
+        return new BinIndex(bin, [.. read.Select(r => r.Dll)], [.. read.SelectMany(r => r.Entries)]);
+    }
+
+    public BlockEntry Check(BlockEntry entry) =>
+        entry is { Problem: null, Form: not EntryForm.App, Type: { } type } && Problem(type) is { } problem ? entry.Names(type.ToString(), problem) : entry;
+
+    public string? Problem(TypeName name) {
         Assembly assembly;
         try {
-            assembly = context.LoadFromAssemblyName(assemblyName);
+            assembly = context.LoadFromAssemblyName(name.Assembly);
         } catch (Exception e) when (e is FileNotFoundException or FileLoadException or BadImageFormatException) {
-            return $"the build output has no assembly {assemblyName}";
+            return $"the build output has no assembly {name.Assembly}";
         }
-        var type = assembly.GetType(typeName);
+        var type = assembly.GetType(name.FullName);
         if (type is null) {
-            return $"{assemblyName} has no type {typeName}";
+            return $"{name.Assembly} has no type {name.FullName}";
         }
         if (Base(type, ArchitectureBase) is null) {
-            return $"{typeName} does not inherit {ArchitectureBase}";
+            return $"{name.FullName} does not inherit {ArchitectureBase}";
         }
         if (type.IsAbstract) {
-            return $"{typeName} is abstract";
+            return $"{name.FullName} is abstract";
         }
-        return type.GetConstructor(Type.EmptyTypes) is null ? $"{typeName} has no public constructor with no parameters" : null;
+        return type.GetConstructor(Type.EmptyTypes) is null ? $"{name.FullName} has no public constructor with no parameters" : null;
     }
 
     public void Dispose() => context.Dispose();
+
+    static List<AppClass> AppClasses(Assembly assembly, Dictionary<string, Source> sources) {
+        var found = new List<AppClass>();
+        foreach (var type in Types(assembly)) {
+            if (type.FullName is not { } name || !sources.TryGetValue(name, out var source)) {
+                continue;
+            }
+            try {
+                if (AppClass.Is(type)) {
+                    found.Add(new AppClass(Name(type), Path.GetFullPath(source.File),
+                        type.GetConstructor(Type.EmptyTypes) is not null, AppClass.BasesOf(type)));
+                }
+            } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
+                continue;
+            }
+        }
+        return found;
+    }
+
+    static BlockEntry AppEntry(AppClass app) =>
+        new(ProjectFolder(Path.GetDirectoryName(app.Source)!), EntryForm.App, app.Type, app.Source);
 
     static IEnumerable<BlockEntry> TypeEntries(Assembly assembly, Dictionary<string, Source> sources) {
         foreach (var type in Types(assembly).Where(t => t is { IsAbstract: false, IsInterface: false })) {
             if (type.FullName is not { } name || !sources.TryGetValue(name, out var source)) {
                 continue;
             }
-            if (Entry(type, source) is { } entry) {
+            if (BlockEntry(type, source) is { } entry) {
                 yield return entry;
             }
         }
     }
 
-    static BlockEntry? Entry(Type type, Source source) {
+    static BlockEntry? BlockEntry(Type type, Source source) {
         var file = Path.GetFullPath(source.File);
-        var folder = Path.GetDirectoryName(file)!;
         try {
-            if (Base(type, AppBase) is not null) {
-                return new BlockEntry(ProjectFolder(folder), EntryForm.App, null, file);
-            }
-            if (Base(type, BlockBase) is { } block) {
-                return new BlockEntry(folder, EntryForm.Base, Name(block.GetGenericArguments()[0]), file);
-            }
+            return Base(type, BlockBase) is { } block
+                ? new BlockEntry(Path.GetDirectoryName(file)!, EntryForm.Base, Name(block.GetGenericArguments()[0]), file)
+                : null;
         } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
             return null;
         }
-        return null;
     }
 
     static IEnumerable<BlockEntry> MetadataEntries(Assembly assembly, Dictionary<string, Source> sources) {
@@ -89,7 +124,9 @@ public sealed class EntryReader : IDisposable {
         var project = ProjectFolder(common);
         var folder = values.TryGetValue(RootKey, out var root) ? Path.GetFullPath(Path.Combine(project, root)) : project;
         var file = Directory.EnumerateFiles(project, "*.csproj").FirstOrDefault() ?? project;
-        yield return new BlockEntry(Path.TrimEndingDirectorySeparator(folder), EntryForm.Metadata, architecture, file);
+        var type = TypeName.Parse(architecture);
+        var entry = new BlockEntry(Path.TrimEndingDirectorySeparator(folder), EntryForm.Metadata, type, file);
+        yield return type is null ? entry.Names(architecture, TypeName.NoAssembly) : entry;
     }
 
     static Dictionary<string, string> Metadata(Assembly assembly) {
@@ -120,15 +157,7 @@ public sealed class EntryReader : IDisposable {
         return null;
     }
 
-    static string Name(Type type) => $"{type.FullName}, {type.Assembly.GetName().Name}";
-
-    public static string? SourceFolder(IEnumerable<Source> sources) {
-        var files = sources.Select(s => Path.GetFullPath(s.File)).ToList();
-        if (CommonFolder(files) is not { } all) {
-            return null;
-        }
-        return CommonFolder([.. files.Where(file => !IsGenerated(Path.GetRelativePath(all, file)))]) ?? all;
-    }
+    static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);
 
     static string? CommonFolder(IReadOnlyList<string> files) {
         var folders = files.Select(file => Path.GetDirectoryName(file)!.Split(Path.DirectorySeparatorChar)).ToList();
@@ -165,14 +194,24 @@ public sealed class EntryReader : IDisposable {
 
     static Version VersionOf(string folder) => Version.TryParse(Path.GetFileName(folder), out var version) ? version : new Version();
 
-    IEnumerable<BlockEntry> Entries(string dll) {
+    DllRead? Read(string dll) {
         try {
-            var assembly = context.LoadFromAssemblyPath(dll);
             using var symbols = new SymbolReader(dll);
-            var sources = symbols.TypeSources().GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
-            return [.. TypeEntries(assembly, sources), .. MetadataEntries(assembly, sources)];
-        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException or TypeLoadException) {
-            return [];
+            var name = Path.GetFileNameWithoutExtension(dll);
+            if (!symbols.HasSymbols) {
+                return new DllRead(new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], []), []);
+            }
+            var assembly = context.LoadFromAssemblyPath(dll);
+            var types = symbols.TypeSources().ToList();
+            var sources = types.GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
+            var apps = AppClasses(assembly, sources);
+            var entries = apps.Select(AppEntry).Concat(TypeEntries(assembly, sources)).Concat(MetadataEntries(assembly, sources)).Select(Check);
+            var read = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), symbols.Documents(), types, apps);
+            return new DllRead(read, [.. entries]);
+        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException or TypeLoadException or InvalidOperationException) {
+            return null;
         }
     }
+
+    sealed record DllRead(BinDll Dll, IReadOnlyList<BlockEntry> Entries);
 }

@@ -1,7 +1,6 @@
-using System.Reflection;
 using BuiltApp.Domain.Shared;
+using BuiltApp.Infrastructure;
 using LoadApp.Domain.Shared;
-using LoadApp.Infrastructure;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
@@ -14,13 +13,13 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
 
     static Result<AppInput> Load(LoadAppCommand command) {
         var blocks = command.Blocks;
-        var root = Path.GetFullPath(blocks.Current.Folder);
-        var bin = Path.GetFullPath(command.Bin);
-        var loader = new AppLoader(bin);
+        var root = blocks.Current.Folder;
+        var bin = command.Bin;
+        var loader = new AppLoader(bin.Bin);
         var skip = Names(command.Skip);
-        var app = loader.AppAssemblies(root, skip);
+        var app = bin.AppDlls(root, skip);
         if (app.Count == 0) {
-            return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin} has source files under the block folder {root}. "
+            return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin.Bin} has source files under the block folder {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
         }
         var found = Definition(blocks.Current, app, loader);
@@ -29,33 +28,39 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         }
         var definition = found.Value;
         var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
-        var referenced = loader.ReferencedAssemblies(app, skip);
-        var assemblies = app.Concat(loader.ExternalAssemblies(externals)).Concat(referenced).Distinct().ToList();
-        return new AppInput(definition, assemblies, root, blocks.InnerFolders);
+        var dlls = app.Concat(bin.ExternalDlls(externals)).Concat(bin.ReferencedDlls(app, skip)).Distinct().ToList();
+        return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
-    static Result<Architecture> Definition(BlockEntry entry, List<Assembly> app, AppLoader loader) {
+    static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
         if (entry.Form != EntryForm.App) {
-            return DefinitionFinder.ArchitectureOf(entry.Architecture!, loader);
+            return loader.CreateArchitecture(entry.Type!);
         }
-        var classes = DefinitionFinder.Find(app);
+        var classes = AppClass.Leaves([.. app.SelectMany(d => d.AppClasses)]);
         if (AppClassError(classes) is { } error) {
             return error;
         }
-        return DefinitionFinder.ArchitectureOf(classes.Usable[0]);
+        return loader.ArchitectureOfApp(classes[0].Type);
     }
 
-    static Error? AppClassError(AppClasses classes) => classes switch {
-        { NoConstructor.Count: > 0 } => new Error(LoadAppCodes.NoEmptyConstructor,
-            $"The app class {DefinitionFinder.Names(classes.NoConstructor)} has no public constructor with no parameters, "
-            + "so the engine cannot make it and read its architecture. Add a public constructor with no parameters."),
-        { Usable.Count: 0 } => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
-            + "Add one class that inherits App<TPack>, for example App<Vsa<WebVsaHost>>."),
-        { Usable.Count: > 1 } => new Error(LoadAppCodes.ManyAppClasses,
-            $"The app has more than one app class: {DefinitionFinder.Names(classes.Usable)}. "
-            + "Keep one, or make one inherit the other."),
-        _ => null,
-    };
+    static Error? AppClassError(IReadOnlyList<AppClass> classes) {
+        var noConstructor = classes.Where(c => !c.HasEmptyConstructor).ToList();
+        if (noConstructor.Count > 0) {
+            return new Error(LoadAppCodes.NoEmptyConstructor,
+                $"The app class {Names(noConstructor)} has no public constructor with no parameters, "
+                + "so the engine cannot make it and read its architecture. Add a public constructor with no parameters.");
+        }
+        return classes.Count switch {
+            0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
+                + "Add one class that inherits App<TPack>, for example App<Vsa<WebVsaHost>>."),
+            > 1 => new Error(LoadAppCodes.ManyAppClasses,
+                $"The app has more than one app class: {Names(classes)}. Keep one, or make one inherit the other."),
+            _ => null,
+        };
+    }
+
+    static string Names(IEnumerable<AppClass> classes) =>
+        string.Join(", ", classes.Select(c => c.Type.FullName).Order(StringComparer.Ordinal));
 
     static string[] Names(string list) => list.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }

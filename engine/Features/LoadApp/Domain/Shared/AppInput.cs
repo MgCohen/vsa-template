@@ -1,7 +1,7 @@
 namespace LoadApp.Domain.Shared;
 
-using System.Reflection;
+using Blocks.Domain.Shared;
 using Umpire.Architecture;
 
 public sealed record AppInput(
-    Architecture Architecture, IReadOnlyList<Assembly> Assemblies, string BlockFolder, IReadOnlyList<string> InnerBlocks);
+    Architecture Architecture, BlockTree Blocks, IReadOnlyList<string> Dlls, IReadOnlyDictionary<string, Source> Sources);

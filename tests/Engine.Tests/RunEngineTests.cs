@@ -1,7 +1,8 @@
 using Baseline;
 using Blocks;
 using LoadApp;
-using LoadApp.Infrastructure;
+using BuiltApp.Domain.Shared;
+using BuiltApp.Infrastructure;
 using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Report;
@@ -20,7 +21,7 @@ namespace Engine.Tests;
 
 public sealed class RunEngineTests {
     const string RulesSkipped =
-        "umpire-engine: UMP030002: CheckRules skipped: App is missing, because an earlier step failed.";
+        "umpire-engine: UMP030002: CheckRules skipped, because an earlier step failed.";
     const string PinnedSdk = "global.json: Umpire.Sdk 0.0.1";
     static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
 
@@ -36,18 +37,20 @@ public sealed class RunEngineTests {
 
     [Test]
     public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
-        var classes = DefinitionFinder.Find([typeof(EngineApp).Assembly]);
+        var app = new TypeName(typeof(EngineApp).FullName!, typeof(EngineApp).Assembly.GetName().Name!);
 
-        Assert.That(classes.Usable, Is.EqualTo(new[] { typeof(EngineApp) }));
-        Assert.That(DefinitionFinder.ArchitectureOf(classes.Usable[0]), Is.TypeOf<EngineArchitecture>());
+        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app);
+
+        Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
     }
 
     [Test]
-    public void Assemblies_with_no_app_class_give_no_architecture() {
-        var classes = DefinitionFinder.Find([typeof(Repo).Assembly]);
+    public void A_dll_with_no_app_class_has_no_app_class_in_the_index() {
+        using var reader = new BinReader(AppContext.BaseDirectory);
 
-        Assert.That(classes.Usable, Is.Empty);
-        Assert.That(classes.NoConstructor, Is.Empty);
+        var shared = reader.Index().Dlls.Single(d => d.Name == typeof(Repo).Assembly.GetName().Name);
+
+        Assert.That(shared.AppClasses, Is.Empty);
     }
 
     [Test]
@@ -68,7 +71,7 @@ public sealed class RunEngineTests {
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.Lines, Has.One.Contains("error UMP030201").And.Contains("global.json: Umpire.Sdk 0.0.1"));
-            Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped: CheckedVersions is missing"));
+            Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier step failed."));
         } finally {
             TempFolder.Delete(root);
         }

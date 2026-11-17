@@ -1,5 +1,6 @@
 namespace Rules.Slices.CheckRules;
 
+using Blocks.Domain.Shared;
 using BuiltApp.Infrastructure;
 using Steps.Domain.Shared;
 using Umpire.Architecture;
@@ -8,15 +9,14 @@ sealed class ArchitectureCheck {
     readonly RuleChecks checks;
 
     readonly ResolvedArchitecture resolved;
-    readonly IReadOnlyList<string> innerBlocks;
+    readonly IReadOnlyList<string> innerFolders;
 
-    ArchitectureCheck(
-        ResolvedArchitecture resolved, LoadedApp app, Bindings bindings, IReadOnlyList<string> innerBlocks) {
+    ArchitectureCheck(ResolvedArchitecture resolved, LoadedApp app, Bindings bindings, IReadOnlyList<string> innerFolders) {
         Definition = resolved.Architecture;
         App = app;
         Bindings = bindings;
         this.resolved = resolved;
-        this.innerBlocks = innerBlocks;
+        this.innerFolders = innerFolders;
         checks = new RuleChecks(resolved, bindings);
     }
 
@@ -24,22 +24,19 @@ sealed class ArchitectureCheck {
     public LoadedApp App { get; }
     public Bindings Bindings { get; }
 
-    public static ArchitectureCheck Load(Architecture definition, IEnumerable<string> dlls, string blockFolder) =>
-        Load(definition, dlls, blockFolder, []);
-
     public static ArchitectureCheck Load(
-        Architecture definition, IEnumerable<string> dlls, string blockFolder, IReadOnlyList<string> innerBlocks) {
+        Architecture definition, IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, BlockTree blocks) {
         var resolved = new ResolvedArchitecture(definition);
-        var app = AppReader.Read(dlls, blockFolder, resolved);
-        var bindings = resolved.Place(app.Facts, app.BlockFolder, innerBlocks);
-        return new ArchitectureCheck(resolved, app, bindings, innerBlocks);
+        var app = AppReader.Read(dlls, sources, blocks.Current.Folder, resolved);
+        var bindings = resolved.Place(app.Facts, app.BlockFolder, blocks.InnerFolders);
+        return new ArchitectureCheck(resolved, app, bindings, blocks.InnerFolders);
     }
 
     public IReadOnlyList<Finding> Findings() => [
         .. Bindings.All.Where(b => !b.External && !b.Part.IsBlockPlace).SelectMany(checks.Of),
         .. Bindings.Unmapped.Select(RuleChecks.Unmapped),
-        .. resolved.CoveredBlocks(App.BlockFolder, innerBlocks).Select(RuleChecks.Covered),
-        .. resolved.EmptyPlaces(App.BlockFolder, innerBlocks).Select(RuleChecks.Empty),
+        .. resolved.CoveredBlocks(App.BlockFolder, innerFolders).Select(RuleChecks.Covered),
+        .. resolved.EmptyPlaces(App.BlockFolder, innerFolders).Select(RuleChecks.Empty),
         .. checks.Counts(),
         .. checks.Matches(),
         .. App.Warnings];
