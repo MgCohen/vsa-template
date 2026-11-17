@@ -149,7 +149,7 @@ public sealed class VsaRulesTests {
     }
 
     static Decision MayUse(PartPlace from, PartPlace to) =>
-        Resolved.DecisionFor( from.Part, from.Values, to.Part, to.Values);
+        Resolved.DecisionFor(from.Part, from.Values, to.Part, to.Values);
 
     static PartPlace Place(string group, string name, string feature = "A", string slice = "s1") {
         var part = Resolved.Parts.Single(p => p.Name == name && p.SelfAndAncestors().Any(a => a.Name == group));

@@ -76,18 +76,19 @@ public sealed class OptionsTests {
             Is.EqualTo(new object?[] { builtIn.DefaultPermission, builtIn.Boundary, builtIn.UseSameConcept, builtIn.Depth, builtIn.Access, builtIn.Required }));
     }
 
-    [TestCase(typeof(OpenConcept), Permission.Allow)]
-    [TestCase(typeof(Target), Permission.Deny)]
-    public void The_default_permission_of_a_use_comes_from_the_target(Type target, Permission expected) {
+    [TestCase(typeof(User), typeof(OpenConcept), Permission.Allow)]
+    [TestCase(typeof(User), typeof(Target), Permission.Deny)]
+    [TestCase(typeof(OpenConcept), typeof(Target), Permission.Deny)]
+    public void The_default_permission_of_a_use_comes_from_the_target(Type user, Type target, Permission expected) {
         var resolved = new ResolvedArchitecture(new InlineArchitecture(block => {
             block.Add<User>();
             block.Add<OpenConcept>();
             block.Add<Target>();
         }));
-        var user = resolved.Parts.Single(p => p.Is(typeof(User)));
+        var from = resolved.Parts.Single(p => p.Is(user));
         var to = resolved.Parts.Single(p => p.Is(target));
 
-        var decision = resolved.DecisionFor(user, NoValues, to, NoValues);
+        var decision = resolved.DecisionFor(from, NoValues, to, NoValues);
 
         Assert.That(decision.Rule, Is.Null);
         Assert.That(decision.Permission, Is.EqualTo(expected));
