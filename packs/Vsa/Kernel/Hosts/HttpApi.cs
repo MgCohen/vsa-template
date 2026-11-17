@@ -6,15 +6,19 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Reflection;
+using Umpire.Kernel;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
+using Umpire.Vsa.Handlers.Requests;
 
-static class HttpApi {
-    internal static void Map(WebApplication app, IEnumerable<Type> handlerServices) {
+public static class HttpApi {
+    public static WebApplication MapRequests(this WebApplication app) {
+        ArgumentNullException.ThrowIfNull(app);
         var map = typeof(HttpApi).GetMethod(nameof(MapRequest), BindingFlags.NonPublic | BindingFlags.Static)!;
-        foreach (var service in handlerServices) {
-            map.MakeGenericMethod(service.GetGenericArguments()).Invoke(null, [app]);
+        foreach (var handler in app.Services.GetRequiredService<AppTypes>().Implementations(typeof(RequestHandler<,>))) {
+            map.MakeGenericMethod(handler.Service.GetGenericArguments()).Invoke(null, [app]);
         }
+        return app;
     }
 
     static void MapRequest<TRequest, TResponse>(WebApplication app)

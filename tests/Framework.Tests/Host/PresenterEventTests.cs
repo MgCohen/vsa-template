@@ -21,6 +21,13 @@ public sealed class PresenterEventTests {
     }
 
     [Test]
+    public void AnAppWithNoViewsRootGetsNoViewServices() {
+        var registrations = WebApps.OnTestServer(new ShelfModule()).Registrations();
+
+        Assert.That(registrations.Any(s => s.ServiceType.Namespace?.StartsWith("Microsoft.AspNetCore.Components", StringComparison.Ordinal) == true), Is.False);
+    }
+
+    [Test]
     public void EachPresenterIsRegisteredOneTime() {
         var registrations = WebApps.OnTestServer(new SignalsModule(), new ShelfModule()).Registrations();
 
