@@ -97,6 +97,31 @@ public sealed class AppFilesTests {
     }
 
     [Test]
+    public void DoctorStopsOnAGlobalJsonPinAndAnUmpireSdkWithNoVersion() {
+        Write("global.json", """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
+        Write("App.csproj", """<Project Sdk="Umpire.Sdk" />""");
+        Write("Lib/Lib.csproj", $"""<Project Sdk="Umpire.Sdk/{V}" />""");
+
+        var unpinned = VersionSlots.UnpinnedSdks(root);
+
+        Assert.That(unpinned, Has.Count.EqualTo(2));
+        Assert.That(unpinned[0], Does.Contain("global.json").And.Contain("Remove the entry"));
+        Assert.That(unpinned[1], Does.StartWith("App.csproj: an Umpire SDK with no version"));
+        Assert.That(() => InFolder(() => CommandList.Run(["doctor"])),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Change these by hand"));
+    }
+
+    [Test]
+    public void UpdateWithNoVersionWritesTheVersionOfTheTool() {
+        Write("App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.1" />""");
+
+        var exitCode = InFolder(() => CommandList.Run(["update"]));
+
+        Assert.That(exitCode, Is.Zero);
+        Assert.That(File.ReadAllText(Path.Combine(root, "App.csproj")), Does.Contain($"Umpire.Sdk.Web/{V}"));
+    }
+
+    [Test]
     public void UpdateKeepsTheLfLineEndingsOfAProjectFile() {
         Write("App.csproj",
             "<Project Sdk=\"Umpire.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Vsa.Hosts.Web\" Version=\"0.0.1\" />\n  </ItemGroup>\n</Project>\n");
@@ -148,6 +173,16 @@ public sealed class AppFilesTests {
 
         Assert.That(ModuleFolder.Find(root, "billing"), Is.EqualTo("Billing"));
         Assert.That(() => ModuleFolder.Find(root, "Shipping"), Throws.TypeOf<UmpireException>().With.Message.Contain("does not exist"));
+    }
+
+    int InFolder(Func<int> run) {
+        var current = Environment.CurrentDirectory;
+        try {
+            Environment.CurrentDirectory = root;
+            return run();
+        } finally {
+            Environment.CurrentDirectory = current;
+        }
     }
 
     string[] Slots() => [.. DoctorCommand.Slots(root).Select(slot => $"{slot.File} {slot.Package} {slot.Version}")];

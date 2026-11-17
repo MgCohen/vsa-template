@@ -157,6 +157,41 @@ public sealed class SetupTests {
     }
 
     [Test]
+    public void AProjectWithSingleQuotesGetsTheUmpireSdk() {
+        Write(Project, "<Project Sdk='Microsoft.NET.Sdk'>\n</Project>\n");
+
+        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk='Umpire.Sdk/{V}'>\n</Project>\n"));
+    }
+
+    [Test]
+    public void AProjectWithSpacesAroundTheSdkAttributeGetsTheUmpireSdk() {
+        Write(Project, "<Project Sdk = \"Microsoft.NET.Sdk.Web\" />\n");
+
+        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk = \"Umpire.Sdk.Web/{V}\" />\n"));
+    }
+
+    [Test]
+    public void AnUmpireSdkAfterAnotherSdkWithTheVersionIsDone() {
+        Write(Project, $"<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/{V}\" />\n");
+
+        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.Done>());
+    }
+
+    [Test]
+    public void AnUmpireSdkAfterAnotherSdkWithNoVersionGetsTheVersion() {
+        Write(Project, "<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk\" />\n");
+
+        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/{V}\" />\n"));
+    }
+
+    [Test]
+    public void AProjectWithNoSdkAttributeIsByHand() {
+        Write(Project, "<Project>\n</Project>\n");
+
+        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("has no Sdk attribute"));
+    }
+
+    [Test]
     public void ABlockWithASecondProjectGetsAnUmpireconfigFile() {
         Write("Tests/Shop.Tests.csproj", "<Project Sdk=\"Umpire.Sdk\" />\n");
 

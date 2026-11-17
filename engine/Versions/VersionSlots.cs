@@ -33,13 +33,25 @@ public static class VersionSlots {
             ? [.. Directory.GetFiles(bin, "*.deps.json").Order(StringComparer.Ordinal).SelectMany(PackagesOfDeps)]
             : [];
 
-    public static bool PinsUmpireSdk(string projectFile) {
-        try {
-            var document = XDocument.Load(projectFile, KeepLayout);
-            return document.Descendants().SelectMany(element => SdkPins(projectFile, element)).Any();
-        } catch (XmlException) {
-            return false;
+    public static bool UsesUmpireSdk(string projectFile) =>
+        ParsedOrNull(projectFile)?.Descendants().Any(NamesUmpireSdk) ?? false;
+
+    public static IReadOnlyList<string> UnpinnedSdks(string root) {
+        if (!Directory.Exists(root)) {
+            return [];
         }
+        var projects = ProjectFiles(root)
+            .Where(file => ParsedOrNull(Path.Combine(root, file))?.Root?.Attribute("Sdk") is XAttribute sdk
+                && sdk.Value.Split(';', StringSplitOptions.TrimEntries).Any(IsSdk))
+            .Select(file => $"{file}: an Umpire SDK with no version. Write the version after the SDK name, "
+                + $"for example Sdk=\"{Sdk}/<version>\"");
+        var globalJson = GlobalJsonAbove(root) is string file
+            && Json(file)?["msbuild-sdks"] is JsonObject sdks
+            && sdks.Any(pair => IsSdk(pair.Key))
+                ? [$"{file}: an Umpire pin in msbuild-sdks. "
+                    + "Remove the entry, and write the version in each project file"]
+                : Array.Empty<string>();
+        return [.. globalJson, .. projects];
     }
 
     public static bool IsSdk(string? name) =>
@@ -52,6 +64,29 @@ public static class VersionSlots {
             .Select(file => Path.GetRelativePath(root, file).Replace('\\', '/'))
             .Where(file => !file.Split('/').Any(part => part is "bin" or "obj"))
             .Order(StringComparer.Ordinal)];
+
+    static bool NamesUmpireSdk(XElement element) =>
+        element.Name.LocalName == "Sdk"
+            ? IsSdk((string?)element.Attribute("Name"))
+            : element.Attribute("Sdk")?.Value.Split(';').Any(part => IsSdk(part.Split('/')[0].Trim())) ?? false;
+
+    static XDocument? ParsedOrNull(string file) {
+        try {
+            return XDocument.Load(file);
+        } catch (XmlException) {
+            return null;
+        }
+    }
+
+    static string? GlobalJsonAbove(string root) {
+        for (var folder = new DirectoryInfo(Path.GetFullPath(root)); folder is not null; folder = folder.Parent) {
+            var file = Path.Combine(folder.FullName, "global.json");
+            if (File.Exists(file)) {
+                return file;
+            }
+        }
+        return null;
+    }
 
     static JsonNode? Json(string file) => JsonNode.Parse(File.ReadAllText(file), documentOptions: JsonAsDotnetReadsIt);
 

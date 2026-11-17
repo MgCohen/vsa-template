@@ -1,8 +1,10 @@
 namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Umpire.Engine.Versions;
 
-sealed class UmpireSdkTask : SetupTask {
+sealed partial class UmpireSdkTask : SetupTask {
     const string NetSdk = "Microsoft.NET.Sdk";
     const string NetWebSdk = "Microsoft.NET.Sdk.Web";
 
@@ -23,31 +25,41 @@ sealed class UmpireSdkTask : SetupTask {
                 + $"because it sets the output folder before the platform SDK. Remove the <Sdk> element, "
                 + $"and make the first line {main}.");
         }
-        var sdk = (string?)root.Attribute("Sdk") ?? "";
-        var parts = sdk.Split('/', StringSplitOptions.TrimEntries);
-        if (VersionSlots.IsSdk(parts[0])) {
-            return parts switch {
-                [_] => Change(project, WithSdk(text, sdk, $"{parts[0]}/{version}")),
-                [_, var pinned] when pinned == version => Done(),
-                [_, var pinned] => ByHand(
-                    $"{project} pins {parts[0]} {pinned}, and the tool is {version}. Run 'umpire update'."),
+        if ((string?)root.Attribute("Sdk") is not string sdk) {
+            return ByHand($"{project} has no Sdk attribute. Make its first line {main}.");
+        }
+        var parts = sdk.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var umpire = parts.Where(part => VersionSlots.IsSdk(NameOf(part))).ToList();
+        if (umpire.Count > 0) {
+            return umpire.Select(part => part.Split('/', StringSplitOptions.TrimEntries)).ToList() switch {
+                [[var name]] => Changed(project, text, string.Join(';', parts.Select(
+                    part => part == umpire[0] ? $"{name}/{version}" : part)), main),
+                [[_, var pinned]] when pinned == version => Done(),
+                [[var name, var pinned]] => ByHand(
+                    $"{project} pins {name} {pinned}, and the tool is {version}. Run 'umpire update'."),
                 _ => ByHand($"The Sdk of {project} is not valid. Make its first line {main}."),
             };
         }
-        return sdk switch {
-            NetSdk => Change(project, WithSdk(text, sdk, $"{VersionSlots.Sdk}/{version}")),
-            NetWebSdk => Change(project, WithSdk(text, sdk, $"{VersionSlots.WebSdk}/{version}")),
+        return parts switch {
+            [NetSdk] => Changed(project, text, $"{VersionSlots.Sdk}/{version}", main),
+            [NetWebSdk] => Changed(project, text, $"{VersionSlots.WebSdk}/{version}", main),
             _ => ByHand($"{project} has the main SDK \"{sdk}\". An Umpire SDK must be the main SDK. "
                 + $"Make the first line {main}."),
         };
     }
 
-    static bool IsUmpireSdkElement(System.Xml.Linq.XElement element) =>
+    static SetupResult Changed(string project, string text, string sdk, string main) {
+        var value = RootSdk().Match(text).Groups["value"];
+        return value.Success
+            ? Change(project, text[..value.Index] + sdk + text[(value.Index + value.Length)..])
+            : ByHand($"The tool cannot change the Sdk attribute of {project}. Make its first line {main}.");
+    }
+
+    static string NameOf(string part) => part.Split('/', StringSplitOptions.TrimEntries)[0];
+
+    static bool IsUmpireSdkElement(XElement element) =>
         element.Name.LocalName == "Sdk" && VersionSlots.IsSdk((string?)element.Attribute("Name"));
 
-    static string WithSdk(string text, string sdk, string umpireSdk) {
-        var attribute = $"Sdk=\"{sdk}\"";
-        var start = text.IndexOf(attribute, StringComparison.Ordinal);
-        return text[..start] + $"Sdk=\"{umpireSdk}\"" + text[(start + attribute.Length)..];
-    }
+    [GeneratedRegex("""<Project\b[^>]*?\sSdk\s*=\s*(?<quote>["'])(?<value>[^"']*)\k<quote>""")]
+    private static partial Regex RootSdk();
 }

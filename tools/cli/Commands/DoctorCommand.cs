@@ -20,6 +20,11 @@ sealed class DoctorCommand : AppCommand {
         foreach (var slot in slots) {
             Console.WriteLine($"  {slot.File.PadRight(width)}  {slot.Package,-24} {VersionCheck.Shown(slot)}");
         }
+        var unpinned = VersionSlots.UnpinnedSdks(block);
+        if (unpinned is not []) {
+            throw new UmpireException(
+                "Change these by hand: " + string.Join("; ", unpinned) + ". Then run 'umpire update'.");
+        }
         var mismatches = VersionCheck.Mismatches(slots, expected);
         if (mismatches is []) {
             Console.WriteLine($"OK: all use Umpire {expected}.");

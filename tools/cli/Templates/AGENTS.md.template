@@ -27,15 +27,15 @@ A plugin module is for base types of the app, as the framework is the base of ea
 
 ## Commands
 
-Use the `umpire` tool to add code. It writes only new files, and it does not write over a file. Use the version on the first line of `SampleApp.csproj`.
+Use the `umpire` tool to add code. It writes only new files, and it does not write over a file. Write the version on the first line of `SampleApp.csproj` in place of `<version>`, for example `Umpire.Sdk.Web/1.2.3` gives `1.2.3`.
 
 ```bash
-dotnet tool exec Umpire.Cli@{{UmpireVersion}} -y -- add module <Name>               # the module root, a status request and a page
-dotnet tool exec Umpire.Cli@{{UmpireVersion}} -y -- add request <Name> -m <Module>  # a request, its response and its handler
-dotnet tool exec Umpire.Cli@{{UmpireVersion}} -y -- add command <Name> -m <Module>  # a command, its result and its handler
-dotnet tool exec Umpire.Cli@{{UmpireVersion}} -y -- add plugin <Name>               # a plugin module with a base command
-dotnet tool exec Umpire.Cli@{{UmpireVersion}} -y -- doctor                          # the tool, the Umpire SDKs and the packages have one version
-dotnet test SampleApp.slnx                                                 # the unit tests
+dotnet tool exec Umpire.Cli@<version> -y -- add module <Name>               # the module root, a status request and a page
+dotnet tool exec Umpire.Cli@<version> -y -- add request <Name> -m <Module>  # a request, its response and its handler
+dotnet tool exec Umpire.Cli@<version> -y -- add command <Name> -m <Module>  # a command, its result and its handler
+dotnet tool exec Umpire.Cli@<version> -y -- add plugin <Name>               # a plugin module with a base command
+dotnet tool exec Umpire.Cli@<version> -y -- doctor                          # the tool, the Umpire SDKs and the packages have one version
+dotnet test SampleApp.slnx                                         # the unit tests
 ```
 
 The rule engine checks each type against the VSA definition after each build of the root project. The Umpire SDK adds the package `Umpire.Engine.Build` to the root project for this check. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebVsaHost>>`.

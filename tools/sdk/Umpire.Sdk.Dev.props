@@ -13,5 +13,13 @@
     <UmpireNUnitVersion Condition="'$(UmpireNUnitVersion)' == ''">$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireRepoPackages)', '(?s).*Include=&quot;NUnit&quot; Version=&quot;([^&quot;]+)&quot;.*', '$1'))</UmpireNUnitVersion>
     <UmpireNUnitAdapterVersion Condition="'$(UmpireNUnitAdapterVersion)' == ''">$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireRepoPackages)', '(?s).*Include=&quot;NUnit3TestAdapter&quot; Version=&quot;([^&quot;]+)&quot;.*', '$1'))</UmpireNUnitAdapterVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <_UmpireRepoNUnitFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(UmpireNUnitVersion)', '^[0-9A-Za-z.+-]+$'))</_UmpireRepoNUnitFound>
+    <_UmpireRepoNUnitAdapterFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(UmpireNUnitAdapterVersion)', '^[0-9A-Za-z.+-]+$'))</_UmpireRepoNUnitAdapterFound>
+  </PropertyGroup>
+  <Target Name="_UmpireCheckRepoNUnitVersions" BeforeTargets="CollectPackageReferences;_GenerateRestoreProjectSpec">
+    <Error Condition="'$(_UmpireRepoNUnitFound)' != 'True' or '$(_UmpireRepoNUnitAdapterFound)' != 'True'"
+           Text="Umpire.Sdk.Dev.props did not find the versions of NUnit and NUnit3TestAdapter in Directory.Packages.props of this repository. Add the two lines in the form &lt;PackageVersion Include=&quot;NUnit&quot; Version=&quot;x.y.z&quot; /&gt;, or set UmpireNUnitVersion and UmpireNUnitAdapterVersion." />
+  </Target>
   <Import Project="$(UmpireSdkDir)Sdk.props" />
 </Project>

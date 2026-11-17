@@ -6,7 +6,7 @@ static class RootProject {
     public static string AppOfCurrentFolder() =>
         AppFolder.Find(Environment.CurrentDirectory)
         ?? throw new UmpireException("This folder is not in an Umpire app. An app folder has a .umpireconfig file, "
-            + "or a project with an Umpire SDK and its version, for example <Project Sdk=\"Umpire.Sdk.Web/0.2.0\">. "
+            + "or a project with an Umpire SDK, for example <Project Sdk=\"Umpire.Sdk.Web/0.2.0\">. "
             + "Run the command in the app folder, or make an app with 'umpire new app <Name>'.");
 
     public static string Name(string app) {
