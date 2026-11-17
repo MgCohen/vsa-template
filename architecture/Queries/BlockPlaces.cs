@@ -2,8 +2,8 @@ namespace Umpire.Architecture;
 
 static class BlockPlaces {
     public static IReadOnlyList<BlockPlace> Covered(
-        Architecture definition, string blockFolder, IReadOnlyList<string> innerBlocks) {
-        var parts = definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup)).ToList();
+        ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
+        var parts = resolved.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup)).ToList();
         var inner = Relative(blockFolder, innerBlocks).ToList();
         var outermost = inner.Where(folder => !inner.Any(other => other != folder && Contains(other, folder)));
         var covered = new List<BlockPlace>();
@@ -24,9 +24,9 @@ static class BlockPlaces {
         return covered;
     }
 
-    public static IReadOnlyList<BlockPlace> Empty(Architecture definition, string blockFolder, IReadOnlyList<string> innerBlocks) {
+    public static IReadOnlyList<BlockPlace> Empty(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
         var inner = Relative(blockFolder, innerBlocks).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return [.. definition.Parts().Where(p => p.IsBlockPlace)
+        return [.. resolved.Parts.Where(p => p.IsBlockPlace)
             .SelectMany(place => Folders(blockFolder, place.Path.Split('/'))
                 .Where(folder => !inner.Contains(folder))
                 .Select(folder => new BlockPlace(place, Full(blockFolder, folder), folder)))];

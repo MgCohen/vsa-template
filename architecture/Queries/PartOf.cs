@@ -9,11 +9,10 @@ sealed class PartOf {
     readonly IReadOnlyList<string> innerBlocks;
 
     PartOf(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
-        var definition = resolved.Architecture;
         this.resolved = resolved;
-        folderParts = [.. definition.Parts().Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
+        folderParts = [.. resolved.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
         blockPlaces = [.. folderParts.Where(p => p.IsBlockPlace)];
-        aliases = definition.FolderAliases(blockFolder);
+        aliases = resolved.Architecture.FolderAliases(blockFolder);
         this.blockFolder = blockFolder;
         this.innerBlocks = [.. innerBlocks.Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)];
     }
@@ -68,8 +67,8 @@ sealed class PartOf {
         if (!paths.Any(path => !path.Contains('/'))) {
             return null;
         }
-        var part = Select(resolved.Architecture.Block, type);
-        return part == resolved.Architecture.Block ? null : part;
+        var part = Select(resolved.Block, type);
+        return part == resolved.Block ? null : part;
     }
 
     bool InInnerBlock(string file) => innerBlocks.Any(folder => file.StartsWith(folder, StringComparison.OrdinalIgnoreCase));

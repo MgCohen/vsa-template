@@ -10,7 +10,7 @@ public sealed class VsaDecisionsTests {
     [Test]
     public void The_decision_of_each_pair_of_parts_is_the_same_as_the_baseline() {
         var baseline = BaselineFile();
-        var actual = string.Join("\n", Decisions(Definition)) + "\n";
+        var actual = string.Join("\n", Decisions(new ResolvedArchitecture(Definition))) + "\n";
         var expected = File.Exists(baseline) ? File.ReadAllText(baseline).Replace("\r\n", "\n") : "";
         if (actual != expected) {
             File.WriteAllText(Path.ChangeExtension(baseline, ".actual.txt"), actual);
@@ -21,14 +21,14 @@ public sealed class VsaDecisionsTests {
             + "If the change is correct, copy the .actual.txt file over the baseline.");
     }
 
-    internal static IEnumerable<string> Decisions(Architecture definition) {
-        var parts = definition.Parts().ToList();
+    internal static IEnumerable<string> Decisions(ResolvedArchitecture resolved) {
+        var parts = resolved.Parts;
         foreach (var from in parts.Where(p => !p.IsExternal)) {
             var fromValues = from.Groups.ToDictionary(i => i.Name, _ => "a");
             foreach (var to in parts) {
                 var decisions = Scenarios(to)
                     .Where(values => !(from == to && values.All(i => fromValues[i.Key] == i.Value)))
-                    .Select(values => new { Scenario = Describe(fromValues, values), Decision = MayUse(definition, from, fromValues, to, values) })
+                    .Select(values => new { Scenario = Describe(fromValues, values), Decision = MayUse(resolved, from, fromValues, to, values) })
                     .ToList();
                 if (decisions.Count == 0) {
                     continue;
@@ -55,9 +55,9 @@ public sealed class VsaDecisionsTests {
     static string Describe(Dictionary<string, string> from, Dictionary<string, string> to) =>
         string.Join(" ", to.Select(i => from.TryGetValue(i.Key, out var value) ? $"{(value == i.Value ? "same" : "other")} {i.Key}" : $"{i.Key} {i.Value}"));
 
-    static string MayUse(Architecture definition, Part from, Dictionary<string, string> fromValues, Part to, Dictionary<string, string> toValues) {
-        var (permission, pair) = Umpire.Architecture.MayUse.For(definition, from, fromValues, to, toValues);
-        return permission == Permission.Allow ? $"Allow {pair?.Access.ToString() ?? "(default)"}" : "Deny";
+    static string MayUse(ResolvedArchitecture resolved, Part from, Dictionary<string, string> fromValues, Part to, Dictionary<string, string> toValues) {
+        var decision = resolved.DecisionFor(from, fromValues, to, toValues);
+        return decision.Permission == Permission.Allow ? $"Allow {decision.Rule?.Access.ToString() ?? "(default)"}" : "Deny";
     }
 
     static string Label(Part part) => string.Join("/", part.SelfAndAncestors().Reverse().Skip(1).Select(p => p.Name));

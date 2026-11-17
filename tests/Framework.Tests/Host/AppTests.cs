@@ -163,7 +163,7 @@ public sealed class AppTests {
     }
 
     static List<Rule> Rules(Architecture definition) =>
-        [.. definition.Resolve().Select(p => new Rule(p.From.Name, p.To.Name, p.Permission))];
+        [.. new ResolvedArchitecture(definition).UseRules.Select(p => new Rule(p.From.Name, p.To.Name, p.Permission))];
 
     static HashSet<string> RuntimeReferences(Assembly start) {
         var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

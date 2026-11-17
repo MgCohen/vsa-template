@@ -6,10 +6,7 @@ public class Part : IPartChain {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
     readonly Dictionary<Type, bool> requiredAtCallSite = [];
-    bool? conceptRequired;
-    Depth? depth;
-    Access? access;
-    Boundary? boundary;
+    Options options = new();
     string? folder;
     string? assembly;
 
@@ -32,9 +29,7 @@ public class Part : IPartChain {
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
     public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
-    public Depth? Depth => depth;
-    public Access? Access => access;
-    public Boundary? Boundary => boundary;
+    public Options Options => options;
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
 
     public string Path {
@@ -101,7 +96,7 @@ public class Part : IPartChain {
         return this;
     }
 
-    public bool? RequiredOf(Type type) => requiredAtCallSite.TryGetValue(type, out var value) ? value : conceptRequired;
+    public bool? RequiredOf(Type type) => requiredAtCallSite.TryGetValue(type, out var value) ? value : options.Required;
 
     IPartChain IPartChain.Add<T>() => Add<T>();
 
@@ -138,30 +133,15 @@ public class Part : IPartChain {
 
     internal Part Group<T>(string? folder, Boundary? boundary) where T : Concept, new() {
         var concept = new T();
-        var part = new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true) { boundary = boundary };
+        var part = new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true);
+        part.options.Boundary = boundary;
         return Attach(part);
-    }
-
-    static void RefuseArchitectureOptions(Part child, Options options) {
-        var names = new[] {
-            options.DefaultPermission is null ? null : nameof(Options.DefaultPermission),
-            options.UseSameConcept is null ? null : nameof(Options.UseSameConcept),
-        };
-        if (names.FirstOrDefault(n => n is not null) is { } name) {
-            throw new InvalidOperationException(
-                $"Define: the concept {child.Name} sets {name}. Only the architecture sets {name}. Move it to Configure of the architecture.");
-        }
     }
 
     Part Attach(Part child) {
         RefuseInBlockPlace(child);
         Block(child);
-        var options = child.Concept!.Configured();
-        RefuseArchitectureOptions(child, options);
-        child.depth = options.Depth;
-        child.access = options.Access;
-        child.boundary ??= options.Boundary;
-        child.conceptRequired = options.Required;
+        child.options = child.options.Over(Options.From(child.Concept!.Configure));
         children.Add(child);
         child.Concept!.Define(child);
         return child;

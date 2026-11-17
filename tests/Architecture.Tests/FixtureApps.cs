@@ -19,7 +19,7 @@ static class FixtureApps {
     public static string Block(string app) => Path.Combine(Root, app);
 
     public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder) {
-        var externals = definition.Parts().Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
+        var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         var dlls = Directory.GetFiles(bin, "*.dll")
             .Where(dll => SourceFiles.HasSourceUnder(dll, blockFolder) || IsExternal(Path.GetFileNameWithoutExtension(dll), externals));
         return ArchitectureCheck.Load(definition, dlls, blockFolder);
