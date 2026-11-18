@@ -1,145 +1,180 @@
-# Composition: the app, the pack and the hosts
+# Composition: the app, the pack, the kernel and the hosts
 
-An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class selects one pack. The pack joins the architecture (for the rule engine) and the host (the composition root). All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class selects one pack. The pack joins the architecture (for the rule engine), the kernel (the install of the architecture) and the host (the platform). All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Startup shape
 
 ```
-Program.cs                          return new ShopApp().Run(args);
-ShopApp : App<Vsa<WebVsaHost>>      ConfigureServices (last), OnStart, OnStop
-└─ Pack (Vsa<THost>)                Architecture (for the engine), CreateHost()
-   ├─ VsaArchitecture               rules, read by the engine at build time
-   └─ WebVsaHost : VsaHost : AppHost
-        Create(args, app) = CreateBuilder → Compose → Build
+App.Run(args)
+├─ Start(args)
+│  ├─ host = Pack.CreateHost()
+│  ├─ Services = host.Build(args, this)
+│  │  └─ host.Compose(services, configuration, Pack.Kernel, types)
+│  └─ OnStart()
+├─ wait: App.Stop(), Ctrl+C or SIGTERM, AppStop.Request(code)
+└─ Stop()
+   ├─ OnStop()
+   └─ host.Dispose()
 ```
+
+The calls go one way. The app calls `Build` and `Dispose` on the host. The host calls only `Compose`.
 
 ```csharp
 // App/Host/Program.cs
 return new ShopApp().Run(args);
 
 // App/Host/ShopApp.cs: the web host and the VSA rules
-public class ShopApp : App<Vsa<WebVsaHost>>;
+public class ShopApp : App<Vsa<WebHost>>;
 
 // The console host and an architecture of the app
-public class ToolApp : App<Vsa<ToolArchitecture, ConsoleVsaHost>>;
+public class ToolApp : App<Vsa<ToolArchitecture, ConsoleHost>>;
 
-// Unity, or an app that owns its container: no host run
-new Vsa<UnityVsaHost>().CreateHost().Compose(services, app);
+// Custom root services: one host class
+public sealed class ShopHost : WebHost {
+    protected override void Configure(IServiceCollection services, AppTypes types) =>
+        services.AddSingleton<ShopClock>();
+}
+public class ShopApp : App<Vsa<ShopHost>>;
 ```
 
-The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host. The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
+The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host (`Umpire.Hosts.Web` or `Umpire.Hosts.Console`). The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
 
 ## The kernel types
 
 | Type | Package | Job |
 |---|---|---|
-| `IApp` | Umpire.Kernels | `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
-| `App`, `App<TPack>` | Umpire.Kernels | The lifetime of the app. `App<TPack>` makes its pack with `new TPack()` |
-| `Pack`, `Pack<TArchitecture, THost>` | Umpire.Kernels | Gives `Architecture` and `CreateHost()` |
-| `AppHost` | Umpire.Kernels | The composition root: `Create`, `Compose`, `Run`, `Stop` |
+| `IApp` | Umpire.Kernels | `Start`, `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
+| `App`, `App<TPack>` | Umpire.Kernels | The lifecycle of the app. `App<TPack>` makes its pack with `new TPack()` |
+| `Pack`, `Pack<TArchitecture, TKernel, THost>` | Umpire.Kernels | Gives `Architecture`, `Kernel` and `CreateHost()` |
+| `Kernel` | Umpire.Kernels | The install point of an architecture: `Install` (the core, fixed), then `Configure` |
+| `AppHost` | Umpire.Kernels | The platform: `Build`, `Dispose`, `Compose` (fixed), `Configure` |
+| `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` ends `App.Run` |
+| `Operation` | Umpire.Kernels | A request that a host exposes: `Group`, `Name`, `Effect`, `Input`, `Invoke` |
 | `Module`, `Module<TSettings>` | Umpire.Kernels | The root class of a module. `Order` 1 |
 | `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
 
-The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa, and `VsaHost`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
+The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa. It adds `VsaKernel`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
 
 ## The app class
 
-`umpire new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`).
+`umpire new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`). The app class has the lifecycle only. It has no install point.
 
 | Member | Default | Override to |
 |---|---|---|
-| `ConfigureServices(IServiceCollection)` | No registrations | Add app registrations. They come last, so they win |
-| `OnStart()` | Nothing | Run code after the build, before the host runs. `Services` is set |
-| `OnStop()` | Nothing | Run code when the host stops (`ApplicationStopped`) |
-| `Modules()` | `null`: `AppTypes` finds the modules | Give the modules, for example in a test |
+| `OnStart()` | Nothing | Run code after the build. `Services` is set |
+| `OnStop()` | Nothing | Run code before the host disposes the services |
 
 To add app rules, derive an architecture from `VsaArchitecture`, override `Rules`, and use `Vsa<TArchitecture, THost>` (see `architecture-engine.md`).
 
-| Lifetime member | Use |
+| Lifecycle member | Use |
 |---|---|
-| `Run(string[] args)` | Makes a host from the pack, composes and runs the app. A second `Run` while the app starts or runs is an error, before it makes a host |
-| `Stop()` | Stops the app. If the app does not run, it does nothing |
-| `IsRunning` | True from `Run` until the host stops |
+| `Start(string[] args)` | Makes a host from the pack, builds the services and calls `OnStart`. A second `Start` while the app runs is an error |
+| `Run(string[] args)` | `Start`, then waits for the end signal, then `Stop`. Gives the exit code |
+| `Stop()` | Stops the app. In `Run`, it ends the wait. If the app does not run, it does nothing |
+| `IsRunning` | True from `Start` until `Stop` |
 | `Services` | The services of the running app, else `null` |
 
-Each `Run` makes a new host, so `Run` after `Stop` starts the app again in the same process. A host that waits (web, generic, console) returns from `Run` after `Stop`. A host that returns (Unity) keeps the app until `Stop`. When the host stops, the app calls `OnStop` and clears its state.
+`Run` ends on one of three signals:
+
+| Signal | Exit code |
+|---|---|
+| `App.Stop()`, from any thread | 0 |
+| Ctrl+C, or SIGTERM on `net10.0` | 0 |
+| `AppStop.Request(code)`, from a service | `code` |
+
+Each `Start` makes a new host, so `Start` after `Stop` starts the app again in the same process. A Unity shell calls `Start` and `Stop`. It does not call `Run`.
 
 ## The hosts
 
+A host is the platform. It builds the services. It does not run and it does not wait. A host class is also the one place for the custom root services of an app (`Configure`).
+
 | Host | Package | Use |
 |---|---|---|
-| `VsaHost` | Umpire.Vsa.Composition | The .NET Generic Host with the VSA layers |
-| `ConsoleVsaHost` | Umpire.Vsa.Composition | A console app with one entry command (`IConsoleCommand<TResult>`). The exit code is 1 for an error result, `ExitCode` for a result that implements `IExitCode`, else 0 |
-| `WebVsaHost` | Umpire.Vsa.Hosts.Web | ASP.NET Core: the HTTP API of the requests, and the views |
-| `UnityVsaHost` | `vsa-unity` | A Unity app. `Run` returns |
+| `AppHost` | Umpire.Kernels | A `ServiceProvider` with an empty configuration. Exposes no operation |
+| `ConsoleHost` | Umpire.Hosts.Console | Command-line configuration. Runs one request, then `AppStop.Request(exitCode)` |
+| `WebHost` | Umpire.Hosts.Web | ASP.NET Core: one HTTP route for each operation, and the views |
+| `UnityHost` | `vsa-unity` | A Unity app. Its `Configure` adds the Unity log provider and the main thread `Dispatch` |
 
 | `AppHost` member | Kind | Default |
 |---|---|---|
-| `Create(args, app)` | Fixed | `CreateBuilder`, then `Compose`, then `Build` |
-| `Compose(services, app)` | Fixed | See "What Compose does" |
-| `CreateBuilder(args)` | Open | `Host.CreateApplicationBuilder(args)` |
-| `Install(services, types)` | Open | Nothing. `VsaHost` adds each VSA layer |
-| `Build(builder)` | Open | Builds the `HostApplicationBuilder` |
-| `Run(app)`, `Stop(app)` | Open | Runs until the stop; stops the app |
+| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose`, `BuildServiceProvider` |
+| `Dispose()` | Virtual | Disposes the provider |
+| `Compose(services, configuration, kernel, types)` | Fixed | See "What Compose does" |
+| `Configure(services, types)` | Virtual | Nothing. The custom root services, last |
+| `Modules` | `init` property | `null`: `AppTypes` finds the modules. A test gives a list |
 
-Each host has a public constructor with no parameters, and `AppHost` has `[RequireDerived]`.
+- `ConsoleHost.Build` selects the request from the words before the first option, and starts it.
+- `WebHost.Build` builds the `WebApplication`, maps the operations and the views, and calls `StartAsync`. `WebHost.Dispose` calls `StopAsync`.
+- `WebHost` turns off the native console lifetime, so only `App.Run` reacts to Ctrl+C.
+- Each host has a public constructor with no parameters, and `AppHost` has `[RequireDerived]`.
 
 ## What Compose does
 
 ```
-AppHost.Compose(services, app)                 fixed order
-├─ core                                        Umpire.Kernels
-│  ├─ IConfiguration                           keep one that exists, else an empty one
-│  ├─ AddLogging                               no log provider
-│  ├─ AppTypes                                 a singleton
-│  └─ auto-register                            each [AutoRegister] type
-├─ Install(services, types)                    VsaHost:
-│  ├─ AddRequestHandlers                       Umpire.Vsa.Handlers.Requests (each kind adds its sender and calls AddPipeline)
-│  ├─ AddEventHandlers, AddCommandHandlers     Umpire.Vsa.Handlers.Events, Umpire.Vsa.Handlers.Commands
-│  ├─ AddPresenters                            Umpire.Vsa.Presenters
-│  └─ the platform                             WebVsaHost: AddViews. ConsoleVsaHost: entry command
-├─ Module.Compose(services, configuration)     each module, in Order, then by name
-│  ├─ Module                                   Configure(services)
-│  └─ Module<TSettings>, Plugin<TSettings>     bind the settings, then Configure(services, settings)
-└─ app.ConfigureServices(services)             last
+AppHost.Compose(services, configuration, kernel, types)    fixed order
+├─ kernel.Install(services, types, configuration)          Umpire.Kernels
+│  ├─ IConfiguration                                        keep one that exists, else the given one
+│  ├─ AddLogging                                            no log provider
+│  ├─ AppTypes, AppStop                                     singletons
+│  ├─ auto-register                                         each [AutoRegister] type
+│  └─ Configure(services, types)                            VsaKernel:
+│     ├─ AddRequestHandlers                                 each kind adds its sender and calls AddPipeline
+│     ├─ AddEventHandlers, AddCommandHandlers
+│     ├─ AddPresenters
+│     └─ AddRequestOperations                               one Operation for each request handler
+├─ Module.Compose(services, configuration)                 each module, in Order, then by name
+│  ├─ Module                                                Configure(services)
+│  └─ Module<TSettings>, Plugin<TSettings>                  bind the settings, then Configure(services, settings)
+└─ host.Configure(services, types)                         last
 ```
 
-The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one. If `services` registers `IConfiguration` with a factory or a type, `Compose` cannot read it before the build, so it stops with an error.
+The order is inside `Compose`, so a host cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). A pack variant kernel derives from `VsaKernel` and calls `base.Configure` first. An app that owns its container calls `Compose` with its own services, configuration, kernel and `AppTypes`.
 
 ## Definitions and transports
 
 A module defines its requests, commands, events, handlers and presenters one time. The same code works on every host. The host selects only the transports:
 
-| Kind | Part | Generic host | Web host |
-|---|---|---|---|
-| Definition | Events (`IntegrationEventHandler<T>`), in-process publisher | Yes | Yes |
-| Definition | Commands (`CommandHandler<,>`), in-process sender | Yes | Yes |
-| Definition | Requests (`RequestHandler<,>`), in-process sender (`IRequestSender`) | Yes | Yes |
-| Definition | Presenters, `LivePresenters` | Yes | Yes |
-| Transport | HTTP API: one route for each request | No | Yes |
-| Transport | Views (`ViewsRoot`): Razor components | No | Yes |
+| Kind | Part | `AppHost` | `ConsoleHost` | `WebHost` |
+|---|---|---|---|---|
+| Definition | Messages, in-process senders | Yes | Yes | Yes |
+| Definition | Presenters, `LivePresenters` | Yes | Yes | Yes |
+| Transport | Command line: one request | No | Yes | No |
+| Transport | HTTP API: one route for each request | No | No | Yes |
+| Transport | Views (`ViewsRoot`): Razor components | No | No | Yes |
 
 ```
-Presenter → IRequestSender.SendAsync(request) → RequestHandler<,>      every host
-API client → HTTP → route of the request → RequestHandler<,>            web host
+Presenter → IRequestSender.SendAsync(request) → RequestHandler<,>             every host
+API client → HTTP /api/{group}/{name} → Operation → RequestHandler<,>          web host
+Command line → {group} {name} --arg value → Operation → RequestHandler<,>      console host
 ```
 
-A request is a message (`IMessage`), as a command is. It goes to its handler in process (`IRequestSender`), or over HTTP on the web host. Each request gives its `Method` and `Route` as static members on the type itself. Only the HTTP API reads them, to map the route. On `netstandard2.1`, `IRequest` has no members (`#if NET`), so the same request compiles in Unity, and nothing reads the route there.
+A request is the message that comes from outside the app. A command is the message between features, so a host does not expose commands. The VSA kernel makes one `Operation` for each request handler. `Invoke` sends the request with `IRequestSender`. The hosts read only the `Operation` list, so they know no VSA type.
 
 ```csharp
 public interface IRequest : IMessage {
 #if NET
-    static abstract HttpMethod Method { get; }
-    static abstract string Route { get; }
+    static virtual string? Group => null;
+    static virtual string? Name => null;
+    static virtual Effect Effect => Effect.Write;
 #endif
 }
 
-public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
+public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
+    public static Effect Effect => Effect.Read;
+}
 ```
 
-- `IRequest` is an interface, because only an interface can make each request give the static members.
-- On `net10.0`, an interface with static abstract members cannot be a type argument (CS8920). Name it with `typeof(IRequest)`, for example in the definition.
-- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IRequestSender` require it, so the compiler finds a response with no marker. Umpire.Sdk also uses it to find the contract files of a slice.
+| Member | Default | Web | Console |
+|---|---|---|---|
+| `Group` | The module name, kebab case | Route segment | First word, optional |
+| `Name` | The type name with no `Request` suffix, kebab case | Route segment | Second word, optional |
+| `Effect` | `Write` | `Read` GET, `Write` POST, `Delete` DELETE | Not used |
+
+- `Effect` is in `Umpire.Messages.Contracts` (#199).
+- On `netstandard2.1`, `IRequest` has no members (`#if NET`, #200). Unity has no transport, so it reads nothing.
+- A response that implements `IExitCode` gives the exit code of the console. An error gives 1. Else the code is 0.
+- If the app has one request, the console words are optional. Else the console needs the name, or the group and the name.
+- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IRequestSender` require it. Umpire.Sdk also uses it to find the contract files of a slice.
 
 ## AppTypes finds the parts of the app
 
@@ -155,8 +190,8 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 - Each source finds nothing where it does not apply, so the scan has no Unity case.
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
-- To select other modules, the app gives its modules in `Modules()`.
-- `Compose` makes one `AppTypes` instance: `new AppTypes(app.Modules(), app.GetType().Assembly)`. If `Modules()` gives `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Run` makes a new instance, so it also finds the assemblies that loaded later.
+- To select other modules, give a list in `AppHost.Modules`.
+- `Build` makes one `AppTypes` instance: `new AppTypes(Modules, app.GetType().Assembly)`. If `Modules` is `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
 - `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |
@@ -252,12 +287,12 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
 | `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter one time, and connects each presenter with events |
-| `ViewsServiceCollectionExtensions` (Views) | `MakeGenericMethod` | `MapViews` calls `MapRazorComponents<TRoot>` for the views root |
-| `HttpApi` (Hosts.Web) | `MakeGenericMethod` | Reads the static `Route` and `Method` of each request |
-| `ConsoleVsaHost` (Composition) | `MakeGenericType` | Makes one `ConsoleEntry<TResult>` for the result type of the entry command. The entry sends the command with a typed `SendAsync` |
+| `Views` (Hosts.Web) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
+| `RequestOperations` (Composition) | `MakeGenericMethod` | Reads the static `Group`, `Name` and `Effect` of each request, and makes its `Operation` |
+| `CommandLine` (Hosts.Console) | `GetConstructors`, `Invoke` | Binds the command-line values to the constructor of the request |
 | `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `MakeGenericType` | Finds the handler of a request or a command |
 | `AppLoader` (engine) | `AssemblyLoadContext`, `Activator`, `GetProperty` | Creates the one definition type: the app class (then reads its architecture) or the architecture |
-| `RuleAnalyzer` (Kernel.Analyzers) | `GetTypes`, `Activator` | Finds the rule classes in its own assembly, in the compiler |
+| `RuleAnalyzer` (Kernels.Analyzers) | `GetTypes`, `Activator` | Finds the rule classes in its own assembly, in the compiler |
 
 The table does not list the uses that only read metadata, for example `IsAssignableFrom`, `GetInterfaces` and `GetGenericArguments`.
 
@@ -272,32 +307,37 @@ The checks read the registered types. They do not find types.
 
 ## The HTTP API
 
-The web host maps one route for each `RequestHandler<,>`, with ASP.NET Core minimal APIs (`MapMethods`).
-
-`WebVsaHost` keeps no state. `Install` calls `services.AddViews(types)`. `Build` calls `app.MapRequests()` and `app.MapViews()`. Both map methods read the `AppTypes` singleton, so an app with its own `WebApplication` can call them too. With no `ViewsRoot`, `AddViews` and `MapViews` do nothing.
+`WebHost` maps one route for each `Operation`, with ASP.NET Core minimal APIs (`MapMethods`). The route is `Route(operation)`, by default `/api/{group}/{name}`. A web host can override `Route`.
 
 | Step | Source |
 |---|---|
 | Bind the request | The JSON body (`POST`, `PUT`, `PATCH`), then the route values, then the query |
-| Run the handler | The pipeline of the request, with the services of the scope of the HTTP request |
+| Run the handler | `Operation.Invoke`, with the services of the scope of the HTTP request |
 | Success | 200 with the response as JSON |
 | Error of the handler | A problem response: 404 if the code ends with `.not_found`, else 400 |
 | Value that does not bind | A problem response, 400, title `request.not_valid` |
 
-The HTTP API sends each request with the registered `IRequestSender`. If a module replaces `IRequestSender`, for example with a remote sender, the HTTP API uses that replacement too. A remote sender that calls the same app makes a loop.
+`Invoke` sends each request with the registered `IRequestSender`. If a module replaces `IRequestSender`, for example with a remote sender, the HTTP API uses that replacement too. A remote sender that calls the same app makes a loop.
+
+If the app has one `ViewsRoot`, `WebHost` adds `AddRazorComponents().AddInteractiveServerComponents()` and maps `MapRazorComponents<TRoot>()` (#204). `Umpire.Vsa.Views` has only the presenter components (`PresenterWatcher`, `PresenterComponent<T>`).
 
 ## Projects
 
 ```
 framework/Kernel/                      Umpire.Kernels
-  App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, THost>
+  App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, TKernel, THost>, AppStop
+  Kernels/                             Kernel, the core step (AutoRegistration)
+  Operations/                          Operation, OperationInvoke, OperationResult
+  Hosts/                               AppHost
+  Hosts/Web/                           Umpire.Hosts.Web: WebHost, ViewsRoot, the HTTP API, the request binder
+  Hosts/Console/                       Umpire.Hosts.Console: ConsoleHost, the command-line binder
   Modules/                             Module, Module<TSettings>, the settings
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
-  Hosting/                             AppHost, the core step (AutoRegistration)
   Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes
   Factories/                           IFactory<T>, AddFactory
 architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/
+  Contracts/                           IMessage, Envelope, Result, Error, Effect
   Handlers/                            PipelineBuilder, Pipeline, Pipelines, InlineRunner, Validator, Before, After, AddPipeline
 packs/Vsa/
   VsaPack.cs                           Umpire.Vsa: Vsa<THost>, Vsa<TArchitecture, THost>
@@ -307,23 +347,25 @@ packs/Vsa/
     Handlers/Commands/                 AddCommandHandlers, InProcessCommandSender
     Handlers/Requests/                 RequestHandler, AddRequestHandlers
     Presenters/                        AddPresenters
-    Views/                             ViewsRoot, AddViews, MapViews
-    Composition/                       Umpire.Vsa.Composition: VsaHost, ConsoleVsaHost, ConsoleEntry, ConsoleExit, Plugin, Plugin<TSettings>
-    Hosts/                             Umpire.Vsa.Hosts.Web: WebVsaHost, HttpApi, HttpRequestBinder
+    Views/                             PresenterWatcher, PresenterComponent<T>
+    Composition/                       Umpire.Vsa.Composition: VsaKernel, RequestOperations, Plugin, Plugin<TSettings>
 ```
 
 ```mermaid
 flowchart BT
     Kernel["Umpire.Kernels"] --> Definition["Umpire.Architecture"]
-    Layers["Umpire.Messages.Handlers.*, Umpire.Vsa.Presenters"] -. private .-> Kernel
+    Kernel --> Contracts["Umpire.Messages.Contracts"]
+    Web["Umpire.Hosts.Web"] --> Kernel
+    Console["Umpire.Hosts.Console"] --> Kernel
     Composition["Umpire.Vsa.Composition"] --> Kernel
-    Composition --> Layers
+    Composition --> Layers["Umpire.Vsa layers"]
     VsaDefinition["Umpire.Vsa"] --> Composition
-    Host["Umpire.Vsa.Hosts.Web"] --> Composition
 ```
 
-- The kernel knows no layer. `VsaHost.Install` calls each layer registration by a direct call, in a fixed order.
-- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition names `Module` and `Plugin` with `OfType`, and `Vsa<THost>` uses `VsaHost`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
+- The kernel knows no layer. `VsaKernel.Configure` calls each layer registration by a direct call, in a fixed order.
+- No host knows VSA. The hosts read only `Operation`.
+- `Umpire.Kernels` does not reference `Microsoft.Extensions.Hosting`. Only `Umpire.Hosts.Web` uses a .NET Generic Host, inside `WebApplication`.
+- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition names `Module` and `Plugin` with `OfType`, and `Vsa<THost>` names `VsaKernel`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
 
 ## The container
 
@@ -334,7 +376,7 @@ Module code and the layer registrations use two shared interfaces from .NET:
 | `IServiceCollection` | Registration: a list of `ServiceDescriptor` | `Microsoft.Extensions.DependencyInjection.Abstractions` |
 | `IServiceProvider` | Resolution: `GetService(Type)` | `System` |
 
-`Run` builds the Microsoft container. With no host run, the app selects the container after `Compose`. Other containers read `IServiceCollection` too:
+`AppHost.Build` builds the Microsoft container. An app with its own container calls `Compose`, then builds its container. Other containers read `IServiceCollection` too:
 
 | Container | Reads `IServiceCollection` |
 |---|---|
@@ -371,44 +413,49 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 ## What each host gives
 
-| Service | `WebVsaHost` | `VsaHost`, `ConsoleVsaHost` | `Compose` (no host run) |
+| Service | `WebHost` | `ConsoleHost` | `AppHost` |
 |---|---|---|---|
 | `ICommandSender`, `IRequestSender`, `IIntegrationEventPublisher` | In process | In process | In process |
-| `ILogger<T>` | Yes, host providers | Yes, host providers | Yes, no providers. The app adds them |
-| `IConfiguration` | `appsettings.json`, environment, `args` | `appsettings.json`, environment, `args` | The one in the services, else an empty one |
-| Lifetime, environment, `IHostedService` start | Yes | Yes | None |
+| `ILogger<T>` | Yes, ASP.NET Core providers | Yes, no providers | Yes, no providers. A host adds them in `Configure` |
+| `IConfiguration` | `appsettings.json`, environment, `args` | `args` (`--key value`) | Empty |
+| `IHostedService` start | Yes, inside `WebApplication` | No | No |
 
 ## Unity target
 
-`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Vsa.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
 
-A Unity app calls `new MyApp().Run(args)` from the shell of the UPM package (repo `vsa-unity`). Its app class is `App<Vsa<UnityVsaHost>>`. The Unity host returns from `Run`, and the shell calls `Stop` when the app quits or the play mode stops. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
-
-An app that owns its container calls `Compose` and builds the container:
+A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM package (repo `vsa-unity`) calls `app.Start(args)` and `app.Stop()`, and it owns the frame loop. The Unity host is an `AppHost` with `Configure`:
 
 ```csharp
-public sealed class AppRoot : MonoBehaviour {
-    ServiceProvider services;
-
-    public IServiceProvider Services => services;
-
-    void Awake() {
-        var collection = new ServiceCollection().AddLogging(l => l.AddProvider(new UnityLogProvider()));
-        services = new Vsa<UnityVsaHost>().CreateHost().Compose(collection, new GameApp()).BuildServiceProvider();
+public sealed class UnityHost : AppHost {
+    protected override void Configure(IServiceCollection services, AppTypes types) {
+        services.AddLogging(logging => logging.AddProvider(new UnityLogProvider()));
+        services.AddSingleton<LivePresenters.Dispatch>(async work => {
+            await Awaitable.MainThreadAsync();
+            await work();
+        });
     }
-
-    void OnDestroy() => services.Dispose();
 }
 ```
 
-The app selects the entry point: a component, a VContainer `LifetimeScope` or a test. `UnityLogProvider` is app code that calls `Debug.Log`. The Unity check runs the EditMode tests of `vsa-consumer-unity` (Mono) against a local pack.
+An app that owns its container calls `Compose` and builds the container itself:
+
+```csharp
+var host = new UnityHost();
+host.Compose(collection, configuration, new VsaKernel(), new AppTypes(null, typeof(GameApp).Assembly));
+```
+
+A bridge to another container (fallback or side by side) reads `App.Services` after `Start`. `UnityLogProvider` is app code that calls `Debug.Log`. The Unity check runs the EditMode tests of `vsa-consumer-unity` (Mono) against a local pack.
 
 ## Non-goals
 
 - No VSA container interface. Reason: `IServiceCollection` and `IServiceProvider` are already container-neutral, and most containers read them.
-- No installer scan. Reason: the host is the composition root. It calls each layer registration directly, in one fixed order.
+- No kernel scan. Reason: the pack names its kernel, so a kernel of another architecture in the bin folder does nothing.
+- No `IHost` in Umpire.Kernels. Reason: only the web platform needs it, and Unity must not vendor the Hosting DLLs.
+- No install point on `App`. Reason: the app class is the lifecycle. The custom host `Configure` is the central root install.
+- No operation for a command. Reason: a command is the message between features. A request is the message from outside.
 - No VContainer bridge in the framework. Reason: only a Unity app with VContainer needs it, so the app keeps it. Use the router, not a copy of the registrations.
-- No Unity code in this repository (the Unity host, `UnityLogProvider`, a view base). Reason: it needs `UnityEngine`. The UPM package (repo `vsa-unity`) keeps it.
+- No Unity code in this repository (`UnityHost`, `UnityLogProvider`, a view base). Reason: it needs `UnityEngine`. The UPM package (repo `vsa-unity`) keeps it.
 - No view injector and no scene scan. Reason: a factory gives each object its services, and a Unity app often has its own container for scene objects.
 - No middleware hook on the web host. Reason: no app needs one. Add it when an app needs authentication or CORS before the routes.
 
@@ -417,4 +464,5 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 - Remote request sender: an `IRequestSender` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
 - IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
-- Hosting DLLs in Unity: Umpire.Kernels references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.
+- The pack: keep it as a join of architecture, kernel and host, or replace it at the app level (#198).
+- The copy of the base `Build` in `ConsoleHost` (#203).

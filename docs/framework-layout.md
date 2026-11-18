@@ -69,7 +69,7 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
 | Generic | `Architecture`, `Concept`, the block kind records (`Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `record Module : Component`, `Library`) | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaHost`, `class Plugin : Module`, `WebVsaHost`, `ConsoleVsaHost` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaKernel`, `class Plugin : Module` |
 
 - The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<Umpire.Kernels.Module>()`. Where two types have the same name, write the full name of the runtime class.
 - A definition `Module` is in the folder of its parent: it is the root part of a group instance.
@@ -79,15 +79,15 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 
 ```
 App.Run(args)                             Umpire.Kernels
-├─ Pack.CreateHost()                      a new AppHost for each run
-└─ AppHost.Create(args, app)
-   ├─ CreateBuilder(args)                 open: the generic host, or the web host
-   ├─ Compose(services, app)              fixed
-   │  ├─ core                             IConfiguration, logging, AppTypes, auto-register
-   │  ├─ Install(services, types)         open: VsaHost adds each VSA layer
-   │  ├─ Module.Configure                 each module, in Order, then by name
-   │  └─ app.ConfigureServices            last
-   └─ Build(builder)                      open
+├─ Start(args)
+│  ├─ Pack.CreateHost()                   a new AppHost for each start
+│  └─ AppHost.Build(args, app)            open: plain, console or web
+│     └─ Compose(services, configuration, Pack.Kernel, types)    fixed
+│        ├─ Kernel.Install                the core, then Kernel.Configure (VsaKernel: the VSA layers)
+│        ├─ Module.Configure              each module, in Order, then by name
+│        └─ AppHost.Configure             open, last
+├─ wait for the end signal
+└─ Stop()                                 OnStop, then AppHost.Dispose
 ```
 
 See `composition.md` for each step.
@@ -98,8 +98,7 @@ See `composition.md` for each step.
 
 ## Non-goals
 
-- No split of the web host. Reason: its generic part is about 20 lines. Split it when a second architecture needs a web host.
-- No portable hosts project. Reason: `VsaHost` and `ConsoleVsaHost` stay in `Umpire.Vsa.Composition`, so `Vsa<THost>` has no project cycle (W11 examines a split).
+- No VSA code in a host. Reason: the hosts read only `Operation`, so another architecture can use `WebHost` and `ConsoleHost`.
 
 ## Open questions
 

@@ -15,7 +15,7 @@ A pack variant is a pack that inherits the architecture of another pack and adds
 
 ```
 PackVariant/                             app block: check entry PackVariantApp, definition EcsArchitecture
-├─ App/Host/PackVariantApp.cs            public class PackVariantApp : App<Ecs<VsaHost>>;
+├─ App/Host/PackVariantApp.cs            public class PackVariantApp : App<Ecs<AppHost>>;
 ├─ Features/Inventory/                   a feature module
 ├─ EcsFeatures/Combat/                   an EcsFeature module
 │  ├─ CombatModule.cs, Components/, Systems/
@@ -29,7 +29,7 @@ PackVariant/                             app block: check entry PackVariantApp, 
 A pack variant is not a package, so the app keeps the default pack `Umpire.Vsa`. The pack class derives from `Vsa<...>`, so the app class selects VSA, and the VSA analyzers run. The pack class is the check entry of the pack block (`Pack : Block<PackArchitecture>`):
 
 ```csharp
-public class Ecs<THost> : Vsa<EcsArchitecture, THost> where THost : VsaHost, new();
+public class Ecs<THost> : Vsa<EcsArchitecture, THost> where THost : AppHost, new();
 ```
 
 | Check | Block folder | Definition | Checks |
@@ -187,12 +187,12 @@ protected override void Rules(RuleBook rules) {
 
 | File | Content |
 |---|---|
-| `Packs/<Name>/<Name>Pack.cs` | `public class <Name><THost> : Vsa<<Name>Architecture, THost> where THost : VsaHost, new();` |
+| `Packs/<Name>/<Name>Pack.cs` | `public class <Name><THost> : Vsa<<Name>Architecture, THost> where THost : AppHost, new();` |
 | `Packs/<Name>/Architecture/<Name>Architecture.cs` | `public class <Name>Architecture : VsaArchitecture;` |
 
 Then do these steps:
 
-1. Change the app class to `App<<Name><WebVsaHost>>`.
+1. Change the app class to `App<<Name><WebHost>>`.
 2. Add the concept records to `Architecture/`.
 3. Add the parts and the rules to `<Name>Architecture`.
 4. Put the bases of the new module kind in `Kernel/`.

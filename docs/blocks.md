@@ -15,7 +15,7 @@ Each guideline has one of two marks:
 Block                    core meaning                                   example
  ├─ App                  it runs; the app class is both entries         tests/Fixtures/Notes, engine/
  ├─ Pack                 an architecture with its kernel                packs/Vsa (Vsa<THost>)
- ├─ Kernel               owns the host                                  framework/Kernel (AppHost) -> packs/Vsa/Kernel (VsaHost)
+ ├─ Kernel               installs an architecture; owns the hosts       framework/Kernel (Kernel, AppHost) -> packs/Vsa/Kernel (VsaKernel)
  ├─ Component            installed by name by the kernel that uses it   framework/Components/Messages (AddPipeline)
  │   └─ Module           a component that the host finds in the app     a VSA feature (Module), a VSA plugin (Plugin)
  └─ Library              no install point                               engine/Versions/, tools/Files/
@@ -25,7 +25,7 @@ Block                    core meaning                                   example
 - An **owned block** gets its shape from the definition of the block around it, for example each feature module of an app (`AddGroup<Feature>()`).
 - A block is not a project. A project of types that only one block uses is a part of that block, for example `architecture/Markers/` or the fixture `Kit`.
 - A module is consumer code and ships with its app. A component is free code that a kernel installs by name. A module is found by the host. That is the difference.
-- There are two kernels. The framework kernel (`framework/Kernel/`, `AppHost`) has no layer. A pack kernel (`packs/Vsa/Kernel/`, `VsaHost`) extends it with the layers of its architecture.
+- There are two kernels. The framework kernel (`framework/Kernel/`, `Kernel`, `AppHost`) has no layer, and it owns the platform hosts (`Hosts/`). A pack kernel (`packs/Vsa/Kernel/`, `VsaKernel`) extends it with the layers of its architecture.
 
 ## Two entries
 
@@ -36,25 +36,25 @@ A block can have two entries. They answer two different questions.
 | Check entry | Which architecture checks this block? | Only an independent block |
 | Install point | What does the host install from this block? | Each kind, except a library |
 
-For an app, one class does both: `NotesApp : App<Vsa<WebVsaHost>>`.
+For an app, the app class is the check entry. Its install point is the custom host, if the app has one.
 
 ## Entries of each kind
 
 | Kind | Check entry | Install point | Mark |
 |---|---|---|---|
-| App | The app class | The app class (`ConfigureServices`) | Checked (`UMP030302`, `UMP030303`) |
-| Pack | `Pack : Block<PackArchitecture>` | `Pack.CreateHost()` | Checked (`PackArchitecture`) |
-| Framework kernel | `AssemblyMetadata` | `AppHost.Install` | Not enforced in 0.1.0 |
-| Pack kernel | None: the pack owns it | `VsaHost.Install` | Not enforced in 0.1.0 |
+| App | The app class | None on the app class. A custom host `Configure` (`MyHost : WebHost`) | Checked (`UMP030302`, `UMP030303`) |
+| Pack | `Pack : Block<PackArchitecture>` | None. The pack names its kernel and its host | Checked (`PackArchitecture`) |
+| Framework kernel | `AssemblyMetadata` | `Kernel.Install` (the core) | Not enforced in 0.1.0 |
+| Pack kernel | None: the pack owns it | `VsaKernel.Configure` | Not enforced in 0.1.0 |
 | Component | `AssemblyMetadata`, optional | An `Add<Name>` extension | Not enforced in 0.1.0 |
-| Module | None: the app owns it | A `Module` or `Plugin` class | Checked (`UMP020301`, host startup) |
+| Module | None: the app owns it | A `Module` class. Each module kind derives from it, for example `Plugin` | Checked (`UMP020301`, host startup) |
 | Library | `AssemblyMetadata`, optional | None | Not enforced in 0.1.0 |
 
 The check entry has four forms. The kinds above give the default form. Each form is possible for each independent block.
 
 | Form | Example |
 |---|---|
-| App class | `NotesApp : App<Vsa<WebVsaHost>>` |
+| App class | `NotesApp : App<Vsa<WebHost>>` |
 | Typed base | `public abstract class Pack : Block<PackArchitecture>` |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="<type>, <assembly>" />` |
 | `.umpireconfig` | `umpire.architecture = <type>, <assembly>` |
@@ -64,10 +64,10 @@ The check entry has four forms. The kinds above give the default form. Each form
 - An entry in code wins over the key `umpire.architecture` in the same folder. **Checked** (`UMP030104`, a warning).
 - A typed base counts only for a type that is not abstract. **Checked** (`FindBlocks`).
 
-A component installs with a public extension that the kernel calls by name. `VsaHost.Install` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
+A component installs with a public extension that the kernel calls by name. `VsaKernel.Configure` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
 
 ```csharp
-protected override void Install(IServiceCollection services, AppTypes types) {
+protected override void Configure(IServiceCollection services, AppTypes types) {
     services.AddRequestHandlers(types);
     services.AddCommandHandlers(types);
 }
@@ -124,7 +124,8 @@ var contracts = kernel.Add<Contracts>().InAssembly("Umpire.Messages.Contracts");
 ## Open questions
 
 - The `Component` base class, and `Module : Component` in code (composition review).
-- The check entry of the framework kernel. A typed base on `AppHost` does not work, because `VsaHost` inherits it.
+- The check entry of the framework kernel. A typed base on `Kernel` does not work, because `VsaKernel` inherits it.
+- `Block<T>` as a typed check entry for module kinds, and the block name family (#202).
 - A tool as an app with a lighter host: `tools/cli` has no app class.
 - Library: a kind of its own, or not. An optional entry utility for a library.
 - A guideline shape for the framework kernel.

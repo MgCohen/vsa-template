@@ -75,6 +75,15 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
 | A plugin module has no `Slices/` folder | `UMP020202` |
 
+## The host part
+
+The kernel part `Host` of the VSA definition maps the assemblies `Umpire.Hosts.*` (`InAssembly("Umpire.Hosts")`): `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
+
+| Rule | Check |
+|---|---|
+| `App/Host` uses `Composition` and the `Kernel` part itself | `UMP020101` |
+| `Views` uses the `Host` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
+
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
 The host finds the module roots from the types, with no build records:

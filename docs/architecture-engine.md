@@ -297,7 +297,7 @@ public sealed class CardsArchitecture : VsaArchitecture {
     }
 }
 
-public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
+public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
 ```
 
 `AppReader` (`engine/Plugins/BuiltApp/Infrastructure`) also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
@@ -396,7 +396,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 
 | Form | Example | Block folder |
 |---|---|---|
-| App class | `NotesApp : App<Vsa<WebVsaHost>>` | The project folder of its assembly |
+| App class | `NotesApp : App<Vsa<WebHost>>` | The project folder of its assembly |
 | Typed base | `public abstract class Pack : Block<PackArchitecture>` | The folder of the source file of each concrete subclass |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
 | `.umpireconfig` | `umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa` | The folder of the file |
@@ -454,7 +454,7 @@ public sealed class MyArchitecture : VsaArchitecture {
     }
 }
 
-public class MyApp : App<Vsa<MyArchitecture, WebVsaHost>>;
+public class MyApp : App<Vsa<MyArchitecture, WebHost>>;
 ```
 
 The Report step sorts the findings: the findings with no file first, then by path, line, code and message (ordinal). Each run gives the same order.
