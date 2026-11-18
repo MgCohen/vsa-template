@@ -35,7 +35,7 @@ dotnet tool exec Umpire.Cli@<version> -y -- add request <Name> -m <Module>  # a 
 dotnet tool exec Umpire.Cli@<version> -y -- add command <Name> -m <Module>  # a command, its result and its handler
 dotnet tool exec Umpire.Cli@<version> -y -- add plugin <Name>               # a plugin module with a base command
 dotnet tool exec Umpire.Cli@<version> -y -- doctor                          # the tool, the Umpire SDKs and the packages have one version
-dotnet test SampleApp.slnx                                         # the unit tests
+dotnet tool exec Umpire.Cli@<version> -y -- test                            # the tests of each *.Tests project
 ```
 
 The rule engine checks each type against the VSA definition. The Umpire SDK adds the package `Umpire.Engine.Build` to the root project for this check. Its after-build hook is off until Umpire issue #206. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebHost>>`.

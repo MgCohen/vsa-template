@@ -87,7 +87,7 @@ Hello/
 ├─ Tests/                  App.Tests.csproj: the unit tests and HelloArchitectureTests.cs
 ├─ AGENTS.md               the instructions for an agent in this app
 ├─ .umpireconfig           the Umpire file (TOML): the anchor of artifacts~/, the rule values and the module settings
-├─ global.json             the .NET SDK and the test runner
+├─ global.json             the .NET SDK version
 ├─ nuget.config            the Umpire feed, with the token in GITHUB_TOKEN
 └─ .gitignore              the build folders and the local files
 ```

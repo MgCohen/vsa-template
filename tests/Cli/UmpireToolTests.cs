@@ -59,7 +59,7 @@ public sealed class UmpireToolTests {
         Assert.That(pluginOfModule.Output, Does.Contain("The module Billing exists"));
 
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(Dotnet.Run(app, env, "test", "--solution", "Hello.slnx", "-c", "Release", "--no-build").EnsureSuccess().Output,
+        Assert.That(Tool(app, "test", "-c", "Release").EnsureSuccess().Output,
             Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d*"));
         await RunAndCall(app, ct, async (client, output) => {
             Assert.That(await client.GetStringAsync("/api/billing/get-status", ct), Does.Contain("\"status\":\"Ready\""));

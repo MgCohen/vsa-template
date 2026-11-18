@@ -10,6 +10,7 @@ static class CommandList {
         new NewAppCommand(),
         new InitCommand(),
         .. AddKind.All.Select(kind => new AddCommand(kind)),
+        new TestCommand(),
         new DoctorCommand(),
         new UpdateCommand(),
     ];

@@ -62,7 +62,7 @@ dotnet tool exec Umpire.Cli@<version> -y -- init --check true   # show the missi
 dotnet tool exec Umpire.Cli@<version> -y -- init                # add it
 ```
 
-It adds the missing parts of `global.json` (the test runner), `nuget.config` and `.gitignore`. It makes the Umpire SDK the main SDK of the root project, with the version (`Umpire.Sdk.Web` for a web project), and it writes `.umpireconfig` if the app has more than one project. It shows each step that it cannot do, for example with central package versions. Then write the app class (`UMP030502`) and run `dotnet build`. See "Setup pipeline" in [scaffolding.md](scaffolding.md).
+It adds the missing parts of `global.json` (the .NET SDK version), `nuget.config` and `.gitignore`. It makes the Umpire SDK the main SDK of the root project, with the version (`Umpire.Sdk.Web` for a web project), and it writes `.umpireconfig` if the app has more than one project. It shows each step that it cannot do, for example with central package versions. Then write the app class (`UMP030502`) and run `dotnet build`. See "Setup pipeline" in [scaffolding.md](scaffolding.md).
 
 ## The architecture check of a new app
 

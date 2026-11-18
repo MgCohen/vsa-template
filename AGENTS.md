@@ -155,6 +155,7 @@ dotnet tool exec Umpire.Cli@<version> -y -- add request <Name> -m <Module>      
 dotnet tool exec Umpire.Cli@<version> -y -- add command <Name> -m <Module>        # the command, the result and the handler
 dotnet tool exec Umpire.Cli@<version> -y -- add plugin <Name>                     # a plugin module: its root and a base command in Contracts/Commands
 dotnet tool exec Umpire.Cli@<version> -y -- add pack <Name>                       # a pack variant in Packs/<Name>: the pack class and its architecture
+dotnet tool exec Umpire.Cli@<version> -y -- test                                  # the tests of each *.Tests project of the app, with no test entry in global.json
 dotnet tool exec Umpire.Cli@<version> -y -- doctor                                # the version check of the engine (UMP030401), with the tool version
 dotnet tool exec Umpire.Cli@<version> -y -- update                                # the Umpire SDK pins and the Umpire.* packages move to the version of the tool
 ```

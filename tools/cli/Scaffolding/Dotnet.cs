@@ -18,4 +18,14 @@ static class Dotnet {
         process.WaitForExit();
         return new DotnetRun(process.ExitCode, output + error.Result);
     }
+
+    public static int Stream(string folder, IReadOnlyList<string> args) {
+        var start = new ProcessStartInfo("dotnet") { WorkingDirectory = folder };
+        foreach (var arg in args) {
+            start.ArgumentList.Add(arg);
+        }
+        using var process = Process.Start(start)!;
+        process.WaitForExit();
+        return process.ExitCode;
+    }
 }

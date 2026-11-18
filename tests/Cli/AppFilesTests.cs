@@ -27,6 +27,19 @@ public sealed class AppFilesTests {
     }
 
     [Test]
+    public void TestFindsEachProjectWhoseNameEndsWithTests() {
+        Write("App.csproj", "<Project />");
+        Write("Tests/App.Tests.csproj", "<Project />");
+        Write("Packs/Ecs/Tests/Ecs.Tests.csproj", "<Project />");
+        Write("Tests/Helpers.csproj", "<Project />");
+        Write("artifacts~/obj/Old.Tests.csproj", "<Project />");
+        Write("Tests/bin/Copy.Tests.csproj", "<Project />");
+
+        Assert.That(TestCommand.TestProjects(root),
+            Is.EqualTo(new[] { "Packs/Ecs/Tests/Ecs.Tests.csproj", "Tests/App.Tests.csproj" }));
+    }
+
+    [Test]
     public void DoctorReadsTheSdkPinsInProjectFiles() {
         Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/0.2.0" />""");
         Write("Features/B/B.csproj", """<Project><Sdk Name="Umpire.Sdk" Version="0.3.0" /></Project>""");

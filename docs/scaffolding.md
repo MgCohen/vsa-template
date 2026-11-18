@@ -15,6 +15,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
 | `add pack <Name>` | Pack class `<Name><THost>` in `Packs/<Name>/<Name>Pack.cs`, and `Architecture/<Name>Architecture.cs` (inherits `VsaArchitecture`). See `pack-variants.md` | None |
+| `test [-c <configuration>]` | None | None. It runs `dotnet run --project` for each project of the app whose name ends with `.Tests`, so it needs no `test` entry in `global.json` |
 | `doctor` | None | None |
 | `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the Umpire versions in `global.json` and the project files |
 
@@ -44,6 +45,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
 ├─ NewAppCommand                 umpire new app <Name> [--source <feed>]
 ├─ InitCommand                   umpire init [--source <feed>] [--check true]
 └─ AppCommand                    finds the app folder, then Run(root, CommandInput)
+   ├─ TestCommand                umpire test [-c <configuration>]
    ├─ DoctorCommand              umpire doctor
    ├─ UpdateCommand              umpire update [--version <version>]
    └─ AddCommand                 checks the name, writes the template files of one TemplateGroup
@@ -196,7 +198,7 @@ The task ids are stable. A later version can let a consumer skip or add a task b
 | The running tool | `Umpire.Cli` |
 | Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin (`Sdk="Umpire.Sdk.Web/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference, also `Umpire.Engine.Build`. A reference with no version uses its `PackageVersion` |
 
-The tool runs with `dotnet tool exec Umpire.Cli@<version> -y -- <command>`, so the app has no tool manifest. The commands that need an app (`add`, `doctor`, `update`) find the app folder: the nearest `.umpireconfig` at or above the current folder, else the nearest folder with a project that names an Umpire SDK. `doctor` reports an Umpire SDK with no version and an Umpire pin in `global.json` as work by hand.
+The tool runs with `dotnet tool exec Umpire.Cli@<version> -y -- <command>`, so the app has no tool manifest. The commands that need an app (`add`, `test`, `doctor`, `update`) find the app folder: the nearest `.umpireconfig` at or above the current folder, else the nearest folder with a project that names an Umpire SDK. `doctor` reports an Umpire SDK with no version and an Umpire pin in `global.json` as work by hand.
 
 ## Update
 
