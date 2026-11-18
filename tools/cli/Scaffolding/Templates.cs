@@ -19,7 +19,6 @@ static partial class Templates {
     static readonly string[] SetupTemplates = [
         ".gitignore.template",
         ".umpireconfig",
-        "global.json.template",
         "nuget.config.template",
     ];
 

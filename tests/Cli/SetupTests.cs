@@ -30,10 +30,11 @@ public sealed class SetupTests {
     public void AFolderWithOnlyAProjectGetsEachSetupFile() {
         var plan = Plan();
 
-        Assert.That(plan.Tasks.Where(task => task.Id != "umpire-config").Select(task => task.Result),
+        var changed = plan.Tasks.Where(task => task.Id is not "umpire-config" and not "global-json");
+        Assert.That(changed.Select(task => task.Result),
             Has.All.TypeOf<SetupResult.Change>());
-        Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] { "global.json", "nuget.config", ".gitignore", Project }));
-        foreach (var path in new[] { "global.json", "nuget.config", ".gitignore" }) {
+        Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] { "nuget.config", ".gitignore", Project }));
+        foreach (var path in new[] { "nuget.config", ".gitignore" }) {
             Assert.That(plan.Files.Single(file => file.Path == path).Content, Is.EqualTo(Templates.SetupFile(path, V)), path);
         }
     }
@@ -213,23 +214,11 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void ANewGlobalJsonKeepsTheSdksOfTheParentWithNoUmpirePinAndAddsNoTestRunner() {
-        File.WriteAllText(Path.Combine(parent, "global.json"),
-            "{ \"sdk\": { \"version\": \"10.0.200\" }, \"msbuild-sdks\": { \"Other.Sdk\": \"1.2.3\", \"Umpire.Sdk\": \"0.0.1\" } }");
+    public void TheSetupWritesNoGlobalJson() {
+        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" } }");
 
-        var json = Written("global.json");
-
-        Assert.That(json, Does.Contain("\"version\": \"10.0.200\""));
-        Assert.That(json, Does.Contain("\"Other.Sdk\": \"1.2.3\""));
-        Assert.That(json, Does.Not.Contain("Umpire.Sdk"));
-        Assert.That(json, Does.Not.Contain("test"));
-    }
-
-    [Test]
-    public void ANewGlobalJsonKeepsTheTestRunnerOfTheParent() {
-        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"test\": { \"runner\": \"VSTest\" } }");
-
-        Assert.That(Written("global.json"), Does.Contain("\"runner\": \"VSTest\""));
+        Assert.That(Result("global-json"), Is.TypeOf<SetupResult.Done>());
+        Assert.That(Plan().Files.Select(file => file.Path), Has.None.EqualTo("global.json"));
     }
 
     [Test]
@@ -319,7 +308,7 @@ public sealed class SetupTests {
 
         Assert.That(plan.ByHand, Is.Empty);
         Assert.That(plan.Files.Select(file => file.Path),
-            Is.SupersetOf(new[] { "global.json", "nuget.config", ".gitignore", ".umpireconfig", Project }));
+            Is.SupersetOf(new[] { "nuget.config", ".gitignore", ".umpireconfig", Project }).And.None.EqualTo("global.json"));
     }
 
     [Test]
@@ -343,10 +332,10 @@ public sealed class SetupTests {
 
     [Test]
     public void NewAppDoesNotReadTheParentFiles() {
-        File.WriteAllText(Path.Combine(parent, "global.json"), "{ \"sdk\": { \"version\": \"10.0.200\" } }");
+        File.WriteAllText(Path.Combine(parent, "nuget.config"), "<configuration />\n");
 
-        Assert.That(Plan(existingApp: false).Files.Single(file => file.Path == "global.json").Content,
-            Is.EqualTo(Templates.SetupFile("global.json", V)));
+        Assert.That(Plan(existingApp: false).Files.Single(file => file.Path == "nuget.config").Content,
+            Is.EqualTo(Templates.SetupFile("nuget.config", V)));
     }
 
     [Test]
@@ -375,7 +364,7 @@ public sealed class SetupTests {
         Write("Other.csproj", WebProject);
 
         Assert.That(() => RunInit("init"), Throws.TypeOf<UmpireException>().With.Message.Contain("2 .csproj files"));
-        Assert.That(File.Exists(Path.Combine(block, "global.json")), Is.False);
+        Assert.That(File.Exists(Path.Combine(block, "nuget.config")), Is.False);
     }
 
     [Test]
