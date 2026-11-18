@@ -1,73 +1,96 @@
 namespace Framework.Tests.Settings;
 
-using System.ComponentModel.DataAnnotations;
-using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Bare;
+using Umpire.Config;
 using Umpire.Kernels;
-using Framework.Tests.Host;
 using Umpire.Vsa.Composition;
 
 public sealed class SettingsTests {
     [Test]
-    public void EmptySettingsStopStartupWithOneMessage() {
-        var error = Assert.Throws<InvalidOperationException>(() => Configure([]));
-
-        Assert.That(error.Message, Is.EqualTo("Modules:Settings is not valid: The Name field is required."));
-    }
-
-    [Test]
-    public void WrongValuesStopStartupWithAllErrorsInOneMessage() {
-        var error = Assert.Throws<InvalidOperationException>(() => Configure(new() {
-            ["Modules:Settings:Name"] = "bad",
-            ["Modules:Settings:Size"] = "20",
-        }));
-
-        Assert.That(error.Message, Is.EqualTo("Modules:Settings is not valid: The field Size must be between 1 and 10. Name must not be bad."));
-    }
-
-    [Test]
-    public void ValidSettingsAreRegisteredAndGivenToConfigure() {
+    public void The_first_provider_that_answers_wins() {
         var module = new SampleModule();
-        var services = Configure(new() { ["Modules:Settings:Name"] = "shelf", ["Modules:Settings:Size"] = "3" }, module);
 
-        Assert.That(module.Settings?.Name, Is.EqualTo("shelf"));
+        Compose([new NoAnswer(), Toml("[Settings]\nName = \"first\""), Toml("[Settings]\nName = \"second\"")], module);
+
+        Assert.That(module.Settings?.Name, Is.EqualTo("first"));
+    }
+
+    [Test]
+    public void With_no_answer_the_module_gets_the_default_settings() {
+        var module = new SampleModule();
+
+        Compose([new NoAnswer(), new UmpireConfigSettings(UmpireConfig.Empty)], module);
+
+        Assert.That(module.Settings?.Name, Is.EqualTo("default"));
+        Assert.That(module.Settings?.Size, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Validate_stops_startup_with_all_errors_in_one_message() {
+        var error = Assert.Throws<InvalidOperationException>(
+            () => Compose([Toml("[Settings]\nName = \"bad\"\nSize = 20")], new SampleModule()));
+
+        Assert.That(error!.Message,
+            Is.EqualTo("The settings of the module Settings are not valid: Name must not be bad. Size must be 1 to 10."));
+    }
+
+    [Test]
+    public void The_settings_are_in_the_services_and_given_to_Configure() {
+        var module = new SampleModule();
+
+        var services = Compose([Toml("[Settings]\nName = \"shelf\"\nSize = 3")], module);
+
+        Assert.That(module.Settings?.Size, Is.EqualTo(3));
         Assert.That(services.BuildServiceProvider().GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
     }
 
     [Test]
-    public void APluginWithSettingsGetsItsSettingsFromCompose() {
+    public void A_plugin_gets_its_settings_from_the_table_of_its_name() {
         var plugin = new SamplePlugin();
-        Compose(new() { ["Modules:Settings:Name"] = "tools" }, plugin);
+
+        Compose([Toml("[Settings]\nName = \"tools\"")], plugin);
 
         Assert.That(plugin.Settings?.Name, Is.EqualTo("tools"));
     }
 
     [Test]
-    public void AModuleWithNoConfigureComposesWithNoError() {
-        Assert.DoesNotThrow(() => Compose([], new BareModule()));
+    public void A_settings_dictionary_binds() {
+        var module = new SampleModule();
+
+        Compose([Toml("[Settings]\nModes = { easy = 1, hard = 5 }")], module);
+
+        Assert.That(module.Settings?.Modes, Is.EqualTo(new Dictionary<string, int> { ["easy"] = 1, ["hard"] = 5 }));
     }
 
     [Test]
-    public void TheHostGivesTheSettingsFromTheArgsOfCreate() {
-        var module = new SampleModule();
+    public void A_module_with_no_settings_composes_with_no_error() =>
+        Assert.DoesNotThrow(() => Compose([], new BareModule()));
 
-        using var host = WebApps.OnTestServer(module).Build("--Modules:Settings:Name=from-args");
+    [Test]
+    public void Get_gives_the_settings_of_a_module() {
+        var settings = new ModuleSettings([Toml("[Settings]\nName = \"read\"")]);
 
-        Assert.That(module.Settings?.Name, Is.EqualTo("from-args"));
-        Assert.That(host.Services.GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
+        Assert.That(settings.Get<SampleSettings>(new SampleModule()).Name, Is.EqualTo("read"));
     }
 
-    static ServiceCollection Configure(Dictionary<string, string?> values, SampleModule? module = null) =>
-        Compose(values, module ?? new SampleModule());
+    static UmpireConfigSettings Toml(string text) => new(UmpireConfig.Parse(text));
 
-    static ServiceCollection Compose(Dictionary<string, string?> values, Module module) {
+    static ServiceCollection Compose(IReadOnlyList<ISettingsProvider> providers, Module module) {
         var services = new ServiceCollection();
-        using var host = new AppHost();
-        host.Compose(services, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), new VsaKernel(),
+        using var host = new SettingsHost(providers);
+        host.Compose(services, new ConfigurationBuilder().Build(), new VsaKernel(),
             new AppTypes([module], typeof(SettingsTests).Assembly));
         return services;
+    }
+
+    sealed class SettingsHost(IReadOnlyList<ISettingsProvider> providers) : AppHost {
+        protected override IReadOnlyList<ISettingsProvider> Settings(AppTypes types) => providers;
+    }
+
+    sealed class NoAnswer : ISettingsProvider {
+        public TSettings? Get<TSettings>(Module module) where TSettings : class, new() => null;
     }
 
     sealed class SamplePlugin : Plugin<SampleSettings> {
@@ -77,22 +100,25 @@ public sealed class SettingsTests {
     }
 
     public sealed class SampleSettings {
-        [Required]
-        public string Name { get; init; } = "";
+        public string Name { get; set; } = "default";
 
-        [Range(1, 10)]
-        public int Size { get; init; } = 1;
+        public int Size { get; set; } = 1;
+
+        public Dictionary<string, int> Modes { get; set; } = [];
     }
 
     sealed class SampleModule : Module<SampleSettings> {
         public SampleSettings? Settings { get; private set; }
 
+        public override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
+
         protected override IEnumerable<string> Validate(SampleSettings settings) {
             if (settings.Name == "bad") {
                 yield return "Name must not be bad.";
             }
+            if (settings.Size is < 1 or > 10) {
+                yield return "Size must be 1 to 10.";
+            }
         }
-
-        public override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
     }
 }

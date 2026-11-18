@@ -20,11 +20,13 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>
   <!-- The Unity tests read the netstandard2.1 DLLs of the portable projects and the analyzer DLLs, so these builds come first. -->
   <ItemGroup>
     <PortableProject Include="$(RepoRoot)architecture/Umpire.Architecture.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Kernel/Umpire.Kernels.csproj" />
+    <PortableProject Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
