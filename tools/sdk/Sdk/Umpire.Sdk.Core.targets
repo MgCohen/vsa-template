@@ -109,9 +109,9 @@
     <EditorConfigFiles Include="$(UmpireBlockConfigCopy)" />
   </ItemGroup>
 
-  <!-- The module settings come from the .umpireconfig file at run time (UmpireConfigSettings), so each project copies it to
-       its output folder. -->
-  <ItemGroup Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
+  <!-- The module settings come from the .umpireconfig file at run time (UmpireConfigSettings), so each executable project
+       (the root project and each test project) copies it to its output folder. A library does not, so no package gets it. -->
+  <ItemGroup Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)') and '$(OutputType)' != 'Library'">
     <None Remove="$(UmpireConfigFile)" />
     <None Include="$(UmpireConfigFile)" Link=".umpireconfig" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>

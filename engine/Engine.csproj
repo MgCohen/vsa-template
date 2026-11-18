@@ -43,7 +43,7 @@
   </ItemGroup>
   <Target Name="_UmpireEngineFiles" BeforeTargets="_GetPackageFiles" DependsOnTargets="Build">
     <ItemGroup>
-      <None Include="$(OutDir)**" Exclude="$(OutDir)**/*.pdb" Pack="true" PackagePath="tools/net10.0/" />
+      <None Include="$(OutDir)**" Exclude="$(OutDir)**/*.pdb;$(OutDir).umpireconfig" Pack="true" PackagePath="tools/net10.0/" />
     </ItemGroup>
   </Target>
   <Import Project="$(UmpireSdkDir)Sdk.targets" />
