@@ -1,26 +1,22 @@
 namespace Umpire.Kernels;
 
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-static class ModuleSettings {
-    internal static TSettings Bind<TSettings>(
-        IServiceCollection services, IConfigurationSection section, Func<TSettings, IEnumerable<string>> validate)
+public sealed class ModuleSettings(IReadOnlyList<ISettingsProvider> providers) {
+    public TSettings Get<TSettings>(Module module) where TSettings : class, new() =>
+        providers.Select(provider => provider.Get<TSettings>(module)).FirstOrDefault(found => found is not null)
+        ?? new TSettings();
+
+    internal TSettings Use<TSettings>(
+        IServiceCollection services, Module module, Func<TSettings, IEnumerable<string>> validate)
         where TSettings : class, new() {
-        var settings = section.Get<TSettings>() ?? new TSettings();
-        var errors = Errors(settings, validate);
+        var settings = Get<TSettings>(module);
+        var errors = validate(settings).ToList();
         if (errors.Count > 0) {
-            throw new InvalidOperationException($"{section.Path} is not valid: {string.Join(" ", errors)}");
+            throw new InvalidOperationException(
+                $"The settings of the module {module.Name} are not valid: {string.Join(" ", errors)}");
         }
         services.AddSingleton(settings);
         return settings;
-    }
-
-    static List<string> Errors<TSettings>(TSettings settings, Func<TSettings, IEnumerable<string>> validate)
-        where TSettings : class {
-        var results = new List<ValidationResult>();
-        Validator.TryValidateObject(settings, new ValidationContext(settings), results, validateAllProperties: true);
-        return [.. results.Select(r => r.ErrorMessage ?? "A value is not valid."), .. validate(settings)];
     }
 }

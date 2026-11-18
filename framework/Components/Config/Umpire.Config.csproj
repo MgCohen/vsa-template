@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The one reader of the .umpireconfig file (TOML). The engine, the kernel and the umpire tool use it. -->
+  <PropertyGroup>
+    <Description>Reads the .umpireconfig file of an Umpire block (TOML).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Tomlyn" />
+  </ItemGroup>
+</Project>

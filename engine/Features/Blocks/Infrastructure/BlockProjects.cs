@@ -2,6 +2,7 @@ namespace Blocks.Infrastructure;
 
 using Blocks.Domain;
 using BuiltApp.Infrastructure;
+using Umpire.Config;
 using Umpire.Engine.Versions;
 
 public static class BlockProjects {
@@ -12,7 +13,7 @@ public static class BlockProjects {
             .Order(StringComparer.OrdinalIgnoreCase)
             .Select(file => new BlockProject(DiskPath.Of(file), VersionSlots.HasUmpireMainSdk(file)))];
 
-    public static bool HasConfigFile(string folder) => File.Exists(Path.Combine(folder, UmpireConfigFile.FileName));
+    public static bool HasConfigFile(string folder) => File.Exists(Path.Combine(folder, UmpireConfig.FileName));
 
     static bool IsAtOrUnder(string path, string folder) =>
         string.Equals(path, folder, StringComparison.OrdinalIgnoreCase)

@@ -32,6 +32,7 @@ The reasons for the limits:
 | The main thread of presenter events | A `LivePresenters.Dispatch` registration in `UnityHost.Configure` | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
+| The module settings | `UnityHost.Settings(types)`: a provider, or a Tomlyn context for no reflection | `docs/composition.md` |
 | The source folders | `UmpireExcludedFolders`, `FolderAliases` | `docs/architecture-engine.md` |
 
 ## Vendored DLLs
@@ -68,6 +69,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Handlers, commands and events | `Umpire.Vsa.Handlers.Commands`, `Umpire.Vsa.Handlers.Events` | Yes |
 | Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |
 | Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
+| The `.umpireconfig` reader | `Umpire.Config` (Tomlyn, its `netstandard2.0` asset) | Yes. Tomlyn needs `System.Buffers`, `System.Collections.Immutable` and `System.Text.Json` 10 |
 | Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
 | Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are only on `net10.0` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
@@ -80,6 +82,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging` and `Configuration` 8.0, and not `Microsoft.Extensions.Hosting`.
+- IL2CPP makes no code at run time. Register a closed generic over a struct (for example `IHandler<MoveCommand>` for a struct `MoveCommand`) by its full type, not as an open generic.
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Non-goals

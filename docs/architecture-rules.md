@@ -25,7 +25,6 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
 | `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Vsa.Analyzers.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
 | `UMP010001` | Analyzers | Each option of each running rule has a valid value: from the config, or the default of its rule. |
-| `UMP010002` | Build (warning) | The `.umpireconfig` file has no section. The analyzers read only the keys above the first section. |
 | `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
 | `UMP010102` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
 | `UMP010103` | Analyzers | A file has at most `max` lines. Formatting, warning. |

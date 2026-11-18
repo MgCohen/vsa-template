@@ -86,7 +86,7 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 |---|---|---|
 | Engine step | One feature module of the engine with one command | `EngineStep<TResult>` |
 | Finding | One result line: code, severity, message, file and line | `Finding` |
-| Rule ID | `UMP` and six digits: area (2), group (2), case (2). Area `01` analyzers, `02` rule findings, `03` engine run | `UMP030201` |
+| Rule ID | `UMP` and six digits: area (2), group (2), case (2). Area `01` analyzers, `02` rule findings, `03` engine run | `UMP030401` |
 
 ## Tool terms
 

@@ -2,6 +2,7 @@ namespace Umpire.Kernels;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Umpire.Config;
 using Umpire.Markers;
 
 [RequireDerived]
@@ -25,8 +26,9 @@ public class AppHost : IDisposable {
 
     public void Compose(IServiceCollection services, IConfiguration configuration, Kernel kernel, AppTypes types) {
         kernel.Install(services, types, configuration);
+        var settings = new ModuleSettings(Settings(types));
         foreach (var module in types.Modules) {
-            module.Compose(services, configuration);
+            module.Compose(services, settings);
         }
         Configure(services, types);
     }
@@ -35,6 +37,9 @@ public class AppHost : IDisposable {
         Compose(services, configuration, app.Pack.Kernel, TypesOf(app));
 
     protected AppTypes TypesOf(App app) => new(Modules, app.GetType().Assembly);
+
+    protected virtual IReadOnlyList<ISettingsProvider> Settings(AppTypes types) =>
+        [new UmpireConfigSettings(UmpireConfig.In(AppContext.BaseDirectory))];
 
     protected virtual void Configure(IServiceCollection services, AppTypes types) {
     }

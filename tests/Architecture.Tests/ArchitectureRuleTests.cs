@@ -1,9 +1,9 @@
 namespace EngineCore.Tests;
 
 using Rules.Domain;
-using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
+using Umpire.Config;
 
 public sealed class ArchitectureRuleTests {
     [Test]
@@ -31,14 +31,14 @@ public sealed class ArchitectureRuleTests {
 
     [Test]
     public void A_severity_of_none_in_the_config_turns_a_rule_off() {
-        var config = Config("dotnet_diagnostic.UMP020101.severity = none");
+        var config = Config("dotnet_diagnostic.UMP020101.severity = \"none\"");
 
         Assert.That(ArchitectureRule.Of<DeniedUseRule>().Check(FixtureApps.Bad, config), Is.Empty);
     }
 
     [Test]
     public void A_severity_in_the_config_replaces_the_severity_of_the_rule() {
-        var config = Config("dotnet_diagnostic.UMP020101.severity = warning");
+        var config = Config("dotnet_diagnostic.UMP020101.severity = \"warning\"");
 
         var findings = ArchitectureRule.Of<DeniedUseRule>().Check(FixtureApps.Bad, config);
 
@@ -47,32 +47,23 @@ public sealed class ArchitectureRuleTests {
 
     [Test]
     public void A_rule_value_wins_over_a_global_value() {
-        var values = Config("umpire.key = global", "umpire.UMP020101.key = rule").For("UMP020101");
+        var values = Config("umpire.key = \"global\"", "umpire.UMP020101.key = \"rule\"").For("UMP020101");
 
         Assert.That(values.Value("key"), Is.EqualTo("rule"));
     }
 
     [Test]
-    public void The_config_file_has_only_the_keys_above_the_first_section() {
-        var values = UmpireConfigFile.Values([
-            "# help", "umpire.max = 3 ; a comment", "", "[*.cs]", "umpire.other = 4",
-        ]);
-
-        Assert.That(values, Is.EqualTo(new Dictionary<string, string> { ["umpire.max"] = "3" }));
-    }
-
-    [Test]
-    public void The_config_file_takes_a_colon_as_the_separator() =>
-        Assert.That(UmpireConfigFile.Values(["umpire.max: 3"])["umpire.max"], Is.EqualTo("3"));
+    public void A_rule_value_matches_its_key_with_no_case() =>
+        Assert.That(Config("UMPIRE.ump020101.KEY = 3").For("UMP020101").Value("key"), Is.EqualTo("3"));
 
     [Test]
     public void The_engine_reads_the_nearest_config_file_above_the_block_folder() {
         var root = Directory.CreateTempSubdirectory("umpire-config").FullName;
         try {
             var block = Directory.CreateDirectory(Path.Combine(root, "App", "Block")).FullName;
-            File.WriteAllText(Path.Combine(root, "App", UmpireConfigFile.FileName), "dotnet_diagnostic.UMP020101.severity = none");
+            File.WriteAllText(Path.Combine(root, "App", UmpireConfig.FileName), "dotnet_diagnostic.UMP020101.severity = \"none\"");
 
-            var values = new RuleConfig(UmpireConfigFile.Read(block)).For("UMP020101");
+            var values = RuleConfig.Of(UmpireConfig.Find(block).Values()).For("UMP020101");
 
             Assert.That(values.Severity(FindingSeverity.Error), Is.Null);
         } finally {
@@ -80,5 +71,6 @@ public sealed class ArchitectureRuleTests {
         }
     }
 
-    static RuleConfig Config(params string[] lines) => new(UmpireConfigFile.Values(lines));
+    static RuleConfig Config(params string[] lines) =>
+        RuleConfig.Of(UmpireConfig.Parse(string.Join("\n", lines)).Values());
 }

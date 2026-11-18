@@ -7,5 +7,5 @@ using Steps.Domain.Shared;
 namespace LoadApp.Slices.LoadApp;
 
 public sealed record LoadAppCommand(BlockTree Blocks, BinIndex Bin, string Skip) : EngineStep<AppInput>, IStepGroup {
-    public static int Group => 3;
+    public static int Group => 5;
 }

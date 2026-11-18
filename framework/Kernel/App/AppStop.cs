@@ -5,7 +5,7 @@ public sealed class AppStop {
 
     public bool IsRequested => exit.Task.IsCompleted;
 
-    internal Task<int> Requested => exit.Task;
+    public Task<int> Requested => exit.Task;
 
     public void Request(int exitCode = 0) => exit.TrySetResult(exitCode);
 }

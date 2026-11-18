@@ -1,6 +1,6 @@
 # Scaffolding: the umpire tool
 
-The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP030201`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
+The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP030401`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
 
 To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
 
@@ -134,7 +134,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform, and `new app` writes the `test` runner in `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
 
-The rule engine checks the architecture after each build of the host (see [architecture-engine.md](architecture-engine.md)). Umpire.Sdk adds the build package `Umpire.Engine.Build` to the root project (an executable that is not a test project), so no project has this line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture. `-p:UmpireCheck=false` turns the check off for one build. `-p:UmpireCheckMode=Warn` reports each error as a warning.
+An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). Umpire.Sdk adds the package `Umpire.Engine.Build` to the root project (an executable that is not a test project), so no project has this line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
 
 ## Setup tasks
 
@@ -175,7 +175,7 @@ Rules of a task:
 - The new `nuget.config` has no `<clear />`.
 - The new `global.json` keeps the `sdk`, `msbuild-sdks` (with no `Umpire.Sdk`) and `test` sections of the parent one. It adds no `test` section of its own.
 
-`new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030302`.
+`new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030502`.
 
 To add a task:
 

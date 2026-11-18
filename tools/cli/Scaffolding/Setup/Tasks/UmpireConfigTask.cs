@@ -1,10 +1,11 @@
 namespace Umpire.Cli.Scaffolding.Setup.Tasks;
 
+using Umpire.Config;
 using Umpire.Engine.Versions;
 using Umpire.Files;
 
 sealed class UmpireConfigTask : SetupTask {
-    const string FileName = AppFolder.ConfigFile;
+    const string FileName = UmpireConfig.FileName;
     static readonly string[] NotSource = ["bin", "obj"];
 
     public override string Id => "umpire-config";

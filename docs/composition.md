@@ -48,7 +48,7 @@ The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<T
 | `Pack`, `Pack<TArchitecture, TKernel, THost>` | Umpire.Kernels | Gives `Architecture`, `Kernel` and `CreateHost()` |
 | `Kernel` | Umpire.Kernels | The install point of an architecture: `Install` (the core, fixed), then `Configure` |
 | `AppHost` | Umpire.Kernels | The platform: `Build`, `Dispose`, `Compose` (fixed), `Configure` |
-| `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` ends `App.Run` |
+| `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` ends `App.Run`. `Requested` gives the exit code |
 | `Operation` | Umpire.Kernels | A request that a host exposes: `Group`, `Name`, `Effect`, `Input`, `Invoke` |
 | `Module`, `Module<TSettings>` | Umpire.Kernels | The root class of a module. `Order` 1 |
 | `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
@@ -122,9 +122,10 @@ AppHost.Compose(services, configuration, kernel, types)    fixed order
 │     ├─ AddEventHandlers, AddCommandHandlers
 │     ├─ AddPresenters
 │     └─ AddRequestOperations                               one Operation for each request handler
-├─ Module.Compose(services, configuration)                 each module, in Order, then by name
+├─ settings = new ModuleSettings(Settings(types))           the providers of the host
+├─ Module.Compose(services, settings)                      each module, in Order, then by name
 │  ├─ Module                                                Configure(services)
-│  └─ Module<TSettings>, Plugin<TSettings>                  bind the settings, then Configure(services, settings)
+│  └─ Module<TSettings>, Plugin<TSettings>                  get the settings, then Configure(services, settings)
 └─ host.Configure(services, types)                         last
 ```
 
@@ -331,7 +332,7 @@ framework/Kernel/                      Umpire.Kernels
   Hosts/                               AppHost
   Hosts/Web/                           Umpire.Hosts.Web: WebHost, ViewsRoot, the HTTP API, the request binder
   Hosts/Console/                       Umpire.Hosts.Console: ConsoleHost, the command-line binder
-  Modules/                             Module, Module<TSettings>, the settings
+  Modules/                             Module, Module<TSettings>, ModuleSettings, ISettingsProvider, UmpireConfigSettings
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
   Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes
   Factories/                           IFactory<T>, AddFactory
@@ -409,7 +410,27 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 ## Module settings
 
-`Module<TSettings>` and `Plugin<TSettings>` bind `{Section}:{Name}` to `TSettings` and check it with the data annotations and `Validate`. The section of a module is `Modules` (`Module.Section`), and the name is the last part of its namespace. `Compose` gives its configuration to the module (internal `Module.Compose`). A direct call of `Configure(services)` on a settings module does nothing. Then the module registers the instance as a singleton and calls `Configure(services, settings)`. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
+```text
+module.Compose(services, settings)                 internal, from AppHost.Compose
+└─ settings.Use<TSettings>(services, this, Validate)
+   ├─ providers[0].Get<TSettings>(module) → null
+   ├─ providers[1].Get<TSettings>(module) → TSettings   the first answer wins
+   ├─ no answer → new TSettings()
+   ├─ Validate errors → InvalidOperationException, all errors in one message
+   └─ services.AddSingleton(settings)
+→ Configure(services, settings)
+```
+
+The host gives the providers in `AppHost.Settings(types)`. The default is `[new UmpireConfigSettings(UmpireConfig.In(AppContext.BaseDirectory))]`: the table with the module name in the `.umpireconfig` file of the output folder, for example `[Notebook]`. `In` reads only that folder, not the folders above it. The name of a module is the last part of its namespace. The SDK copies `.umpireconfig` to the output folder. With no file or no base folder, `In` gives `UmpireConfig.Empty`, and the next provider answers. The table name and the property names match with no case. A value of the wrong type stops the start with the table name, the file and the Tomlyn message. A host adds a provider in front: `[new MyProvider(), .. base.Settings(types)]`. `ModuleSettings.Get<TSettings>(module)` reads the settings with no registration.
+
+```toml
+[Notebook]
+MaxNotes = 50
+Limits.MaxLines = 80
+Modes = { easy = 1, hard = 5 }
+```
+
+`UmpireConfigSettings` reads with Tomlyn reflection. For no reflection, give a Tomlyn context (the context sets its own options, so its property names match with case): `new UmpireConfigSettings(config, MyToml.Default)` with `[TomlSerializable(typeof(NotebookSettings))] partial class MyToml : TomlSerializerContext`. A direct call of `Configure(services)` on a settings module does nothing. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
 
 ## What each host gives
 

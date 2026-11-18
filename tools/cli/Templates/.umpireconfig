@@ -1,2 +1,3 @@
-# The Umpire file of this app: the anchor of its build output and the rule values of the analyzers.
-# Write each key at the top level, with no section. Example: umpire.UMP010101.max = 140
+# The Umpire file of this app (TOML): the anchor of its build output, the rule values of the analyzers and the module
+# settings. A rule value is a top-level key, for example umpire.UMP010101.max = 140. A module has a table of its name,
+# for example [Notebook] and MaxNotes = 50. A string value needs quotes.

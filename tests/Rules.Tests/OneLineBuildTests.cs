@@ -5,20 +5,36 @@ namespace Rules.Tests;
 [NonParallelizable]
 public sealed class OneLineBuildTests {
     Workspace workspace = null!;
+    DotnetResult first = null!;
+    DotnetResult engine = null!;
     DotnetResult build = null!;
+
+    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.engine.build", LocalFeed.Version, "tools", "net10.0",
+        "umpire-engine.dll");
+
+    string Copy => Path.Combine(workspace.Src, "artifacts~", "Umpire.Block.globalconfig");
 
     [OneTimeSetUp]
     public void Build() {
         workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "OneLine"));
         File.Delete(Path.Combine(workspace.Root, "Directory.Build.props"));
-        build = workspace.Dotnet("build", "Tests/OneLine.Tests.csproj", "-nodeReuse:false");
+        first = workspace.Dotnet("build", "Tests/OneLine.Tests.csproj", "-nodeReuse:false");
+        engine = RunEngine();
+        build = workspace.Dotnet("build", "Tests/OneLine.Tests.csproj", "--no-incremental", "-nodeReuse:false");
     }
 
     [OneTimeTearDown]
     public void Delete() => workspace.Dispose();
 
     [Test]
-    public void The_one_line_projects_build() => Assert.That(build.Succeeded, Is.True, build.Output);
+    public void The_one_line_projects_build() {
+        Assert.That(first.Succeeded, Is.True, first.Output);
+        Assert.That(build.Succeeded, Is.True, build.Output);
+    }
+
+    [Test]
+    public void The_engine_run_writes_the_rule_values_builds_the_app_and_checks_it() =>
+        Assert.That(engine.Succeeded, Is.True, engine.Output);
 
     [TestCase("bin/OneLine")]
     [TestCase("bin/OneLine.Tests")]
@@ -41,9 +57,22 @@ public sealed class OneLineBuildTests {
             Is.Not.Empty, build.Output);
 
     [Test]
-    public void The_root_project_runs_the_rule_engine() =>
-        Assert.That(Directory.EnumerateFiles(Path.Combine(workspace.Src, "artifacts~", "obj", "OneLine"),
-            "umpire-check.*", SearchOption.AllDirectories), Is.Not.Empty, build.Output);
+    public void The_root_project_gets_the_rule_engine_package() =>
+        Assert.That(File.Exists(Engine), Is.True, first.Output);
+
+    [Test]
+    public void A_build_does_not_run_the_rule_engine() =>
+        Assert.That(Lines("UMP03"), Is.Empty, build.Output);
+
+    [Test]
+    public void A_build_with_no_engine_run_uses_the_values_of_the_analyzer_package() =>
+        Assert.That(first.Output.Split('\n').Where(line => line.Contains("warning UMP010101", StringComparison.Ordinal)
+            && line.Contains("OneLineApp.cs", StringComparison.Ordinal)), Is.Empty, first.Output);
+
+    [Test]
+    public void The_umpireconfig_file_is_in_the_output_folder() =>
+        Assert.That(File.Exists(Path.Combine(workspace.Src, "artifacts~", "bin", "OneLine", "debug", ".umpireconfig")),
+            Is.True, first.Output);
 
     [Test]
     public void The_test_project_runs_its_tests() {
@@ -52,19 +81,23 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_compiler_gets_the_top_level_keys_of_the_umpireconfig_file() {
-        var obj = Path.Combine(workspace.Src, "artifacts~", "obj", "OneLine");
-        var copy = Directory.EnumerateFiles(obj, "Umpire.Block.globalconfig", SearchOption.AllDirectories).Single();
-        var source = File.ReadAllLines(Path.Combine(workspace.Src, ".umpireconfig"))
-            .TakeWhile(line => !line.TrimStart().StartsWith('['));
-        var header = new[] { "is_global = true", "global_level = 101" };
-        Assert.That(NotBlank(File.ReadAllLines(copy)), Is.EqualTo(NotBlank(header.Concat(source))));
-    }
+    public void The_engine_writes_the_values_of_the_umpireconfig_file_for_the_compiler() =>
+        Assert.That(File.ReadAllLines(Copy),
+            Is.EqualTo(new[] { "is_global = true", "global_level = 101", "umpire.UMP010101.max = 60" }), engine.Output);
 
     [Test]
-    public void A_section_in_the_umpireconfig_file_gives_a_warning_and_no_value() {
-        Assert.That(Lines("warning UMP010002"), Is.Not.Empty, build.Output);
-        Assert.That(Lines("warning UMP010102"), Is.Empty, build.Output);
+    public void A_file_pattern_section_stops_the_engine_run_with_the_line_of_the_TOML_error() {
+        var file = Path.Combine(workspace.Src, ".umpireconfig");
+        var text = File.ReadAllText(file);
+        File.WriteAllText(file, text + "\n[*.cs]\numpire.UMP010102.max = 1\n");
+        try {
+            var run = RunEngine();
+
+            Assert.That(run.Succeeded, Is.False, run.Output);
+            Assert.That(run.Output, Does.Contain(".umpireconfig(4,").And.Contain("UMP030001"), run.Output);
+        } finally {
+            File.WriteAllText(file, text);
+        }
     }
 
     [Test]
@@ -92,14 +125,15 @@ public sealed class OneLineBuildTests {
         Assert.That(references.Output, Does.Not.Contain("Umpire.Engine.Build"), references.Output);
     }
 
-    static IEnumerable<string> NotBlank(IEnumerable<string> lines) => lines.Where(line => line.Trim().Length > 0);
-
     [TestCase("OneLine.csproj", "Umpire.Vsa")]
     [TestCase("Tests/OneLine.Tests.csproj", "Umpire.Vsa.Testing.Unit")]
     public void The_default_pack_can_be_left_out(string project, string package) {
         var references = Evaluate(project, "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
         Assert.That(references.Output, Does.Not.Contain($"\"{package}\""), references.Output);
     }
+
+    DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "--project", workspace.Src,
+        "--bin", Path.Combine(workspace.Src, "artifacts~", "bin", "OneLine", "debug"));
 
     DotnetResult Evaluate(params string[] args) =>
         workspace.Dotnet(["msbuild", .. args, "-nodeReuse:false"]).EnsureSuccess();

@@ -1,6 +1,10 @@
 namespace Engine.Slices.RunEngine;
 
+using Blocks.Domain.Shared;
 using Blocks.Slices.FindBlocks;
+using Build.Domain.Shared;
+using Build.Slices.BuildApp;
+using Config.Slices.WriteConfig;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
 using Report.Slices.WriteReport;
@@ -22,6 +26,10 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     }
 
     async Task<IReadOnlyList<Finding>> Run(RunEngineRequest run, CancellationToken ct) {
+        if (!await Prepare(run, ct)) {
+            log.Skip<FindBlocksCommand, FindBlocksResult>();
+            return [.. log.Findings];
+        }
         var blocks = await commands.SendAsync(new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);
         if (!blocks.IsSuccess) {
             return [.. log.Findings];
@@ -38,5 +46,19 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
             log.Skip<CheckRulesCommand, CheckRulesResult>();
         }
         return [.. log.Findings];
+    }
+
+    async Task<bool> Prepare(RunEngineRequest run, CancellationToken ct) {
+        var folder = run.Block.Length > 0 ? run.Block : run.Project;
+        var config = await commands.SendAsync(new WriteConfigCommand(folder), ct);
+        if (!config.IsSuccess) {
+            log.Skip<BuildAppCommand, BuildAppResult>();
+            return false;
+        }
+        if (!run.Build) {
+            return true;
+        }
+        var build = await commands.SendAsync(new BuildAppCommand(run.Project, run.Bin), ct);
+        return build.IsSuccess;
     }
 }

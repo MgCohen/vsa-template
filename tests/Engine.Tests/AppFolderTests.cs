@@ -1,4 +1,5 @@
 using Tests.Shared;
+using Umpire.Config;
 using Umpire.Engine.Versions;
 
 namespace Engine.Tests;
@@ -14,7 +15,7 @@ public sealed class AppFolderTests {
 
     [Test]
     public void The_tool_finds_the_nearest_folder_with_an_umpireconfig_file() {
-        File.WriteAllText(Path.Combine(root, AppFolder.ConfigFile), "");
+        File.WriteAllText(Path.Combine(root, UmpireConfig.FileName), "");
         Write("Tests/App.Tests.csproj", """<Project Sdk="Umpire.Sdk/0.0.1" />""");
 
         Assert.That(AppFolder.Find(Path.Combine(root, "Tests")), Is.EqualTo(Path.GetFullPath(root)));

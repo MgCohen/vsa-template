@@ -1,6 +1,2 @@
 # The rule values of this block. A value here wins over the value of the analyzer package.
 umpire.UMP010101.max = 60
-
-# A section has no effect: the build gives UMP010002.
-[*.cs]
-umpire.UMP010102.max = 1

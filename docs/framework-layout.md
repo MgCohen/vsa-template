@@ -11,13 +11,15 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Architecture | `architecture/` | The definition API and the rule answers | Each pack and the engine |
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
-| Engine | `engine/` | The rule engine app and the build hook | The build hook package |
+| Engine | `engine/` | The rule engine app | The package `Umpire.Engine.Build` |
 | Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`) and Umpire.Sdk | The developer |
 
 ```mermaid
 flowchart BT
     Kernel["framework/Kernel"] --> Architecture["architecture/"]
     Messages["framework/Components/Messages"] -. private .-> Kernel
+    Kernel --> Config["framework/Components/Config"]
+    Versions --> Config
     Vsa["packs/Vsa"] --> Kernel
     Vsa --> Messages
     Vsa --> Architecture
@@ -73,7 +75,7 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 
 - The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<Umpire.Kernels.Module>()`. Where two types have the same name, write the full name of the runtime class.
 - A definition `Module` is in the folder of its parent: it is the root part of a group instance.
-- A runtime `Module` has `Name`, `Order`, `Section` and `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
+- A runtime `Module` has `Name`, `Order` and `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
 
 ## How the kernel starts an app
 

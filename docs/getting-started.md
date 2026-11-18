@@ -11,7 +11,7 @@ flowchart LR
     E --> F[Fix it]
 ```
 
-Umpire checks the architecture of an app after each build. The rule engine reads the build output and compares each use of a type with the definition. The definition of a new app is the VSA pack: Vertical Slice Architecture, with one folder for each module and for each slice.
+Umpire checks the architecture of an app in an engine run. The rule engine reads the build output and compares each use of a type with the definition. The definition of a new app is the VSA pack: Vertical Slice Architecture, with one folder for each module and for each slice.
 
 ## Before you start
 
@@ -53,7 +53,7 @@ Next:
 
 Each later command of the tool runs the same way, with the version on the first line of `Hello.csproj`.
 
-To add Umpire to an existing app, run `init` in the folder of its root project: `dotnet tool exec Umpire.Cli@<version> -y -- init`. It adds only the missing setup, and a second run changes nothing. It does not write the app class. Without an app class, the rule engine gives `UMP030302`. For a console app `Shop`, write these two files:
+To add Umpire to an existing app, run `init` in the folder of its root project: `dotnet tool exec Umpire.Cli@<version> -y -- init`. It adds only the missing setup, and a second run changes nothing. It does not write the app class. Without an app class, the rule engine gives `UMP030502`. For a console app `Shop`, write these two files:
 
 ```csharp
 // App/Host/ShopApp.cs
@@ -86,7 +86,7 @@ Hello/
 ├─ Features/  Plugins/     the feature modules and the plugin modules (empty)
 ├─ Tests/                  App.Tests.csproj: the unit tests and HelloArchitectureTests.cs
 ├─ AGENTS.md               the instructions for an agent in this app
-├─ .umpireconfig           the Umpire file: the anchor of artifacts~/ and the rule values
+├─ .umpireconfig           the Umpire file (TOML): the anchor of artifacts~/, the rule values and the module settings
 ├─ global.json             the .NET SDK and the test runner
 ├─ nuget.config            the Umpire feed, with the token in GITHUB_TOKEN
 └─ .gitignore              the build folders and the local files
@@ -100,9 +100,9 @@ The root project gets its packages from two places:
 | `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
 | `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, and their rule values |
 | `Umpire.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the presenter views |
-| `Umpire.Engine.Build` | Umpire.Sdk, for the root project | The architecture check after each build |
+| `Umpire.Engine.Build` | Umpire.Sdk, for the root project | The rule engine (the after-build hook is off until issue #206) |
 
-Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each build (`UMP030201`), and the `doctor` command of the tool does the same check.
+Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
 
 ## Build the app
 
@@ -216,18 +216,11 @@ To share the type, move `GetStatusResponse.cs` to `Features/Billing/Slices/Share
 
 ## Next
 
-Build switches of the check:
+The analyzers check one file in the compile, for example the line length (`UMP010101`). Each rule has the defaults of its values on its class. To change a value, write it at the top of the `.umpireconfig` file in the root of the app (TOML, a string needs quotes):
 
-| Switch | Effect |
-|---|---|
-| `-p:UmpireCheck=false` | No check in this build |
-| `-p:UmpireCheckMode=Warn` | Each error of the check is a warning |
-
-The analyzers check one file in the compile, for example the line length (`UMP010101`). Each rule has the defaults of its values on its class. To change a value, write it in the `.umpireconfig` file in the root of the app, with no section:
-
-```ini
+```toml
 umpire.UMP010101.max = 140
-dotnet_diagnostic.UMP010104.severity = none
+dotnet_diagnostic.UMP010104.severity = "none"
 ```
 
 | To learn | Read |
