@@ -1,6 +1,6 @@
 # Scaffolding: the umpire tool
 
-The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP030201`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
+The `umpire` tool (package `Umpire.Cli`) writes new apps, modules, plugin modules, requests and commands from templates. The templates are one compilable app in this repository, so `Umpire.slnx` builds them as normal code (`dotnet run solution.cs` makes `Umpire.slnx`). The tool, Umpire.Sdk and the Umpire.* packages have one version. The rule engine checks it on each build (`UMP030401`), `umpire doctor` runs the same check, and `umpire update` moves all to the latest version.
 
 To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
 
@@ -175,7 +175,7 @@ Rules of a task:
 - The new `nuget.config` has no `<clear />`.
 - The new `global.json` keeps the `sdk`, `msbuild-sdks` (with no `Umpire.Sdk`) and `test` sections of the parent one. It adds no `test` section of its own.
 
-`new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030302`.
+`new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030502`.
 
 To add a task:
 

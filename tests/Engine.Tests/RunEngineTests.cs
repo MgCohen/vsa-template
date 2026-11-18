@@ -1,4 +1,7 @@
 using Blocks;
+using Build;
+using Config;
+using Config.Infrastructure;
 using LoadApp;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
@@ -33,7 +36,7 @@ public sealed class RunEngineTests {
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Build", "Config", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -63,7 +66,7 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030201_and_skips_the_load() {
+    public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030401_and_skips_the_load() {
         var root = TempFolder.Create();
         try {
             File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Umpire.Sdk/0.0.1" />""");
@@ -71,7 +74,7 @@ public sealed class RunEngineTests {
             var result = await Run(block: root);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030201").And.Contains("Old.csproj: Umpire.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030401").And.Contains("Old.csproj: Umpire.Sdk 0.0.1"));
             Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier step failed."));
         } finally {
             TempFolder.Delete(root);
@@ -82,25 +85,25 @@ public sealed class RunEngineTests {
     public async Task With_no_block_the_engine_uses_the_nearest_check_entry_above_the_project() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
+            File.WriteAllText(Path.Combine(root, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
             var project = Directory.CreateDirectory(Path.Combine(root, "App", "Host")).FullName;
 
             var result = await Run(project: project);
 
-            Assert.That(result.Lines, Has.One.Contains("error UMP030301").And.Contains($"under the block folder {Path.GetFullPath(root)}"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030501").And.Contains($"under the block folder {Path.GetFullPath(root)}"));
         } finally {
             TempFolder.Delete(root);
         }
     }
 
     [Test]
-    public async Task With_no_check_entry_and_no_block_the_run_gives_UMP030103_and_runs_no_other_step() {
+    public async Task With_no_check_entry_and_no_block_the_run_gives_UMP030303_and_runs_no_other_step() {
         var project = TempFolder.Create();
         try {
             var result = await Run(project: project, bin: project);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030103: No check entry is in"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030303: No check entry is in"));
             Assert.That(result.Lines, Has.None.Contains("UMP030002"));
         } finally {
             TempFolder.Delete(project);
@@ -121,7 +124,7 @@ public sealed class RunEngineTests {
         var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
         Directory.CreateDirectory(store);
         try {
-            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
+            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
 
             var result = await Run(project: Notes);
 
@@ -139,7 +142,7 @@ public sealed class RunEngineTests {
         var original = File.ReadAllText(config);
         Directory.CreateDirectory(store);
         try {
-            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa");
+            File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
             File.WriteAllText(config, original + "dotnet_diagnostic.UMP020401.severity = none\n");
 
             var result = await Run(project: Notes);
@@ -170,36 +173,36 @@ public sealed class RunEngineTests {
         var result = await Run(block: Path.Combine(Notes, "Features", "Missing"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030301"));
+        Assert.That(result.Lines, Has.One.Contains("error UMP030501"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_with_two_app_classes_gives_UMP030303_with_both_names() {
+    public async Task An_app_with_two_app_classes_gives_UMP030503_with_both_names() {
         var result = await Run(block: Repo.Path("tests", "Fixtures", "TwoApps"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030303: The app has more than one app class: "
+        Assert.That(result.Lines, Has.One.Contains("error UMP030503: The app has more than one app class: "
             + "TwoApps.App.Host.FirstApp, TwoApps.App.Host.SecondApp."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_class_with_no_empty_constructor_gives_UMP030304_with_its_name() {
+    public async Task An_app_class_with_no_empty_constructor_gives_UMP030504_with_its_name() {
         var result = await Run(block: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030304: The app class NoConstructorApp.App.Host.NamedApp "
+        Assert.That(result.Lines, Has.One.Contains("error UMP030504: The app class NoConstructorApp.App.Host.NamedApp "
             + "has no public constructor with no parameters"));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
     [Test]
-    public async Task An_app_with_no_app_class_gives_UMP030302() {
+    public async Task An_app_with_no_app_class_gives_UMP030502() {
         var result = await Run(block: Repo.Path("tests", "Shared"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030302: The app has no app class."));
+        Assert.That(result.Lines, Has.One.Contains("error UMP030502: The app has no app class."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 
@@ -220,6 +223,60 @@ public sealed class RunEngineTests {
     }
 
     [Test]
+    public async Task The_config_step_writes_the_rule_values_for_the_analyzers() {
+        var root = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(root, ".umpireconfig"),
+                "umpire.UMP010101.max = 60\ndotnet_diagnostic.UMP010106.severity = \"none\"\n[Notebook]\nMaxNotes = 5\n");
+
+            await Run(block: root);
+
+            var copy = Path.Combine(root, BlockConfigCopy.Folder, BlockConfigCopy.FileName);
+            Assert.That(File.ReadAllLines(copy), Is.EqualTo(new[] {
+                "is_global = true", "global_level = 101", "umpire.UMP010101.max = 60",
+                "dotnet_diagnostic.UMP010106.severity = none", "Notebook.MaxNotes = 5",
+            }));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [Test]
+    public async Task A_umpireconfig_file_that_is_not_TOML_stops_the_run_with_the_line_of_the_error() {
+        var root = TempFolder.Create();
+        try {
+            var file = Path.Combine(root, ".umpireconfig");
+            File.WriteAllText(file, "umpire.UMP010101.max = 60\n[*.cs]\n");
+
+            var result = await Run(block: root);
+
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.Lines, Has.One.StartsWith("umpire-engine: error UMP030001: WriteConfig could not run: ")
+                .And.Contains($"{Path.GetFullPath(file)}(2,"));
+            Assert.That(result.Lines, Has.One.Contains("UMP030002: BuildApp skipped"));
+            Assert.That(result.Lines, Has.One.Contains("UMP030002: FindBlocks skipped"));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [Test]
+    public async Task A_build_that_fails_gives_UMP030201_and_stops_the_run() {
+        var root = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(root, "Broken.csproj"), "<Project>");
+
+            var result = await Run(block: root, project: root, build: true);
+
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030201: The build of"));
+            Assert.That(result.Lines, Has.One.Contains("UMP030002: FindBlocks skipped"));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [Test]
     public async Task The_report_line_has_the_line_and_the_column_of_the_finding() {
         using var host = new EngineTestApp(new StepsPlugin(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
@@ -232,14 +289,14 @@ public sealed class RunEngineTests {
     }
 
     static async Task<RunEngineResponse> Run(
-        string? block = null, string? bin = null, bool failFast = false, string? project = null) {
+        string? block = null, string? bin = null, bool failFast = false, string? project = null, bool build = false) {
         using var host = new EngineTestApp(
-            new StepsPlugin(), new EngineModule(), new BlocksModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
-            new ReportModule()).Build();
+            new StepsPlugin(), new EngineModule(), new ConfigModule(), new BuildModule(), new BlocksModule(), new VersionsModule(),
+            new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;
-        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast);
+        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast, Build: build);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }

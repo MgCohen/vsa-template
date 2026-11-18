@@ -53,7 +53,7 @@
 
   <!-- Package mode (consumers): package references with the version of this SDK.
        With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
-       A Umpire.* package that the project adds itself, for example a web host of the pack, gives its own version. The rule engine checks it (UMP030201). -->
+       A Umpire.* package that the project adds itself, for example a web host of the pack, gives its own version. The rule engine checks it (UMP030401). -->
   <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
     <_UmpireV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireVersion)</_UmpireV>
     <_UmpireVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireVersion)</_UmpireVO>
@@ -63,8 +63,9 @@
     <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The root project of the app gets the rule engine: an executable that is not a test project. UmpireEngine=false turns it off.
-       A project that references Umpire.Engine.Build itself keeps its own reference. -->
+  <!-- The root project of the app gets the rule engine package: an executable that is not a test project. UmpireEngine=false
+       turns it off. A project that references Umpire.Engine.Build itself keeps its own reference. The package has the engine
+       only: the after-build hook is off until issue #206. -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests'))">true</UmpireEngine>
@@ -96,31 +97,24 @@
     <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
   </ItemGroup>
 
-  <!-- The rule values of the block: the top-level keys of the .umpireconfig file in the block root (UmpireConfigFile,
-       Umpire.Sdk.Output.props). The analyzers read a rule value only from a global config, so a copy in obj/ starts with
-       is_global = true. A global config has no section for a file pattern, so the copy stops at the first section, and the
-       build gives UMP010002. global_level = 101 is above the analyzer packages (0) and a .globalconfig file of the app (100),
-       so a value in .umpireconfig wins. -->
-  <Target Name="_UmpireBlockConfig" BeforeTargets="CoreCompile" DependsOnTargets="_UmpireBlockConfigFile"
-          Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
-    <ItemGroup>
-      <EditorConfigFiles Include="$(_UmpireBlockConfigCopy)" />
-    </ItemGroup>
-  </Target>
-  <Target Name="_UmpireBlockConfigFile" Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
-    <PropertyGroup>
-      <_UmpireBlockConfigCopy>$(IntermediateOutputPath)Umpire.Block.globalconfig</_UmpireBlockConfigCopy>
-    </PropertyGroup>
-    <PropertyGroup>
-      <_UmpireBlockConfigText>$([System.IO.File]::ReadAllText('$(UmpireConfigFile)'))</_UmpireBlockConfigText>
-      <_UmpireBlockConfigHasSection>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireBlockConfigText)', '(?m)^[ \t]*\['))</_UmpireBlockConfigHasSection>
-      <_UmpireBlockConfigTop>$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireBlockConfigText)', '(?ms)^[ \t]*\[.*', ''))</_UmpireBlockConfigTop>
-    </PropertyGroup>
-    <Warning Condition="'$(_UmpireBlockConfigHasSection)' == 'True'" Code="UMP010002" File="$(UmpireConfigFile)"
-             Text="The .umpireconfig file has a section, for example [*.cs]. The analyzers read only the keys above the first section, so the keys in a section have no effect. Move each key above the first section, and remove the section." />
-    <WriteLinesToFile File="$(_UmpireBlockConfigCopy)" Lines="is_global = true;global_level = 101;$([MSBuild]::Escape('$(_UmpireBlockConfigTop)'))"
-                      Overwrite="true" WriteOnlyWhenDifferent="true" />
-  </Target>
+  <!-- The rule values of the block. The rule engine (its Config step) reads the .umpireconfig file in the block root
+       (UmpireConfigFile, Umpire.Sdk.Output.props) and writes each value to artifacts~/Umpire.Block.globalconfig in the block
+       root, with is_global = true. The SDK gives that copy to the compiler if it exists. Until issue #206, a plain build uses
+       the copy of the last engine run, or the values of the analyzer packages. global_level = 101 is above the analyzer
+       packages (0) and a .globalconfig file of the app (100), so a value in .umpireconfig wins. -->
+  <PropertyGroup Condition="'$(UmpireConfigFile)' != ''">
+    <UmpireBlockConfigCopy Condition="'$(UmpireBlockConfigCopy)' == ''">$([MSBuild]::NormalizePath('$(_UmpireBlockRoot)', 'artifacts~', 'Umpire.Block.globalconfig'))</UmpireBlockConfigCopy>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireBlockConfigCopy)' != '' and Exists('$(UmpireBlockConfigCopy)')">
+    <EditorConfigFiles Include="$(UmpireBlockConfigCopy)" />
+  </ItemGroup>
+
+  <!-- The module settings come from the .umpireconfig file at run time (UmpireConfigSettings), so each project copies it to
+       its output folder. -->
+  <ItemGroup Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
+    <None Remove="$(UmpireConfigFile)" />
+    <None Include="$(UmpireConfigFile)" Link=".umpireconfig" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
 
   <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">

@@ -139,79 +139,79 @@ public sealed class BlocksTests {
     }
 
     [Test]
-    public void No_block_gives_UMP030103() {
+    public void No_block_gives_UMP030303() {
         var result = BlockSearch.Find("C:/z", null, [], NoBin);
 
-        Assert.That(result.Error!.Code, Is.EqualTo("UMP030103"));
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030303"));
     }
 
     [Test]
-    public void Two_entries_in_the_block_give_UMP030101_and_stop_the_run() {
+    public void Two_entries_in_the_block_give_UMP030301_and_stop_the_run() {
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), Entry("C:/a", EntryForm.Metadata)], NoBin);
 
-        Assert.That(result.Error!.Code, Is.EqualTo("UMP030101"));
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030301"));
         Assert.That(result.Error.Message, Does.Contain("more than one check entry"));
     }
 
     [Test]
-    public void Two_entries_in_an_inner_block_give_UMP030101_and_the_run_continues() {
+    public void Two_entries_in_an_inner_block_give_UMP030301_and_the_run_continues() {
         var inner = new[] { Entry("C:/a/t", EntryForm.Base), Entry("C:/a/t", EntryForm.Metadata) };
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), .. inner], NoBin);
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "UMP030101" }));
+        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "UMP030301" }));
         Assert.That(result.Value.Blocks.InnerFolders, Is.EqualTo(new[] { Path.GetFullPath("C:/a/t") }));
     }
 
     [Test]
-    public void Two_entry_forms_in_one_file_give_UMP030101() {
+    public void Two_entry_forms_in_one_file_give_UMP030301() {
         var app = Entry("C:/a", EntryForm.App);
         var typed = app with { Form = EntryForm.Base, Type = TypeName.Parse(VsaArchitecture) };
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [app, typed], NoBin);
 
-        Assert.That(result.Error!.Code, Is.EqualTo("UMP030101"));
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030301"));
     }
 
     [Test]
-    public void An_entry_in_code_wins_over_the_key_in_the_file_with_UMP030104() {
+    public void An_entry_in_code_wins_over_the_key_in_the_file_with_UMP030304() {
         var file = Entry("C:/a", EntryForm.File);
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), file], NoBin);
 
         Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.App));
-        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030104"));
+        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030304"));
         Assert.That(result.Value.Findings.Single().Severity, Is.EqualTo(FindingSeverity.Warning));
         Assert.That(result.Value.Findings.Single().File, Is.EqualTo(file.Source));
     }
 
     [Test]
-    public void An_entry_in_code_of_an_inner_block_wins_over_its_key_with_UMP030104() {
+    public void An_entry_in_code_of_an_inner_block_wins_over_its_key_with_UMP030304() {
         var inner = new[] { Entry("C:/a/t", EntryForm.Base), Entry("C:/a/t", EntryForm.File) };
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), .. inner], NoBin);
 
-        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "UMP030104" }));
+        Assert.That(result.Value.Findings.Select(f => f.Code), Is.EqualTo(new[] { "UMP030304" }));
         Assert.That(result.Value.Blocks.Inner, Is.EqualTo(new[] { inner[0] }));
     }
 
     [Test]
-    public void A_project_with_no_Umpire_main_SDK_gives_UMP030105() {
+    public void A_project_with_no_Umpire_main_SDK_gives_UMP030305() {
         var projects = new[] { new BlockProject("C:/a/A.csproj", true), new BlockProject("C:/a/B/B.csproj", false) };
 
         var findings = ProjectCheck.Findings("C:/a", projects, hasConfigFile: true);
 
         Assert.That(findings.Select(f => $"{f.Code} {f.File} {f.Severity}"),
-            Is.EqualTo(new[] { "UMP030105 C:/a/B/B.csproj Warning" }));
+            Is.EqualTo(new[] { "UMP030305 C:/a/B/B.csproj Warning" }));
     }
 
     [Test]
-    public void A_block_with_two_projects_and_no_umpireconfig_file_gives_UMP030106() {
+    public void A_block_with_two_projects_and_no_umpireconfig_file_gives_UMP030306() {
         var projects = new[] { new BlockProject("C:/a/A.csproj", true), new BlockProject("C:/a/B/B.csproj", true) };
 
         Assert.That(ProjectCheck.Findings("C:/a", projects, hasConfigFile: false).Select(f => f.Code),
-            Is.EqualTo(new[] { "UMP030106" }));
+            Is.EqualTo(new[] { "UMP030306" }));
         Assert.That(ProjectCheck.Findings("C:/a", projects, hasConfigFile: true), Is.Empty);
         Assert.That(ProjectCheck.Findings("C:/a", [projects[0]], hasConfigFile: false), Is.Empty);
     }
@@ -245,12 +245,12 @@ public sealed class BlocksTests {
     }
 
     [Test]
-    public void A_bad_name_in_an_inner_block_gives_UMP030102() {
+    public void A_bad_name_in_an_inner_block_gives_UMP030302() {
         var bad = Entry("C:/a/t", EntryForm.File).Names("X", TypeName.NoAssembly);
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), bad], NoBin);
 
-        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030102"));
+        Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030302"));
         Assert.That(result.Value.Findings.Single().Message, Does.Contain("for example \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\""));
     }
 
@@ -277,7 +277,7 @@ public sealed class BlocksTests {
         try {
             foreach (var folder in new[] { "Tools", "bin", "obj", "artifacts~", Path.Combine("Tools", "obj") }) {
                 Directory.CreateDirectory(Path.Combine(root, folder));
-                File.WriteAllText(Path.Combine(root, folder, EntryFiles.Name), $"umpire.architecture = {VsaArchitecture}");
+                File.WriteAllText(Path.Combine(root, folder, EntryFiles.Name), $"umpire.architecture = \"{VsaArchitecture}\"");
             }
 
             var found = EntryFiles.Below(root);
@@ -289,8 +289,8 @@ public sealed class BlocksTests {
         }
     }
 
-    [TestCase("umpire.architecture =", "does not name an architecture: the key umpire.architecture has no value")]
-    [TestCase("umpire.architecture = Lib.X", "names \"Lib.X\", but the name has no assembly")]
+    [TestCase("umpire.architecture = \"\"", "does not name an architecture: the key umpire.architecture has no value")]
+    [TestCase("umpire.architecture = \"Lib.X\"", "names \"Lib.X\", but the name has no assembly")]
     public void A_bad_entry_file_gives_its_reason(string text, string reason) {
         var root = TempFolder.Create();
         try {
@@ -305,7 +305,7 @@ public sealed class BlocksTests {
 
     [TestCase("")]
     [TestCase("umpire.UMP010101.max = 140")]
-    [TestCase("[*.cs]\numpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa")]
+    [TestCase("[Tools]\numpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"")]
     public void An_umpireconfig_file_with_no_top_level_architecture_key_is_no_entry(string text) {
         var root = TempFolder.Create();
         try {
@@ -371,7 +371,7 @@ public sealed class BlocksTests {
         var root = TempFolder.Create();
         try {
             var file = Path.Combine(root, EntryFiles.Name);
-            File.WriteAllText(file, $"umpire.architecture = {VsaArchitecture}");
+            File.WriteAllText(file, $"umpire.architecture = \"{VsaArchitecture}\"");
 
             Assert.That(EntryFiles.Read(file.ToUpperInvariant()), Is.EqualTo(EntryFiles.Read(file.ToLowerInvariant())));
         } finally {

@@ -1,2 +1,2 @@
 # A block with no check entry in code: the key names its architecture.
-umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa
+umpire.architecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa"

@@ -1,7 +1,7 @@
 namespace Umpire.Engine.Versions;
 
 public static class VersionCheck {
-    public const string Code = "UMP030201";
+    public const string Code = "UMP030401";
 
     public static IReadOnlyList<VersionSlot> Mismatches(IEnumerable<VersionSlot> slots, string expected) =>
         [.. slots.Where(slot => slot.IsChecked && slot.Version != expected)];

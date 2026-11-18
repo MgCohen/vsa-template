@@ -9,5 +9,6 @@ public sealed record RunEngineRequest(
     string Block = "",
     ReportMode Mode = ReportMode.Error,
     string Skip = "",
-    bool FailFast = false)
+    bool FailFast = false,
+    bool Build = true)
     : IRequest<RunEngineResponse>;

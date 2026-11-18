@@ -1,11 +1,11 @@
 namespace Umpire.Engine.Versions;
 
-public static class AppFolder {
-    public const string ConfigFile = ".umpireconfig";
+using Umpire.Config;
 
+public static class AppFolder {
     public static string? Find(string start) {
         var folders = Above(start).ToList();
-        return folders.FirstOrDefault(folder => File.Exists(Path.Combine(folder, ConfigFile)))
+        return folders.FirstOrDefault(folder => File.Exists(Path.Combine(folder, UmpireConfig.FileName)))
             ?? folders.FirstOrDefault(HasUmpireProject);
     }
 

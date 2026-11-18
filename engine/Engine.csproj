@@ -1,7 +1,7 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
   <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins.
-       Its package is the build hook Umpire.Engine.Build: the engine in tools/, and the target that runs it after the build. -->
+       Its package is Umpire.Engine.Build: the engine in tools/. The after-build hook is off until issue #206. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>umpire-engine</AssemblyName>
@@ -11,7 +11,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>Umpire.Engine.Build</PackageId>
-    <Description>Checks the architecture of an Umpire app after each build of its root project.</Description>
+    <Description>The Umpire rule engine: it checks the architecture of an Umpire app.</Description>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <DevelopmentDependency>true</DevelopmentDependency>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
@@ -26,17 +26,20 @@
     <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Reflection.MetadataLoadContext" />
     <PackageReference Include="TngTech.ArchUnitNET" />
   </ItemGroup>
+  <!-- The SDK removes the folder of a nested project with an item transform. MSBuild matches it as text when a project has
+       100 or more Compile items, so a glob here removes the folder of Umpire.Engine.Versions. -->
+  <ItemGroup>
+    <Compile Remove="Versions/**" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Architecture.Tests" />
     <InternalsVisibleTo Include="Engine.Tests" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Umpire.Engine.Build.targets" Pack="true" PackagePath="build/" />
   </ItemGroup>
   <Target Name="_UmpireEngineFiles" BeforeTargets="_GetPackageFiles" DependsOnTargets="Build">
     <ItemGroup>

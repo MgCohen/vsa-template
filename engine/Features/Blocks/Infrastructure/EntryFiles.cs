@@ -3,9 +3,10 @@ namespace Blocks.Infrastructure;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using Umpire.Architecture;
+using Umpire.Config;
 
 public static class EntryFiles {
-    public const string Name = UmpireConfigFile.FileName;
+    public const string Name = UmpireConfig.FileName;
     public const string Key = "umpire.architecture";
 
     public static IReadOnlyList<BlockEntry> Above(string folder) {
@@ -37,7 +38,7 @@ public static class EntryFiles {
     }
 
     static string? ArchitectureName(string file) =>
-        UmpireConfigFile.Values(File.ReadLines(file)).GetValueOrDefault(Key);
+        UmpireConfig.Find(Path.GetDirectoryName(Path.GetFullPath(file))!).Value(Key);
 
     public static IEnumerable<string> SourceFolders(string folder) =>
         Directory.Exists(folder) ? Tree(folder) : [];

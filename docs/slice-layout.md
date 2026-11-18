@@ -91,7 +91,7 @@ A web root project uses Umpire.Sdk.Web, with the version:
 </Project>
 ```
 
-A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030201`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030401`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Modules/`) has its own project in the module folder. It then references the other modules that it uses.
 
