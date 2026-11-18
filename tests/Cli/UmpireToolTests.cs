@@ -62,7 +62,7 @@ public sealed class UmpireToolTests {
         Assert.That(Dotnet.Run(app, env, "test", "--solution", "Hello.slnx", "-c", "Release", "--no-build").EnsureSuccess().Output,
             Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d*"));
         await RunAndCall(app, ct, async (client, output) => {
-            Assert.That(await client.GetStringAsync("/api/billing/status", ct), Does.Contain("\"status\":\"Ready\""));
+            Assert.That(await client.GetStringAsync("/api/billing/get-status", ct), Does.Contain("\"status\":\"Ready\""));
             var created = await client.PostAsync("/api/billing/create-invoice", null, ct);
             Assert.That(created.IsSuccessStatusCode, Is.True, $"POST /api/billing/create-invoice gave {created.StatusCode}.\n{output}");
             var page = await client.GetStringAsync("/billing", ct);
