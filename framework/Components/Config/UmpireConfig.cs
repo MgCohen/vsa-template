@@ -9,6 +9,8 @@ public sealed class UmpireConfig {
     public const string FileName = ".umpireconfig";
     const char Separator = '.';
 
+    static readonly TomlSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
+
     readonly TomlTable root;
 
     UmpireConfig(TomlTable root, string? filePath) {
@@ -21,6 +23,14 @@ public sealed class UmpireConfig {
     public string? FilePath { get; }
 
     public static UmpireConfig Parse(string toml) => Parse(toml, null);
+
+    public static UmpireConfig In(string? folder) {
+        if (string.IsNullOrWhiteSpace(folder)) {
+            return Empty;
+        }
+        var file = Path.Combine(folder, FileName);
+        return File.Exists(file) ? Parse(File.ReadAllText(file), Path.GetFullPath(file)) : Empty;
+    }
 
     public static UmpireConfig Find(string folder) {
         for (var current = new DirectoryInfo(Path.GetFullPath(folder)); current is not null; current = current.Parent) {
@@ -36,15 +46,21 @@ public sealed class UmpireConfig {
         if (Node(table) is not TomlTable found) {
             return null;
         }
-        var text = TomlSerializer.Serialize(found, TomlSerializerOptions.Default);
-        return context is null
-            ? TomlSerializer.Deserialize<T>(text, TomlSerializerOptions.Default)
-            : TomlSerializer.Deserialize<T>(text, context);
+        var text = TomlSerializer.Serialize(found, Options);
+        try {
+            return context is null ? TomlSerializer.Deserialize<T>(text, Options) : TomlSerializer.Deserialize<T>(text, context);
+        } catch (TomlException e) {
+            throw new InvalidOperationException(
+                $"The table [{table}] of {FilePath ?? "the TOML text"} does not fit {typeof(T).Name}: {e.Message}", e);
+        }
     }
 
     public string? Value(string path) => Text(Node(path));
 
     public IEnumerable<KeyValuePair<string, string>> Values() => Leaves(root, "");
+
+    public IEnumerable<KeyValuePair<string, string>> Values(string table) =>
+        Node(table) is TomlTable found ? Leaves(found, table + Separator) : [];
 
     static UmpireConfig Parse(string toml, string? file) {
         var options = new TomlSerializerOptions { SourceName = file ?? "" };

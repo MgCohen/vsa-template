@@ -6,13 +6,14 @@ public static class DotnetBuild {
     const string HostPath = "DOTNET_HOST_PATH";
     const string MSBuildPrefix = "MSBuild";
 
-    public static async Task<BuildOutput> RunAsync(string project, CancellationToken cancellation) {
+    public static async Task<BuildOutput> RunAsync(string project, string? configuration, CancellationToken cancellation) {
         var info = new ProcessStartInfo(Environment.GetEnvironmentVariable(HostPath) ?? "dotnet") {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        foreach (var argument in new[] { "build", project, "-nologo", "-nodeReuse:false" }) {
+        string[] build = configuration is null ? [] : ["-c", configuration];
+        foreach (var argument in new[] { "build", project, "-nologo", "-nodeReuse:false" }.Concat(build)) {
             info.ArgumentList.Add(argument);
         }
         foreach (var key in info.Environment.Keys.Where(IsMSBuildValue).ToList()) {

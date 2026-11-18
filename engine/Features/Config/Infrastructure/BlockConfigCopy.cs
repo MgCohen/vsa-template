@@ -1,5 +1,6 @@
 namespace Config.Infrastructure;
 
+using Steps.Domain.Shared;
 using Umpire.Config;
 
 public static class BlockConfigCopy {
@@ -20,7 +21,7 @@ public static class BlockConfigCopy {
 
     public static string Text(UmpireConfig config) {
         var lines = new[] { "is_global = true", $"global_level = {GlobalLevel}" }
-            .Concat(config.Values().Select(pair => $"{pair.Key} = {pair.Value}"));
+            .Concat(RuleKeys.Of(config).Select(pair => $"{pair.Key} = {pair.Value}"));
         return string.Concat(lines.Select(line => line + "\n"));
     }
 }

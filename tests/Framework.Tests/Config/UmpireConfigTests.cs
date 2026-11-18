@@ -50,9 +50,50 @@ public sealed class UmpireConfigTests {
         Assert.That(Config.Get<NotebookSettings>("Shelf"), Is.Null);
 
     [Test]
-    public void A_property_name_keeps_its_case() =>
+    public void A_property_name_matches_with_no_case() =>
         Assert.That(UmpireConfig.Parse("[Notebook]\nmaxnotes = 3").Get<NotebookSettings>("Notebook")!.MaxNotes,
-            Is.EqualTo(10));
+            Is.EqualTo(3));
+
+    [Test]
+    public void A_value_of_the_wrong_type_names_the_table_and_the_file() {
+        var root = TempFolder.Create();
+        try {
+            var file = Path.Combine(root, UmpireConfig.FileName);
+            File.WriteAllText(file, "[Notebook]\nMaxNotes = \"50\"\n");
+
+            var error = Assert.Throws<InvalidOperationException>(() => UmpireConfig.In(root).Get<NotebookSettings>("Notebook"));
+
+            Assert.That(error!.Message, Does.StartWith($"The table [Notebook] of {Path.GetFullPath(file)} does not fit NotebookSettings: "));
+            Assert.That(error.InnerException, Is.TypeOf<TomlException>());
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [Test]
+    public void In_reads_only_the_file_of_the_folder() {
+        var root = TempFolder.Create();
+        try {
+            var inner = Directory.CreateDirectory(Path.Combine(root, "bin")).FullName;
+            File.WriteAllText(Path.Combine(root, UmpireConfig.FileName), "umpire.max = 3");
+
+            Assert.That(UmpireConfig.In(inner).FilePath, Is.Null);
+            Assert.That(UmpireConfig.In(root).Value("umpire.max"), Is.EqualTo("3"));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("  ")]
+    public void In_with_no_folder_gives_Empty(string? folder) =>
+        Assert.That(UmpireConfig.In(folder), Is.SameAs(UmpireConfig.Empty));
+
+    [Test]
+    public void Values_of_a_table_gives_only_the_leaves_of_that_table() =>
+        Assert.That(Config.Values("umpire").Select(pair => pair.Key),
+            Is.EqualTo(new[] { "umpire.architecture", "umpire.UMP010101.max" }));
 
     [Test]
     public void Get_uses_a_serializer_context() {

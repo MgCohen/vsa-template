@@ -223,18 +223,28 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task The_config_step_writes_the_rule_values_for_the_analyzers() {
+    public async Task The_config_step_writes_only_the_one_line_rule_values_for_the_analyzers() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, ".umpireconfig"),
-                "umpire.UMP010101.max = 60\ndotnet_diagnostic.UMP010106.severity = \"none\"\n[Notebook]\nMaxNotes = 5\n");
+            File.WriteAllText(Path.Combine(root, ".umpireconfig"), """
+                umpire.UMP010101.max = 60
+                umpire.note = '''
+                two
+                lines'''
+                dotnet_diagnostic.UMP010106.severity = "none"
+
+                [Notebook]
+                MaxNotes = 5
+                Text = '''
+                a = b'''
+                """);
 
             await Run(block: root);
 
             var copy = Path.Combine(root, BlockConfigCopy.Folder, BlockConfigCopy.FileName);
             Assert.That(File.ReadAllLines(copy), Is.EqualTo(new[] {
                 "is_global = true", "global_level = 101", "umpire.UMP010101.max = 60",
-                "dotnet_diagnostic.UMP010106.severity = none", "Notebook.MaxNotes = 5",
+                "dotnet_diagnostic.UMP010106.severity = none",
             }));
         } finally {
             TempFolder.Delete(root);

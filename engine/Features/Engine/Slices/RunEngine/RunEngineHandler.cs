@@ -58,7 +58,7 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
         if (!run.Build) {
             return true;
         }
-        var build = await commands.SendAsync(new BuildAppCommand(run.Project), ct);
+        var build = await commands.SendAsync(new BuildAppCommand(run.Project, run.Bin), ct);
         return build.IsSuccess;
     }
 }

@@ -10,7 +10,8 @@ sealed class BuildAppHandler : CommandHandler<BuildAppCommand, BuildAppResult> {
 
     public override async Task<Result<BuildAppResult>> HandleAsync(Envelope<BuildAppCommand> envelope) {
         var project = envelope.Message.Project;
-        var build = await DotnetBuild.RunAsync(project, envelope.Cancellation);
+        var configuration = BuildConfiguration.Of(envelope.Message.Bin);
+        var build = await DotnetBuild.RunAsync(project, configuration, envelope.Cancellation);
         return build.ExitCode == 0
             ? new BuildAppResult([])
             : new Error(BuildCodes.Failed, $"The build of {project} failed with exit code {build.ExitCode}:\n{Shown(build.Lines)}");

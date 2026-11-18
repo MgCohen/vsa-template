@@ -39,7 +39,7 @@ public class AppHost : IDisposable {
     protected AppTypes TypesOf(App app) => new(Modules, app.GetType().Assembly);
 
     protected virtual IReadOnlyList<ISettingsProvider> Settings(AppTypes types) =>
-        [new UmpireConfigSettings(UmpireConfig.Find(AppContext.BaseDirectory))];
+        [new UmpireConfigSettings(UmpireConfig.In(AppContext.BaseDirectory))];
 
     protected virtual void Configure(IServiceCollection services, AppTypes types) {
     }

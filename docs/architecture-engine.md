@@ -334,7 +334,7 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
 | `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
 
-The Rules step reads the values of the nearest `.umpireconfig` file at or above the block folder (`UmpireConfig.Values()`: each scalar as a dotted key, with no case). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
+The Rules step reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` and `dotnet_diagnostic` tables as a dotted key, with no case (`RuleKeys` in the Steps plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
 
 ```toml
 dotnet_diagnostic.UMP020101.severity = "warning"   # error, warning, suggestion, or none (the rule does not run)
