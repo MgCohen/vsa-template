@@ -57,7 +57,7 @@ The check entry has four forms. The kinds above give the default form. Each form
 | App class | `NotesApp : App<Vsa<WebHost>>` |
 | Typed base | `public abstract class Pack : Block<PackArchitecture>` |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="<type>, <assembly>" />` |
-| `.umpireconfig` | `umpire.architecture = <type>, <assembly>` |
+| `.umpireconfig` | `umpire.architecture = "<type>, <assembly>"` |
 
 - Each independent block has exactly one check entry. **Checked** (`UMP030301`).
 - A check entry names a type that loads and that is an `Architecture`. **Checked** (`UMP030302`).
