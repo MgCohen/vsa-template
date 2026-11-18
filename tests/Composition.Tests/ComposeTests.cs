@@ -5,7 +5,6 @@ using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Resources;
 using Resources.Domain.Shared;
@@ -59,26 +58,16 @@ public sealed class ComposeTests {
     }
 
     [Test]
-    public void Compose_with_a_configuration_from_a_factory_is_an_error() {
-        var services = new ServiceCollection().AddSingleton<IConfiguration>(_ => new ConfigurationBuilder().Build());
-
-        var error = Assert.Throws<InvalidOperationException>(() => new TestApp().Compose(services));
-
-        Assert.That(error!.Message, Does.StartWith("The services register IConfiguration with a factory or a type"));
-    }
-
-    [Test]
     public void Compose_adds_no_host_parts_and_no_logger_providers() {
         var services = new TestApp().Compose(new ServiceCollection());
 
-        Assert.That(services.Select(service => service.ServiceType), Has.None.EqualTo(typeof(IHostLifetime))
-            .And.None.EqualTo(typeof(IHostedService))
-            .And.None.EqualTo(typeof(ILoggerProvider))
+        Assert.That(services.Select(service => service.ServiceType.Namespace), Has.None.EqualTo("Microsoft.Extensions.Hosting"));
+        Assert.That(services.Select(service => service.ServiceType), Has.None.EqualTo(typeof(ILoggerProvider))
             .And.Some.EqualTo(typeof(ILoggerFactory)));
     }
 
     [Test]
-    public async Task The_app_services_come_after_the_modules_and_win() {
+    public async Task The_host_services_come_after_the_modules_and_win() {
         var appRingLog = new RingLog();
 
         await using var provider = new TestApp(new SignalsModule()).With(services => services.AddSingleton(appRingLog))

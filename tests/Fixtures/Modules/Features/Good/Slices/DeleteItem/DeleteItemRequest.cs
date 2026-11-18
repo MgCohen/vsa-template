@@ -1,10 +1,10 @@
 namespace Good.Slices.DeleteItem;
 
+using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 
 public sealed record DeleteItemRequest(Guid Id) : IRequest<DeleteItemResponse> {
-    public static HttpMethod Method => HttpMethod.Delete;
-    public static string Route => "/good/items/{id}";
+    public static Effect Effect => Effect.Delete;
 }
 
 public sealed record DeleteItemResponse(Guid Id) : IResponse;

@@ -1,42 +1,41 @@
 namespace Framework.Tests.Host;
 
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Umpire.Vsa;
-using Umpire.Vsa.Composition;
-using Umpire.Vsa.Hosts.Web;
 using Umpire.Kernels;
 
-sealed class WebTestApp(params Module[] modules) : App<Vsa<WebVsaHost>> {
+sealed class WebTestApp : App {
     readonly List<Action<IServiceCollection>> configure = [];
+    readonly Module[] modules;
+
+    public WebTestApp(params Module[] modules) {
+        this.modules = modules;
+        Pack = new TestPack(CreateHost);
+    }
+
+    public override Pack Pack { get; }
 
     public WebTestApp With(Action<IServiceCollection> services) {
         configure.Add(services);
         return this;
     }
 
-    public IHost Build() => Pack.CreateHost().Create([], this);
-
-    public async Task<IHost> Start() {
-        var host = Build();
-        await host.StartAsync();
-        return host;
+    public WebRun Build(params string[] args) {
+        var host = Pack.CreateHost();
+        return new WebRun(host, host.Build(args, this));
     }
+
+    public Task<WebRun> Start() => Task.FromResult(Build());
 
     public IServiceCollection Registrations() {
         IServiceCollection? registrations = null;
-        With(services => registrations = services).Build().Dispose();
+        using (With(services => registrations = services).Build()) {
+        }
         return registrations!;
     }
 
-    protected internal override IReadOnlyList<Module> Modules() => modules;
-
-    protected internal override void ConfigureServices(IServiceCollection services) {
-        services.AddSingleton<IServer, TestServer>();
-        foreach (var add in configure) {
-            add(services);
-        }
+    WebTestHost CreateHost() {
+        var host = new WebTestHost { Modules = modules };
+        host.Actions.AddRange(configure);
+        return host;
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Bare;
 using Umpire.Kernels;
-using Umpire.Vsa;
+using Framework.Tests.Host;
 using Umpire.Vsa.Composition;
 
 public sealed class SettingsTests {
@@ -52,9 +52,8 @@ public sealed class SettingsTests {
     [Test]
     public void TheHostGivesTheSettingsFromTheArgsOfCreate() {
         var module = new SampleModule();
-        var app = new ModuleApp(module);
 
-        using var host = app.Pack.CreateHost().Create(["--Modules:Settings:Name=from-args"], app);
+        using var host = WebApps.OnTestServer(module).Build("--Modules:Settings:Name=from-args");
 
         Assert.That(module.Settings?.Name, Is.EqualTo("from-args"));
         Assert.That(host.Services.GetRequiredService<SampleSettings>(), Is.SameAs(module.Settings));
@@ -65,9 +64,9 @@ public sealed class SettingsTests {
 
     static ServiceCollection Compose(Dictionary<string, string?> values, Module module) {
         var services = new ServiceCollection();
-        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
-        var app = new ModuleApp(module);
-        app.Pack.CreateHost().Compose(services, app);
+        using var host = new AppHost();
+        host.Compose(services, new ConfigurationBuilder().AddInMemoryCollection(values).Build(), new VsaKernel(),
+            new AppTypes([module], typeof(SettingsTests).Assembly));
         return services;
     }
 
@@ -75,10 +74,6 @@ public sealed class SettingsTests {
         public SampleSettings? Settings { get; private set; }
 
         public override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
-    }
-
-    sealed class ModuleApp(Module module) : App<Vsa<VsaHost>> {
-        protected internal override IReadOnlyList<Module> Modules() => [module];
     }
 
     public sealed class SampleSettings {

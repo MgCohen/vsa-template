@@ -5,22 +5,21 @@ using Answers;
 using Answers.Slices.Answer;
 using Arena.Slices.Duel;
 using Arena.Slices.Finisher;
-using Greet;
-using Greet.Slices.Greet;
+using Resources;
+using Resources.Domain.Shared;
+using Cards;
+using Cards.Domain.Shared;
+using Cards.Slices.PayCost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Umpire.Vsa.Composition;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
-using Umpire.Vsa.Presenters;
-using Umpire.Kernels;
 
 public sealed class PipelineTests {
-    IHost host = null!;
+    TestBuild host = null!;
     AsyncServiceScope scope;
 
     ICommandSender Sender => scope.ServiceProvider.GetRequiredService<ICommandSender>();
@@ -183,15 +182,15 @@ public sealed class PipelineTests {
 
     [Test]
     public async Task Two_kinds_with_one_message_base_have_their_own_pipelines() {
-        using var app = new TestApp(new GreetModule(), new AnswersModule()).Build();
+        using var app = new TestApp(new CardsModule(), new ResourcesModule(), new AnswersModule()).Build();
         await using var appScope = app.Services.CreateAsyncScope();
 
         var answer = await appScope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(new AnswerRequest(null));
-        var greet = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
-            .SendAsync(new GreetCommand("Ada"), default);
+        var pay = await appScope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new PayCostCommand(new Cost(ResourceKeys.Mana.Name, 3)), default);
 
         Assert.That(answer.Value, Is.EqualTo(new AnswerResponse("done")));
-        Assert.That(greet.Value, Is.EqualTo(new GreetResult("Hello, Ada", 0)));
+        Assert.That(pay.Value, Is.EqualTo(new PayCostResult(true, 7)));
     }
 
     [Test]
@@ -260,7 +259,7 @@ public sealed class PipelineTests {
             Does.StartWith("Two pipelines are registered for Arena.Slices.Duel.ArenaMove with the same handler base."));
     }
 
-    static IHost FinisherApp() => new TestApp(new ArenaModule())
+    static TestBuild FinisherApp() => new TestApp(new ArenaModule())
         .With(services => services.AddPipeline(
             new PipelineBuilder<FinisherMove>().HandlersOf(typeof(FinisherHandler<>))))
         .Build();

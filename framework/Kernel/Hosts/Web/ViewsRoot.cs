@@ -1,4 +1,4 @@
-namespace Umpire.Vsa.Views;
+namespace Umpire.Hosts.Web;
 
 using Microsoft.AspNetCore.Components;
 

@@ -11,7 +11,7 @@ public static class PackSelection {
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
     const string AppType = "Umpire.Kernels.App`1";
     const string BlockType = "Umpire.Architecture.Block`1";
-    const string PackType = "Umpire.Kernels.Pack`2";
+    const string PackType = "Umpire.Kernels.Pack`3";
 
     public static bool Selects(Compilation compilation, AnalyzerConfigOptions global, string packAssembly) {
         var entries = CodeEntries(compilation).ToList();

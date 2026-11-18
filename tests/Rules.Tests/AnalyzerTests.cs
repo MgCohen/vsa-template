@@ -134,8 +134,6 @@ public sealed class EventHandlerRequestRuleTests {
     const string Types = """
         public sealed record Done : Umpire.Vsa.Contracts.Events.IntegrationEvent;
         public sealed record Ping : Umpire.Vsa.Contracts.Requests.IRequest<Pong> {
-            public static HttpMethod Method => HttpMethod.Post;
-            public static string Route => "/ping";
         }
         public sealed record Pong : Umpire.Vsa.Contracts.Requests.IResponse;
 

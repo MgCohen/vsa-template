@@ -14,6 +14,7 @@ using Versions;
 using Tests.Shared;
 using Umpire.Engine.Versions;
 using Umpire.Vsa.Contracts.Commands;
+using Umpire.Vsa.Contracts.Requests;
 using Umpire.Kernels;
 using UmpireEngine;
 
@@ -230,7 +231,7 @@ public sealed class RunEngineTests {
         Assert.That(result.Value.Lines, Is.EqualTo(new[] { "Probe.cs(4,9): error UMP020101: Probe in Host" }));
     }
 
-    static async Task<RunEngineResult> Run(
+    static async Task<RunEngineResponse> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BlocksModule(), new VersionsModule(), new LoadAppModule(), new RulesModule(),
@@ -238,8 +239,8 @@ public sealed class RunEngineTests {
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;
-        var command = new RunEngineCommand(project ?? declared, output, declared, FailFast: failFast);
-        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>().SendAsync(command, default);
+        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast);
+        var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }
 }

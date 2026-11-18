@@ -1,7 +1,7 @@
 namespace SampleApp.App.Host;
 
-using Umpire.Vsa;
-using Umpire.Vsa.Hosts.Web;
+using Umpire.Hosts.Web;
 using Umpire.Kernels;
+using Umpire.Vsa;
 
-public class SampleAppApp : App<Vsa<WebVsaHost>>;
+public class SampleAppApp : App<Vsa<WebHost>>;

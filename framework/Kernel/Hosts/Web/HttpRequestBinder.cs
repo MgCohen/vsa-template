@@ -1,4 +1,4 @@
-namespace Umpire.Vsa.Hosts.Web;
+namespace Umpire.Hosts.Web;
 
 using System.ComponentModel;
 using System.Globalization;
@@ -8,9 +8,9 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 
 static class HttpRequestBinder {
-    internal static async Task<TRequest> Bind<TRequest>(HttpContext http, JsonSerializerOptions json) {
+    internal static async Task<object> Bind(Type input, HttpContext http, JsonSerializerOptions json) {
         var values = await Body(http) ?? [];
-        foreach (var property in typeof(TRequest).GetProperties(BindingFlags.Public | BindingFlags.Instance)) {
+        foreach (var property in input.GetProperties(BindingFlags.Public | BindingFlags.Instance)) {
             if (values.Any(pair => string.Equals(pair.Key, property.Name, StringComparison.OrdinalIgnoreCase))
                 || TextOf(http.Request, property.Name) is not { } text) {
                 continue;
@@ -18,8 +18,8 @@ static class HttpRequestBinder {
             var value = TypeDescriptor.GetConverter(property.PropertyType).ConvertFromInvariantString(text);
             values[property.Name] = JsonSerializer.SerializeToNode(value, property.PropertyType, json);
         }
-        return values.Deserialize<TRequest>(json)
-            ?? throw new JsonException($"The request is not a {typeof(TRequest).Name}.");
+        return values.Deserialize(input, json)
+            ?? throw new JsonException($"The request is not a {input.Name}.");
     }
 
     internal static bool IsBindError(Exception e) =>

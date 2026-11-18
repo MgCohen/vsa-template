@@ -44,7 +44,7 @@ sealed record AddKind(
         "Adds a pack variant: a pack class and an architecture that inherits VsaArchitecture.",
         Folder: "Packs",
         BaseNames: ["Vsa"],
-        NextStep: name => $"Change the app class to App<{name}<WebVsaHost>>, then add parts and rules to "
+        NextStep: name => $"Change the app class to App<{name}<WebHost>>, then add parts and rules to "
             + $"{name}Architecture. See docs/pack-variants.md.");
 
     public static readonly AddKind Request = new(

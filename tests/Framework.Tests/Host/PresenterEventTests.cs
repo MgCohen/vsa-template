@@ -1,7 +1,6 @@
 namespace Framework.Tests.Host;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Shelf;
 using Shelf.Presenters;
 using Signals;
@@ -94,7 +93,7 @@ public sealed class PresenterEventTests {
         Assert.That(presenter.Last, Is.EqualTo("door"));
     }
 
-    static Task<IHost> Start(Action<IServiceCollection>? configure = null) =>
+    static Task<WebRun> Start(Action<IServiceCollection>? configure = null) =>
         WebApps.OnTestServer(new SignalsModule()).With(configure ?? (_ => { })).Start();
 
     sealed class OpenPresenter<T>() : Presenter(null!);

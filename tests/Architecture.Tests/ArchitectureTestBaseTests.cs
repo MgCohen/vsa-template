@@ -1,6 +1,7 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
+using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Definition;
 using Umpire.Vsa.Handlers.Commands;
@@ -133,9 +134,8 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     public sealed record SampleRequest : IRequest<SampleResponse> {
+        public static Effect Effect => Effect.Read;
         public SampleDetail? Detail { get; init; }
-        public static HttpMethod Method => HttpMethod.Get;
-        public static string Route => "/api/sample";
     }
 
     public sealed record SampleResponse : IResponse;

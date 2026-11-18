@@ -6,7 +6,8 @@
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Hosts/Umpire.Vsa.Hosts.Web.csproj" />
+    <ProjectReference Include="$(RepoRoot)framework/Kernel/Hosts/Web/Umpire.Hosts.Web.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Views/Umpire.Vsa.Views.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Plugins/Toolbox/Toolbox.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Bare/Bare.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Shelf/Shelf.csproj" />

@@ -114,7 +114,7 @@ App/Views -> Kernel/Handlers/Handlers.Events [any] Deny
 App/Views -> Kernel/Handlers/Handlers.Commands [any] Deny
 App/Views -> Kernel/Views [any] Allow Public
 App/Views -> Kernel/Composition [any] Deny
-App/Views -> Kernel/Host [any] Deny
+App/Views -> Kernel/Host [any] Allow Public
 App/Views -> App [any] Deny
 App/Views -> App/Host [any] Deny
 App/Views -> Pack [any] Deny

@@ -41,7 +41,7 @@ public sealed class PackArchitectureTests {
     [Test]
     public void The_pack_base_is_the_check_entry_of_the_pack_architecture() {
         Assert.That(typeof(Pack).BaseType, Is.EqualTo(typeof(Block<PackArchitecture>)));
-        Assert.That(typeof(Pack<,>).IsAbstract, Is.True);
+        Assert.That(typeof(Pack<,,>).IsAbstract, Is.True);
     }
 
     static Bindings Place(params TypeFacts[] types) => new ResolvedArchitecture(new PackArchitecture()).Place(types, PackFolder);

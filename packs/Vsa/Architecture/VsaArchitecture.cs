@@ -39,7 +39,7 @@ public class VsaArchitecture : Architecture {
         handlers.Add<Handlers.Commands>().InAssembly("Umpire.Vsa.Handlers.Commands");
         kernel.Add<Views>().InAssembly("Umpire.Vsa.Views");
         kernel.Add<Composition>().InAssembly("Umpire.Vsa.Composition");
-        kernel.Add<Host>().InAssembly("Umpire.Vsa.Hosts.Web");
+        kernel.Add<Host>().InAssembly("Umpire.Hosts");
     }
 
     protected virtual void DefinePlugin(PartGroup plugin) {
@@ -96,6 +96,7 @@ public class VsaArchitecture : Architecture {
         rules.For<Module>().Under<Feature>().Denies<Composition>();
         rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self);
         rules.For<Views>().Uses<Presenters>();
+        rules.For<Views>().Uses<Host>().Under<Kernel>();
         rules.For<Host>().Under<App>().Uses<Pack>();
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 

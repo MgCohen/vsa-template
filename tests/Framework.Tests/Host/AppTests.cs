@@ -1,39 +1,36 @@
 namespace Framework.Tests.Host;
 
 using System.Reflection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Architecture;
+using Umpire.Hosts.Web;
+using Umpire.Kernels;
 using Umpire.Vsa;
 using Umpire.Vsa.Definition;
-using Umpire.Vsa.Composition;
-using Umpire.Vsa.Hosts.Web;
-using Umpire.Kernels;
 using Concepts = Umpire.Vsa.Definition;
 
 public sealed class AppTests {
     [Test]
-    public void Run_composes_the_app_and_calls_OnStart_with_the_services() {
-        var app = new ReturningApp();
+    public void Start_builds_the_services_and_calls_OnStart_with_them() {
+        var app = new LifecycleApp();
 
-        var exitCode = app.Run(["--name", "test"]);
+        app.Start([]);
         app.Stop();
 
-        Assert.That(exitCode, Is.Zero);
-        Assert.That(app.Marker, Is.EqualTo("test"));
+        Assert.That(app.TypesOnStart, Is.Not.Null);
     }
 
     [Test]
-    public async Task A_waiting_host_returns_from_Run_after_Stop_and_the_app_can_run_again() {
-        var app = new WaitingApp();
+    public async Task Run_waits_until_Stop_and_the_app_can_run_again() {
+        var app = new LifecycleApp();
         await RunUntilStop(app);
 
         Assert.That(await RunUntilStop(app), Is.Zero);
     }
 
     [Test]
-    public void Stop_before_the_host_starts_makes_Run_return_and_the_app_can_run_again() {
-        var app = new StopOnStartApp();
+    public void Stop_in_OnStart_makes_Run_return_and_the_app_can_run_again() {
+        var app = new LifecycleApp { StopOnStart = true };
 
         var first = app.Run([]);
         var second = app.Run([]);
@@ -45,21 +42,21 @@ public sealed class AppTests {
     }
 
     [Test]
-    public void A_returning_host_returns_from_Run_and_Stop_stops_the_app() {
-        var app = new ReturningApp();
-        app.Run([]);
-        var runningAfterRun = app.IsRunning;
+    public void Start_returns_and_Stop_stops_the_app() {
+        var app = new LifecycleApp();
+        app.Start([]);
+        var runningAfterStart = app.IsRunning;
         app.Stop();
 
-        Assert.That(runningAfterRun, Is.True);
+        Assert.That(runningAfterStart, Is.True);
         Assert.That(app.IsRunning, Is.False);
         Assert.That(app.Services, Is.Null);
     }
 
     [Test]
-    public void OnStop_runs_when_the_host_stops() {
-        var app = new ReturningApp();
-        app.Run([]);
+    public void OnStop_runs_when_the_app_stops() {
+        var app = new LifecycleApp();
+        app.Start([]);
 
         app.Stop();
 
@@ -67,12 +64,12 @@ public sealed class AppTests {
     }
 
     [Test]
-    public void Run_after_Stop_starts_the_app_again() {
-        var app = new ReturningApp();
-        app.Run([]);
+    public void Start_after_Stop_starts_the_app_again() {
+        var app = new LifecycleApp();
+        app.Start([]);
         app.Stop();
 
-        app.Run([]);
+        app.Start([]);
         var running = app.IsRunning;
         app.Stop();
 
@@ -81,14 +78,13 @@ public sealed class AppTests {
     }
 
     [Test]
-    public void Run_of_a_running_app_is_an_error() {
-        var app = new ReturningApp();
-        app.Run([]);
+    public void Start_of_a_running_app_is_an_error() {
+        var app = new LifecycleApp();
+        app.Start([]);
         try {
-            var error = Assert.Throws<InvalidOperationException>(() => app.Run([]));
+            var error = Assert.Throws<InvalidOperationException>(() => app.Start([]));
 
-            Assert.That(error!.Message, Is.EqualTo("ReturningApp is already running. Call Stop() before Run."));
-            Assert.That(app.Composes, Is.EqualTo(1));
+            Assert.That(error!.Message, Is.EqualTo("LifecycleApp is already running. Call Stop() before Start or Run."));
         } finally {
             app.Stop();
         }
@@ -96,7 +92,12 @@ public sealed class AppTests {
 
     [Test]
     public void Stop_of_an_app_that_does_not_run_does_nothing() {
-        Assert.DoesNotThrow(new ReturningApp().Stop);
+        Assert.DoesNotThrow(new LifecycleApp().Stop);
+    }
+
+    [Test]
+    public void Dispose_of_a_host_that_did_not_build_does_nothing() {
+        Assert.DoesNotThrow(new AppHost().Dispose);
     }
 
     [Test]
@@ -105,28 +106,13 @@ public sealed class AppTests {
 
         var first = pack.CreateHost();
 
-        Assert.That(first, Is.TypeOf<WebVsaHost>());
+        Assert.That(first, Is.TypeOf<WebHost>());
         Assert.That(pack.CreateHost(), Is.Not.SameAs(first));
     }
 
     [Test]
-    public void A_host_keeps_the_host_that_it_builds() {
-        var app = new ReturningApp();
-        var host = app.Pack.CreateHost();
-
-        var built = host.Create([], app);
-
-        Assert.That(host.Services, Is.SameAs(built.Services));
-    }
-
-    [Test]
-    public void Run_of_a_host_with_no_built_host_is_an_error() {
-        var host = new ReturningApp().Pack.CreateHost();
-
-        var error = Assert.Throws<InvalidOperationException>(() => host.Run());
-
-        Assert.That(error!.Message, Is.EqualTo("ReturningHost has no built host. Call Create before Run or Stop."));
-        Assert.That(host.Services, Is.Null);
+    public void The_VSA_pack_names_the_VSA_kernel() {
+        Assert.That(new WebApp().Pack.Kernel, Is.TypeOf<Umpire.Vsa.Composition.VsaKernel>());
     }
 
     [Test]
@@ -146,11 +132,12 @@ public sealed class AppTests {
     [TestCase("ArchUnitNET")]
     [TestCase("Mono.Cecil")]
     [TestCase("nunit.framework")]
-    public void The_runtime_of_an_app_does_not_reference_the_test_tools(string tool) {
+    [TestCase("Microsoft.Extensions.Hosting")]
+    public void The_runtime_of_an_app_does_not_reference_the_test_tools_or_the_generic_host(string tool) {
         Assert.That(RuntimeReferences(typeof(Vsa<>).Assembly), Has.None.StartsWith(tool));
     }
 
-    static async Task<int> RunUntilStop(WaitingApp app) {
+    static async Task<int> RunUntilStop(LifecycleApp app) {
         var run = Task.Run(() => app.Run([]));
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (!app.IsRunning && !run.IsCompleted && DateTime.UtcNow < deadline) {
@@ -181,7 +168,7 @@ public sealed class AppTests {
 
     sealed record Rule(string From, string To, Permission Permission);
 
-    sealed class WebApp : App<Vsa<WebVsaHost>>;
+    sealed class WebApp : App<Vsa<WebHost>>;
 
     sealed class RulesArchitecture : VsaArchitecture {
         protected override void Rules(RuleBook rules) {
@@ -190,34 +177,23 @@ public sealed class AppTests {
         }
     }
 
-    sealed class RulesApp : App<Vsa<RulesArchitecture, WebVsaHost>>;
+    sealed class RulesApp : App<Vsa<RulesArchitecture, WebHost>>;
 
-    sealed class WaitingApp : App<Vsa<VsaHost>> {
-        protected internal override IReadOnlyList<Umpire.Kernels.Module> Modules() => [];
-    }
+    sealed class LifecycleApp : App {
+        public override Pack Pack { get; } = new TestPack(() => new AppHost { Modules = [] });
 
-    sealed class StopOnStartApp : App<Vsa<VsaHost>> {
-        public int Stops { get; private set; }
+        public bool StopOnStart { get; init; }
 
-        protected internal override IReadOnlyList<Umpire.Kernels.Module> Modules() => [];
-
-        protected override void OnStart() => Stop();
-
-        protected override void OnStop() => Stops++;
-    }
-
-    sealed class ReturningApp : App<Vsa<ReturningHost>> {
-        public string? Marker { get; private set; }
+        public AppTypes? TypesOnStart { get; private set; }
 
         public int Stops { get; private set; }
 
-        public int Composes { get; private set; }
-
-        protected internal override IReadOnlyList<Umpire.Kernels.Module> Modules() => [];
-
-        protected internal override void ConfigureServices(IServiceCollection services) => Composes++;
-
-        protected override void OnStart() => Marker = Services!.GetRequiredService<IConfiguration>()["name"];
+        protected override void OnStart() {
+            TypesOnStart = Services!.GetRequiredService<AppTypes>();
+            if (StopOnStart) {
+                Stop();
+            }
+        }
 
         protected override void OnStop() => Stops++;
     }

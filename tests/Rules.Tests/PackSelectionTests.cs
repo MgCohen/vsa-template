@@ -3,18 +3,18 @@ namespace Rules.Tests;
 using Umpire.Vsa.Analyzers;
 
 public sealed class PackSelectionTests {
-    const string Route = "public static HttpMethod Method => HttpMethod.Get; public static string Route => \"/items\";";
-    const string Request = $$"""
-        public sealed class {|#0:GetItems|} : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+    const string Request = """
+        public sealed class {|#0:GetItems|} : Umpire.Vsa.Contracts.Requests.IRequest<Items>;
         public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
         """;
-    const string QuietRequest = $$"""
-        public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+    const string QuietRequest = """
+        public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items>;
         public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
         """;
     const string OtherPack = """
         public sealed class OtherPack : Umpire.Kernels.Pack {
             public override Umpire.Architecture.Architecture Architecture => null!;
+            public override Umpire.Kernels.Kernel Kernel => null!;
             public override Umpire.Kernels.AppHost CreateHost() => null!;
         }
         """;
@@ -26,12 +26,12 @@ public sealed class PackSelectionTests {
 
     [Test]
     public Task An_app_class_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
-        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Vsa<Umpire.Vsa.Composition.ConsoleVsaHost>>;
+        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
         """, Found());
 
     [Test]
     public Task A_pack_variant_runs_the_rules_of_its_base_pack() => Analyzer.Verify(Request + """
-        public sealed class EcsPack : Umpire.Vsa.Vsa<Umpire.Vsa.Composition.ConsoleVsaHost>;
+        public sealed class EcsPack : Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>;
         public sealed class ShopApp : Umpire.Kernels.App<EcsPack>;
         """, Found());
 
@@ -61,7 +61,7 @@ public sealed class PackSelectionTests {
 
     [Test]
     public Task An_entry_in_code_wins_over_the_umpireconfig_key() => Analyzer.Verify(Request + """
-        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Vsa<Umpire.Vsa.Composition.ConsoleVsaHost>>;
+        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
         """, OtherArchitecture, Found());
 
     [Test]

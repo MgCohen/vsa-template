@@ -1,4 +1,4 @@
-namespace Umpire.Vsa.Contracts.Commands;
+namespace Umpire.Vsa.Contracts.Requests;
 
 public interface IExitCode {
     int ExitCode { get; }

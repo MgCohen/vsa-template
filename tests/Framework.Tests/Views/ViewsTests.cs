@@ -2,7 +2,7 @@ namespace Framework.Tests.Views;
 
 using Framework.Tests.Host;
 using Shelf;
-using Umpire.Vsa.Views;
+using Umpire.Hosts.Web;
 
 public sealed class ViewsTests {
     [Test]
@@ -14,11 +14,11 @@ public sealed class ViewsTests {
 
     [Test]
     public void NoViewsRootFindsNoRoot() =>
-        Assert.That(ViewsServiceCollectionExtensions.FindRoot([]), Is.Null);
+        Assert.That(Views.FindRoot([]), Is.Null);
 
     [Test]
     public void TwoViewsRootsStopTheApp() {
-        var error = Assert.Throws<InvalidOperationException>(() => ViewsServiceCollectionExtensions.FindRoot([typeof(FirstRoot), typeof(SecondRoot)]));
+        var error = Assert.Throws<InvalidOperationException>(() => Views.FindRoot([typeof(FirstRoot), typeof(SecondRoot)]));
 
         Assert.That(error!.Message, Does.StartWith("The app has 2 views roots: "));
         Assert.That(error.Message, Does.EndWith("Keep one component that inherits ViewsRoot."));

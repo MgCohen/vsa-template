@@ -5,7 +5,6 @@ using Meters.Domain.Shared;
 using Meters.Slices.ChangeMeter;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Markers;
-using Umpire.Vsa.Composition;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
