@@ -9,7 +9,7 @@ using Umpire.Vsa.Composition;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class OpenGenericTests {
     [Test]

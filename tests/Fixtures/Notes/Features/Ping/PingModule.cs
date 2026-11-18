@@ -1,5 +1,5 @@
 namespace Notes.Features.Ping;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class PingModule : Module;

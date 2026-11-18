@@ -1,4 +1,4 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 public abstract class App<TPack> : App where TPack : Pack, new() {
     readonly TPack pack = new();

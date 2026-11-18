@@ -10,7 +10,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Term | Meaning | Code names |
 |---|---|---|
-| Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernel`, `umpire` tool |
+| Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernels`, `umpire` tool |
 | Framework | The Umpire code in `framework/`: the framework kernel and the components. Not a .NET assembly, and not an external part | `framework/Kernel/`, `framework/Components/` |
 | Pack | One architecture with its definition, bases and rules | `packs/Vsa/`, `Vsa<THost>` |
 | Pack variant | A pack whose architecture inherits the architecture of another pack and adds parts and rules | `Packs/Ecs/`, `EcsArchitecture : VsaArchitecture` |
@@ -56,7 +56,7 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | Part | One place in the folder tree of a definition | `Part`, `PartGroup` |
 | Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture`: `AddContractParts`, `AndHandlerParts`, `ForContractParts`, `UsesContractParts`, `ForHandlerParts` |
 | Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Host`, `Composition`, `Slice` |
-| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernel.Module` and `Plugin` |
+| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernels.Module` and `Plugin` |
 | Module kind | A group of modules with one shape. Each module kind record inherits `Module` | `Feature`, `Plugin`, the `EcsFeature` of a pack variant |
 | External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` |
 | System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` |

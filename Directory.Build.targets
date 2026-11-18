@@ -1,7 +1,7 @@
 <Project>
   <!-- The Umpire analyzer rules about any code (the format) also check the framework and its tests.
        UmpireFrameworkCode turns off the rules about module code, for example the layers. A Umpire.Sdk project gets the analyzer from Umpire.Sdk.
-       The rules about any code are in Umpire.Kernel.Analyzers. The two analyzer projects do not check themselves,
+       The rules about any code are in Umpire.Kernels.Analyzers. The two analyzer projects do not check themselves,
        and Rules.Tests references them as libraries. -->
   <PropertyGroup Condition="'$(UsingUmpireSdk)' != 'true'">
     <UmpireFrameworkCode>true</UmpireFrameworkCode>
@@ -9,10 +9,10 @@
   <ItemGroup Condition="'$(UsingUmpireSdk)' != 'true'">
     <CompilerVisibleProperty Include="UmpireFrameworkCode" />
   </ItemGroup>
-  <ItemGroup Condition="'$(UsingUmpireSdk)' != 'true' and '$(MSBuildProjectName)' != 'Umpire.Vsa.Analyzers' and '$(MSBuildProjectName)' != 'Umpire.Kernel.Analyzers' and '$(MSBuildProjectName)' != 'Rules.Tests'">
-    <ProjectReference Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.csproj"
+  <ItemGroup Condition="'$(UsingUmpireSdk)' != 'true' and '$(MSBuildProjectName)' != 'Umpire.Vsa.Analyzers' and '$(MSBuildProjectName)' != 'Umpire.Kernels.Analyzers' and '$(MSBuildProjectName)' != 'Rules.Tests'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig" />
+    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.globalconfig" />
   </ItemGroup>
 
   <!-- The pack takes the documentation file from bin/. The file is not there, so the pack does not take it. -->

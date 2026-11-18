@@ -1,5 +1,5 @@
 namespace Blocks;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class BlocksModule : Module;

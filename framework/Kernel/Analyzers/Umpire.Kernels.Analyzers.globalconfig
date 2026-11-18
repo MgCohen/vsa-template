@@ -1,4 +1,4 @@
-# The rules of Umpire.Kernel.Analyzers (UMP0101xx). Each rule has the defaults of its values on its class.
+# The rules of Umpire.Kernels.Analyzers (UMP0101xx). Each rule has the defaults of its values on its class.
 # The package ships this file, and its build props give it to each project that references the package.
 # A consumer changes a value in the .umpireconfig file of its block. Severity uses the standard key: dotnet_diagnostic.UMP010101.severity = none
 # Keys: umpire.<rule ID>.<key> for one rule, umpire.<key> for all rules that read the key. A rule key wins.

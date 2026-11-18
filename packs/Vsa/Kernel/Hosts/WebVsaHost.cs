@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Vsa.Views;
 
 public sealed class WebVsaHost : VsaHost {

@@ -2,7 +2,7 @@ namespace Umpire.Messages.Handlers;
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Messages.Contracts;
 
 public sealed class Pipeline {

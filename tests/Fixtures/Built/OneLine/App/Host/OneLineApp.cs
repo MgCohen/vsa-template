@@ -1,6 +1,6 @@
 namespace OneLine.App.Host;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Vsa;
 using Umpire.Vsa.Composition;
 

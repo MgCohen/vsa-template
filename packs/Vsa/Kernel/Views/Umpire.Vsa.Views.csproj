@@ -5,9 +5,9 @@
   <ItemGroup>
     <ProjectReference Include="../Presenters/Umpire.Vsa.Presenters.csproj" />
   </ItemGroup>
-  <!-- AddViews and MapViews use AppTypes (Umpire.Kernel). Private, so the module projects of this layer do not see Umpire.Kernel. -->
+  <!-- AddViews and MapViews use AppTypes (Umpire.Kernels). Private, so the module projects of this layer do not see Umpire.Kernels. -->
   <ItemGroup>
-    <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernels.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Framework.Tests" />

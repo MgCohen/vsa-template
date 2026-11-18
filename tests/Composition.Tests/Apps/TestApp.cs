@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Umpire.Vsa;
 using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public class TestApp<THost>(params Module[] modules) : App<Vsa<THost>> where THost : VsaHost, new() {
     readonly List<Action<IServiceCollection>> configure = [];

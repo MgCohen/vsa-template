@@ -3,7 +3,7 @@ namespace Umpire.Vsa.Views;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public static class ViewsServiceCollectionExtensions {
     public static IServiceCollection AddViews(this IServiceCollection services, AppTypes types) {

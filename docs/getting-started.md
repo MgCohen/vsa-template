@@ -59,7 +59,7 @@ To add Umpire to an existing app, run `init` in the folder of its root project: 
 // App/Host/ShopApp.cs
 namespace Shop.App.Host;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Vsa;
 using Umpire.Vsa.Composition;
 
@@ -96,7 +96,7 @@ The root project gets its packages from two places:
 
 | Package | From | Contains |
 |---|---|---|
-| `Umpire.Kernel`, `Umpire.Markers` | Umpire.Sdk | The app start, the markers |
+| `Umpire.Kernels`, `Umpire.Markers` | Umpire.Sdk | The app start, the markers |
 | `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
 | `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, and their rule values |
 | `Umpire.Vsa.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the views |

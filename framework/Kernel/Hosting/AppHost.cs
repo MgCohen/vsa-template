@@ -1,4 +1,4 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

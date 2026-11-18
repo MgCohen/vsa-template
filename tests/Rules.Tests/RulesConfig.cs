@@ -9,7 +9,7 @@ sealed class RulesConfig {
     }
 
     public static RulesConfig Kernel { get; } =
-        new(Repo.Path("framework", "Kernel", "Analyzers", "Umpire.Kernel.Analyzers.globalconfig"));
+        new(Repo.Path("framework", "Kernel", "Analyzers", "Umpire.Kernels.Analyzers.globalconfig"));
 
     public static RulesConfig Vsa { get; } =
         new(Repo.Path("packs", "Vsa", "Tests", "Analyzers", "Umpire.Vsa.Analyzers.globalconfig"));

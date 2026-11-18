@@ -1,4 +1,4 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 using System.Collections.Concurrent;
 using System.Reflection;

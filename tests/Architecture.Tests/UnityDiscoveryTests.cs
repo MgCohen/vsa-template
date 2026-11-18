@@ -3,10 +3,10 @@ namespace EngineCore.Tests;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
 using Umpire.Vsa.Definition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class UnityDiscoveryTests {
-    const string ModuleClass = "public sealed class {0} : Umpire.Kernel.Module {{ public override void Configure("
+    const string ModuleClass = "public sealed class {0} : Umpire.Kernels.Module {{ public override void Configure("
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
     UnityProjectFolder project = null!;

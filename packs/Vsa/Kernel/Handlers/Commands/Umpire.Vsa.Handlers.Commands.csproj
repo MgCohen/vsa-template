@@ -6,8 +6,8 @@
     <ProjectReference Include="../../../../../framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
     <ProjectReference Include="../../Contracts/Commands/Umpire.Vsa.Contracts.Commands.csproj" />
   </ItemGroup>
-  <!-- The registration of the layer uses AppTypes (Umpire.Kernel). Private, so the module projects of this layer do not see Umpire.Kernel. -->
+  <!-- The registration of the layer uses AppTypes (Umpire.Kernels). Private, so the module projects of this layer do not see Umpire.Kernels. -->
   <ItemGroup>
-    <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernels.csproj" PrivateAssets="all" />
   </ItemGroup>
 </Project>

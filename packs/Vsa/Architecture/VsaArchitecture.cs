@@ -54,7 +54,7 @@ public class VsaArchitecture : Architecture {
     }
 
     protected virtual void DefineFeature(PartGroup feature) {
-        feature.Add<Module>().OfType<Umpire.Kernel.Module>();
+        feature.Add<Module>().OfType<Umpire.Kernels.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();
         feature.Add<Slice.Shared>();

@@ -1,5 +1,5 @@
 namespace Engine;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class EngineModule : Module;

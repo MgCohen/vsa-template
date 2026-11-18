@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class ConsoleVsaHost : VsaHost {
     public override int Run() {

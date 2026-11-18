@@ -17,7 +17,7 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Presenters;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class PipelineTests {
     IHost host = null!;

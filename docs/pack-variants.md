@@ -54,7 +54,7 @@ public sealed class EcsArchitecture : VsaArchitecture {
     protected override void Define(Block block) {
         base.Define(block);
         var ecs = block.AddGroup<EcsFeature>();
-        ecs.Add<Module>().OfType<Umpire.Kernel.Module>();
+        ecs.Add<Module>().OfType<Umpire.Kernels.Module>();
         ecs.Add<Components>();
         ecs.Add<Systems>().OfType<EcsSystem>();
     }
@@ -154,11 +154,11 @@ using Umpire.Vsa.Definition;
 |---|---|
 | `Kernel` is the record `Umpire.Architecture.Blocks.Kernel` and a folder of the pack | 1 |
 | `App` is the record and the namespace `<App>.App` | 1 |
-| `Pack` is the record and the class `Umpire.Kernel.Pack` | 3: `using Pack = Umpire.Architecture.Blocks.Pack;` |
+| `Pack` is the record and the class `Umpire.Kernels.Pack` | 3: `using Pack = Umpire.Architecture.Blocks.Pack;` |
 | `Plugin` is the record and the class `Umpire.Vsa.Composition.Plugin` | 3: `using Plugin = Umpire.Vsa.Definition.Plugin;` |
 | A variant in `Umpire.Vsa.Definition.*` | 2 |
 
-Write each real type with its full name, for example `OfType<Umpire.Kernel.Module>()`. Then the file does not import its namespace.
+Write each real type with its full name, for example `OfType<Umpire.Kernels.Module>()`. Then the file does not import its namespace.
 
 ## A plugin with its own folders
 

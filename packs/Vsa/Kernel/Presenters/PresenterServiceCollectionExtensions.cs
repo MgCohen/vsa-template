@@ -3,7 +3,7 @@ namespace Umpire.Vsa.Presenters;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Architecture;
 using Umpire.Vsa.Contracts.Events;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public static class PresenterServiceCollectionExtensions {
     public static IServiceCollection AddPresenters(this IServiceCollection services, AppTypes types) {

@@ -27,18 +27,18 @@ public class ToolApp : App<Vsa<ToolArchitecture, ConsoleVsaHost>>;
 new Vsa<UnityVsaHost>().CreateHost().Compose(services, app);
 ```
 
-The app class file imports `Umpire.Kernel` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host. The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernel.App`.
+The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host. The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
 
 ## The kernel types
 
 | Type | Package | Job |
 |---|---|---|
-| `IApp` | Umpire.Kernel | `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
-| `App`, `App<TPack>` | Umpire.Kernel | The lifetime of the app. `App<TPack>` makes its pack with `new TPack()` |
-| `Pack`, `Pack<TArchitecture, THost>` | Umpire.Kernel | Gives `Architecture` and `CreateHost()` |
-| `AppHost` | Umpire.Kernel | The composition root: `Create`, `Compose`, `Run`, `Stop` |
-| `Module`, `Module<TSettings>` | Umpire.Kernel | The root class of a module. `Order` 1 |
-| `AppTypes` | Umpire.Kernel | The one type source: the modules and their types |
+| `IApp` | Umpire.Kernels | `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
+| `App`, `App<TPack>` | Umpire.Kernels | The lifetime of the app. `App<TPack>` makes its pack with `new TPack()` |
+| `Pack`, `Pack<TArchitecture, THost>` | Umpire.Kernels | Gives `Architecture` and `CreateHost()` |
+| `AppHost` | Umpire.Kernels | The composition root: `Create`, `Compose`, `Run`, `Stop` |
+| `Module`, `Module<TSettings>` | Umpire.Kernels | The root class of a module. `Order` 1 |
+| `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
 
 The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa, and `VsaHost`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
 
@@ -88,7 +88,7 @@ Each host has a public constructor with no parameters, and `AppHost` has `[Requi
 
 ```
 AppHost.Compose(services, app)                 fixed order
-├─ core                                        Umpire.Kernel
+├─ core                                        Umpire.Kernels
 │  ├─ IConfiguration                           keep one that exists, else an empty one
 │  ├─ AddLogging                               no log provider
 │  ├─ AppTypes                                 a singleton
@@ -104,7 +104,7 @@ AppHost.Compose(services, app)                 fixed order
 └─ app.ConfigureServices(services)             last
 ```
 
-The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernel). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one. If `services` registers `IConfiguration` with a factory or a type, `Compose` cannot read it before the build, so it stops with an error.
+The order is inside `Compose`, so an app cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). `Create` gives the configuration of the host builder to `Compose`. With no host run, `Compose` uses the `IConfiguration` instance of `services`, else an empty one. If `services` registers `IConfiguration` with a factory or a type, `Compose` cannot read it before the build, so it stops with an error.
 
 ## Definitions and transports
 
@@ -143,7 +143,7 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 
 ## AppTypes finds the parts of the app
 
-`AppTypes` (Umpire.Kernel) reads 2 sources and keeps each loaded assembly that references a given assembly:
+`AppTypes` (Umpire.Kernels) reads 2 sources and keeps each loaded assembly that references a given assembly:
 
 | Source | Finds |
 |---|---|
@@ -168,7 +168,7 @@ public interface IRequest<TResponse> : IRequest where TResponse : IResponse;
 
 | Part | Scan for | Rule |
 |---|---|---|
-| Module root | A reference to `Umpire.Kernel`, or to an assembly with an abstract `Module` base (for example `Plugin` in `Umpire.Vsa.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
+| Module root | A reference to `Umpire.Kernels`, or to an assembly with an abstract `Module` base (for example `Plugin` in `Umpire.Vsa.Composition`) | One class that inherits `Module` in each namespace (`ModuleRoot.Create`) |
 | Views root | The assemblies of the modules and of the app class (`ConcreteTypesOf(typeof(ViewsRoot))`) | One component that inherits `ViewsRoot` |
 
 The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) comes before a module (`Order` 1). If the app has a views root, the views run in that process. Two views roots stop the build.
@@ -199,7 +199,7 @@ The markers are in `Umpire.Markers`. The same package has the stripping markers 
 | `[RequireImplementors]` | Interface | Each implementor | `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
 | `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
 
-The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernel uses the markers assembly in code.
+The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernels uses the markers assembly in code.
 
 The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>` and the four hook bases. A class that derives from one of them needs no marker.
 
@@ -289,7 +289,7 @@ The HTTP API sends each request with the registered `IRequestSender`. If a modul
 ## Projects
 
 ```
-framework/Kernel/                      Umpire.Kernel
+framework/Kernel/                      Umpire.Kernels
   App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, THost>
   Modules/                             Module, Module<TSettings>, the settings
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
@@ -314,7 +314,7 @@ packs/Vsa/
 
 ```mermaid
 flowchart BT
-    Kernel["Umpire.Kernel"] --> Definition["Umpire.Architecture"]
+    Kernel["Umpire.Kernels"] --> Definition["Umpire.Architecture"]
     Layers["Umpire.Messages.Handlers.*, Umpire.Vsa.Presenters"] -. private .-> Kernel
     Composition["Umpire.Vsa.Composition"] --> Kernel
     Composition --> Layers
@@ -380,7 +380,7 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 
 ## Unity target
 
-`Umpire.Kernel`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Vsa.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Vsa.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
 
 A Unity app calls `new MyApp().Run(args)` from the shell of the UPM package (repo `vsa-unity`). Its app class is `App<Vsa<UnityVsaHost>>`. The Unity host returns from `Run`, and the shell calls `Stop` when the app quits or the play mode stops. The default .NET host expects an app that owns its process, and Unity owns the process. In Unity, the default host fails: the EventLog logger provider throws on Mono, and an empty host has the content root `Unity.exe\`.
 
@@ -417,4 +417,4 @@ The app selects the entry point: a component, a VContainer `LifetimeScope` or a 
 - Remote request sender: an `IRequestSender` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
 - IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
-- Hosting DLLs in Unity: Umpire.Kernel references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.
+- Hosting DLLs in Unity: Umpire.Kernels references `Microsoft.Extensions.Hosting` for `AppHost`, so a Unity app still vendors it. The reference can move to the `net10.0` target only.

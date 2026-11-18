@@ -14,7 +14,7 @@ using Versions;
 using Tests.Shared;
 using Umpire.Engine.Versions;
 using Umpire.Vsa.Contracts.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using UmpireEngine;
 
 namespace Engine.Tests;

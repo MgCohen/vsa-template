@@ -8,7 +8,7 @@ using Umpire.Vsa;
 using Umpire.Vsa.Definition;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Hosts.Web;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Concepts = Umpire.Vsa.Definition;
 
 public sealed class AppTests {
@@ -193,13 +193,13 @@ public sealed class AppTests {
     sealed class RulesApp : App<Vsa<RulesArchitecture, WebVsaHost>>;
 
     sealed class WaitingApp : App<Vsa<VsaHost>> {
-        protected internal override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+        protected internal override IReadOnlyList<Umpire.Kernels.Module> Modules() => [];
     }
 
     sealed class StopOnStartApp : App<Vsa<VsaHost>> {
         public int Stops { get; private set; }
 
-        protected internal override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+        protected internal override IReadOnlyList<Umpire.Kernels.Module> Modules() => [];
 
         protected override void OnStart() => Stop();
 
@@ -213,7 +213,7 @@ public sealed class AppTests {
 
         public int Composes { get; private set; }
 
-        protected internal override IReadOnlyList<Umpire.Kernel.Module> Modules() => [];
+        protected internal override IReadOnlyList<Umpire.Kernels.Module> Modules() => [];
 
         protected internal override void ConfigureServices(IServiceCollection services) => Composes++;
 

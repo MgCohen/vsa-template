@@ -6,7 +6,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 [NonParallelizable]
 public sealed class ConsoleHostTests {

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Handlers.Requests;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Vsa.Presenters;
 
 public class VsaHost : AppHost {

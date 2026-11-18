@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class AppLoader : AssemblyLoadContext {
     public static readonly IReadOnlySet<string> Shared = SharedClosure(typeof(Architecture).Assembly);

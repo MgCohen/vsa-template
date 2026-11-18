@@ -21,7 +21,7 @@ using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Presenters;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class HeadlessCompositionTests {
     [Test]

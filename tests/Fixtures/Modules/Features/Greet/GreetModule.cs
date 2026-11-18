@@ -1,5 +1,5 @@
 namespace Greet;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class GreetModule : Module;

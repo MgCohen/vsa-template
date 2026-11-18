@@ -1,5 +1,5 @@
 namespace Battle;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class BattleModule : Module;

@@ -7,7 +7,7 @@ public sealed class PortablePackageTests {
     [TestCase("Umpire.Vsa.Composition")]
     [TestCase("Umpire.Architecture")]
     [TestCase("Umpire.Vsa")]
-    [TestCase("Umpire.Kernel")]
+    [TestCase("Umpire.Kernels")]
     public void A_package_that_the_app_needs_in_Unity_has_a_netstandard2_1_library(string package) {
         using var nupkg = ZipFile.OpenRead(Path.Combine(LocalFeed.Path, $"{package}.{LocalFeed.Version}.nupkg"));
 

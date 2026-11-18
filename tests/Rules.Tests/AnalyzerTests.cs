@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Umpire.Vsa.Analyzers;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 sealed class AllRulesTest : CSharpAnalyzerTest<VsaAnalyzer, DefaultVerifier> {
     protected override IEnumerable<Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer> GetDiagnosticAnalyzers() =>
@@ -56,7 +56,7 @@ static class Analyzer {
             test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
         }
         Type[] layers = [typeof(Umpire.Messages.Contracts.IMessage), typeof(Umpire.Vsa.Contracts.Requests.IRequest<>), typeof(Umpire.Vsa.Contracts.Events.IntegrationEvent),
-            typeof(Umpire.Vsa.Handlers.Events.IntegrationEventHandler<>), typeof(Umpire.Vsa.Contracts.Requests.IRequestSender), typeof(Umpire.Vsa.Presenters.Presenter), typeof(Umpire.Kernel.Module), typeof(Umpire.Vsa.Composition.Plugin),
+            typeof(Umpire.Vsa.Handlers.Events.IntegrationEventHandler<>), typeof(Umpire.Vsa.Contracts.Requests.IRequestSender), typeof(Umpire.Vsa.Presenters.Presenter), typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin),
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection), typeof(Umpire.Vsa.Handlers.Commands.CommandHandler<,>),
             typeof(Umpire.Messages.Handlers.IHandler), typeof(Umpire.Vsa.Contracts.Commands.ICommand),
             typeof(Umpire.Vsa.Vsa<>), typeof(Umpire.Architecture.Architecture)];

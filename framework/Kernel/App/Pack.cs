@@ -1,4 +1,4 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 using Umpire.Markers;
 using Umpire.Architecture;

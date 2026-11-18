@@ -1,7 +1,7 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class PackArchitectureTests {
     const string PackFolder = "C:/packs/Sample";

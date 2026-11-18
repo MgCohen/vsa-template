@@ -1,5 +1,5 @@
 namespace Cards;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class CardsModule : Module;

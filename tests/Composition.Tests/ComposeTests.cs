@@ -87,6 +87,6 @@ public sealed class ComposeTests {
         Assert.That(provider.GetRequiredService<RingLog>(), Is.SameAs(appRingLog));
     }
 
-    static ServiceProvider Compose(params Umpire.Kernel.Module[] modules) =>
+    static ServiceProvider Compose(params Umpire.Kernels.Module[] modules) =>
         new TestApp(modules).Compose(new ServiceCollection()).BuildServiceProvider();
 }

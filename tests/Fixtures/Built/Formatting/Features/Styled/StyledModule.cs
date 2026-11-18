@@ -1,4 +1,4 @@
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 namespace Styled;
 

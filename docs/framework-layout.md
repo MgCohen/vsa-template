@@ -71,14 +71,14 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 | Generic | `Architecture`, `Concept`, the block kind records (`Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `record Module : Component`, `Library`) | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
 | VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaHost`, `class Plugin : Module`, `WebVsaHost`, `ConsoleVsaHost` |
 
-- The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<Umpire.Kernel.Module>()`. Where two types have the same name, write the full name of the runtime class.
+- The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<Umpire.Kernels.Module>()`. Where two types have the same name, write the full name of the runtime class.
 - A definition `Module` is in the folder of its parent: it is the root part of a group instance.
 - A runtime `Module` has `Name`, `Order`, `Section` and `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
 
 ## How the kernel starts an app
 
 ```
-App.Run(args)                             Umpire.Kernel
+App.Run(args)                             Umpire.Kernels
 ├─ Pack.CreateHost()                      a new AppHost for each run
 └─ AppHost.Create(args, app)
    ├─ CreateBuilder(args)                 open: the generic host, or the web host

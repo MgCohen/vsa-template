@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umpire.Vsa;
 using Umpire.Vsa.Definition;
 using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class ComposeOrderTests {
     [Test]

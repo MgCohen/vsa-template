@@ -16,7 +16,7 @@ public sealed class PackageGraphTests {
         assets = File.ReadAllText(assetsFile);
     }
 
-    [TestCase("Umpire.Kernel.Analyzers")]
+    [TestCase("Umpire.Kernels.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]
     public void Each_analyzer_package_has_its_values_and_props(string package) =>
         Assert.That(Entries(package), Is.SupersetOf(new[] {
@@ -28,9 +28,9 @@ public sealed class PackageGraphTests {
     public void The_VSA_analyzer_package_holds_the_kernel_analyzer_in_its_own_folder() =>
         Assert.That(Entries("Umpire.Vsa.Analyzers"), Is.SupersetOf(new[] {
             "analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll",
-            "analyzers/dotnet/cs/Umpire.Kernel.Analyzers.dll",
-            "build/Umpire.Kernel.Analyzers.globalconfig",
-            "buildTransitive/Umpire.Kernel.Analyzers.globalconfig",
+            "analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll",
+            "build/Umpire.Kernels.Analyzers.globalconfig",
+            "buildTransitive/Umpire.Kernels.Analyzers.globalconfig",
         }));
 
     [Test]
@@ -44,7 +44,7 @@ public sealed class PackageGraphTests {
 
     [Test]
     public void An_app_gets_the_kernel_analyzer_only_from_the_pack_analyzer_package() =>
-        Assert.That(assets, Does.Contain("\"Umpire.Vsa.Analyzers/").And.Not.Contain("\"Umpire.Kernel.Analyzers/"));
+        Assert.That(assets, Does.Contain("\"Umpire.Vsa.Analyzers/").And.Not.Contain("\"Umpire.Kernels.Analyzers/"));
 
     [Test]
     public void An_app_with_no_pack_line_gets_the_VSA_pack_and_both_rule_sets() {

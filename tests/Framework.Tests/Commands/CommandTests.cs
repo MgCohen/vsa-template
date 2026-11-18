@@ -58,5 +58,5 @@ public sealed class CommandTests {
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:").And.EndWith("A command has one handler."));
     }
 
-    static Task<IHost> Start(params Umpire.Kernel.Module[] modules) => WebApps.OnTestServer(modules).Start();
+    static Task<IHost> Start(params Umpire.Kernels.Module[] modules) => WebApps.OnTestServer(modules).Start();
 }

@@ -5,7 +5,7 @@ using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Bare;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Vsa;
 using Umpire.Vsa.Composition;
 

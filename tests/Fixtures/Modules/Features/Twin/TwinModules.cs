@@ -1,6 +1,6 @@
 namespace Twin;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class TwinModule : Module;
 

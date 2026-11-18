@@ -6,7 +6,7 @@ using Steps.Infrastructure;
 using Umpire.Vsa.Composition;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class StepsPlugin : Plugin {
     public override void Configure(IServiceCollection services) {

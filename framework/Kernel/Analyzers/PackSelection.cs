@@ -9,9 +9,9 @@ public static class PackSelection {
     public const string ArchitectureKey = "umpire.architecture";
     const string MetadataKey = "Umpire.Architecture";
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
-    const string AppType = "Umpire.Kernel.App`1";
+    const string AppType = "Umpire.Kernels.App`1";
     const string BlockType = "Umpire.Architecture.Block`1";
-    const string PackType = "Umpire.Kernel.Pack`2";
+    const string PackType = "Umpire.Kernels.Pack`2";
 
     public static bool Selects(Compilation compilation, AnalyzerConfigOptions global, string packAssembly) {
         var entries = CodeEntries(compilation).ToList();

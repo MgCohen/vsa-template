@@ -1,5 +1,5 @@
 namespace PackVariant.Features.Inventory;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class InventoryModule : Module;

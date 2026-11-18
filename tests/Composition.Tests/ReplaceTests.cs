@@ -1,7 +1,7 @@
 namespace Composition.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class ReplaceTests {
     [Test]

@@ -1,5 +1,5 @@
 namespace Report;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class ReportModule : Module;

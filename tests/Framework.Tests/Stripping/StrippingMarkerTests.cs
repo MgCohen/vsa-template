@@ -7,7 +7,7 @@ using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Handlers.Requests;
 using Umpire.Vsa.Presenters;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class StrippingMarkerTests {
     [TestCase(typeof(PreserveAttribute), "PreserveAttribute", AttributeTargets.All)]
@@ -31,7 +31,7 @@ public sealed class StrippingMarkerTests {
     [TestCase(typeof(BeforeStep<>))]
     [TestCase(typeof(AfterStep<>))]
     [TestCase(typeof(Presenter))]
-    [TestCase(typeof(Umpire.Kernel.Module))]
+    [TestCase(typeof(Umpire.Kernels.Module))]
     [TestCase(typeof(App))]
     [TestCase(typeof(Pack))]
     [TestCase(typeof(Umpire.Architecture.Architecture))]

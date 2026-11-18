@@ -1,5 +1,5 @@
 namespace Good;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class GoodModule : Module;

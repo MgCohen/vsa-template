@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Umpire.Vsa;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Hosts.Web;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 sealed class WebTestApp(params Module[] modules) : App<Vsa<WebVsaHost>> {
     readonly List<Action<IServiceCollection>> configure = [];
