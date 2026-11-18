@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Notes.Features.Notebook.Domain;
 using Notes.Features.Notebook.Infrastructure;
 using Umpire.Vsa.Infrastructure;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class NotebookModule : Module {
     public override void Configure(IServiceCollection services) {

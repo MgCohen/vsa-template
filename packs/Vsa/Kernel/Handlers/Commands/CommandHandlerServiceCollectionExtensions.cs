@@ -3,7 +3,7 @@ namespace Umpire.Vsa.Handlers.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Messages.Handlers;
 
 public static class CommandHandlerServiceCollectionExtensions {

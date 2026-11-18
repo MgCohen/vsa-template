@@ -30,8 +30,8 @@ public sealed partial class NotesConsumerTests {
             await WaitUntilStarted(client, app, output, ct);
 
             var title = $"consumer note {Guid.NewGuid():N}";
-            var created = await client.PostAsJsonAsync("/api/notes", new { AuthorId = Guid.NewGuid(), Title = title }, ct);
-            Assert.True(created.IsSuccessStatusCode, $"POST /api/notes gave {created.StatusCode}.\n{output}");
+            var created = await client.PostAsJsonAsync("/api/notebook/create-note", new { AuthorId = Guid.NewGuid(), Title = title }, ct);
+            Assert.True(created.IsSuccessStatusCode, $"POST /api/notebook/create-note gave {created.StatusCode}.\n{output}");
 
             var page = await client.GetStringAsync("/", ct);
             Assert.That(page, Does.Contain("<h1>Notes</h1>"));
@@ -72,7 +72,7 @@ public sealed partial class NotesConsumerTests {
             using var request = CancellationTokenSource.CreateLinkedTokenSource(ct);
             request.CancelAfter(TimeSpan.FromSeconds(10));
             try {
-                using var response = await client.GetAsync("/api/notes", request.Token);
+                using var response = await client.GetAsync("/api/notebook/list-notes", request.Token);
                 if (response.StatusCode == HttpStatusCode.OK) {
                     return;
                 }
@@ -82,7 +82,7 @@ public sealed partial class NotesConsumerTests {
             }
             await Task.Delay(500, ct);
         }
-        Assert.Fail($"The app did not start in three minutes. The last GET /api/notes gave {last}.\n{output}");
+        Assert.Fail($"The app did not start in three minutes. The last GET /api/notebook/list-notes gave {last}.\n{output}");
     }
 
     static int FreePort() {

@@ -129,7 +129,7 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
         Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
-        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebVsaHost>>;"));
+        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebHost>>;"));
         Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("namespace Hello.App.Host;"));
         Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("using Hello.App.Host;"));
     }
@@ -224,7 +224,7 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
         var root = files.Single(f => f.Path == "Hello.csproj").Content;
-        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Vsa.Hosts.Web\" Version=\"{Version}\" />"));
+        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Hosts.Web\" Version=\"{Version}\" />"));
         Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Vsa.Views\" Version=\"{Version}\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Umpire"));
     }
@@ -250,7 +250,7 @@ public sealed class ScaffoldingTests {
             Is.EqualTo(["Features/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs",
                         "Features/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
                         "Features/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
-        Assert.That(string.Concat(files.Select(f => f.Content)), Does.Contain("\"/api/billing/create-invoice\""));
+        Assert.That(string.Concat(files.Select(f => f.Content)), Does.Not.Contain("Route"));
         Assert.That(files.Select(f => f.Content), Has.All.Contain("namespace Shop.Features.Billing.Slices.CreateInvoice;"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
     }

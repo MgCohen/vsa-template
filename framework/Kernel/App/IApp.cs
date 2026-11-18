@@ -1,4 +1,4 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 using Umpire.Markers;
 
@@ -7,6 +7,8 @@ public interface IApp {
     bool IsRunning { get; }
 
     IServiceProvider? Services { get; }
+
+    void Start(string[] args);
 
     int Run(string[] args);
 

@@ -145,7 +145,7 @@ public sealed class VsaRulesTests {
 
         Assert.That(modules.Any(p => p.IsGroup), Is.False);
         Assert.That(modules.SelectMany(p => p.Types),
-            Is.EquivalentTo(new[] { typeof(Umpire.Kernel.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
+            Is.EquivalentTo(new[] { typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
     }
 
     static Decision MayUse(PartPlace from, PartPlace to) =>

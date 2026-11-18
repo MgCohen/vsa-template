@@ -1,5 +1,5 @@
 namespace Shelf;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class ShelfModule : Module;

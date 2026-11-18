@@ -21,7 +21,7 @@ flowchart LR
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030201`). The engine app and the `umpire` tool bundle it |
 | Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
-The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -37,7 +37,7 @@ public class VsaArchitecture : Architecture {
     protected override void Define(Block block) {
         block.Add<Kernel>();
         var feature = block.AddGroup<Feature>();
-        feature.Add<Module>().OfType<Umpire.Kernel.Module>();
+        feature.Add<Module>().OfType<Umpire.Kernels.Module>();
         feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
     }
 
@@ -108,7 +108,7 @@ The placement of the `using` directives is a guideline, not an enforced rule (`I
 2. Put some `using` directives outside the namespace if the file is inside the namespace of the concept records, for example a pack variant in `Umpire.Vsa.Definition.*`.
 3. Add an alias inside the namespace, for example `using Plugin = Umpire.Vsa.Definition.Plugin;`.
 
-A definition file writes each real type with its full name, for example `OfType<Umpire.Kernel.Module>()`. Then it does not import the namespace of that type, and no clash occurs.
+A definition file writes each real type with its full name, for example `OfType<Umpire.Kernels.Module>()`. Then it does not import the namespace of that type, and no clash occurs.
 
 C# finds a name level by level, from the innermost namespace to the outermost. At each level, it examines the members of the namespace first, then the `using` directives of that level. A concept record has the name of a folder, and a folder is a part of a namespace. In app code, a `using` inside the namespace wins over the outer app namespaces:
 
@@ -297,7 +297,7 @@ public sealed class CardsArchitecture : VsaArchitecture {
     }
 }
 
-public class MyApp : App<Vsa<CardsArchitecture, UnityVsaHost>>;
+public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
 ```
 
 `AppReader` (`engine/Plugins/BuiltApp/Infrastructure`) also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
@@ -396,7 +396,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 
 | Form | Example | Block folder |
 |---|---|---|
-| App class | `NotesApp : App<Vsa<WebVsaHost>>` | The project folder of its assembly |
+| App class | `NotesApp : App<Vsa<WebHost>>` | The project folder of its assembly |
 | Typed base | `public abstract class Pack : Block<PackArchitecture>` | The folder of the source file of each concrete subclass |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
 | `.umpireconfig` | `umpire.architecture = Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa` | The folder of the file |
@@ -421,7 +421,7 @@ After it finds the block, the step `FindBlocks` reads the `.csproj` files of the
 | Each project has an Umpire main SDK | `UMP030105` | The `Sdk` attribute of `<Project>` names `Umpire.Sdk` or `Umpire.Sdk.Web`, with or without a version, or the project imports `Umpire.Sdk.Dev.props` (the source form of this repository) |
 | A block with more than one project has a `.umpireconfig` file | `UMP030106` | The file is in the block folder |
 
-`PackArchitecture` (Umpire.Kernel) is the shape of a pack: the pack class in the pack folder (`<Name>Pack.cs`, required), and the folders `Architecture/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`). The pack class uses `Architecture/` and `Kernel/`, `Architecture/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack.
+`PackArchitecture` (Umpire.Kernels) is the shape of a pack: the pack class in the pack folder (`<Name>Pack.cs`, required), and the folders `Architecture/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`). The pack class uses `Architecture/` and `Kernel/`, `Architecture/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack.
 
 `VsaArchitecture` marks `Packs/` with `AddBlockGroup<Pack>()`, so each `Packs/<Name>/` of a VSA app is the place of a pack block. The app host and each module may use `Pack`. A pack variant in that folder inherits `VsaArchitecture` and adds parts and rules: see `pack-variants.md`.
 
@@ -454,7 +454,7 @@ public sealed class MyArchitecture : VsaArchitecture {
     }
 }
 
-public class MyApp : App<Vsa<MyArchitecture, WebVsaHost>>;
+public class MyApp : App<Vsa<MyArchitecture, WebHost>>;
 ```
 
 The Report step sorts the findings: the findings with no file first, then by path, line, code and message (ordinal). Each run gives the same order.

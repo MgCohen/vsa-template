@@ -1,21 +1,24 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Umpire.Markers;
 
 [RequireDerived]
 public abstract class App : IApp {
     readonly object gate = new();
-    AppHost? running;
+    AppHost? host;
+    IServiceProvider? services;
+    AppStop? waiting;
     bool starting;
+    bool runs;
+    bool stopAsked;
 
     public abstract Pack Pack { get; }
 
     public bool IsRunning {
         get {
             lock (gate) {
-                return running is not null;
+                return host is not null;
             }
         }
     }
@@ -23,61 +26,31 @@ public abstract class App : IApp {
     public IServiceProvider? Services {
         get {
             lock (gate) {
-                return running?.Services;
+                return services;
             }
         }
     }
 
-    public int Run(string[] args) {
+    public void Start(string[] args) {
         lock (gate) {
-            if (running is not null || starting) {
+            if (host is not null || starting) {
                 throw new InvalidOperationException(
-                    $"{GetType().Name} is already running. Call Stop() before Run.");
+                    $"{GetType().Name} is already running. Call Stop() before Start or Run.");
             }
             starting = true;
         }
-        var started = Start(args);
-        var lifetime = started.Services?.GetService<IHostApplicationLifetime>();
-        lifetime?.ApplicationStopped.Register(() => Stopped(started));
+        var started = Pack.CreateHost();
         try {
+            var provider = started.Build(args, this);
+            lock (gate) {
+                host = started;
+                services = provider;
+            }
             OnStart();
-            return started.Run();
-        } catch (OperationCanceledException) when (lifetime?.ApplicationStopping.IsCancellationRequested == true) {
-            Stopped(started);
-            return 0;
         } catch {
             Clear(started);
+            started.Dispose();
             throw;
-        }
-    }
-
-    public void Stop() {
-        AppHost? stopped;
-        lock (gate) {
-            stopped = running;
-        }
-        stopped?.Stop();
-    }
-
-    protected internal virtual void ConfigureServices(IServiceCollection services) {
-    }
-
-    protected internal virtual IReadOnlyList<Module>? Modules() => null;
-
-    protected virtual void OnStart() {
-    }
-
-    protected virtual void OnStop() {
-    }
-
-    AppHost Start(string[] args) {
-        try {
-            var host = Pack.CreateHost();
-            host.Create(args, this);
-            lock (gate) {
-                running = host;
-            }
-            return host;
         } finally {
             lock (gate) {
                 starting = false;
@@ -85,18 +58,82 @@ public abstract class App : IApp {
         }
     }
 
-    void Stopped(AppHost stopped) {
+    public int Run(string[] args) {
+        lock (gate) {
+            if (runs) {
+                throw new InvalidOperationException(
+                    $"{GetType().Name} is already running. Call Stop() before Start or Run.");
+            }
+            runs = true;
+            stopAsked = false;
+        }
+        try {
+            Start(args);
+        } catch {
+            EndRun();
+            throw;
+        }
+        try {
+            var stop = Services!.GetRequiredService<AppStop>();
+            lock (gate) {
+                waiting = stop;
+                if (stopAsked) {
+                    stop.Request();
+                }
+            }
+            using var signals = AppSignals.Listen(stop);
+            return stop.Requested.GetAwaiter().GetResult();
+        } finally {
+            EndRun();
+            StopHost();
+        }
+    }
+
+    public void Stop() {
+        lock (gate) {
+            if (runs) {
+                stopAsked = true;
+                waiting?.Request();
+                return;
+            }
+        }
+        StopHost();
+    }
+
+    protected virtual void OnStart() {
+    }
+
+    protected virtual void OnStop() {
+    }
+
+    void EndRun() {
+        lock (gate) {
+            runs = false;
+            waiting = null;
+        }
+    }
+
+    void StopHost() {
+        AppHost? stopped;
+        lock (gate) {
+            stopped = host;
+        }
+        if (stopped is null) {
+            return;
+        }
         try {
             OnStop();
         } finally {
             Clear(stopped);
+            stopped.Dispose();
         }
     }
 
     void Clear(AppHost stopped) {
         lock (gate) {
-            if (running == stopped) {
-                running = null;
+            if (host == stopped) {
+                host = null;
+                services = null;
             }
         }
     }

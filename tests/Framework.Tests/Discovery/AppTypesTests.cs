@@ -4,7 +4,7 @@ using Bare;
 using Shelf;
 using Toolbox;
 using Twin;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class AppTypesTests {
     [Test]

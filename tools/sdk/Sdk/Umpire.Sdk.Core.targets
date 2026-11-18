@@ -25,10 +25,10 @@
     </_UmpireFramework>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <_UmpireFramework Include="Umpire.Kernel" Path="framework/Kernel" />
+    <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" />
     <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
-    <_UmpireFramework Include="Umpire.Kernel.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
+    <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
   <!-- The code of the app selects its pack (App<Vsa<...>>). A package only makes a pack available. The SDK adds the default pack,
        VSA, and its test bases for a test project. UmpireDefaultPack=false leaves them out: then the app references the package

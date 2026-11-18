@@ -1,14 +1,15 @@
 namespace Greet.Slices.Greet;
 
 using Umpire.Messages.Contracts;
-using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Requests;
 
-sealed class GreetHandler : CommandHandler<GreetCommand, GreetResult> {
-    public override Task<Result<GreetResult>> HandleAsync(Envelope<GreetCommand> envelope) {
-        var command = envelope.Message;
-        if (command.Name.Length == 0) {
-            return Task.FromResult<Result<GreetResult>>(new Error("greet.name", "The name is empty."));
+sealed class GreetHandler : RequestHandler<GreetRequest, GreetResponse> {
+    public override Task<Result<GreetResponse>> HandleAsync(Envelope<GreetRequest> envelope) {
+        var request = envelope.Message;
+        if (request.Name.Length == 0) {
+            return Task.FromResult<Result<GreetResponse>>(new Error("greet.name", "The name is empty."));
         }
-        return Task.FromResult<Result<GreetResult>>(new GreetResult($"Hello, {command.Name}", command.Style == GreetStyle.Loud ? 10 : command.Code));
+        var code = request.Style == GreetStyle.Loud ? 10 : request.Code;
+        return Task.FromResult<Result<GreetResponse>>(new GreetResponse($"Hello, {request.Name}", code));
     }
 }

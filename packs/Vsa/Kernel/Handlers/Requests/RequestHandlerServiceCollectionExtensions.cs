@@ -3,7 +3,7 @@ namespace Umpire.Vsa.Handlers.Requests;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Messages.Handlers;
 
 public static class RequestHandlerServiceCollectionExtensions {

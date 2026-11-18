@@ -53,7 +53,7 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         }
         return classes.Count switch {
             0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
-                + "Add one class that inherits App<TPack>, for example App<Vsa<WebVsaHost>>."),
+                + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>."),
             > 1 => new Error(LoadAppCodes.ManyAppClasses,
                 $"The app has more than one app class: {Names(classes)}. Keep one, or make one inherit the other."),
             _ => null,

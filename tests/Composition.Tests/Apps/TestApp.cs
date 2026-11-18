@@ -1,28 +1,30 @@
 namespace Composition.Tests;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Umpire.Vsa;
-using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
-public class TestApp<THost>(params Module[] modules) : App<Vsa<THost>> where THost : VsaHost, new() {
+public class TestApp<THost>(params Module[] modules) : App where THost : AppHost, ITestHost, new() {
     readonly List<Action<IServiceCollection>> configure = [];
+    readonly TestPack<THost> pack = new(modules);
+
+    public override Pack Pack => pack;
 
     public TestApp<THost> With(Action<IServiceCollection> services) {
         configure.Add(services);
+        pack.Configure = configure;
         return this;
     }
 
-    public IHost Build(params string[] args) => Pack.CreateHost().Create(args, this);
+    public TestBuild Build(params string[] args) {
+        var host = Pack.CreateHost();
+        return new TestBuild(host, host.Build(args, this));
+    }
 
-    public IServiceCollection Compose(IServiceCollection services) => Pack.CreateHost().Compose(services, this);
-
-    protected internal override IReadOnlyList<Module> Modules() => modules;
-
-    protected internal override void ConfigureServices(IServiceCollection services) {
-        foreach (var add in configure) {
-            add(services);
-        }
+    public IServiceCollection Compose(IServiceCollection services, IConfiguration? configuration = null) {
+        var host = Pack.CreateHost();
+        host.Compose(services, configuration ?? new ConfigurationBuilder().Build(), Pack.Kernel,
+            new AppTypes(modules, GetType().Assembly));
+        return services;
     }
 }

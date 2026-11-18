@@ -1,5 +1,5 @@
 namespace Rules;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class RulesModule : Module;

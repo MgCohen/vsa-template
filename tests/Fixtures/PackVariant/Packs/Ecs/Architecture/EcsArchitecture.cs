@@ -9,7 +9,7 @@ public sealed class EcsArchitecture : VsaArchitecture {
     protected override void Define(Block block) {
         base.Define(block);
         var ecs = block.AddGroup<EcsFeature>();
-        ecs.Add<Module>().OfType<Umpire.Kernel.Module>();
+        ecs.Add<Module>().OfType<Umpire.Kernels.Module>();
         ecs.Add<Components>();
         ecs.Add<Systems>().OfType<EcsSystem>();
     }

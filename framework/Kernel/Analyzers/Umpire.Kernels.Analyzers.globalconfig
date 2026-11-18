@@ -1,0 +1,14 @@
+# The rules of Umpire.Kernels.Analyzers (UMP0101xx). Each rule has the defaults of its values on its class.
+# The package ships this file, and its build props give it to each project that references the package.
+# A consumer changes a value in the .umpireconfig file of its block. Severity uses the standard key: dotnet_diagnostic.UMP010101.severity = none
+# Keys: umpire.<rule ID>.<key> for one rule, umpire.<key> for all rules that read the key. A rule key wins.
+# If a value is not valid, the build reports UMP010001, and that rule does not run.
+# In a list, write a comma between the items: a semicolon starts a comment.
+# The keys and their defaults:
+#   UMP010101.max = 120, UMP010102.max = 40, UMP010103.max = 300: the maximum characters in a line, lines in a method and lines in a file.
+#   UMP010104.allow_same_name = true: types with the same name can share a file, for example Module and Module<TSettings>.
+#   UMP010105.kind_order = constant, field, constructor, finalizer, property, event, method, nested_type
+#   UMP010105.access_order = public, internal, protected_internal, protected, private_protected, private
+#   UMP010105.static_first = true: static before instance.
+is_global = true
+global_level = -1

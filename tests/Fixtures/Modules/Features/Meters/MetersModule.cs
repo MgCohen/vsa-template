@@ -1,5 +1,5 @@
 namespace Meters;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class MetersModule : Module;

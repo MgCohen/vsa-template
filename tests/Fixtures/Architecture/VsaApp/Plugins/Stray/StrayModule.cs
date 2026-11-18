@@ -1,5 +1,5 @@
 namespace VsaApp.Plugins.Stray;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class StrayModule : Module;

@@ -4,8 +4,9 @@ using Umpire.Messages.Contracts;
 
 public interface IRequest : IMessage {
 #if NET
-    static abstract HttpMethod Method { get; }
-    static abstract string Route { get; }
+    static virtual string? Group => null;
+    static virtual string? Name => null;
+    static virtual Effect Effect => Effect.Write;
 #endif
 }
 

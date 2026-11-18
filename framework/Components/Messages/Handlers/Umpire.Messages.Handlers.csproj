@@ -8,9 +8,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
-  <!-- The registration of the layer uses AppTypes (Umpire.Kernel). Private, so the module projects of this layer do not see Umpire.Kernel. -->
+  <!-- The registration of the layer uses AppTypes (Umpire.Kernels). Private, so the module projects of this layer do not see Umpire.Kernels. -->
   <ItemGroup>
-    <ProjectReference Include="../../../Kernel/Umpire.Kernel.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../../../Kernel/Umpire.Kernels.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Commands" />

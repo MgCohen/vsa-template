@@ -1,7 +1,7 @@
 namespace BuiltApp.Domain.Shared;
 
 public sealed record AppClass(TypeName Type, string Source, bool HasEmptyConstructor, IReadOnlyList<string> Bases) {
-    const string AppBase = "Umpire.Kernel.App";
+    const string AppBase = "Umpire.Kernels.App";
 
     public static bool Is(Type type) =>
         type is { IsAbstract: false, ContainsGenericParameters: false } && BasesOf(type).Contains(AppBase);

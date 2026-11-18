@@ -1,6 +1,6 @@
 namespace Toolbox;
 
 using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class ToolboxPlugin : Plugin;

@@ -10,7 +10,6 @@ using Echo;
 using Framework.Tests.Host;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
@@ -21,8 +20,8 @@ public sealed class CommandTests {
         using var app = await Start(new BattleModule(), new CardsModule(), new ResourcesModule());
         var client = app.GetTestClient();
 
-        var played = await client.PostAsJsonAsync("/api/cards/play", new PlayCardRequest(4));
-        var tooMuch = await client.PostAsJsonAsync("/api/cards/play", new PlayCardRequest(7));
+        var played = await client.PostAsJsonAsync("/api/battle/play-card", new PlayCardRequest(4));
+        var tooMuch = await client.PostAsJsonAsync("/api/battle/play-card", new PlayCardRequest(7));
 
         Assert.That(await played.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<PlayCardResponse>(), Is.EqualTo(new PlayCardResponse(true, 6)));
         Assert.That(await tooMuch.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<PlayCardResponse>(), Is.EqualTo(new PlayCardResponse(false, 6)));
@@ -58,5 +57,5 @@ public sealed class CommandTests {
         Assert.That(error.Message, Does.StartWith("Command Echo.Slices.Echo.EchoCommand has two handlers:").And.EndWith("A command has one handler."));
     }
 
-    static Task<IHost> Start(params Umpire.Kernel.Module[] modules) => WebApps.OnTestServer(modules).Start();
+    static Task<WebRun> Start(params Umpire.Kernels.Module[] modules) => WebApps.OnTestServer(modules).Start();
 }

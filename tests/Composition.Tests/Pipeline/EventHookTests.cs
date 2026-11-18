@@ -3,7 +3,6 @@ namespace Composition.Tests.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 using Signals;
 using Signals.Slices.Ring;
-using Umpire.Vsa.Composition;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Events;
 

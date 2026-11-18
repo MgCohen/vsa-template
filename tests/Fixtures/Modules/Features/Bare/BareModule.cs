@@ -1,5 +1,5 @@
 namespace Bare;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class BareModule : Module;

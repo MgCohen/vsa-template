@@ -25,9 +25,11 @@ The reasons for the limits:
 
 | Unity replaces | Extension point | Doc |
 |---|---|---|
-| The type source of the modules | `App.Modules()`, `new AppTypes(modules)` | `docs/composition.md` |
-| The host | The host type argument: `App<Vsa<UnityVsaHost>>` | `docs/composition.md` |
-| The container | `CreateHost().Compose(services, app)`, with no `Run` | `docs/composition.md` |
+| The type source of the modules | `AppHost.Modules`, `new AppTypes(modules)` | `docs/composition.md` |
+| The host | `UnityHost : AppHost` with `Configure`: `App<Vsa<UnityHost>>` | `docs/composition.md` |
+| The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
+| The container | `host.Compose(services, configuration, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
+| The main thread of presenter events | A `LivePresenters.Dispatch` registration in `UnityHost.Configure` | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
 | The source folders | `UmpireExcludedFolders`, `FolderAliases` | `docs/architecture-engine.md` |
@@ -40,9 +42,9 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 
 Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). Umpire.Sdk does not compile `Assets/` (`UmpireExcludedFolders`).
 
-Each Umpire analyzer rule has the defaults of its values on its class. Two globalconfig files hold the disabled severities and the help text: `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` and `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig`. Each analyzer package ships its file as `build/<PackageId>.globalconfig`, and `Umpire.Vsa.Analyzers` also ships the kernel file. Unity reads a global config only as `Assets/Default.globalconfig` or `<AsmdefName>.globalconfig`, so the Unity package must copy both files there. If a value is not valid, the analyzer reports `UMP010001`.
+Each Umpire analyzer rule has the defaults of its values on its class. Two globalconfig files hold the disabled severities and the help text: `framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.globalconfig` and `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig`. Each analyzer package ships its file as `build/<PackageId>.globalconfig`, and `Umpire.Vsa.Analyzers` also ships the kernel file. Unity reads a global config only as `Assets/Default.globalconfig` or `<AsmdefName>.globalconfig`, so the Unity package must copy both files there. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernel.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` and both values files in `build/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). A Unity project puts both DLLs in one folder. Umpire.Sdk does not add the Umpire.Kernel.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` and both values files in `build/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). A Unity project puts both DLLs in one folder. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
 
 ## Build output
 
@@ -65,9 +67,9 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Contracts, commands and events | `Umpire.Vsa.Contracts.Commands`, `Umpire.Vsa.Contracts.Events` | Yes |
 | Handlers, commands and events | `Umpire.Vsa.Handlers.Commands`, `Umpire.Vsa.Handlers.Events` | Yes |
 | Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |
-| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernel` | Yes |
-| Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaHost` and `Plugin` are here |
-| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The route members are only on `net10.0` |
+| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
+| Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
+| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are only on `net10.0` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
 | Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
@@ -77,7 +79,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. A Unity app calls `new MyApp().Run(args)` through the Unity host, or `new Vsa<UnityVsaHost>().CreateHost().Compose(services, app)` with no host run (`docs/composition.md`). It vendors `Microsoft.Extensions.Hosting` 8.0 and its dependencies, because Umpire.Vsa.Composition references them.
+- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging` and `Configuration` 8.0, and not `Microsoft.Extensions.Hosting`.
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Non-goals

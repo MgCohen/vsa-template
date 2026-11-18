@@ -1,5 +1,5 @@
 namespace SampleApp.Features.SampleModule;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class SampleModuleModule : Module;

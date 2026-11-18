@@ -1,4 +1,4 @@
-namespace Umpire.Kernel;
+namespace Umpire.Kernels;
 
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Configuration;

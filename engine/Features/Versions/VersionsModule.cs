@@ -1,5 +1,5 @@
 namespace Versions;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class VersionsModule : Module;

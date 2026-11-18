@@ -6,7 +6,7 @@ using Umpire.Vsa.Definition;
 namespace Framework.Tests.Pack;
 
 public sealed class PackGraphTests {
-    static readonly string[] Transports = ["Umpire.Vsa.Hosts.Web", "Umpire.Vsa.Views"];
+    static readonly string[] Transports = ["Umpire.Hosts", "Umpire.Vsa.Views"];
 
     [Test]
     public void The_pack_references_each_kernel_layer_of_its_definition() {

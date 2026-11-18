@@ -2,18 +2,18 @@
   <!-- Pinned choice (W24): the analyzer package of a pack holds the kernel analyzer DLL and the kernel rule values, next to its own.
        Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered
        path with the same name and version, also a deleted one, so the VSA rules did not load on Linux (CS8032).
-       Umpire.Sdk adds the Umpire.Kernel.Analyzers package only in source mode (Sdk.targets), so KernelAnalyzer runs one time.
+       Umpire.Sdk adds the Umpire.Kernels.Analyzers package only in source mode (Sdk.targets), so KernelAnalyzer runs one time.
        A pack analyzer project imports this file. A second pack that also bundles the kernel analyzer gives each kernel finding
        two times in an app that gets both packs. -->
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_UmpireKernelAnalyzerInPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)Umpire.Kernel.Analyzers.globalconfig" Pack="true" PackagePath="build;buildTransitive" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)Umpire.Kernels.Analyzers.globalconfig" Pack="true" PackagePath="build;buildTransitive" Visible="false" />
   </ItemGroup>
   <Target Name="_UmpireKernelAnalyzerInPackage" DependsOnTargets="ResolveReferences">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'Umpire.Kernel.Analyzers'" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'Umpire.Kernels.Analyzers'" PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>
   </Target>
 </Project>

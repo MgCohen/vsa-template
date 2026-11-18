@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 using Tests.Shared;
-using Umpire.Kernel;
+using Umpire.Kernels;
 using Umpire.Vsa.Analyzers;
 
 namespace Rules.Tests;

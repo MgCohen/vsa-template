@@ -9,19 +9,19 @@ using Steps.Domain.Shared;
 using Steps.Infrastructure;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
-using Umpire.Vsa.Handlers.Commands;
+using Umpire.Vsa.Handlers.Requests;
 using Versions.Slices.CheckVersions;
 
-sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : CommandHandler<RunEngineCommand, RunEngineResult> {
-    public override async Task<Result<RunEngineResult>> HandleAsync(Envelope<RunEngineCommand> envelope) {
+sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : RequestHandler<RunEngineRequest, RunEngineResponse> {
+    public override async Task<Result<RunEngineResponse>> HandleAsync(Envelope<RunEngineRequest> envelope) {
         var run = envelope.Message;
         options.FailFast = run.FailFast;
         var findings = await Run(run, envelope.Cancellation);
         var report = await commands.SendAsync(new WriteReportCommand(run.Mode, findings), envelope.Cancellation);
-        return report.IsSuccess ? new RunEngineResult(report.Value.ExitCode, report.Value.Lines) : report.Error!;
+        return report.IsSuccess ? new RunEngineResponse(report.Value.ExitCode, report.Value.Lines) : report.Error!;
     }
 
-    async Task<IReadOnlyList<Finding>> Run(RunEngineCommand run, CancellationToken ct) {
+    async Task<IReadOnlyList<Finding>> Run(RunEngineRequest run, CancellationToken ct) {
         var blocks = await commands.SendAsync(new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);
         if (!blocks.IsSuccess) {
             return [.. log.Findings];

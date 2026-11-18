@@ -1,5 +1,5 @@
 namespace Answers;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class AnswersModule : Module;

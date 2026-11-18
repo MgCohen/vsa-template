@@ -1,12 +1,25 @@
 namespace Engine.Tests;
 
-using Microsoft.Extensions.Hosting;
-using Umpire.Vsa;
+using Umpire.Kernels;
 using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Vsa.Definition;
 
-sealed class EngineTestApp(params Module[] modules) : App<Vsa<VsaHost>> {
-    public IHost Build() => Pack.CreateHost().Create([], this);
+sealed class EngineTestApp : App {
+    public EngineTestApp(params Module[] modules) =>
+        Pack = new EnginePack(new AppHost { Modules = modules });
 
-    protected override IReadOnlyList<Module> Modules() => modules;
+    public override Pack Pack { get; }
+
+    public EngineBuild Build() {
+        var host = Pack.CreateHost();
+        return new EngineBuild(host, host.Build([], this));
+    }
+
+    sealed class EnginePack(AppHost host) : Pack {
+        public override Umpire.Architecture.Architecture Architecture { get; } = new VsaArchitecture();
+
+        public override Kernel Kernel { get; } = new VsaKernel();
+
+        public override AppHost CreateHost() => host;
+    }
 }

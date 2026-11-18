@@ -1,5 +1,5 @@
 namespace VsaApp.Features.Notebook;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class NotebookModule : Module;

@@ -3,7 +3,7 @@ namespace Composition.Tests;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Commands;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class OneAssemblyModuleTests {
     [Test]

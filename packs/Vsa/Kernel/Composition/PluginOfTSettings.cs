@@ -2,7 +2,7 @@ namespace Umpire.Vsa.Composition;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public abstract class Plugin<TSettings> : Plugin where TSettings : class, new() {
     public sealed override void Configure(IServiceCollection services) {

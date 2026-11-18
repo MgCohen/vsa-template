@@ -1,7 +1,6 @@
 namespace PackVariant.App.Host;
 
 using PackVariant.Packs.Ecs;
-using Umpire.Vsa.Composition;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
-public class PackVariantApp : App<Ecs<VsaHost>>;
+public class PackVariantApp : App<Ecs<AppHost>>;

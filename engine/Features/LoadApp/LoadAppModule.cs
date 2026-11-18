@@ -1,5 +1,5 @@
 namespace LoadApp;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class LoadAppModule : Module;

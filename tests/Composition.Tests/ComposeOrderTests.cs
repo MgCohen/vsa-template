@@ -1,37 +1,53 @@
 namespace Composition.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Vsa;
-using Umpire.Vsa.Definition;
+using Umpire.Kernels;
 using Umpire.Vsa.Composition;
-using Umpire.Kernel;
 
 public sealed class ComposeOrderTests {
     [Test]
-    public void Compose_runs_the_core_then_the_host_then_the_modules_in_order_then_the_app() {
-        var services = new OrderApp(new LastModule(), new FirstModule()).Compose(new ServiceCollection());
+    public void Compose_runs_the_kernel_then_the_modules_in_order_then_the_host() {
+        var services = new TestApp(new LastModule(), new FirstModule())
+            .With(services => services.AddSingleton(new Step("host")))
+            .Compose(new ServiceCollection());
 
         var steps = services.Select(service => service.ImplementationInstance).OfType<Step>().Select(step => step.Name);
 
-        Assert.That(steps, Is.EqualTo(new[] { "host:core", "module:1", "module:2", "app" }));
+        Assert.That(steps, Is.EqualTo(new[] { "module:1", "module:2", "host" }));
+    }
+
+    [Test]
+    public void The_kernel_installs_the_core_before_the_architecture_layers() {
+        var services = new TestApp().Compose(new ServiceCollection());
+
+        var types = services.ToList().FindIndex(service => service.ServiceType == typeof(AppTypes));
+        var stop = services.ToList().FindIndex(service => service.ServiceType == typeof(AppStop));
+        var requests = services.ToList().FindIndex(service => service.ServiceType.Name == "IRequestSender");
+
+        Assert.That(types, Is.LessThan(requests));
+        Assert.That(stop, Is.LessThan(requests));
+    }
+
+    [Test]
+    public void A_pack_variant_kernel_installs_the_layers_of_its_parent_first() {
+        var services = new ServiceCollection();
+        using var host = new TestHost();
+        host.Compose(services, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(),
+            new VariantKernel(), new AppTypes([], typeof(ComposeOrderTests).Assembly));
+
+        var requests = services.ToList().FindIndex(service => service.ServiceType.Name == "IRequestSender");
+        var variant = services.ToList().FindIndex(s => s.ImplementationInstance is Step { Name: "variant" });
+
+        Assert.That(requests, Is.LessThan(variant));
     }
 
     public sealed record Step(string Name);
 
-    public sealed class OrderHost : VsaHost {
-        protected override void Install(IServiceCollection services, AppTypes types) {
-            var core = services.Any(service => service.ImplementationInstance == types);
-            services.AddSingleton(new Step(core ? "host:core" : "host"));
+    public sealed class VariantKernel : VsaKernel {
+        protected override void Configure(IServiceCollection services, AppTypes types) {
+            base.Configure(services, types);
+            services.AddSingleton(new Step("variant"));
         }
-    }
-
-    public sealed class OrderApp(params Module[] modules) : App<Vsa<VsaArchitecture, OrderHost>> {
-        public IServiceCollection Compose(IServiceCollection services) => Pack.CreateHost().Compose(services, this);
-
-        protected internal override IReadOnlyList<Module> Modules() => modules;
-
-        protected internal override void ConfigureServices(IServiceCollection services) =>
-            services.AddSingleton(new Step("app"));
     }
 
     public sealed class FirstModule : Module {

@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernel.csproj" />
+    <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernels.csproj" />
     <ProjectReference Include="../../../../framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
     <ProjectReference Include="../Handlers/Events/Umpire.Vsa.Handlers.Events.csproj" />
     <ProjectReference Include="../Handlers/Commands/Umpire.Vsa.Handlers.Commands.csproj" />

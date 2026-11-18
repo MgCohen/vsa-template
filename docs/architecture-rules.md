@@ -6,7 +6,7 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
-| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernel.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
+| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernels.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
 | Build of the host | Architecture | `Umpire.Engine.Build` (rule engine, ArchUnitNET) | `UMP02xxxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
@@ -44,7 +44,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP020402` | Architecture | Each block place holds a check entry. |
 | `UMP03xxxx` | Engine | The engine run: a step throws or is skipped, the check entries, the projects of a block, a version, the load of the app. One table: "Engine codes" in `architecture-engine.md`. |
 
-Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`), `01` Umpire.Kernel.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
+Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`), `01` Umpire.Kernels.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
 ## Disabled rules
 
@@ -74,6 +74,15 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A plugin module has exactly one root class | `UMP020301`, and the host at startup |
 | A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
 | A plugin module has no `Slices/` folder | `UMP020202` |
+
+## The host part
+
+The kernel part `Host` of the VSA definition maps the assemblies `Umpire.Hosts.*` (`InAssembly("Umpire.Hosts")`): `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
+
+| Rule | Check |
+|---|---|
+| `App/Host` uses `Composition` and the `Kernel` part itself | `UMP020101` |
+| `Views` uses the `Host` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
@@ -123,7 +132,7 @@ umpire.UMP010201.check_responses = true             # rule option
 | File | Holds |
 |---|---|
 | `.editorconfig` (repository root) | The style of this repository: the built-in .NET rules, editor and code style options, severities. A test section turns off CA1707 (underscores in test names). No `UMP` key |
-| `framework/Kernel/Analyzers/Umpire.Kernel.Analyzers.globalconfig` | The help text of the keys of the kernel rules (`UMP0101xx`). The defaults are on the rule classes |
+| `framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.globalconfig` | The help text of the keys of the kernel rules (`UMP0101xx`). The defaults are on the rule classes |
 | `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig` | The severities of the disabled VSA rules (`UMP0102xx`) and the help text of their keys |
 | `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings |
 | `framework/Kernel/Analyzers/Umpire.RuleValues.targets` | The one place that knows how the rule values reach a compile |

@@ -10,7 +10,7 @@ using UmpireEngine;
 namespace Engine.Tests;
 
 public sealed class BlocksTests {
-    const string PackArchitecture = "Umpire.Kernel.PackArchitecture, Umpire.Kernel";
+    const string PackArchitecture = "Umpire.Kernels.PackArchitecture, Umpire.Kernels";
     const string VsaArchitecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa";
     static readonly BinIndex NoBin = new("", [], []);
     static readonly string Fixture = Repo.Path("tests", "Fixtures", "Blocks");
@@ -72,7 +72,7 @@ public sealed class BlocksTests {
     }
 
     [TestCase("Lib.Missing, Umpire.Vsa", "Umpire.Vsa has no type Lib.Missing")]
-    [TestCase("Umpire.Kernel.Pack, Umpire.Kernel", "does not inherit Umpire.Architecture.Architecture")]
+    [TestCase("Umpire.Kernels.Pack, Umpire.Kernels", "does not inherit Umpire.Architecture.Architecture")]
     [TestCase("Some.Architecture, Some.Missing", "the build output has no assembly Some.Missing")]
     public void A_bad_architecture_name_gives_its_reason(string name, string reason) {
         using var reader = new BinReader(AppContext.BaseDirectory);
@@ -97,14 +97,14 @@ public sealed class BlocksTests {
         var app = Index.Dlls.Single(d => d.Name == "umpire-engine").AppClasses.Single();
 
         Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp).FullName!, "umpire-engine")));
-        Assert.That(app.Bases, Does.Contain("Umpire.Kernel.App"));
+        Assert.That(app.Bases, Does.Contain("Umpire.Kernels.App"));
         Assert.That(app.HasEmptyConstructor, Is.True);
     }
 
     [Test]
     public void The_leaves_of_the_app_classes_drop_each_base_app_class() {
-        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", true, ["Umpire.Kernel.App"]);
-        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", true, ["A.First", "Umpire.Kernel.App"]);
+        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", true, ["Umpire.Kernels.App"]);
+        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", true, ["A.First", "Umpire.Kernels.App"]);
 
         Assert.That(AppClass.Leaves([first, second]), Is.EqualTo(new[] { second }));
     }

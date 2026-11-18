@@ -3,7 +3,7 @@ namespace Framework.Tests.Unity;
 public static class PortableProjects {
     public static readonly string[] Names = [
         "Umpire.Architecture",
-        "Umpire.Kernel",
+        "Umpire.Kernels",
         "Umpire.Messages.Contracts",
         "Umpire.Messages.Handlers",
         "Umpire.Vsa",
@@ -19,5 +19,5 @@ public static class PortableProjects {
         "Umpire.Vsa.Presenters",
     ];
 
-    public static readonly string[] Analyzers = ["Umpire.Kernel.Analyzers", "Umpire.Vsa.Analyzers"];
+    public static readonly string[] Analyzers = ["Umpire.Kernels.Analyzers", "Umpire.Vsa.Analyzers"];
 }

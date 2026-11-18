@@ -1,6 +1,6 @@
 namespace Framework.Tests.Host;
 
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 static class WebApps {
     public static WebTestApp OnTestServer(params Module[] modules) => new(modules);

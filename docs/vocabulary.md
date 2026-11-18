@@ -10,7 +10,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Term | Meaning | Code names |
 |---|---|---|
-| Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernel`, `umpire` tool |
+| Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernels`, `umpire` tool |
 | Framework | The Umpire code in `framework/`: the framework kernel and the components. Not a .NET assembly, and not an external part | `framework/Kernel/`, `framework/Components/` |
 | Pack | One architecture with its definition, bases and rules | `packs/Vsa/`, `Vsa<THost>` |
 | Pack variant | A pack whose architecture inherits the architecture of another pack and adds parts and rules | `Packs/Ecs/`, `EcsArchitecture : VsaArchitecture` |
@@ -21,9 +21,11 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Term | Meaning | Code names |
 |---|---|---|
-| App | A block that runs. Its app class is the check entry and the install point. Not the built host | `App`, `App<TPack>`, `IApp`, `NotesApp`, `EngineApp`; the concept record `App` |
-| Host | The code that starts one kind of app. The host class makes, runs and stops the built host. The VSA layer `Host` holds this code and the app class | `AppHost`, `VsaHost`, `WebVsaHost`, `ConsoleVsaHost`; the layer record `Host` |
-| Built host | The Microsoft host object that a host class builds | `IHost` (Microsoft.Extensions.Hosting) |
+| App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TPack>`, `IApp`, `NotesApp`, `EngineApp`; the concept record `App` |
+| Host | The platform of an app. The host class builds the services and disposes them. It does not run or wait | `AppHost`, `WebHost`, `ConsoleHost`; the layer record `Host` |
+| Kernel | The install point of an architecture: the core, then the layers | `Kernel`, `VsaKernel` |
+| Operation | A request that a host exposes, with its group, name and effect | `Operation`, `Effect` |
+| Stop request | A call that ends `App.Run` with an exit code | `AppStop.Request` |
 | Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `AddPipeline`, the `Add<Name>(services, types)` extensions |
 | Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation`, `AppTypes.Implementations` |
 
@@ -33,8 +35,8 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 |---|---|---|
 | App | A block that runs. Its app class is the check entry and the install point | `NotesApp`, `EngineApp` |
 | Pack | A block with one architecture and its kernel | `packs/Vsa/` |
-| Framework kernel | Free base code that each app has, with no layer. It owns the host | `framework/Kernel/`, `AppHost` |
-| Pack kernel | The layer bases of a pack. It extends the framework kernel | `packs/Vsa/Kernel/`, `VsaHost` |
+| Framework kernel | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, `Kernel`, `AppHost` |
+| Pack kernel | The layer bases of a pack. It extends the framework kernel | `packs/Vsa/Kernel/`, `VsaKernel` |
 | Component | Free code that a kernel installs by name | `framework/Components/Messages/` |
 | Module | A component that the host finds in the app. It ships with the app | A feature module, a plugin module |
 | Library | A block with no install point | `engine/Versions/` |
@@ -56,7 +58,7 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | Part | One place in the folder tree of a definition | `Part`, `PartGroup` |
 | Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture`: `AddContractParts`, `AndHandlerParts`, `ForContractParts`, `UsesContractParts`, `ForHandlerParts` |
 | Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Host`, `Composition`, `Slice` |
-| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernel.Module` and `Plugin` |
+| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernels.Module` and `Plugin` |
 | Module kind | A group of modules with one shape. Each module kind record inherits `Module` | `Feature`, `Plugin`, the `EcsFeature` of a pack variant |
 | External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` |
 | System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` |
@@ -100,5 +102,4 @@ Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pa
 | Step, alone | "Engine step" or "pipeline step" |
 | Framework, for a .NET assembly | "System assembly" |
 | Framework, for a DLL part of a definition | "External part" |
-| App, for the `IHost` | "Built host" |
 | Registration, for a found type pair | "Service implementation" |

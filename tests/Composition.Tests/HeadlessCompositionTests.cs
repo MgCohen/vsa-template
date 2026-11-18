@@ -9,19 +9,16 @@ using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Echo;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Resources;
 using Resources.Domain.Shared;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
-using Umpire.Vsa.Composition;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Contracts.Requests;
-using Umpire.Vsa.Presenters;
-using Umpire.Kernel;
+using Umpire.Kernels;
 
 public sealed class HeadlessCompositionTests {
     [Test]
@@ -112,13 +109,31 @@ public sealed class HeadlessCompositionTests {
     }
 
     [Test]
-    public async Task The_generic_host_runs_until_the_app_stops_it() {
-        using var host = App().Build();
+    public async Task Run_waits_until_the_app_stops() {
+        var app = App();
 
-        var run = host.RunAsync();
-        await host.StopAsync();
+        var run = Task.Run(() => app.Run([]));
+        while (!app.IsRunning && !run.IsCompleted) {
+            await Task.Delay(10);
+        }
+        app.Stop();
 
         Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10))), Is.SameAs(run));
+        Assert.That(await run, Is.Zero);
+        Assert.That(app.IsRunning, Is.False);
+    }
+
+    [Test]
+    public async Task A_stop_request_from_a_service_ends_the_run_with_its_exit_code() {
+        var app = App();
+
+        var run = Task.Run(() => app.Run([]));
+        while (app.Services is null && !run.IsCompleted) {
+            await Task.Delay(10);
+        }
+        app.Services!.GetRequiredService<AppStop>().Request(5);
+
+        Assert.That(await run, Is.EqualTo(5));
     }
 
     static TestApp App(params Module[] modules) => new(modules);
