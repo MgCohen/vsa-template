@@ -7,17 +7,16 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Umpire.Config;
 
 public static class ConfigFile {
-    static readonly ConditionalWeakTable<AdditionalText, UmpireConfig> Parsed = new();
+    static readonly ConditionalWeakTable<AdditionalText, ConfigValues> Parsed = new();
 
-    public static UmpireConfig Of(AnalyzerOptions options, CancellationToken cancellation) =>
+    public static ConfigValues Of(AnalyzerOptions options, CancellationToken cancellation) =>
         File(options) is { } file
-            ? Parsed.GetValue(file, text => UmpireConfig.Parse(text.GetText(cancellation)?.ToString() ?? ""))
-            : UmpireConfig.Empty;
+            ? Parsed.GetValue(file, text => ConfigValues.Parse(text.GetText(cancellation)?.ToString() ?? ""))
+            : ConfigValues.Empty;
 
     public static AdditionalText? File(AnalyzerOptions options) =>
         options.AdditionalFiles.FirstOrDefault(file =>
-            string.Equals(Path.GetFileName(file.Path), UmpireConfig.FileName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(Path.GetFileName(file.Path), ConfigValues.FileName, StringComparison.OrdinalIgnoreCase));
 }

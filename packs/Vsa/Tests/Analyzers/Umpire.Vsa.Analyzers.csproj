@@ -15,6 +15,5 @@
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <ProjectReference Include="../../../../framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" PrivateAssets="all" />
   </ItemGroup>
-  <Import Project="../../../../framework/Kernel/Analyzers/Umpire.ConfigBundle.targets" />
   <Import Project="../../../../framework/Kernel/Analyzers/Umpire.KernelBundle.targets" />
 </Project>
