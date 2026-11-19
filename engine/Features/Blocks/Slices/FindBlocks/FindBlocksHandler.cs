@@ -18,8 +18,14 @@ sealed class FindBlocksHandler : CommandHandler<FindBlocksCommand, FindBlocksRes
         var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
         var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
         IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
-        var found = BlockSearch.Find(project, folder, [.. bin.Entries, .. files.Select(reader.Check)], bin);
-        return found.IsSuccess ? WithProjects(found.Value) : found;
+        IReadOnlyList<BlockEntry> entries = [.. bin.Entries, .. files.Select(reader.Check)];
+        var found = BlockSearch.Find(project, folder, entries, bin);
+        if (!found.IsSuccess || command.IsUsed) {
+            return found;
+        }
+        var tree = found.Value.Blocks;
+        var used = UsedBlocks.Of(tree.Current.Folder, tree.Inner, entries, bin);
+        return WithProjects(found.Value with { Blocks = tree with { Used = used } });
     }
 
     static FindBlocksResult WithProjects(FindBlocksResult found) {

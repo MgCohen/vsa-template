@@ -15,11 +15,13 @@ public sealed class BinReader : IDisposable {
 
     readonly string bin;
     readonly string[] dlls;
+    readonly IReadOnlySet<string> projects;
     readonly MetadataLoadContext context;
 
     public BinReader(string bin) {
         this.bin = bin;
         dlls = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
+        projects = DepsFile.ProjectAssemblies(bin);
         var shared = SharedFrameworks().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
         context = new MetadataLoadContext(new PathAssemblyResolver(dlls.Concat(shared)));
     }
@@ -206,7 +208,7 @@ public sealed class BinReader : IDisposable {
         }
         using (symbols) {
             var name = Path.GetFileNameWithoutExtension(dll);
-            var plain = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], []);
+            var plain = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], [], projects.Contains(name));
             if (!symbols.HasSymbols) {
                 return new DllRead(plain, []);
             }
