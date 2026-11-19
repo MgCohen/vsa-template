@@ -36,15 +36,34 @@ static class ConfigReader {
             ?? Type.GetType(LoadContextType + ", System.Runtime.Loader")
             ?? throw new FileLoadException(
                 $"The compiler runtime has no {LoadContextType}, so {ConfigAssembly} cannot load in a private load context.");
-        var context = Activator.CreateInstance(contextType, ConfigAssembly + ".Private", false)!;
+        var owner = contextType.GetMethod("GetLoadContext", [typeof(Assembly)])!.Invoke(null, [typeof(ConfigReader).Assembly]);
+        var ownerIsCollectible = owner is not null && (bool)contextType.GetProperty("IsCollectible")!.GetValue(owner)!;
+        var context = Activator.CreateInstance(contextType, ConfigAssembly + ".Private", ownerIsCollectible)!;
         var fromStream = contextType.GetMethod("LoadFromStream", [typeof(Stream)])!;
         var tree = new Tree(context, fromStream);
-        var resolving = contextType.GetEvent("Resolving")!;
-        resolving.AddEventHandler(context, Delegate.CreateDelegate(resolving.EventHandlerType!, tree, typeof(Tree).GetMethod(nameof(Tree.Resolve))!));
+        var resolving = Subscribe(contextType, context, "Resolving", tree, nameof(Tree.Resolve));
+        if (ownerIsCollectible) {
+            var lifetime = new Lifetime(context, contextType.GetEvent("Resolving")!, resolving, contextType.GetMethod("Unload", Type.EmptyTypes)!);
+            Subscribe(contextType, owner!, "Unloading", lifetime, nameof(Lifetime.Unload));
+        }
         var config = tree.Load(ConfigAssembly)
             ?? throw new FileNotFoundException($"The analyzer DLL has no embedded {ConfigAssembly}.dll.", ConfigAssembly + ".dll");
         var type = config.GetType(ConfigType, throwOnError: true)!;
         return new Reader(type.GetMethod("Parse", [typeof(string)])!, type.GetMethod("Values", Type.EmptyTypes)!);
+    }
+
+    static Delegate Subscribe(Type contextType, object source, string eventName, object target, string method) {
+        var handler = contextType.GetEvent(eventName)!;
+        var subscription = Delegate.CreateDelegate(handler.EventHandlerType!, target, target.GetType().GetMethod(method)!);
+        handler.AddEventHandler(source, subscription);
+        return subscription;
+    }
+
+    sealed class Lifetime(object context, EventInfo resolving, Delegate resolver, MethodInfo unload) {
+        public void Unload(object _) {
+            resolving.RemoveEventHandler(context, resolver);
+            unload.Invoke(context, null);
+        }
     }
 
     sealed class Reader(MethodInfo parse, MethodInfo values) {
