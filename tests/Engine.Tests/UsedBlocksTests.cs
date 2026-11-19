@@ -6,7 +6,10 @@ using Tests.Shared;
 namespace Engine.Tests;
 
 public sealed class UsedBlocksTests {
-    static readonly string pack = Repo.Path("packs", "Vsa");
+    static readonly string[] frameworkBlocks = [
+        Repo.Path("architecture"), Repo.Path("framework", "Components", "Config"),
+        Repo.Path("framework", "Components", "Messages"), Repo.Path("framework", "Kernel"), Repo.Path("packs", "Vsa"),
+    ];
     static BinIndex? index;
 
     static BinIndex Index {
@@ -21,10 +24,10 @@ public sealed class UsedBlocksTests {
 
     [TestCase("tests", "Fixtures", "Notes")]
     [TestCase("engine")]
-    public void A_block_uses_only_the_pack_block_of_its_project_references(params string[] folder) {
+    public void A_block_uses_only_the_framework_blocks_of_its_project_references(params string[] folder) {
         var used = UsedBlocks.Of(Repo.Path(folder), [], Index.Entries, Index);
 
-        Assert.That(used, Is.EqualTo(new[] { Path.GetFullPath(pack) }));
+        Assert.That(used, Is.EqualTo(frameworkBlocks.Select(Path.GetFullPath)));
     }
 
     [Test]
