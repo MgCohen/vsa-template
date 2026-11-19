@@ -13,6 +13,7 @@ using Signals.Presenters;
 using Signals.Slices.Ring;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Presenters;
 
 public sealed class ComposeTests {
     [Test]
@@ -30,6 +31,7 @@ public sealed class ComposeTests {
     public async Task An_event_reaches_its_handler_and_a_live_presenter_with_no_host() {
         await using var provider = Compose(new SignalsModule());
         await using var scope = provider.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<PresenterScope>();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
 
         await scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>()

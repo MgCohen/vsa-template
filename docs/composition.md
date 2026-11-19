@@ -185,7 +185,7 @@ A module defines its requests, commands, events, handlers and presenters one tim
 | Kind | Part | `AppHost` | `ConsoleHost` | `WebHost` |
 |---|---|---|---|---|
 | Definition | Messages, in-process senders | Yes | Yes | Yes |
-| Definition | Presenters, `LivePresenters` | Yes | Yes | Yes |
+| Definition | Presenters, `PresenterScope`, `LivePresenters` | Yes | Yes | Yes |
 | Transport | Command line: one request | No | Yes | No |
 | Transport | HTTP API: one route for each request | No | No | Yes |
 | Transport | Views (`ViewsRoot`): Razor components | No | No | Yes |
@@ -334,7 +334,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
-| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter one time, and connects each presenter with events |
+| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces` | Registers each presenter one time, and forwards each `IPresenterHandler<TEvent>` of the presenter to it |
 | `Views` (Hosts.Web) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
 | `RequestOperations` (Composition) | `MakeGenericMethod` | Reads the static `Group`, `Name` and `Effect` of each request, and makes its `Operation` |
 | `CommandLine` (Hosts.Console) | `GetConstructors`, `Invoke` | Binds the command-line values to the constructor of the request |
@@ -498,10 +498,6 @@ A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM packag
 public sealed class UnityHost : AppHost {
     protected override void Configure(IServiceCollection services, AppTypes types) {
         services.AddLogging(logging => logging.AddProvider(new UnityLogProvider()));
-        services.AddSingleton<LivePresenters.Dispatch>(async work => {
-            await Awaitable.MainThreadAsync();
-            await work();
-        });
     }
 }
 ```

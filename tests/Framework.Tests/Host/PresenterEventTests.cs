@@ -36,14 +36,24 @@ public sealed class PresenterEventTests {
     }
 
     [Test]
+    public void TheModuleScanDoesNotTakeAPresenterAsAModuleHandler() {
+        var registrations = WebApps.OnTestServer(new SignalsModule()).Registrations();
+
+        Assert.That(registrations.Where(s => s.ImplementationType == typeof(BellPresenter)).Select(s => s.ServiceType),
+            Is.EqualTo(new[] { typeof(BellPresenter) }));
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(IPresenterHandler<Rang>)), Is.EqualTo(1));
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.EqualTo(1));
+    }
+
+    [Test]
     public async Task APresenterGetsTheEventAfterItsHandlersWithNoView() {
         using var app = await Start();
-        using var scope = app.Services.CreateScope();
+        using var scope = LiveScope(app);
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
         var changed = 0;
         presenter.Changed += () => changed++;
 
-        await scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(new Rang("door"), CancellationToken.None);
+        await Publish(scope, "door");
 
         Assert.That(app.Services.GetRequiredService<RingLog>().Bells, Is.EqualTo(new[] { "door" }));
         Assert.That(presenter.Last, Is.EqualTo("door"));
@@ -51,50 +61,66 @@ public sealed class PresenterEventTests {
     }
 
     [Test]
-    public async Task APresenterInAnotherScopeGetsTheEvent() {
+    public async Task TheEventReachesThePresentersOfTwoLiveScopes() {
         using var app = await Start();
-        using var circuit = app.Services.CreateScope();
-        var presenter = circuit.ServiceProvider.GetRequiredService<BellPresenter>();
+        using var first = LiveScope(app);
+        using var second = LiveScope(app);
+        var one = first.ServiceProvider.GetRequiredService<BellPresenter>();
+        var two = second.ServiceProvider.GetRequiredService<BellPresenter>();
 
         using (var request = app.Services.CreateScope()) {
-            await request.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(new Rang("door"), CancellationToken.None);
+            await Publish(request, "door");
         }
 
-        Assert.That(presenter.Last, Is.EqualTo("door"));
+        Assert.That(one.Last, Is.EqualTo("door"));
+        Assert.That(two.Last, Is.EqualTo("door"));
     }
 
     [Test]
     public async Task APresenterOfAScopeThatEndedGetsNothing() {
         using var app = await Start();
         BellPresenter presenter;
-        using (var circuit = app.Services.CreateScope()) {
+        using (var circuit = LiveScope(app)) {
             presenter = circuit.ServiceProvider.GetRequiredService<BellPresenter>();
         }
         using var request = app.Services.CreateScope();
 
-        await request.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(new Rang("door"), CancellationToken.None);
+        await Publish(request, "door");
 
         Assert.That(presenter.Last, Is.Null);
     }
 
     [Test]
-    public async Task AScopeDispatcherRunsTheEvent() {
-        var dispatched = 0;
-        using var app = await Start(services => services.AddScoped<LivePresenters.Dispatch>(_ => work => {
-            dispatched++;
-            return work();
-        }));
+    public async Task APresenterOfAScopeThatIsNotLiveGetsNothing() {
+        using var app = await Start();
         using var scope = app.Services.CreateScope();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
 
-        await scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(new Rang("door"), CancellationToken.None);
+        await Publish(scope, "door");
 
-        Assert.That(dispatched, Is.EqualTo(1));
-        Assert.That(presenter.Last, Is.EqualTo("door"));
+        Assert.That(presenter.Last, Is.Null);
     }
 
-    static Task<WebRun> Start(Action<IServiceCollection>? configure = null) =>
-        WebApps.OnTestServer(new SignalsModule()).With(configure ?? (_ => { })).Start();
+    [Test]
+    public async Task TheDeliveryMakesAPresenterThatDoesNotExistYetInALiveScope() {
+        using var app = await Start();
+        using var scope = LiveScope(app);
+
+        await Publish(scope, "door");
+
+        Assert.That(scope.ServiceProvider.GetRequiredService<BellPresenter>().Last, Is.EqualTo("door"));
+    }
+
+    static IServiceScope LiveScope(WebRun app) {
+        var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<PresenterScope>();
+        return scope;
+    }
+
+    static Task Publish(IServiceScope scope, string bell) =>
+        scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(new Rang(bell), CancellationToken.None);
+
+    static Task<WebRun> Start() => WebApps.OnTestServer(new SignalsModule()).Start();
 
     sealed class OpenPresenter<T>() : Presenter(null!);
 }

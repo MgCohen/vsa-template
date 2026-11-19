@@ -17,6 +17,7 @@ using Signals.Slices.Ring;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
+using Umpire.Vsa.Presenters;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Kernels;
 
@@ -55,6 +56,7 @@ public sealed class HeadlessCompositionTests {
     public async Task An_event_reaches_its_handler_and_a_live_presenter() {
         using var host = App(new SignalsModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<PresenterScope>();
         var presenter = scope.ServiceProvider.GetRequiredService<BellPresenter>();
 
         await scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>()

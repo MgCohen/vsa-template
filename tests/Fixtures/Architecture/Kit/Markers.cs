@@ -14,6 +14,6 @@ public interface IPresenter;
 
 public interface IEntity;
 
-public interface IPresenterEvent<in TEvent> : IPresenter {
-    System.Threading.Tasks.Task OnEventAsync(TEvent e);
+public interface IPresenterHandler<in TEvent> : IPresenter {
+    System.Threading.Tasks.Task HandleAsync(TEvent e);
 }
