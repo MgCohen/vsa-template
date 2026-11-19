@@ -5,6 +5,7 @@ using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
 using Changes.Slices.FindChanges;
 using Changes.Slices.WriteStamp;
+using Engine.Infrastructure;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
 using Report.Slices.WriteReport;
@@ -18,10 +19,11 @@ using Versions.Slices.CheckVersions;
 
 sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : RequestHandler<RunEngineRequest, RunEngineResponse> {
     public override async Task<Result<RunEngineResponse>> HandleAsync(Envelope<RunEngineRequest> envelope) {
-        var run = envelope.Message;
+        var given = envelope.Message;
+        var run = given with { Mode = CheckMode.Of(given.Mode, Folder(given)) };
         options.FailFast = run.FailFast;
         var findings = await Run(run, envelope.Cancellation);
-        var report = await commands.SendAsync(new WriteReportCommand(run.Mode, findings), envelope.Cancellation);
+        var report = await commands.SendAsync(new WriteReportCommand(run.Mode!.Value, findings), envelope.Cancellation);
         return report.IsSuccess ? new RunEngineResponse(report.Value.ExitCode, report.Value.Lines) : report.Error!;
     }
 
@@ -40,8 +42,7 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     }
 
     async Task Check(RunEngineRequest run, CancellationToken ct) {
-        var folder = run.Block.Length > 0 ? run.Block : run.Project;
-        var changes = await commands.SendAsync(new FindChangesCommand(folder, run.Bin, Inputs(run)), ct);
+        var changes = await commands.SendAsync(new FindChangesCommand(Folder(run), run.Bin, Inputs(run)), ct);
         if (changes.IsSuccess && changes.Value.Same) {
             return;
         }
@@ -51,6 +52,8 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
             await commands.SendAsync(new WriteStampCommand(run.Bin, changes.Value.Hash), ct);
         }
     }
+
+    static string Folder(RunEngineRequest run) => run.Block.Length > 0 ? run.Block : run.Project;
 
     static string Inputs(RunEngineRequest run) => $"{run.Mode}|{run.Skip}|{run.Block}";
 

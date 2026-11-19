@@ -35,7 +35,9 @@ public sealed class ChangesTests {
         var result = await RunEngineTests.Run(block: TwoApps, keepStamp: true);
 
         Assert.That(result.ExitCode, Is.Zero, string.Join("\n", result.Lines));
-        Assert.That(result.Lines, Is.Empty);
+        Assert.That(result.Lines, Is.EqualTo(new[] {
+            "umpire-engine: UMP030201: No input changed since the last clean check, so the check did not run.",
+        }));
     }
 
     [Test]

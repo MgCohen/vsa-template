@@ -149,7 +149,7 @@ public sealed class UmpireToolTests {
 
         var clean = Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
         Assert.That(clean.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
-        Assert.That(Directory.GetFiles(Path.Combine(app, "artifacts~", "obj", "Hello"), "umpire-check.*.stamp", SearchOption.AllDirectories), Is.Not.Empty);
+        Assert.That(File.Exists(Path.Combine(app, "artifacts~", "bin", "Hello", "debug", ".umpire-check")), Is.True, clean.Output);
 
         var probe = Path.Combine(app, "App", "Host", "Probe.cs");
         File.WriteAllText(probe, """

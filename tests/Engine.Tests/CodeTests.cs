@@ -84,15 +84,17 @@ public sealed class CodeTests {
             Assert.That(BlocksCodes.NoUmpireSdk, Is.EqualTo("UMP030305"));
             Assert.That(BlocksCodes.NoConfigFile, Is.EqualTo("UMP030306"));
             Assert.That(BuildCodes.Failed, Is.EqualTo("UMP030101"));
+            Assert.That(ChangesCodes.Same, Is.EqualTo("UMP030201"));
             Assert.That(RunCodes.CouldNotRun, Is.EqualTo("UMP030001"));
             Assert.That(RunCodes.Skipped, Is.EqualTo("UMP030002"));
+            Assert.That(RunCodes.NoEngine, Is.EqualTo("UMP030003"));
         });
     }
 
     [Test]
     public void Each_engine_code_is_different() {
         string[] codes = [
-            VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, BuildCodes.Failed,
+            VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine, BuildCodes.Failed, ChangesCodes.Same,
             BlocksCodes.TwoEntries, BlocksCodes.BadArchitecture, BlocksCodes.NoBlock,
             BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses, LoadAppCodes.NoEmptyConstructor,

@@ -65,8 +65,14 @@ public sealed class OneLineBuildTests {
         Assert.That(File.Exists(Engine), Is.True, first.Output);
 
     [Test]
-    public void A_build_does_not_run_the_rule_engine() =>
-        Assert.That(Lines(build, "UMP03"), Is.Empty, build.Output);
+    public void A_build_runs_the_architecture_check() =>
+        Assert.That(Lines(first, "umpire-engine: "), Is.Not.Empty, first.Output);
+
+    [Test]
+    public void A_build_with_UmpireCheck_false_does_not_run_the_check() {
+        var quiet = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false");
+        Assert.That(Lines(quiet, "umpire-engine: "), Is.Empty, quiet.Output);
+    }
 
     [Test]
     public void The_umpireconfig_file_is_in_the_output_folder() =>

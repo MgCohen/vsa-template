@@ -13,7 +13,8 @@ public static class DotnetBuild {
             UseShellExecute = false,
         };
         string[] build = configuration is null ? [] : ["-c", configuration];
-        foreach (var argument in new[] { "build", project, "-nologo", "-nodeReuse:false" }.Concat(build)) {
+        string[] arguments = ["build", project, "-nologo", "-nodeReuse:false", "-p:UmpireCheck=false", .. build];
+        foreach (var argument in arguments) {
             info.ArgumentList.Add(argument);
         }
         foreach (var key in info.Environment.Keys.Where(IsMSBuildValue).ToList()) {

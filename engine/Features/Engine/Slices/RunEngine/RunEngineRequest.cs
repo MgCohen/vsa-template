@@ -8,7 +8,7 @@ public sealed record RunEngineRequest(
     string Project,
     string Bin,
     string Block = "",
-    ReportMode Mode = ReportMode.Error,
+    ReportMode? Mode = null,
     string Skip = "",
     bool FailFast = false,
     Stage Stage = Stage.All)

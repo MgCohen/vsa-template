@@ -63,8 +63,7 @@
   </ItemGroup>
 
   <!-- The root project of the app gets the rule engine package: an executable that is not a test project. UmpireEngine=false
-       turns it off. A project that references Umpire.Engine.Build itself keeps its own reference. The package has the engine
-       only: the after-build hook is off until issue #206. -->
+       turns it off. A project that references Umpire.Engine.Build itself keeps its own reference. -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests'))">true</UmpireEngine>
@@ -73,6 +72,28 @@
     <PackageReference Include="Umpire.Engine.Build" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all"
                       Condition="'@(PackageReference->WithMetadataValue('Identity', 'Umpire.Engine.Build')->Count())' == '0'" />
   </ItemGroup>
+
+  <!-- The architecture check after each build of the root project. MSBuild only calls the engine with the Check stage: the
+       engine reads .umpireconfig (for example umpire.check.mode) and decides what to check. Its Changes step skips the check
+       when no input changed. -p:UmpireCheck=false stops the call for one build. -p:UmpireCheckMode=Warn gives the mode for
+       one build, and it wins over .umpireconfig. UmpireBlock gives the block folder (this repository has one global.json for
+       many apps). In source mode the call is off, because the engine package is not there. -->
+  <PropertyGroup>
+    <_UmpireDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_UmpireDotnet>
+    <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
+  </PropertyGroup>
+  <Target Name="UmpireCheck" AfterTargets="Build"
+          Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true' and '$(UmpireFrameworkSourceDir)' == ''">
+    <PropertyGroup>
+      <_UmpireEngineDll>$([MSBuild]::NormalizePath('$(NuGetPackageRoot)', 'umpire.engine.build', '$(UmpireVersion.ToLowerInvariant())', 'tools', 'net10.0', 'umpire-engine.dll'))</_UmpireEngineDll>
+      <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
+      <_UmpireBlockArgument Condition="'$(UmpireBlock)' != ''"> --block &quot;$(UmpireBlock.TrimEnd('\').TrimEnd('/'))&quot;</_UmpireBlockArgument>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(_UmpireEngineDll)')" Code="UMP030003"
+           Text="The rule engine $(_UmpireEngineDll) does not exist, so the architecture check cannot run. Restore the project again." />
+    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
+          Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(_UmpireEngineDll)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)" />
+  </Target>
 
   <!-- A test project (UmpireTestProject, Umpire.Sdk.Core.props) gets NUnit and the test bases of the pack.
        It references the projects that it tests itself. -->
