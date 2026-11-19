@@ -2,13 +2,11 @@ namespace Umpire.Vsa.Analyzers;
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.Diagnostics;
+using Umpire.Config;
 
-public sealed class UmpireOptions(string ruleId, AnalyzerConfigOptions options, IReadOnlyList<UmpireOption> declared) {
+public sealed class UmpireOptions(string ruleId, UmpireConfig config, IReadOnlyList<UmpireOption> declared) {
     public string? Configured(string key) =>
-        options.TryGetValue($"umpire.{ruleId}.{key}", out var rule) ? rule
-        : options.TryGetValue($"umpire.{key}", out var global) ? global
-        : null;
+        config.Value($"umpire.{ruleId}.{key}") ?? config.Value($"umpire.{key}");
 
     public string? Value(string key) => Configured(key) ?? declared.FirstOrDefault(option => option.Key == key)?.Default;
 

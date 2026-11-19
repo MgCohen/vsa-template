@@ -40,13 +40,8 @@ static class Analyzer {
     public static Task VerifyFormatting(DiagnosticDescriptor rule, string source, string config, params DiagnosticResult[] expected) =>
         Verify(source, config, null, expected, formatting: rule);
 
-    public static Task VerifyFormattingWithoutRulesConfig(DiagnosticDescriptor rule, string source, string config,
-        params DiagnosticResult[] expected) =>
-        Verify(source, config, null, expected, formatting: rule, rulesConfig: false);
-
     static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected,
-        Action<AllRulesTest>? configure = null, DiagnosticDescriptor? formatting = null,
-        bool rulesConfig = true) {
+        Action<AllRulesTest>? configure = null, DiagnosticDescriptor? formatting = null) {
         var test = new AllRulesTest {
             TestCode = formatting is not null ? source
                 : "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
@@ -65,22 +60,17 @@ static class Analyzer {
         }
         var others = formatting is null ? Formatting : Analyzer.AllRules.Select(r => r.Rule).Where(r => r.Id != formatting.Id);
         var off = others.Select(r => $"dotnet_diagnostic.{r.Id}.severity = none\n");
-        var globalConfig = "is_global = true\n" + string.Concat(off) + config;
+        var globalConfig = "is_global = true\n" + string.Concat(off) + TestConfig.Native(config);
+        var umpireConfig = TestConfig.Umpire(config);
         test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", globalConfig));
-        if (rulesConfig) {
-            foreach (var rules in RulesConfig.All) {
-                test.TestState.AnalyzerConfigFiles.Add(($"/{rules.FileName}", rules.OptionText));
-            }
-        }
+        test.TestState.AdditionalFiles.Add(("/.umpireconfig", umpireConfig));
         if (formatting is not null) {
             test.TestBehaviors |= TestBehaviors.SkipSuppressionCheck | TestBehaviors.SkipGeneratedCodeCheck;
         }
         configure?.Invoke(test);
         foreach (var project in test.TestState.AdditionalProjects.Values) {
             project.AnalyzerConfigFiles.Add(($"/{project.Name}/.globalconfig", globalConfig));
-            foreach (var rules in RulesConfig.All) {
-                project.AnalyzerConfigFiles.Add(($"/{project.Name}/{rules.FileName}", rules.OptionText));
-            }
+            project.AdditionalFiles.Add(($"/{project.Name}/.umpireconfig", umpireConfig));
         }
         test.ExpectedDiagnostics.AddRange(expected);
         return test.RunAsync(TestContext.CurrentContext.CancellationToken);
@@ -128,6 +118,20 @@ public sealed class SealedRecordRuleTests {
         public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
         """, "dotnet_diagnostic.UMP010201.severity = none");
+
+    [Test]
+    public Task Umpire_severity_none_turns_off_the_rule() => Analyzer.Verify($$"""
+        public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """, "umpire.UMP010201.severity = none");
+
+    [Test]
+    public Task Umpire_severity_sets_the_severity_of_the_finding() => Analyzer.Verify($$"""
+        public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """, "umpire.UMP010201.severity = warning",
+        Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems")
+            .WithSeverity(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning));
 }
 
 public sealed class EventHandlerRequestRuleTests {

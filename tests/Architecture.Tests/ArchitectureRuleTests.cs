@@ -31,14 +31,14 @@ public sealed class ArchitectureRuleTests {
 
     [Test]
     public void A_severity_of_none_in_the_config_turns_a_rule_off() {
-        var config = Config("dotnet_diagnostic.UMP020101.severity = \"none\"");
+        var config = Config("umpire.UMP020101.severity = \"none\"");
 
         Assert.That(ArchitectureRule.Of<DeniedUseRule>().Check(FixtureApps.Bad, config), Is.Empty);
     }
 
     [Test]
     public void A_severity_in_the_config_replaces_the_severity_of_the_rule() {
-        var config = Config("dotnet_diagnostic.UMP020101.severity = \"warning\"");
+        var config = Config("umpire.UMP020101.severity = \"warning\"");
 
         var findings = ArchitectureRule.Of<DeniedUseRule>().Check(FixtureApps.Bad, config);
 
@@ -61,7 +61,7 @@ public sealed class ArchitectureRuleTests {
         var root = Directory.CreateTempSubdirectory("umpire-config").FullName;
         try {
             var block = Directory.CreateDirectory(Path.Combine(root, "App", "Block")).FullName;
-            File.WriteAllText(Path.Combine(root, "App", UmpireConfig.FileName), "dotnet_diagnostic.UMP020101.severity = \"none\"");
+            File.WriteAllText(Path.Combine(root, "App", UmpireConfig.FileName), "umpire.UMP020101.severity = \"none\"");
 
             var values = RuleConfig.Of(UmpireConfig.Find(block).Values()).For("UMP020101");
 

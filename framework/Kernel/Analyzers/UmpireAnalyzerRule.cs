@@ -21,6 +21,8 @@ public abstract class UmpireAnalyzerRule {
 
     public virtual bool IsModuleRule => true;
 
+    public virtual bool IsOnByDefault => true;
+
     public virtual IReadOnlyList<UmpireOption> Options => [];
 
     protected abstract string Title { get; }
@@ -29,8 +31,10 @@ public abstract class UmpireAnalyzerRule {
 
     protected internal abstract void Register(CompilationStartAnalysisContext start);
 
-    protected UmpireOptions Values(AnalyzerOptions options, SyntaxTree tree) =>
-        new(Id, options.AnalyzerConfigOptionsProvider.GetOptions(tree), Options);
+    protected UmpireOptions Values(AnalyzerOptions options) => new(Id, ConfigFile.Of(options, default), Options);
 
-    protected Diagnostic Create(Location location, params object[] arguments) => Diagnostic.Create(Rule, location, arguments);
+    protected Diagnostic Create(Location location, params object[] arguments) =>
+        RuleSeverity.For(location, Id) is { } severity
+            ? Diagnostic.Create(Rule, location, severity, additionalLocations: null, properties: null, arguments)
+            : Diagnostic.Create(Rule, location, arguments);
 }

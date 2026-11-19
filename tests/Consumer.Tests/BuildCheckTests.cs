@@ -10,13 +10,12 @@ public sealed class BuildCheckTests {
     public void The_build_of_the_host_runs_the_rule_engine(CancellationToken ct) {
         using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
         NotesConsumerTests.UsePackages(workspace.Src);
-        AddBuildHook(workspace.Src, "Notes.csproj");
 
         var clean = workspace.Dotnet("build", "Notes.csproj", "-nodeReuse:false").EnsureSuccess();
         Assert.That(clean.Output, Does.Contain(Summary).And.Contain("0 errors"));
 
         var again = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(again.Output, Does.Not.Contain(Summary), "A build with no change runs the check again.");
+        Assert.That(again.Output, Does.Contain("UMP030201"), "A build with no change runs the check again.");
 
         var probe = Path.Combine(workspace.Src, "App", "Host", "Probe.cs");
         File.WriteAllText(probe, """
@@ -38,16 +37,5 @@ public sealed class BuildCheckTests {
 
         File.Delete(probe);
         workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
-    }
-
-    static void AddBuildHook(string root, string project) {
-        var path = Path.Combine(root, project);
-        var text = File.ReadAllText(path).Replace("</Project>", """
-              <ItemGroup>
-                <PackageReference Include="Umpire.Engine.Build" PrivateAssets="all" />
-              </ItemGroup>
-            </Project>
-            """);
-        File.WriteAllText(path, text);
     }
 }

@@ -12,6 +12,8 @@ public sealed class SharedTypeBaseRule : VsaRule {
 
     public override int Number => 7;
 
+    public override bool IsOnByDefault => false;
+
     public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.List(AllowedBasesKey, [])];
 
     protected override string Title => "Domain.Shared types have only permitted bases";
@@ -31,7 +33,7 @@ public sealed class SharedTypeBaseRule : VsaRule {
             || context.SemanticModel.GetDeclaredSymbol(declaration, context.CancellationToken) is not { } type) {
             return;
         }
-        if (Values(context.Options, context.Node.SyntaxTree).List(AllowedBasesKey) is not { } allowed) {
+        if (Values(context.Options).List(AllowedBasesKey) is not { } allowed) {
             return;
         }
         foreach (var baseSyntax in ((BaseListSyntax)context.Node).Types) {

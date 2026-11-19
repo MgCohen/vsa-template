@@ -33,7 +33,7 @@ public sealed class SealedRecordRule : VsaRule {
             return;
         }
         Report(type, "a request", context);
-        if (Values(context.Options, type.Locations[0].SourceTree!).Bool(CheckResponsesKey) != true) {
+        if (Values(context.Options).Bool(CheckResponsesKey) != true) {
             return;
         }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)

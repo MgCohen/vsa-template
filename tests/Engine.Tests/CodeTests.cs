@@ -1,7 +1,7 @@
 using System.Reflection;
 using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
-using Config.Slices.WriteConfig;
+using Changes.Slices.FindChanges;
 using LoadApp.Slices.LoadApp;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
@@ -27,13 +27,32 @@ public sealed class CodeTests {
     [Test]
     public void The_groups_follow_the_order_of_the_steps() {
         Assert.Multiple(() => {
-            Assert.That(WriteConfigCommand.Group, Is.EqualTo(1));
-            Assert.That(BuildAppCommand.Group, Is.EqualTo(2));
+            Assert.That(BuildAppCommand.Group, Is.EqualTo(1));
+            Assert.That(FindChangesCommand.Group, Is.EqualTo(2));
             Assert.That(FindBlocksCommand.Group, Is.EqualTo(3));
             Assert.That(CheckVersionsCommand.Group, Is.EqualTo(4));
             Assert.That(LoadAppCommand.Group, Is.EqualTo(5));
             Assert.That(CheckRulesCommand.Group, Is.EqualTo(6));
             Assert.That(Report.Slices.WriteReport.WriteReportCommand.Group, Is.EqualTo(7));
+        });
+    }
+
+    [Test]
+    public void Each_engine_step_gives_its_stages() {
+        var steps = EngineTypes.Where(t => typeof(IEngineStep).IsAssignableFrom(t));
+
+        Assert.That(steps, Has.All.Matches<Type>(t => typeof(IStepStage).IsAssignableFrom(t)));
+    }
+
+    [Test]
+    public void Only_the_build_step_is_in_the_build_stage() {
+        Assert.Multiple(() => {
+            Assert.That(BuildAppCommand.Stages, Is.EqualTo(Stage.Build));
+            Assert.That(FindChangesCommand.Stages, Is.EqualTo(Stage.Check));
+            Assert.That(FindBlocksCommand.Stages, Is.EqualTo(Stage.Check));
+            Assert.That(CheckVersionsCommand.Stages, Is.EqualTo(Stage.Check));
+            Assert.That(LoadAppCommand.Stages, Is.EqualTo(Stage.Check));
+            Assert.That(CheckRulesCommand.Stages, Is.EqualTo(Stage.Check));
         });
     }
 
@@ -64,16 +83,19 @@ public sealed class CodeTests {
             Assert.That(BlocksCodes.CodeWins, Is.EqualTo("UMP030304"));
             Assert.That(BlocksCodes.NoUmpireSdk, Is.EqualTo("UMP030305"));
             Assert.That(BlocksCodes.NoConfigFile, Is.EqualTo("UMP030306"));
-            Assert.That(BuildCodes.Failed, Is.EqualTo("UMP030201"));
+            Assert.That(BuildCodes.Failed, Is.EqualTo("UMP030101"));
+            Assert.That(ChangesCodes.Same, Is.EqualTo("UMP030201"));
             Assert.That(RunCodes.CouldNotRun, Is.EqualTo("UMP030001"));
             Assert.That(RunCodes.Skipped, Is.EqualTo("UMP030002"));
+            Assert.That(RunCodes.NoEngine, Is.EqualTo("UMP030003"));
+            Assert.That(RunCodes.EngineCrash, Is.EqualTo("UMP030004"));
         });
     }
 
     [Test]
     public void Each_engine_code_is_different() {
         string[] codes = [
-            VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, BuildCodes.Failed,
+            VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine, RunCodes.EngineCrash, BuildCodes.Failed, ChangesCodes.Same,
             BlocksCodes.TwoEntries, BlocksCodes.BadArchitecture, BlocksCodes.NoBlock,
             BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses, LoadAppCodes.NoEmptyConstructor,

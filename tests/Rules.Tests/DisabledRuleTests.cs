@@ -6,7 +6,6 @@ using Umpire.Vsa.Analyzers;
 namespace Rules.Tests;
 
 public sealed partial class DisabledRuleTests {
-    static readonly string Config = RulesConfig.Vsa.Text;
     static readonly string Rules = File.ReadAllText(Repo.Path("docs", "architecture-rules.md"));
 
     [Test]
@@ -29,7 +28,7 @@ public sealed partial class DisabledRuleTests {
     }
 
     static IEnumerable<string> Disabled() =>
-        SeverityNone().Matches(Config).Select(m => m.Groups["code"].Value);
+        Analyzer.AllRules.Where(rule => !rule.IsOnByDefault).Select(rule => rule.Id);
 
     static IEnumerable<string> Table() =>
         TableRows().Select(row => RowCode().Match(row).Groups["code"].Value);
@@ -39,9 +38,6 @@ public sealed partial class DisabledRuleTests {
         section = section[..section.IndexOf("\n## ", 1, StringComparison.Ordinal)];
         return section.Split('\n').Where(line => RowCode().IsMatch(line));
     }
-
-    [GeneratedRegex(@"^dotnet_diagnostic\.(?<code>UMP\d{6})\.severity\s*=\s*none\s*$", RegexOptions.Multiline)]
-    private static partial Regex SeverityNone();
 
     [GeneratedRegex(@"^\| `(?<code>UMP\d{6})` \|")]
     private static partial Regex RowCode();

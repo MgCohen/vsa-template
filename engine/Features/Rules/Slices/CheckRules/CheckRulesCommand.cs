@@ -4,6 +4,7 @@ using LoadApp.Domain.Shared;
 using Steps.Contracts.Commands;
 using Steps.Domain.Shared;
 
-public sealed record CheckRulesCommand(AppInput App) : EngineStep<CheckRulesResult>, IStepGroup {
+public sealed record CheckRulesCommand(AppInput App) : EngineStep<CheckRulesResult>, IStepGroup, IStepStage {
     public static int Group => 6;
+    public static Stage Stages => Stage.Check;
 }

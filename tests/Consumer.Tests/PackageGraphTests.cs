@@ -18,23 +18,27 @@ public sealed class PackageGraphTests {
 
     [TestCase("Umpire.Kernels.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]
-    public void Each_analyzer_package_has_its_values_and_props(string package) =>
+    public void Each_analyzer_package_holds_the_config_reader_next_to_its_analyzer(string package) =>
         Assert.That(Entries(package), Is.SupersetOf(new[] {
-            $"build/{package}.props", $"build/{package}.globalconfig",
-            $"buildTransitive/{package}.props", $"buildTransitive/{package}.globalconfig",
+            $"analyzers/dotnet/cs/{package}.dll",
+            "analyzers/dotnet/cs/Umpire.Config.dll",
+            "analyzers/dotnet/cs/Tomlyn.dll",
         }));
+
+    [TestCase("Umpire.Kernels.Analyzers")]
+    [TestCase("Umpire.Vsa.Analyzers")]
+    public void No_analyzer_package_has_a_rule_values_file(string package) =>
+        Assert.That(Entries(package).Where(entry => entry.StartsWith("build", StringComparison.Ordinal)), Is.Empty);
 
     [Test]
     public void The_VSA_analyzer_package_holds_the_kernel_analyzer_in_its_own_folder() =>
         Assert.That(Entries("Umpire.Vsa.Analyzers"), Is.SupersetOf(new[] {
             "analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll",
             "analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll",
-            "build/Umpire.Kernels.Analyzers.globalconfig",
-            "buildTransitive/Umpire.Kernels.Analyzers.globalconfig",
         }));
 
     [Test]
-    public void The_pack_package_brings_its_analyzers_and_their_rule_values() {
+    public void The_pack_package_brings_its_analyzers() {
         var dependencies = Nuspec("Umpire.Vsa").Descendants().Where(e => e.Name.LocalName == "dependency")
             .Where(e => (string?)e.Attribute("id") == "Umpire.Vsa.Analyzers").ToList();
         Assert.That(dependencies, Is.Not.Empty);

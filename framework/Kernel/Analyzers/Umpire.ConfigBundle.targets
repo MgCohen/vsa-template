@@ -1,0 +1,19 @@
+<Project>
+  <!-- The analyzers read the .umpireconfig file of the block with Umpire.Config. Roslyn loads a dependency of an analyzer from the
+       folder of that analyzer, so the output folder and the analyzers/dotnet/cs folder of the package hold Umpire.Config and Tomlyn
+       next to the analyzer DLL. Each analyzer project imports this file. -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_UmpireConfigInPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../Components/Config/Umpire.Config.csproj" />
+    <PackageReference Include="Tomlyn" GeneratePathProperty="true" ExcludeAssets="analyzers" />
+    <None Include="$(PkgTomlyn)/lib/netstandard2.0/Tomlyn.dll" CopyToOutputDirectory="PreserveNewest" Pack="true"
+          PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+  <Target Name="_UmpireConfigInPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'Umpire.Config'" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
+</Project>

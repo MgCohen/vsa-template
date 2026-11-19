@@ -38,7 +38,7 @@ dotnet tool exec Umpire.Cli@<version> -y -- doctor                          # th
 dotnet tool exec Umpire.Cli@<version> -y -- test                            # the tests of each *.Tests project
 ```
 
-The rule engine checks each type against the VSA definition. The Umpire SDK adds the package `Umpire.Engine.Build` to the root project for this check. Its after-build hook is off until Umpire issue #206. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebHost>>`.
+The rule engine checks each type against the VSA definition. The Umpire SDK package holds the engine, and it runs the check after each build of the root project. `-p:UmpireCheck=false` stops the check for one build. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebHost>>`.
 
 `.umpireconfig` is TOML. The top-level keys are the rule values, for example `umpire.UMP010101.max = 140`. A table with the name of a module holds its settings, for example `[Notebook]`. A string needs quotes.
 
