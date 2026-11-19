@@ -17,7 +17,7 @@ public sealed class FileLengthRule : LimitRule {
         start.RegisterSyntaxTreeAction(Check);
 
     void Check(SyntaxTreeAnalysisContext context) {
-        if (Max(context.Options, context.Tree) is not { } max) {
+        if (Max(context.Options) is not { } max) {
             return;
         }
         var lines = context.Tree.GetText(context.CancellationToken).Lines;

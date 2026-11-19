@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 public sealed class ContractTypeRule : VsaRule {
     public override int Number => 3;
 
+    public override bool IsOnByDefault => false;
+
     protected override string Title => "Contracts projects hold only contract types";
 
     protected override string Message =>

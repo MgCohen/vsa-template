@@ -10,6 +10,8 @@ using Microsoft.CodeAnalysis.Operations;
 public sealed class DataOnlySharedTypeRule : VsaRule {
     public override int Number => 6;
 
+    public override bool IsOnByDefault => false;
+
     protected override string Title => "Domain.Shared types hold only data";
 
     protected override string Message =>

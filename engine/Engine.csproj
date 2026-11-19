@@ -1,7 +1,7 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
   <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins.
-       Its package is Umpire.Engine.Build: the engine in tools/. The after-build hook is off until issue #206. -->
+       Its package is Umpire.Engine.Build: the engine in tools/. The after-build hook is in Umpire.Sdk.Core.targets. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>umpire-engine</AssemblyName>

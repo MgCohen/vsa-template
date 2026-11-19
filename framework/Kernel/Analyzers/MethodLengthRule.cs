@@ -24,7 +24,7 @@ public sealed class MethodLengthRule : LimitRule {
 
     void Check(SyntaxNodeAnalysisContext context) {
         var node = context.Node;
-        if (Max(context.Options, node.SyntaxTree) is not { } max) {
+        if (Max(context.Options) is not { } max) {
             return;
         }
         var span = node.GetLocation().GetLineSpan();

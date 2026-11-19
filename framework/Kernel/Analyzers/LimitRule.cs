@@ -11,5 +11,5 @@ public abstract class LimitRule : KernelRule {
 
     protected abstract int DefaultMax { get; }
 
-    protected int? Max(AnalyzerOptions options, SyntaxTree tree) => Values(options, tree).Int(MaxKey);
+    protected int? Max(AnalyzerOptions options) => Values(options).Int(MaxKey);
 }

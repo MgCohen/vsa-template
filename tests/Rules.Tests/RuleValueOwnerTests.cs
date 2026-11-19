@@ -18,24 +18,6 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
-    public void No_package_file_has_an_option_value() {
-        var values = RulesConfig.All.SelectMany(config => config.Keys
-            .Where(key => key.StartsWith("umpire.", StringComparison.Ordinal))
-            .Select(key => $"{config.FileName}: {key}"));
-
-        Assert.That(values, Is.Empty);
-    }
-
-    [Test]
-    public void Each_key_belongs_to_a_rule_of_its_package() {
-        var orphans = Analyzers.SelectMany(analyzer => ConfigOf(analyzer).Keys
-            .Where(key => !Owns(analyzer, key))
-            .Select(key => $"{ConfigOf(analyzer).FileName}: {key}"));
-
-        Assert.That(orphans, Is.Empty);
-    }
-
-    [Test]
     public void The_repository_style_has_no_Umpire_rule_key() {
         var keys = File.ReadAllLines(Repo.Path(".editorconfig")).Where(line => UmpireKey().IsMatch(line));
 
@@ -75,20 +57,11 @@ public sealed partial class RuleValueOwnerTests {
             .Select(property => Plain(property.Name))
             .ToHashSet();
 
-        var clashes = RulesConfig.All.SelectMany(config => config.Keys)
-            .Where(key => definition.Contains(Plain(key.Split('.')[^1])));
+        var clashes = Analyzers.SelectMany(analyzer => analyzer.Rules.SelectMany(rule => rule.Options))
+            .Where(option => definition.Contains(Plain(option.Key)));
 
         Assert.That(clashes, Is.Empty);
     }
-
-    static RulesConfig ConfigOf(RuleAnalyzer analyzer) =>
-        analyzer is KernelAnalyzer ? RulesConfig.Kernel : RulesConfig.Vsa;
-
-    static string Key(UmpireAnalyzerRule rule, UmpireOption option) => $"umpire.{rule.Id}.{option.Key}";
-
-    static bool Owns(RuleAnalyzer analyzer, string key) =>
-        analyzer.Rules.Any(rule => rule.Options.Any(option => Key(rule, option) == key))
-        || analyzer.Rules.Any(rule => key == $"dotnet_diagnostic.{rule.Id}.severity");
 
     static IEnumerable<string> SdkFiles() =>
         new[] { Repo.Path("tools", "sdk", "Sdk"), Repo.Path("tools", "sdk", "Web", "Sdk") }

@@ -1,7 +1,7 @@
 using Blocks;
 using Build;
-using Config;
-using Config.Infrastructure;
+using Changes;
+using Changes.Infrastructure;
 using LoadApp;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
@@ -36,7 +36,7 @@ public sealed class RunEngineTests {
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Build", "Config", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Build", "Changes", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -143,11 +143,11 @@ public sealed class RunEngineTests {
         Directory.CreateDirectory(store);
         try {
             File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
-            File.WriteAllText(config, original + "dotnet_diagnostic.UMP020401.severity = none\n");
+            File.WriteAllText(config, original + "umpire.UMP020401.severity = \"none\"\n");
 
             var result = await Run(project: Notes);
 
-            Assert.That(result.Lines, Has.None.Contains("UMP020401"));
+            Assert.That(result.Lines, Has.None.Contains("UMP020401").And.None.Contains("UMP030001"), string.Join("\n", result.Lines));
         } finally {
             File.WriteAllText(config, original);
             Directory.Delete(store, recursive: true);
@@ -223,35 +223,6 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task The_config_step_writes_only_the_one_line_rule_values_for_the_analyzers() {
-        var root = TempFolder.Create();
-        try {
-            File.WriteAllText(Path.Combine(root, ".umpireconfig"), """
-                umpire.UMP010101.max = 60
-                umpire.note = '''
-                two
-                lines'''
-                dotnet_diagnostic.UMP010106.severity = "none"
-
-                [Notebook]
-                MaxNotes = 5
-                Text = '''
-                a = b'''
-                """);
-
-            await Run(block: root);
-
-            var copy = Path.Combine(root, BlockConfigCopy.Folder, BlockConfigCopy.FileName);
-            Assert.That(File.ReadAllLines(copy), Is.EqualTo(new[] {
-                "is_global = true", "global_level = 101", "umpire.UMP010101.max = 60",
-                "dotnet_diagnostic.UMP010106.severity = none",
-            }));
-        } finally {
-            TempFolder.Delete(root);
-        }
-    }
-
-    [Test]
     public async Task A_umpireconfig_file_that_is_not_TOML_stops_the_run_with_the_line_of_the_error() {
         var root = TempFolder.Create();
         try {
@@ -261,26 +232,9 @@ public sealed class RunEngineTests {
             var result = await Run(block: root);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.StartsWith("umpire-engine: error UMP030001: WriteConfig could not run: ")
+            Assert.That(result.Lines, Has.One.StartsWith("umpire-engine: error UMP030001: FindBlocks could not run: ")
                 .And.Contains($"{Path.GetFullPath(file)}(2,"));
-            Assert.That(result.Lines, Has.One.Contains("UMP030002: BuildApp skipped"));
-            Assert.That(result.Lines, Has.One.Contains("UMP030002: FindBlocks skipped"));
-        } finally {
-            TempFolder.Delete(root);
-        }
-    }
-
-    [Test]
-    public async Task A_build_that_fails_gives_UMP030201_and_stops_the_run() {
-        var root = TempFolder.Create();
-        try {
-            File.WriteAllText(Path.Combine(root, "Broken.csproj"), "<Project>");
-
-            var result = await Run(block: root, project: root, build: true);
-
-            Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030201: The build of"));
-            Assert.That(result.Lines, Has.One.Contains("UMP030002: FindBlocks skipped"));
+            Assert.That(result.Lines, Has.None.Contains("UMP030002"));
         } finally {
             TempFolder.Delete(root);
         }
@@ -298,15 +252,19 @@ public sealed class RunEngineTests {
         Assert.That(result.Value.Lines, Is.EqualTo(new[] { "Probe.cs(4,9): error UMP020101: Probe in Host" }));
     }
 
-    static async Task<RunEngineResponse> Run(
-        string? block = null, string? bin = null, bool failFast = false, string? project = null, bool build = false) {
+    internal static async Task<RunEngineResponse> Run(
+        string? block = null, string? bin = null, bool failFast = false, string? project = null,
+        Stage stage = Stage.Check, bool keepStamp = false) {
         using var host = new EngineTestApp(
-            new StepsPlugin(), new EngineModule(), new ConfigModule(), new BuildModule(), new BlocksModule(), new VersionsModule(),
+            new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
             new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;
-        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast, Build: build);
+        if (Directory.Exists(output) && keepStamp is false) {
+            StampFile.Delete(output);
+        }
+        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast, Stage: stage);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }

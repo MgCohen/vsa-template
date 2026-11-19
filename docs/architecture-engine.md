@@ -334,10 +334,10 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
 | `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
 
-The Rules step reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` and `dotnet_diagnostic` tables as a dotted key, with no case (`RuleKeys` in the Steps plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
+The Rules step reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` table as a dotted key, with no case (`RuleKeys` in the Steps plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
 
 ```toml
-dotnet_diagnostic.UMP020101.severity = "warning"   # error, warning, suggestion, or none (the rule does not run)
+umpire.UMP020101.severity = "warning"   # error, warning, suggestion, or none (the rule does not run)
 ```
 
 Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
@@ -348,20 +348,36 @@ C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHand
 
 ## The checks of an app
 
-An engine run does the checks of an app. The package `Umpire.Engine.Build` on the host project has the engine. Its after-build hook is off until issue #206. See "The rule engine" in `AGENTS.md`.
+An engine run does the checks of an app. The package `Umpire.Engine.Build` on the host project has the engine. See "The rule engine" in `AGENTS.md`.
 
 ```text
-umpire-engine --project <root> --block <block> --bin <output>
-├─ 1 Config     UmpireConfig.Find(folder).Values() → <block root>/artifacts~/Umpire.Block.globalconfig
-├─ 2 Build      dotnet build <root>                    --build false skips it
-├─ 3 Blocks
-├─ 4 Versions
-├─ 5 LoadApp
-├─ 6 Rules
-└─ 7 Report
+umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Warn]
+├─ Build stage
+│  └─ 1 Build      dotnet build <root> -p:UmpireCheck=false → each build line becomes a finding
+├─ Check stage
+│  ├─ 2 Changes    same input hash as the stamp in --bin → the check stops (UMP030201)
+│  ├─ 3 Blocks
+│  ├─ 4 Versions
+│  ├─ 5 LoadApp
+│  └─ 6 Rules
+└─ 7 Report        in each run
+
+dotnet build <root project>
+└─ UmpireCheck (Umpire.Sdk.Core.targets, AfterTargets="Build")
+   └─ umpire-engine --stage Check --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
 ```
 
-The Config step is the one writer of `Umpire.Block.globalconfig`. The SDK gives that file to the compiler if it exists, so the analyzers read the rule values of the last engine run. If the Config step or the Build step fails, the run skips the later steps.
+Each step declares its stages with `IStepStage` (`public static Stage Stages => Stage.Check;`). With no `--stage`, all stages run. The Report step runs in each run. A step that is not in the stage gives no finding.
+
+| Value | Source | Scope |
+|---|---|---|
+| Mode (`Error` or `Warn`) | `--mode`, from `-p:UmpireCheckMode` in the hook | One run |
+| Mode | `umpire.check.mode` in `.umpireconfig` | Each run |
+| Check on or off | `-p:UmpireCheck=false` | One build |
+
+The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, the hook gives `UMP030003`. If the engine stops with an exit code that is not 0 and no finding line, the hook gives `UMP030004`. Only the executable project in the block root runs the hook. In source mode (this repository) the hook is off.
+
+The Changes step makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
 One definition applies to one block: the folder tree of code that the definition checks. The definition applies to its block folder, not to the repository. `Define(Block block)` starts at the block folder, and each part path is relative to it. A source file outside the block folder is not checked.
 
@@ -382,13 +398,16 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 
 ### Engine codes
 
-Each engine code is `UMP03`, the group and the case. Group `00` is the engine run. Each step has the next group, in the order of `RunEngineHandler`. A step command gives its group with `IStepGroup` (`public static int Group => 2;`), and `StepCode.Of<TStep>(n)` makes its codes. Each step module holds its codes in one class, for example `LoadAppCodes`.
+Each engine code is `UMP03`, the group and the case. Group `00` is the engine run. Each step has the next group, in the order of `RunEngineHandler`. A step command gives its group with `IStepGroup` (`public static int Group => 2;`) and its stages with `IStepStage`, and `StepCode.Of<TStep>(n)` makes its codes. Each step module holds its codes in one class, for example `LoadAppCodes`.
 
 | ID | Group | Severity | Problem |
 |---|---|---|---|
 | `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
 | `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
-| `UMP030201` | 02 Build | Error | The build of the root project fails. The run stops |
+| `UMP030003` | 00 Run | Error | The hook does not find the engine file. Restore the project again |
+| `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and reports no finding, for example after a crash. The build fails |
+| `UMP030101` | 01 Build | Error | The build of the root project fails. The Check stage does not run |
+| `UMP030201` | 02 Changes | Info | No input changed since the last clean check, so the check did not run |
 | `UMP030301` | 03 Blocks | Error | A block has more than one check entry |
 | `UMP030302` | 03 Blocks | Error | A check entry names a type that does not load or that is not an `Architecture` |
 | `UMP030303` | 03 Blocks | Error | No check entry is at or above the project, and no `--block` is given. The run stops |
@@ -401,7 +420,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class |
 | `UMP030504` | 05 LoadApp | Error | An app class has no public constructor with no parameters |
 
-The Config step (group `01`) has no code: a TOML error throws, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
+A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
 
 ### Blocks and check entries
 

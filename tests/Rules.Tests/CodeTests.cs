@@ -8,6 +8,8 @@ namespace Rules.Tests;
 public sealed partial class CodeTests {
     static readonly string[] CodeFiles = ["*.cs", "*.md", "*.globalconfig", "*.targets", "*.props", "*.template"];
     static readonly string[] SkippedFolders = ["artifacts~", "bin", "obj", ".git", ".claude", "proposals"];
+    static readonly string[] BaseIds =
+        [RuleAnalyzer.OptionDescriptor.Id, RuleAnalyzer.ConfigDescriptor.Id, RuleAnalyzer.LoadDescriptor.Id];
 
     [Test]
     public void Each_rule_of_the_Kernel_analyzers_has_an_ID_of_block_01_group_00_or_01() {
@@ -34,7 +36,8 @@ public sealed partial class CodeTests {
     [Test]
     public void Each_rule_ID_belongs_to_one_rule() {
         var ids = new KernelAnalyzer().SupportedDiagnostics.Concat(new VsaAnalyzer().SupportedDiagnostics)
-            .Select(d => d.Id).Where(id => id != "UMP010001").ToList();
+            .Select(d => d.Id)
+            .Where(id => !BaseIds.Contains(id)).ToList();
 
         Assert.That(ids, Is.Unique);
     }

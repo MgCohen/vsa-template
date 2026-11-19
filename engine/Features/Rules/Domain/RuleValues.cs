@@ -9,11 +9,11 @@ public sealed class RuleValues(string code, IReadOnlyDictionary<string, string> 
         : null;
 
     public FindingSeverity? Severity(FindingSeverity defaultValue) =>
-        values.TryGetValue($"dotnet_diagnostic.{code}.severity", out var text) ? text.Trim().ToLowerInvariant() switch {
+        values.TryGetValue($"umpire.{code}.severity", out var text) ? text.Trim().ToLowerInvariant() switch {
             "none" or "silent" => null,
             "error" => FindingSeverity.Error,
             "warning" => FindingSeverity.Warning,
-            "suggestion" => FindingSeverity.Info,
+            "suggestion" or "info" => FindingSeverity.Info,
             _ => defaultValue,
         } : defaultValue;
 }

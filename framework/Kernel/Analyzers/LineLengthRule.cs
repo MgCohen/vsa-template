@@ -18,7 +18,7 @@ public sealed class LineLengthRule : LimitRule {
         start.RegisterSyntaxTreeAction(Check);
 
     void Check(SyntaxTreeAnalysisContext context) {
-        if (Max(context.Options, context.Tree) is not { } max) {
+        if (Max(context.Options) is not { } max) {
             return;
         }
         foreach (var line in context.Tree.GetText(context.CancellationToken).Lines) {

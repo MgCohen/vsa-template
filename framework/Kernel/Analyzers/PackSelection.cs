@@ -3,7 +3,6 @@ namespace Umpire.Vsa.Analyzers;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 public static class PackSelection {
     public const string ArchitectureKey = "umpire.architecture";
@@ -13,9 +12,9 @@ public static class PackSelection {
     const string BlockType = "Umpire.Architecture.Block`1";
     const string PackType = "Umpire.Kernels.Pack`3";
 
-    public static bool Selects(Compilation compilation, AnalyzerConfigOptions global, string packAssembly) {
+    public static bool Selects(Compilation compilation, string? architecture, string packAssembly) {
         var entries = CodeEntries(compilation).ToList();
-        if (entries.Count == 0 && global.TryGetValue(ArchitectureKey, out var named) && named.Trim().Length > 0) {
+        if (entries.Count == 0 && architecture is { } named && named.Trim().Length > 0) {
             entries.Add(NamedEntry(compilation, named));
         }
         return entries.Count == 0

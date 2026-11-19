@@ -6,6 +6,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 public sealed class ImmutableSharedTypeRule : VsaRule {
     public override int Number => 5;
 
+    public override bool IsOnByDefault => false;
+
     protected override string Title => "Domain.Shared types are immutable";
 
     protected override string Message =>
