@@ -16,8 +16,7 @@ public static class InputHash {
         var lines = new List<string> { run, Engine() };
         lines.AddRange(Facts(Patterns(bin, BinPatterns)));
         lines.AddRange(Facts(Patterns(Path.Combine(block, ScriptAssemblies), ["*.dll"])));
-        lines.AddRange(Facts(BlockFiles(block)));
-        lines.AddRange(Facts(FilesAbove(block)));
+        lines.AddRange(ConfigFacts(block));
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", lines)));
         return Convert.ToHexString(bytes);
     }
@@ -30,7 +29,9 @@ public static class InputHash {
                 && name.EndsWith(".props", StringComparison.OrdinalIgnoreCase));
     }
 
-    static string Engine() => typeof(InputHash).Assembly.ManifestModule.ModuleVersionId.ToString();
+    public static IEnumerable<string> ConfigFacts(string block) => [.. Facts(BlockFiles(block)), .. Facts(FilesAbove(block))];
+
+    public static string Engine() => typeof(InputHash).Assembly.ManifestModule.ModuleVersionId.ToString();
 
     static IEnumerable<string> Patterns(string folder, string[] patterns) =>
         Directory.Exists(folder) ? patterns.SelectMany(pattern => Directory.EnumerateFiles(folder, pattern, OneLevel)) : [];

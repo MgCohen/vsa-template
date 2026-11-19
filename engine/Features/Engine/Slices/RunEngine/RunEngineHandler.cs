@@ -3,7 +3,9 @@ namespace Engine.Slices.RunEngine;
 using Blocks.Domain.Shared;
 using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
+using BuiltApp.Domain.Shared;
 using Changes.Slices.FindChanges;
+using Changes.Slices.WriteBlockStamp;
 using Changes.Slices.WriteStamp;
 using Engine.Infrastructure;
 using LoadApp.Domain.Shared;
@@ -70,15 +72,31 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
             return [];
         }
         var tree = blocks.Value.Blocks;
+        var findStamp = new FindBlockStampCommand(tree.Current, blocks.Value.Bin, Inputs(run));
+        var stamp = await commands.SendAsync(findStamp, ct);
+        if (stamp.IsSuccess) {
+            log.Add(stamp.Value.Findings);
+        }
+        if (stamp.IsSuccess && stamp.Value.Same) {
+            return tree.Used;
+        }
+        var before = log.Findings.Count;
+        await Check(run, tree, blocks.Value.Bin, ct);
+        if (stamp.IsSuccess && log.Findings.Skip(before).All(f => f.Severity == FindingSeverity.Info)) {
+            await commands.SendAsync(new WriteBlockStampCommand(stamp.Value.File, stamp.Value.Hash), ct);
+        }
+        return tree.Used;
+    }
+
+    async Task Check(RunEngineRequest run, BlockTree tree, BinIndex bin, CancellationToken ct) {
         var versions = await commands.SendAsync(new CheckVersionsCommand(tree.Current.Folder, run.Bin), ct);
         var app = versions.IsSuccess
-            ? await commands.SendAsync(new LoadAppCommand(tree, blocks.Value.Bin, run.Skip), ct)
+            ? await commands.SendAsync(new LoadAppCommand(tree, bin, run.Skip), ct)
             : log.Skip<LoadAppCommand, AppInput>();
         if (app.IsSuccess) {
             await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
         } else {
             log.Skip<CheckRulesCommand, CheckRulesResult>();
         }
-        return tree.Used;
     }
 }

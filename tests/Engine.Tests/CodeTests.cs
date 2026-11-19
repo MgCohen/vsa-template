@@ -85,6 +85,7 @@ public sealed class CodeTests {
             Assert.That(BlocksCodes.NoConfigFile, Is.EqualTo("UMP030306"));
             Assert.That(BuildCodes.Failed, Is.EqualTo("UMP030101"));
             Assert.That(ChangesCodes.Same, Is.EqualTo("UMP030201"));
+            Assert.That(ChangesCodes.BlockSame, Is.EqualTo("UMP030202"));
             Assert.That(RunCodes.CouldNotRun, Is.EqualTo("UMP030001"));
             Assert.That(RunCodes.Skipped, Is.EqualTo("UMP030002"));
             Assert.That(RunCodes.NoEngine, Is.EqualTo("UMP030003"));
