@@ -83,6 +83,56 @@ public sealed class UsedBlocksTests {
         }
     }
 
+    [Test]
+    public void A_library_with_a_bad_shape_is_not_a_project_and_the_other_libraries_stay() {
+        var bin = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(bin, "App.deps.json"), """
+                {
+                  "targets": { ".NETCoreApp,Version=v10.0": {
+                    "App/1.0.0": { "runtime": { "App.dll": {} } },
+                    "Number/1.0.0": { "runtime": { "Number.dll": {} } },
+                    "Text/1.0.0": "not an object",
+                    "Array/1.0.0": { "runtime": [ "Array.dll" ] }
+                  } },
+                  "libraries": {
+                    "App/1.0.0": { "type": "project" },
+                    "Number/1.0.0": { "type": 7 },
+                    "Text/1.0.0": { "type": "project" },
+                    "Array/1.0.0": { "type": "project" }
+                  }
+                }
+                """);
+            File.WriteAllText(Path.Combine(bin, "Other.deps.json"), """[ "an array, not an object" ]""");
+
+            Assert.That(DepsFile.ProjectAssemblies(bin), Is.EquivalentTo(new[] { "App" }));
+        } finally {
+            TempFolder.Delete(bin);
+        }
+    }
+
+    [Test]
+    public void A_deps_file_that_cannot_be_read_gives_no_project() {
+        if (!OperatingSystem.IsWindows()) {
+            Assert.Ignore("Only Windows locks a file with FileShare.None.");
+        }
+        var bin = TempFolder.Create();
+        try {
+            var file = Path.Combine(bin, "App.deps.json");
+            File.WriteAllText(file, """
+                {
+                  "targets": { "t": { "App/1.0.0": { "runtime": { "App.dll": {} } } } },
+                  "libraries": { "App/1.0.0": { "type": "project" } }
+                }
+                """);
+            using var locked = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            Assert.That(DepsFile.ProjectAssemblies(bin), Is.Empty);
+        } finally {
+            TempFolder.Delete(bin);
+        }
+    }
+
     static BinDll Dll(string name, string source, IReadOnlyList<string> references, bool isProject) {
         var dll = Path.Combine(Path.GetDirectoryName(source)!, name + ".dll");
         return new(dll, name, false, references, [source], [], [], isProject);

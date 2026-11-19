@@ -79,6 +79,24 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
+    public void A_crash_line_with_the_word_error_is_not_a_finding() {
+        const string crash = "System.IO.IOException: error reading: the file 'a,b' is locked";
+        var host = Path.Combine(workspace.Root, OperatingSystem.IsWindows() ? "crash.cmd" : "crash.sh");
+        File.WriteAllText(host, OperatingSystem.IsWindows()
+            ? $"@echo {crash}\r\n@exit /b 1\r\n"
+            : $"#!/bin/sh\necho \"{crash}\"\nexit 1\n");
+        if (!OperatingSystem.IsWindows()) {
+            File.SetUnixFileMode(host, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+
+        var crashed = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false",
+            $"-p:_UmpireDotnet={host}");
+
+        Assert.That(crashed.Succeeded, Is.False, crashed.Output);
+        Assert.That(crashed.Output, Does.Contain("error UMP030004"), crashed.Output);
+    }
+
+    [Test]
     public void A_build_with_UmpireCheck_false_does_not_run_the_check() {
         var quiet = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false");
         Assert.That(Lines(quiet, "umpire-engine: "), Is.Empty, quiet.Output);

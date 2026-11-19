@@ -104,8 +104,9 @@
     </PropertyGroup>
     <Error Condition="!Exists('$(UmpireEngineFile)')" Code="UMP030003"
            Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again, so the Umpire SDK package is complete." />
-    <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no error line
-         is an engine crash, for example an exception or a missing runtime: it fails the build too, with UMP030004. -->
+    <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no finding
+         line (": error <CODE>: ", for example ": error UMP020101: ") is an engine crash, for example an exception or a
+         missing runtime: it fails the build too, with UMP030004. -->
     <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high" ConsoleToMSBuild="true"
           Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(UmpireEngineFile)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
       <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
@@ -113,8 +114,9 @@
     </Exec>
     <PropertyGroup>
       <_UmpireCheckOutput>@(_UmpireCheckLine)</_UmpireCheckOutput>
+      <_UmpireCheckFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireCheckOutput)', ': error [A-Z]+[0-9]+: '))</_UmpireCheckFound>
     </PropertyGroup>
-    <Error Condition="'$(_UmpireCheckExit)' != '0' and !$(_UmpireCheckOutput.Contains(': error '))" Code="UMP030004"
+    <Error Condition="'$(_UmpireCheckExit)' != '0' and '$(_UmpireCheckFound)' != 'True'" Code="UMP030004"
            Text="The rule engine stopped with exit code $(_UmpireCheckExit) and reported no finding, so the architecture check did not run. Read the engine output above." />
   </Target>
 

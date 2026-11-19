@@ -16,14 +16,14 @@ public static class DepsFile {
     }
 
     static IEnumerable<string> ProjectAssembliesOf(string file) {
-        if (Json(file) is not { } deps || deps["libraries"] is not JsonObject libraries
+        if (Json(file) is not JsonObject deps || deps["libraries"] is not JsonObject libraries
             || deps["targets"] is not JsonObject targets) {
             yield break;
         }
         foreach (var target in targets.Select(t => t.Value).OfType<JsonObject>()) {
             foreach (var (key, library) in target) {
-                var type = libraries[key]?["type"]?.GetValue<string>();
-                if (type != Project || library?["runtime"] is not JsonObject runtime) {
+                if (!IsProject(libraries[key]) || library is not JsonObject { } entry
+                    || entry["runtime"] is not JsonObject runtime) {
                     continue;
                 }
                 foreach (var dll in runtime.Select(r => r.Key)) {
@@ -33,11 +33,15 @@ public static class DepsFile {
         }
     }
 
+    static bool IsProject(JsonNode? library) =>
+        library is JsonObject { } entry && entry["type"] is JsonValue type
+        && type.TryGetValue<string>(out var name) && name == Project;
+
     static JsonNode? Json(string file) {
         try {
             var options = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip };
             return JsonNode.Parse(File.ReadAllText(file), documentOptions: options);
-        } catch (JsonException) {
+        } catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) {
             return null;
         }
     }
