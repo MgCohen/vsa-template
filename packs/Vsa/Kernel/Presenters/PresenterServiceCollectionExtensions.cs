@@ -10,28 +10,26 @@ public static class PresenterServiceCollectionExtensions {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
+        services.AddScoped<PresenterScope>();
         foreach (var presenter in PresentersOf(types)) {
-            if (ShowsEvents(presenter)) {
-                services.AddScoped(presenter, provider => Connected(provider, presenter));
-            } else {
-                services.AddScoped(presenter);
+            services.AddScoped(presenter);
+            foreach (var handler in HandlersOf(presenter)) {
+                services.AddScoped(handler, ThePresenterOfTheScope(presenter));
             }
         }
         return services;
     }
+
+    static Func<IServiceProvider, object> ThePresenterOfTheScope(Type presenter) =>
+        provider => provider.GetRequiredService(presenter);
 
     static IEnumerable<Type> PresentersOf(AppTypes types) =>
         types.Modules.Select(module => module.GetType().Assembly).Distinct()
             .SelectMany(LoadedTypes.Of)
             .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } && t.IsSubclassOf(typeof(Presenter)));
 
-    static bool ShowsEvents(Type presenter) =>
+    static IEnumerable<Type> HandlersOf(Type presenter) =>
         presenter.GetInterfaces()
-            .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>));
-
-    static Presenter Connected(IServiceProvider provider, Type presenter) {
-        var instance = (Presenter)ActivatorUtilities.CreateInstance(provider, presenter);
-        provider.GetRequiredService<LivePresenters>().Connect(instance, provider.GetService<LivePresenters.Dispatch>());
-        return instance;
-    }
+            .Where(i => i.IsGenericType && !i.ContainsGenericParameters
+                && i.GetGenericTypeDefinition() == typeof(IPresenterHandler<>));
 }

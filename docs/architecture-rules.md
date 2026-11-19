@@ -20,7 +20,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010201` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
 | `UMP010202` | Analyzers | Event handlers do not use a request type or `IRequestSender`. |
 | `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. Disabled (#143). |
-| `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
+| `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterHandler`); it does not publish them. |
 | `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Disabled (#143). |
 | `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
 | `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty by default: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |

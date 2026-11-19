@@ -133,22 +133,24 @@ A host is the platform. It builds the services and starts the host work. It does
 
 | Host | Package | Use |
 |---|---|---|
-| `AppHost` | Umpire.Kernels | A `ServiceProvider` with an empty configuration. Exposes no operation |
+| `AppHost` | Umpire.Kernels | A `ServiceProvider` with the command-line configuration. Exposes no operation |
 | `ConsoleHost` | Umpire.Hosts.Console | Command-line configuration. Runs one request, then `AppStop.Request(exitCode)` |
 | `WebHost` | Umpire.Hosts.Web | ASP.NET Core: one HTTP route for each operation, and the views |
 | `UnityHost` | `vsa-unity` | A Unity app. Its `Configure` adds the Unity log provider and the main thread `Dispatch` |
 
 | `AppHost` member | Kind | Default |
 |---|---|---|
-| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose`, `BuildServiceProvider`. Composes only |
+| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose` with `Configuration(args)`, `BuildServiceProvider`. Composes only |
+| `Configuration(args)` | Virtual | `AddCommandLine` with the Umpire options only: `--Key=Value` and `--Key Value`. The host ignores other arguments |
 | `Start(services, stop)` | Virtual | Nothing. Starts the host work, and sends each stop source to `stop.Request` |
 | `Dispose()` | Virtual | Disposes the provider |
 | `Compose(services, configuration, kernel, types)` | Fixed | See "What Compose does" |
 | `Configure(services, types)` | Virtual | Nothing. The custom root services, last |
 | `Modules` | `init` property | `null`: `AppTypes` finds the modules. A test gives a list |
 
-- `ConsoleHost.Build` selects the request from the words before the first option. `ConsoleHost.Start` starts the request and listens for Ctrl+C and SIGTERM.
-- `WebHost.Build` builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
+- A host reads the arguments in `Configuration(args)`. The base host reads only `--Key=Value` and `--Key Value`, and it ignores other arguments, for example `-batchmode`, `-logFile path` or a path. So the raw arguments of a Unity player do not stop the start. `ConsoleHost` overrides it: it gives only the arguments from the first option to the base, so the words that select the request are not values.
+- `ConsoleHost.Build` calls the base `Build`, then selects the request from the words before the first option. `ConsoleHost.Start` starts the request and listens for Ctrl+C and SIGTERM.
+- `WebHost.Build` gives `args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
 - `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.
 - `AppHost` does no OS work, so a Unity app does not listen for Ctrl+C.
 - Each host has a public constructor with no parameters, and `AppHost` has `[RequireDerived]`.
@@ -183,7 +185,7 @@ A module defines its requests, commands, events, handlers and presenters one tim
 | Kind | Part | `AppHost` | `ConsoleHost` | `WebHost` |
 |---|---|---|---|---|
 | Definition | Messages, in-process senders | Yes | Yes | Yes |
-| Definition | Presenters, `LivePresenters` | Yes | Yes | Yes |
+| Definition | Presenters, `PresenterScope`, `LivePresenters` | Yes | Yes | Yes |
 | Transport | Command line: one request | No | Yes | No |
 | Transport | HTTP API: one route for each request | No | No | Yes |
 | Transport | Views (`ViewsRoot`): Razor components | No | No | Yes |
@@ -332,7 +334,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
-| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces`, `ActivatorUtilities` | Registers each presenter one time, and connects each presenter with events |
+| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces` | Registers each presenter one time, and forwards each `IPresenterHandler<TEvent>` of the presenter to it |
 | `Views` (Hosts.Web) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
 | `RequestOperations` (Composition) | `MakeGenericMethod` | Reads the static `Group`, `Name` and `Effect` of each request, and makes its `Operation` |
 | `CommandLine` (Hosts.Console) | `GetConstructors`, `Invoke` | Binds the command-line values to the constructor of the request |
@@ -483,7 +485,7 @@ Modes = { easy = 1, hard = 5 }
 |---|---|---|---|
 | `ICommandSender`, `IRequestSender`, `IIntegrationEventPublisher` | In process | In process | In process |
 | `ILogger<T>` | Yes, ASP.NET Core providers | Yes, no providers | Yes, no providers. A host adds them in `Configure` |
-| `IConfiguration` | `appsettings.json`, environment, `args` | `args` (`--key value`) | Empty |
+| `IConfiguration` | `appsettings.json`, environment, `args` | `args` from the first option (`--key value`) | `args` (`--key value`, `--Section:Key=Value`) |
 | `IHostedService` start | Yes, inside `WebApplication` | No | No |
 
 ## Unity target
@@ -496,10 +498,6 @@ A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM packag
 public sealed class UnityHost : AppHost {
     protected override void Configure(IServiceCollection services, AppTypes types) {
         services.AddLogging(logging => logging.AddProvider(new UnityLogProvider()));
-        services.AddSingleton<LivePresenters.Dispatch>(async work => {
-            await Awaitable.MainThreadAsync();
-            await work();
-        });
     }
 }
 ```

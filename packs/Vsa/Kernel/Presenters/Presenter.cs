@@ -7,18 +7,11 @@ using Umpire.Vsa.Contracts.Requests;
 [RequireDerived]
 [Preserve]
 public abstract class Presenter(IRequestSender requests) : IDisposable {
-    Action? disconnect;
-
     public event Action? Changed;
 
     protected IRequestSender Requests => requests;
 
     internal void RaiseChanged() => Changed?.Invoke();
-
-    internal void Connect(Action disconnectFromLive) {
-        disconnect?.Invoke();
-        disconnect = disconnectFromLive;
-    }
 
     protected async Task Run(OpState op, Func<Task<Error?>> body) {
         op.Busy = true;
@@ -37,10 +30,5 @@ public abstract class Presenter(IRequestSender requests) : IDisposable {
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing) {
-        if (disposing) {
-            disconnect?.Invoke();
-            disconnect = null;
-        }
-    }
+    protected virtual void Dispose(bool disposing) { }
 }
