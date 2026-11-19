@@ -70,7 +70,7 @@
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
   </PropertyGroup>
   <PropertyGroup>
-    <UmpireEngineFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
+    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
   </PropertyGroup>
 
   <!-- The architecture check after each build of the root project. MSBuild only calls the engine with the Check stage: the

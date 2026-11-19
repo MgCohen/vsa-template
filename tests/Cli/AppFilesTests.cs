@@ -51,7 +51,7 @@ public sealed class AppFilesTests {
     }
 
     [Test]
-    public void ThePackageOfTheBuildCheckIsASlot() {
+    public void APackageReferenceIsASlot() {
         Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Hosts.Web" Version="0.0.1" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
