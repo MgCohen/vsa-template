@@ -99,7 +99,6 @@ public sealed class ScaffoldingTests {
             ("Tests/SampleAppArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
             ("appsettings.json", App),
-            ("global.json.template", Setup),
             ("nuget.config.template", Setup),
         ];
 
@@ -146,7 +145,7 @@ public sealed class ScaffoldingTests {
         var paths = NewApp("Hello").Select(f => f.Path).ToList();
 
         Assert.That(paths, Does.Contain(".umpireconfig"));
-        Assert.That(paths, Has.None.EqualTo("Directory.Build.props").And.None.EqualTo("dotnet-tools.json"));
+        Assert.That(paths, Has.None.EqualTo("Directory.Build.props").And.None.EqualTo("dotnet-tools.json").And.None.EqualTo("global.json"));
     }
 
     [Test]
@@ -155,7 +154,6 @@ public sealed class ScaffoldingTests {
 
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\">"));
         Assert.That(files.Single(f => f.Path == "Tests/App.Tests.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk/{Version}\">"));
-        Assert.That(files.Single(f => f.Path == "global.json").Content, Does.Not.Contain("msbuild-sdks"));
         Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
     }

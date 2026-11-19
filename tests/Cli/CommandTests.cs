@@ -45,6 +45,11 @@ public sealed class CommandTests {
             Throws.TypeOf<UmpireException>().With.Message.Contain("Give the module: umpire add command <Name> -m <Module>"));
 
     [Test]
+    public void TestStopsWhenTheAppHasNoTestProject() =>
+        Assert.That(() => RunInAnApp(["test"]),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("has no test project"));
+
+    [Test]
     public void ACommandThatTakesANameStopsWithoutIt() =>
         Assert.That(() => CommandList.Run(["add", "module"]),
             Throws.TypeOf<UmpireException>().With.Message.Contain("Give the name: umpire add module <Name>"));

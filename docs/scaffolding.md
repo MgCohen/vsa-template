@@ -15,8 +15,9 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
 | `add pack <Name>` | Pack class `<Name><THost>` in `Packs/<Name>/<Name>Pack.cs`, and `Architecture/<Name>Architecture.cs` (inherits `VsaArchitecture`). See `pack-variants.md` | None |
+| `test [-c <configuration>]` | None | None. It runs `dotnet run --project` for each project of the app whose name ends with `.Tests`, so it needs no `test` entry in `global.json` |
 | `doctor` | None | None |
-| `update [--version <version>]` | None | The tool manifest, with `dotnet tool update`. Then the Umpire versions in `global.json` and the project files |
+| `update [--version <version>]` | None | The Umpire versions in the project files and `Directory.*.props` |
 
 Rules for all commands:
 
@@ -44,6 +45,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
 ├─ NewAppCommand                 umpire new app <Name> [--source <feed>]
 ├─ InitCommand                   umpire init [--source <feed>] [--check true]
 └─ AppCommand                    finds the app folder, then Run(root, CommandInput)
+   ├─ TestCommand                umpire test [-c <configuration>]
    ├─ DoctorCommand              umpire doctor
    ├─ UpdateCommand              umpire update [--version <version>]
    └─ AddCommand                 checks the name, writes the template files of one TemplateGroup
@@ -79,7 +81,6 @@ tools/cli/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
 ├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
-├─ global.json.template              setup (the .NET SDK and the test runner)
 ├─ .umpireconfig                     setup (only for an app with more than one project)
 ├─ nuget.config.template             setup (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               setup
@@ -116,7 +117,7 @@ The path of a template file gives its command. The tool uses the first rule that
 
 The tool also replaces the kebab form of each name, for routes: `sample-module` becomes `billing`, and `sample-action` becomes `create-invoice`.
 
-The suffix `.template` keeps a file inactive in this repository, for example a `global.json` that would change the SDK of the template build. The tool removes the suffix. In each template file, the tool replaces `{{UmpireVersion}}` with its own version.
+The suffix `.template` keeps a file inactive in this repository, for example a `nuget.config` that would change the feeds of the template build. The tool removes the suffix. In each template file, the tool replaces `{{UmpireVersion}}` with its own version.
 
 ## Source mode and package mode
 
@@ -132,7 +133,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 ## Tests of a new app
 
-`Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform, and `new app` writes the `test` runner in `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
+`Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform. `umpire test` runs it with `dotnet run --project`, so the app needs no `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
 
 An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). Umpire.Sdk adds the package `Umpire.Engine.Build` to the root project (an executable that is not a test project), so no project has this line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
 
@@ -153,7 +154,7 @@ SetupTasks.Plan ──► each task: Done | Change(file, content) | ByHand(messa
 
 | Task | File | Done when | No file | A file without the setup | By hand |
 |---|---|---|---|---|---|
-| `global-json` | `global.json` | The file exists with no `msbuild-sdks` → `Umpire.Sdk` | The template | Nothing | A pin of `Umpire.Sdk` (the version is on the project line), comments |
+| `global-json` | `global.json` | No file, or a file with no `msbuild-sdks` → `Umpire.Sdk` | Nothing: the app needs no `global.json` | Nothing | A pin of `Umpire.Sdk` (the version is on the project line), comments |
 | `nuget-config` | `nuget.config` | A source has the key `umpire`. With `--source`: each source path is a source | The template | Adds the `umpire` source and its credentials. With `--source`: each missing source, with a free key | Not valid XML |
 | `git-ignore` | `.gitignore` | Each line of the template is in the file | The template | Adds the missing lines | None |
 | `umpire-sdk` | The root project | The main SDK is `Umpire.Sdk` or `Umpire.Sdk.Web` with the tool version | Not possible | `Microsoft.NET.Sdk` becomes `Umpire.Sdk/<version>`, `Microsoft.NET.Sdk.Web` becomes `Umpire.Sdk.Web/<version>`, an Umpire SDK with no version gets it | Another version (`umpire update`), an `<Sdk>` element, another main SDK, not valid XML |
@@ -173,7 +174,6 @@ Rules of a task:
 `init` needs exactly one `.csproj` in the current folder: the root project. It writes only in that folder. A file in a parent folder stays, and the new file does not hide it:
 
 - The new `nuget.config` has no `<clear />`.
-- The new `global.json` keeps the `sdk`, `msbuild-sdks` (with no `Umpire.Sdk`) and `test` sections of the parent one. It adds no `test` section of its own.
 
 `new app` does not read the parent folders. `init` does not write the app class: if the app has none, the rule engine gives `UMP030502`.
 
@@ -196,15 +196,16 @@ The task ids are stable. A later version can let a consumer skip or add a task b
 | The running tool | `Umpire.Cli` |
 | Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin (`Sdk="Umpire.Sdk.Web/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference, also `Umpire.Engine.Build`. A reference with no version uses its `PackageVersion` |
 
-The tool runs with `dotnet tool exec Umpire.Cli@<version> -y -- <command>`, so the app has no tool manifest. The commands that need an app (`add`, `doctor`, `update`) find the app folder: the nearest `.umpireconfig` at or above the current folder, else the nearest folder with a project that names an Umpire SDK. `doctor` reports an Umpire SDK with no version and an Umpire pin in `global.json` as work by hand.
+The tool runs with `dotnet tool exec Umpire.Cli@<version> -y -- <command>`, so the app needs no tool manifest. A consumer can also install the tool, as a global tool (`umpire <command>`) or in a tool manifest of the app (`dotnet umpire <command>`). The commands that need an app (`add`, `test`, `doctor`, `update`) find the app folder: the nearest `.umpireconfig` at or above the current folder, else the nearest folder with a project that names an Umpire SDK. `doctor` reports an Umpire SDK with no version and an Umpire pin in `global.json` as work by hand.
 
 ## Update
 
 `umpire update` moves an app to a new Umpire version:
 
-1. `dotnet tool update umpire.cli --local` changes the tool manifest. With no `--version`, it gets the latest version on the feeds of the app. If the app uses a preview, it also accepts previews. With `--version`, it gets that version, also a lower one.
-2. The tool writes the version of the manifest to `global.json` and to each place in the table above. It changes no other item. A package reference with no version keeps its `PackageVersion`.
-3. The tool shows the changed files. Then run `dotnet build`.
+1. The tool writes the version of the running tool (or `--version`) to each place in the table above. It changes no other item. A package reference with no version keeps its `PackageVersion`.
+2. The tool shows the changed files. Then run `dotnet build`.
+
+`update` does not change a tool manifest. If the app has one, run `dotnet tool update Umpire.Cli` first, so that the manifest and the app get the same version.
 
 The running tool is the old version. So run `umpire doctor` after the update, not in the same command.
 
