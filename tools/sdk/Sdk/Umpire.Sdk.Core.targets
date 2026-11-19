@@ -102,8 +102,10 @@
       <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
       <_UmpireBlockArgument Condition="'$(UmpireBlock)' != ''"> --block &quot;$(UmpireBlock.TrimEnd('\').TrimEnd('/'))&quot;</_UmpireBlockArgument>
     </PropertyGroup>
-    <Error Condition="!Exists('$(UmpireEngineFile)')" Code="UMP030003"
+    <Error Condition="!Exists('$(UmpireEngineFile)') and '$(UmpireFrameworkSourceDir)' == ''" Code="UMP030003"
            Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again, so the Umpire SDK package is complete." />
+    <Error Condition="!Exists('$(UmpireEngineFile)') and '$(UmpireFrameworkSourceDir)' != ''" Code="UMP030003"
+           Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Build engine/Engine.csproj with the same configuration, or give UmpireEngineFile." />
     <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no finding
          line (": error <CODE>: ", for example ": error UMP020101: ") is an engine crash, for example an exception or a
          missing runtime: it fails the build too, with UMP030004. -->

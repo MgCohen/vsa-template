@@ -44,11 +44,11 @@ For an app, the app class is the check entry. Its install point is the custom ho
 |---|---|---|---|
 | App | The app class | None on the app class. A custom host `Configure` (`MyHost : WebHost`) | Checked (`UMP030502`, `UMP030503`) |
 | Pack | `Pack : Block<PackArchitecture>` | None. The pack names its kernel and its host | Checked (`PackArchitecture`) |
-| Framework kernel | `AssemblyMetadata` | `Kernel.Install` (the core) | Not enforced in 0.1.0 |
+| Framework kernel | `AssemblyMetadata` | `Kernel.Install` (the core) | Checked: folders only (`KernelArchitecture`) |
 | Pack kernel | None: the pack owns it | `VsaKernel.Configure` | Not enforced in 0.1.0 |
-| Component | `AssemblyMetadata`, optional | An `Add<Name>` extension | Not enforced in 0.1.0 |
+| Component | `AssemblyMetadata`, optional | An `Add<Name>` extension | Checked: folders only (`MessagesArchitecture`, `LibraryArchitecture`) |
 | Module | None: the app owns it | A `Module` class. Each module kind derives from it, for example `Plugin` | Checked (`UMP020301`, host startup) |
-| Library | `AssemblyMetadata`, optional | None | Not enforced in 0.1.0 |
+| Library | `AssemblyMetadata`, optional | None | Checked: folders only (`LibraryArchitecture`, `ApiArchitecture`) |
 
 The check entry has four forms. The kinds above give the default form. Each form is possible for each independent block.
 
@@ -63,6 +63,7 @@ The check entry has four forms. The kinds above give the default form. Each form
 - A check entry names a type that loads and that is an `Architecture`. **Checked** (`UMP030302`).
 - An entry in code wins over the key `umpire.architecture` in the same folder. **Checked** (`UMP030304`, a warning).
 - A typed base counts only for a type that is not abstract. **Checked** (`FindBlocks`).
+- The framework definitions (`KernelArchitecture`, `MessagesArchitecture`, `ApiArchitecture`, `LibraryArchitecture`, in `framework/Kernel/App/`) have the folders of the block as parts, no rules and `DefaultPermission = Allow`. The same pipeline checks them as each other definition. A run of an app finds them as used blocks.
 
 A component installs with a public extension that the kernel calls by name. `VsaKernel.Configure` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
 
@@ -124,7 +125,6 @@ var contracts = kernel.Add<Contracts>().InAssembly("Umpire.Messages.Contracts");
 ## Open questions
 
 - The `Component` base class, and `Module : Component` in code (composition review).
-- The check entry of the framework kernel. A typed base on `Kernel` does not work, because `VsaKernel` inherits it.
 - `Block<T>` as a typed check entry for module kinds, and the block name family (#202).
 - A tool as an app with a lighter host: `tools/cli` has no app class.
 - Library: a kind of its own, or not. An optional entry utility for a library.
