@@ -6,7 +6,7 @@ using Tests.Shared;
 namespace Engine.Tests;
 
 public sealed class UsedBlocksTests {
-    static readonly string Pack = Repo.Path("packs", "Vsa");
+    static readonly string pack = Repo.Path("packs", "Vsa");
     static BinIndex? index;
 
     static BinIndex Index {
@@ -21,16 +21,17 @@ public sealed class UsedBlocksTests {
 
     [TestCase("tests", "Fixtures", "Notes")]
     [TestCase("engine")]
-    public void A_block_uses_the_pack_block_of_its_project_references_and_no_other_block_of_the_bin(params string[] folder) {
+    public void A_block_uses_only_the_pack_block_of_its_project_references(params string[] folder) {
         var used = UsedBlocks.Of(Repo.Path(folder), [], Index.Entries, Index);
 
-        Assert.That(used, Is.EqualTo(new[] { Path.GetFullPath(Pack) }));
+        Assert.That(used, Is.EqualTo(new[] { Path.GetFullPath(pack) }));
     }
 
     [Test]
     public void An_inner_block_is_a_used_block() {
         var app = Repo.Path("tests", "Fixtures", "PackVariant");
-        var inner = Index.Entries.Where(e => e.Folder.StartsWith(Path.Combine(app, "Packs"), StringComparison.OrdinalIgnoreCase)).ToList();
+        var packs = Path.Combine(app, "Packs");
+        var inner = Index.Entries.Where(e => e.Folder.StartsWith(packs, StringComparison.OrdinalIgnoreCase)).ToList();
 
         var used = UsedBlocks.Of(app, inner, Index.Entries, Index);
 
@@ -82,6 +83,8 @@ public sealed class UsedBlocksTests {
         }
     }
 
-    static BinDll Dll(string name, string source, IReadOnlyList<string> references, bool isProject) =>
-        new(Path.Combine(Path.GetDirectoryName(source)!, name + ".dll"), name, false, references, [source], [], [], isProject);
+    static BinDll Dll(string name, string source, IReadOnlyList<string> references, bool isProject) {
+        var dll = Path.Combine(Path.GetDirectoryName(source)!, name + ".dll");
+        return new(dll, name, false, references, [source], [], [], isProject);
+    }
 }
