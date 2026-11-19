@@ -7,7 +7,7 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 | Group | Level | Package | IDs |
 |---|---|---|---|
 | Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernels.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
-| Build of the host | Architecture | `Umpire.Engine.Build` (rule engine, ArchUnitNET) | `UMP02xxxx` |
+| Build of the host | Architecture | The rule engine in the Umpire SDK package (ArchUnitNET) | `UMP02xxxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
 
