@@ -13,13 +13,15 @@ public static class PresenterServiceCollectionExtensions {
         services.AddScoped<PresenterScope>();
         foreach (var presenter in PresentersOf(types)) {
             services.AddScoped(presenter);
-            // A forward to the presenter registration, so the handler is the presenter of the scope.
             foreach (var handler in HandlersOf(presenter)) {
-                services.AddScoped(handler, provider => provider.GetRequiredService(presenter));
+                services.AddScoped(handler, ThePresenterOfTheScope(presenter));
             }
         }
         return services;
     }
+
+    static Func<IServiceProvider, object> ThePresenterOfTheScope(Type presenter) =>
+        provider => provider.GetRequiredService(presenter);
 
     static IEnumerable<Type> PresentersOf(AppTypes types) =>
         types.Modules.Select(module => module.GetType().Assembly).Distinct()

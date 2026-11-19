@@ -17,9 +17,12 @@ The bottom-up path works at the presenter level. It does not need a view: a view
 module handler ──PublishAsync──▶ InProcessEventPublisher
                                   1. the event pipeline: each IntegrationEventHandler<TEvent>, in the scope of the publish
                                   2. if the run is Accepted: each IIntegrationEventObserver ──▶ LivePresenters
-                                       for each live presenter scope, one event at a time:
+                                       for each live presenter scope: add the delivery to the queue of the scope
+                                         if the scope is idle: this flow runs the queue until it is empty
+                                         if the scope is busy: the flow that runs the queue runs this delivery later
+                                       one delivery:
                                          resolve IEnumerable<IPresenterHandler<TEvent>>
-                                         for each handler: HandleAsync(envelope), then Changed
+                                         for each handler, while the scope is live: HandleAsync(envelope), then Changed
 PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 ```
 
@@ -30,7 +33,7 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 | `IIntegrationEventObserver` | `Umpire.Vsa.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `Umpire.Vsa.Handlers.Events` needs no reference to `Umpire.Vsa.Presenters`. |
 | `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(Envelope<TEvent>)`. It has no `[AutoRegister]`. |
 | `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. |
-| `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. |
+| `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. It has the queue of the deliveries to the scope. |
 | `LivePresenters` | `Umpire.Vsa.Presenters` | The live presenter scopes, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. |
 | `AddPresenters` | `Umpire.Vsa.Presenters` | Registers each presenter one time, as scoped. Forwards each `IPresenterHandler<TEvent>` of the presenter to that registration. |
 | `PresenterWatcher` | `Umpire.Vsa.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` resolves `PresenterScope`, listens to `Changed` of each presenter and renders. |
@@ -46,14 +49,23 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 | Unity | One for each page, or one for the app | The shell or the page that makes the scope, one time |
 | Test | The test scope | The test, with `GetRequiredService<PresenterScope>()` |
 
+- Dispose each scope that resolves `PresenterScope`. A scope that you do not dispose stays live: it keeps its presenters and gets each event until the app stops. Blazor disposes the scope of a circuit at the end of the circuit. In Unity, the shell or the page that makes the scope disposes it.
+- Resolve `PresenterScope` in a scope only. A resolve from the root provider throws `InvalidOperationException`, because a root `PresenterScope` stays live until the app stops.
+- A scope gets the events that are published after it becomes live. A `PresenterWatcher` makes the scope live in `Watch`. If the first view of a circuit calls `Watch` late, for example after an `await` in `OnInitializedAsync`, the presenters of the circuit do not get the events of that time. Call `Watch` in `OnParametersSet`, before the first `await`. `PresenterComponent<T>` calls `Watch` in `OnParametersSet`.
+
 ## Rules
 
 - Each presenter of a live scope gets its events, also when no view shows it. A scope gets no more events after its end.
 - The delivery resolves the handlers in the live scope. If a presenter does not exist yet in that scope, the resolve makes it.
 - A presenter constructor does not send requests. A resolve during a publish then cannot start a second publish.
 - `LivePresenters` is one for the app. Each presenter of the event type gets the event, in each live scope (for example each circuit). In an app with more than one user, the presenter must ignore the events that are not for its user.
-- The delivery runs on the thread of the publish, and the publish waits for it. The presenters of one scope get one event at a time. The handlers have no order.
+- Each scope has a queue of deliveries. The presenters of one scope get one event at a time, in the order of the queue. The handlers of one event have no order.
+- If the scope is idle, the delivery runs on the thread of the publish, and the publish waits for it. If the scope is busy, the publish adds the delivery to the queue and does not wait. The flow that runs the queue then runs the delivery. A publish never waits for another flow, so two scopes that publish to each other cannot deadlock.
+- A presenter handler can send a request, and the request handler can publish an event to the same scope. That event goes in the queue and runs after the current event. The response of the request comes before that event.
+- The cost of a publish: the publish runs the presenters of each idle live scope, one scope after the other. It does not wait for a busy scope. The flow that runs the queue of a scope also runs the deliveries that other flows add during that time. Keep presenter handlers short: a slow handler makes each publish to an idle scope slow.
+- The delivery checks that the scope is live before each handler. If the scope ends during the delivery, the next handlers do not run. An `ObjectDisposedException` of an ended scope is not an error.
 - If a handler throws or returns an error, the log gets the error, and the next handler runs.
+- `IIntegrationEventHandler<TEvent>` has no `[AutoRegister]`. The marker is on `IntegrationEventHandler<TEvent>` only, so the module scan does not take a presenter as a module handler.
 - Each scope gets its own envelope. `Envelope.Services` is the provider of the presenter scope, and `Envelope.Cancellation` is the token of the publish.
 - A view renders on its own thread: `PresenterWatcher` calls `InvokeAsync(StateHasChanged)`.
 - The observer runs after the handlers. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.

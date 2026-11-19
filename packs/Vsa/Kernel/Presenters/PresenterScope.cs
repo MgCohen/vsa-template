@@ -1,10 +1,16 @@
 namespace Umpire.Vsa.Presenters;
 
-// The first resolve in a scope adds that scope to LivePresenters. The end of the scope removes it.
 public sealed class PresenterScope : IDisposable {
     readonly LivePresenters live;
+    readonly Queue<Func<Task>> waitingDeliveries = new();
+    bool delivering;
 
     public PresenterScope(IServiceProvider services, LivePresenters live) {
+        if (ReferenceEquals(services, live.RootServices)) {
+            throw new InvalidOperationException(
+                "PresenterScope was resolved from the root provider, so it stays live until the app stops. "
+                + "Resolve it in a scope (IServiceScopeFactory.CreateScope), and dispose that scope at the end of the view.");
+        }
         Services = services;
         this.live = live;
         live.Add(this);
@@ -12,10 +18,35 @@ public sealed class PresenterScope : IDisposable {
 
     internal IServiceProvider Services { get; }
 
-    // Two publishes on two threads can reach the same scope at the same time,
-    // for example two web requests and one Blazor circuit. The gate keeps the
-    // presenters of a scope on one event at a time.
-    internal SemaphoreSlim Gate { get; } = new(1, 1);
+    internal async Task DeliverInTurnAsync(Func<Task> delivery) {
+        lock (waitingDeliveries) {
+            waitingDeliveries.Enqueue(delivery);
+            if (delivering) {
+                return;
+            }
+            delivering = true;
+        }
+        try {
+            while (NextDelivery() is { } next) {
+                await next();
+            }
+        } catch {
+            lock (waitingDeliveries) {
+                delivering = false;
+            }
+            throw;
+        }
+    }
 
     public void Dispose() => live.Remove(this);
+
+    Func<Task>? NextDelivery() {
+        lock (waitingDeliveries) {
+            if (waitingDeliveries.Count > 0) {
+                return waitingDeliveries.Dequeue();
+            }
+            delivering = false;
+            return null;
+        }
+    }
 }

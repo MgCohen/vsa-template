@@ -11,8 +11,7 @@ public abstract class PresenterWatcher : ComponentBase, IDisposable {
     [Inject] IServiceProvider Services { get; set; } = default!;
 
     protected void Watch(params Presenter[] presenters) {
-        // The first view of a circuit makes its scope a live presenter scope.
-        Services.GetService<PresenterScope>();
+        MakeTheScopeLive();
         if (watched.SequenceEqual(presenters, ReferenceEqualityComparer.Instance)) {
             return;
         }
@@ -22,6 +21,8 @@ public abstract class PresenterWatcher : ComponentBase, IDisposable {
             presenter.Changed += OnChanged;
         }
     }
+
+    void MakeTheScopeLive() => Services.GetService<PresenterScope>();
 
     async void OnChanged() {
         if (disposed) {
