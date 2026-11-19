@@ -1,11 +1,30 @@
 namespace Umpire.Kernels;
 
 public sealed class AppStop {
-    readonly TaskCompletionSource<int> exit = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    readonly object gate = new();
+    Action<int>? listener;
+    int? exitCode;
 
-    public bool IsRequested => exit.Task.IsCompleted;
+    public void Request(int exitCode = 0) {
+        Action<int>? notify;
+        lock (gate) {
+            if (this.exitCode is not null) {
+                return;
+            }
+            this.exitCode = exitCode;
+            notify = listener;
+        }
+        notify?.Invoke(exitCode);
+    }
 
-    public Task<int> Requested => exit.Task;
-
-    public void Request(int exitCode = 0) => exit.TrySetResult(exitCode);
+    internal void Listen(Action<int> listener) {
+        int? requested;
+        lock (gate) {
+            this.listener = listener;
+            requested = exitCode;
+        }
+        if (requested is { } code) {
+            listener(code);
+        }
+    }
 }

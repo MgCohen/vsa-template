@@ -22,7 +22,7 @@ public sealed class ConsoleHostTests {
 
     [Test]
     public void A_response_with_no_exit_code_gives_exit_code_zero() =>
-        Assert.That(new TestApp<TestConsoleHost>(new QuietModule()).Run(["--code", "7"]), Is.Zero);
+        Assert.That(new TestApp<TestConsoleHost>(new QuietModule()).Run(["quiet", "--code", "7"]), Is.Zero);
 
     [Test]
     public void A_missing_parameter_gives_exit_code_one() =>

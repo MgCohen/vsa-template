@@ -7,6 +7,8 @@ using Umpire.Kernels;
 
 public class WebHost : AppHost {
     WebApplication? web;
+    AppSignals? signals;
+    CancellationTokenRegistration stopping;
 
     public override IServiceProvider Build(string[] args, App app) {
         var builder = WebApplication.CreateBuilder(args);
@@ -22,11 +24,19 @@ public class WebHost : AppHost {
         if (root is not null) {
             Views.Map(web, root);
         }
-        web.StartAsync().GetAwaiter().GetResult();
         return web.Services;
     }
 
+    public override void Start(IServiceProvider services, AppStop stop) {
+        web!.StartAsync().GetAwaiter().GetResult();
+        stopping = web.Lifetime.ApplicationStopping.Register(() => stop.Request());
+        signals = AppSignals.Listen(stop);
+    }
+
     public override void Dispose() {
+        signals?.Dispose();
+        signals = null;
+        stopping.Dispose();
         if (web is { } running) {
             web = null;
             running.StopAsync().GetAwaiter().GetResult();

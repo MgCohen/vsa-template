@@ -37,7 +37,7 @@ public sealed class AppTests {
 
         Assert.That(first, Is.Zero);
         Assert.That(second, Is.Zero);
-        Assert.That(app.IsRunning, Is.False);
+        Assert.That(app.State == AppState.Running, Is.False);
         Assert.That(app.Stops, Is.EqualTo(2));
     }
 
@@ -45,11 +45,11 @@ public sealed class AppTests {
     public void Start_returns_and_Stop_stops_the_app() {
         var app = new LifecycleApp();
         app.Start([]);
-        var runningAfterStart = app.IsRunning;
+        var runningAfterStart = app.State == AppState.Running;
         app.Stop();
 
         Assert.That(runningAfterStart, Is.True);
-        Assert.That(app.IsRunning, Is.False);
+        Assert.That(app.State == AppState.Running, Is.False);
         Assert.That(app.Services, Is.Null);
     }
 
@@ -70,7 +70,7 @@ public sealed class AppTests {
         app.Stop();
 
         app.Start([]);
-        var running = app.IsRunning;
+        var running = app.State == AppState.Running;
         app.Stop();
 
         Assert.That(running, Is.True);
@@ -140,12 +140,12 @@ public sealed class AppTests {
     static async Task<int> RunUntilStop(LifecycleApp app) {
         var run = Task.Run(() => app.Run([]));
         var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (!app.IsRunning && !run.IsCompleted && DateTime.UtcNow < deadline) {
+        while (app.State != AppState.Running && !run.IsCompleted && DateTime.UtcNow < deadline) {
             await Task.Delay(10);
         }
         app.Stop();
         Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(30))), Is.SameAs(run));
-        Assert.That(app.IsRunning, Is.False);
+        Assert.That(app.State == AppState.Running, Is.False);
         return await run;
     }
 

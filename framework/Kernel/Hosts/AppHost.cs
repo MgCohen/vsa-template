@@ -18,6 +18,9 @@ public class AppHost : IDisposable {
         return provider;
     }
 
+    public virtual void Start(IServiceProvider services, AppStop stop) {
+    }
+
     public virtual void Dispose() {
         provider?.DisposeAsync().AsTask().GetAwaiter().GetResult();
         provider = null;

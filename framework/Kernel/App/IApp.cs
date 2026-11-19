@@ -4,13 +4,13 @@ using Umpire.Markers;
 
 [RequireImplementors]
 public interface IApp {
-    bool IsRunning { get; }
+    AppState State { get; }
 
     IServiceProvider? Services { get; }
 
     void Start(string[] args);
 
-    int Run(string[] args);
-
     void Stop();
+
+    int Run(string[] args);
 }

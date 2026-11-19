@@ -113,14 +113,14 @@ public sealed class HeadlessCompositionTests {
         var app = App();
 
         var run = Task.Run(() => app.Run([]));
-        while (!app.IsRunning && !run.IsCompleted) {
+        while (app.State != AppState.Running && !run.IsCompleted) {
             await Task.Delay(10);
         }
         app.Stop();
 
         Assert.That(await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(10))), Is.SameAs(run));
         Assert.That(await run, Is.Zero);
-        Assert.That(app.IsRunning, Is.False);
+        Assert.That(app.State == AppState.Running, Is.False);
     }
 
     [Test]

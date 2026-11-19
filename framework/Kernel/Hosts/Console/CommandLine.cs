@@ -26,8 +26,8 @@ static class CommandLine {
     }
 
     internal static async Task Run(
-        IServiceProvider services, Operation operation, IConfiguration configuration, CancellationToken ct) {
-        var stop = services.GetRequiredService<AppStop>();
+        IServiceProvider services, Operation operation, IConfiguration configuration, AppStop stop,
+        CancellationToken ct) {
         try {
             var input = Bind(operation.Input, configuration);
             using var scope = services.CreateScope();

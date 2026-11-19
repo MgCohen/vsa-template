@@ -25,7 +25,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 | Host | The platform of an app. The host class builds the services and disposes them. It does not run or wait | `AppHost`, `WebHost`, `ConsoleHost`; the layer record `Host` |
 | Kernel | The install point of an architecture: the core, then the layers | `Kernel`, `VsaKernel` |
 | Operation | A request that a host exposes, with its group, name and effect | `Operation`, `Effect` |
-| Stop request | A call that ends `App.Run` with an exit code | `AppStop.Request` |
+| Stop request | A call from app code that stops the app with an exit code | `AppStop.Request` |
 | Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `AddPipeline`, the `Add<Name>(services, types)` extensions |
 | Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation`, `AppTypes.Implementations` |
 
