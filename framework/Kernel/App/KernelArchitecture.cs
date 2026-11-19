@@ -1,0 +1,15 @@
+namespace Umpire.Kernels;
+
+using Umpire.Architecture;
+
+public sealed class KernelArchitecture : Architecture {
+    protected override void Configure(Options defaults) {
+        defaults.DefaultPermission = Permission.Allow;
+    }
+
+    protected override void Define(Block block) {
+        block.Add<KernelParts.App>().And<KernelParts.Kernels>().And<KernelParts.Hosts>().And<KernelParts.Operations>()
+            .And<KernelParts.Modules>().And<KernelParts.Scan>().And<KernelParts.Factories>().And<KernelParts.Services>()
+            .And<KernelParts.Analyzers>();
+    }
+}

@@ -12,19 +12,21 @@ public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyL
     }
 
     public IReadOnlyList<BinDll> AppDlls(string blockFolder, IReadOnlyList<string> skip) =>
-        [.. Dlls.Where(d => !d.IsShared && !Skipped(d.Name, skip) && d.HasSourceUnder(blockFolder))];
+        [.. Dlls.Where(d => !Skipped(d.Name, skip) && d.HasSourceUnder(blockFolder))];
 
     public IReadOnlyList<BinDll> ExternalDlls(IReadOnlyList<string> names) =>
         [.. Dlls.Where(d => !d.IsShared && names.Any(e => d.Name == e || d.Name.StartsWith(e + ".", StringComparison.Ordinal)))];
 
-    public IReadOnlyList<BinDll> ReferencedDlls(IReadOnlyList<BinDll> app, IReadOnlyList<string> skip) {
+    public IReadOnlyList<BinDll> ReferencedDlls(
+        IReadOnlyList<BinDll> app, IReadOnlyList<string> skip, bool shared = false) {
         var byName = Dlls.ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
         var found = new Dictionary<string, BinDll>(StringComparer.OrdinalIgnoreCase);
         var next = new Queue<BinDll>(app);
         while (next.TryDequeue(out var dll)) {
             foreach (var reference in dll.References) {
                 if (BinDll.IsSystem(reference) || found.ContainsKey(reference) || Skipped(reference, skip)
-                    || app.Any(a => a.Name == reference) || !byName.TryGetValue(reference, out var referenced) || referenced.IsShared) {
+                    || app.Any(a => a.Name == reference) || !byName.TryGetValue(reference, out var referenced)
+                    || (referenced.IsShared && !shared)) {
                     continue;
                 }
                 found[reference] = referenced;
