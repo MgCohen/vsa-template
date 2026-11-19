@@ -10,14 +10,18 @@ App.Run(args)
 │  ├─ host = Pack.CreateHost()
 │  ├─ Services = host.Build(args, this)
 │  │  └─ host.Compose(services, configuration, Pack.Kernel, types)
+│  ├─ host.Start(Services, AppStop)          the host work: operation, web, signals
+│  ├─ State = Running
 │  └─ OnStart()
-├─ wait: App.Stop(), Ctrl+C or SIGTERM, AppStop.Request(code)
-└─ Stop()
+├─ wait for a stop request
+└─ the stop
+   ├─ State = Stopping
    ├─ OnStop()
-   └─ host.Dispose()
+   ├─ host.Dispose()
+   └─ State = Stopped
 ```
 
-The calls go one way. The app calls `Build` and `Dispose` on the host. The host calls only `Compose`.
+The calls go one way. The app calls `Build`, `Start` and `Dispose` on the host. The host calls only `Compose` and `AppStop.Request`.
 
 ```csharp
 // App/Host/Program.cs
@@ -43,12 +47,13 @@ The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<T
 
 | Type | Package | Job |
 |---|---|---|
-| `IApp` | Umpire.Kernels | `Start`, `Run`, `Stop`, `IsRunning`, `Services`. A shell makes the app class through it |
+| `IApp` | Umpire.Kernels | `State`, `Services`, `Start`, `Stop`, `Run`. A shell makes the app class through it |
 | `App`, `App<TPack>` | Umpire.Kernels | The lifecycle of the app. `App<TPack>` makes its pack with `new TPack()` |
 | `Pack`, `Pack<TArchitecture, TKernel, THost>` | Umpire.Kernels | Gives `Architecture`, `Kernel` and `CreateHost()` |
 | `Kernel` | Umpire.Kernels | The install point of an architecture: `Install` (the core, fixed), then `Configure` |
-| `AppHost` | Umpire.Kernels | The platform: `Build`, `Dispose`, `Compose` (fixed), `Configure` |
-| `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` ends `App.Run`. `Requested` gives the exit code |
+| `AppHost` | Umpire.Kernels | The platform: `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
+| `AppState` | Umpire.Kernels | `Stopped`, `Running` or `Stopping` |
+| `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` stops the app. The first request gives the exit code |
 | `Operation` | Umpire.Kernels | A request that a host exposes: `Group`, `Name`, `Effect`, `Input`, `Invoke` |
 | `Module`, `Module<TSettings>` | Umpire.Kernels | The root class of a module. `Order` 1 |
 | `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
@@ -68,25 +73,63 @@ To add app rules, derive an architecture from `VsaArchitecture`, override `Rules
 
 | Lifecycle member | Use |
 |---|---|
-| `Start(string[] args)` | Makes a host from the pack, builds the services and calls `OnStart`. A second `Start` while the app runs is an error |
-| `Run(string[] args)` | `Start`, then waits for the end signal, then `Stop`. Gives the exit code |
-| `Stop()` | Stops the app. In `Run`, it ends the wait. If the app does not run, it does nothing |
-| `IsRunning` | True from `Start` until `Stop` |
+| `Start(string[] args)` | Builds a new host, starts the host work, calls `OnStart`. Returns |
+| `Stop()` | Stops the app and returns when `State` is `Stopped` |
+| `Run(string[] args)` | `Start`, then waits until `State` is `Stopped`. Gives the exit code |
+| `State` | `Running` from the start of the host work until the stop |
 | `Services` | The services of the running app, else `null` |
 
-`Run` ends on one of three signals:
+A second `Start` or `Run` while the app runs is an error. If the app does not run, `Stop` does nothing. Each `Start` makes a new host, so `Start` after `Stop` starts the app again in the same process.
 
-| Signal | Exit code |
+### One stop path
+
+The app has two stop entries. `App.Stop()` is for the code that owns the app: a Unity shell, `Program.cs`, a test. `AppStop.Request(code)` is for the code inside the app: a module, a handler, a service. Both entries go to the same stop.
+
+```text
+any source ──► AppStop.Request(code)
+                 └─► App posts the stop to the app thread
+                       └─► OnStop ─► host.Dispose ─► State = Stopped
+App.Stop() on the app thread ──► the stop runs inline: no post, no wait
+App.Stop() on another thread ──► request, then wait until Stopped
+Run ──► the stop runs on the thread of Run, after the wait
+```
+
+| App thread | Where the stop runs |
 |---|---|
-| `App.Stop()`, from any thread | 0 |
-| Ctrl+C, or SIGTERM on `net10.0` | 0 |
-| `AppStop.Request(code)`, from a service | `code` |
+| `Start` on a thread with a `SynchronizationContext` | That context. `Start` keeps `SynchronizationContext.Current` |
+| `Start` on a thread with no context | The thread pool |
+| `Run` | The thread of `Run` |
 
-Each `Start` makes a new host, so `Start` after `Stop` starts the app again in the same process. A Unity shell calls `Start` and `Stop`. It does not call `Run`.
+- The inline rule prevents a deadlock. `Stop()` on the Unity main thread does not wait for work that it posted to the main thread.
+- A stop request during `Start`, for example in `OnStart`, runs after `Start` ends.
+- The first request gives the exit code. The app ignores a request of an earlier start.
+- `Stop()` in host work only requests the stop, and returns. The stop waits for the host work, so a wait in `Stop()` is a deadlock. Host work is the console operation and each HTTP request of `WebHost`. Code inside the app uses `AppStop.Request`.
+- `ConsoleHost` runs the operation on the thread pool, so the operation does not continue on the app thread.
+- If `OnStop` or `host.Dispose` throws, `Stop()` gives the error to its caller. A stop on the thread pool also writes the error to the app log. A stop on an app thread gives the error to its `SynchronizationContext`.
+- If the console operation cancels itself, the exit code is 1. A cancel from the stop is not an error.
+
+| Stop source | Exit code of `Run` |
+|---|---|
+| `App.Stop()` | 0 |
+| `AppStop.Request(code)`, from app code | `code` |
+| The end of the console operation | The exit code of the response |
+| Ctrl+C, or SIGTERM on `net10.0` (console and web hosts) | 0 |
+| `IHostApplicationLifetime.StopApplication()` (web host) | 0 |
+
+Code inside the app uses the same call in all hosts:
+
+```csharp
+sealed class QuitHandler(AppStop stop) : CommandHandler<QuitCommand, Done> {
+    public override Task<Result<Done>> HandleAsync(Envelope<QuitCommand> envelope) {
+        stop.Request(envelope.Message.ExitCode);
+        return Task.FromResult<Result<Done>>(new Done());
+    }
+}
+```
 
 ## The hosts
 
-A host is the platform. It builds the services. It does not run and it does not wait. A host class is also the one place for the custom root services of an app (`Configure`).
+A host is the platform. It builds the services and starts the host work. It does not wait. A host class is also the one place for the custom root services of an app (`Configure`).
 
 | Host | Package | Use |
 |---|---|---|
@@ -97,15 +140,17 @@ A host is the platform. It builds the services. It does not run and it does not 
 
 | `AppHost` member | Kind | Default |
 |---|---|---|
-| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose`, `BuildServiceProvider` |
+| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose`, `BuildServiceProvider`. Composes only |
+| `Start(services, stop)` | Virtual | Nothing. Starts the host work, and sends each stop source to `stop.Request` |
 | `Dispose()` | Virtual | Disposes the provider |
 | `Compose(services, configuration, kernel, types)` | Fixed | See "What Compose does" |
 | `Configure(services, types)` | Virtual | Nothing. The custom root services, last |
 | `Modules` | `init` property | `null`: `AppTypes` finds the modules. A test gives a list |
 
-- `ConsoleHost.Build` selects the request from the words before the first option, and starts it.
-- `WebHost.Build` builds the `WebApplication`, maps the operations and the views, and calls `StartAsync`. `WebHost.Dispose` calls `StopAsync`.
-- `WebHost` turns off the native console lifetime, so only `App.Run` reacts to Ctrl+C.
+- `ConsoleHost.Build` selects the request from the words before the first option. `ConsoleHost.Start` starts the request and listens for Ctrl+C and SIGTERM.
+- `WebHost.Build` builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
+- `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.
+- `AppHost` does no OS work, so a Unity app does not listen for Ctrl+C.
 - Each host has a public constructor with no parameters, and `AppHost` has `[RequireDerived]`.
 
 ## What Compose does
@@ -445,7 +490,7 @@ Modes = { easy = 1, hard = 5 }
 
 `Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
 
-A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM package (repo `vsa-unity`) calls `app.Start(args)` and `app.Stop()`, and it owns the frame loop. The Unity host is an `AppHost` with `Configure`:
+A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM package (repo `vsa-unity`) calls `app.Start(args)` on the main thread and `app.Stop()`, and it owns the frame loop. `Start` keeps the Unity main thread as the app thread, so `AppStop.Request` from any thread stops the app on the main thread. A stop request stops the app only, and Unity continues. A game that must quit overrides `OnStop` and calls `Application.Quit`. The Unity host is an `AppHost` with `Configure`:
 
 ```csharp
 public sealed class UnityHost : AppHost {

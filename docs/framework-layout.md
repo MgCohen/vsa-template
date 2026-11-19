@@ -83,13 +83,14 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 App.Run(args)                             Umpire.Kernels
 ├─ Start(args)
 │  ├─ Pack.CreateHost()                   a new AppHost for each start
-│  └─ AppHost.Build(args, app)            open: plain, console or web
-│     └─ Compose(services, configuration, Pack.Kernel, types)    fixed
-│        ├─ Kernel.Install                the core, then Kernel.Configure (VsaKernel: the VSA layers)
-│        ├─ Module.Configure              each module, in Order, then by name
-│        └─ AppHost.Configure             open, last
-├─ wait for the end signal
-└─ Stop()                                 OnStop, then AppHost.Dispose
+│  ├─ AppHost.Build(args, app)            open: plain, console or web
+│  │  └─ Compose(services, configuration, Pack.Kernel, types)    fixed
+│  │     ├─ Kernel.Install                the core, then Kernel.Configure (VsaKernel: the VSA layers)
+│  │     ├─ Module.Configure              each module, in Order, then by name
+│  │     └─ AppHost.Configure             open, last
+│  └─ AppHost.Start(services, stop)       open: the host work and its stop sources
+├─ wait for a stop request
+└─ the stop                               OnStop, then AppHost.Dispose
 ```
 
 See `composition.md` for each step.

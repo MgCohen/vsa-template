@@ -21,7 +21,9 @@ sealed class WebTestApp : App {
 
     public WebRun Build(params string[] args) {
         var host = Pack.CreateHost();
-        return new WebRun(host, host.Build(args, this));
+        var services = host.Build(args, this);
+        host.Start(services, services.GetRequiredService<AppStop>());
+        return new WebRun(host, services);
     }
 
     public Task<WebRun> Start() => Task.FromResult(Build());
