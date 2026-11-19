@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Umpire.Console.dll: the console host. A console app references it. -->
+  <PropertyGroup>
+    <Description>The Umpire console host.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UmpireRoot)framework/Kernel/Hosts/Console/**/*.cs" Exclude="$(_UmpireNotBundled)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Umpire/Umpire.csproj" />
+  </ItemGroup>
+</Project>

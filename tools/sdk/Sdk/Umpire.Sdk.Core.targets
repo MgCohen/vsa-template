@@ -30,16 +30,17 @@
     <EmbeddedResource Remove="@(_UmpireNestedFile)" />
   </ItemGroup>
 
-  <!-- The general packages that each app needs, with no layer, and the default pack.
-       Path is the project folder under the repository root in source mode. An Analyzer item is a Roslyn analyzer, not a library. -->
+  <!-- The general parts that each app needs, with no layer, and the default pack.
+       Path is the project folder under the repository root in source mode. Package is the bundle package that ships the project
+       in package mode (tools/bundle/): many projects share one package. An Analyzer item is a Roslyn analyzer, not a library. -->
   <ItemDefinitionGroup>
     <_UmpireFramework>
       <Analyzer>false</Analyzer>
     </_UmpireFramework>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" />
-    <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" />
+    <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
     <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
@@ -49,16 +50,29 @@
        project reference does not bring analyzers. -->
   <PropertyGroup>
     <UmpireDefaultPack Condition="'$(UmpireDefaultPack)' == ''">true</UmpireDefaultPack>
+    <!-- A web project (Umpire.Sdk.Web) gets the web host and, with the default pack, its views. UmpireWeb=false leaves them out. -->
+    <UmpireWeb Condition="'$(UmpireWeb)' == ''">$(UsingMicrosoftNETSdkWeb)</UmpireWeb>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireDefaultPack)' == 'true'">
-    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Architecture" />
+    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Architecture" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
-    <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" />
+    <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" Package="Umpire.Testing" Bundle="tools/bundle/Testing" />
+    <_UmpireFramework Include="Umpire.Vsa.Views" Path="packs/Vsa/Kernel/Views" Package="Umpire.Web" Bundle="tools/bundle/Web" Condition="'$(UmpireWeb)' == 'true'" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UmpireWeb)' == 'true'">
+    <_UmpireFramework Include="Umpire.Hosts.Web" Path="framework/Kernel/Hosts/Web" Package="Umpire.Web" Bundle="tools/bundle/Web" />
   </ItemGroup>
 
-  <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set. -->
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
+  <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set.
+       UmpireUseBundle=true references the bundle projects (Bundle) in place of the runtime projects, as a consumer gets them.
+       The SDK package builds its rule engine so, because the engine must load the definition of an app from the same Umpire.dll. -->
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireUseBundle)' != 'true'">
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireUseBundle)' == 'true'">
+    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Bundle)/%(Package).csproj'->Distinct())" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
@@ -71,7 +85,7 @@
     <_UmpireVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireVersion)</_UmpireVO>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'%(Package)'->Distinct())" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
     <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
   </ItemGroup>
 
@@ -149,12 +163,13 @@
   <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' == ''">
     <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
     <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
-    <PackageReference Include="@(_UmpireTestBase)" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
+    <PackageReference Include="@(_UmpireTestBase->'%(Package)'->Distinct())" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
   </ItemGroup>
   <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' != ''">
     <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
     <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
-    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
+    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" Condition="'$(UmpireUseBundle)' != 'true'" />
+    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Bundle)/%(Package).csproj')" Condition="'$(UmpireUseBundle)' == 'true'" />
   </ItemGroup>
 
   <!-- The rule values of the block are in the .umpireconfig file in the block root (UmpireConfigFile, Umpire.Sdk.Output.props).

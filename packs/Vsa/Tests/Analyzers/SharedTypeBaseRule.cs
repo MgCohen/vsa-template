@@ -52,9 +52,9 @@ public sealed class SharedTypeBaseRule : VsaRule {
         baseType.SpecialType is SpecialType.System_Object or SpecialType.System_ValueType
         || SymbolEqualityComparer.Default.Equals(baseType.ContainingAssembly, compilation.Assembly)
         || DomainShared.IsAssembly(baseType.ContainingAssembly?.Name)
-        || baseType.ContainingAssembly?.Name == MarkersAssembly;
+        || baseType.ContainingNamespace?.ToDisplayString() == MarkersNamespace;
 
-    const string MarkersAssembly = "Umpire.Markers";
+    const string MarkersNamespace = "Umpire.Markers";
 
     static string MetadataName(INamedTypeSymbol type) {
         if (type.ContainingType is { } outer) {

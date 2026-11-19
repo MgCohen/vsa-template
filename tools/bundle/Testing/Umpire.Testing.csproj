@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Umpire.Testing.dll: the unit test base and the base of the tests of a VSA definition. Umpire.Sdk adds it to a test project. -->
+  <PropertyGroup>
+    <Description>The Umpire test bases: VsaUnitTest and VsaArchitectureTest.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UmpireRoot)packs/Vsa/Tests/Unit/**/*.cs" Exclude="$(_UmpireNotBundled)" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../Umpire/Umpire.csproj" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="NUnit" />
+  </ItemGroup>
+</Project>

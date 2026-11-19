@@ -10,7 +10,7 @@ static class TypeFactsReader {
         var loaded = types.ToHashSet();
         bool IsExternalPartType(IType type) =>
             loaded.Contains(type) && !LoadedTypes.IsCompilerGenerated(type.Name)
-            && architecture.ExternalPart(AssemblyName(type)) is not null;
+            && architecture.ExternalPart(AssemblyName(type), type.FullName) is not null;
         return [.. types.Select(type => Facts(type, sources.GetValueOrDefault(type.FullName), loaded, IsExternalPartType))];
     }
 

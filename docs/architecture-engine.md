@@ -159,7 +159,7 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 ## External parts
 
-An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `Umpire.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`: `VsaArchitecture` gives `Contracts` the DLL `Umpire.Messages.Contracts`, and `Contracts.Requests` the DLL `Umpire.Vsa.Contracts.Requests`. The longest matching DLL name wins. The types of an external DLL are rule targets: a rule can deny them.
+An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `Umpire.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`: `VsaArchitecture` gives `Contracts` the DLL `Umpire.Messages.Contracts`, and `Contracts.Requests` the DLL `Umpire.Vsa.Contracts.Requests`. A type also matches by its namespace, so the bundle `Umpire.dll` binds `Umpire.Vsa.Contracts.Requests.IRequest` to `Contracts.Requests`. The longest matching name wins. The types of an external DLL are rule targets: a rule can deny them.
 
 `Umpire.Vsa.dll` (the pack: `Vsa<THost>`, `VsaArchitecture`) has no external part of its own. `Kernel` binds it by the name `Umpire`, and `App/Host` uses `Kernel` (`Uses<Kernel>(Depth.Self)`), so the app class can name the pack. Reason: no other part uses the pack, so a separate part gives no new rule.
 

@@ -5,5 +5,5 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class VsaAnalyzer : RuleAnalyzer {
-    protected override string? PackAssembly => "Umpire.Vsa";
+    protected override string? PackNamespace => "Umpire.Vsa";
 }

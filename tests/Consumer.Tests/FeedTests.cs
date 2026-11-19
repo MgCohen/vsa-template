@@ -5,7 +5,7 @@ namespace Consumer.Tests;
 public sealed class FeedTests {
     [Test]
     public void Each_package_in_the_feed_has_the_product_name() {
-        Assert.That(LocalFeed.Packages, Has.All.StartsWith("Umpire."));
+        Assert.That(LocalFeed.Packages, Has.All.Matches<string>(id => id == "Umpire" || id.StartsWith("Umpire.", StringComparison.Ordinal)));
     }
 
     [Test]

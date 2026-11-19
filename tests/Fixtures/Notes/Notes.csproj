@@ -4,9 +4,5 @@
   <PropertyGroup>
     <RootNamespace>Notes</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Kernel/Hosts/Web/Umpire.Hosts.Web.csproj" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Kernel/Views/Umpire.Vsa.Views.csproj" />
-  </ItemGroup>
   <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

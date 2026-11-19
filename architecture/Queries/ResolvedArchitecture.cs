@@ -27,10 +27,15 @@ public sealed class ResolvedArchitecture {
 
     public Options OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
 
-    public Part? ExternalPart(string assembly) => externalParts
-        .Where(p => assembly == p.Assembly || assembly.StartsWith(p.Assembly + ".", StringComparison.Ordinal))
-        .OrderByDescending(p => p.Assembly!.Length)
-        .FirstOrDefault();
+    public Part? ExternalPart(string assembly) => ExternalPart(assembly, "");
+
+    public Part? ExternalPart(string assembly, string typeFullName) {
+        var space = NamespaceOf(typeFullName);
+        return externalParts
+            .Where(p => IsUnder(assembly, p.Assembly!) || IsUnder(space, p.Assembly!))
+            .OrderByDescending(p => p.Assembly!.Length)
+            .FirstOrDefault();
+    }
 
     public Bindings Place(IReadOnlyList<TypeFacts> types, string blockFolder) => Place(types, blockFolder, []);
 
@@ -54,4 +59,13 @@ public sealed class ResolvedArchitecture {
 
     public IReadOnlyList<MatchResult> Matches(Bindings bindings) =>
         [.. matches.SelectMany(statement => MatchCheck.Failures(statement, bindings))];
+
+    static bool IsUnder(string name, string external) =>
+        name == external || name.StartsWith(external + ".", StringComparison.Ordinal);
+
+    static string NamespaceOf(string typeFullName) {
+        var outer = typeFullName.Split('+')[0];
+        var dot = outer.LastIndexOf('.');
+        return dot < 0 ? "" : outer[..dot];
+    }
 }
