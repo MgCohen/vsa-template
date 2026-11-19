@@ -98,9 +98,9 @@ The root project gets its packages from two places:
 |---|---|---|
 | `Umpire.Kernels`, `Umpire.Markers` | Umpire.Sdk | The app start, the markers |
 | `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
-| `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, and their rule values |
+| `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
 | `Umpire.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the presenter views |
-| `Umpire.Engine.Build` | Umpire.Sdk, for the root project | The rule engine (the after-build hook is off until issue #206) |
+| `Umpire.Engine.Build` | Umpire.Sdk, for the root project | The rule engine. The SDK runs its check after each build of the root project |
 
 Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
 
@@ -220,7 +220,7 @@ The analyzers check one file in the compile, for example the line length (`UMP01
 
 ```toml
 umpire.UMP010101.max = 140
-dotnet_diagnostic.UMP010104.severity = "none"
+umpire.UMP010104.severity = "none"
 ```
 
 | To learn | Read |

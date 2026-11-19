@@ -23,7 +23,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterEvent`); it does not publish them. |
 | `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Disabled (#143). |
 | `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
-| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty in `Umpire.Vsa.Analyzers.globalconfig`: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
+| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty by default: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
 | `UMP010001` | Analyzers | Each option of each running rule has a valid value: from the config, or the default of its rule. |
 | `UMP010002` | Analyzers | The `.umpireconfig` file of the block is valid TOML. Else the Umpire rules do not run. |
 | `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
@@ -48,7 +48,7 @@ Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). A
 
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. The globalconfig file of its analyzer package sets the severity of each one to `none`, and `RuleAnalyzer` does not run a rule with severity `none`. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.UMP010205.severity = "warning"`.
 
 | Code | Class | Why disabled | Issue |
 |---|---|---|---|
@@ -57,7 +57,7 @@ If the design of an analyzer or a rule is not clear, it is disabled, not deleted
 | `UMP010206` | `DataOnlySharedTypeRule` | The code shape is not decided | #142, #143 |
 | `UMP010207` | `SharedTypeBaseRule` | The code shape is not decided | #142, #143 |
 
-`DisabledRuleTests` makes sure that the codes with severity `none` in `Umpire.Vsa.Analyzers.globalconfig` are the codes of this table. To disable a rule, add its severity line and a row here and in #143.
+`DisabledRuleTests` makes sure that the rules with `IsOnByDefault => false` are the codes of this table. To disable a rule, set `IsOnByDefault => false` on its class and add a row here and in #143.
 
 ## Plugin modules
 
@@ -116,30 +116,31 @@ public sealed class SealedRecordRule : VsaRule {
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSymbolAction(symbol => {
-            if (Values(symbol.Options, symbol.Symbol.Locations[0].SourceTree!).Bool(CheckResponsesKey) == true) { ... }
+            if (Values(symbol.Options).Bool(CheckResponsesKey) == true) { ... }
         }, SymbolKind.NamedType);
 }
 ```
 
-```ini
-dotnet_diagnostic.UMP010201.severity = warning   # standard severity key
-umpire.check_responses = false                    # global option
-umpire.UMP010201.check_responses = true             # rule option
+```toml
+umpire.UMP010201.severity = "warning"     # error, warning, suggestion, or none (the rule does not run)
+umpire.check_responses = false            # global option
+umpire.UMP010201.check_responses = true   # rule option
 ```
+
+A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consumer also works: the compiler applies it over the Umpire severity.
 
 ## Rule files
 
 | File | Holds |
 |---|---|
 | `.editorconfig` (repository root) | The style of this repository: the built-in .NET rules, editor and code style options, severities. A test section turns off CA1707 (underscores in test names). No `UMP` key |
-| `framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.globalconfig` | The help text of the keys of the kernel rules (`UMP0101xx`). The defaults are on the rule classes |
-| `packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.globalconfig` | The severities of the disabled VSA rules (`UMP0102xx`) and the help text of their keys |
+| `.umpireconfig` (block root) | The rule values and severities of the block (`umpire.<ID>.<key>`). The defaults are on the rule classes |
 | `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings |
-| `framework/Kernel/Analyzers/Umpire.RuleValues.targets` | The one place that knows how the rule values reach a compile |
+| `framework/Kernel/Analyzers/Umpire.ConfigBundle.targets` | Puts Umpire.Config and Tomlyn next to each analyzer DLL, in the output folder and in the package |
 
-Each analyzer package holds `build/<PackageId>.globalconfig` and `build/<PackageId>.props`. NuGet imports the props file in each project that references the package, and it gives the values to the compiler. In source mode, `Sdk.targets` and `Directory.Build.targets` add the same files from the analyzer folders. The definition holds no analyzer value, and the analyzer files hold no definition option.
+`Umpire.Sdk.Core.targets` gives `.umpireconfig` to the compiler as an additional file. `RuleAnalyzer` reads it with Umpire.Config (`ConfigFile`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The compiler loads a dependency of an analyzer only from its analyzer items. A package gives each DLL in `analyzers/dotnet/cs`, and in source mode `Directory.Build.targets` adds Umpire.Config and Tomlyn from the analyzer output folder. The definition holds no analyzer value.
 
-Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer and its rule values, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
+Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 
 Each analyzer rule is one class on a group base: `KernelRule` (group `01`) or `VsaRule` (group `02`). The rule sets only its `Number`, its `Title`, its `Message` and the defaults of its options. The base makes the ID (`UMP01` + group + number) and the descriptor. Roslyn release tracking reads only a constant ID, so `AnalyzerReleases.Unshipped.md` lists only `UMP010001` and `UMP010002`; `CodeTests` checks that the rules table of this file lists each rule ID. Tests and other code find a rule by its type, for example `new LineLengthRule().Rule`.
 
