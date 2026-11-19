@@ -28,6 +28,7 @@ The reasons for the limits:
 | The type source of the modules | `AppHost.Modules`, `new AppTypes(modules)` | `docs/composition.md` |
 | The host | `UnityHost : AppHost` with `Configure`: `App<Vsa<UnityHost>>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
+| The configuration | The base host reads `args` (`--Section:Key=Value`) into `IConfiguration`. `UnityHost.Configuration(args)` can add other sources | `docs/composition.md` |
 | The container | `host.Compose(services, configuration, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
 | The main thread of presenter events | A `LivePresenters.Dispatch` registration in `UnityHost.Configure` | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
@@ -81,7 +82,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging` and `Configuration` 8.0, and not `Microsoft.Extensions.Hosting`.
+- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. `vendor.cs` must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
 - IL2CPP makes no code at run time. Register a closed generic over a struct (for example `IHandler<MoveCommand>` for a struct `MoveCommand`) by its full type, not as an open generic.
 - In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 

@@ -13,10 +13,13 @@ public class AppHost : IDisposable {
 
     public virtual IServiceProvider Build(string[] args, App app) {
         var services = new ServiceCollection();
-        Compose(services, new ConfigurationBuilder().Build(), app);
+        Compose(services, Configuration(args), app);
         provider = services.BuildServiceProvider();
         return provider;
     }
+
+    protected virtual IConfiguration Configuration(string[] args) =>
+        new ConfigurationBuilder().AddCommandLine(args).Build();
 
     public virtual void Start(IServiceProvider services, AppStop stop) {
     }
