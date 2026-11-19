@@ -11,10 +11,23 @@
   </PropertyGroup>
   <ItemGroup>
     <_UmpireNestedProject Include="**/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource)" />
-    <Compile Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
-    <Content Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
-    <None Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
-    <EmbeddedResource Remove="@(_UmpireNestedProject->'%(RelativeDir)**')" />
+  </ItemGroup>
+  <!-- The nested folders are removed in two steps, because a Remove of these globs fails at 100 or more items: MSBuild then
+       looks up the values of an item transform as literal paths (DictionaryBasedItemRemoveThreshold, issue 209).
+       1. An Exclude matches the globs on each path, so _UmpireOwnFile gets the files outside the nested folders.
+       2. A Remove of literal paths uses the fast dictionary lookup, so _UmpireNestedFile keeps only the nested files.
+       An Exclude of literal paths compares each item with each value, so step 2 is a Remove. -->
+  <PropertyGroup>
+    <_UmpireNestedFolders>@(_UmpireNestedProject->'%(RelativeDir)**')</_UmpireNestedFolders>
+  </PropertyGroup>
+  <ItemGroup>
+    <_UmpireOwnFile Include="@(Compile);@(Content);@(None);@(EmbeddedResource)" Exclude="$(_UmpireNestedFolders)" />
+    <_UmpireNestedFile Include="@(Compile);@(Content);@(None);@(EmbeddedResource)" />
+    <_UmpireNestedFile Remove="@(_UmpireOwnFile)" />
+    <Compile Remove="@(_UmpireNestedFile)" />
+    <Content Remove="@(_UmpireNestedFile)" />
+    <None Remove="@(_UmpireNestedFile)" />
+    <EmbeddedResource Remove="@(_UmpireNestedFile)" />
   </ItemGroup>
 
   <!-- The general packages that each app needs, with no layer, and the default pack.
