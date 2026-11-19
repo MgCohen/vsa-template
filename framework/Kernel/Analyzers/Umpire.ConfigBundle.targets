@@ -1,5 +1,5 @@
 <Project>
-  <!-- Issue #233: the kernel analyzer DLL embeds Umpire.Config, Tomlyn and their full netstandard2.0 dependency tree as resources.
+  <!-- The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their full netstandard2.0 dependency tree as resources.
        ConfigReader loads them into a private AssemblyLoadContext, so the compiler of the host (for example Unity: Roslyn 4.10 with
        System.Collections.Immutable 8.0) keeps its own System.Collections.Immutable. The analyzer DLLs compile against the
        System.Collections.Immutable of Roslyn, and the package holds no dependency next to them. -->

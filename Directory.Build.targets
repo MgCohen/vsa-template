@@ -14,9 +14,6 @@
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Issue #233: the kernel analyzer DLL embeds Umpire.Config and Tomlyn (Umpire.ConfigBundle.targets), so the compiler gets
-       only the analyzer DLLs, also in source mode. -->
-
   <!-- The pack takes the documentation file from bin/. The file is not there, so the pack does not take it. -->
   <Target Name="_UmpireKeepDocumentationFileInObj" AfterTargets="DocumentationProjectOutputGroup"
           Condition="'$(CopyDocumentationFileToOutputDirectory)' == 'false'">

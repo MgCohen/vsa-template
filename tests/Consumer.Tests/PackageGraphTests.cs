@@ -18,12 +18,9 @@ public sealed class PackageGraphTests {
 
     [TestCase("Umpire.Kernels.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]
-    public void Each_analyzer_package_holds_the_config_reader_next_to_its_analyzer(string package) =>
-        Assert.That(Entries(package), Is.SupersetOf(new[] {
-            $"analyzers/dotnet/cs/{package}.dll",
-            "analyzers/dotnet/cs/Umpire.Config.dll",
-            "analyzers/dotnet/cs/Tomlyn.dll",
-        }));
+    public void Each_analyzer_package_holds_only_analyzer_DLLs(string package) =>
+        Assert.That(Entries(package).Where(entry => entry.StartsWith("analyzers/", StringComparison.Ordinal)),
+            Has.All.Matches<string>(entry => entry.EndsWith(".Analyzers.dll", StringComparison.Ordinal)));
 
     [TestCase("Umpire.Kernels.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]
