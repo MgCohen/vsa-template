@@ -5,14 +5,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
-using Umpire.Config;
 
 public static class RuleSeverity {
     public const string Key = "severity";
 
     static readonly ConditionalWeakTable<SyntaxTree, ConcurrentDictionary<string, DiagnosticSeverity>> Trees = new();
 
-    public static string? Text(UmpireConfig config, string ruleId) => config.Value($"umpire.{ruleId}.{Key}");
+    public static string? Text(ConfigValues config, string ruleId) => config.Value($"umpire.{ruleId}.{Key}");
 
     public static bool IsOff(string? text) => Normal(text) is "none" or "silent";
 
@@ -23,7 +22,7 @@ public static class RuleSeverity {
         _ => null,
     };
 
-    internal static void Use(Compilation compilation, UmpireConfig config, IEnumerable<UmpireAnalyzerRule> rules) {
+    internal static void Use(Compilation compilation, ConfigValues config, IEnumerable<UmpireAnalyzerRule> rules) {
         foreach (var tree in compilation.SyntaxTrees) {
             var severities = Trees.GetValue(tree, NewSeverities);
             foreach (var rule in rules) {

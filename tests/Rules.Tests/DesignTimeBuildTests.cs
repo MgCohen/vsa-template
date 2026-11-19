@@ -28,10 +28,15 @@ public sealed class DesignTimeBuildTests {
 
     [TestCase("Umpire.Kernels.Analyzers.dll")]
     [TestCase("Umpire.Vsa.Analyzers.dll")]
-    [TestCase("Umpire.Config.dll")]
-    [TestCase("Tomlyn.dll")]
     public void The_editor_runs_the_analyzer(string file) =>
         Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.Member(file), build.Output);
+
+    [TestCase("Umpire.Config.dll")]
+    [TestCase("Tomlyn.dll")]
+    [TestCase("System.Collections.Immutable.dll")]
+    [TestCase("System.Text.Json.dll")]
+    public void The_analyzer_package_embeds_the_config_reader(string file) =>
+        Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.No.Member(file), build.Output);
 
     [TestCase("RunAnalyzersDuringLiveAnalysis")]
     [TestCase("RunAnalyzers")]
