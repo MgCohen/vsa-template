@@ -18,9 +18,16 @@ public sealed class PackageGraphTests {
 
     [TestCase("Umpire.Kernels.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]
-    public void Each_analyzer_package_holds_only_analyzer_DLLs(string package) =>
-        Assert.That(Entries(package).Where(entry => entry.StartsWith("analyzers/", StringComparison.Ordinal)),
-            Has.All.Matches<string>(entry => entry.EndsWith(".Analyzers.dll", StringComparison.Ordinal)));
+    public void Each_analyzer_package_holds_only_analyzer_DLLs(string package) {
+        var analyzers = Entries(package).Where(entry => entry.StartsWith("analyzers/", StringComparison.Ordinal)).ToList();
+        Assert.That(analyzers, Has.Member($"analyzers/dotnet/cs/{package}.dll"));
+        Assert.That(analyzers, Has.All.Matches<string>(entry => entry.EndsWith(".Analyzers.dll", StringComparison.Ordinal)));
+    }
+
+    [TestCase("Umpire.Kernels.Analyzers")]
+    [TestCase("Umpire.Vsa.Analyzers")]
+    public void Each_analyzer_package_holds_the_notices_of_the_embedded_libraries(string package) =>
+        Assert.That(Entries(package), Has.Member("THIRD-PARTY-NOTICES.txt"));
 
     [TestCase("Umpire.Kernels.Analyzers")]
     [TestCase("Umpire.Vsa.Analyzers")]

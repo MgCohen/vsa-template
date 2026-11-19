@@ -7,6 +7,7 @@
     <_UmpireConfigProject>$(MSBuildThisFileDirectory)../../Components/Config/Umpire.Config.csproj</_UmpireConfigProject>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="" Visible="false" />
     <ProjectReference Include="$(_UmpireConfigProject)" ReferenceOutputAssembly="false" Private="false"
                       SetTargetFramework="TargetFramework=netstandard2.0" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>

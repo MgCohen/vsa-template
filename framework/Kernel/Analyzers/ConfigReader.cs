@@ -32,6 +32,15 @@ static class ConfigReader {
             .Select(name => name.Substring(ResourcePrefix.Length))];
 
     static Reader Load() {
+        try {
+            return LoadInPrivateContext();
+        } catch (Exception e) when (e is not (FileLoadException or FileNotFoundException)) {
+            throw new FileLoadException(
+                $"{ConfigAssembly} cannot load in a private load context: {(e as TargetInvocationException)?.InnerException?.Message ?? e.Message}", e);
+        }
+    }
+
+    static Reader LoadInPrivateContext() {
         var contextType = typeof(object).Assembly.GetType(LoadContextType)
             ?? Type.GetType(LoadContextType + ", System.Runtime.Loader")
             ?? throw new FileLoadException(
@@ -73,9 +82,21 @@ static class ConfigReader {
     }
 
     sealed class Tree(object context, MethodInfo fromStream) {
+        readonly Dictionary<string, Assembly?> loaded = new(StringComparer.OrdinalIgnoreCase);
+
         public Assembly? Resolve(object _, AssemblyName name) => name.Name is { } simple ? Load(simple) : null;
 
         public Assembly? Load(string simpleName) {
+            lock (loaded) {
+                if (!loaded.TryGetValue(simpleName, out var assembly)) {
+                    assembly = FromResource(simpleName);
+                    loaded.Add(simpleName, assembly);
+                }
+                return assembly;
+            }
+        }
+
+        Assembly? FromResource(string simpleName) {
             using var stream = typeof(ConfigReader).Assembly.GetManifestResourceStream(ResourcePrefix + simpleName + ".dll");
             return stream is null ? null : (Assembly)fromStream.Invoke(context, [stream])!;
         }

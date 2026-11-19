@@ -21,6 +21,13 @@ public sealed class ConfigValuesTests {
         Assert.That(error!.GetType().FullName, Is.EqualTo("Tomlyn.TomlException"));
     }
 
+    [TestCase("Umpire.Config.dll")]
+    [TestCase("Tomlyn.dll")]
+    [TestCase("System.Collections.Immutable.dll")]
+    [TestCase("System.Text.Json.dll")]
+    public void The_kernel_analyzer_embeds_the_config_reader(string file) =>
+        Assert.That(typeof(ConfigValues).Assembly.GetManifestResourceNames(), Has.Member($"UmpireConfigTree/{file}"));
+
     [Test]
     public void The_config_reader_loads_in_a_private_load_context() {
         ConfigValues.Parse("a = 1");

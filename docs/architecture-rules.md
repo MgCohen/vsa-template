@@ -154,11 +154,14 @@ compiler (Roslyn 4.10, SCI 8.0)
 ```
 
 - The kernel analyzer DLL embeds Umpire.Config and its full `netstandard2.0` dependency tree (`Umpire.ConfigBundle.targets`). The packages hold only the analyzer DLLs.
-- `ConfigReader` loads the tree into a private `AssemblyLoadContext`. Only corelib types cross the boundary, so the two SCI copies never meet.
+- `ConfigReader` loads the tree into a private `AssemblyLoadContext`. For each dependency, the default context of the compiler answers first, and the embedded copy loads only when the compiler does not have that version. So on Unity (.NET 8), Tomlyn gets the embedded SCI 9.0, and on a .NET 9 or later compiler it gets the SCI of the compiler. Only corelib types cross the boundary, so the analyzer API always uses the SCI of the compiler.
+- Each embedded DLL loads one time, under a lock, so parallel compilations do not load it two times.
 - `ConfigValues` holds the flat keys, with no case. The analyzers read only `ConfigValues`.
 - If the analyzer context can unload (an IDE, the compiler server), the private context unloads with it.
 - A compiler on .NET Framework has no `AssemblyLoadContext`. There, the build gives `UMP010003` (issue #240).
 - `AnalyzerRoslynTests` checks that each analyzer DLL references only the assemblies of the Unity compiler, at the Unity version or lower.
+- `AnalyzerLoadTests` compiles a file with a real .NET 8 compiler (Roslyn 4.10, SCI 8.0), for example the one of a Unity 6 install, with the analyzer DLLs and a `.umpireconfig`. If the computer has no .NET 8 compiler, the test is ignored. `UMPIRE_NET8_DOTNET_ROOT` selects a dotnet folder.
+- The analyzer packages hold `THIRD-PARTY-NOTICES.txt` for the embedded DLLs.
 
 Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 

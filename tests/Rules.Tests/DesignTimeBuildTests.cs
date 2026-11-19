@@ -35,7 +35,7 @@ public sealed class DesignTimeBuildTests {
     [TestCase("Tomlyn.dll")]
     [TestCase("System.Collections.Immutable.dll")]
     [TestCase("System.Text.Json.dll")]
-    public void The_analyzer_package_embeds_the_config_reader(string file) =>
+    public void The_editor_gets_no_config_reader_file_as_an_analyzer(string file) =>
         Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.No.Member(file), build.Output);
 
     [TestCase("RunAnalyzersDuringLiveAnalysis")]
