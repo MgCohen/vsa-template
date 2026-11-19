@@ -70,9 +70,19 @@ public sealed class LivePresenters(ILogger<LivePresenters> logger, IServiceProvi
             }
         } catch (ObjectDisposedException) when (!IsLive(scope)) {
             return;
+        } catch (OperationCanceledException) when (envelope.Cancellation.IsCancellationRequested) {
+            return;
         } catch (Exception e) {
             logger.LogError(e, "{Presenter} failed on {Event}.", handler.GetType().Name, typeof(TEvent).Name);
         }
-        (handler as Presenter)?.RaiseChanged();
+        RaiseChanged(handler);
+    }
+
+    void RaiseChanged(object handler) {
+        try {
+            (handler as Presenter)?.RaiseChanged();
+        } catch (Exception e) {
+            logger.LogError(e, "A Changed listener of {Presenter} failed.", handler.GetType().Name);
+        }
     }
 }

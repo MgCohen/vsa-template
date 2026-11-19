@@ -186,6 +186,46 @@ public sealed class LivePresentersTests {
     }
 
     [Test]
+    public async Task AChangedListenerThatThrowsDoesNotStopTheQueueOrTheOtherScopes() {
+        var errors = new ErrorLog();
+        using var services = Services(s => {
+            Add<SlowPresenter, Counted>(s);
+            Add<CountPresenter, Counted>(s);
+        }, errors);
+        using var first = LiveScope(services);
+        using var second = LiveScope(services);
+        var slow = first.ServiceProvider.GetRequiredService<SlowPresenter>();
+        slow.Changed += () => throw new InvalidOperationException("listener");
+        second.ServiceProvider.GetRequiredService<SlowPresenter>().Release();
+        second.ServiceProvider.GetRequiredService<SlowPresenter>().Release();
+
+        var drainer = Task.Run(() => Live(services).OnPublishedAsync(new Counted(1), CancellationToken.None));
+        await slow.Started.Task;
+        await Live(services).OnPublishedAsync(new Counted(2), CancellationToken.None);
+        slow.Release();
+        slow.Release();
+        await drainer;
+
+        Assert.That(slow.Handled, Is.EqualTo(2));
+        Assert.That(first.ServiceProvider.GetRequiredService<CountPresenter>().Total, Is.EqualTo(3));
+        Assert.That(second.ServiceProvider.GetRequiredService<CountPresenter>().Total, Is.EqualTo(3));
+        Assert.That(errors.Count, Is.EqualTo(2));
+    }
+
+    [Test]
+    public async Task ACancelledDeliveryIsNotAnError() {
+        var errors = new ErrorLog();
+        using var services = Services(Add<CancelledPresenter, Counted>, errors);
+        using var scope = LiveScope(services);
+        using var cancelled = new CancellationTokenSource();
+        await cancelled.CancelAsync();
+
+        await Live(services).OnPublishedAsync(new Counted(1), cancelled.Token);
+
+        Assert.That(errors.Count, Is.Zero);
+    }
+
+    [Test]
     public void APresenterScopeFromTheRootProviderThrows() {
         using var services = Services(Add<CountPresenter, Counted>);
 
@@ -371,6 +411,13 @@ public sealed class LivePresentersTests {
             await gate.WaitAsync();
             envelope.Services.GetRequiredService<CountPresenter>();
             return Unit.Value;
+        }
+    }
+
+    sealed class CancelledPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+            envelope.Cancellation.ThrowIfCancellationRequested();
+            return Done;
         }
     }
 
