@@ -26,7 +26,7 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     async Task<IReadOnlyList<Finding>> Run(RunEngineRequest run, CancellationToken ct) {
         if (run.Stage.Runs<BuildAppCommand>()) {
             var build = await commands.SendAsync(new BuildAppCommand(run.Project, run.Bin), ct);
-            if (!build.IsSuccess && run.Stage.Runs<FindBlocksCommand>()) {
+            if ((!build.IsSuccess || build.Value.Failed) && run.Stage.Runs<FindBlocksCommand>()) {
                 log.Skip<FindBlocksCommand, FindBlocksResult>();
                 return [.. log.Findings];
             }

@@ -25,7 +25,7 @@ public static class RuleSeverity {
 
     internal static void Use(Compilation compilation, UmpireConfig config, IEnumerable<UmpireAnalyzerRule> rules) {
         foreach (var tree in compilation.SyntaxTrees) {
-            var severities = Trees.GetValue(tree, _ => new ConcurrentDictionary<string, DiagnosticSeverity>(StringComparer.Ordinal));
+            var severities = Trees.GetValue(tree, NewSeverities);
             foreach (var rule in rules) {
                 if (Of(Text(config, rule.Id)) is { } severity) {
                     severities[rule.Id] = severity;
@@ -39,6 +39,8 @@ public static class RuleSeverity {
     internal static DiagnosticSeverity? For(Location location, string ruleId) =>
         location.SourceTree is { } tree && Trees.TryGetValue(tree, out var severities)
             && severities.TryGetValue(ruleId, out var severity) ? severity : null;
+
+    static ConcurrentDictionary<string, DiagnosticSeverity> NewSeverities(SyntaxTree tree) => new(StringComparer.Ordinal);
 
     static string? Normal(string? text) => text?.Trim().ToLowerInvariant();
 }

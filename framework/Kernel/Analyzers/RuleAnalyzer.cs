@@ -99,7 +99,8 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         }
     }
 
-    static bool IsOn(UmpireAnalyzerRule rule, UmpireConfig config, Compilation compilation, System.Threading.CancellationToken ct) {
+    static bool IsOn(
+        UmpireAnalyzerRule rule, UmpireConfig config, Compilation compilation, System.Threading.CancellationToken ct) {
         var severity = RuleSeverity.Text(config, rule.Id);
         if (RuleSeverity.IsOff(severity) || (severity is null && !rule.IsOnByDefault)) {
             return false;

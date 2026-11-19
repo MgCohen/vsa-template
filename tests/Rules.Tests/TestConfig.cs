@@ -38,5 +38,6 @@ static class TestConfig {
         || (value.Length > 1 && value[0] == '"' && value[^1] == '"');
 
     static string Quoted(string value) =>
-        "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+        "\"" + value.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
 }
