@@ -26,7 +26,7 @@ public sealed class OneTypePerFileRule : KernelRule {
         if (types.Count < 2) {
             return;
         }
-        if (Values(context.Options, context.Tree).Bool(AllowSameNameKey) is not { } allowSameName) {
+        if (Values(context.Options).Bool(AllowSameNameKey) is not { } allowSameName) {
             return;
         }
         var first = Identifier(types[0]).Text;

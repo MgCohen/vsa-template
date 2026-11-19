@@ -31,7 +31,7 @@ public sealed class MemberOrderRule : KernelRule {
 
     void Check(SyntaxNodeAnalysisContext context) {
         var type = (TypeDeclarationSyntax)context.Node;
-        if (Order.Read(Values(context.Options, type.SyntaxTree)) is not { } order) {
+        if (Order.Read(Values(context.Options)) is not { } order) {
             return;
         }
         var inInterface = type is InterfaceDeclarationSyntax;

@@ -6,3 +6,4 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 UMP010001 | Umpire | Error | RuleAnalyzer, option missing or not valid
+UMP010002 | Umpire | Error | RuleAnalyzer, .umpireconfig file not valid TOML

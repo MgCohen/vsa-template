@@ -12,8 +12,6 @@ public sealed class OneLineBuildTests {
     string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.engine.build", LocalFeed.Version, "tools", "net10.0",
         "umpire-engine.dll");
 
-    string Copy => Path.Combine(workspace.Src, "artifacts~", "Umpire.Block.globalconfig");
-
     [OneTimeSetUp]
     public void Build() {
         workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "OneLine"));
@@ -33,7 +31,7 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_engine_run_writes_the_rule_values_builds_the_app_and_checks_it() =>
+    public void The_engine_run_builds_the_app_and_checks_it() =>
         Assert.That(engine.Succeeded, Is.True, engine.Output);
 
     [TestCase("bin/OneLine")]
@@ -52,9 +50,15 @@ public sealed class OneLineBuildTests {
         Assert.That(Directory.Exists(Path.Combine(workspace.Src, folder)), Is.False);
 
     [Test]
-    public void A_value_in_the_umpireconfig_file_wins_over_the_package_value() =>
-        Assert.That(Lines("warning UMP010101").Where(line => line.Contains("OneLineApp.cs", StringComparison.Ordinal)),
-            Is.Not.Empty, build.Output);
+    public void A_value_in_the_umpireconfig_file_reaches_the_analyzers_in_the_first_build() =>
+        Assert.That(Lines(first, "warning UMP010101").Where(line => line.Contains("OneLineApp.cs", StringComparison.Ordinal)),
+            Is.Not.Empty, first.Output);
+
+    [Test]
+    public void The_compiler_gets_the_umpireconfig_file_as_an_additional_file() {
+        var files = Evaluate("OneLine.csproj", "-getItem:AdditionalFiles");
+        Assert.That(files.Output, Does.Contain(".umpireconfig"), files.Output);
+    }
 
     [Test]
     public void The_root_project_gets_the_rule_engine_package() =>
@@ -62,12 +66,7 @@ public sealed class OneLineBuildTests {
 
     [Test]
     public void A_build_does_not_run_the_rule_engine() =>
-        Assert.That(Lines("UMP03"), Is.Empty, build.Output);
-
-    [Test]
-    public void A_build_with_no_engine_run_uses_the_values_of_the_analyzer_package() =>
-        Assert.That(first.Output.Split('\n').Where(line => line.Contains("warning UMP010101", StringComparison.Ordinal)
-            && line.Contains("OneLineApp.cs", StringComparison.Ordinal)), Is.Empty, first.Output);
+        Assert.That(Lines(build, "UMP03"), Is.Empty, build.Output);
 
     [Test]
     public void The_umpireconfig_file_is_in_the_output_folder() =>
@@ -81,20 +80,15 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_engine_writes_the_values_of_the_umpireconfig_file_for_the_compiler() =>
-        Assert.That(File.ReadAllLines(Copy),
-            Is.EqualTo(new[] { "is_global = true", "global_level = 101", "umpire.UMP010101.max = 60" }), engine.Output);
-
-    [Test]
-    public void A_file_pattern_section_stops_the_engine_run_with_the_line_of_the_TOML_error() {
+    public void A_file_pattern_section_stops_the_build_with_the_TOML_error() {
         var file = Path.Combine(workspace.Src, ".umpireconfig");
         var text = File.ReadAllText(file);
         File.WriteAllText(file, text + "\n[*.cs]\numpire.UMP010102.max = 1\n");
         try {
-            var run = RunEngine();
+            var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false");
 
             Assert.That(run.Succeeded, Is.False, run.Output);
-            Assert.That(run.Output, Does.Contain(".umpireconfig(4,").And.Contain("UMP030001"), run.Output);
+            Assert.That(run.Output, Does.Contain("error UMP010002"), run.Output);
         } finally {
             File.WriteAllText(file, text);
         }
@@ -138,6 +132,6 @@ public sealed class OneLineBuildTests {
     DotnetResult Evaluate(params string[] args) =>
         workspace.Dotnet(["msbuild", .. args, "-nodeReuse:false"]).EnsureSuccess();
 
-    IEnumerable<string> Lines(string text) =>
-        build.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));
+    static IEnumerable<string> Lines(DotnetResult result, string text) =>
+        result.Output.Split('\n').Where(line => line.Contains(text, StringComparison.Ordinal));
 }

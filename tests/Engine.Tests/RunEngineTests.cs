@@ -141,11 +141,11 @@ public sealed class RunEngineTests {
         Directory.CreateDirectory(store);
         try {
             File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
-            File.WriteAllText(config, original + "dotnet_diagnostic.UMP020401.severity = none\n");
+            File.WriteAllText(config, original + "umpire.UMP020401.severity = \"none\"\n");
 
             var result = await Run(project: Notes);
 
-            Assert.That(result.Lines, Has.None.Contains("UMP020401"));
+            Assert.That(result.Lines, Has.None.Contains("UMP020401").And.None.Contains("UMP030001"), string.Join("\n", result.Lines));
         } finally {
             File.WriteAllText(config, original);
             Directory.Delete(store, recursive: true);

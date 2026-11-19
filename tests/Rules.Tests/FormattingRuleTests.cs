@@ -18,7 +18,7 @@ public sealed class LineLengthRuleTests {
 
     [Test]
     public Task Limit_comes_from_the_default_of_the_rule() {
-        var max = int.Parse(RulesConfig.Default(new LineLengthRule(), LimitRule.MaxKey));
+        var max = int.Parse(TestConfig.Default(new LineLengthRule(), LimitRule.MaxKey));
         var comment = "// " + new string('x', max - 3);
         var source = string.Join("\n", "class A { }", comment, comment + "{|#0:x|}");
         return Analyzer.VerifyFormatting(Rule, source, "", Analyzer.Diagnostic(Rule, 0, max + 1, max));
@@ -57,7 +57,7 @@ public sealed class MethodLengthRuleTests {
 
     [Test]
     public Task Global_max_option_applies() =>
-        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, Method, "umpire.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
+        Analyzer.VerifyFormatting(Rule, Method, "umpire.max = 3", Analyzer.Diagnostic(Rule, 0, "M", 4, 3));
 }
 
 public sealed class FileLengthRuleTests {
@@ -122,8 +122,8 @@ public sealed class MemberOrderRuleTests {
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Diagnostic(string name, string group, string previous,
         string order = "static before instance") =>
-        Analyzer.Diagnostic(Rule, 0, name, group, previous, RulesConfig.Default(new MemberOrderRule(), MemberOrderRule.KindOrderKey),
-            RulesConfig.Default(new MemberOrderRule(), MemberOrderRule.AccessOrderKey), order);
+        Analyzer.Diagnostic(Rule, 0, name, group, previous, TestConfig.Default(new MemberOrderRule(), MemberOrderRule.KindOrderKey),
+            TestConfig.Default(new MemberOrderRule(), MemberOrderRule.AccessOrderKey), order);
 
     [Test]
     public Task Members_in_order_pass() => Analyzer.VerifyFormatting(Rule, """
@@ -279,7 +279,7 @@ public sealed class RuleOptionTests {
 
     [Test]
     public Task Missing_option_takes_the_default_of_the_rule() =>
-        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "// " + new string('y', 117) + "{|#0:x|}", "",
+        Analyzer.VerifyFormatting(Rule, "// " + new string('y', 117) + "{|#0:x|}", "",
             Analyzer.Diagnostic(Rule, 0, 121, 120));
 
     [Test]
@@ -293,7 +293,7 @@ public sealed class RuleOptionTests {
     public Task Option_with_no_default_runs_with_a_value_from_the_config() =>
         new NoDefaultTest {
             TestCode = "{|#0:class Abc { }|}",
-            TestState = { AnalyzerConfigFiles = { ("/.globalconfig", "is_global = true\numpire.UMP010199.size = 2") } },
+            TestState = { AdditionalFiles = { ("/.umpireconfig", "umpire.UMP010199.size = 2") } },
             ExpectedDiagnostics = { new Microsoft.CodeAnalysis.Testing.DiagnosticResult(new NoDefaultRule().Rule).WithLocation(0).WithArguments(2) },
         }.RunAsync(TestContext.CurrentContext.CancellationToken);
 
@@ -312,7 +312,7 @@ public sealed class RuleOptionTests {
 
     [Test]
     public Task Option_from_the_test_config_is_enough() =>
-        Analyzer.VerifyFormattingWithoutRulesConfig(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP010101.max = 20",
+        Analyzer.VerifyFormatting(Rule, "class Abc { int valu{|#0:e; }|}", "umpire.UMP010101.max = 20",
             Analyzer.Diagnostic(Rule, 0, 24, 20));
 }
 
@@ -337,7 +337,7 @@ public sealed class NoDefaultRule : KernelRule {
 
     protected override void Register(Microsoft.CodeAnalysis.Diagnostics.CompilationStartAnalysisContext start) =>
         start.RegisterSyntaxTreeAction(context => {
-            if (Values(context.Options, context.Tree).Int(Key) is { } size) {
+            if (Values(context.Options).Int(Key) is { } size) {
                 context.ReportDiagnostic(Create(context.Tree.GetRoot().GetLocation(), size));
             }
         });

@@ -1,6 +1,0 @@
-<Project>
-  <!-- The package ships this file as build/<PackageId>.props, next to the rule values of its analyzers. -->
-  <ItemGroup>
-    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)*.globalconfig" />
-  </ItemGroup>
-</Project>

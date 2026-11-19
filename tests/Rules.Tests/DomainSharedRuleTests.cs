@@ -178,13 +178,9 @@ public sealed class SharedTypeBaseRuleTests {
 }
 
 public sealed class UmpireOptionsTests {
-    sealed class Config(Dictionary<string, string> values) : Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptions {
-        public override bool TryGetValue(string key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? value) =>
-            values.TryGetValue(key, out value);
-    }
-
     static UmpireOptions Of(params (string Key, string Value)[] values) =>
-        new("UMP010207", new Config(values.ToDictionary(v => v.Key, v => v.Value)), new SharedTypeBaseRule().Options);
+        new("UMP010207", Umpire.Config.UmpireConfig.Parse(string.Concat(values.Select(v => $"{v.Key} = \"{v.Value}\"\n"))),
+            new SharedTypeBaseRule().Options);
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>

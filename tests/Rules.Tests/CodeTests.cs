@@ -34,7 +34,8 @@ public sealed partial class CodeTests {
     [Test]
     public void Each_rule_ID_belongs_to_one_rule() {
         var ids = new KernelAnalyzer().SupportedDiagnostics.Concat(new VsaAnalyzer().SupportedDiagnostics)
-            .Select(d => d.Id).Where(id => id != "UMP010001").ToList();
+            .Select(d => d.Id)
+            .Where(id => id != RuleAnalyzer.OptionDescriptor.Id && id != RuleAnalyzer.ConfigDescriptor.Id).ToList();
 
         Assert.That(ids, Is.Unique);
     }
