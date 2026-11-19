@@ -6,7 +6,6 @@ using Umpire.Kernels;
 
 public class ConsoleHost : AppHost {
     readonly CancellationTokenSource stopping = new();
-    IConfiguration? configuration;
     Operation? operation;
     AppSignals? signals;
     Task? work;
@@ -19,11 +18,9 @@ public class ConsoleHost : AppHost {
 
     public override void Start(IServiceProvider services, AppStop stop) {
         signals = AppSignals.Listen(stop);
-        work = HostWork.Run(() => CommandLine.Run(services, operation!, configuration!, stop, stopping.Token));
+        work = HostWork.Run(() => CommandLine.Run(
+            services, operation!, services.GetRequiredService<IConfiguration>(), stop, stopping.Token));
     }
-
-    protected override IConfiguration Configuration(string[] args) =>
-        configuration = base.Configuration(CommandLine.Options(args));
 
     public override void Dispose() {
         signals?.Dispose();
@@ -36,4 +33,7 @@ public class ConsoleHost : AppHost {
         stopping.Dispose();
         base.Dispose();
     }
+
+    protected override IConfiguration Configuration(string[] args) =>
+        base.Configuration(CommandLine.Options(args));
 }

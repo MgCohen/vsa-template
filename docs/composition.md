@@ -141,14 +141,14 @@ A host is the platform. It builds the services and starts the host work. It does
 | `AppHost` member | Kind | Default |
 |---|---|---|
 | `Build(args, app)` | Virtual | `ServiceCollection`, `Compose` with `Configuration(args)`, `BuildServiceProvider`. Composes only |
-| `Configuration(args)` | Virtual | `AddCommandLine(args)`: each `--Key=Value` or `--Key Value` is a value of `IConfiguration` |
+| `Configuration(args)` | Virtual | `AddCommandLine` with the Umpire options only: `--Key=Value` and `--Key Value`. The host ignores other arguments |
 | `Start(services, stop)` | Virtual | Nothing. Starts the host work, and sends each stop source to `stop.Request` |
 | `Dispose()` | Virtual | Disposes the provider |
 | `Compose(services, configuration, kernel, types)` | Fixed | See "What Compose does" |
 | `Configure(services, types)` | Virtual | Nothing. The custom root services, last |
 | `Modules` | `init` property | `null`: `AppTypes` finds the modules. A test gives a list |
 
-- A host reads the arguments in `Configuration(args)`. `ConsoleHost` overrides it: it gives only the arguments from the first option to the base, so the words that select the request are not values.
+- A host reads the arguments in `Configuration(args)`. The base host reads only `--Key=Value` and `--Key Value`, and it ignores other arguments, for example `-batchmode`, `-logFile path` or a path. So the raw arguments of a Unity player do not stop the start. `ConsoleHost` overrides it: it gives only the arguments from the first option to the base, so the words that select the request are not values.
 - `ConsoleHost.Build` calls the base `Build`, then selects the request from the words before the first option. `ConsoleHost.Start` starts the request and listens for Ctrl+C and SIGTERM.
 - `WebHost.Build` gives `args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
 - `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.

@@ -18,9 +18,6 @@ public class AppHost : IDisposable {
         return provider;
     }
 
-    protected virtual IConfiguration Configuration(string[] args) =>
-        new ConfigurationBuilder().AddCommandLine(args).Build();
-
     public virtual void Start(IServiceProvider services, AppStop stop) {
     }
 
@@ -41,6 +38,9 @@ public class AppHost : IDisposable {
 
     protected void Compose(IServiceCollection services, IConfiguration configuration, App app) =>
         Compose(services, configuration, app.Pack.Kernel, TypesOf(app));
+
+    protected virtual IConfiguration Configuration(string[] args) =>
+        new ConfigurationBuilder().AddCommandLine(HostArguments.Options(args)).Build();
 
     protected AppTypes TypesOf(App app) => new(Modules, app.GetType().Assembly);
 
