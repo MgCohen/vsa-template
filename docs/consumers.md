@@ -66,7 +66,7 @@ It adds the missing parts of `nuget.config` and `.gitignore`, and it checks that
 
 ## The architecture check of a new app
 
-The Umpire SDK adds the package `Umpire.Engine.Build` to the root project of an app. The package has the rule engine. After each build of the root project, the SDK runs the engine check, and each finding is a build error (or a warning with `umpire.check.mode = "Warn"`). `-p:UmpireCheck=false` stops the check for one build. A manual engine run builds the root project, then checks it, and gives one report with the build findings and the architecture findings. `umpire doctor` and `umpire update` include this package in the one version.
+The Umpire SDK package holds the rule engine, so an app has no engine package. After each build of the root project, the SDK runs the engine check, and each finding is a build error (or a warning with `umpire.check.mode = "Warn"`). `-p:UmpireCheck=false` stops the check for one build. A manual engine run builds the root project, then checks it, and gives one report with the build findings and the architecture findings. The engine has the version of the SDK package, so `umpire doctor` and `umpire update` need no other slot.
 
 ## Packages of an app
 
@@ -85,7 +85,7 @@ An Umpire SDK must be the main SDK of the project, because it sets the output fo
 - **Output.** Each project writes to one `artifacts~` folder in the block root, in the .NET artifacts layout (`artifacts~/bin/<Project>/`, `artifacts~/obj/<Project>/`). No `bin/` or `obj/` folder is next to the code. A `Directory.Build.props` file that sets `ArtifactsPath` wins.
 - **Rule values.** `.umpireconfig` is TOML, and it holds only Umpire values (`umpire.<ID>.<key>`, `umpire.<ID>.severity`). The SDK gives the file to the compiler as an additional file, and the Umpire analyzers read it with Umpire.Config. A value there wins over the default on the rule class. A file-pattern section, for example `[*.cs]`, is not valid TOML: the build gives `UMP010002`, and the engine run stops with the line of the error. The severities of the .NET rules stay in the `.editorconfig` of the app.
 - **Module settings.** The SDK copies `.umpireconfig` to the output folder of each project. A module reads the table with its name (`docs/composition.md`).
-- **Rule engine.** The root project of the app (an executable that is not a test project) gets `Umpire.Engine.Build`. `-p:UmpireEngine=false` turns it off. A project that references the package itself keeps its own reference.
+- **Rule engine.** The root project of the app (an executable that is not a test project) runs the engine of the SDK package after its build. `-p:UmpireEngine=false` turns it off.
 - **Test project.** A project whose name ends with `.Tests` gets NUnit on Microsoft.Testing.Platform, `using NUnit.Framework` and the test bases of the pack. It references the projects that it tests itself. To make such a project a normal project, set `UmpireTestProject=false` in a `Directory.Build.props` file: the project body is too late, because the platform SDK reads `OutputType` first. A `*.Tests` project never gets the rule engine.
 
 Umpire.Sdk ships no native .NET style. The app sets its own style in its `.editorconfig`.
