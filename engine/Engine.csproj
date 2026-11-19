@@ -23,11 +23,6 @@
     <PackageReference Include="System.Reflection.MetadataLoadContext" />
     <PackageReference Include="TngTech.ArchUnitNET" />
   </ItemGroup>
-  <!-- The SDK removes the folder of a nested project with an item transform. MSBuild matches it as text when a project has
-       100 or more Compile items, so a glob here removes the folder of Umpire.Engine.Versions. -->
-  <ItemGroup>
-    <Compile Remove="Versions/**" />
-  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Architecture.Tests" />
     <InternalsVisibleTo Include="Engine.Tests" />

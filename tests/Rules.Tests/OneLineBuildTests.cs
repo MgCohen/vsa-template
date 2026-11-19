@@ -61,6 +61,26 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
+    public void A_root_project_with_more_than_100_files_does_not_compile_the_files_of_a_nested_project() {
+        var folder = Path.Combine(workspace.Src, "App", "Many");
+        Directory.CreateDirectory(folder);
+        foreach (var number in Enumerable.Range(1, 110)) {
+            File.WriteAllText(Path.Combine(folder, $"Part{number}.cs"),
+                $"namespace OneLine.App.Many;\n\ninternal static class Part{number};\n");
+        }
+        try {
+            var files = Evaluate("OneLine.csproj", "-getItem:Compile");
+            var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false");
+
+            Assert.That(files.Output, Does.Contain("Part110.cs").And.Not.Contain("AppTests.cs"), files.Output);
+            Assert.That(run.Succeeded, Is.True, run.Output);
+            Assert.That(run.Output, Does.Not.Contain("CS0436"), run.Output);
+        } finally {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    [Test]
     public void The_sdk_package_has_the_rule_engine() =>
         Assert.That(File.Exists(Engine), Is.True, first.Output);
 
