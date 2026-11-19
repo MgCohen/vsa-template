@@ -30,6 +30,7 @@ public sealed class BuildCheckTests {
         var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
         Assert.That(build.Succeeded, Is.False, build.Output);
         Assert.That(build.Output, Does.Contain(finding));
+        Assert.That(build.Output, Does.Not.Contain("UMP030004"), "A finding is not an engine crash.");
 
         var warned = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Warn")
             .EnsureSuccess();

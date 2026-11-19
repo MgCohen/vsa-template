@@ -69,34 +69,54 @@
     <UmpireEngine>false</UmpireEngine>
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
   </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
     <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
   </PropertyGroup>
+
+  <!-- Source mode (this repository): the engine is the output of engine/Engine.csproj. The engine checks itself with its own
+       new output. Each other root project builds the engine first, with no reference to its assembly, so the engine files
+       do not go into its bin. -->
+  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
+    <_UmpireEngineProject>$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'engine', 'Engine.csproj'))</_UmpireEngineProject>
+    <_UmpireIsEngine Condition="'$(MSBuildProjectFullPath)' == '$(_UmpireEngineProject)'">true</_UmpireIsEngine>
+    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == '' and '$(_UmpireIsEngine)' != 'true'">$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'engine', 'artifacts~', 'bin', 'Engine', '$(Configuration.ToLowerInvariant())', 'umpire-engine.dll'))</UmpireEngineFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(_UmpireIsEngine)' != 'true'">
+    <ProjectReference Include="$(_UmpireEngineProject)" ReferenceOutputAssembly="false" Private="false"
+                      SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
 
   <!-- The architecture check after each build of the root project. MSBuild only calls the engine with the Check stage: the
        engine reads .umpireconfig (for example umpire.check.mode) and decides what to check. Its Changes step skips the check
        when no input changed. -p:UmpireCheck=false stops the call for one build. -p:UmpireCheckMode=Warn gives the mode for
        one build, and it wins over .umpireconfig. UmpireBlock gives the block folder (this repository has one global.json for
-       many apps). In source mode the call is off, because the SDK files have no engine there. -->
+       many apps). -->
   <PropertyGroup>
     <_UmpireDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_UmpireDotnet>
     <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
   </PropertyGroup>
   <Target Name="UmpireCheck" AfterTargets="Build"
-          Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true' and '$(UmpireFrameworkSourceDir)' == ''">
+          Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true'">
     <PropertyGroup>
+      <UmpireEngineFile Condition="'$(_UmpireIsEngine)' == 'true'">$(TargetPath)</UmpireEngineFile>
       <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
       <_UmpireBlockArgument Condition="'$(UmpireBlock)' != ''"> --block &quot;$(UmpireBlock.TrimEnd('\').TrimEnd('/'))&quot;</_UmpireBlockArgument>
     </PropertyGroup>
     <Error Condition="!Exists('$(UmpireEngineFile)')" Code="UMP030003"
            Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again, so the Umpire SDK package is complete." />
-    <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no error line
-         is an engine crash, for example an exception or a missing runtime: it fails the build too, with UMP030004. -->
-    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
+    <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no finding
+         line (": error <CODE>: ", for example ": error UMP020101: ") is an engine crash, for example an exception or a
+         missing runtime: it fails the build too, with UMP030004. -->
+    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high" ConsoleToMSBuild="true"
           Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(UmpireEngineFile)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
       <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
+      <Output TaskParameter="ConsoleOutput" ItemName="_UmpireCheckLine" />
     </Exec>
-    <Error Condition="'$(_UmpireCheckExit)' != '0'" Code="UMP030004"
+    <PropertyGroup>
+      <_UmpireCheckOutput>@(_UmpireCheckLine)</_UmpireCheckOutput>
+      <_UmpireCheckFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireCheckOutput)', ': error [A-Z]+[0-9]+: '))</_UmpireCheckFound>
+    </PropertyGroup>
+    <Error Condition="'$(_UmpireCheckExit)' != '0' and '$(_UmpireCheckFound)' != 'True'" Code="UMP030004"
            Text="The rule engine stopped with exit code $(_UmpireCheckExit) and reported no finding, so the architecture check did not run. Read the engine output above." />
   </Target>
 

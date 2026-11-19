@@ -58,9 +58,16 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     static string Inputs(RunEngineRequest run) => $"{run.Mode}|{run.Skip}|{run.Block}";
 
     async Task Rules(RunEngineRequest run, CancellationToken ct) {
-        var blocks = await commands.SendAsync(new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);
+        var used = await Block(run, new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);
+        foreach (var folder in used) {
+            await Block(run, new FindBlocksCommand(folder, run.Bin, "", IsUsed: true), ct);
+        }
+    }
+
+    async Task<IReadOnlyList<string>> Block(RunEngineRequest run, FindBlocksCommand find, CancellationToken ct) {
+        var blocks = await commands.SendAsync(find, ct);
         if (!blocks.IsSuccess) {
-            return;
+            return [];
         }
         var tree = blocks.Value.Blocks;
         var versions = await commands.SendAsync(new CheckVersionsCommand(tree.Current.Folder, run.Bin), ct);
@@ -72,5 +79,6 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
         } else {
             log.Skip<CheckRulesCommand, CheckRulesResult>();
         }
+        return tree.Used;
     }
 }

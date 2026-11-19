@@ -2,7 +2,7 @@ namespace BuiltApp.Domain.Shared;
 
 public sealed record BinDll(
     string Path, string Name, bool IsShared, IReadOnlyList<string> References, IReadOnlyList<string> Documents,
-    IReadOnlyList<TypeSource> Types, IReadOnlyList<AppClass> AppClasses) {
+    IReadOnlyList<TypeSource> Types, IReadOnlyList<AppClass> AppClasses, bool IsProject = false) {
     const string UnityLibrary = "Library/";
 
     public static bool IsSystem(string name) =>
