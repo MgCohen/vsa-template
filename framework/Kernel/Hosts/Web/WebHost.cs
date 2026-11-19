@@ -20,6 +20,10 @@ public class WebHost : AppHost {
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
         }
         web = builder.Build();
+        web.Use(async (http, next) => {
+            HostWork.MarkCurrentFlow();
+            await next(http);
+        });
         HttpApi.Map(web, Route);
         if (root is not null) {
             Views.Map(web, root);

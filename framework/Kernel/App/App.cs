@@ -2,6 +2,7 @@ namespace Umpire.Kernels;
 
 using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Umpire.Markers;
 
 [RequireDerived]
@@ -13,6 +14,7 @@ public abstract class App : IApp {
     readonly object gate = new();
     AppHost? host;
     IServiceProvider? services;
+    ILogger? log;
     AppState state;
     int generation;
     bool starting;
@@ -69,7 +71,7 @@ public abstract class App : IApp {
             from = generation;
             done = stopped;
             inline = !starting && state == AppState.Running && OnAppThread(thread);
-            deferred = starting && startThread == thread;
+            deferred = (starting && startThread == thread) || HostWork.IsCurrent;
         }
         if (inline) {
             StopNow();
@@ -144,6 +146,7 @@ public abstract class App : IApp {
         lock (gate) {
             host = started;
             services = provider;
+            log = provider.GetService<ILoggerFactory>()?.CreateLogger(GetType());
         }
         stop.Listen(code => OnRequest(current, code));
         started.Start(provider, stop);
@@ -196,22 +199,22 @@ public abstract class App : IApp {
             return;
         }
         var target = context ?? threadPoolWhenNoAppThread;
-        target.Post(_ => StopPosted(from, keepErrorForStopCaller: context is null), null);
+        target.Post(_ => StopPosted(from, onThreadPool: context is null), null);
     }
 
-    void StopPosted(int from, bool keepErrorForStopCaller) {
+    void StopPosted(int from, bool onThreadPool) {
         lock (gate) {
             if (from != generation) {
                 return;
             }
         }
         try {
-            StopNow();
-        } catch when (keepErrorForStopCaller) {
+            StopNow(logErrors: onThreadPool);
+        } catch when (onThreadPool) {
         }
     }
 
-    int StopNow() {
+    int StopNow(bool logErrors = false) {
         AppHost? stopping;
         ManualResetEventSlim done;
         lock (gate) {
@@ -224,17 +227,7 @@ public abstract class App : IApp {
             stopping = host;
             done = stopped;
         }
-        Exception? error = null;
-        try {
-            OnStop();
-        } catch (Exception e) {
-            error = e;
-        }
-        try {
-            stopping?.Dispose();
-        } catch (Exception e) {
-            error ??= e;
-        }
+        var error = RunStopSteps(stopping, logErrors);
         int code;
         lock (gate) {
             host = null;
@@ -244,12 +237,41 @@ public abstract class App : IApp {
             runThread = NoThread;
             stopError = error;
             code = exitCode;
+            log = null;
         }
         done.Set();
         if (error is not null) {
             ExceptionDispatchInfo.Capture(error).Throw();
         }
         return code;
+    }
+
+    Exception? RunStopSteps(AppHost? stopping, bool logErrors) {
+        Exception? error = null;
+        try {
+            OnStop();
+        } catch (Exception e) {
+            error = e;
+            LogStopError(e, logErrors);
+        }
+        try {
+            stopping?.Dispose();
+        } catch (Exception e) {
+            error ??= e;
+            LogStopError(e, logErrors);
+        }
+        return error;
+    }
+
+    void LogStopError(Exception error, bool logErrors) {
+        ILogger? logger;
+        lock (gate) {
+            logger = logErrors ? log : null;
+        }
+        try {
+            logger?.LogError(error, "{App} failed to stop.", GetType().Name);
+        } catch (ObjectDisposedException) {
+        }
     }
 
     bool OnAppThread(int thread) =>

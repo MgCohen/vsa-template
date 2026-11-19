@@ -2,6 +2,7 @@ namespace Framework.Tests.Host;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Umpire.Kernels;
 
 [NonParallelizable]
@@ -184,6 +185,29 @@ public sealed class AppStopTests {
         Assert.That(run.Result, Is.EqualTo(9));
     }
 
+    [Test]
+    public void An_OnStop_error_in_a_stop_on_the_thread_pool_goes_to_the_log() {
+        using var logs = new CapturedLogs();
+        var app = new StopApp(() => new LogHost(logs) { Modules = [] }) { ThrowOnStop = true };
+        Task.Run(() => app.Start([])).Wait(limit);
+
+        app.Services!.GetRequiredService<AppStop>().Request();
+
+        Assert.That(StopsInTime(app), Is.True);
+        Assert.That(logs.Errors, Has.One.EqualTo("StopApp failed to stop. OnStop failed."));
+    }
+
+    [Test]
+    public void An_OnStop_error_goes_to_the_caller_of_Stop() {
+        var app = new StopApp { ThrowOnStop = true };
+        app.Start([]);
+
+        var error = Assert.Throws<InvalidOperationException>(app.Stop);
+
+        Assert.That(error!.Message, Is.EqualTo("OnStop failed."));
+        Assert.That(app.State, Is.EqualTo(AppState.Stopped));
+    }
+
     static void WaitUntilRunning(IApp app, Task run) {
         var deadline = DateTime.UtcNow + limit;
         while (app.State != AppState.Running && !run.IsCompleted && DateTime.UtcNow < deadline) {
@@ -200,10 +224,12 @@ public sealed class AppStopTests {
         return app.State == AppState.Stopped;
     }
 
-    sealed class StopApp : App {
-        public override Pack Pack { get; } = new TestPack(() => new AppHost { Modules = [] });
+    sealed class StopApp(Func<AppHost>? host = null) : App {
+        public override Pack Pack { get; } = new TestPack(host ?? (() => new AppHost { Modules = [] }));
 
         public int? RequestOnStart { get; init; }
+
+        public bool ThrowOnStop { get; init; }
 
         public int Stops { get; private set; }
 
@@ -218,6 +244,45 @@ public sealed class AppStopTests {
         protected override void OnStop() {
             Stops++;
             StopThread = Environment.CurrentManagedThreadId;
+            if (ThrowOnStop) {
+                throw new InvalidOperationException("OnStop failed.");
+            }
+        }
+    }
+
+    sealed class LogHost(CapturedLogs logs) : AppHost {
+        protected override void Configure(IServiceCollection services, AppTypes types) =>
+            services.AddLogging(logging => logging.AddProvider(logs));
+    }
+
+    sealed class CapturedLogs : ILoggerProvider, ILogger {
+        readonly List<string> errors = [];
+
+        public IReadOnlyList<string> Errors {
+            get {
+                lock (errors) {
+                    return [.. errors];
+                }
+            }
+        }
+
+        public ILogger CreateLogger(string categoryName) => this;
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter) {
+            if (logLevel == LogLevel.Error) {
+                lock (errors) {
+                    errors.Add($"{formatter(state, exception)} {exception?.Message}");
+                }
+            }
+        }
+
+        public void Dispose() {
         }
     }
 }

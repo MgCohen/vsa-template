@@ -36,7 +36,7 @@ static class CommandLine {
                 await System.Console.Error.WriteLineAsync($"{error.Code}: {error.Message}").ConfigureAwait(false);
             }
             stop.Request(result.ExitCode);
-        } catch (Exception e) when (e is not OperationCanceledException) {
+        } catch (Exception e) when (e is not OperationCanceledException || !ct.IsCancellationRequested) {
             var reason = (e as TargetInvocationException)?.InnerException?.Message ?? e.Message;
             await System.Console.Error.WriteLineAsync($"{operation.Name} failed: {reason}").ConfigureAwait(false);
             stop.Request(1);

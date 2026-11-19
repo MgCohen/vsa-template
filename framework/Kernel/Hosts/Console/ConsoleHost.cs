@@ -23,7 +23,7 @@ public class ConsoleHost : AppHost {
 
     public override void Start(IServiceProvider services, AppStop stop) {
         signals = AppSignals.Listen(stop);
-        work = Task.Run(() => CommandLine.Run(services, operation!, configuration!, stop, stopping.Token));
+        work = HostWork.Run(() => CommandLine.Run(services, operation!, configuration!, stop, stopping.Token));
     }
 
     public override void Dispose() {

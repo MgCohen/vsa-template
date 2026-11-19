@@ -103,8 +103,10 @@ Run ──► the stop runs on the thread of Run, after the wait
 - The inline rule prevents a deadlock. `Stop()` on the Unity main thread does not wait for work that it posted to the main thread.
 - A stop request during `Start`, for example in `OnStart`, runs after `Start` ends.
 - The first request gives the exit code. The app ignores a request of an earlier start.
-- Do not call `App.Stop()` from host work, for example a request handler. `Stop()` waits for the stop, and the stop waits for the host work. Use `AppStop.Request`.
+- `Stop()` in host work only requests the stop, and returns. The stop waits for the host work, so a wait in `Stop()` is a deadlock. Host work is the console operation and each HTTP request of `WebHost`. Code inside the app uses `AppStop.Request`.
 - `ConsoleHost` runs the operation on the thread pool, so the operation does not continue on the app thread.
+- If `OnStop` or `host.Dispose` throws, `Stop()` gives the error to its caller. A stop on the thread pool also writes the error to the app log. A stop on an app thread gives the error to its `SynchronizationContext`.
+- If the console operation cancels itself, the exit code is 1. A cancel from the stop is not an error.
 
 | Stop source | Exit code of `Run` |
 |---|---|

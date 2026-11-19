@@ -53,6 +53,38 @@ public sealed class ConsoleStopTests {
         Assert.That(app.State, Is.EqualTo(AppState.Stopped));
     }
 
+    [Test]
+    public void Stop_from_the_operation_ends_the_run_with_no_deadlock() {
+        var app = new TestApp<TestConsoleHost>(new WaitModule());
+        HaltHandler.App = app;
+
+        var run = Task.Run(() => app.Run(["halt"]));
+
+        Assert.That(run.Wait(limit), Is.True);
+        Assert.That(run.Result, Is.Zero);
+        Assert.That(HaltHandler.StopReturned, Is.True);
+    }
+
+    [Test]
+    public void Stop_from_the_operation_of_a_started_app_stops_it_with_no_deadlock() {
+        var app = new TestApp<TestConsoleHost>(new WaitModule());
+        HaltHandler.App = app;
+
+        app.Start(["halt"]);
+
+        Assert.That(StopsInTime(app), Is.True);
+    }
+
+    [Test]
+    public void A_cancellation_of_the_operation_itself_ends_the_run_with_exit_code_one() {
+        var app = new TestApp<TestConsoleHost>(new WaitModule());
+
+        var run = Task.Run(() => app.Run(["abort"]));
+
+        Assert.That(run.Wait(limit), Is.True);
+        Assert.That(run.Result, Is.EqualTo(1));
+    }
+
     static bool StopsInTime(IApp app) {
         var deadline = DateTime.UtcNow + limit;
         while (app.State != AppState.Stopped && DateTime.UtcNow < deadline) {
@@ -72,5 +104,27 @@ public sealed class ConsoleStopTests {
             await Task.Delay(Timeout.Infinite, envelope.Cancellation);
             return new WaitResponse();
         }
+    }
+
+    public sealed record HaltRequest : IRequest<WaitResponse>;
+
+    public sealed class HaltHandler : RequestHandler<HaltRequest, WaitResponse> {
+        public static IApp? App { get; set; }
+
+        public static bool StopReturned { get; private set; }
+
+        public override Task<Result<WaitResponse>> HandleAsync(Envelope<HaltRequest> envelope) {
+            StopReturned = false;
+            App!.Stop();
+            StopReturned = true;
+            return Task.FromResult<Result<WaitResponse>>(new WaitResponse());
+        }
+    }
+
+    public sealed record AbortRequest : IRequest<WaitResponse>;
+
+    public sealed class AbortHandler : RequestHandler<AbortRequest, WaitResponse> {
+        public override Task<Result<WaitResponse>> HandleAsync(Envelope<AbortRequest> envelope) =>
+            throw new OperationCanceledException("The operation gave up.");
     }
 }
