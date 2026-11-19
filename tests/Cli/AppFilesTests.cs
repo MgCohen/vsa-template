@@ -52,12 +52,12 @@ public sealed class AppFilesTests {
 
     [Test]
     public void ThePackageOfTheBuildCheckIsASlot() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Engine.Build" Version="0.0.1" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Hosts.Web" Version="0.0.1" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
 
-        Assert.That(mismatches.Select(slot => $"{slot.File} {slot.Package} {slot.Version} {slot.Line}"), Is.EqualTo(new[] { "App.csproj Umpire.Engine.Build 0.0.1 1" }));
-        Assert.That(VersionCheck.Message(mismatches, V), Does.Contain("App.csproj: Umpire.Engine.Build 0.0.1"));
+        Assert.That(mismatches.Select(slot => $"{slot.File} {slot.Package} {slot.Version} {slot.Line}"), Is.EqualTo(new[] { "App.csproj Umpire.Hosts.Web 0.0.1 1" }));
+        Assert.That(VersionCheck.Message(mismatches, V), Does.Contain("App.csproj: Umpire.Hosts.Web 0.0.1"));
     }
 
     [Test]
@@ -73,12 +73,12 @@ public sealed class AppFilesTests {
     [Test]
     public void APackageUsesTheCentralVersionAboveTheBlockFolder() {
         var app = Path.Combine(root, "src");
-        Write("Directory.Packages.props", $"""<Project><ItemGroup><PackageVersion Include="Umpire.Engine.Build" Version="{V}" /></ItemGroup></Project>""");
-        Write("src/App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Engine.Build" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("Directory.Packages.props", $"""<Project><ItemGroup><PackageVersion Include="Umpire.Hosts.Web" Version="{V}" /></ItemGroup></Project>""");
+        Write("src/App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Hosts.Web" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var slots = VersionSlots.InApp(app).SelectMany(file => file.Slots).ToList();
 
-        Assert.That(slots.Select(slot => $"{slot.File} {slot.Package} {slot.Version}"), Is.EqualTo(new[] { $"App.csproj Umpire.Engine.Build {V}" }));
+        Assert.That(slots.Select(slot => $"{slot.File} {slot.Package} {slot.Version}"), Is.EqualTo(new[] { $"App.csproj Umpire.Hosts.Web {V}" }));
     }
 
     [Test]
@@ -163,7 +163,7 @@ public sealed class AppFilesTests {
     [Test]
     public void UpdateWritesTheVersionToEachPlaceThatDoctorReads() {
         Write("Directory.Packages.props", """<Project><ItemGroup><PackageVersion Include="Umpire.Vsa.Hosts.Web" Version="0.0.1" /><PackageVersion Include="NUnit" Version="4.0.0" /></ItemGroup></Project>""");
-        Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Vsa.Hosts.Web" /><PackageReference Include="Umpire.Vsa.Views" VersionOverride="0.0.2" /><PackageReference Include="Umpire.Engine.Build" Version="0.0.3" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Vsa.Hosts.Web" /><PackageReference Include="Umpire.Vsa.Views" VersionOverride="0.0.2" /><PackageReference Include="Umpire.Hosts.Web" Version="0.0.3" PrivateAssets="all" /></ItemGroup></Project>""");
         Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/0.0.5" />""");
         Write("Features/B/B.csproj", """<Project><Sdk Name="Umpire.Sdk" Version="0.0.6" /></Project>""");
         Write("Features/C/C.csproj", """<Project Sdk="Umpire.Sdk" />""");

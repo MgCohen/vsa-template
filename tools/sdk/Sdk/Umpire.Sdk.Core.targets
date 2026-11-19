@@ -62,23 +62,22 @@
     <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The root project of the app gets the rule engine package: the executable in the block root that is not a test project.
-       A nested console project of the same block does not check the block again. UmpireEngine=false turns it off. A project
-       that references Umpire.Engine.Build itself keeps its own reference. -->
+  <!-- The root project of the app runs the rule engine: the executable in the block root that is not a test project. A
+       nested console project of the same block does not check the block again. UmpireEngine=false turns it off. The engine
+       is in this package, in tools/net10.0/ (Umpire.Sdk.Package.targets). -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
   </PropertyGroup>
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngine)' == 'true'">
-    <PackageReference Include="Umpire.Engine.Build" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all"
-                      Condition="'@(PackageReference->WithMetadataValue('Identity', 'Umpire.Engine.Build')->Count())' == '0'" />
-  </ItemGroup>
+  <PropertyGroup>
+    <UmpireEngineFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
+  </PropertyGroup>
 
   <!-- The architecture check after each build of the root project. MSBuild only calls the engine with the Check stage: the
        engine reads .umpireconfig (for example umpire.check.mode) and decides what to check. Its Changes step skips the check
        when no input changed. -p:UmpireCheck=false stops the call for one build. -p:UmpireCheckMode=Warn gives the mode for
        one build, and it wins over .umpireconfig. UmpireBlock gives the block folder (this repository has one global.json for
-       many apps). In source mode the call is off, because the engine package is not there. -->
+       many apps). In source mode the call is off, because the SDK files have no engine there. -->
   <PropertyGroup>
     <_UmpireDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_UmpireDotnet>
     <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
@@ -86,12 +85,11 @@
   <Target Name="UmpireCheck" AfterTargets="Build"
           Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true' and '$(UmpireFrameworkSourceDir)' == ''">
     <PropertyGroup>
-      <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(NuGetPackageRoot)', 'umpire.engine.build', '$(UmpireVersion.ToLowerInvariant())', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
       <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
       <_UmpireBlockArgument Condition="'$(UmpireBlock)' != ''"> --block &quot;$(UmpireBlock.TrimEnd('\').TrimEnd('/'))&quot;</_UmpireBlockArgument>
     </PropertyGroup>
     <Error Condition="!Exists('$(UmpireEngineFile)')" Code="UMP030003"
-           Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again." />
+           Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again, so the Umpire SDK package is complete." />
     <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no error line
          is an engine crash, for example an exception or a missing runtime: it fails the build too, with UMP030004. -->
     <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"

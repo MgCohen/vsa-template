@@ -19,7 +19,7 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
+| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the Umpire SDK packages hold the engine in `tools/net10.0/` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
@@ -348,7 +348,7 @@ C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHand
 
 ## The checks of an app
 
-An engine run does the checks of an app. The package `Umpire.Engine.Build` on the host project has the engine. See "The rule engine" in `AGENTS.md`.
+An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net10.0/` (property `UmpireEngineFile`). See "The rule engine" in `AGENTS.md`.
 
 ```text
 umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Warn]
@@ -463,7 +463,7 @@ The engine, the Umpire SDKs, the `umpire` tool and the `Umpire.*` packages have 
 
 | Slot | Item |
 |---|---|
-| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin and each `Umpire.*` package, also `Umpire.Engine.Build` |
+| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin and each `Umpire.*` package |
 | `*.deps.json` of the host output (engine only) | Each `Umpire.*` package library |
 
 A file that does not exist gives no slot. `global.json` and a tool manifest give no slot: the version of the Umpire SDK is on the first line of each project. The `*.deps.json` files can have comments and trailing commas, as dotnet reads them.

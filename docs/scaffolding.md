@@ -135,7 +135,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform. `umpire test` runs it with `dotnet run --project`, so the app needs no `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
 
-An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). Umpire.Sdk adds the package `Umpire.Engine.Build` to the root project (an executable that is not a test project), so no project has this line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
+An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). The Umpire SDK package holds the engine and runs it after the build of the root project (an executable that is not a test project), so no project has an engine line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
 
 ## Setup tasks
 
@@ -194,7 +194,7 @@ The task ids are stable. A later version can let a consumer skip or add a task b
 | File | Item |
 |---|---|
 | The running tool | `Umpire.Cli` |
-| Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin (`Sdk="Umpire.Sdk.Web/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference, also `Umpire.Engine.Build`. A reference with no version uses its `PackageVersion` |
+| Each `.csproj` and `Directory.*.props` | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin (`Sdk="Umpire.Sdk.Web/1.0.0"`, `<Sdk Name="Umpire.Sdk" Version="1.0.0" />`) and each `Umpire.*` package reference. A reference with no version uses its `PackageVersion` |
 
 The tool runs with `dotnet tool exec Umpire.Cli@<version> -y -- <command>`, so the app needs no tool manifest. A consumer can also install the tool, as a global tool (`umpire <command>`) or in a tool manifest of the app (`dotnet umpire <command>`). The commands that need an app (`add`, `test`, `doctor`, `update`) find the app folder: the nearest `.umpireconfig` at or above the current folder, else the nearest folder with a project that names an Umpire SDK. `doctor` reports an Umpire SDK with no version and an Umpire pin in `global.json` as work by hand.
 

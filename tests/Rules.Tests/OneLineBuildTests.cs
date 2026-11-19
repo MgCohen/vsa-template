@@ -9,7 +9,7 @@ public sealed class OneLineBuildTests {
     DotnetResult engine = null!;
     DotnetResult build = null!;
 
-    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.engine.build", LocalFeed.Version, "tools", "net10.0",
+    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.sdk.web", LocalFeed.Version, "tools", "net10.0",
         "umpire-engine.dll");
 
     [OneTimeSetUp]
@@ -61,7 +61,7 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_root_project_gets_the_rule_engine_package() =>
+    public void The_sdk_package_has_the_rule_engine() =>
         Assert.That(File.Exists(Engine), Is.True, first.Output);
 
     [Test]
@@ -129,10 +129,16 @@ public sealed class OneLineBuildTests {
     }
 
     [TestCase("OneLine.csproj", "-p:UmpireEngine=false")]
-    [TestCase("Tests/OneLine.Tests.csproj", "-p:UmpireEngine=")]
-    public void A_project_gets_no_rule_engine(string project, string engine) {
-        var references = Evaluate(project, "-getItem:PackageReference", engine);
-        Assert.That(references.Output, Does.Not.Contain("Umpire.Engine.Build"), references.Output);
+    [TestCase("Tests/OneLine.Tests.csproj", "-p:UmpireCheck=true")]
+    public void A_project_runs_no_rule_engine(string project, string engine) {
+        var value = Evaluate(project, "-getProperty:UmpireEngine", engine);
+        Assert.That(value.Output.Trim(), Is.EqualTo("false"), value.Output);
+    }
+
+    [Test]
+    public void The_root_project_gets_no_engine_package() {
+        var references = Evaluate("OneLine.csproj", "-getItem:PackageReference");
+        Assert.That(references.Output, Does.Not.Contain("Umpire.Engine"), references.Output);
     }
 
     [TestCase("OneLine.csproj", "Umpire.Vsa")]

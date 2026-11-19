@@ -99,7 +99,6 @@ The root project gets its packages from two places:
 | `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
 | `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
 | `Umpire.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the presenter views |
-| `Umpire.Engine.Build` | Umpire.Sdk, for the root project | The rule engine. The SDK runs its check after each build of the root project |
 
 Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
 

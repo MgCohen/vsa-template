@@ -32,4 +32,19 @@
       <None Include="$(_UmpireVersionFile)" Pack="true" PackagePath="Sdk" Visible="false" />
     </ItemGroup>
   </Target>
+  <!-- Each SDK package holds the rule engine in tools/net10.0/, so a consumer gets the engine with the SDK and no other
+       package. The hook in Umpire.Sdk.Core.targets runs it from there. The engine builds with the global properties of the
+       pack (configuration, version, output folder). -->
+  <Target Name="_UmpireEngineInPackage" BeforeTargets="_GetPackageFiles">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)../../engine/Engine.csproj" Targets="Build;GetTargetPath">
+      <Output TaskParameter="TargetOutputs" ItemName="_UmpireEngineTarget" />
+    </MSBuild>
+    <PropertyGroup>
+      <_UmpireEngineDir>@(_UmpireEngineTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check" />
+      <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net10.0/%(RecursiveDir)" Visible="false" />
+    </ItemGroup>
+  </Target>
 </Project>

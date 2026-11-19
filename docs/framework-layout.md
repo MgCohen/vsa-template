@@ -11,7 +11,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Architecture | `architecture/` | The definition API and the rule answers | Each pack and the engine |
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
-| Engine | `engine/` | The rule engine app | The package `Umpire.Engine.Build` |
+| Engine | `engine/` | The rule engine app | No package: `tools/net10.0/` of Umpire.Sdk and Umpire.Sdk.Web |
 | Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`) and Umpire.Sdk | The developer |
 
 ```mermaid

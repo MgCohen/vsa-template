@@ -9,7 +9,8 @@ public sealed class FeedTests {
     }
 
     [Test]
-    public void The_feed_has_the_tool_the_sdk_and_the_build_hook() {
-        Assert.That(LocalFeed.Packages, Is.SupersetOf(new[] { "Umpire.Cli", "Umpire.Sdk", "Umpire.Engine.Build" }));
+    public void The_feed_has_the_tool_and_the_sdk_packages_with_no_engine_package() {
+        Assert.That(LocalFeed.Packages, Is.SupersetOf(new[] { "Umpire.Cli", "Umpire.Sdk", "Umpire.Sdk.Web" }));
+        Assert.That(LocalFeed.Packages, Has.No.Member("Umpire.Engine.Build"));
     }
 }
