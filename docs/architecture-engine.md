@@ -375,7 +375,7 @@ Each step declares its stages with `IStepStage` (`public static Stage Stages => 
 | Mode | `umpire.check.mode` in `.umpireconfig` | Each run |
 | Check on or off | `-p:UmpireCheck=false` | One build |
 
-The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, the hook gives `UMP030003`. In source mode (this repository) the hook is off.
+The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, the hook gives `UMP030003`. If the engine stops with an exit code that is not 0 and no finding line, the hook gives `UMP030004`. Only the executable project in the block root runs the hook. In source mode (this repository) the hook is off.
 
 The Changes step makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
@@ -405,6 +405,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
 | `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
 | `UMP030003` | 00 Run | Error | The hook does not find the engine file. Restore the project again |
+| `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and reports no finding, for example after a crash. The build fails |
 | `UMP030101` | 01 Build | Error | The build of the root project fails. The Check stage does not run |
 | `UMP030201` | 02 Changes | Info | No input changed since the last clean check, so the check did not run |
 | `UMP030301` | 03 Blocks | Error | A block has more than one check entry |

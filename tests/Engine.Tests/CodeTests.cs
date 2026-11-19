@@ -88,13 +88,14 @@ public sealed class CodeTests {
             Assert.That(RunCodes.CouldNotRun, Is.EqualTo("UMP030001"));
             Assert.That(RunCodes.Skipped, Is.EqualTo("UMP030002"));
             Assert.That(RunCodes.NoEngine, Is.EqualTo("UMP030003"));
+            Assert.That(RunCodes.EngineCrash, Is.EqualTo("UMP030004"));
         });
     }
 
     [Test]
     public void Each_engine_code_is_different() {
         string[] codes = [
-            VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine, BuildCodes.Failed, ChangesCodes.Same,
+            VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine, RunCodes.EngineCrash, BuildCodes.Failed, ChangesCodes.Same,
             BlocksCodes.TwoEntries, BlocksCodes.BadArchitecture, BlocksCodes.NoBlock,
             BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses, LoadAppCodes.NoEmptyConstructor,

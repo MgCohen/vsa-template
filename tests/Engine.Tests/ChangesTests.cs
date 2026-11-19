@@ -61,6 +61,42 @@ public sealed class ChangesTests {
         Assert.That(InputHash.Of(Notes, Bin, "run"), Is.EqualTo(first));
     }
 
+    [TestCase("Directory.Packages.props")]
+    [TestCase("global.json")]
+    public void A_change_in_a_version_file_above_the_block_changes_the_input_hash(string name) {
+        var root = TempFolder.Create();
+        try {
+            var block = Path.Combine(root, "App");
+            Directory.CreateDirectory(block);
+            var file = Path.Combine(root, name);
+            File.WriteAllText(file, "<Project />");
+            var before = InputHash.Of(block, Bin, "run");
+
+            File.WriteAllText(file, "<Project><ItemGroup /></Project>");
+
+            Assert.That(InputHash.Of(block, Bin, "run"), Is.Not.EqualTo(before));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [TestCase("node_modules")]
+    [TestCase(".git")]
+    [TestCase("artifacts~")]
+    public void A_project_file_in_an_ignored_folder_does_not_change_the_input_hash(string folder) {
+        var root = TempFolder.Create();
+        try {
+            var before = InputHash.Of(root, Bin, "run");
+            Directory.CreateDirectory(Path.Combine(root, folder));
+
+            File.WriteAllText(Path.Combine(root, folder, "Other.csproj"), "<Project />");
+
+            Assert.That(InputHash.Of(root, Bin, "run"), Is.EqualTo(before));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
     [Test]
     public void Other_run_options_give_another_hash() =>
         Assert.That(InputHash.Of(Notes, Bin, "Warn"), Is.Not.EqualTo(InputHash.Of(Notes, Bin, "Error")));

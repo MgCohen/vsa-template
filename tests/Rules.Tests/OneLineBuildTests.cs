@@ -69,6 +69,16 @@ public sealed class OneLineBuildTests {
         Assert.That(Lines(first, "umpire-engine: "), Is.Not.Empty, first.Output);
 
     [Test]
+    public void An_engine_that_crashes_fails_the_build() {
+        var notAnEngine = Path.Combine(workspace.Src, ".umpireconfig");
+        var crashed = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false",
+            $"-p:UmpireEngineFile={notAnEngine}");
+
+        Assert.That(crashed.Succeeded, Is.False, crashed.Output);
+        Assert.That(crashed.Output, Does.Contain("error UMP030004"), crashed.Output);
+    }
+
+    [Test]
     public void A_build_with_UmpireCheck_false_does_not_run_the_check() {
         var quiet = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false");
         Assert.That(Lines(quiet, "umpire-engine: "), Is.Empty, quiet.Output);

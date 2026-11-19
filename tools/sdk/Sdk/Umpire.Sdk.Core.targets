@@ -62,11 +62,12 @@
     <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- The root project of the app gets the rule engine package: an executable that is not a test project. UmpireEngine=false
-       turns it off. A project that references Umpire.Engine.Build itself keeps its own reference. -->
+  <!-- The root project of the app gets the rule engine package: the executable in the block root that is not a test project.
+       A nested console project of the same block does not check the block again. UmpireEngine=false turns it off. A project
+       that references Umpire.Engine.Build itself keeps its own reference. -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
-    <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests'))">true</UmpireEngine>
+    <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngine)' == 'true'">
     <PackageReference Include="Umpire.Engine.Build" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all"
@@ -85,14 +86,20 @@
   <Target Name="UmpireCheck" AfterTargets="Build"
           Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true' and '$(UmpireFrameworkSourceDir)' == ''">
     <PropertyGroup>
-      <_UmpireEngineDll>$([MSBuild]::NormalizePath('$(NuGetPackageRoot)', 'umpire.engine.build', '$(UmpireVersion.ToLowerInvariant())', 'tools', 'net10.0', 'umpire-engine.dll'))</_UmpireEngineDll>
+      <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(NuGetPackageRoot)', 'umpire.engine.build', '$(UmpireVersion.ToLowerInvariant())', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
       <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
       <_UmpireBlockArgument Condition="'$(UmpireBlock)' != ''"> --block &quot;$(UmpireBlock.TrimEnd('\').TrimEnd('/'))&quot;</_UmpireBlockArgument>
     </PropertyGroup>
-    <Error Condition="!Exists('$(_UmpireEngineDll)')" Code="UMP030003"
-           Text="The rule engine $(_UmpireEngineDll) does not exist, so the architecture check cannot run. Restore the project again." />
+    <Error Condition="!Exists('$(UmpireEngineFile)')" Code="UMP030003"
+           Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again." />
+    <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no error line
+         is an engine crash, for example an exception or a missing runtime: it fails the build too, with UMP030004. -->
     <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
-          Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(_UmpireEngineDll)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)" />
+          Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(UmpireEngineFile)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
+      <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
+    </Exec>
+    <Error Condition="'$(_UmpireCheckExit)' != '0'" Code="UMP030004"
+           Text="The rule engine stopped with exit code $(_UmpireCheckExit) and reported no finding, so the architecture check did not run. Read the engine output above." />
   </Target>
 
   <!-- A test project (UmpireTestProject, Umpire.Sdk.Core.props) gets NUnit and the test bases of the pack.

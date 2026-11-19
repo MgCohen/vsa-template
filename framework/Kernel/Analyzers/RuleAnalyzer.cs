@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Umpire.Config;
 
 public abstract class RuleAnalyzer : DiagnosticAnalyzer {
+    const string TomlException = "Tomlyn.TomlException";
+
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
         "UMP010001",
         "An Umpire rule option is missing or not valid",
@@ -28,12 +30,22 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         isEnabledByDefault: true,
         customTags: WellKnownDiagnosticTags.CompilationEnd);
 
+    public static readonly DiagnosticDescriptor LoadDescriptor = new(
+        "UMP010003",
+        "The Umpire analyzers cannot load a library",
+        "The Umpire analyzers cannot load a library: {0} Put Umpire.Config.dll, Tomlyn.dll and their dependencies next to the "
+            + "analyzer DLLs. The Umpire rules do not run until the library loads.",
+        "Umpire",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
     protected RuleAnalyzer() {
         Rules = [.. GetType().Assembly.GetTypes()
             .Where(t => t.IsSubclassOf(typeof(UmpireAnalyzerRule)) && !t.IsAbstract)
             .Select(t => (UmpireAnalyzerRule)Activator.CreateInstance(t)!)
             .OrderBy(r => r.Id, StringComparer.Ordinal)];
-        SupportedDiagnostics = [OptionDescriptor, ConfigDescriptor, .. Rules.Select(r => r.Rule)];
+        SupportedDiagnostics = [OptionDescriptor, ConfigDescriptor, LoadDescriptor, .. Rules.Select(r => r.Rule)];
     }
 
     public ImmutableArray<UmpireAnalyzerRule> Rules { get; }
@@ -49,9 +61,18 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     }
 
     void Start(CompilationStartAnalysisContext start) {
+        try {
+            Run(start);
+        } catch (Exception e) when (IsLoadFailure(e)) {
+            if (Broken(LoadDescriptor, e.Message) is { } broken) {
+                start.RegisterCompilationEndAction(end => end.ReportDiagnostic(broken));
+            }
+        }
+    }
+
+    void Run(CompilationStartAnalysisContext start) {
         if (Config(start.Options, start.CancellationToken, out var error) is not { } config) {
-            if (PackAssembly is null) {
-                var broken = Diagnostic.Create(ConfigDescriptor, Location.None, error);
+            if (Broken(ConfigDescriptor, error) is { } broken) {
                 start.RegisterCompilationEndAction(end => end.ReportDiagnostic(broken));
             }
             return;
@@ -82,11 +103,27 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         error = "";
         try {
             return ConfigFile.Of(options, ct);
-        } catch (Exception e) when (e is not OperationCanceledException) {
+        } catch (Exception e) when (IsTomlError(e)) {
             error = e.Message;
             return null;
         }
     }
+
+    Diagnostic? Broken(DiagnosticDescriptor descriptor, string message) =>
+        PackAssembly is null ? Diagnostic.Create(descriptor, Location.None, message) : null;
+
+    static bool IsTomlError(Exception e) {
+        for (var type = e.GetType(); type is not null; type = type.BaseType) {
+            if (type.FullName == TomlException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static bool IsLoadFailure(Exception e) =>
+        e is System.IO.FileNotFoundException or System.IO.FileLoadException or BadImageFormatException or TypeLoadException
+            or MissingMemberException;
 
     static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, UmpireConfig config) {
         var options = new UmpireOptions(rule.Id, config, rule.Options);
