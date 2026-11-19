@@ -1,6 +1,7 @@
 namespace Engine.Slices.RunEngine;
 
 using Report.Domain.Shared;
+using Steps.Domain.Shared;
 using Umpire.Vsa.Contracts.Requests;
 
 public sealed record RunEngineRequest(
@@ -10,5 +11,5 @@ public sealed record RunEngineRequest(
     ReportMode Mode = ReportMode.Error,
     string Skip = "",
     bool FailFast = false,
-    bool Build = true)
+    Stage Stage = Stage.All)
     : IRequest<RunEngineResponse>;

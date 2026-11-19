@@ -60,13 +60,27 @@ static class CommandLine {
                     $"{input.Name} needs --{parameter.Name}. Add it to the command line.");
         }
         var type = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
-        if (type.IsEnum) {
-            var names = Enum.GetNames(type);
-            return names.FirstOrDefault(name => string.Equals(name, text, StringComparison.OrdinalIgnoreCase)) is { } name
-                ? Enum.Parse(type, name)
-                : throw new InvalidOperationException(
-                    $"--{parameter.Name} must be one of {string.Join(", ", names)}. The value is '{text}'.");
-        }
-        return Convert.ChangeType(text, type, CultureInfo.InvariantCulture);
+        return type.IsEnum
+            ? EnumValue(type, parameter.Name!, text)
+            : Convert.ChangeType(text, type, CultureInfo.InvariantCulture);
     }
+
+    static object EnumValue(Type type, string option, string text) {
+        var names = Enum.GetNames(type);
+        string[] parts = type.IsDefined(typeof(FlagsAttribute), false)
+            ? text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            : [text];
+        var found = parts.Select(part => Member(names, part)).ToList();
+        if (found.Count == 0 || found.Contains(null)) {
+            throw new InvalidOperationException(
+                $"--{option} must be one of {string.Join(", ", names)}. The value is '{text}'.");
+        }
+        var value = found.Aggregate(0L, (all, name) => all | Number(Enum.Parse(type, name!)));
+        return Enum.ToObject(type, value);
+    }
+
+    static string? Member(string[] names, string part) =>
+        names.FirstOrDefault(name => string.Equals(name, part, StringComparison.OrdinalIgnoreCase));
+
+    static long Number(object member) => Convert.ToInt64(member, CultureInfo.InvariantCulture);
 }

@@ -2,9 +2,7 @@ namespace Engine.Slices.RunEngine;
 
 using Blocks.Domain.Shared;
 using Blocks.Slices.FindBlocks;
-using Build.Domain.Shared;
 using Build.Slices.BuildApp;
-using Config.Slices.WriteConfig;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
 using Report.Slices.WriteReport;
@@ -26,17 +24,26 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     }
 
     async Task<IReadOnlyList<Finding>> Run(RunEngineRequest run, CancellationToken ct) {
-        if (!await Prepare(run, ct)) {
-            log.Skip<FindBlocksCommand, FindBlocksResult>();
-            return [.. log.Findings];
+        if (run.Stage.Runs<BuildAppCommand>()) {
+            var build = await commands.SendAsync(new BuildAppCommand(run.Project, run.Bin), ct);
+            if (!build.IsSuccess && run.Stage.Runs<FindBlocksCommand>()) {
+                log.Skip<FindBlocksCommand, FindBlocksResult>();
+                return [.. log.Findings];
+            }
         }
+        if (run.Stage.Runs<FindBlocksCommand>()) {
+            await Check(run, ct);
+        }
+        return [.. log.Findings];
+    }
+
+    async Task Check(RunEngineRequest run, CancellationToken ct) {
         var blocks = await commands.SendAsync(new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);
         if (!blocks.IsSuccess) {
-            return [.. log.Findings];
+            return;
         }
         var tree = blocks.Value.Blocks;
-        var block = tree.Current.Folder;
-        var versions = await commands.SendAsync(new CheckVersionsCommand(block, run.Bin), ct);
+        var versions = await commands.SendAsync(new CheckVersionsCommand(tree.Current.Folder, run.Bin), ct);
         var app = versions.IsSuccess
             ? await commands.SendAsync(new LoadAppCommand(tree, blocks.Value.Bin, run.Skip), ct)
             : log.Skip<LoadAppCommand, AppInput>();
@@ -45,20 +52,5 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
         } else {
             log.Skip<CheckRulesCommand, CheckRulesResult>();
         }
-        return [.. log.Findings];
-    }
-
-    async Task<bool> Prepare(RunEngineRequest run, CancellationToken ct) {
-        var folder = run.Block.Length > 0 ? run.Block : run.Project;
-        var config = await commands.SendAsync(new WriteConfigCommand(folder), ct);
-        if (!config.IsSuccess) {
-            log.Skip<BuildAppCommand, BuildAppResult>();
-            return false;
-        }
-        if (!run.Build) {
-            return true;
-        }
-        var build = await commands.SendAsync(new BuildAppCommand(run.Project, run.Bin), ct);
-        return build.IsSuccess;
     }
 }
