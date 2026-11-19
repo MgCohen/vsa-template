@@ -3,6 +3,8 @@ namespace Engine.Slices.RunEngine;
 using Blocks.Domain.Shared;
 using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
+using Changes.Slices.FindChanges;
+using Changes.Slices.WriteStamp;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
 using Report.Slices.WriteReport;
@@ -38,6 +40,21 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     }
 
     async Task Check(RunEngineRequest run, CancellationToken ct) {
+        var folder = run.Block.Length > 0 ? run.Block : run.Project;
+        var changes = await commands.SendAsync(new FindChangesCommand(folder, run.Bin, Inputs(run)), ct);
+        if (changes.IsSuccess && changes.Value.Same) {
+            return;
+        }
+        var before = log.Findings.Count;
+        await Rules(run, ct);
+        if (changes.IsSuccess && log.Findings.Skip(before).All(f => f.Severity == FindingSeverity.Info)) {
+            await commands.SendAsync(new WriteStampCommand(run.Bin, changes.Value.Hash), ct);
+        }
+    }
+
+    static string Inputs(RunEngineRequest run) => $"{run.Mode}|{run.Skip}|{run.Block}";
+
+    async Task Rules(RunEngineRequest run, CancellationToken ct) {
         var blocks = await commands.SendAsync(new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);
         if (!blocks.IsSuccess) {
             return;

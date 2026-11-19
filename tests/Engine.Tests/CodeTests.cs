@@ -1,6 +1,7 @@
 using System.Reflection;
 using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
+using Changes.Slices.FindChanges;
 using LoadApp.Slices.LoadApp;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
@@ -27,6 +28,7 @@ public sealed class CodeTests {
     public void The_groups_follow_the_order_of_the_steps() {
         Assert.Multiple(() => {
             Assert.That(BuildAppCommand.Group, Is.EqualTo(1));
+            Assert.That(FindChangesCommand.Group, Is.EqualTo(2));
             Assert.That(FindBlocksCommand.Group, Is.EqualTo(3));
             Assert.That(CheckVersionsCommand.Group, Is.EqualTo(4));
             Assert.That(LoadAppCommand.Group, Is.EqualTo(5));
@@ -46,6 +48,7 @@ public sealed class CodeTests {
     public void Only_the_build_step_is_in_the_build_stage() {
         Assert.Multiple(() => {
             Assert.That(BuildAppCommand.Stages, Is.EqualTo(Stage.Build));
+            Assert.That(FindChangesCommand.Stages, Is.EqualTo(Stage.Check));
             Assert.That(FindBlocksCommand.Stages, Is.EqualTo(Stage.Check));
             Assert.That(CheckVersionsCommand.Stages, Is.EqualTo(Stage.Check));
             Assert.That(LoadAppCommand.Stages, Is.EqualTo(Stage.Check));

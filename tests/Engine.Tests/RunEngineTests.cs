@@ -1,5 +1,7 @@
 using Blocks;
 using Build;
+using Changes;
+using Changes.Infrastructure;
 using LoadApp;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
@@ -34,7 +36,7 @@ public sealed class RunEngineTests {
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Build", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Build", "Changes", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
     }
 
     [Test]
@@ -252,13 +254,16 @@ public sealed class RunEngineTests {
 
     internal static async Task<RunEngineResponse> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
-        Stage stage = Stage.Check) {
+        Stage stage = Stage.Check, bool keepStamp = false) {
         using var host = new EngineTestApp(
-            new StepsPlugin(), new EngineModule(), new BuildModule(), new BlocksModule(), new VersionsModule(),
+            new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
             new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;
+        if (Directory.Exists(output) && keepStamp is false) {
+            StampFile.Delete(output);
+        }
         var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast, Stage: stage);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
