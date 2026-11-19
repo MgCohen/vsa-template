@@ -29,7 +29,7 @@ The reasons for the limits:
 | The host | `UnityHost : AppHost` with `Configure`: `App<Vsa<UnityHost>>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
 | The container | `host.Compose(services, configuration, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
-| The main thread of presenter events | A `LivePresenters.Dispatch` registration in `UnityHost.Configure` | `docs/presenter-events.md` |
+| The presenter scopes | The shell or the page resolves `PresenterScope` in its scope | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
 | The module settings | `UnityHost.Settings(types)`: a provider, or a Tomlyn context for no reflection | `docs/composition.md` |

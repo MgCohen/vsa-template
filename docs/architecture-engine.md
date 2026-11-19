@@ -203,8 +203,8 @@ The framework can require a public exposure, so the check ignores two exposures:
 
 | Exposure | Example |
 |---|---|
-| A base type or an interface of an `External` part, with its generic arguments | `: Presenter(bus), IPresenterEvent<Rang>` |
-| A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task OnEventAsync(Rang e)` |
+| A base type or an interface of an `External` part, with its generic arguments | `: Presenter(bus), IPresenterHandler<Rang>` |
+| A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task<Result<Unit>> HandleAsync(Envelope<Rang> e)` |
 
 An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `UMP020102` if the rule limits `Note`.
 

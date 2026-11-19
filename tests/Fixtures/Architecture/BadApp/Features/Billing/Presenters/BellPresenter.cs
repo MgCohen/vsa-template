@@ -4,14 +4,14 @@ using BadApp.Billing.Domain;
 using BadApp.Billing.Slices.CreateInvoice;
 using Kit;
 
-public sealed class BellPresenter : IPresenterEvent<InvoiceCreated>, IBellSource, IEquatable<Invoice> {
+public sealed class BellPresenter : IPresenterHandler<InvoiceCreated>, IBellSource, IEquatable<Invoice> {
     internal InvoiceCreated? Last { get; private set; }
 
     public InvoiceCreated? Current => Last;
 
     public InvoiceCreated? Latest => Last;
 
-    public Task OnEventAsync(InvoiceCreated e) {
+    public Task HandleAsync(InvoiceCreated e) {
         Last = e;
         return Task.CompletedTask;
     }

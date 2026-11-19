@@ -1,58 +1,98 @@
 namespace Umpire.Vsa.Presenters;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Events;
 
 public sealed class LivePresenters(ILogger<LivePresenters> logger) : IIntegrationEventObserver {
     readonly object gate = new();
-    readonly Dictionary<Presenter, Live> live = [];
+    readonly HashSet<PresenterScope> scopes = [];
 
-    public delegate Task Dispatch(Func<Task> work);
+    // The scopes whose gate this async flow holds. A presenter handler can send a request,
+    // and the request handler can publish an event to the same scope. That delivery runs
+    // in the flow that holds the gate, so it does not wait for the gate again.
+    static readonly AsyncLocal<Held?> held = new();
 
-    public void Connect(Presenter presenter, Dispatch? dispatch = null) {
-        Live entry;
+    internal void Add(PresenterScope scope) {
         lock (gate) {
-            var serial = live.TryGetValue(presenter, out var current) ? current.Gate : new SemaphoreSlim(1, 1);
-            entry = new Live(dispatch ?? (work => work()), serial);
-            live[presenter] = entry;
+            scopes.Add(scope);
         }
-        presenter.Connect(() => Disconnect(presenter, entry));
     }
 
-    public Task OnPublishedAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
-        KeyValuePair<Presenter, Live>[] targets;
+    internal void Remove(PresenterScope scope) {
         lock (gate) {
-            targets = [.. live.Where(p => p.Key is IPresenterEvent<TEvent>)];
+            scopes.Remove(scope);
         }
-        foreach (var target in targets) {
-            _ = Deliver(target.Key, target.Value, integrationEvent);
-        }
-        return Task.CompletedTask;
     }
 
-    async Task Deliver<TEvent>(Presenter presenter, Live entry, TEvent integrationEvent) where TEvent : IntegrationEvent {
+    bool IsLive(PresenterScope scope) {
+        lock (gate) {
+            return scopes.Contains(scope);
+        }
+    }
+
+    public async Task OnPublishedAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
+        PresenterScope[] targets;
+        lock (gate) {
+            targets = [.. scopes];
+        }
+        foreach (var scope in targets) {
+            await DeliverAsync(scope, integrationEvent, ct);
+        }
+    }
+
+    async Task DeliverAsync<TEvent>(PresenterScope scope, TEvent integrationEvent, CancellationToken ct) where TEvent : IntegrationEvent {
+        var reentry = Held.Contains(held.Value, scope);
+        if (!reentry) {
+            await scope.Gate.WaitAsync(CancellationToken.None);
+        }
+        var outer = held.Value;
+        held.Value = new Held(scope, outer);
         try {
-            await entry.Dispatch(async () => {
-                await entry.Gate.WaitAsync();
-                try {
-                    await ((IPresenterEvent<TEvent>)presenter).OnEventAsync(integrationEvent, CancellationToken.None);
-                } finally {
-                    entry.Gate.Release();
-                }
-                presenter.RaiseChanged();
-            });
-        } catch (Exception e) {
-            logger.LogError(e, "{Presenter} failed on {Event}.", presenter.GetType().Name, typeof(TEvent).Name);
-        }
-    }
-
-    void Disconnect(Presenter presenter, Live entry) {
-        lock (gate) {
-            if (live.TryGetValue(presenter, out var current) && ReferenceEquals(current, entry)) {
-                live.Remove(presenter);
+            if (!IsLive(scope)) {
+                return;
+            }
+            IPresenterHandler<TEvent>[] handlers;
+            try {
+                handlers = [.. scope.Services.GetServices<IPresenterHandler<TEvent>>()];
+            } catch (Exception e) {
+                logger.LogError(e, "The presenters for {Event} failed to resolve.", typeof(TEvent).Name);
+                return;
+            }
+            // Each scope gets its own envelope, with the services of that presenter scope.
+            var envelope = Envelope.For(integrationEvent, scope.Services, ct);
+            foreach (var handler in handlers) {
+                await HandleAsync(handler, envelope);
+            }
+        } finally {
+            held.Value = outer;
+            if (!reentry) {
+                scope.Gate.Release();
             }
         }
     }
 
-    sealed record Live(Dispatch Dispatch, SemaphoreSlim Gate);
+    async Task HandleAsync<TEvent>(IPresenterHandler<TEvent> handler, Envelope<TEvent> envelope) where TEvent : IntegrationEvent {
+        try {
+            var result = await handler.HandleAsync(envelope);
+            if (result.Error is { } error) {
+                logger.LogError("{Presenter} failed on {Event}: {Error}", handler.GetType().Name, typeof(TEvent).Name, error.Message);
+            }
+        } catch (Exception e) {
+            logger.LogError(e, "{Presenter} failed on {Event}.", handler.GetType().Name, typeof(TEvent).Name);
+        }
+        (handler as Presenter)?.RaiseChanged();
+    }
+
+    sealed record Held(PresenterScope Scope, Held? Outer) {
+        public static bool Contains(Held? held, PresenterScope scope) {
+            for (var h = held; h is not null; h = h.Outer) {
+                if (ReferenceEquals(h.Scope, scope)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 }

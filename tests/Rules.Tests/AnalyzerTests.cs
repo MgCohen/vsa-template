@@ -186,8 +186,9 @@ public sealed class PresenterPublishRuleTests {
 
     [Test]
     public Task Presenter_that_shows_an_event_passes() => Analyzer.Verify(Types + """
-        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests) : Umpire.Vsa.Presenters.Presenter(requests), Umpire.Vsa.Presenters.IPresenterEvent<Done> {
-            public Task OnEventAsync(Done integrationEvent, CancellationToken ct) => Task.CompletedTask;
+        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests) : Umpire.Vsa.Presenters.Presenter(requests), Umpire.Vsa.Presenters.IPresenterHandler<Done> {
+            public Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) =>
+                Task.FromResult<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>>(Umpire.Messages.Contracts.Unit.Value);
         }
         """);
 

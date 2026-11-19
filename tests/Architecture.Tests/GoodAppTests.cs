@@ -61,7 +61,7 @@ public sealed class GoodAppTests {
 
     [Test]
     public void A_member_that_implements_a_framework_interface_exposes_nothing() {
-        Assert.That(ExposuresOf("BellPresenter").Select(e => e.Member), Has.None.Contains("OnEventAsync"));
+        Assert.That(ExposuresOf("BellPresenter").Select(e => e.Member), Has.None.Contains("HandleAsync"));
     }
 
     [Test]

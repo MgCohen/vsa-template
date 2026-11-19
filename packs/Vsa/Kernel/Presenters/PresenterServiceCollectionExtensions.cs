@@ -10,11 +10,12 @@ public static class PresenterServiceCollectionExtensions {
         services.AddSingleton<LivePresenters>();
         services.AddSingleton<IIntegrationEventObserver>(
             provider => provider.GetRequiredService<LivePresenters>());
+        services.AddScoped<PresenterScope>();
         foreach (var presenter in PresentersOf(types)) {
-            if (ShowsEvents(presenter)) {
-                services.AddScoped(presenter, provider => Connected(provider, presenter));
-            } else {
-                services.AddScoped(presenter);
+            services.AddScoped(presenter);
+            // A forward to the presenter registration, so the handler is the presenter of the scope.
+            foreach (var handler in HandlersOf(presenter)) {
+                services.AddScoped(handler, provider => provider.GetRequiredService(presenter));
             }
         }
         return services;
@@ -25,13 +26,8 @@ public static class PresenterServiceCollectionExtensions {
             .SelectMany(LoadedTypes.Of)
             .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } && t.IsSubclassOf(typeof(Presenter)));
 
-    static bool ShowsEvents(Type presenter) =>
+    static IEnumerable<Type> HandlersOf(Type presenter) =>
         presenter.GetInterfaces()
-            .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPresenterEvent<>));
-
-    static Presenter Connected(IServiceProvider provider, Type presenter) {
-        var instance = (Presenter)ActivatorUtilities.CreateInstance(provider, presenter);
-        provider.GetRequiredService<LivePresenters>().Connect(instance, provider.GetService<LivePresenters.Dispatch>());
-        return instance;
-    }
+            .Where(i => i.IsGenericType && !i.ContainsGenericParameters
+                && i.GetGenericTypeDefinition() == typeof(IPresenterHandler<>));
 }

@@ -1,179 +1,204 @@
 namespace Framework.Tests.Presenters;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Presenters;
 
 public sealed class LivePresentersTests {
-    readonly LivePresenters live = new(NullLogger<LivePresenters>.Instance);
-
     [Test]
-    public async Task ALivePresenterGetsItsEventAndRaisesChanged() {
-        var presenter = new CountPresenter();
+    public async Task APresenterOfALiveScopeGetsItsEventAndRaisesChanged() {
+        using var services = Services(Add<CountPresenter, Counted>);
+        using var scope = LiveScope(services);
+        var presenter = scope.ServiceProvider.GetRequiredService<CountPresenter>();
         var changed = 0;
         presenter.Changed += () => changed++;
-        live.Connect(presenter);
 
-        await live.OnPublishedAsync(new Counted(3), CancellationToken.None);
+        await Live(services).OnPublishedAsync(new Counted(3), CancellationToken.None);
 
         Assert.That(presenter.Total, Is.EqualTo(3));
         Assert.That(changed, Is.EqualTo(1));
     }
 
     [Test]
-    public async Task APresenterWithNoInterfaceForTheEventGetsNothing() {
-        var presenter = new CountPresenter();
+    public async Task TheEnvelopeHasTheServicesOfThePresenterScope() {
+        using var services = Services(Add<CountPresenter, Counted>);
+        using var scope = LiveScope(services);
+
+        await Live(services).OnPublishedAsync(new Counted(1), CancellationToken.None);
+
+        Assert.That(scope.ServiceProvider.GetRequiredService<CountPresenter>().Services, Is.SameAs(scope.ServiceProvider));
+    }
+
+    [Test]
+    public async Task APresenterWithNoHandlerForTheEventGetsNothing() {
+        using var services = Services(Add<CountPresenter, Counted>);
+        using var scope = LiveScope(services);
+        var presenter = scope.ServiceProvider.GetRequiredService<CountPresenter>();
         var changed = 0;
         presenter.Changed += () => changed++;
-        live.Connect(presenter);
 
-        await live.OnPublishedAsync(new Other(), CancellationToken.None);
+        await Live(services).OnPublishedAsync(new Other(), CancellationToken.None);
 
         Assert.That(changed, Is.Zero);
     }
 
     [Test]
-    public async Task ADisposedPresenterGetsNothing() {
-        var presenter = new CountPresenter();
-        live.Connect(presenter);
-        presenter.Dispose();
+    public async Task AScopeAfterItsEndGetsNothing() {
+        using var services = Services(Add<CountPresenter, Counted>);
+        var scope = LiveScope(services);
+        var presenter = scope.ServiceProvider.GetRequiredService<CountPresenter>();
+        scope.Dispose();
 
-        await live.OnPublishedAsync(new Counted(3), CancellationToken.None);
+        await Live(services).OnPublishedAsync(new Counted(3), CancellationToken.None);
 
         Assert.That(presenter.Total, Is.Zero);
     }
 
     [Test]
-    public async Task APresenterConnectedTwoTimesGetsEachEventOneTime() {
-        var presenter = new CountPresenter();
-        live.Connect(presenter);
-        live.Connect(presenter);
-
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        presenter.Dispose();
-        presenter.Dispose();
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-
-        Assert.That(presenter.Total, Is.EqualTo(1));
-    }
-
-    [Test]
-    public async Task AnErrorInOnePresenterDoesNotStopTheOthers() {
-        var broken = new BrokenPresenter();
-        var presenter = new CountPresenter();
-        live.Connect(broken);
-        live.Connect(presenter);
-
-        await live.OnPublishedAsync(new Counted(2), CancellationToken.None);
-
-        Assert.That(presenter.Total, Is.EqualTo(2));
-    }
-
-    [Test]
-    public async Task TheEventRunsOnTheDispatcherOfTheView() {
-        var presenter = new CountPresenter();
-        var dispatched = 0;
-        live.Connect(presenter, work => {
-            dispatched++;
-            return work();
+    public async Task AFailedHandlerDoesNotStopTheNextOne() {
+        using var services = Services(s => {
+            Add<BrokenPresenter, Counted>(s);
+            Add<ErrorPresenter, Counted>(s);
+            Add<CountPresenter, Counted>(s);
         });
+        using var scope = LiveScope(services);
 
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
+        await Live(services).OnPublishedAsync(new Counted(2), CancellationToken.None);
 
-        Assert.That(dispatched, Is.EqualTo(1));
+        Assert.That(scope.ServiceProvider.GetRequiredService<CountPresenter>().Total, Is.EqualTo(2));
     }
 
     [Test]
-    public async Task ThePublisherDoesNotWaitForABusyView() {
-        var presenter = new CountPresenter();
-        var view = new TaskCompletionSource();
-        live.Connect(presenter, async work => {
-            await view.Task;
-            await work();
-        });
+    public async Task ThePublishWaitsForTheHandlers() {
+        using var services = Services(Add<SlowPresenter, Counted>);
+        using var scope = LiveScope(services);
+        var presenter = scope.ServiceProvider.GetRequiredService<SlowPresenter>();
 
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        Assert.That(presenter.Total, Is.Zero);
-        view.SetResult();
+        var publish = Live(services).OnPublishedAsync(new Counted(1), CancellationToken.None);
+        Assert.That(publish.IsCompleted, Is.False);
+        presenter.Release();
+        await publish;
 
-        Assert.That(presenter.Total, Is.EqualTo(1));
+        Assert.That(presenter.Handled, Is.EqualTo(1));
     }
 
     [Test]
-    public async Task ACanceledPublisherTokenDoesNotStopTheDelivery() {
-        var presenter = new CountPresenter();
-        live.Connect(presenter);
+    public async Task TheEventsOfOneScopeRunOneAtATime() {
+        using var services = Services(Add<SlowPresenter, Counted>);
+        using var scope = LiveScope(services);
+        var presenter = scope.ServiceProvider.GetRequiredService<SlowPresenter>();
 
-        await live.OnPublishedAsync(new Counted(1), new CancellationToken(canceled: true));
-
-        Assert.That(presenter.Total, Is.EqualTo(1));
-    }
-
-    [Test]
-    public async Task TheEventsOfOnePresenterRunOneAtATime() {
-        var presenter = new SlowPresenter();
-        live.Connect(presenter);
-
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        Assert.That(presenter.Running, Is.EqualTo(1));
+        var first = Task.Run(() => Live(services).OnPublishedAsync(new Counted(1), CancellationToken.None));
+        var second = Task.Run(() => Live(services).OnPublishedAsync(new Counted(1), CancellationToken.None));
+        await presenter.Started.Task;
         presenter.Release();
         presenter.Release();
-        await presenter.Done.Task;
+        await Task.WhenAll(first, second);
 
+        Assert.That(presenter.Handled, Is.EqualTo(2));
         Assert.That(presenter.MostAtOnce, Is.EqualTo(1));
     }
 
     [Test]
-    public async Task ASecondConnectKeepsTheGateOfThePresenter() {
-        var presenter = new SlowPresenter();
-        live.Connect(presenter);
+    public async Task ASecondPublishFromAHandlerInTheSameScopeDoesNotWaitForTheGate() {
+        using var services = Services(s => {
+            Add<EchoPresenter, Counted>(s);
+            Add<OtherPresenter, Other>(s);
+        });
+        using var scope = LiveScope(services);
 
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        live.Connect(presenter);
-        await live.OnPublishedAsync(new Counted(1), CancellationToken.None);
-        presenter.Release();
-        presenter.Release();
-        await presenter.Done.Task;
+        var publish = Live(services).OnPublishedAsync(new Counted(1), CancellationToken.None);
 
-        Assert.That(presenter.MostAtOnce, Is.EqualTo(1));
+        Assert.That(await Task.WhenAny(publish, Task.Delay(TimeSpan.FromSeconds(5))), Is.SameAs(publish));
+        Assert.That(scope.ServiceProvider.GetRequiredService<OtherPresenter>().Seen, Is.EqualTo(1));
     }
+
+    static ServiceProvider Services(Action<IServiceCollection> presenters) {
+        var services = new ServiceCollection();
+        services.AddSingleton<ILogger<LivePresenters>>(NullLogger<LivePresenters>.Instance);
+        services.AddSingleton<LivePresenters>();
+        services.AddScoped<PresenterScope>();
+        presenters(services);
+        return services.BuildServiceProvider();
+    }
+
+    static void Add<TPresenter, TEvent>(IServiceCollection services)
+        where TPresenter : Presenter, IPresenterHandler<TEvent> where TEvent : IntegrationEvent {
+        services.AddScoped<TPresenter>();
+        services.AddScoped<IPresenterHandler<TEvent>>(provider => provider.GetRequiredService<TPresenter>());
+    }
+
+    static IServiceScope LiveScope(IServiceProvider services) {
+        var scope = services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<PresenterScope>();
+        return scope;
+    }
+
+    static LivePresenters Live(IServiceProvider services) => services.GetRequiredService<LivePresenters>();
+
+    static Task<Result<Unit>> Done => Task.FromResult<Result<Unit>>(Unit.Value);
 
     sealed record Counted(int By) : IntegrationEvent;
 
     sealed record Other : IntegrationEvent;
 
-    sealed class CountPresenter() : Presenter(null!), IPresenterEvent<Counted> {
+    sealed class CountPresenter() : Presenter(null!), IPresenterHandler<Counted> {
         public int Total { get; private set; }
+        public IServiceProvider? Services { get; private set; }
 
-        public Task OnEventAsync(Counted integrationEvent, CancellationToken ct) {
-            Total += integrationEvent.By;
-            return Task.CompletedTask;
+        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+            Total += envelope.Message.By;
+            Services = envelope.Services;
+            return Done;
         }
     }
 
-    sealed class SlowPresenter() : Presenter(null!), IPresenterEvent<Counted> {
+    sealed class SlowPresenter() : Presenter(null!), IPresenterHandler<Counted> {
         readonly SemaphoreSlim gate = new(0);
-        int handled;
+        int running;
 
-        public int Running { get; private set; }
+        public int Handled { get; private set; }
         public int MostAtOnce { get; private set; }
-        public TaskCompletionSource Done { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public void Release() => gate.Release();
 
-        public async Task OnEventAsync(Counted integrationEvent, CancellationToken ct) {
-            Running++;
-            MostAtOnce = Math.Max(MostAtOnce, Running);
-            await gate.WaitAsync(ct);
-            Running--;
-            if (++handled == 2) {
-                Done.SetResult();
-            }
+        public async Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+            MostAtOnce = Math.Max(MostAtOnce, Interlocked.Increment(ref running));
+            Started.TrySetResult();
+            await gate.WaitAsync();
+            Interlocked.Decrement(ref running);
+            Handled++;
+            return Unit.Value;
         }
     }
 
-    sealed class BrokenPresenter() : Presenter(null!), IPresenterEvent<Counted> {
-        public Task OnEventAsync(Counted integrationEvent, CancellationToken ct) => throw new InvalidOperationException("broken");
+    sealed class BrokenPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) => throw new InvalidOperationException("broken");
+    }
+
+    sealed class ErrorPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) =>
+            Task.FromResult<Result<Unit>>(new Error("broken", "The presenter failed."));
+    }
+
+    // Stands for a presenter that sends a request, and the request handler publishes an event.
+    sealed class EchoPresenter(LivePresenters live) : Presenter(null!), IPresenterHandler<Counted> {
+        public async Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+            await live.OnPublishedAsync(new Other(), CancellationToken.None);
+            return Unit.Value;
+        }
+    }
+
+    sealed class OtherPresenter() : Presenter(null!), IPresenterHandler<Other> {
+        public int Seen { get; private set; }
+
+        public Task<Result<Unit>> HandleAsync(Envelope<Other> envelope) {
+            Seen++;
+            return Done;
+        }
     }
 }

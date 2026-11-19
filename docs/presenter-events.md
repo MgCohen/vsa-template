@@ -7,7 +7,7 @@ Changes go in two directions:
 | Direction | Path |
 |---|---|
 | Top down | A view calls a presenter method. The presenter sends a request with `IRequestSender` (`Run`), and changes its state from the result. `Run` puts the message of the `Error` of the result on the `OpState` |
-| Bottom up | A handler publishes an event. The presenter gets it (`IPresenterEvent<TEvent>`), changes its state, and raises `Changed` |
+| Bottom up | A handler publishes an event. The presenter gets it (`IPresenterHandler<TEvent>`), changes its state, and raises `Changed` |
 
 The bottom-up path works at the presenter level. It does not need a view: a view only listens to `Changed` and renders.
 
@@ -15,11 +15,11 @@ The bottom-up path works at the presenter level. It does not need a view: a view
 
 ```text
 module handler ──PublishAsync──▶ InProcessEventPublisher
-                                  1. the event pipeline: each IntegrationEventHandler<TEvent>
+                                  1. the event pipeline: each IntegrationEventHandler<TEvent>, in the scope of the publish
                                   2. if the run is Accepted: each IIntegrationEventObserver ──▶ LivePresenters
-                                                                         for each presenter that implements IPresenterEvent<TEvent>:
-                                                                           on the dispatcher of its scope (if any), one event at a time:
-                                                                             OnEventAsync(event), then Changed
+                                       for each live presenter scope, one event at a time:
+                                         resolve IEnumerable<IPresenterHandler<TEvent>>
+                                         for each handler: HandleAsync(envelope), then Changed
 PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 ```
 
@@ -27,35 +27,49 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 
 | Part | Project | Job |
 |---|---|---|
-| `IIntegrationEventObserver` | `Umpire.Vsa.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `Umpire.Vsa.Handlers.Events` needs no reference to `Umpire.Vsa.Presenters` (it also targets `netstandard2.1`). |
-| `IPresenterEvent<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. |
-| `LivePresenters` | `Umpire.Vsa.Presenters` | The presenters that exist now, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. `Connect` adds a presenter. `Dispose` of the presenter removes it. |
-| `AddPresenters` | `Umpire.Vsa.Presenters` | Registers each presenter one time, as scoped. `Presenter` has no `[AutoRegister]`. When the services make a presenter with `IPresenterEvent`, they connect it to `LivePresenters`. The end of the scope disposes the presenter, which removes it. |
-| `LivePresenters.Dispatch` | `Umpire.Vsa.Presenters` | Optional scoped service. The app sets the thread of the events, for example the main thread in Unity. |
-| `PresenterWatcher` | `Umpire.Vsa.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` listens to `Changed` of each presenter and renders. |
+| `IIntegrationEventObserver` | `Umpire.Vsa.Contracts.Events` | Gets each event after its handlers. The publisher calls it, so `Umpire.Vsa.Handlers.Events` needs no reference to `Umpire.Vsa.Presenters`. |
+| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(Envelope<TEvent>)`. It has no `[AutoRegister]`. |
+| `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. |
+| `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. |
+| `LivePresenters` | `Umpire.Vsa.Presenters` | The live presenter scopes, for the whole app. It implements the observer. `AddPresenters` registers it as a singleton. |
+| `AddPresenters` | `Umpire.Vsa.Presenters` | Registers each presenter one time, as scoped. Forwards each `IPresenterHandler<TEvent>` of the presenter to that registration. |
+| `PresenterWatcher` | `Umpire.Vsa.Views` | The base of a component that shows one or more presenters. `Watch(a, b)` resolves `PresenterScope`, listens to `Changed` of each presenter and renders. |
 | `PresenterComponent<T>` | `Umpire.Vsa.Views` | A `PresenterWatcher` for one presenter, given as the `Presenter` parameter. |
+
+## Presenter scopes
+
+A scope gets events only when it is live. These parts resolve `PresenterScope`:
+
+| App | Presenter scope | Resolves `PresenterScope` |
+|---|---|---|
+| Blazor | One for each circuit | The first `PresenterWatcher` of the circuit |
+| Unity | One for each page, or one for the app | The shell or the page that makes the scope, one time |
+| Test | The test scope | The test, with `GetRequiredService<PresenterScope>()` |
 
 ## Rules
 
-- Each presenter that exists gets its events, also when no view shows it. It gets no more events after its scope ends.
-- `LivePresenters` is one for the app. Each presenter of the event type gets the event, in each scope (for example each circuit). In an app with more than one user, the presenter must ignore the events that are not for its user.
-- The events of one presenter run one at a time. With a `LivePresenters.Dispatch` service in the scope, they run on that dispatcher.
+- Each presenter of a live scope gets its events, also when no view shows it. A scope gets no more events after its end.
+- The delivery resolves the handlers in the live scope. If a presenter does not exist yet in that scope, the resolve makes it.
+- A presenter constructor does not send requests. A resolve during a publish then cannot start a second publish.
+- `LivePresenters` is one for the app. Each presenter of the event type gets the event, in each live scope (for example each circuit). In an app with more than one user, the presenter must ignore the events that are not for its user.
+- The delivery runs on the thread of the publish, and the publish waits for it. The presenters of one scope get one event at a time. The handlers have no order.
+- If a handler throws or returns an error, the log gets the error, and the next handler runs.
+- Each scope gets its own envelope. `Envelope.Services` is the provider of the presenter scope, and `Envelope.Cancellation` is the token of the publish.
 - A view renders on its own thread: `PresenterWatcher` calls `InvokeAsync(StateHasChanged)`.
-- The publisher does not wait for the presenters, and the token of the publisher does not go to the presenters. An error in one presenter goes to the log.
-- The observer runs after the handlers, in the scope of the publisher. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
-- A presenter that sends a request can get the event of that request before the response. Make `OnEventAsync` safe for a change that the presenter has already applied, for example replace by ID.
+- The observer runs after the handlers. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
+- A presenter that sends a request can get the event of that request before the response. Make `HandleAsync` safe for a change that the presenter has already applied, for example replace by ID.
 - A presenter does not publish events, and does not use `IIntegrationEventObserver` or `LivePresenters` (`UMP010204`). To change state, it sends a request with `IRequestSender`, and the request handler publishes the event.
 - A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP020101`).
 
 ## Example
 
 ```csharp
-public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IPresenterEvent<Rang> {
+public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IPresenterHandler<Rang> {
     public string? Last { get; private set; }
 
-    public Task OnEventAsync(Rang integrationEvent, CancellationToken ct) {
-        Last = integrationEvent.Bell;
-        return Task.CompletedTask;
+    public Task<Result<Unit>> HandleAsync(Envelope<Rang> envelope) {
+        Last = envelope.Message.Bell;
+        return Task.FromResult<Result<Unit>>(Unit.Value);
     }
 }
 ```

@@ -129,8 +129,8 @@ public sealed class BadAppTests {
             .And.Contain($") in {member} with Public access"));
     }
 
-    [TestCase("OnEventAsync")]
-    [TestCase("IPresenterEvent")]
+    [TestCase("HandleAsync")]
+    [TestCase("IPresenterHandler")]
     [TestCase("in Last ")]
     public void A_framework_interface_in_the_header_and_its_members_and_an_internal_member_give_no_UMP020102(string text) {
         Assert.That(ExposureFailures, Does.Not.Contain(text));
