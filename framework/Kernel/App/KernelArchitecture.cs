@@ -2,7 +2,7 @@ namespace Umpire.Kernels;
 
 using Umpire.Architecture;
 
-public sealed class KernelArchitecture : Architecture {
+sealed class KernelArchitecture : Architecture {
     protected override void Configure(Options defaults) {
         defaults.DefaultPermission = Permission.Allow;
     }

@@ -2,7 +2,7 @@ namespace Umpire.Kernels;
 
 using Umpire.Architecture;
 
-public static class ApiParts {
+static class ApiParts {
     public sealed record Concepts : Concept;
 
     public sealed record Markers : Concept;

@@ -1,3 +1,4 @@
+using BuiltApp.Domain.Shared;
 using Changes.Infrastructure;
 using Tests.Shared;
 
@@ -47,6 +48,45 @@ public sealed class BlockStampTests {
             TempFolder.Delete(root);
         }
     }
+
+    [Test]
+    public void A_change_in_the_dll_of_the_definition_or_a_shared_dll_changes_the_block_hash() {
+        var root = TempFolder.Create();
+        try {
+            var block = Directory.CreateDirectory(Path.Combine(root, "Block")).FullName;
+            var own = new BinDll(Dll(root, "Block", "own"), "Probe", false, [], [Path.Combine(block, "Own.cs")], [], [], true);
+            var definition = Named(Dll(root, "Kernel", "v1"), "Definitions", isShared: false);
+            var shared = Named(Dll(root, "Shared", "v1"), "Api", isShared: true);
+            var entry = new BlockEntry(block, EntryForm.Metadata, new TypeName("Definitions.Probe", "Definitions"), block);
+            var dlls = BlockDlls.Of(entry, new BinIndex(root, [own, definition, shared], [entry]));
+            var before = BlockHash.Inputs(block, Definition, dlls, "run");
+
+            File.WriteAllText(definition.Path, "v2");
+            var afterDefinition = BlockHash.Inputs(block, Definition, dlls, "run");
+            File.WriteAllText(shared.Path, "v2");
+            var afterShared = BlockHash.Inputs(block, Definition, dlls, "run");
+
+            Assert.That(dlls, Is.EquivalentTo(new[] { own.Path, definition.Path, shared.Path }));
+            Assert.That(new[] { before, afterDefinition, afterShared }, Is.Unique);
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    [Test]
+    public void A_stamp_that_cannot_be_read_is_no_stamp() {
+        var root = TempFolder.Create();
+        try {
+            var file = BlockStamp.Write(BlockStamp.In(root, "view"), "hash");
+            using var locked = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            Assert.That(BlockStamp.Read(file), OperatingSystem.IsWindows() ? Is.Null : Is.EqualTo("hash"));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
+    static BinDll Named(string path, string name, bool isShared) => new(path, name, isShared, [], [], [], [], true);
 
     static string Dll(string root, string folder, string content) {
         var file = Path.Combine(Directory.CreateDirectory(Path.Combine(root, folder)).FullName, "Probe.dll");

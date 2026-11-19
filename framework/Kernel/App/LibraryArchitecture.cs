@@ -3,7 +3,7 @@ namespace Umpire.Kernels;
 using Umpire.Architecture;
 using Root = Umpire.Architecture.Blocks.Library;
 
-public sealed class LibraryArchitecture : Architecture {
+sealed class LibraryArchitecture : Architecture {
     protected override void Configure(Options defaults) {
         defaults.DefaultPermission = Permission.Allow;
     }

@@ -2,7 +2,7 @@ namespace Umpire.Kernels;
 
 using Umpire.Architecture;
 
-public sealed class MessagesArchitecture : Architecture {
+sealed class MessagesArchitecture : Architecture {
     protected override void Configure(Options defaults) {
         defaults.DefaultPermission = Permission.Allow;
     }
