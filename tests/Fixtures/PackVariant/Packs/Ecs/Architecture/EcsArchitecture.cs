@@ -1,6 +1,6 @@
 namespace PackVariant.Packs.Ecs.Architecture;
 
-using PackVariant.Packs.Ecs.Kernel;
+using PackVariant.Packs.Ecs.Kernel.Domain;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;

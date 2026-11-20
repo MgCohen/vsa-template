@@ -19,7 +19,17 @@ public sealed class AppLoader : AssemblyLoadContext {
         resolver = main is null ? null : new AssemblyDependencyResolver(main);
     }
 
-    public Architecture CreateArchitecture(TypeName name) => (Architecture)Create(name);
+    public bool TakesPacked(TypeName name) => PackedConstructor(TypeOf(name)) is not null;
+
+    public Architecture CreateArchitecture(TypeName name, TypeName? packed = null) {
+        var type = TypeOf(name);
+        if (packed is null) {
+            return (Architecture)Activator.CreateInstance(type)!;
+        }
+        var withPacked = PackedConstructor(type)
+            ?? throw new InvalidOperationException($"{type.FullName} has no public constructor with one {nameof(Architecture)} parameter.");
+        return (Architecture)withPacked.Invoke([CreateArchitecture(packed)]);
+    }
 
     public Architecture ArchitectureOfApp(TypeName appClass, string dll) {
         var app = Activator.CreateInstance(LoadFromAssemblyPath(dll).GetType(appClass.FullName, throwOnError: true)!)!;
@@ -47,8 +57,8 @@ public sealed class AppLoader : AssemblyLoadContext {
         return names;
     }
 
-    object Create(TypeName name) {
-        var type = LoadFromAssemblyName(new AssemblyName(name.Assembly)).GetType(name.FullName, throwOnError: true)!;
-        return Activator.CreateInstance(type)!;
-    }
+    static ConstructorInfo? PackedConstructor(Type type) => type.GetConstructor([typeof(Architecture)]);
+
+    Type TypeOf(TypeName name) =>
+        LoadFromAssemblyName(new AssemblyName(name.Assembly)).GetType(name.FullName, throwOnError: true)!;
 }

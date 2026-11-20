@@ -1,3 +1,3 @@
-namespace Blocks.Packs.Alpha.Kernel;
+namespace Blocks.Packs.Alpha.Kernel.Domain;
 
 public sealed record AlphaNote(string Text);

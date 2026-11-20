@@ -111,7 +111,8 @@ public sealed class BinReader : IDisposable {
         var file = Path.GetFullPath(source.File);
         try {
             return Base(type, BlockBase) is { } block
-                ? new BlockEntry(Path.GetDirectoryName(file)!, EntryForm.Base, Name(block.GetGenericArguments()[0]), file)
+                ? new BlockEntry(Path.GetDirectoryName(file)!, EntryForm.Base, Name(block.GetGenericArguments()[0]), file,
+                    Packed: Packed(type, block))
                 : null;
         } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
             return null;
@@ -147,6 +148,18 @@ public sealed class BinReader : IDisposable {
         } catch (ReflectionTypeLoadException e) {
             return e.Types.OfType<Type>();
         }
+    }
+
+    static TypeName? Packed(Type type, Type block) {
+        for (var b = type.BaseType; b is not null && b != block; b = b.BaseType) {
+            var packed = b.IsGenericType
+                ? b.GetGenericArguments().FirstOrDefault(a => !a.IsGenericParameter && Base(a, ArchitectureBase) is not null)
+                : null;
+            if (packed is not null) {
+                return Name(packed);
+            }
+        }
+        return null;
     }
 
     static Type? Base(Type type, string name) {

@@ -25,21 +25,27 @@ public class VsaArchitecture : Architecture {
         DefineFeature(block.AddGroup<Feature>());
     }
 
-    protected virtual void DefineKernel(Part kernel) {
-        kernel.Add<Domain>().InAssembly("Umpire.Vsa.Domain");
-        kernel.Add<Infrastructure>().InAssembly("Umpire.Vsa.Infrastructure");
-        kernel.Add<Presenters>().InAssembly("Umpire.Vsa.Presenters");
-        var contracts = kernel.Add<Contracts>().InAssembly("Umpire.Messages.Contracts");
-        contracts.Add<Contracts.Requests>().InAssembly("Umpire.Vsa.Contracts.Requests");
-        contracts.Add<Contracts.Events>().InAssembly("Umpire.Vsa.Contracts.Events");
-        contracts.Add<Contracts.Commands>().InAssembly("Umpire.Vsa.Contracts.Commands");
-        var handlers = kernel.Add<Handlers>().InAssembly("Umpire.Messages.Handlers");
-        handlers.Add<Handlers.Requests>().InAssembly("Umpire.Vsa.Handlers.Requests");
-        handlers.Add<Handlers.Events>().InAssembly("Umpire.Vsa.Handlers.Events");
-        handlers.Add<Handlers.Commands>().InAssembly("Umpire.Vsa.Handlers.Commands");
-        kernel.Add<Views>().InAssembly("Umpire.Vsa.Views");
-        kernel.Add<Composition>().InAssembly("Umpire.Vsa.Composition");
-        kernel.Add<Host>().InAssembly("Umpire.Hosts");
+    protected override void DefineKernel(Part kernel) {
+        Bind(kernel.Add<Domain>(), "Umpire.Vsa.Domain");
+        Bind(kernel.Add<Infrastructure>(), "Umpire.Vsa.Infrastructure");
+        Bind(kernel.Add<Presenters>(), "Umpire.Vsa.Presenters");
+        var contracts = Bind(kernel.Add<Contracts>(), "Umpire.Messages.Contracts");
+        Bind(contracts.Add<Contracts.Requests>(), "Umpire.Vsa.Contracts.Requests");
+        Bind(contracts.Add<Contracts.Events>(), "Umpire.Vsa.Contracts.Events");
+        Bind(contracts.Add<Contracts.Commands>(), "Umpire.Vsa.Contracts.Commands");
+        var handlers = Bind(kernel.Add<Handlers>(), "Umpire.Messages.Handlers");
+        Bind(handlers.Add<Handlers.Requests>(), "Umpire.Vsa.Handlers.Requests");
+        Bind(handlers.Add<Handlers.Events>(), "Umpire.Vsa.Handlers.Events");
+        Bind(handlers.Add<Handlers.Commands>(), "Umpire.Vsa.Handlers.Commands");
+        Bind(kernel.Add<Views>(), "Umpire.Vsa.Views");
+        Bind(kernel.Add<Composition>(), "Umpire.Vsa.Composition");
+        if (kernel.IsExternal) {
+            kernel.Add<Host>().InAssembly("Umpire.Hosts");
+        }
+    }
+
+    protected override void KernelRules(RuleBook rules) {
+        AndOtherKernelLayers(AndOtherKernelLayers(rules.For<Domain>()).Uses<Domain>());
     }
 
     protected virtual void DefinePlugin(PartGroup plugin) {
@@ -103,6 +109,14 @@ public class VsaArchitecture : Architecture {
         rules.For<Feature>().Has<Module>().Exactly(1);
         rules.For<Plugin>().Has<Module>().Exactly(1);
     }
+
+    static TChain AndOtherKernelLayers<TChain>(TChain domain) where TChain : Chain<TChain> =>
+        domain.And<Infrastructure>().And<Presenters>().And<Contracts>().And<Contracts.Requests>()
+            .And<Contracts.Events>().And<Contracts.Commands>().And<Handlers>().And<Handlers.Requests>().And<Handlers.Events>()
+            .And<Handlers.Commands>().And<Views>().And<Composition>();
+
+    static Part Bind(Part part, string assembly) => part.IsExternal ? part.InAssembly(assembly) : part;
+
     protected static PartGroup AddContractParts(IPartChain parent) =>
         parent.Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
 

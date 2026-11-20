@@ -50,6 +50,27 @@ public sealed class BlocksTests {
         Assert.That(EntriesIn(Path.Combine(app, "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Base }));
     }
 
+    [TestCase("packs/Vsa", "Umpire.Vsa.Definition.VsaArchitecture")]
+    [TestCase("tests/Fixtures/PackVariant/Packs/Ecs", "PackVariant.Packs.Ecs.Architecture.EcsArchitecture")]
+    public void A_pack_entry_names_the_architecture_of_the_pack(string folder, string architecture) {
+        var packed = Entries.Where(e => Same(e.Folder, Repo.Path(folder.Split('/'))) && e.Packed is not null)
+            .Select(e => e.Packed!.FullName).Distinct();
+
+        Assert.That(packed, Is.EqualTo(new[] { architecture }));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void The_entry_that_names_the_pack_architecture_is_the_current_block(bool packedFirst) {
+        var plain = Entry("C:/a", EntryForm.Base);
+        var packed = plain with { Packed = TypeName.Parse(VsaArchitecture) };
+        BlockEntry[] entries = packedFirst ? [packed, plain] : [plain, packed];
+
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), entries, NoBin);
+
+        Assert.That(result.Value.Blocks.Current.Packed, Is.EqualTo(TypeName.Parse(VsaArchitecture)));
+    }
+
     [Test]
     public void Assembly_metadata_with_Umpire_Root_is_the_check_entry_of_the_folder_above_the_project() {
         var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "Lib")));

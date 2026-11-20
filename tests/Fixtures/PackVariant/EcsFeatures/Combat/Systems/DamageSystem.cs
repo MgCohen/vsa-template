@@ -1,7 +1,7 @@
 namespace PackVariant.EcsFeatures.Combat.Systems;
 
 using PackVariant.EcsFeatures.Combat.Components;
-using PackVariant.Packs.Ecs.Kernel;
+using PackVariant.Packs.Ecs.Kernel.Domain;
 
 public sealed class DamageSystem : EcsSystem {
     public Health Current { get; private set; } = new(100);
