@@ -197,11 +197,17 @@ public sealed class OneLineBuildTests {
         Assert.That(references.Output, Does.Not.Contain("Umpire.Engine"), references.Output);
     }
 
-    [TestCase("OneLine.csproj", "Umpire.Vsa")]
-    [TestCase("Tests/OneLine.Tests.csproj", "Umpire.Vsa.Testing.Unit")]
-    public void The_default_pack_can_be_left_out(string project, string package) {
-        var references = Evaluate(project, "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
-        Assert.That(references.Output, Does.Not.Contain($"\"{package}\""), references.Output);
+    [Test]
+    public void The_web_root_project_gets_the_runtime_and_the_web_bundles() {
+        var references = Evaluate("OneLine.csproj", "-getItem:PackageReference");
+        Assert.That(references.Output, Does.Contain("\"Umpire\"").And.Contain("\"Umpire.Web\"").And.Not.Contain("\"Umpire.Vsa"),
+            references.Output);
+    }
+
+    [Test]
+    public void The_test_bases_of_the_default_pack_can_be_left_out() {
+        var references = Evaluate("Tests/OneLine.Tests.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
+        Assert.That(references.Output, Does.Not.Contain("\"Umpire.Testing\""), references.Output);
     }
 
     DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "--project", workspace.Src,

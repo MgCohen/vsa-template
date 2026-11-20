@@ -4,9 +4,15 @@ namespace Umpire.Architecture;
 public abstract class Architecture {
     public virtual IReadOnlyList<FolderAlias> FolderAliases(string blockFolder) => [];
 
-    protected internal virtual void Configure(Options defaults) { }
+    protected virtual void Configure(Options defaults) { }
 
-    protected internal abstract void Define(Block block);
+    protected abstract void Define(Block block);
 
-    protected internal virtual void Rules(RuleBook rules) { }
+    protected virtual void Rules(RuleBook rules) { }
+
+    internal void ConfigureDefaults(Options defaults) => Configure(defaults);
+
+    internal void DefineBlock(Block block) => Define(block);
+
+    internal void AddRules(RuleBook rules) => Rules(rules);
 }

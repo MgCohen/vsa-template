@@ -2,6 +2,7 @@ namespace Framework.Tests.Unity;
 
 public static class PortableProjects {
     public static readonly string[] Names = [
+        "Umpire",
         "Umpire.Architecture",
         "Umpire.Config",
         "Umpire.Kernels",

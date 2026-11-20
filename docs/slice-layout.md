@@ -80,18 +80,13 @@ tests/Fixtures/Notes/
 | `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
 | Framework references | Each project gets the base of each layer |
 
-A web root project uses Umpire.Sdk.Web, with the version:
+A web root project uses Umpire.Sdk.Web, with the version. The SDK adds the web host and the views (`Umpire.Web`):
 
 ```xml
-<Project Sdk="Umpire.Sdk.Web/0.2.0">
-  <ItemGroup>
-    <PackageReference Include="Umpire.Hosts.Web" />
-    <PackageReference Include="Umpire.Vsa.Views" />
-  </ItemGroup>
-</Project>
+<Project Sdk="Umpire.Sdk.Web/0.2.0" />
 ```
 
-A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Hosts.Web`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030401`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Console`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030401`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Modules/`) has its own project in the module folder. It then references the other modules that it uses.
 

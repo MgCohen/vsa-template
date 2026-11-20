@@ -205,9 +205,9 @@ public sealed class PresenterPublishRuleTests {
             Analyzer.Diagnostic(new PresenterPublishRule().Rule, 1, "DonePresenter", "IIntegrationEventPublisher"));
 
     [Test]
-    public Task Presenter_with_the_live_presenters_fails() => Analyzer.Verify(Types + """
-        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests, Umpire.Vsa.Presenters.LivePresenters {|#0:views|}) : Umpire.Vsa.Presenters.Presenter(requests);
-        """, Analyzer.Diagnostic(new PresenterPublishRule().Rule, 0, "DonePresenter", "LivePresenters"));
+    public Task Presenter_with_the_pipelines_fails() => Analyzer.Verify(Types + """
+        sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests, Umpire.Messages.Handlers.Pipelines {|#0:bus|}) : Umpire.Vsa.Presenters.Presenter(requests);
+        """, Analyzer.Diagnostic(new PresenterPublishRule().Rule, 0, "DonePresenter", "Pipelines"));
 
     [Test]
     public Task Other_class_that_publishes_passes() => Analyzer.Verify(Types + """

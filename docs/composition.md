@@ -185,7 +185,7 @@ A module defines its requests, commands, events, handlers and presenters one tim
 | Kind | Part | `AppHost` | `ConsoleHost` | `WebHost` |
 |---|---|---|---|---|
 | Definition | Messages, in-process senders | Yes | Yes | Yes |
-| Definition | Presenters, `PresenterScope`, `LivePresenters` | Yes | Yes | Yes |
+| Definition | Presenters, `PresenterScope`, `LiveScopes` | Yes | Yes | Yes |
 | Transport | Command line: one request | No | Yes | No |
 | Transport | HTTP API: one route for each request | No | No | Yes |
 | Transport | Views (`ViewsRoot`): Razor components | No | No | Yes |
@@ -280,11 +280,11 @@ The markers are in `Umpire.Markers`. The same package has the stripping markers 
 |---|---|---|---|
 | `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, `Module`, `App`, `Pack`, `AppHost` |
 | `[RequireImplementors]` | Interface | Each implementor | `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
-| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method of the pipeline |
+| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method and the typed handler call of the pipeline |
 
 The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernels uses the markers assembly in code.
 
-The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>` and the four hook bases. A class that derives from one of them needs no marker.
+The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, the four hook bases and `Presenter`. A class that derives from one of them needs no marker.
 
 ```csharp
 [TypeArgument]
@@ -314,7 +314,7 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 | Parameters | One generic parameter. An open class with two or more parameters stops the start, with a message. |
 | No marker | VSA does not close or register the class. |
 | No type argument fits | The open class gets no closed type. A send of that command fails with "has no handler". |
-| Owner | A layer registration can register a class first, for example a presenter with a factory. The core step does not replace it. |
+| Owner | A layer registration can register a class first. The core step does not replace it. |
 
 `AppTypes` is a singleton service. `Implementations(typeof(TBase))` gives a `ServiceImplementation(Service, Implementation)` for each registered type that derives from `TBase`, with that base as the service. A plugin reads its own types with it.
 
@@ -331,10 +331,9 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `ModuleRoot.Create` (Kernel) | `Activator.CreateInstance` | Creates the module class. A class with no public constructor with no parameters stops the start, with a message |
 | `AppTypes`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class for each type argument |
 | `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[TypeArgument]` by name |
-| `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope of the runtime message type |
+| `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope and the typed handler call of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
-| `PresenterServiceCollectionExtensions` (Presenters) | `GetInterfaces` | Registers each presenter one time, and forwards each `IPresenterHandler<TEvent>` of the presenter to it |
 | `Views` (Hosts.Web) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
 | `RequestOperations` (Composition) | `MakeGenericMethod` | Reads the static `Group`, `Name` and `Effect` of each request, and makes its `Operation` |
 | `CommandLine` (Hosts.Console) | `GetConstructors`, `Invoke` | Binds the command-line values to the constructor of the request |

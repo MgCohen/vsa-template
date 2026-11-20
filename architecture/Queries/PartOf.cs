@@ -31,7 +31,7 @@ sealed class PartOf {
         if (LoadedTypes.IsCompilerGenerated(type.Name)) {
             return;
         }
-        if (resolved.ExternalPart(type.Assembly) is { } external) {
+        if (resolved.ExternalPart(type.Assembly, type.FullName) is { } external) {
             bound.Add(new Binding(type, external, new Dictionary<string, string>(), null));
             return;
         }

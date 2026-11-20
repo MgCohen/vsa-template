@@ -41,7 +41,7 @@ The reasons for the limits:
 
 ## Vendored DLLs
 
-Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `vendor.cs` writes them: it publishes a `netstandard2.1` project with the VSA packages, then copies the DLLs to `Assets/Plugins/VSA`.
+Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `vendor.cs` writes them: it publishes a `netstandard2.1` project with the package `Umpire`, then copies the DLLs to `Assets/Plugins/VSA`. The Umpire part is one `Umpire.dll`; the other DLLs are its third-party dependencies.
 
 ## Unity app build
 
@@ -79,6 +79,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
 | Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
+| All the parts above, in one DLL | `Umpire` (`tools/bundle/`) | Yes. Unity vendors this DLL, not the projects above |
 | Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
 ## Rules for the netstandard2.1 target

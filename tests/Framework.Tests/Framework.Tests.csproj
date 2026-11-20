@@ -19,6 +19,8 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Battle/Battle.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Gauges/Gauges.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cached/Cached.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>

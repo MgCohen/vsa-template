@@ -16,7 +16,6 @@ public sealed class PresenterPublishRule : ForbiddenUseRule {
 
     protected override IEnumerable<INamedTypeSymbol?> ForbiddenTypes(Compilation compilation) => [
         compilation.GetTypeByMetadataName("Umpire.Vsa.Contracts.Events.IIntegrationEventPublisher"),
-        compilation.GetTypeByMetadataName("Umpire.Vsa.Contracts.Events.IIntegrationEventObserver"),
-        compilation.GetTypeByMetadataName("Umpire.Vsa.Presenters.LivePresenters"),
+        compilation.GetTypeByMetadataName("Umpire.Messages.Handlers.Pipelines"),
     ];
 }

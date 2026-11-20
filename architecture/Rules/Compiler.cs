@@ -6,9 +6,9 @@ internal sealed class Compiler {
     readonly Dictionary<Part, Options> partOptions = [];
 
     internal Compiler(Architecture architecture) {
-        Options = Options.From(architecture.Configure).Over(Options.BuiltIn);
+        Options = Options.From(architecture.ConfigureDefaults).Over(Options.BuiltIn);
         Block = new Block();
-        architecture.Define(Block);
+        architecture.DefineBlock(Block);
         Parts = [.. Block.Walk().Skip(1)];
         CheckShared();
         foreach (var part in Parts) {
@@ -16,9 +16,9 @@ internal sealed class Compiler {
         }
         book = new RuleBook(Block);
         foreach (var concept in Parts.Select(p => p.Concept!).GroupBy(c => c.GetType()).Select(g => g.First())) {
-            concept.Rules(book.Of(concept.GetType()));
+            concept.AddRules(book.Of(concept.GetType()));
         }
-        architecture.Rules(book);
+        architecture.AddRules(book);
         UseRules = CompileUseRules();
         Counts = [.. book.Counts.Select(Of), .. Required()];
         Matches = [.. book.Matches.Select(Of)];

@@ -42,8 +42,8 @@ public sealed class PackageGraphTests {
         }));
 
     [Test]
-    public void The_pack_package_brings_its_analyzers() {
-        var dependencies = Nuspec("Umpire.Vsa").Descendants().Where(e => e.Name.LocalName == "dependency")
+    public void The_runtime_package_brings_the_pack_analyzers() {
+        var dependencies = Nuspec("Umpire").Descendants().Where(e => e.Name.LocalName == "dependency")
             .Where(e => (string?)e.Attribute("id") == "Umpire.Vsa.Analyzers").ToList();
         Assert.That(dependencies, Is.Not.Empty);
         Assert.That(dependencies.Select(e => (string?)e.Attribute("exclude") ?? ""),

@@ -51,7 +51,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
 
-    protected virtual string? PackAssembly => null;
+    protected virtual string? PackNamespace => null;
 
     public sealed override void Initialize(AnalysisContext context) {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -77,7 +77,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
             return;
         }
         var architecture = config.Value(PackSelection.ArchitectureKey);
-        if (PackAssembly is { } pack && !PackSelection.Selects(start.Compilation, architecture, pack)) {
+        if (PackNamespace is { } pack && !PackSelection.Selects(start.Compilation, architecture, pack)) {
             return;
         }
         var global = start.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
@@ -109,7 +109,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     }
 
     Diagnostic? Broken(DiagnosticDescriptor descriptor, string message) =>
-        PackAssembly is null ? Diagnostic.Create(descriptor, Location.None, message) : null;
+        PackNamespace is null ? Diagnostic.Create(descriptor, Location.None, message) : null;
 
     static bool IsTomlError(Exception e) {
         for (var type = e.GetType(); type is not null; type = type.BaseType) {

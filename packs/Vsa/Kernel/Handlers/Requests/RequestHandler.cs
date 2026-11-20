@@ -13,6 +13,6 @@ public abstract class RequestHandler<TRequest, TResponse> : IHandler<TRequest>
     where TResponse : IResponse {
     public abstract Task<Result<TResponse>> HandleAsync(Envelope<TRequest> envelope);
 
-    async Task<IMessageResult> IHandler.HandleAsync(Envelope envelope) =>
-        await HandleAsync((Envelope<TRequest>)envelope);
+    async Task<IMessageResult> IHandler<TRequest>.RunAsync(Envelope<TRequest> envelope) =>
+        await HandleAsync(envelope);
 }
