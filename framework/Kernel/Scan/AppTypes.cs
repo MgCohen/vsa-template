@@ -46,6 +46,17 @@ public sealed class AppTypes {
             .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
             .OfType<ServiceImplementation>()];
 
+    public IReadOnlyList<ServiceImplementation> OpenImplementations(Type baseType) =>
+        [.. Loaded()
+            .Where(type => type.IsGenericTypeDefinition && MarkedTypes.IsAutoRegistered(type))
+            .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
+            .OfType<ServiceImplementation>()];
+
+    public static Type? Closed(Type definition, Type argument) =>
+        ConstraintTypeArguments.For(ParameterOf(definition), [argument]).Any()
+            ? definition.MakeGenericType(argument)
+            : null;
+
     internal IReadOnlyList<Type> TypeArguments() => typeArguments ??= [.. Loaded()
         .Where(MarkedTypes.IsTypeArgument)
         .Concat(Assemblies().SelectMany(MarkedTypes.TypeArgumentsOf))
@@ -58,17 +69,19 @@ public sealed class AppTypes {
         return ClosedBase.Of(type, baseType) ?? ClosedBase.InterfaceOf(type, baseType);
     }
 
-    IEnumerable<Type> Close(Type definition) {
+    static Type ParameterOf(Type definition) {
         var parameters = definition.GetGenericArguments();
-        if (parameters.Length != 1) {
-            throw new InvalidOperationException(
+        return parameters.Length == 1
+            ? parameters[0]
+            : throw new InvalidOperationException(
                 $"{definition.FullName} has {parameters.Length} generic parameters. "
                 + "Umpire closes an open module type with one generic parameter only. "
                 + "Write one closed type for each type argument.");
-        }
-        return ConstraintTypeArguments.For(parameters[0], TypeArguments())
-            .Select(argument => definition.MakeGenericType(argument));
     }
+
+    IEnumerable<Type> Close(Type definition) =>
+        ConstraintTypeArguments.For(ParameterOf(definition), TypeArguments())
+            .Select(argument => definition.MakeGenericType(argument));
 
     IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Assemblies()
         .Append(appAssembly)

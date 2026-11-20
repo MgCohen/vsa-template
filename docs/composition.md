@@ -120,7 +120,7 @@ Code inside the app uses the same call in all hosts:
 
 ```csharp
 sealed class QuitHandler(AppStop stop) : CommandHandler<QuitCommand, Done> {
-    public override Task<Result<Done>> HandleAsync(Envelope<QuitCommand> envelope) {
+    public override Task<Result<Done>> HandleAsync(IEnvelope<QuitCommand> envelope) {
         stop.Request(envelope.Message.ExitCode);
         return Task.FromResult<Result<Done>>(new Done());
     }

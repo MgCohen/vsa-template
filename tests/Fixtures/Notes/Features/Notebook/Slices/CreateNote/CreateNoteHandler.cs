@@ -12,7 +12,7 @@ sealed class CreateNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEven
     static readonly Error TitleTooLong =
         new("notes.title_too_long", $"A title must have {Note.MaxTitleLength} characters or fewer.");
 
-    public override async Task<Result<CreateNoteResponse>> HandleAsync(Envelope<CreateNoteRequest> envelope) {
+    public override async Task<Result<CreateNoteResponse>> HandleAsync(IEnvelope<CreateNoteRequest> envelope) {
         var title = envelope.Message.Title;
         if (!Note.IsValidTitle(title)) {
             return string.IsNullOrWhiteSpace(title) ? TitleRequired : TitleTooLong;

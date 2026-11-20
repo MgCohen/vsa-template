@@ -20,6 +20,6 @@ public sealed class OneAssemblyModuleTests {
     public sealed record OneAssemblyCommand : ICommand<int>;
 
     public sealed class OneAssemblyHandler : CommandHandler<OneAssemblyCommand, int> {
-        public override Task<Result<int>> HandleAsync(Envelope<OneAssemblyCommand> envelope) => Task.FromResult<Result<int>>(1);
+        public override Task<Result<int>> HandleAsync(IEnvelope<OneAssemblyCommand> envelope) => Task.FromResult<Result<int>>(1);
     }
 }

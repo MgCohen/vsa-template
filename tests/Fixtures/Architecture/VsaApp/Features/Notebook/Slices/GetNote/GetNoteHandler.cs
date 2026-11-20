@@ -5,7 +5,7 @@ using Umpire.Vsa.Handlers.Requests;
 using VsaApp.Features.Notebook.Slices.Shared;
 
 sealed class GetNoteHandler(IEnumerable<TitleCheck> checks) : RequestHandler<GetNoteRequest, GetNoteResponse> {
-    public override Task<Result<GetNoteResponse>> HandleAsync(Envelope<GetNoteRequest> envelope) {
+    public override Task<Result<GetNoteResponse>> HandleAsync(IEnvelope<GetNoteRequest> envelope) {
         var title = new NoteTitle(envelope.Message.Title);
         return Task.FromResult<Result<GetNoteResponse>>(checks.All(check => check.Passes(title))
             ? new GetNoteResponse(title)

@@ -42,9 +42,7 @@ public sealed class Pipelines {
     }
 
     static Pipeline? MostSpecific(List<Pipeline> pipelines) =>
-        pipelines.LastOrDefault(p => !pipelines.Exists(o => IsNarrower(o.Definition.Message, p.Definition.Message)));
-
-    static bool IsNarrower(Type message, Type than) => message != than && than.IsAssignableFrom(message);
+        MessageTypes.Narrowest(pipelines, p => p.Definition.Message).LastOrDefault();
 
     Pipeline For(Type handlerBase, Type message) {
         var candidates = definitions
@@ -63,7 +61,7 @@ public sealed class Pipelines {
             .Where(d => typeof(IBroadcastMessage).IsAssignableFrom(d.Message) && d.Message.IsAssignableFrom(message))
             .ToList();
         return [.. candidates
-            .Where(d => !candidates.Exists(o => o.SharesHandlers(d) && IsNarrower(o.Message, d.Message)))
+            .Where(d => !candidates.Exists(o => o.SharesHandlers(d) && MessageTypes.IsNarrower(o.Message, d.Message)))
             .OrderBy(d => candidates.FindIndex(o => o.SharesHandlers(d)))
             .Select(Instance)];
     }

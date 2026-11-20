@@ -5,6 +5,6 @@ using Umpire.Vsa.Handlers.Requests;
 using VsaApp.Features.Notebook.Slices.Ping;
 
 sealed class PongHandler : RequestHandler<PingRequest, PingResponse> {
-    public override Task<Result<PingResponse>> HandleAsync(Envelope<PingRequest> envelope) =>
+    public override Task<Result<PingResponse>> HandleAsync(IEnvelope<PingRequest> envelope) =>
         Task.FromResult<Result<PingResponse>>(new PingResponse());
 }
