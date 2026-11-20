@@ -95,10 +95,10 @@ The root project gets its packages from two places:
 
 | Package | From | Contains |
 |---|---|---|
-| `Umpire.Kernels`, `Umpire.Markers` | Umpire.Sdk | The app start, the markers |
-| `Umpire.Vsa` | Umpire.Sdk, the default pack | The VSA pack and the base of each layer |
-| `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
-| `Umpire.Hosts.Web`, `Umpire.Vsa.Views` | `Hello.csproj` | The web host and the presenter views |
+| `Umpire` | Umpire.Sdk | One `Umpire.dll`: the app start, the markers, the definition API and the VSA pack with the base of each layer |
+| `Umpire.Vsa.Analyzers` | `Umpire` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
+| `Umpire.Web` | Umpire.Sdk.Web | The web host and the presenter views |
+| `Umpire.Testing` | Umpire.Sdk, in `Tests/` | The test bases |
 
 Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
 

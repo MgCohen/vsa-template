@@ -152,7 +152,7 @@ public sealed class ScaffoldingTests {
     public void NewAppWritesTheToolVersionToTheFirstLineOfEachProject() {
         var files = NewApp("Hello");
 
-        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\">"));
+        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\""));
         Assert.That(files.Single(f => f.Path == "Tests/App.Tests.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk/{Version}\">"));
         Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
@@ -172,7 +172,7 @@ public sealed class ScaffoldingTests {
 
         Assert.That(projects, Is.EqualTo(["Hello.csproj", "Tests/App.Tests.csproj"]));
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
-            Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\">\n").And.Not.Contain("Sdk.targets").And.Not.Contain("Dev.props"));
+            Is.EqualTo($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\" />\n"));
     }
 
     [Test]
@@ -222,8 +222,7 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
         var root = files.Single(f => f.Path == "Hello.csproj").Content;
-        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Hosts.Web\" Version=\"{Version}\" />"));
-        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Vsa.Views\" Version=\"{Version}\" />"));
+        Assert.That(root.Trim(), Is.EqualTo($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Umpire"));
     }
 

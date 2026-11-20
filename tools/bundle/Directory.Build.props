@@ -1,0 +1,11 @@
+<Project>
+  <!-- The bundle projects compile the source files of the runtime projects into the shipped assemblies. The runtime projects stay
+       for development: their references enforce the layers. The bundles are the packages. Each file comes from the folder of its
+       runtime project, so a new file is in the bundle with no change here (BundleSourceTests). -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <UmpireRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</UmpireRoot>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <_UmpireNotBundled>$(UmpireRoot)**/artifacts~/**;$(UmpireRoot)**/bin/**;$(UmpireRoot)**/obj/**</_UmpireNotBundled>
+  </PropertyGroup>
+</Project>

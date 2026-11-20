@@ -78,7 +78,7 @@ A plugin module has the layers of a module and the folder layout of the framewor
 
 ## The host part
 
-The kernel part `Host` of the VSA definition maps the assemblies `Umpire.Hosts.*` (`InAssembly("Umpire.Hosts")`): `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
+The kernel part `Host` of the VSA definition maps the assemblies and namespaces `Umpire.Hosts.*` (`InAssembly("Umpire.Hosts")`): `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
 
 | Rule | Check |
 |---|---|

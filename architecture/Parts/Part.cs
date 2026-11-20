@@ -141,9 +141,9 @@ public class Part : IPartChain {
     Part Attach(Part child) {
         RefuseInBlockPlace(child);
         Block(child);
-        child.options = child.options.Over(Options.From(child.Concept!.Configure));
+        child.options = child.options.Over(Options.From(child.Concept!.ConfigureDefaults));
         children.Add(child);
-        child.Concept!.Define(child);
+        child.Concept!.DefinePart(child);
         return child;
     }
 

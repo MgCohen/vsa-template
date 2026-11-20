@@ -12,14 +12,14 @@ public static class PackSelection {
     const string BlockType = "Umpire.Architecture.Block`1";
     const string PackType = "Umpire.Kernels.Pack`3";
 
-    public static bool Selects(Compilation compilation, string? architecture, string packAssembly) {
+    public static bool Selects(Compilation compilation, string? architecture, string packNamespace) {
         var entries = CodeEntries(compilation).ToList();
         if (entries.Count == 0 && architecture is { } named && named.Trim().Length > 0) {
             entries.Add(NamedEntry(compilation, named));
         }
         return entries.Count == 0
-            ? compilation.ReferencedAssemblyNames.Any(reference => reference.Name == packAssembly)
-            : entries.Any(assemblies => assemblies.Contains(packAssembly));
+            ? References(compilation, packNamespace)
+            : entries.Any(names => names.Any(name => IsIn(name, packNamespace)));
     }
 
     static IEnumerable<IReadOnlyList<string>> CodeEntries(Compilation compilation) {
@@ -60,9 +60,24 @@ public static class PackSelection {
             if (current.ContainingAssembly is { } assembly) {
                 names.Add(assembly.Name);
             }
+            if (current.ContainingNamespace is { IsGlobalNamespace: false } space) {
+                names.Add(space.ToDisplayString());
+            }
         }
         return names;
     }
+
+    static bool IsIn(string name, string packNamespace) =>
+        name == packNamespace || name.StartsWith(packNamespace + ".", System.StringComparison.Ordinal);
+
+    static bool References(Compilation compilation, string packNamespace) =>
+        compilation.ReferencedAssemblyNames.Any(reference => reference.Name == packNamespace)
+        || HasReferencedType(compilation, compilation.GlobalNamespace, packNamespace.Split('.'), 0);
+
+    static bool HasReferencedType(Compilation compilation, INamespaceSymbol space, string[] parts, int index) =>
+        index == parts.Length
+            ? space.GetTypeMembers().Any(type => !SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, compilation.Assembly))
+            : space.GetNamespaceMembers().Any(child => child.Name == parts[index] && HasReferencedType(compilation, child, parts, index + 1));
 
     static IEnumerable<INamedTypeSymbol> SourceTypes(INamespaceSymbol space) =>
         space.GetTypeMembers().SelectMany(WithNested).Where(type => type.TypeKind == TypeKind.Class)

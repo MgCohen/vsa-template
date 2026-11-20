@@ -12,7 +12,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
 | Engine | `engine/` | The rule engine app | No package: `tools/net10.0/` of Umpire.Sdk and Umpire.Sdk.Web |
-| Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`) and Umpire.Sdk | The developer |
+| Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`), the bundle packages (`tools/bundle/`) and Umpire.Sdk | The developer |
 
 ```mermaid
 flowchart BT
@@ -27,6 +27,19 @@ flowchart BT
     Cli["tools/cli"] --> Versions["engine/Versions"]
     Cli --> Files["tools/Files"]
 ```
+
+## Shipped files
+
+The projects of the groups are for development: their references enforce the layers. They are not packages. The bundle projects in `tools/bundle/` compile the same source files into the shipped DLLs:
+
+| Package | DLL | Source projects |
+|---|---|---|
+| `Umpire` | `Umpire.dll` (`net10.0`, `netstandard2.1`) | Markers, Architecture, Config, Kernels, Messages, Umpire.Vsa and each VSA layer base |
+| `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views |
+| `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console |
+| `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit |
+
+`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `UmpireUseBundle=true` makes Umpire.Sdk reference the bundle projects in source mode. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.dll` as the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
 
 ## Kinds of block
 

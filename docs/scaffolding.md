@@ -127,7 +127,7 @@ The templates build in this repository in source mode, as the fixtures do. The t
 |---|---|
 | `<Project>` with `<Import ... Umpire.Sdk.Dev.props />` and `<Import ... Sdk.targets />` | `<Project Sdk="Umpire.Sdk/<tool version>">` (one line if it has nothing else) |
 | `<Project Sdk="Microsoft.NET.Sdk.Web">` with the same imports | `<Project Sdk="Umpire.Sdk.Web/<tool version>">` |
-| `<ProjectReference Include="$(UmpireFrameworkSourceDir).../Umpire.Hosts.Web.csproj" />` | `<PackageReference Include="Umpire.Hosts.Web" Version="<tool version>" />` |
+| `<ProjectReference Include="$(UmpireFrameworkSourceDir).../Umpire.X.csproj" />` | `<PackageReference Include="Umpire.X" Version="<tool version>" />`. No template has one now: the SDK adds the framework |
 
 If a template `.csproj` has a source-mode property that the tool cannot change, the tool stops with an error.
 
