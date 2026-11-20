@@ -96,6 +96,11 @@ public class Part : IPartChain {
         return this;
     }
 
+    internal void ClearTypes() {
+        types.Clear();
+        requiredAtCallSite.Clear();
+    }
+
     public bool? RequiredOf(Type type) => requiredAtCallSite.TryGetValue(type, out var value) ? value : options.Required;
 
     IPartChain IPartChain.Add<T>() => Add<T>();

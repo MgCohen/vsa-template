@@ -34,7 +34,7 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
 
     static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
         if (entry.Form != EntryForm.App) {
-            return loader.CreateArchitecture(entry.Type!);
+            return loader.CreateArchitecture(entry.Type!, entry.Packed);
         }
         var classes = AppClass.Leaves([.. app.SelectMany(d => d.AppClasses)]);
         if (AppClassError(classes) is { } error) {

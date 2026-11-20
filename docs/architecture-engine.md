@@ -98,6 +98,15 @@ A rule condition is a `Condition`: the groups that must have the same instance (
 
 `VsaArchitecture.Define` calls one `virtual` define method for each base group and for the kernel: `DefineKernel`, `DefinePlugin`, `DefineFeature` and `DefineSlice`. The parts of a slice are in `Slice.Define`, so `DefineSlice` is empty in the base. It runs after `Slice.Define`. A pack variant overrides one to add a part to each instance of that group (see `pack-variants.md`).
 
+Each architecture defines its kernel with two hooks of `Architecture`: `DefineKernel(Part kernel)` (the kernel parts) and `KernelRules(RuleBook rules)` (the rules inside the kernel). The kernel is defined on the architecture, never on the pack. Two checks use it:
+
+| Check | Kernel parent | Binding | Rules |
+|---|---|---|---|
+| An app | The external `Kernel` part (`Define` calls `DefineKernel`) | By assembly, or by namespace in the bundled `Umpire.dll` | The rules of the app toward the kernel |
+| The pack | `PackParts.Kernel`, the folder `Kernel/` of the pack | By folder | `KernelRules` |
+
+For the pack check, the engine reads the architecture from the base chain of the pack class (`Pack<VsaArchitecture, …>`, `BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. The type requirements of the layer concepts (`OfType`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. Today `VsaArchitecture.KernelRules` allows each use between two kernel layers: the check covers the shape of the kernel, and the rules come later.
+
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
 ### `using` placement

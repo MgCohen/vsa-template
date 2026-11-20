@@ -10,9 +10,22 @@ public abstract class Architecture {
 
     protected virtual void Rules(RuleBook rules) { }
 
+    protected virtual void DefineKernel(Part kernel) { }
+
+    protected virtual void KernelRules(RuleBook rules) { }
+
     internal void ConfigureDefaults(Options defaults) => Configure(defaults);
 
     internal void DefineBlock(Block block) => Define(block);
 
     internal void AddRules(RuleBook rules) => Rules(rules);
+
+    internal void DefineKernelPart(Part kernel) {
+        DefineKernel(kernel);
+        foreach (var part in kernel.Walk()) {
+            part.ClearTypes();
+        }
+    }
+
+    internal void AddKernelRules(RuleBook rules) => KernelRules(rules);
 }

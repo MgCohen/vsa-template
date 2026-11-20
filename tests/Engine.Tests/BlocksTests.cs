@@ -50,6 +50,15 @@ public sealed class BlocksTests {
         Assert.That(EntriesIn(Path.Combine(app, "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Base }));
     }
 
+    [TestCase("packs/Vsa", "Umpire.Vsa.Definition.VsaArchitecture")]
+    [TestCase("tests/Fixtures/PackVariant/Packs/Ecs", "PackVariant.Packs.Ecs.Architecture.EcsArchitecture")]
+    public void A_pack_entry_names_the_architecture_of_the_pack(string folder, string architecture) {
+        var packed = Entries.Where(e => Same(e.Folder, Repo.Path(folder.Split('/'))) && e.Packed is not null)
+            .Select(e => e.Packed!.FullName).Distinct();
+
+        Assert.That(packed, Is.EqualTo(new[] { architecture }));
+    }
+
     [Test]
     public void Assembly_metadata_with_Umpire_Root_is_the_check_entry_of_the_folder_above_the_project() {
         var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "Lib")));

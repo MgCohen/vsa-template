@@ -19,7 +19,12 @@ public sealed class AppLoader : AssemblyLoadContext {
         resolver = main is null ? null : new AssemblyDependencyResolver(main);
     }
 
-    public Architecture CreateArchitecture(TypeName name) => (Architecture)Create(name);
+    public Architecture CreateArchitecture(TypeName name, TypeName? packed = null) {
+        var type = Load(name);
+        return packed is not null && type.GetConstructor([typeof(Architecture)]) is { } withPacked
+            ? (Architecture)withPacked.Invoke([CreateArchitecture(packed)])
+            : (Architecture)Activator.CreateInstance(type)!;
+    }
 
     public Architecture ArchitectureOfApp(TypeName appClass, string dll) {
         var app = Activator.CreateInstance(LoadFromAssemblyPath(dll).GetType(appClass.FullName, throwOnError: true)!)!;
@@ -47,8 +52,6 @@ public sealed class AppLoader : AssemblyLoadContext {
         return names;
     }
 
-    object Create(TypeName name) {
-        var type = LoadFromAssemblyName(new AssemblyName(name.Assembly)).GetType(name.FullName, throwOnError: true)!;
-        return Activator.CreateInstance(type)!;
-    }
+    Type Load(TypeName name) =>
+        LoadFromAssemblyName(new AssemblyName(name.Assembly)).GetType(name.FullName, throwOnError: true)!;
 }

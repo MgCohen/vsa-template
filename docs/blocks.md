@@ -45,7 +45,7 @@ For an app, the app class is the check entry. Its install point is the custom ho
 | App | The app class | None on the app class. A custom host `Configure` (`MyHost : WebHost`) | Checked (`UMP030502`, `UMP030503`) |
 | Pack | `Pack : Block<PackArchitecture>` | None. The pack names its kernel and its host | Checked (`PackArchitecture`) |
 | Framework kernel | `AssemblyMetadata` | `Kernel.Install` (the core) | Checked: folders only (`KernelArchitecture`) |
-| Pack kernel | None: the pack owns it | `VsaKernel.Configure` | Not enforced in 0.1.0 |
+| Pack kernel | None: the architecture of the pack defines it (`DefineKernel`, `KernelRules`) | `VsaKernel.Configure` | Checked with the pack: folders only |
 | Component | `AssemblyMetadata`, optional | An `Add<Name>` extension | Checked: folders only (`MessagesArchitecture`, `LibraryArchitecture`) |
 | Module | None: the app owns it | A `Module` class. Each module kind derives from it, for example `Plugin` | Checked (`UMP020301`, host startup) |
 | Library | `AssemblyMetadata`, optional | None | Checked: folders only (`LibraryArchitecture`, `ApiArchitecture`) |
@@ -82,7 +82,7 @@ protected override void Configure(IServiceCollection services, AppTypes types) {
 | Framework kernel | Free: one folder for each topic | Not enforced in 0.1.0 |
 | Component | Free | Not enforced in 0.1.0 |
 | Library | Fully free | Not enforced in 0.1.0 |
-| Pack kernel | The folder `Kernel/` of the pack. Free inside it | Not enforced in 0.1.0 |
+| Pack kernel | The folder `Kernel/` of the pack, with the kernel parts of the pack's architecture | Checked: folders only, no rules yet |
 | App, module | The shapes of `VsaArchitecture` | Checked (`UMP0201xx`-`UMP0203xx`) |
 
 The framework kernel and each component have one install point. **Not enforced in 0.1.0.**
@@ -131,5 +131,4 @@ var contracts = kernel.Add<Contracts>().InAssembly("Umpire.Messages.Contracts");
 - A guideline shape for the framework kernel.
 - A component that brings its own piece of definition (spike first).
 - A shared module as an independent block in its own repository, seen by the app as an external part.
-- The provided architecture also checks the code in the pack `Kernel/`.
 - The names "Component", "Library" and the two kernels (names review).
