@@ -31,7 +31,7 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 
 | Part | Project | Job |
 |---|---|---|
-| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(Envelope<TEvent>)`. It has no `[AutoRegister]` |
+| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(IEnvelope<TEvent>)`. It has no `[AutoRegister]` |
 | `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. Its `RunAsync` raises `Changed` after `HandleAsync`, also when it fails |
 | `Presenter` | `Umpire.Vsa.Presenters` | The base of each presenter. It has `[AutoRegister]`, so the core step registers each presenter as scoped |
 | `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. It has the queue of the deliveries to the scope |
@@ -95,7 +95,7 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IPresenterHandler<Rang> {
     public string? Last { get; private set; }
 
-    public Task<Result<Unit>> HandleAsync(Envelope<Rang> envelope) {
+    public Task<Result<Unit>> HandleAsync(IEnvelope<Rang> envelope) {
         Last = envelope.Message.Bell;
         return Task.FromResult<Result<Unit>>(Unit.Value);
     }

@@ -166,7 +166,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Requests;
 
 sealed class CreateInvoiceHandler : RequestHandler<CreateInvoiceRequest, CreateInvoiceResponse> {
-    public override Task<Result<CreateInvoiceResponse>> HandleAsync(Envelope<CreateInvoiceRequest> envelope) {
+    public override Task<Result<CreateInvoiceResponse>> HandleAsync(IEnvelope<CreateInvoiceRequest> envelope) {
         var status = new GetStatusResponse("Billing", "Open");
         return Task.FromResult<Result<CreateInvoiceResponse>>(new CreateInvoiceResponse());
     }

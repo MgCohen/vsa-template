@@ -146,12 +146,12 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
 
     public sealed class SampleRequestHandler : RequestHandler<SampleRequest, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
-            Umpire.Messages.Contracts.Envelope<SampleRequest> envelope) => throw new NotSupportedException();
+            Umpire.Messages.Contracts.IEnvelope<SampleRequest> envelope) => throw new NotSupportedException();
     }
 
     public sealed class SampleCommandHandler : CommandHandler<SampleCommand, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
-            Umpire.Messages.Contracts.Envelope<SampleCommand> envelope) => throw new NotSupportedException();
+            Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) => throw new NotSupportedException();
     }
 
     public sealed class SampleValidator : Umpire.Messages.Handlers.Validator<SampleRequest> {
@@ -168,7 +168,7 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
 
     public sealed class SampleCheckingHandler(SampleCheckBase check) : RequestHandler<SampleRequest, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
-            Umpire.Messages.Contracts.Envelope<SampleRequest> envelope) =>
+            Umpire.Messages.Contracts.IEnvelope<SampleRequest> envelope) =>
             check.Passes(envelope.Message) ? throw new NotSupportedException() : throw new InvalidOperationException();
     }
 

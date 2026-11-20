@@ -10,5 +10,5 @@ using Umpire.Vsa.Contracts.Events;
 public abstract class IntegrationEventHandler<TEvent> : IIntegrationEventHandler<TEvent> where TEvent : IntegrationEvent {
     protected static Task<Result<Unit>> Done { get; } = Task.FromResult<Result<Unit>>(Unit.Value);
 
-    public abstract Task<Result<Unit>> HandleAsync(Envelope<TEvent> envelope);
+    public abstract Task<Result<Unit>> HandleAsync(IEnvelope<TEvent> envelope);
 }

@@ -9,7 +9,7 @@ using Umpire.Vsa.Handlers.Commands;
 sealed class BuildAppHandler : CommandHandler<BuildAppCommand, BuildAppResult> {
     const int ShownLines = 20;
 
-    public override async Task<Result<BuildAppResult>> HandleAsync(Envelope<BuildAppCommand> envelope) {
+    public override async Task<Result<BuildAppResult>> HandleAsync(IEnvelope<BuildAppCommand> envelope) {
         var project = envelope.Message.Project;
         var configuration = BuildConfiguration.Of(envelope.Message.Bin);
         var build = await DotnetBuild.RunAsync(project, configuration, envelope.Cancellation);

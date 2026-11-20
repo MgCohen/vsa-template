@@ -88,7 +88,7 @@ public sealed class ConsoleHostTests {
     public sealed record QuietResponse(int Code) : IResponse;
 
     public sealed class QuietHandler : RequestHandler<QuietRequest, QuietResponse> {
-        public override Task<Result<QuietResponse>> HandleAsync(Envelope<QuietRequest> envelope) =>
+        public override Task<Result<QuietResponse>> HandleAsync(IEnvelope<QuietRequest> envelope) =>
             Task.FromResult<Result<QuietResponse>>(new QuietResponse(envelope.Message.Code));
     }
 }

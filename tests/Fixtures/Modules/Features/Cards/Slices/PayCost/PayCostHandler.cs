@@ -9,7 +9,7 @@ using Umpire.Vsa.Handlers.Commands;
 
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events)
     : CommandHandler<PayCostCommand, PayCostResult> {
-    public override async Task<Result<PayCostResult>> HandleAsync(Envelope<PayCostCommand> envelope) {
+    public override async Task<Result<PayCostResult>> HandleAsync(IEnvelope<PayCostCommand> envelope) {
         var cost = envelope.Message.Cost;
         var changed = await commands.SendAsync(new ChangeResourceCommand(new ResourceKey(cost.Resource), -cost.Amount), envelope.Cancellation);
         if (!changed.IsSuccess) {

@@ -8,7 +8,7 @@ using Umpire.Vsa.Handlers.Commands;
 namespace LoadApp.Slices.LoadApp;
 
 sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
-    public override Task<Result<AppInput>> HandleAsync(Envelope<LoadAppCommand> envelope) =>
+    public override Task<Result<AppInput>> HandleAsync(IEnvelope<LoadAppCommand> envelope) =>
         Task.FromResult(Load(envelope.Message));
 
     static Result<AppInput> Load(LoadAppCommand command) {

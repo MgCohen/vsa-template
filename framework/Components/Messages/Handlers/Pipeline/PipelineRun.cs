@@ -64,11 +64,12 @@ static class PipelineRun {
                     $"{route.Message.FullName} has no handler in its pipeline. Add one handler for it: a class that "
                     + $"implements IHandler<{route.Message.Name}>, directly or through a handler base.");
             }
-            return await route.Call(Resolve<IHandler>(route.Handlers[0], envelope), envelope);
+            var handler = route.Handlers[0];
+            return await route.CallAsync(handler, Resolve<IHandler>(handler.Handler, envelope), envelope);
         }
         IMessageResult result = (Result<Unit>)Unit.Value;
-        foreach (var type in route.Handlers) {
-            var handled = await OneOfManyAsync(route, type, envelope);
+        foreach (var handler in route.Handlers) {
+            var handled = await OneOfManyAsync(route, handler, envelope);
             if (!handled.IsSuccess && result.IsSuccess) {
                 result = handled;
             }
@@ -76,13 +77,13 @@ static class PipelineRun {
         return result;
     }
 
-    static async Task<IMessageResult> OneOfManyAsync(MessageRoute route, Type handler, Envelope envelope) {
+    static async Task<IMessageResult> OneOfManyAsync(MessageRoute route, RouteHandler handler, Envelope envelope) {
         try {
-            return await route.Call(Resolve<IHandler>(handler, envelope), envelope);
+            return await route.CallAsync(handler, Resolve<IHandler>(handler.Handler, envelope), envelope);
         } catch (Exception e)
             when (e is not OperationCanceledException || !envelope.Cancellation.IsCancellationRequested) {
             envelope.AddHandlerException(e);
-            return (Result<Unit>)new Error(EnvelopeResults.FaultCode, $"{handler.Name} failed: {e.Message}");
+            return (Result<Unit>)new Error(EnvelopeResults.FaultCode, $"{handler.Handler.Name} failed: {e.Message}");
         }
     }
 

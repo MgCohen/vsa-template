@@ -146,21 +146,21 @@ public sealed class EventHandlerRequestRuleTests {
     [Test]
     public Task Event_handler_with_no_request_passes() => Analyzer.Verify(Types + """
         sealed class DoneHandler : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) => null!;
         }
         """);
 
     [Test]
     public Task Event_handler_with_the_request_sender_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler(Umpire.Vsa.Contracts.Requests.IRequestSender {|#0:requests|}) : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) => null!;
         }
         """, Analyzer.Diagnostic(new EventHandlerRequestRule().Rule, 0, "DoneHandler", "IRequestSender"));
 
     [Test]
     public Task Event_handler_that_makes_a_request_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) {
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) {
                 _ = {|#0:new Ping()|};
                 return null!;
             }
@@ -170,7 +170,7 @@ public sealed class EventHandlerRequestRuleTests {
     [Test]
     public Task Event_handler_with_the_request_base_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler(Umpire.Vsa.Contracts.Requests.IRequest {|#0:request|}) : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) => null!;
         }
         """, Analyzer.Diagnostic(new EventHandlerRequestRule().Rule, 0, "DoneHandler", "IRequest"));
 
@@ -191,7 +191,7 @@ public sealed class PresenterPublishRuleTests {
     [Test]
     public Task Presenter_that_shows_an_event_passes() => Analyzer.Verify(Types + """
         sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests) : Umpire.Vsa.Presenters.Presenter(requests), Umpire.Vsa.Presenters.IPresenterHandler<Done> {
-            public Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) =>
+            public Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) =>
                 Task.FromResult<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>>(Umpire.Messages.Contracts.Unit.Value);
         }
         """);

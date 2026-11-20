@@ -6,7 +6,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Events;
 
 sealed partial class NoteCreatedHandler(ILogger<NoteCreatedHandler> logger) : IntegrationEventHandler<NoteCreated> {
-    public override Task<Result<Unit>> HandleAsync(Envelope<NoteCreated> envelope) {
+    public override Task<Result<Unit>> HandleAsync(IEnvelope<NoteCreated> envelope) {
         LogCreated(envelope.Message.NoteId, envelope.Message.Title);
         return Done;
     }

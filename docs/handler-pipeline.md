@@ -75,24 +75,45 @@ Each handler takes the envelope and returns `Result<T>`:
 
 ```csharp
 sealed class StrikeHandler(ArenaLog log) : CommandHandler<StrikeCommand, int> {
-    public override Task<Result<int>> HandleAsync(Envelope<StrikeCommand> envelope) =>
+    public override Task<Result<int>> HandleAsync(IEnvelope<StrikeCommand> envelope) =>
         Task.FromResult<Result<int>>(envelope.Message.Damage);
 }
 
 sealed class RangHandler(RingLog log) : IntegrationEventHandler<Rang> {
-    public override Task<Result<Unit>> HandleAsync(Envelope<Rang> envelope) {
+    public override Task<Result<Unit>> HandleAsync(IEnvelope<Rang> envelope) {
         log.Add(envelope.Message.Bell);
         return Done;
     }
 }
 ```
 
-The pipeline calls `IHandler<TMessage>.RunAsync(Envelope<TMessage>)`. Each handler base gives that body one time, as `CommandHandler<,>`, `RequestHandler<,>` and `IIntegrationEventHandler<>` do. Each closed `IHandler<T>` has its own `RunAsync`, so one class can handle many message types, for example a presenter:
+The pipeline calls `IHandler<TMessage>.RunAsync(IEnvelope<TMessage>)`. Each handler base gives that body one time, as `CommandHandler<,>`, `RequestHandler<,>` and `IIntegrationEventHandler<>` do. Each closed `IHandler<T>` has its own `RunAsync`, so one class can handle many message types, for example a presenter:
 
 ```csharp
 public sealed class CardPresenter(IRequestSender r) : Presenter(r),
     IPresenterHandler<CardAdded>, IPresenterHandler<CardRemoved> { ... }   // one HandleAsync for each event
 ```
+
+### Which handler runs
+
+A handler of a base message type also handles each derived message. The pipeline uses one match for all stages: a part for `B` applies to each message that is a `B` (`MessageTypes.Applies`).
+
+| Kind | Handlers that run |
+|---|---|
+| Command, request | The handler of the nearest type: the exact type first, then the nearest base type or interface. If two handlers have the same distance, the send fails, and the error names both |
+| Event | Each handler of the event type and of each base type, one time each. The exact type comes first |
+
+```csharp
+public abstract record JsCommand<TResult> : JsCommand, ICommand<TResult>;
+public sealed record MotionWait(string Target) : JsCommand<WaitResult>;
+public sealed record Frames(int Count) : JsCommand<int>;
+
+public sealed class JsCommandHandler<TResult>(IJSRuntime js) : CommandHandler<JsCommand<TResult>, TResult> {
+    public override Task<Result<TResult>> HandleAsync(IEnvelope<JsCommand<TResult>> envelope) => ...;
+}
+```
+
+The message also closes an open handler. For `MotionWait`, the pipeline reads `WaitResult` from the base chain and closes `JsCommandHandler<WaitResult>`, with a check of the constraints. Open validators and open hooks are closed the same way. The route of each message type is made one time. The open class needs one generic parameter, and its message type uses that parameter. In Unity (IL2CPP), give each type argument with `[TypeArgument]`, so the closed types exist at build time (`docs/composition.md`).
 
 ## Runners
 

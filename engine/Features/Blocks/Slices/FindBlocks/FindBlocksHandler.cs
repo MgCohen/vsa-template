@@ -8,7 +8,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 sealed class FindBlocksHandler : CommandHandler<FindBlocksCommand, FindBlocksResult> {
-    public override Task<Result<FindBlocksResult>> HandleAsync(Envelope<FindBlocksCommand> envelope) =>
+    public override Task<Result<FindBlocksResult>> HandleAsync(IEnvelope<FindBlocksCommand> envelope) =>
         Task.FromResult(Find(envelope.Message));
 
     static Result<FindBlocksResult> Find(FindBlocksCommand command) {

@@ -9,7 +9,7 @@ using Umpire.Vsa.Handlers.Commands;
 sealed class FindChangesHandler : CommandHandler<FindChangesCommand, ChangesResult> {
     const string Skipped = "No input changed since the last clean check, so the check did not run.";
 
-    public override Task<Result<ChangesResult>> HandleAsync(Envelope<FindChangesCommand> envelope) {
+    public override Task<Result<ChangesResult>> HandleAsync(IEnvelope<FindChangesCommand> envelope) {
         var command = envelope.Message;
         var hash = InputHash.Of(command.Block, command.Bin, command.Run);
         var same = StampFile.Read(command.Bin) == hash;

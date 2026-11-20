@@ -38,15 +38,16 @@ public sealed class OpenGenericTests {
     }
 
     [Test]
-    public void A_type_with_no_key_marker_gets_no_closed_handler() {
+    public async Task The_message_closes_the_open_handler_and_validator_for_a_type_with_no_key_marker() {
         using var host = App().Build();
-        using var scope = host.Services.CreateScope();
+        await using var scope = host.Services.CreateAsyncScope();
         var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
 
-        var error = Assert.ThrowsAsync<InvalidOperationException>(
-            () => sender.SendAsync(new ChangeMeterCommand<Weight>(1), default));
+        var weight = await sender.SendAsync(new ChangeMeterCommand<Weight>(1), default);
+        var none = await sender.SendAsync(new ChangeMeterCommand<Weight>(0), default);
 
-        Assert.That(error!.Message, Does.Contain("has no handler"));
+        Assert.That(weight.Value, Is.EqualTo("Weight 1"));
+        Assert.That(none.Error, Is.EqualTo(MeterErrors.NoChange));
     }
 
     [Test]

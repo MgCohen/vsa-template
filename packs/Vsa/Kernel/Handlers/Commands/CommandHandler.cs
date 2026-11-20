@@ -10,8 +10,8 @@ using Umpire.Vsa.Contracts.Commands;
 [Preserve]
 public abstract class CommandHandler<TCommand, TResult> : IHandler<TCommand>
     where TCommand : class, ICommand<TResult> {
-    public abstract Task<Result<TResult>> HandleAsync(Envelope<TCommand> envelope);
+    public abstract Task<Result<TResult>> HandleAsync(IEnvelope<TCommand> envelope);
 
-    async Task<IMessageResult> IHandler<TCommand>.RunAsync(Envelope<TCommand> envelope) =>
+    async Task<IMessageResult> IHandler<TCommand>.RunAsync(IEnvelope<TCommand> envelope) =>
         await HandleAsync(envelope);
 }

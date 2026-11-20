@@ -20,7 +20,7 @@ using Umpire.Vsa.Handlers.Requests;
 using Versions.Slices.CheckVersions;
 
 sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : RequestHandler<RunEngineRequest, RunEngineResponse> {
-    public override async Task<Result<RunEngineResponse>> HandleAsync(Envelope<RunEngineRequest> envelope) {
+    public override async Task<Result<RunEngineResponse>> HandleAsync(IEnvelope<RunEngineRequest> envelope) {
         var given = envelope.Message;
         var run = given with { Mode = CheckMode.Of(given.Mode, Folder(given)) };
         options.FailFast = run.FailFast;

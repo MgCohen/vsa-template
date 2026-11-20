@@ -4,6 +4,6 @@ using Umpire.Messages.Contracts;
 
 public interface IHandler;
 
-public interface IHandler<TMessage> : IHandler where TMessage : class {
-    Task<IMessageResult> RunAsync(Envelope<TMessage> envelope);
+public interface IHandler<in TMessage> : IHandler where TMessage : class {
+    Task<IMessageResult> RunAsync(IEnvelope<TMessage> envelope);
 }

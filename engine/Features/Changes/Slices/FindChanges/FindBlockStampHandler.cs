@@ -8,7 +8,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 sealed class FindBlockStampHandler : CommandHandler<FindBlockStampCommand, BlockStampResult> {
-    public override Task<Result<BlockStampResult>> HandleAsync(Envelope<FindBlockStampCommand> envelope) {
+    public override Task<Result<BlockStampResult>> HandleAsync(IEnvelope<FindBlockStampCommand> envelope) {
         var command = envelope.Message;
         var block = command.Block;
         var definition = $"{block.Key}|{block.Folder}";
