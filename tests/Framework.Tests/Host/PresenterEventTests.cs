@@ -1,5 +1,10 @@
 namespace Framework.Tests.Host;
 
+using Cached;
+using Gauges;
+using Gauges.Domain.Shared;
+using Gauges.Presenters;
+using Gauges.Slices.ReadGauge;
 using Microsoft.Extensions.DependencyInjection;
 using Shelf;
 using Shelf.Presenters;
@@ -25,7 +30,7 @@ public sealed class PresenterEventTests {
 
         Assert.That(registrations.Count(s => s.ServiceType == typeof(BellPresenter)), Is.EqualTo(1));
         Assert.That(registrations.Count(s => s.ServiceType == typeof(ShelfPresenter)), Is.EqualTo(1));
-        Assert.That(registrations.Any(s => s.ServiceType == typeof(Presenter)), Is.False);
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(Presenter)), Is.EqualTo(2));
     }
 
     [Test]
@@ -41,8 +46,36 @@ public sealed class PresenterEventTests {
 
         Assert.That(registrations.Where(s => s.ImplementationType == typeof(BellPresenter)).Select(s => s.ServiceType),
             Is.EqualTo(new[] { typeof(BellPresenter) }));
-        Assert.That(registrations.Count(s => s.ServiceType == typeof(IPresenterHandler<Rang>)), Is.EqualTo(1));
+        Assert.That(registrations.Any(s => s.ServiceType == typeof(IPresenterHandler<Rang>)), Is.False);
         Assert.That(registrations.Count(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void AnOpenPresenterIsClosedForEachTypeArgument() {
+        var registrations = WebApps.OnTestServer(new GaugesModule()).Registrations();
+
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(GaugePresenter<Fuel>)), Is.EqualTo(1));
+        Assert.That(registrations.Count(s => s.ServiceType == typeof(GaugePresenter<Heat>)), Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task EachClosedPresenterOfAnOpenPresenterGetsTheEvent() {
+        using var app = await WebApps.OnTestServer(new GaugesModule()).Start();
+        using var scope = LiveScope(app);
+
+        await Publish(scope, new GaugeRead(7));
+
+        Assert.That(scope.ServiceProvider.GetRequiredService<GaugePresenter<Fuel>>().Last, Is.EqualTo(7));
+        Assert.That(scope.ServiceProvider.GetRequiredService<GaugePresenter<Heat>>().Last, Is.EqualTo(7));
+    }
+
+    [Test]
+    public void APresenterWithALifetimeOtherThanScopedStopsTheStart() {
+        var start = WebApps.OnTestServer(new CachedModule());
+
+        Assert.That(() => start.Registrations(),
+            Throws.InvalidOperationException.With.Message.Contains("Cached.Presenters.CachedPresenter")
+                .And.Message.Contains("Singleton"));
     }
 
     [Test]
@@ -111,14 +144,26 @@ public sealed class PresenterEventTests {
         Assert.That(scope.ServiceProvider.GetRequiredService<BellPresenter>().Last, Is.EqualTo("door"));
     }
 
+    [Test]
+    public async Task APresenterDoesNotGetAnEventThatAHookRejects() {
+        using var app = await Start();
+        using var scope = LiveScope(app);
+
+        await Publish(scope, "silent");
+
+        Assert.That(scope.ServiceProvider.GetRequiredService<BellPresenter>().Last, Is.Null);
+    }
+
     static IServiceScope LiveScope(WebRun app) {
         var scope = app.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<PresenterScope>();
         return scope;
     }
 
-    static Task Publish(IServiceScope scope, string bell) =>
-        scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(new Rang(bell), CancellationToken.None);
+    static Task Publish(IServiceScope scope, string bell) => Publish(scope, new Rang(bell));
+
+    static Task Publish(IServiceScope scope, IntegrationEvent published) =>
+        scope.ServiceProvider.GetRequiredService<IIntegrationEventPublisher>().PublishAsync(published, CancellationToken.None);
 
     static Task<WebRun> Start() => WebApps.OnTestServer(new SignalsModule()).Start();
 

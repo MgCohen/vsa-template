@@ -1,11 +1,11 @@
 namespace Umpire.Vsa.Presenters;
 
 public sealed class PresenterScope : IDisposable {
-    readonly LivePresenters live;
+    readonly LiveScopes live;
     readonly Queue<Func<Task>> waitingDeliveries = new();
     bool delivering;
 
-    public PresenterScope(IServiceProvider services, LivePresenters live) {
+    public PresenterScope(IServiceProvider services, LiveScopes live) {
         if (ReferenceEquals(services, live.RootServices)) {
             throw new InvalidOperationException(
                 "PresenterScope was resolved from the root provider, so it stays live until the app stops. "

@@ -3,12 +3,15 @@ namespace Umpire.Messages.Handlers;
 using Umpire.Architecture;
 
 static class MessageTypes {
-    internal static Type OfHandler(Type handler) =>
-        handler.GetInterfaces()
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandler<>))
-            ?.GetGenericArguments()[0]
-        ?? throw new InvalidOperationException(
-            $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, directly or through a handler base.");
+    internal static IReadOnlyList<Type> OfHandler(Type handler) {
+        Type[] messages = [.. handler.GetInterfaces()
+            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandler<>))
+            .Select(i => i.GetGenericArguments()[0])];
+        return messages.Length > 0
+            ? messages
+            : throw new InvalidOperationException(
+                $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, directly or through a handler base.");
+    }
 
     internal static Type OfStep(Type step, Type typedStepBase) => ArgumentOf(step, typedStepBase) ?? typeof(object);
 

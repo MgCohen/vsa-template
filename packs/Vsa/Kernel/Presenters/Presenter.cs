@@ -4,6 +4,7 @@ using Umpire.Markers;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 
+[AutoRegister]
 [RequireDerived]
 [Preserve]
 public abstract class Presenter(IRequestSender requests) : IDisposable {

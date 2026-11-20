@@ -50,6 +50,8 @@ public abstract class Envelope : IEnvelope {
         State = EnvelopeState.Faulted;
     }
 
+    public abstract Envelope InScope(IServiceProvider services);
+
     internal abstract void Replace(object message);
 }
 
@@ -64,6 +66,10 @@ public sealed class Envelope<TMessage> : Envelope, IEnvelope<TMessage> where TMe
     public new TMessage Message { get; private set; }
     public TMessage Original { get; }
     protected override object UntypedMessage => Message;
+
+    public override Envelope InScope(IServiceProvider services) =>
+        new Envelope<TMessage>(
+            Message, Parent, services ?? throw new ArgumentNullException(nameof(services)), Cancellation);
 
     internal override void Replace(object message) =>
         Message = message as TMessage ?? throw new InvalidOperationException(
