@@ -41,38 +41,19 @@ static class MessageTypes {
             .GroupBy(typeOf)
             .Select(group => group.First());
 
-    internal static Type? ArgumentFor(Type pattern, Type message) {
+    internal static Type? Closed(Type open, Type pattern, Type message) {
         if (pattern.IsGenericParameter) {
-            return message;
+            return OpenGenerics.Solve(open, pattern, message);
         }
         if (!pattern.IsGenericType) {
             return null;
         }
         var definition = pattern.GetGenericTypeDefinition();
         var closed = ClosedBase.OfSelfOrBase(message, definition) ?? ClosedBase.InterfaceOf(message, definition);
-        return closed is null ? null : ArgumentIn(pattern.GetGenericArguments(), closed.GetGenericArguments());
+        return closed is null ? null : OpenGenerics.Solve(open, pattern, closed);
     }
-
-    internal static Type? Closed(Type open, Type pattern, Type message) =>
-        ArgumentFor(pattern, message) is { } argument ? AppTypes.Closed(open, argument) : null;
 
     static Type DefinitionOf(Type type) => type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
-
-    static Type? ArgumentIn(Type[] pattern, Type[] closed) {
-        Type? argument = null;
-        for (var i = 0; i < pattern.Length; i++) {
-            if (!pattern[i].IsGenericParameter) {
-                if (pattern[i] != closed[i]) {
-                    return null;
-                }
-            } else if (argument is null) {
-                argument = closed[i];
-            } else if (argument != closed[i]) {
-                return null;
-            }
-        }
-        return argument;
-    }
 
     static Type? ArgumentOf(Type type, Type genericBase) => ClosedBase.OfSelfOrBase(type, genericBase)?.GetGenericArguments()[0];
 }

@@ -11,6 +11,7 @@ using Shelf.Presenters;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
+using Umpire.Markers;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Presenters;
@@ -168,4 +169,7 @@ public sealed class PresenterEventTests {
     static Task<WebRun> Start() => WebApps.OnTestServer(new SignalsModule()).Start();
 
     sealed class OpenPresenter<T>() : Presenter(null!);
+
+    [AutoClose]
+    readonly record struct OpenPresenterArgument;
 }

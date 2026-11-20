@@ -3,9 +3,7 @@ namespace Umpire.Kernels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Config;
-using Umpire.Markers;
 
-[RequireDerived]
 public class AppHost : IDisposable {
     ServiceProvider? provider;
 
@@ -29,10 +27,12 @@ public class AppHost : IDisposable {
 
     public void Compose(IServiceCollection services, IConfiguration configuration, Kernel kernel, AppTypes types) {
         kernel.Install(services, types, configuration);
+        var kernelServices = OpenDescriptors.Snapshot(services);
         var settings = new ModuleSettings(Settings(types));
         foreach (var module in types.Modules) {
             module.Compose(services, settings);
         }
+        CloseOpenDescriptors(services, types, kernelServices);
         Configure(services, types);
     }
 
@@ -49,4 +49,8 @@ public class AppHost : IDisposable {
 
     protected virtual void Configure(IServiceCollection services, AppTypes types) {
     }
+
+    static void CloseOpenDescriptors(
+        IServiceCollection services, AppTypes types, HashSet<ServiceDescriptor> kernelServices) =>
+        OpenDescriptors.Close(services, types, kernelServices);
 }

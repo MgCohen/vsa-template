@@ -1,8 +1,6 @@
 namespace Umpire.Kernels;
 
-using Umpire.Markers;
 
-[RequireImplementors]
 public interface IApp {
     AppState State { get; }
 

@@ -3,12 +3,21 @@ namespace Umpire.Kernels;
 using System.Reflection;
 
 static class ConstraintTypeArguments {
-    internal static IEnumerable<Type> For(Type genericParameter, IReadOnlyList<Type> candidates) {
-        var constraints = genericParameter.GetGenericParameterConstraints();
-        return [.. candidates.Where(c => MeetsEachConstraint(genericParameter, constraints, c))];
+    internal static IEnumerable<Type> For(Type genericParameter, IReadOnlyList<Type> candidates) =>
+        [.. candidates.Where(c => MeetsEachConstraint(genericParameter, c, bound: null))];
+
+    internal static bool Meet(Type[] parameters, IReadOnlyList<Type> arguments) {
+        var bound = new Dictionary<Type, Type>();
+        for (var i = 0; i < parameters.Length; i++) {
+            bound[parameters[i]] = arguments[i];
+        }
+        return parameters.Select((p, i) => MeetsEachConstraint(p, arguments[i], bound)).All(meets => meets);
     }
 
-    static bool MeetsEachConstraint(Type parameter, Type[] constraints, Type candidate) {
+    static bool MeetsEachConstraint(Type parameter, Type candidate, Dictionary<Type, Type>? bound) {
+        if (candidate.ContainsGenericParameters || candidate.IsByRef || candidate.IsPointer) {
+            return false;
+        }
         var flags = parameter.GenericParameterAttributes;
         if (flags.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) && candidate.IsValueType) {
             return false;
@@ -17,13 +26,41 @@ static class ConstraintTypeArguments {
             && (!candidate.IsValueType || Nullable.GetUnderlyingType(candidate) is not null)) {
             return false;
         }
-        if (constraints.Any(c => !c.ContainsGenericParameters && !c.IsAssignableFrom(candidate))) {
+        if (flags.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+            && !candidate.IsValueType
+            && (candidate.IsAbstract || candidate.GetConstructor(Type.EmptyTypes) is null)) {
             return false;
         }
-        if (IsUnmanagedParameter(parameter) && !IsUnmanaged(candidate, [])) {
+        if (parameter.GetGenericParameterConstraints()
+            .Select(c => Substituted(c, bound))
+            .Any(c => c is not null && !c.IsAssignableFrom(candidate))) {
             return false;
         }
-        return CanClose(parameter.DeclaringType, candidate);
+        return !IsUnmanagedParameter(parameter) || IsUnmanaged(candidate, []);
+    }
+
+    static Type? Substituted(Type constraint, Dictionary<Type, Type>? bound) {
+        if (!constraint.ContainsGenericParameters) {
+            return constraint;
+        }
+        if (bound is null) {
+            return null;
+        }
+        if (constraint.IsGenericParameter) {
+            return bound.TryGetValue(constraint, out var argument) ? argument : null;
+        }
+        if (!constraint.IsGenericType) {
+            return null;
+        }
+        var arguments = constraint.GetGenericArguments().Select(a => Substituted(a, bound)).ToArray();
+        if (arguments.Any(a => a is null)) {
+            return null;
+        }
+        try {
+            return constraint.GetGenericTypeDefinition().MakeGenericType(arguments!);
+        } catch (ArgumentException) {
+            return null;
+        }
     }
 
     static bool IsUnmanagedParameter(Type parameter) =>
@@ -42,17 +79,5 @@ static class ConstraintTypeArguments {
         }
         return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .All(f => IsUnmanaged(f.FieldType, seen));
-    }
-
-    static bool CanClose(Type? definition, Type candidate) {
-        if (definition is null || definition.GetGenericArguments().Length != 1) {
-            return true;
-        }
-        try {
-            definition.MakeGenericType(candidate);
-            return true;
-        } catch (ArgumentException) {
-            return false;
-        }
     }
 }

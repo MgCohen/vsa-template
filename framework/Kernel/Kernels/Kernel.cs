@@ -3,9 +3,7 @@ namespace Umpire.Kernels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Umpire.Markers;
 
-[RequireDerived]
 public class Kernel {
     public void Install(IServiceCollection services, AppTypes types, IConfiguration configuration) {
         services.TryAddSingleton(configuration);

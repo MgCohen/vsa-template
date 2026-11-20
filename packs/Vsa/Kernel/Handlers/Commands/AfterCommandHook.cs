@@ -6,8 +6,6 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Contracts.Commands;
 
 [AutoRegister]
-[RequireDerived]
-[Preserve]
 public abstract class AfterCommandHook<TCommand, TResult> : IAfterCall where TCommand : class, ICommand<TResult> {
     public abstract Task AfterAsync(IEnvelope<TCommand> envelope, Result<TResult> outcome);
 

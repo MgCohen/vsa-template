@@ -184,6 +184,9 @@ public sealed class BaseHandlerTests {
 
     public record ItemChanged : IntegrationEvent;
 
+    [AutoClose]
+    public sealed record AuditArgument : IntegrationEvent;
+
     public record CardChanged : ItemChanged;
 
     public sealed record SubCard : CardChanged;
@@ -224,7 +227,7 @@ public sealed class BaseHandlerTests {
 
     public sealed class CheckModule : Module;
 
-    [TypeArgument]
+    [AutoClose]
     public record Check : ICommand<string>;
 
     public sealed record SubCheck : Check;

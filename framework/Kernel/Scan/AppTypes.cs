@@ -14,7 +14,8 @@ public sealed class AppTypes {
     Assembly[]? assemblies;
     Type[]? loaded;
     Type[]? registered;
-    Type[]? typeArguments;
+    Type[]? autoCloseTypes;
+    Type[]? openRegistered;
 
     public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null) {
         this.modules = modules is null ? null : InOrder(modules);
@@ -39,7 +40,10 @@ public sealed class AppTypes {
 
     public IReadOnlyList<Type> Registered() => registered ??= [.. Loaded()
         .Where(MarkedTypes.IsAutoRegistered)
-        .SelectMany(type => type.IsGenericTypeDefinition ? Close(type) : [type])];
+        .SelectMany(type => type.IsGenericTypeDefinition ? OpenGenerics.CloseOver(type, AutoCloseTypes()) : [type])];
+
+    public IReadOnlyList<Type> OpenRegistered() => openRegistered ??= [.. Loaded()
+        .Where(type => type.IsGenericTypeDefinition && MarkedTypes.IsAutoRegistered(type))];
 
     public IReadOnlyList<ServiceImplementation> Implementations(Type baseType) =>
         [.. Registered()
@@ -47,19 +51,13 @@ public sealed class AppTypes {
             .OfType<ServiceImplementation>()];
 
     public IReadOnlyList<ServiceImplementation> OpenImplementations(Type baseType) =>
-        [.. Loaded()
-            .Where(type => type.IsGenericTypeDefinition && MarkedTypes.IsAutoRegistered(type))
+        [.. OpenRegistered()
             .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
             .OfType<ServiceImplementation>()];
 
-    public static Type? Closed(Type definition, Type argument) =>
-        ConstraintTypeArguments.For(ParameterOf(definition), [argument]).Any()
-            ? definition.MakeGenericType(argument)
-            : null;
-
-    internal IReadOnlyList<Type> TypeArguments() => typeArguments ??= [.. Loaded()
-        .Where(MarkedTypes.IsTypeArgument)
-        .Concat(Assemblies().SelectMany(MarkedTypes.TypeArgumentsOf))
+    public IReadOnlyList<Type> AutoCloseTypes() => autoCloseTypes ??= [.. Loaded()
+        .Where(MarkedTypes.IsAutoClose)
+        .Concat(Assemblies().SelectMany(MarkedTypes.AutoCloseTypesOf))
         .Distinct()];
 
     static Type? ServiceOf(Type type, Type baseType) {
@@ -68,20 +66,6 @@ public sealed class AppTypes {
         }
         return ClosedBase.Of(type, baseType) ?? ClosedBase.InterfaceOf(type, baseType);
     }
-
-    static Type ParameterOf(Type definition) {
-        var parameters = definition.GetGenericArguments();
-        return parameters.Length == 1
-            ? parameters[0]
-            : throw new InvalidOperationException(
-                $"{definition.FullName} has {parameters.Length} generic parameters. "
-                + "Umpire closes an open module type with one generic parameter only. "
-                + "Write one closed type for each type argument.");
-    }
-
-    IEnumerable<Type> Close(Type definition) =>
-        ConstraintTypeArguments.For(ParameterOf(definition), TypeArguments())
-            .Select(argument => definition.MakeGenericType(argument));
 
     IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Assemblies()
         .Append(appAssembly)

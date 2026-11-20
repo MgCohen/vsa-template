@@ -1,7 +1,6 @@
 namespace Umpire.Messages.Handlers;
 
 using System.Reflection;
-using Umpire.Markers;
 using Umpire.Messages.Contracts;
 
 sealed class MessageRoute {
@@ -36,12 +35,10 @@ sealed class MessageRoute {
             .MakeGenericMethod(message)
             .CreateDelegate(typeof(TDelegate));
 
-    [Preserve]
     static Envelope CreateEnvelope<TMessage>(
         object message, Envelope? parent, IServiceProvider services, CancellationToken ct) where TMessage : class =>
         new Envelope<TMessage>((TMessage)message, parent, services, ct);
 
-    [Preserve]
     static Task<IMessageResult> CallHandler<TMessage>(IHandler handler, Envelope envelope) where TMessage : class =>
         ((IHandler<TMessage>)handler).RunAsync((IEnvelope<TMessage>)envelope);
 }

@@ -2,5 +2,5 @@ namespace Gauges.Domain.Shared;
 
 using Umpire.Markers;
 
-[TypeArgument]
+[AutoClose]
 public interface IGauge;
