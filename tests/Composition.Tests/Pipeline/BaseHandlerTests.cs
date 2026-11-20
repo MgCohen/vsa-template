@@ -184,9 +184,6 @@ public sealed class BaseHandlerTests {
 
     public record ItemChanged : IntegrationEvent;
 
-    [AutoClose]
-    public sealed record AuditArgument : IntegrationEvent;
-
     public record CardChanged : ItemChanged;
 
     public sealed record SubCard : CardChanged;

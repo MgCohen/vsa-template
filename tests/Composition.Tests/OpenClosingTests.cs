@@ -6,10 +6,15 @@ using Till;
 using Till.Domain;
 using Till.Domain.Shared;
 using Till.Slices.Change;
+using Till.Slices.Pick;
 using Till.Slices.Put;
+using Till.Slices.Swap;
 using Umpire.Kernels;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
+using Relay;
+using Relay.Slices.Pass;
+using Unbound;
 using Unclosed;
 
 public sealed class OpenClosingTests {
@@ -115,6 +120,75 @@ public sealed class OpenClosingTests {
     }
 
     [Test]
+    public async Task The_dispatch_closes_an_open_command_handler_for_a_struct_with_no_attribute() {
+        using var host = App().Build();
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var put = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new PutCommand<Coin>(5), default);
+
+        Assert.That(put.Value, Is.EqualTo(5));
+    }
+
+    [Test]
+    public async Task The_dispatch_closes_an_open_handler_with_two_type_parameters() {
+        using var host = App().Build();
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var swap = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new SwapCommand<Coin, Gem>(), default);
+
+        Assert.That(swap.Value, Is.EqualTo("Coin->Gem"));
+    }
+
+    [Test]
+    public async Task An_open_handler_with_each_type_parameter_in_its_message_needs_no_auto_close_type() {
+        using var host = new TestApp(new RelayModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var relay = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new RelayCommand<int>(4), default);
+
+        Assert.That(relay.Value, Is.EqualTo("Int32 4"));
+    }
+
+    [Test]
+    public async Task The_start_closes_an_open_handler_for_each_declared_message_of_its_shape() {
+        using var host = new TestApp(new RelayModule()).Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var open = typeof(RelayModule).Assembly.GetTypes().Single(t => t.Name == "RelayHandler`1");
+
+        var handler = scope.ServiceProvider.GetService(open.MakeGenericType(typeof(string)));
+        var relay = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
+            .SendAsync(new NameRelay("Ada"), default);
+
+        Assert.That(handler, Is.Not.Null);
+        Assert.That(relay.Value, Is.EqualTo("String Ada"));
+    }
+
+    [Test]
+    public async Task A_failed_dispatch_close_names_the_handler_the_message_and_the_constraint() {
+        using var host = App().Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
+
+        var send = async () => await sender.SendAsync(new PickCommand<int>(), default);
+
+        Assert.That(send, Throws.InvalidOperationException.With.Message.Contains(
+            "Till.Slices.Pick.PickHandler<T> cannot close for PickCommand`1: "
+            + "Int32 does not meet the constraints of T: struct, IAmount."));
+    }
+
+    [Test]
+    public void An_open_handler_with_a_type_parameter_that_is_not_in_its_message_stops_the_start() {
+        var start = () => new TestApp(new UnboundModule()).Build();
+
+        Assert.That(start, Throws.InvalidOperationException.With.Message.EqualTo(
+            "Unbound.Slices.Mark.MarkHandler<T, TLabel> has no type argument. "
+            + "Mark a type that meets the constraints of T, TLabel with [AutoClose], or remove [AutoRegister]."));
+    }
+
+    [Test]
     public void Unify_solves_the_type_parameter_of_a_nested_service() {
         var closed = OpenGenerics.Unify(typeof(Entry<>), typeof(IEntry<PutCommand<Coin>>));
 
@@ -139,7 +213,8 @@ public sealed class OpenClosingTests {
 
     static ServiceCollection Composed(Module module) {
         var services = new ServiceCollection();
-        new TestHost().Compose(services, new ConfigurationBuilder().Build(),
+        using var host = new TestHost();
+        host.Compose(services, new ConfigurationBuilder().Build(),
             new Kernel(), new AppTypes([module]));
         return services;
     }

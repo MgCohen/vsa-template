@@ -25,6 +25,7 @@ sealed class MessageRoute {
     internal IReadOnlyList<Type> BeforeHooks { get; init; } = [];
     internal IReadOnlyList<Type> AfterHooks { get; init; } = [];
     internal IReadOnlyList<Type> AfterSteps { get; init; } = [];
+    internal IReadOnlyList<string> CloseFailures { get; init; } = [];
 
     internal Task<IMessageResult> CallAsync(RouteHandler handler, IHandler instance, Envelope envelope) =>
         calls[handler.Message](instance, envelope);

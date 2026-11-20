@@ -1,5 +1,7 @@
 namespace Umpire.Kernels;
 
+using Umpire.Architecture;
+
 public static class OpenGenerics {
     public static Type? Unify(Type openImplementation, Type service) =>
         service.ContainsGenericParameters
@@ -8,13 +10,39 @@ public static class OpenGenerics {
                 .Select(candidate => Solve(openImplementation, candidate, service))
                 .FirstOrDefault(closed => closed is not null);
 
-    public static Type? Solve(Type openImplementation, Type pattern, Type actual) {
+    public static Type? Solve(Type openImplementation, Type pattern, Type actual) =>
+        Arguments(openImplementation, pattern, actual) is { } arguments ? Close(openImplementation, arguments) : null;
+
+    public static Type? ForMessage(Type openImplementation, Type pattern, Type message) =>
+        MessageShapeOf(pattern, message) is { } closed ? Solve(openImplementation, pattern, closed) : null;
+
+    public static Type? MessageShapeOf(Type pattern, Type message) {
+        if (pattern.IsGenericParameter) {
+            return message;
+        }
+        if (!pattern.IsGenericType) {
+            return null;
+        }
+        var definition = pattern.GetGenericTypeDefinition();
+        return ClosedBase.OfSelfOrBase(message, definition) ?? ClosedBase.InterfaceOf(message, definition);
+    }
+
+    public static Type[]? Arguments(Type openImplementation, Type pattern, Type actual) {
         var parameters = openImplementation.GetGenericArguments();
         var map = new Dictionary<Type, Type>();
         if (!Match(pattern, actual, map) || parameters.Any(p => !map.ContainsKey(p))) {
             return null;
         }
-        return Close(openImplementation, [.. parameters.Select(p => map[p])]);
+        return [.. parameters.Select(p => map[p])];
+    }
+
+    public static string? Unmet(Type definition, IReadOnlyList<Type> arguments) =>
+        ConstraintTypeArguments.Unmet(definition.GetGenericArguments(), arguments);
+
+    public static bool UsesEachParameter(Type definition, Type pattern) {
+        var used = new HashSet<Type>();
+        AddParameters(pattern, used);
+        return definition.GetGenericArguments().All(used.Contains);
     }
 
     public static Type? Close(Type definition, IReadOnlyList<Type> arguments) {
@@ -38,6 +66,12 @@ public static class OpenGenerics {
         }
     }
 
+    public static string NameOf(Type definition) =>
+        definition.IsGenericType
+            ? definition.FullName![..definition.FullName!.IndexOf('`')].Replace('+', '.')
+              + $"<{string.Join(", ", definition.GetGenericArguments().Select(a => a.Name))}>"
+            : definition.FullName ?? definition.Name;
+
     internal static IEnumerable<Type> CloseOver(Type definition, IReadOnlyList<Type> candidates) {
         IEnumerable<Type[]> choices = [[]];
         foreach (var parameter in definition.GetGenericArguments()) {
@@ -47,11 +81,17 @@ public static class OpenGenerics {
         return choices.Select(arguments => Close(definition, arguments)).OfType<Type>();
     }
 
-    internal static string NameOf(Type definition) =>
-        definition.IsGenericType
-            ? definition.FullName![..definition.FullName!.IndexOf('`')].Replace('+', '.')
-              + $"<{string.Join(", ", definition.GetGenericArguments().Select(a => a.Name))}>"
-            : definition.FullName ?? definition.Name;
+    static void AddParameters(Type type, HashSet<Type> used) {
+        if (type.IsGenericParameter) {
+            used.Add(type);
+        } else if (type.IsGenericType) {
+            foreach (var argument in type.GetGenericArguments()) {
+                AddParameters(argument, used);
+            }
+        } else if (type.HasElementType) {
+            AddParameters(type.GetElementType()!, used);
+        }
+    }
 
     static bool Match(Type pattern, Type actual, Dictionary<Type, Type> map) {
         if (pattern.IsGenericParameter) {

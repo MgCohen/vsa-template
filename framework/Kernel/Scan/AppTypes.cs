@@ -16,6 +16,7 @@ public sealed class AppTypes {
     Type[]? registered;
     Type[]? autoCloseTypes;
     Type[]? openRegistered;
+    Type[]? declared;
 
     public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null) {
         this.modules = modules is null ? null : InOrder(modules);
@@ -41,6 +42,9 @@ public sealed class AppTypes {
     public IReadOnlyList<Type> Registered() => registered ??= [.. Loaded()
         .Where(MarkedTypes.IsAutoRegistered)
         .SelectMany(type => type.IsGenericTypeDefinition ? OpenGenerics.CloseOver(type, AutoCloseTypes()) : [type])];
+
+    public IReadOnlyList<Type> Declared() => declared ??= [.. Loaded()
+        .Where(t => !t.ContainsGenericParameters && !t.IsAbstract && (t.IsClass || t.IsValueType))];
 
     public IReadOnlyList<Type> OpenRegistered() => openRegistered ??= [.. Loaded()
         .Where(type => type.IsGenericTypeDefinition && MarkedTypes.IsAutoRegistered(type))];

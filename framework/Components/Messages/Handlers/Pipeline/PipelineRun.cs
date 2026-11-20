@@ -59,6 +59,12 @@ static class PipelineRun {
 
     static async Task<IMessageResult> HandleAsync(MessageRoute route, Envelope envelope) {
         if (!route.Many) {
+            if (route.Handlers.Count == 0 && route.CloseFailures.Count > 0) {
+                throw new InvalidOperationException(
+                    $"{route.Message.FullName} has no handler in its pipeline. "
+                    + string.Join(" ", route.CloseFailures)
+                    + " Change the message, or change the constraints of the open handler.");
+            }
             if (route.Handlers.Count == 0) {
                 throw new InvalidOperationException(
                     $"{route.Message.FullName} has no handler in its pipeline. Add one handler for it: a class that "

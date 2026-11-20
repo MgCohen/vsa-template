@@ -6,12 +6,21 @@ static class ConstraintTypeArguments {
     internal static IEnumerable<Type> For(Type genericParameter, IReadOnlyList<Type> candidates) =>
         [.. candidates.Where(c => MeetsEachConstraint(genericParameter, c, bound: null))];
 
-    internal static bool Meet(Type[] parameters, IReadOnlyList<Type> arguments) {
+    internal static bool Meet(Type[] parameters, IReadOnlyList<Type> arguments) =>
+        Unmet(parameters, arguments) is null;
+
+    internal static string? Unmet(Type[] parameters, IReadOnlyList<Type> arguments) {
         var bound = new Dictionary<Type, Type>();
         for (var i = 0; i < parameters.Length; i++) {
             bound[parameters[i]] = arguments[i];
         }
-        return parameters.Select((p, i) => MeetsEachConstraint(p, arguments[i], bound)).All(meets => meets);
+        for (var i = 0; i < parameters.Length; i++) {
+            if (!MeetsEachConstraint(parameters[i], arguments[i], bound)) {
+                return $"{arguments[i].Name} does not meet the constraints of {parameters[i].Name}: "
+                    + ConstraintsOf(parameters[i]);
+            }
+        }
+        return null;
     }
 
     static bool MeetsEachConstraint(Type parameter, Type candidate, Dictionary<Type, Type>? bound) {
@@ -37,6 +46,28 @@ static class ConstraintTypeArguments {
             return false;
         }
         return !IsUnmanagedParameter(parameter) || IsUnmanaged(candidate, []);
+    }
+
+    static string ConstraintsOf(Type parameter) {
+        var flags = parameter.GenericParameterAttributes;
+        var unmanaged = IsUnmanagedParameter(parameter);
+        var names = new List<string>();
+        if (unmanaged) {
+            names.Add("unmanaged");
+        } else if (flags.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint)) {
+            names.Add("struct");
+        }
+        if (flags.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint)) {
+            names.Add("class");
+        }
+        names.AddRange(parameter.GetGenericParameterConstraints()
+            .Where(c => c != typeof(ValueType))
+            .Select(c => c.Name));
+        if (flags.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+            && !flags.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint)) {
+            names.Add("new()");
+        }
+        return string.Join(", ", names);
     }
 
     static Type? Substituted(Type constraint, Dictionary<Type, Type>? bound) {

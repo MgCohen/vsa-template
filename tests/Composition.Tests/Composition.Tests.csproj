@@ -16,5 +16,7 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Greet/Greet.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Till/Till.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Unclosed/Unclosed.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Unbound/Unbound.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Relay/Relay.csproj" />
   </ItemGroup>
 </Project>

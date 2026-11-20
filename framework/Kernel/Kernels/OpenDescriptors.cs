@@ -8,6 +8,7 @@ sealed class OpenDescriptors {
     readonly IServiceCollection services;
     readonly AppTypes types;
     readonly List<ServiceDescriptor> open;
+    readonly List<IDispatchClose> dispatch;
     readonly HashSet<ServiceDescriptor> closedSome = new(ByReference.Instance);
     readonly HashSet<ServicePair> known = [];
     readonly HashSet<Type> walked = [];
@@ -17,6 +18,7 @@ sealed class OpenDescriptors {
         this.services = services;
         this.types = types;
         open = [.. services.Where(d => !kernelServices.Contains(d) && IsOpen(d))];
+        dispatch = DispatchClosesOf(services);
         foreach (var descriptor in services) {
             if (Pair(descriptor) is { } pair) {
                 known.Add(pair);
@@ -32,10 +34,11 @@ sealed class OpenDescriptors {
         IServiceCollection services, AppTypes types, HashSet<ServiceDescriptor> kernelServices) {
         var closing = new OpenDescriptors(services, types, kernelServices);
         closing.CloseOverAutoCloseTypes();
+        closing.CloseOverDeclaredMessages();
         closing.Walk();
         closing.RemoveClosedOpenDescriptors();
         RemoveDuplicates(services);
-        StopIfAnOpenClassHasNoClosedType(services, types);
+        closing.StopIfAnOpenClassHasNoClosedType();
     }
 
     static void RemoveDuplicates(IServiceCollection services) {
@@ -47,20 +50,15 @@ sealed class OpenDescriptors {
         }
     }
 
-    static void StopIfAnOpenClassHasNoClosedType(IServiceCollection services, AppTypes types) {
-        var closedDefinitions = services
-            .Where(d => !d.IsKeyedService && d.ServiceType.IsConstructedGenericType)
-            .Select(d => d.ServiceType.GetGenericTypeDefinition())
-            .ToHashSet();
-        var unclosed = types.OpenRegistered().FirstOrDefault(definition => !closedDefinitions.Contains(definition));
-        if (unclosed is not null) {
-            var parameters = string.Join(", ", unclosed.GetGenericArguments().Select(p => p.Name));
-            throw new InvalidOperationException(
-                $"{OpenGenerics.NameOf(unclosed)} has no type argument. "
-                + $"Mark a type that meets the constraints of {parameters} with [AutoClose], "
-                + "or remove [AutoRegister].");
-        }
-    }
+    static List<IDispatchClose> DispatchClosesOf(IServiceCollection services) =>
+        [.. services.Where(d => !d.IsKeyedService).Select(d => d.ImplementationInstance).OfType<IDispatchClose>()];
+
+    static IEnumerable<DispatchShape> DispatchShapesOf(Type definition, IReadOnlyList<IDispatchClose> closes) =>
+        closes.SelectMany(close => close.ClosedServices.SelectMany(service => OpenGenerics.Implemented(definition)
+            .Where(c => c.IsGenericType && c.GetGenericTypeDefinition() == service)
+            .Select(c => c.GetGenericArguments()[0])
+            .Where(pattern => OpenGenerics.UsesEachParameter(definition, pattern))
+            .Select(pattern => new DispatchShape(close.Message, pattern))));
 
     static bool IsOpen(ServiceDescriptor descriptor) =>
         !descriptor.IsKeyedService
@@ -108,6 +106,22 @@ sealed class OpenDescriptors {
         }
     }
 
+    void CloseOverDeclaredMessages() {
+        foreach (var definition in types.OpenRegistered()) {
+            foreach (var shape in DispatchShapesOf(definition, dispatch).Distinct()) {
+                foreach (var message in types.Declared().Where(shape.Message.IsAssignableFrom)) {
+                    if (OpenGenerics.ForMessage(definition, shape.Pattern, message) is { } closed
+                        && !IsRegistered(closed)) {
+                        AutoRegistration.AddClosed(services, closed);
+                        queue.Enqueue(closed);
+                    }
+                }
+            }
+        }
+    }
+
+    bool IsRegistered(Type closed) => services.Any(d => !d.IsKeyedService && d.ServiceType == closed);
+
     void Walk() {
         while (queue.Count > 0) {
             var type = queue.Dequeue();
@@ -133,7 +147,7 @@ sealed class OpenDescriptors {
         foreach (var openClass in types.OpenRegistered()) {
             if (OpenGenerics.Unify(openClass, service) is { } closed
                 && (closed == service || MarkedTypes.ServicesOf(closed).Contains(service))
-                && !services.Any(d => !d.IsKeyedService && d.ServiceType == closed)) {
+                && !IsRegistered(closed)) {
                 AutoRegistration.AddClosed(services, closed);
                 queue.Enqueue(closed);
             }
@@ -154,7 +168,25 @@ sealed class OpenDescriptors {
         }
     }
 
+    void StopIfAnOpenClassHasNoClosedType() {
+        var closedDefinitions = services
+            .Where(d => !d.IsKeyedService && d.ServiceType.IsConstructedGenericType)
+            .Select(d => d.ServiceType.GetGenericTypeDefinition())
+            .ToHashSet();
+        var unclosed = types.OpenRegistered().FirstOrDefault(definition =>
+            !closedDefinitions.Contains(definition) && !DispatchShapesOf(definition, dispatch).Any());
+        if (unclosed is not null) {
+            var parameters = string.Join(", ", unclosed.GetGenericArguments().Select(p => p.Name));
+            throw new InvalidOperationException(
+                $"{OpenGenerics.NameOf(unclosed)} has no type argument. "
+                + $"Mark a type that meets the constraints of {parameters} with [AutoClose], "
+                + "or remove [AutoRegister].");
+        }
+    }
+
     readonly record struct ServicePair(Type Service, Type Implementation);
+
+    readonly record struct DispatchShape(Type Message, Type Pattern);
 
     sealed class ByReference : IEqualityComparer<ServiceDescriptor> {
         public static readonly ByReference Instance = new();

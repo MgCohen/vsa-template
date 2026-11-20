@@ -306,7 +306,7 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 | Constraints | `class`, `struct`, `new()`, `unmanaged` and each type constraint. |
 | Parameters | One or more. Each parameter gets each `[AutoClose]` type that fits. |
 | No marker | VSA does not close or register the class. |
-| No type argument fits | The start stops, with a message (see below). |
+| No type argument fits | The start stops, with a message, except for an open handler (see below). |
 | Owner | A layer registration can register a class first. The core step does not replace it. |
 
 `AppTypes` is a singleton service. `Implementations(typeof(TBase))` gives a `ServiceImplementation(Service, Implementation)` for each registered type that derives from `TBase`, with that base as the service. A plugin reads its own types with it.
@@ -322,13 +322,14 @@ AppHost.Compose
 └─ CloseOpenDescriptors(services, types)
    ├─ open descriptors       each module descriptor with an open ServiceType and ImplementationType
    ├─ 1. [AutoClose] types   each fit closes the implementation; each matching service is added
+   ├─ declared messages      each open handler is closed for each concrete message of its shape
    ├─ 2. constructor walk    each closed parameter, or the item of IEnumerable<T>, is a closed request
    │                         OpenGenerics.Unify(open implementation, request) solves the type parameters
    │                         an open [AutoRegister] class also answers a request
    │                         repeat until no new type
    ├─ remove                 an open descriptor with one or more known closed forms
    ├─ remove duplicates      one descriptor for each (service, implementation), the last one stays
-   └─ stop the start         an open [AutoRegister] class with no closed type
+   └─ stop the start         an open [AutoRegister] class with no closed type, except an open handler
 ```
 
 | Item | Rule |
@@ -338,7 +339,7 @@ AppHost.Compose
 | No closed form | The open descriptor stays, and the container closes it at use. |
 | Kernel descriptors | Not changed, for example `ILogger<>` and `IOptions<>`. |
 | Duplicates | A module registration of a scanned class gives one list item. |
-| Dispatch | The pipeline closes an open handler, validator or hook for a sent message with the same `Unify`. |
+| Dispatch | The pipeline closes an open handler, validator or hook for a sent message with the same matcher. |
 
 `OpenGenerics.Unify(openImplementation, service)` matches the closed service against each type that the open class implements: the class, its base classes and its interfaces. It solves each type parameter, then it checks each constraint itself, because IL2CPP does not check constraints in `MakeGenericType`.
 
@@ -348,15 +349,36 @@ OpenGenerics.Unify(typeof(Exchange<,>), typeof(IExchange<Gem, Coin>));    // Exc
 OpenGenerics.Unify(typeof(Counter<>), typeof(ICounter<int>));             // null: int is not IAmount
 ```
 
+### Open handlers
+
+An open handler is an open class of a dispatch service: `IHandler<>`, `Validator<>` or a hook base of a pipeline. Each pipeline definition gives its message base and these services to the kernel (`IDispatchClose`). The message shape is the first type argument of the dispatch service.
+
+| Open handler | Message shape | Result |
+|---|---|---|
+| `PutHandler<T> : CommandHandler<Put<T>, int>` | `Put<T>` | Dispatch closes it. No marker |
+| `SwapHandler<TA, TB> : CommandHandler<Swap<TA, TB>, string>` | `Swap<TA, TB>` | Dispatch closes it. No marker |
+| `JsCommandHandler<TResult> : CommandHandler<JsCommand<TResult>, TResult>` | `JsCommand<TResult>` | Also closed at start for `MotionWait : JsCommand<WaitResult>` |
+| `Bad<T, U> : CommandHandler<Put<T>, int>` | `Put<T>`, no `U` | The start stops |
+
+- If each type parameter of the class is in the message shape, the dispatch can close it, so the start does not stop.
+- At start, each concrete message class of the module assemblies that has the shape closes the handler. The closed handler is registered as the scan registers it.
+- If a send finds no handler, and an open handler has the shape but a type argument does not meet a constraint, the error names the handler, the message and the constraint:
+
+```text
+Till.Slices.Pick.PickCommand`1[System.Int32] has no handler in its pipeline. Till.Slices.Pick.PickHandler<T> cannot close for PickCommand`1: Int32 does not meet the constraints of T: struct, IAmount. Change the message, or change the constraints of the open handler.
+```
+
+`MessageTypes.Closed` (the dispatch close) supports more than one type parameter: `OpenGenerics.ForMessage` finds the message shape in the message, its base classes or its interfaces, then it solves each parameter.
+
 ### Start error
 
-An open `[AutoRegister]` class with no closed type stops the start:
+Each other open `[AutoRegister]` class with no closed type stops the start, for example a service:
 
 ```text
 Shop.Domain.Rack<T> has no type argument. Mark a type that meets the constraints of T with [AutoClose], or remove [AutoRegister].
 ```
 
-The check applies to each open `[AutoRegister]` class of the module assemblies. These are the only assemblies that the scan reads. A library type that an app may not use has no `[AutoRegister]`, or it is outside the module assemblies. Thus `[AutoRegister]` has no opt-out (MgCohen/vsa-template#214). An open handler that only a sent message closes also needs one `[AutoClose]` type.
+The check applies to each open `[AutoRegister]` class of the module assemblies. These are the only assemblies that the scan reads. A library type that an app may not use has no `[AutoRegister]`, or it is outside the module assemblies. Thus `[AutoRegister]` has no opt-out (MgCohen/vsa-template#214).
 
 The guide with the use cases: https://claude.ai/artifact/5xxwYSBS2MNS3kupBP61rT (a private page). This file is the repository source.
 
@@ -370,7 +392,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `LoadedTypes.Of` (Architecture) | `GetTypes` | The one load-safe type read |
 | `ModuleRoot.Create` (Kernel) | `Activator.CreateInstance` | Creates the module class. A class with no public constructor with no parameters stops the start, with a message |
 | `OpenGenerics`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class: the scan, the descriptor close and the dispatch |
-| `OpenDescriptors` (Kernel) | `GetConstructors`, `GetParameters` | The constructor walk of `CloseOpenDescriptors` |
+| `OpenDescriptors` (Kernel) | `GetConstructors`, `GetParameters` | The constructor walk and the declared message close of `CloseOpenDescriptors` |
 | `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[AutoClose]` by name |
 | `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope and the typed handler call of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |

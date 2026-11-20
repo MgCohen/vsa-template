@@ -41,17 +41,15 @@ static class MessageTypes {
             .GroupBy(typeOf)
             .Select(group => group.First());
 
-    internal static Type? Closed(Type open, Type pattern, Type message) {
-        if (pattern.IsGenericParameter) {
-            return OpenGenerics.Solve(open, pattern, message);
-        }
-        if (!pattern.IsGenericType) {
-            return null;
-        }
-        var definition = pattern.GetGenericTypeDefinition();
-        var closed = ClosedBase.OfSelfOrBase(message, definition) ?? ClosedBase.InterfaceOf(message, definition);
-        return closed is null ? null : OpenGenerics.Solve(open, pattern, closed);
-    }
+    internal static Type? Closed(Type open, Type pattern, Type message) =>
+        OpenGenerics.ForMessage(open, pattern, message);
+
+    internal static string? CloseFailure(Type open, Type pattern, Type message) =>
+        OpenGenerics.MessageShapeOf(pattern, message) is { } shape
+        && OpenGenerics.Arguments(open, pattern, shape) is { } arguments
+        && OpenGenerics.Unmet(open, arguments) is { } unmet
+            ? $"{OpenGenerics.NameOf(open)} cannot close for {message.Name}: {unmet}."
+            : null;
 
     static Type DefinitionOf(Type type) => type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
 
