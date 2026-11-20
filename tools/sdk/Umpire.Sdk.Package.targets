@@ -34,10 +34,10 @@
   </Target>
   <!-- Each SDK package holds the rule engine in tools/net10.0/, so a consumer gets the engine with the SDK and no other
        package. The hook in Umpire.Sdk.Core.targets runs it from there. The engine builds with the global properties of the
-       pack (configuration, version), on the bundles (UmpireUseBundle), in its own output folder, and with no self-check:
+       pack (configuration, version), on the bundles (_UmpireUseBundle), in its own output folder, and with no self-check:
        the source build of the engine checks it. -->
   <PropertyGroup>
-    <_UmpireEngineProperties>UmpireUseBundle=true;UmpireCheck=false;ArtifactsPath=$(ArtifactsPath)/engine-bundle</_UmpireEngineProperties>
+    <_UmpireEngineProperties>_UmpireUseBundle=true;UmpireCheck=false;ArtifactsPath=$(ArtifactsPath)/engine-bundle</_UmpireEngineProperties>
   </PropertyGroup>
   <Target Name="_UmpireEngineInPackage" BeforeTargets="_GetPackageFiles">
     <!-- The output folder of the engine is new, so it needs its own restore. A restore needs its own evaluation. -->

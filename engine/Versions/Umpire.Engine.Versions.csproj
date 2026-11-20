@@ -8,7 +8,7 @@
     <UmpireDefaultPack>false</UmpireDefaultPack>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" Condition="'$(UmpireUseBundle)' != 'true'" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" Condition="'$(_UmpireUseBundle)' != 'true'" />
   </ItemGroup>
   <Import Project="$(UmpireSdkDir)Sdk.targets" />
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->

@@ -64,12 +64,14 @@
   </ItemGroup>
 
   <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set.
-       UmpireUseBundle=true references the bundle projects (Bundle) in place of the runtime projects, as a consumer gets them.
-       The SDK package builds its rule engine so, because the engine must load the definition of an app from the same Umpire.dll. -->
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireUseBundle)' != 'true'">
+       _UmpireUseBundle=true references the bundle projects (Bundle) in place of the runtime projects, as a consumer gets them.
+       The SDK package builds its rule engine so, because the engine must load the definition of an app from the same Umpire.dll.
+       It is private: in this repository, the framework blocks have their check entries in the runtime DLLs, so a build of a
+       repository app with it gives UMP030001 for each framework block. -->
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(_UmpireUseBundle)' != 'true'">
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
   </ItemGroup>
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireUseBundle)' == 'true'">
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(_UmpireUseBundle)' == 'true'">
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Bundle)/%(Package).csproj'->Distinct())" />
   </ItemGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
@@ -168,8 +170,8 @@
   <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' != ''">
     <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
     <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
-    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" Condition="'$(UmpireUseBundle)' != 'true'" />
-    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Bundle)/%(Package).csproj')" Condition="'$(UmpireUseBundle)' == 'true'" />
+    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" Condition="'$(_UmpireUseBundle)' != 'true'" />
+    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Bundle)/%(Package).csproj')" Condition="'$(_UmpireUseBundle)' == 'true'" />
   </ItemGroup>
 
   <!-- The rule values of the block are in the .umpireconfig file in the block root (UmpireConfigFile, Umpire.Sdk.Output.props).

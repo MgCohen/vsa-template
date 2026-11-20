@@ -148,6 +148,41 @@ public sealed class VsaRulesTests {
             Is.EquivalentTo(new[] { typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
     }
 
+    [TestCase("Umpire.Vsa.Contracts.Requests.IRequestSender", "Contracts.Requests")]
+    [TestCase("Umpire.Vsa.Handlers.Commands.CommandHandler`2", "Handlers.Commands")]
+    [TestCase("Umpire.Messages.Contracts.Envelope`1", "Contracts")]
+    [TestCase("Umpire.Vsa.Domain.Entity`1+Key", "Domain")]
+    [TestCase("Umpire.Hosts.Web.WebHost", "Host")]
+    [TestCase("Umpire.Kernels.App", "Kernel")]
+    public void A_type_of_the_one_runtime_DLL_binds_to_the_part_of_its_namespace(string type, string part) =>
+        Assert.That(Resolved.ExternalPart("Umpire", type)?.Name, Is.EqualTo(part));
+
+    [Test]
+    public void A_domain_use_of_a_request_sender_in_the_one_runtime_DLL_is_denied() {
+        var block = Path.GetFullPath("Demo");
+        var sender = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire", null, [], [], [], []);
+        var order = AppType(block, "Demo.Features.Shop.Domain.Order", "Features/Shop/Domain/Order.cs") with { Mentions = [sender.FullName] };
+
+        var bindings = Resolved.Place([order, sender], block);
+
+        Assert.That(bindings.Of(sender.FullName)?.Part.Name, Is.EqualTo("Contracts.Requests"));
+        Assert.That(Resolved.DecisionFor(bindings.Of(order.FullName)!, bindings.Of(sender.FullName)!).Permission, Is.EqualTo(Permission.Deny));
+    }
+
+    [Test]
+    public void An_app_type_with_an_Umpire_namespace_binds_to_its_folder_and_not_to_the_kernel() {
+        var block = Path.GetFullPath("Demo");
+        var order = AppType(block, "Umpire.Demo.Features.Shop.Domain.Order", "Features/Shop/Domain/Order.cs");
+
+        var bound = Resolved.Place([order], block).Of(order.FullName);
+
+        Assert.That(bound?.External, Is.False);
+        Assert.That(bound?.Part.Name, Is.EqualTo("Domain"));
+    }
+
+    static TypeFacts AppType(string block, string fullName, string file) =>
+        new(fullName, fullName[(fullName.LastIndexOf('.') + 1)..], "Demo", new Source(Path.Combine(block, file), 1), [], [], [], []);
+
     static Decision MayUse(PartPlace from, PartPlace to) =>
         Resolved.DecisionFor(from.Part, from.Values, to.Part, to.Values);
 
