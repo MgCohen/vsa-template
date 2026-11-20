@@ -37,6 +37,21 @@ public sealed class BuildCheckTests {
         Assert.That(warned.Output, Does.Contain($"{probe}(4,90): warning UMP020101: Probe in Host"));
 
         File.Delete(probe);
+        var domainProbe = Path.Combine(workspace.Src, "Features", "Notebook", "Domain", "SenderProbe.cs");
+        File.WriteAllText(domainProbe, """
+            namespace Notes.Features.Notebook.Domain;
+
+            public static class SenderProbe {
+                public static Umpire.Vsa.Contracts.Requests.IRequestSender? Sender { get; set; }
+            }
+            """);
+
+        var layer = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
+        Assert.That(layer.Succeeded, Is.False, layer.Output);
+        Assert.That(layer.Output, Does.Contain($"{domainProbe}(").And.Contain("error UMP020101: SenderProbe in Domain"),
+            "A use of a layer in Umpire.dll is a finding.");
+
+        File.Delete(domainProbe);
         workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
     }
 }

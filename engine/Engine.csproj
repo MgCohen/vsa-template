@@ -15,15 +15,15 @@
   <ItemGroup>
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
   </ItemGroup>
-  <!-- The engine of the SDK package builds on the bundles (UmpireUseBundle, Umpire.Sdk.Package.targets): it loads the
+  <!-- The engine of the SDK package builds on the bundles (_UmpireUseBundle, Umpire.Sdk.Package.targets): it loads the
        definition of an app, so its Architecture type must come from the same Umpire.dll as the app. -->
-  <ItemGroup Condition="'$(UmpireUseBundle)' != 'true'">
+  <ItemGroup Condition="'$(_UmpireUseBundle)' != 'true'">
     <ProjectReference Include="$(UmpireFrameworkSourceDir)architecture/Umpire.Architecture.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(UmpireUseBundle)' == 'true'">
+  <ItemGroup Condition="'$(_UmpireUseBundle)' == 'true'">
     <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Console/Umpire.Console.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -39,7 +39,7 @@ The projects of the groups are for development: their references enforce the lay
 | `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console |
 | `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit |
 
-`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `UmpireUseBundle=true` makes Umpire.Sdk reference the bundle projects in source mode. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.dll` as the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
+`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `_UmpireUseBundle=true` (private) makes Umpire.Sdk reference the bundle projects in source mode. Only the SDK pack sets it: a repository app built with it gives `UMP030001` for each framework block, because the check entries of those blocks are in the runtime DLLs. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.dll` as the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
 
 ## Kinds of block
 

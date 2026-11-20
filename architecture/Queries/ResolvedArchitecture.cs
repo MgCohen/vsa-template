@@ -29,8 +29,8 @@ public sealed class ResolvedArchitecture {
 
     public Part? ExternalPart(string assembly) => ExternalPart(assembly, "");
 
-    public Part? ExternalPart(string assembly, string typeFullName) {
-        var space = NamespaceOf(typeFullName);
+    public Part? ExternalPart(string assembly, string externalTypeFullName) {
+        var space = NamespaceOf(externalTypeFullName);
         return externalParts
             .Where(p => IsUnder(assembly, p.Assembly!) || IsUnder(space, p.Assembly!))
             .OrderByDescending(p => p.Assembly!.Length)

@@ -15,7 +15,7 @@ public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyL
         [.. Dlls.Where(d => !Skipped(d.Name, skip) && d.HasSourceUnder(blockFolder))];
 
     public IReadOnlyList<BinDll> ExternalDlls(IReadOnlyList<string> names) =>
-        [.. Dlls.Where(d => !d.IsShared && names.Any(e => d.Name == e || d.Name.StartsWith(e + ".", StringComparison.Ordinal)))];
+        [.. Dlls.Where(d => names.Any(e => d.Name == e || d.Name.StartsWith(e + ".", StringComparison.Ordinal)))];
 
     public IReadOnlyList<BinDll> ReferencedDlls(
         IReadOnlyList<BinDll> app, IReadOnlyList<string> skip, bool shared = false) {

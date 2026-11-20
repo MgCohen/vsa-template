@@ -31,7 +31,7 @@ sealed class PartOf {
         if (LoadedTypes.IsCompilerGenerated(type.Name)) {
             return;
         }
-        if (resolved.ExternalPart(type.Assembly, type.FullName) is { } external) {
+        if (resolved.ExternalPart(type.Assembly, IsInBlock(type) ? "" : type.FullName) is { } external) {
             bound.Add(new Binding(type, external, new Dictionary<string, string>(), null));
             return;
         }
@@ -62,6 +62,9 @@ sealed class PartOf {
             bound.Add(BindTo(match, type, located));
         }
     }
+
+    bool IsInBlock(TypeFacts type) =>
+        type.Source is { } source && !Path.GetRelativePath(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
 
     Part? TopFile(IReadOnlyList<string> paths, TypeFacts type) {
         if (!paths.Any(path => !path.Contains('/'))) {
