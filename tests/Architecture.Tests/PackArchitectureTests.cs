@@ -61,13 +61,18 @@ public sealed class PackArchitectureTests {
     }
 
     [Test]
-    public void A_use_between_two_kernel_layers_is_allowed_until_the_kernel_has_rules() {
+    public void Each_use_between_two_kernel_layers_is_allowed_until_the_kernel_has_rules() {
         var resolved = WithKernel();
-        var domain = resolved.Parts.Single(p => p.Path == "Kernel/Domain");
-        var handlers = resolved.Parts.Single(p => p.Path == "Kernel/Handlers/Commands");
+        var layers = resolved.Parts.Where(p => p.Path.StartsWith("Kernel/", StringComparison.Ordinal)).ToList();
         var none = new Dictionary<string, string>();
 
-        Assert.That(resolved.DecisionFor(domain, none, handlers, none).Permission, Is.EqualTo(Permission.Allow));
+        var denied = layers.SelectMany(from => layers.Where(to => to != from)
+                .Where(to => resolved.DecisionFor(from, none, to, none).Permission != Permission.Allow)
+                .Select(to => $"{from.Path} -> {to.Path}"))
+            .ToList();
+
+        Assert.That(layers, Has.Count.EqualTo(13));
+        Assert.That(denied, Is.Empty);
     }
 
     static ResolvedArchitecture WithKernel() => new(new PackArchitecture(new VsaArchitecture()));

@@ -59,6 +59,18 @@ public sealed class BlocksTests {
         Assert.That(packed, Is.EqualTo(new[] { architecture }));
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void The_entry_that_names_the_pack_architecture_is_the_current_block(bool packedFirst) {
+        var plain = Entry("C:/a", EntryForm.Base);
+        var packed = plain with { Packed = TypeName.Parse(VsaArchitecture) };
+        BlockEntry[] entries = packedFirst ? [packed, plain] : [plain, packed];
+
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), entries, NoBin);
+
+        Assert.That(result.Value.Blocks.Current.Packed, Is.EqualTo(TypeName.Parse(VsaArchitecture)));
+    }
+
     [Test]
     public void Assembly_metadata_with_Umpire_Root_is_the_check_entry_of_the_folder_above_the_project() {
         var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "Lib")));

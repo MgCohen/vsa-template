@@ -45,7 +45,7 @@ public class VsaArchitecture : Architecture {
     }
 
     protected override void KernelRules(RuleBook rules) {
-        UsesKernelLayers(ForKernelLayers(rules));
+        AndOtherKernelLayers(AndOtherKernelLayers(rules.For<Domain>()).Uses<Domain>());
     }
 
     protected virtual void DefinePlugin(PartGroup plugin) {
@@ -109,13 +109,9 @@ public class VsaArchitecture : Architecture {
         rules.For<Feature>().Has<Module>().Exactly(1);
         rules.For<Plugin>().Has<Module>().Exactly(1);
     }
-    static From ForKernelLayers(RuleBook rules) =>
-        rules.For<Domain>().And<Infrastructure>().And<Presenters>().And<Contracts>().And<Contracts.Requests>()
-            .And<Contracts.Events>().And<Contracts.Commands>().And<Handlers>().And<Handlers.Requests>().And<Handlers.Events>()
-            .And<Handlers.Commands>().And<Views>().And<Composition>();
 
-    static Rule UsesKernelLayers(From from) =>
-        from.Uses<Domain>().And<Infrastructure>().And<Presenters>().And<Contracts>().And<Contracts.Requests>()
+    static TChain AndOtherKernelLayers<TChain>(TChain domain) where TChain : Chain<TChain> =>
+        domain.And<Infrastructure>().And<Presenters>().And<Contracts>().And<Contracts.Requests>()
             .And<Contracts.Events>().And<Contracts.Commands>().And<Handlers>().And<Handlers.Requests>().And<Handlers.Events>()
             .And<Handlers.Commands>().And<Views>().And<Composition>();
 

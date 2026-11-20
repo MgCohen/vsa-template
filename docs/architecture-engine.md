@@ -429,6 +429,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030502` | 05 LoadApp | Error | The app has no app class |
 | `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class |
 | `UMP030504` | 05 LoadApp | Error | An app class has no public constructor with no parameters |
+| `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
 A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
 

@@ -32,9 +32,14 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
-    static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
+    internal static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
         if (entry.Form != EntryForm.App) {
-            return loader.CreateArchitecture(entry.Type!, entry.Packed);
+            return entry.Packed is { } packed && !loader.TakesPacked(entry.Type!)
+                ? new Error(LoadAppCodes.NoPackedConstructor,
+                    $"The block architecture {entry.Type!.FullName} has no public constructor with one Architecture parameter, "
+                    + $"so the engine cannot check the kernel of the pack with {packed.FullName}. "
+                    + "Use the same Umpire version for the pack and the engine (see UMP030401).")
+                : loader.CreateArchitecture(entry.Type!, entry.Packed);
         }
         var classes = AppClass.Leaves([.. app.SelectMany(d => d.AppClasses)]);
         if (AppClassError(classes) is { } error) {
