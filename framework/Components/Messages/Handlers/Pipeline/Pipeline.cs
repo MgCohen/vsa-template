@@ -77,15 +77,16 @@ public sealed class Pipeline {
         var index = new Dictionary<Type, List<Type>>();
         var all = Definition.HandlerBases.SelectMany(HandlersOf).Concat(Definition.Handlers).Distinct();
         foreach (var handler in all) {
-            var message = MessageTypes.OfHandler(handler);
-            if (!index.TryGetValue(message, out var list)) {
-                index[message] = list = [];
-            }
-            list.Add(handler);
-            if (!many && list.Count > 1) {
-                throw new InvalidOperationException(
-                    $"{message.FullName} has two handlers: {list[0].FullName} and {list[1].FullName}. "
-                    + "A command or a request has one handler.");
+            foreach (var message in MessageTypes.OfHandler(handler)) {
+                if (!index.TryGetValue(message, out var list)) {
+                    index[message] = list = [];
+                }
+                list.Add(handler);
+                if (!many && list.Count > 1) {
+                    throw new InvalidOperationException(
+                        $"{message.FullName} has two handlers: {list[0].FullName} and {list[1].FullName}. "
+                        + "A command or a request has one handler.");
+                }
             }
         }
         return index;

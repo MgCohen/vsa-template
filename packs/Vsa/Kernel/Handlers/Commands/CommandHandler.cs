@@ -12,6 +12,6 @@ public abstract class CommandHandler<TCommand, TResult> : IHandler<TCommand>
     where TCommand : class, ICommand<TResult> {
     public abstract Task<Result<TResult>> HandleAsync(Envelope<TCommand> envelope);
 
-    async Task<IMessageResult> IHandler.HandleAsync(Envelope envelope) =>
-        await HandleAsync((Envelope<TCommand>)envelope);
+    async Task<IMessageResult> IHandler<TCommand>.RunAsync(Envelope<TCommand> envelope) =>
+        await HandleAsync(envelope);
 }

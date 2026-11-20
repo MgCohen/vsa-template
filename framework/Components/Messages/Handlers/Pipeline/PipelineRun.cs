@@ -64,16 +64,26 @@ static class PipelineRun {
                     $"{route.Message.FullName} has no handler in its pipeline. Add one handler for it: a class that "
                     + $"implements IHandler<{route.Message.Name}>, directly or through a handler base.");
             }
-            return await Resolve<IHandler>(route.Handlers[0], envelope).HandleAsync(envelope);
+            return await route.Call(Resolve<IHandler>(route.Handlers[0], envelope), envelope);
         }
         IMessageResult result = (Result<Unit>)Unit.Value;
         foreach (var type in route.Handlers) {
-            var handled = await Resolve<IHandler>(type, envelope).HandleAsync(envelope);
+            var handled = await OneOfManyAsync(route, type, envelope);
             if (!handled.IsSuccess && result.IsSuccess) {
                 result = handled;
             }
         }
         return result;
+    }
+
+    static async Task<IMessageResult> OneOfManyAsync(MessageRoute route, Type handler, Envelope envelope) {
+        try {
+            return await route.Call(Resolve<IHandler>(handler, envelope), envelope);
+        } catch (Exception e)
+            when (e is not OperationCanceledException || !envelope.Cancellation.IsCancellationRequested) {
+            envelope.AddHandlerException(e);
+            return (Result<Unit>)new Error(EnvelopeResults.FaultCode, $"{handler.Name} failed: {e.Message}");
+        }
     }
 
     static async Task AfterAsync(MessageRoute route, Envelope envelope) {

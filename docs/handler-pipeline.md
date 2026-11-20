@@ -17,7 +17,7 @@ SendAsync ◀── Result<T> (the value or the Error, with its envelope)
 | Validate | Each `Validator<TMessage>` of the modules | It checks the message as it is at this stage. The first `Error` rejects the message: the handler does not run |
 | Before steps | `.BeforeStep<T>()` in the builder of the pipeline | In the order of the builder. It returns the message: the same one, or a copy made with `with` |
 | Before hooks | Each Before hook of the modules, if the pipeline names its base | By full type name. It returns the message, or rejects it with `envelope.Reject(error)` |
-| Handle | The handler of the message | One handler for a command or a request, zero or more for an event |
+| Handle | The handler of the message | One handler for a command or a request, zero or more for an event. If one event handler throws, its error goes in the result, and the next handler runs. A cancellation stops the run |
 | After hooks | Each After hook of the modules, if the pipeline names its base | By full type name. Each outcome, also a fault |
 | After steps | `.AfterStep<T>()` in the builder | In the order of the builder. Each outcome, also a fault |
 
@@ -87,7 +87,12 @@ sealed class RangHandler(RingLog log) : IntegrationEventHandler<Rang> {
 }
 ```
 
-A handler base of a plugin module implements `IHandler<TMessage>` one time, as `CommandHandler<,>`, `RequestHandler<,>` and `IntegrationEventHandler<>` do.
+The pipeline calls `IHandler<TMessage>.RunAsync(Envelope<TMessage>)`. Each handler base gives that body one time, as `CommandHandler<,>`, `RequestHandler<,>` and `IIntegrationEventHandler<>` do. Each closed `IHandler<T>` has its own `RunAsync`, so one class can handle many message types, for example a presenter:
+
+```csharp
+public sealed class CardPresenter(IRequestSender r) : Presenter(r),
+    IPresenterHandler<CardAdded>, IPresenterHandler<CardRemoved> { ... }   // one HandleAsync for each event
+```
 
 ## Runners
 
@@ -140,11 +145,31 @@ Each kind adds its default pipeline with `AddPipeline`, as a module does:
 |---|---|---|
 | Commands | `CommandHandler<,>` | `BeforeCommandHook<>`, `AfterCommandHook<,>` |
 | Events | `IntegrationEventHandler<>` | `BeforeEventHook<>`, `AfterEventHook<>` |
+| Presenters | `IPresenterHandler<>`, runner `LiveScopesRunner` | None |
 | Requests | `RequestHandler<,>` | None |
 
 A message base has one pipeline for each handler base: a second `AddPipeline` with the same message base and a related handler base fails. Two handler bases are related if one derives from the other. A listed handler counts as a handler base. The command and the request defaults both have the base `IMessage`, with different handler bases.
 
 The default of each kind already has its message base and handler base. Thus a module pipeline with `PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>))` fails, and it does not replace the default. Give a module pipeline a narrower message base, for example `ArenaMove`.
+
+### Broadcast: an event goes to each pipeline
+
+A command or a request goes to one pipeline. An event (`IBroadcastMessage`) goes to each pipeline that takes it:
+
+```text
+IIntegrationEventPublisher.PublishAsync(event)
+ └─ Pipelines.PublishAsync
+     1. events      IntegrationEventHandler<>   in the scope of the publish     → its result is the result of the publish
+     2. presenters  IPresenterHandler<>         in each live presenter scope    → only if 1 is Accepted
+     3. a module broadcast pipeline, for example an audit                       → only if 1 is Accepted
+```
+
+| Rule | Detail |
+|---|---|
+| Pipelines | Each pipeline with a broadcast message base that takes the event |
+| One for each handler base | If pipelines have related handler bases, the most specific message base wins |
+| Order | The order of `AddPipeline`. A group of related pipelines has the place of its first pipeline |
+| Gate | The later pipelines run only if the first one is `Accepted` |
 
 ## Projects
 

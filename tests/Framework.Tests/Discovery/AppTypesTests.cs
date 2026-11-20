@@ -11,7 +11,9 @@ public sealed class AppTypesTests {
     public void RootsAreInOrdinalOrderOfName() {
         var roots = new AppTypes(null).Roots;
 
-        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] { "Answers", "Bare", "Battle", "Cards", "Echo", "Resources", "Shelf", "Signals", "Toolbox", "Twin" }));
+        Assert.That(roots.Select(root => root.Name), Is.EqualTo(new[] {
+            "Answers", "Bare", "Battle", "Cached", "Cards", "Echo", "Gauges", "Resources", "Shelf", "Signals", "Toolbox", "Twin",
+        }));
     }
 
     [Test]
