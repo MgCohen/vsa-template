@@ -13,7 +13,7 @@ public sealed class Pipeline {
     readonly bool many;
     readonly Dictionary<Type, List<Type>> handlers;
     readonly List<Type> openHandlers;
-    readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> matches = new();
+    readonly ConcurrentDictionary<Type, IReadOnlyList<RouteHandler>> matches = new();
     readonly ConcurrentDictionary<Type, MessageRoute> routes = new();
 
     internal Pipeline(PipelineDefinition definition, IServiceProvider services) {
@@ -58,10 +58,16 @@ public sealed class Pipeline {
     }
 
     static Type[] ByName(IEnumerable<ServiceImplementation> found, Type message) =>
-        [.. found.Where(t => MessageTypes.Applies(t.Service.GetGenericArguments()[0], message))
+        [.. MessageTypes.NearestPerDefinition(
+                MessageTypes.NearestFirst(
+                    found.Where(t => MessageTypes.Applies(MessageOf(t), message)), MessageOf),
+                t => t.Implementation,
+                MessageOf)
             .Select(t => t.Implementation)
             .Distinct()
             .OrderBy(t => t.FullName, StringComparer.Ordinal)];
+
+    static Type MessageOf(ServiceImplementation found) => found.Service.GetGenericArguments()[0];
 
     static Type[] Steps(IReadOnlyList<Type> steps, Type typedStepBase, Type message) =>
         [.. steps.Where(step => MessageTypes.Applies(MessageTypes.OfStep(step, typedStepBase), message))];
@@ -111,9 +117,9 @@ public sealed class Pipeline {
         }
     }
 
-    IReadOnlyList<Type> HandlersFor(Type message) => matches.GetOrAdd(message, Match);
+    IReadOnlyList<RouteHandler> HandlersFor(Type message) => matches.GetOrAdd(message, Match);
 
-    IReadOnlyList<Type> Match(Type message) {
+    IReadOnlyList<RouteHandler> Match(Type message) {
         var found = new Dictionary<Type, List<Type>>();
         foreach (var entry in handlers.Where(h => MessageTypes.Applies(h.Key, message))) {
             Add(found, entry.Key, entry.Value);
@@ -123,21 +129,24 @@ public sealed class Pipeline {
                 Add(found, handled, [closed]);
             }
         }
-        var keys = found.Keys
-            .OrderBy(k => k == message ? 0 : 1)
-            .ThenBy(k => k.FullName, StringComparer.Ordinal)
+        var all = MessageTypes.NearestPerDefinition(
+                MessageTypes.NearestFirst(
+                    found.SelectMany(f => f.Value.Select(h => new RouteHandler(f.Key, h))), r => r.Message),
+                r => r.Handler,
+                r => r.Message)
             .ToList();
         if (many) {
-            return [.. keys.SelectMany(k => found[k]).Distinct()];
+            return all;
         }
-        var nearest = MessageTypes.Narrowest(keys, k => k);
+        var nearest = MessageTypes.Narrowest(all, r => r.Message);
         if (nearest.Count > 1) {
             throw new InvalidOperationException(
-                $"{message.FullName} has two nearest handlers: {found[nearest[0]][0].FullName} for {nearest[0].Name} "
-                + $"and {found[nearest[1]][0].FullName} for {nearest[1].Name}. "
+                $"{message.FullName} has two nearest handlers: "
+                + $"{nearest[0].Handler.FullName} for {nearest[0].Message.Name} "
+                + $"and {nearest[1].Handler.FullName} for {nearest[1].Message.Name}. "
                 + $"Add a handler for {message.Name}, or remove one of them.");
         }
-        return nearest.Count == 0 ? [] : found[nearest[0]];
+        return nearest.Count == 0 ? [] : [nearest[0]];
     }
 
     IEnumerable<Type> ClosedFor(Type message) =>

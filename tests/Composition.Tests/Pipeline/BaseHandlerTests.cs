@@ -1,6 +1,8 @@
 namespace Composition.Tests.Pipeline;
 
 using Microsoft.Extensions.DependencyInjection;
+using Umpire.Kernels;
+using Umpire.Markers;
 using Umpire.Messages.Contracts;
 using Umpire.Messages.Handlers;
 using Umpire.Vsa.Contracts.Commands;
@@ -76,7 +78,48 @@ public sealed class BaseHandlerTests {
 
         await pipeline.SendAsync<Unit>(new CardChanged());
 
-        Assert.That(Log.Lines, Is.EqualTo(new[] { "card", "both", "item" }));
+        Assert.That(Log.Lines, Is.EqualTo(new[] { "card", "both:card", "item" }));
+    }
+
+    [Test]
+    public async Task An_event_calls_a_handler_of_many_bases_one_time_for_its_nearest_base() {
+        var pipeline = new PipelineBuilder<IntegrationEvent>()
+            .Handlers(typeof(ItemChangedHandler), typeof(CardChangedHandler), typeof(BothHandler))
+            .Build(services);
+        Log.Lines.Clear();
+
+        await pipeline.SendAsync<Unit>(new SubCard());
+
+        Assert.That(Log.Lines, Is.EqualTo(new[] { "card", "both:card", "item" }));
+    }
+
+    [Test]
+    public async Task An_event_runs_one_closure_of_an_open_handler_when_a_closed_one_also_matches() {
+        var pipeline = new PipelineBuilder<IntegrationEvent>()
+            .Handlers(typeof(Audit<ItemChanged>), typeof(Audit<>))
+            .Build(services);
+        Log.Lines.Clear();
+
+        await pipeline.SendAsync<Unit>(new CardChanged());
+
+        Assert.That(Log.Lines, Is.EqualTo(new[] { "audit:CardChanged" }));
+    }
+
+    [Test]
+    public async Task The_message_closes_an_open_validator_and_hook_one_time_next_to_a_type_argument_closure() {
+        using var typed = new ServiceCollection()
+            .AddSingleton<Calls>()
+            .AddSingleton(new AppTypes([new CheckModule()]))
+            .BuildServiceProvider();
+        var pipeline = new PipelineBuilder<Check>()
+            .Handlers(typeof(CheckHandler))
+            .HooksOf(typeof(AfterCommandHook<,>))
+            .Build(typed);
+
+        var result = await pipeline.SendAsync<string>(new SubCheck());
+
+        Assert.That(result.Value, Is.EqualTo("ok"));
+        Assert.That(typed.GetRequiredService<Calls>().Lines, Is.EqualTo(new[] { "valid:SubCheck", "hook:SubCheck" }));
     }
 
     Pipeline Commands(params Type[] handlers) =>
@@ -141,7 +184,9 @@ public sealed class BaseHandlerTests {
 
     public record ItemChanged : IntegrationEvent;
 
-    public sealed record CardChanged : ItemChanged;
+    public record CardChanged : ItemChanged;
+
+    public sealed record SubCard : CardChanged;
 
     public sealed class ItemChangedHandler(Calls calls) : IntegrationEventHandler<ItemChanged> {
         public override Task<Result<Unit>> HandleAsync(IEnvelope<ItemChanged> envelope) {
@@ -160,13 +205,46 @@ public sealed class BaseHandlerTests {
     public sealed class BothHandler(Calls calls)
         : IIntegrationEventHandler<ItemChanged>, IIntegrationEventHandler<CardChanged> {
         public Task<Result<Unit>> HandleAsync(IEnvelope<ItemChanged> envelope) {
-            calls.Lines.Add("both");
+            calls.Lines.Add("both:item");
             return Task.FromResult<Result<Unit>>(Unit.Value);
         }
 
         public Task<Result<Unit>> HandleAsync(IEnvelope<CardChanged> envelope) {
-            calls.Lines.Add("both");
+            calls.Lines.Add("both:card");
             return Task.FromResult<Result<Unit>>(Unit.Value);
+        }
+    }
+
+    public sealed class Audit<TEvent>(Calls calls) : IntegrationEventHandler<TEvent> where TEvent : IntegrationEvent {
+        public override Task<Result<Unit>> HandleAsync(IEnvelope<TEvent> envelope) {
+            calls.Lines.Add($"audit:{typeof(TEvent).Name}");
+            return Done;
+        }
+    }
+
+    public sealed class CheckModule : Module;
+
+    [TypeArgument]
+    public record Check : ICommand<string>;
+
+    public sealed record SubCheck : Check;
+
+    public sealed class CheckHandler : CommandHandler<Check, string> {
+        public override Task<Result<string>> HandleAsync(IEnvelope<Check> envelope) =>
+            Task.FromResult<Result<string>>("ok");
+    }
+
+    public sealed class CheckValidator<T>(Calls calls) : Validator<T> where T : Check {
+        public override Error? Validate(IEnvelope<T> envelope) {
+            calls.Lines.Add($"valid:{typeof(T).Name}");
+            return null;
+        }
+    }
+
+    public sealed class CheckHook<T>(Calls calls) : AfterCommandHook<T, string> where T : Check {
+        public override Task AfterAsync(IEnvelope<T> envelope, Result<string> outcome) {
+            calls.Lines.Add($"hook:{typeof(T).Name}");
+            return Task.CompletedTask;
         }
     }
 }

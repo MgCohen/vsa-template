@@ -26,6 +26,21 @@ static class MessageTypes {
     internal static List<T> Narrowest<T>(IReadOnlyList<T> items, Func<T, Type> messageOf) =>
         [.. items.Where(item => !items.Any(other => IsNarrower(messageOf(other), messageOf(item))))];
 
+    internal static List<T> NearestFirst<T>(IEnumerable<T> items, Func<T, Type> messageOf) {
+        var list = items.ToList();
+        return [.. list
+            .OrderByDescending(item => list.Count(other => IsNarrower(messageOf(item), messageOf(other))))
+            .ThenBy(item => messageOf(item).FullName, StringComparer.Ordinal)];
+    }
+
+    internal static IEnumerable<T> NearestPerDefinition<T>(
+        IEnumerable<T> nearestFirst, Func<T, Type> typeOf, Func<T, Type> messageOf) =>
+        nearestFirst
+            .GroupBy(item => DefinitionOf(typeOf(item)))
+            .SelectMany(group => Narrowest(group.ToList(), messageOf))
+            .GroupBy(typeOf)
+            .Select(group => group.First());
+
     internal static Type? ArgumentFor(Type pattern, Type message) {
         if (pattern.IsGenericParameter) {
             return message;
@@ -40,6 +55,8 @@ static class MessageTypes {
 
     internal static Type? Closed(Type open, Type pattern, Type message) =>
         ArgumentFor(pattern, message) is { } argument ? AppTypes.Closed(open, argument) : null;
+
+    static Type DefinitionOf(Type type) => type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
 
     static Type? ArgumentIn(Type[] pattern, Type[] closed) {
         Type? argument = null;
