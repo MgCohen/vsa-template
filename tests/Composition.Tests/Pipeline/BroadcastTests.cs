@@ -16,6 +16,7 @@ public sealed class BroadcastTests {
 
         Assert.That(services.GetRequiredService<PingLog>().Lines, Is.EqualTo(new[] { "throwing", "counting" }));
         Assert.That(result.Error?.Message, Does.StartWith("ThrowingPing failed: broken"));
+        Assert.That(result.Envelope?.HandlerExceptions.Single().StackTrace, Does.Contain(nameof(ThrowingPing)));
     }
 
     [Test]

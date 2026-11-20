@@ -81,6 +81,7 @@ static class PipelineRun {
             return await route.Call(Resolve<IHandler>(handler, envelope), envelope);
         } catch (Exception e)
             when (e is not OperationCanceledException || !envelope.Cancellation.IsCancellationRequested) {
+            envelope.AddHandlerException(e);
             return (Result<Unit>)new Error(EnvelopeResults.FaultCode, $"{handler.Name} failed: {e.Message}");
         }
     }

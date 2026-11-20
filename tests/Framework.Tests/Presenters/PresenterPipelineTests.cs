@@ -223,6 +223,47 @@ public sealed class PresenterPipelineTests {
     }
 
     [Test]
+    public async Task TheLogHasTheExceptionOfAPresenterThatThrows() {
+        var errors = new ErrorLog();
+        using var services = Services([typeof(BrokenPresenter)], errors);
+        using var scope = LiveScope(services);
+
+        await Publish(services, new Counted(1), CancellationToken.None);
+
+        Assert.That(errors.Exceptions, Has.Count.EqualTo(1));
+        Assert.That(errors.Exceptions[0], Is.TypeOf<InvalidOperationException>().With.Message.EqualTo("broken"));
+        Assert.That(errors.Exceptions[0].StackTrace, Does.Contain(nameof(BrokenPresenter)));
+    }
+
+    [Test]
+    public async Task AThrowAndAThrowingListenerKeepBothExceptions() {
+        var errors = new ErrorLog();
+        using var services = Services([typeof(BrokenPresenter)], errors);
+        using var scope = LiveScope(services);
+        scope.ServiceProvider.GetRequiredService<BrokenPresenter>().Changed +=
+            () => throw new InvalidOperationException("listener");
+
+        await Publish(services, new Counted(1), CancellationToken.None);
+
+        var both = errors.Exceptions.Single() as AggregateException;
+        Assert.That(both?.InnerExceptions.Select(e => e.Message), Is.EqualTo(new[] { "broken", "listener" }));
+    }
+
+    [Test]
+    public async Task ACancelledDeliveryRaisesNoChanged() {
+        using var services = Services([typeof(CancelledPresenter)]);
+        using var scope = LiveScope(services);
+        var changed = 0;
+        scope.ServiceProvider.GetRequiredService<CancelledPresenter>().Changed += () => changed++;
+        using var cancelled = new CancellationTokenSource();
+        await cancelled.CancelAsync();
+
+        await Publish(services, new Counted(1), cancelled.Token);
+
+        Assert.That(changed, Is.Zero);
+    }
+
+    [Test]
     public async Task ACancelledDeliveryIsNotAnError() {
         var errors = new ErrorLog();
         using var services = Services([typeof(CancelledPresenter)], errors);
@@ -455,6 +496,7 @@ public sealed class PresenterPipelineTests {
 
     sealed class ErrorLog : ILogger<LiveScopesRunner> {
         public int Count { get; private set; }
+        public List<Exception> Exceptions { get; } = [];
 
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
@@ -464,6 +506,9 @@ public sealed class PresenterPipelineTests {
             Func<TState, Exception?, string> formatter) {
             if (logLevel >= LogLevel.Error) {
                 Count++;
+                if (exception is not null) {
+                    Exceptions.Add(exception);
+                }
             }
         }
     }

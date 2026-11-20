@@ -2,6 +2,7 @@ namespace Umpire.Messages.Contracts;
 
 public abstract class Envelope : IEnvelope {
     static long lastId;
+    readonly List<Exception> handlerExceptions = [];
 
     private protected Envelope(Envelope? parent, IServiceProvider services, CancellationToken cancellation) {
         Id = Interlocked.Increment(ref lastId);
@@ -22,6 +23,7 @@ public abstract class Envelope : IEnvelope {
     public Error? Error { get; private set; }
     public IMessageResult? Result { get; private set; }
     public Exception? Exception { get; private set; }
+    public IReadOnlyList<Exception> HandlerExceptions => handlerExceptions;
     public object Message => UntypedMessage;
     protected abstract object UntypedMessage { get; }
 
@@ -44,6 +46,8 @@ public abstract class Envelope : IEnvelope {
         Error = result.Error;
         State = EnvelopeState.Accepted;
     }
+
+    internal void AddHandlerException(Exception exception) => handlerExceptions.Add(exception);
 
     internal void Fault(Exception exception) {
         Exception = exception;

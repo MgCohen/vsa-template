@@ -75,11 +75,14 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 - In Blazor, the flow of circuit X can run the presenters of circuit Y on the thread of X. The render of Y stays safe, because `PresenterWatcher` calls `InvokeAsync`. But the state of a presenter of Y can change while Y renders.
 - The cost of a publish: the publish runs the presenters of each idle live scope, one scope after the other. It does not wait for a busy scope. The flow that runs the queue of a scope also runs the deliveries that other flows add during that time. Keep presenter handlers short: a slow handler makes each publish to an idle scope slow.
 - The runner checks that the scope is live before the delivery. If the scope ends during the delivery, the next handlers cannot resolve, and the runner logs no error for an ended scope.
-- If a handler throws or returns an error, the next handler runs, and the log gets the first error of the delivery. A `Changed` listener that throws is an error of its handler.
+- If a handler throws or returns an error, the next handler runs. The log gets each exception with its stack trace (`Envelope.HandlerExceptions`). If no handler throws, it gets the first error of the delivery.
+- `Changed` is raised after each handler that completes or throws, but not after a cancellation. A `Changed` listener that throws is an error of its handler. If the handler and the listener both throw, the log gets an `AggregateException` with both.
 - A delivery that starts later keeps the token of its publish. If that token is cancelled, an `OperationCanceledException` stops the delivery to that scope, and it is not an error.
 - `IIntegrationEventHandler<TEvent>` has no `[AutoRegister]`. The event pipeline takes the classes of `IntegrationEventHandler<TEvent>`, and the presenter pipeline takes the classes of `IPresenterHandler<TEvent>`. Thus a presenter is never a module handler.
 - One presenter can show many events: it implements `IPresenterHandler<T>` one time for each event.
-- An open presenter, for example `GaugePresenter<T> where T : struct, IGauge`, is closed for each `[TypeArgument]` type that meets its constraints, the same as an open handler (`docs/composition.md`).
+- An open presenter, for example `GaugePresenter<T> where T : struct, IGauge`, is closed for each `[TypeArgument]` type that meets its constraints, the same as an open handler (`docs/composition.md`). If no type argument fits, the presenter gets no registration and no start error, the same as each open class (MgCohen/vsa-template#214).
+- `Presenter` is a service, with one forward for each presenter. Thus `GetServices<Presenter>()` in a scope makes each presenter of that scope.
+- The presenter pipeline has the validators of the event, so each `Validator<TEvent>` runs one time for the event pipeline and one time for each live scope. Keep validators of events cheap and free of side effects.
 - Each scope gets its own envelope. `Envelope.Services` is the provider of the presenter scope, and `Envelope.Cancellation` is the token of the publish.
 - A view renders on its own thread: `PresenterWatcher` calls `InvokeAsync(StateHasChanged)`.
 - The presenter pipeline runs after the event pipeline. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.

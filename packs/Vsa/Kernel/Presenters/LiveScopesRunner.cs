@@ -25,7 +25,13 @@ public sealed class LiveScopesRunner(LiveScopes live, ILogger<LiveScopesRunner> 
         } catch (Exception) {
             return;
         }
-        if (envelope.Error is { } error && live.IsLive(scope)) {
+        if (!live.IsLive(scope)) {
+            return;
+        }
+        foreach (var exception in envelope.HandlerExceptions) {
+            logger.LogError(exception, "A presenter failed on {Event}.", envelope.Message.GetType().Name);
+        }
+        if (envelope.HandlerExceptions.Count == 0 && envelope.Error is { } error) {
             logger.LogError(
                 "The presenters failed on {Event}: {Error}", envelope.Message.GetType().Name, error.Message);
         }
