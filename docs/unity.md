@@ -11,6 +11,8 @@ The framework obeys the limits that Unity 6 gives, and a test checks each limit 
 | `Microsoft.Extensions` on `netstandard2.1` | 8.0 | `Directory.Packages.props` | `PortableReferenceTests` |
 | Roslyn of the analyzers | 4.10 at most | The two analyzer project files | `AnalyzerRoslynTests` |
 | Target of the analyzers | `netstandard2.0` | The two analyzer project files | `AnalyzerRoslynTests` |
+| Compiler assemblies of the analyzers | SCI and `System.Reflection.Metadata` 8.0 at most, no other reference | The two analyzer project files, `Umpire.ConfigBundle.targets` | `AnalyzerRoslynTests` |
+| The analyzers load and read `.umpireconfig` in the Unity compiler | .NET 8, Roslyn 4.10, SCI 8.0 | `Umpire.ConfigBundle.targets` | `AnalyzerLoadTests` |
 | Target of `Umpire.Markers` | `netstandard2.0` | `architecture/Markers/Umpire.Markers.csproj` | `PortableTargetTests` |
 
 The tests are in `tests/Framework.Tests/Unity/`. They read the built DLLs in `artifacts~/bin/`, so `Framework.Tests` builds the `netstandard2.1` target of each portable project first. If you add a project to `UmpirePortableLayer`, also add it to `PortableProjects.cs` and to the table "Layers that Unity can use".
@@ -19,6 +21,7 @@ The reasons for the limits:
 
 - Unity 6 ships some `Microsoft.Extensions` DLLs at version 8.0, in `Editor/Data/BCLExtensions`. A higher version is a compile error in Unity (`CS1705`).
 - Roslyn 4.10 is the compiler of Unity 6. A newer compiler also runs an analyzer for 4.10. An analyzer that references a newer Roslyn does not run in Unity (`CS9057`).
+- The compiler of Unity 6 runs on .NET 8 and owns `System.Collections.Immutable` 8.0. An analyzer that references 9.0 does not load (`CS8032`), and a copy of 9.0 in the analyzer folder breaks the analyzer API. So the kernel analyzer DLL embeds its config reader and loads it in a private load context (see "The config reader in the compiler" in `docs/architecture-rules.md`).
 - The framework has no C# language limit. Unity does not compile the framework source: it gets the DLLs. The compiler refuses each feature that needs runtime support that `netstandard2.1` does not have. Unity compiles only the code in `Assets/`, with C# 9, and `vsa-unity` owns the rules for that code.
 
 ## Extension points
@@ -46,7 +49,7 @@ Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`), with `Umpire.Config.dll` and `Tomlyn.dll` next to them. A Unity project puts these four DLLs in one folder and marks each one as an analyzer. The netstandard2.0 build of Tomlyn 2.10.2 also needs `System.Text.Json` (10.0.2), `System.Collections.Immutable` (9.0.0) and `System.Buffers` (4.6.1), with their own dependencies. The .NET SDK compiler has them, but the packages do not ship them. If one does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. A Unity project puts the two DLLs in one folder and marks each one as an analyzer (label `RoslynAnalyzer`). It adds no other DLL to that folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
 
 ## Build output
 

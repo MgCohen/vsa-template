@@ -1,0 +1,9 @@
+<Project>
+  <!-- Imported only in the netstandard2.0 build of Umpire.Config that Umpire.ConfigBundle.targets calls.
+       It returns the runtime DLLs of the NuGet graph of Umpire.Config. -->
+  <Target Name="UmpireConfigTree" DependsOnTargets="ResolvePackageAssets" Returns="@(_UmpireConfigTreeDll)">
+    <ItemGroup>
+      <_UmpireConfigTreeDll Include="@(RuntimeCopyLocalItems)" Condition="'%(Extension)' == '.dll'" />
+    </ItemGroup>
+  </Target>
+</Project>

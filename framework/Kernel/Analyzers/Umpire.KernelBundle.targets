@@ -8,6 +8,9 @@
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_UmpireKernelAnalyzerInPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
   <Target Name="_UmpireKernelAnalyzerInPackage" DependsOnTargets="ResolveReferences">
     <ItemGroup>
       <TfmSpecificPackageFile Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'Umpire.Kernels.Analyzers'" PackagePath="analyzers/dotnet/cs" />

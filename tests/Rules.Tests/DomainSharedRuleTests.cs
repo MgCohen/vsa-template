@@ -179,7 +179,7 @@ public sealed class SharedTypeBaseRuleTests {
 
 public sealed class UmpireOptionsTests {
     static UmpireOptions Of(params (string Key, string Value)[] values) =>
-        new("UMP010207", Umpire.Config.UmpireConfig.Parse(string.Concat(values.Select(v => $"{v.Key} = \"{v.Value}\"\n"))),
+        new("UMP010207", ConfigValues.Parse(string.Concat(values.Select(v => $"{v.Key} = \"{v.Value}\"\n"))),
             new SharedTypeBaseRule().Options);
 
     [Test]

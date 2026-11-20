@@ -1,19 +1,27 @@
 <Project>
-  <!-- The analyzers read the .umpireconfig file of the block with Umpire.Config. Roslyn loads a dependency of an analyzer from the
-       folder of that analyzer, so the output folder and the analyzers/dotnet/cs folder of the package hold Umpire.Config and Tomlyn
-       next to the analyzer DLL. Each analyzer project imports this file. -->
+  <!-- The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their full netstandard2.0 dependency tree as resources.
+       ConfigReader loads them into a private AssemblyLoadContext, so the compiler of the host (for example Unity: Roslyn 4.10 with
+       System.Collections.Immutable 8.0) keeps its own System.Collections.Immutable. The analyzer DLLs compile against the
+       System.Collections.Immutable of Roslyn, and the package holds no dependency next to them. -->
   <PropertyGroup>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_UmpireConfigInPackage</TargetsForTfmSpecificContentInPackage>
+    <_UmpireConfigProject>$(MSBuildThisFileDirectory)../../Components/Config/Umpire.Config.csproj</_UmpireConfigProject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)../../Components/Config/Umpire.Config.csproj" />
-    <PackageReference Include="Tomlyn" GeneratePathProperty="true" ExcludeAssets="analyzers" />
-    <None Include="$(PkgTomlyn)/lib/netstandard2.0/Tomlyn.dll" CopyToOutputDirectory="PreserveNewest" Pack="true"
-          PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="" Visible="false" />
+    <ProjectReference Include="$(_UmpireConfigProject)" ReferenceOutputAssembly="false" Private="false"
+                      SetTargetFramework="TargetFramework=netstandard2.0" SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
-  <Target Name="_UmpireConfigInPackage" DependsOnTargets="ResolveReferences">
+  <Target Name="_UmpireEmbedConfigTree" BeforeTargets="PrepareResources" DependsOnTargets="ResolveProjectReferences">
+    <MSBuild Projects="$(_UmpireConfigProject)" Targets="GetTargetPath" Properties="TargetFramework=netstandard2.0">
+      <Output TaskParameter="TargetOutputs" ItemName="_UmpireConfigTreeFile" />
+    </MSBuild>
+    <MSBuild Projects="$(_UmpireConfigProject)" Targets="UmpireConfigTree"
+             Properties="TargetFramework=netstandard2.0;CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Umpire.ConfigTree.targets">
+      <Output TaskParameter="TargetOutputs" ItemName="_UmpireConfigTreeFile" />
+    </MSBuild>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'Umpire.Config'" PackagePath="analyzers/dotnet/cs" />
+      <EmbeddedResource Include="@(_UmpireConfigTreeFile->'%(FullPath)')" LogicalName="UmpireConfigTree/%(Filename)%(Extension)"
+                        WithCulture="false" Type="Non-Resx" />
     </ItemGroup>
   </Target>
 </Project>

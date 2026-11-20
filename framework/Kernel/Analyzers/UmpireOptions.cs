@@ -2,9 +2,8 @@ namespace Umpire.Vsa.Analyzers;
 
 using System.Collections.Generic;
 using System.Linq;
-using Umpire.Config;
 
-public sealed class UmpireOptions(string ruleId, UmpireConfig config, IReadOnlyList<UmpireOption> declared) {
+public sealed class UmpireOptions(string ruleId, ConfigValues config, IReadOnlyList<UmpireOption> declared) {
     public string? Configured(string key) =>
         config.Value($"umpire.{ruleId}.{key}") ?? config.Value($"umpire.{key}");
 

@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Umpire.Config;
 
 public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     const string TomlException = "Tomlyn.TomlException";
@@ -33,8 +32,8 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     public static readonly DiagnosticDescriptor LoadDescriptor = new(
         "UMP010003",
         "The Umpire analyzers cannot load a library",
-        "The Umpire analyzers cannot load a library: {0} Put Umpire.Config.dll, Tomlyn.dll and their dependencies next to the "
-            + "analyzer DLLs. The Umpire rules do not run until the library loads.",
+        "The Umpire analyzers cannot load a library: {0} The analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. Use a "
+            + "compiler on .NET 8 or later. The Umpire rules do not run until the library loads.",
         "Umpire",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
@@ -99,7 +98,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         }
     }
 
-    static UmpireConfig? Config(AnalyzerOptions options, System.Threading.CancellationToken ct, out string error) {
+    static ConfigValues? Config(AnalyzerOptions options, System.Threading.CancellationToken ct, out string error) {
         error = "";
         try {
             return ConfigFile.Of(options, ct);
@@ -125,7 +124,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         e is System.IO.FileNotFoundException or System.IO.FileLoadException or BadImageFormatException or TypeLoadException
             or MissingMemberException;
 
-    static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, UmpireConfig config) {
+    static IEnumerable<Diagnostic> Invalid(UmpireAnalyzerRule rule, ConfigValues config) {
         var options = new UmpireOptions(rule.Id, config, rule.Options);
         foreach (var option in rule.Options) {
             var value = options.Configured(option.Key);
@@ -137,7 +136,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     }
 
     static bool IsOn(
-        UmpireAnalyzerRule rule, UmpireConfig config, Compilation compilation, System.Threading.CancellationToken ct) {
+        UmpireAnalyzerRule rule, ConfigValues config, Compilation compilation, System.Threading.CancellationToken ct) {
         var severity = RuleSeverity.Text(config, rule.Id);
         if (RuleSeverity.IsOff(severity) || (severity is null && !rule.IsOnByDefault)) {
             return false;
