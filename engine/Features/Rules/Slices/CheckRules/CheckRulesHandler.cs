@@ -12,7 +12,8 @@ sealed class CheckRulesHandler(RunOptions options) : CommandHandler<CheckRulesCo
         var app = envelope.Message.App;
         var config = RuleConfig.Of(RuleKeys.Of(UmpireConfig.Find(app.Blocks.Current.Folder)));
         var check = ArchitectureCheck.Load(
-            app.Architecture, app.Dlls, app.Sources, app.Blocks, config, options.IgnoredFolders, options.References);
+            app.Architecture, app.Dlls, app.Sources, app.Blocks, config, options.IgnoredFolders, options.References,
+            options.FolderAliases);
         return Task.FromResult<Result<CheckRulesResult>>(new CheckRulesResult(check.Findings()));
     }
 }

@@ -330,28 +330,22 @@ The rules of the content checks:
 
 The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`BinReader`, one time for each run).
 
-## Unity projects
+## Folder aliases
 
-If the block folder has `ProjectSettings/ProjectVersion.txt`, the app is a Unity project. Unity compiles `Assets/`, so the folders of a Unity app are not the folders of a .NET app.
+A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder as if they were in another folder of the block. For example, a host that keeps the app in `Assets/Dice/` (Unity) gives the aliases below. With no alias, each folder binds as it is. The binder tries each path and keeps the deepest part.
 
-| Folder | Binds as | Contains |
-|---|---|---|
-| `Assets/<UnityApp>/` | The block | `Features/`, `Plugins/` |
-| `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
-| `<UnitySource>/` (default `Source`) | The block | `Features/`, `Plugins/` of the .NET projects |
-
-`Architecture.FolderAliases(blockFolder)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
-
-```csharp
-public sealed class CardsArchitecture : VsaArchitecture {
-    public CardsArchitecture() {
-        UnityApp = "Cards";
-        UnitySource = "Modules";
-    }
-}
-
-public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
+```toml
+[umpire.check.folder_aliases]
+"Assets/Dice" = ["", "App"]   # Assets/Dice/Features/... binds as Features/..., Assets/Dice/Views/... as App/Views/...
+"Source" = [""]               # Source/Features/... binds as Features/...
 ```
+
+| Source | Gives the aliases |
+|---|---|
+| `umpire.check.folder_aliases` in `.umpireconfig` | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). `CheckSettings` reads them |
+| `Architecture.FolderAliases(blockFolder)` | A definition can override it in code. The engine uses both |
+
+The framework has no host layout of its own: the host package (for example vsa-unity) writes the aliases.
 
 ### Check settings
 
@@ -363,6 +357,7 @@ The engine knows no host build system. A host that compiles the app in its own w
 | `umpire.check.source_root` | `--sourceroot` | None | The root of a relative source path in a PDB. With no root, a relative path stays relative and is not under the block |
 | `umpire.check.ignored_folders` | `--ignoredfolders` | None | Folders of the block (relative paths) that hold no app code, for example a package cache. The change check does not read them |
 | `umpire.check.project_checks` | `--projectchecks` | `true` | `false` stops the project checks (`UMP030305`, `UMP030306`), for example for project files that the host writes |
+| `umpire.check.folder_aliases` | None | None | A table of folder aliases (see "Folder aliases") |
 
 | Case | Result |
 |---|---|

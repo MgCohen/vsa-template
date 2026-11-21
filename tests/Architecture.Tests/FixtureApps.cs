@@ -21,7 +21,8 @@ static class FixtureApps {
 
     public static string Block(string app) => Path.Combine(Root, app);
 
-    public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder, ReadOptions? options = null) {
+    public static ArchitectureCheck Load(
+        Architecture definition, string bin, string blockFolder, ReadOptions? options = null, IReadOnlyList<FolderAlias>? aliases = null) {
         var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         using var reader = new BinReader(bin, options);
         var index = reader.Index();
@@ -29,7 +30,7 @@ static class FixtureApps {
         var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
         return ArchitectureCheck.Load(
             definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks, RuleConfig.Empty,
-            options?.IgnoredFolders, options?.References);
+            options?.IgnoredFolders, options?.References, aliases);
     }
 
     public static string Line(Finding finding) {

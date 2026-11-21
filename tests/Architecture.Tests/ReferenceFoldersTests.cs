@@ -3,6 +3,7 @@ namespace EngineCore.Tests;
 using Rules.Slices.CheckRules;
 using BuiltApp.Domain.Shared;
 using Steps.Domain.Shared;
+using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 using Umpire.Kernels;
 
@@ -10,7 +11,7 @@ public sealed class ReferenceFoldersTests {
     const string ModuleClass = "public sealed class {0} : Umpire.Kernels.Module {{ public override void Configure("
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
-    UnityProjectFolder project = null!;
+    ProjectFolder project = null!;
     ArchitectureCheck map = null!;
 
     string Scripts => Path.Combine(project.Root, "Scripts");
@@ -19,7 +20,7 @@ public sealed class ReferenceFoldersTests {
 
     [OneTimeSetUp]
     public void BuildTwoOutputsOfOneBlock() {
-        project = UnityProjectFolder.Create();
+        project = ProjectFolder.Create();
         var module = project.Write("Assets/Game/Features/Notes/NotesModule.cs", "namespace Notes; " + string.Format(ModuleClass, "NotesModule"));
         var note = project.Write("Assets/Game/Features/Notes/Domain/Note.cs", "namespace Notes.Domain; public sealed class Note { }");
         var view = project.Write("Assets/Game/Views/Board.cs", "namespace Game.Views; public sealed class Board { public Notes.Domain.Note? Shown; }");
@@ -27,7 +28,9 @@ public sealed class ReferenceFoldersTests {
         var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
         project.Compile("Assembly-CSharp", Scripts, module, note, view, package);
         project.Compile("Game.Modules", project.Output, module, note, tasks);
-        map = FixtureApps.Load(new VsaArchitecture(), project.Output, project.Root, new ReadOptions([Scripts, Missing], null, ["Cache"]));
+        FolderAlias[] aliases = [new("Assets/Game", ""), new("Assets/Game", "App"), new("Source", "")];
+        map = FixtureApps.Load(
+            new VsaArchitecture(), project.Output, project.Root, new ReadOptions([Scripts, Missing], null, ["Cache"]), aliases);
     }
 
     [OneTimeTearDown]
@@ -73,6 +76,13 @@ public sealed class ReferenceFoldersTests {
     [Test]
     public void A_source_file_in_an_ignored_folder_is_not_app_code() {
         Assert.That(map.Bindings.AppTypes.Select(t => t.FullName), Has.None.EqualTo("Vendor.Tool"));
+    }
+
+    [Test]
+    public void With_no_folder_aliases_a_module_in_an_app_folder_is_not_in_a_feature() {
+        var plain = FixtureApps.Load(new VsaArchitecture(), project.Output, project.Root, new ReadOptions([Scripts], null, ["Cache"]));
+
+        Assert.That(plain.Bindings.Unmapped.Select(u => u.Type.FullName), Does.Contain("Game.Views.Board"));
     }
 
     [Test]

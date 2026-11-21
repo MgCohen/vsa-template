@@ -61,6 +61,7 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
         options.SourceRoot = settings.SourceRoot;
         options.IgnoredFolders = settings.IgnoredFolders;
         options.ProjectChecks = settings.ProjectChecks;
+        options.FolderAliases = settings.FolderAliases;
     }
 
     static string Folder(RunEngineRequest run) => run.Block.Length > 0 ? run.Block : run.Project;

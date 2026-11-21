@@ -6,12 +6,12 @@ using Umpire.Architecture;
 public sealed class SourceFilesTests {
     const string Generator = "obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator";
 
-    UnityProjectFolder project = null!;
+    ProjectFolder project = null!;
     IReadOnlyDictionary<string, Source> sources = null!;
 
     [OneTimeSetUp]
     public void CompileGeneratedFiles() {
-        project = UnityProjectFolder.Create();
+        project = ProjectFolder.Create();
         var page = project.Write($"Host/{Generator}/App/Views/Pages/NotesPage_razor.g.cs", "namespace Views; public sealed class NotesPage { }");
         var info = project.Write("Host/obj/Debug/net10.0/Host.AssemblyInfo.cs", "namespace Host; public sealed class Info { public int Value() => 1; }");
         var flat = project.Write($"Host/{Generator}/Flat_razor.g.cs", "namespace Views; public sealed class Flat { }");

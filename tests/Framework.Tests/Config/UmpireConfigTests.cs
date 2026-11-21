@@ -21,6 +21,17 @@ public sealed class UmpireConfigTests {
     static readonly UmpireConfig Config = UmpireConfig.Parse(Text);
 
     [Test]
+    public void Lists_gives_each_array_of_a_table_and_skips_the_other_values() {
+        var lists = Config.Lists("Notebook").ToList();
+
+        Assert.That(lists.Select(pair => pair.Key), Is.EqualTo(new[] { "Tags" }));
+        Assert.That(lists[0].Value, Is.EqualTo(new[] { "work", "home" }));
+    }
+
+    [Test]
+    public void Lists_of_a_missing_table_is_empty() => Assert.That(Config.Lists("Missing"), Is.Empty);
+
+    [Test]
     public void Get_gives_the_values_of_a_table() =>
         Assert.That(Config.Get<NotebookSettings>("Notebook")!.MaxNotes, Is.EqualTo(50));
 

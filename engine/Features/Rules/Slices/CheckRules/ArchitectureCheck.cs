@@ -34,10 +34,10 @@ sealed class ArchitectureCheck {
     public static ArchitectureCheck Load(
         Architecture definition, IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, BlockTree blocks,
         RuleConfig config, IReadOnlyList<string>? ignoredFolders = null,
-        IReadOnlyList<string>? references = null) {
+        IReadOnlyList<string>? references = null, IReadOnlyList<FolderAlias>? folderAliases = null) {
         var resolved = new ResolvedArchitecture(definition);
         var app = AppReader.Read(dlls, sources, blocks.Current.Folder, resolved, ignoredFolders);
-        var bindings = resolved.Place(app.Facts, app.BlockFolder, blocks.InnerFolders);
+        var bindings = resolved.Place(app.Facts, app.BlockFolder, blocks.InnerFolders, folderAliases ?? []);
         var missing = (references ?? []).Where(folder => !Directory.Exists(folder)).ToList();
         return new ArchitectureCheck(resolved, app, bindings, blocks.InnerFolders, config, missing);
     }

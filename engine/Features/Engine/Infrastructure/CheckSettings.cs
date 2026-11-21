@@ -1,5 +1,6 @@
 namespace Engine.Infrastructure;
 
+using Umpire.Architecture;
 using Umpire.Config;
 
 public sealed record CheckSettings(
@@ -8,8 +9,11 @@ public sealed record CheckSettings(
     public const string SourceRootKey = "umpire.check.source_root";
     public const string IgnoredFoldersKey = "umpire.check.ignored_folders";
     public const string ProjectChecksKey = "umpire.check.project_checks";
+    public const string FolderAliasesKey = "umpire.check.folder_aliases";
     static readonly char[] ListSeparators = [',', ';'];
     static readonly string[] Off = ["false", "0", "no", "off"];
+
+    public IReadOnlyList<FolderAlias> FolderAliases { get; init; } = [];
 
     public static CheckSettings Of(
         string folder, string references, string sourceRoot, string ignoredFolders, bool? projectChecks) {
@@ -21,8 +25,14 @@ public sealed record CheckSettings(
             given.Count > 0 ? given : Folders(config.Value(ReferencesKey), root),
             RootOfSources(sourceRoot, config.Value(SourceRootKey), root),
             ignored.Length > 0 ? ignored : List(config.Value(IgnoredFoldersKey)),
-            projectChecks ?? IsOn(config.Value(ProjectChecksKey)));
+            projectChecks ?? IsOn(config.Value(ProjectChecksKey))) {
+            FolderAliases = Aliases(config),
+        };
     }
+
+    static IReadOnlyList<FolderAlias> Aliases(UmpireConfig config) =>
+        [.. config.Lists(FolderAliasesKey)
+            .SelectMany(pair => pair.Value.Select(target => new FolderAlias(pair.Key, target)))];
 
     static bool IsOn(string? value) => !Off.Contains(value ?? "", StringComparer.OrdinalIgnoreCase);
 

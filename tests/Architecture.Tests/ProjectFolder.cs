@@ -6,23 +6,20 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 
-sealed class UnityProjectFolder : IDisposable {
-    public const string VersionFile = "ProjectSettings/ProjectVersion.txt";
-
-    UnityProjectFolder(string block) {
+sealed class ProjectFolder : IDisposable {
+    ProjectFolder(string block) {
         Root = block;
         Output = block + "-out";
         Directory.CreateDirectory(Output);
         Write("global.json", "{}");
-        Write(VersionFile, "m_EditorVersion: 6000.6.0f1");
     }
 
     public string Root { get; }
 
     public string Output { get; }
 
-    public static UnityProjectFolder Create() =>
-        new(Path.Combine(Path.GetTempPath(), "vsa-unity-" + Guid.NewGuid().ToString("N")[..8]));
+    public static ProjectFolder Create() =>
+        new(Path.Combine(Path.GetTempPath(), "umpire-project-" + Guid.NewGuid().ToString("N")[..8]));
 
     public string Write(string relativePath, string text) {
         var path = Path.Combine(Root, relativePath);

@@ -8,17 +8,21 @@ sealed class PartOf {
     readonly string blockFolder;
     readonly IReadOnlyList<string> innerBlocks;
 
-    PartOf(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
+    PartOf(
+        ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks,
+        IReadOnlyList<FolderAlias> folderAliases) {
         this.resolved = resolved;
         folderParts = [.. resolved.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
         blockPlaces = [.. folderParts.Where(p => p.IsBlockPlace)];
-        aliases = resolved.Architecture.FolderAliases(blockFolder);
+        aliases = [.. resolved.Architecture.FolderAliases(blockFolder), .. folderAliases];
         this.blockFolder = blockFolder;
         this.innerBlocks = [.. innerBlocks.Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)];
     }
 
-    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks) {
-        var partOf = new PartOf(resolved, blockFolder, innerBlocks);
+    public static Bindings Bind(
+        ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks,
+        IReadOnlyList<FolderAlias> folderAliases) {
+        var partOf = new PartOf(resolved, blockFolder, innerBlocks, folderAliases);
         var bound = new List<Binding>();
         var unmapped = new List<UnmappedType>();
         foreach (var type in types) {

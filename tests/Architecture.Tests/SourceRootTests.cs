@@ -6,12 +6,12 @@ using BuiltApp.Infrastructure;
 public sealed class SourceRootTests {
     const string PackageFolder = "Packages/com.vendor.game";
 
-    UnityProjectFolder project = null!;
+    ProjectFolder project = null!;
     string output = null!;
 
     [OneTimeSetUp]
     public void CompileCodeWithRelativeDocuments() {
-        project = UnityProjectFolder.Create();
+        project = ProjectFolder.Create();
         var host = project.Write($"{PackageFolder}/App/Host/GameHost.cs", "namespace Game.App.Host; public sealed class GameHost { public int Value() => 1; }");
         var tool = project.Write("Cache/com.vendor.tool/Tool.cs", "namespace Vendor; public sealed class Tool { public int Value() => 1; }");
         output = Path.Combine(project.Root, "Out");
