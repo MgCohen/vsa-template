@@ -179,8 +179,11 @@ public sealed class BadAppTests {
     public void The_type_facts_give_the_kind_and_the_member_attributes() {
         var billing = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Commands.Billing");
 
-        Assert.That((billing.Kind, billing.IsAbstract), Is.EqualTo((Umpire.Architecture.TypeKind.StaticClass, false)));
-        Assert.That(billing.Attributes, Has.Member("Kit.CommandAttribute"));
+        Assert.Multiple(() => {
+            Assert.That(billing.Kind, Is.EqualTo(Umpire.Architecture.TypeKind.StaticClass));
+            Assert.That(billing.IsAbstract, Is.False);
+            Assert.That(billing.Attributes, Has.Member("Kit.CommandAttribute"));
+        });
     }
 
     static string Lines(string? code) =>

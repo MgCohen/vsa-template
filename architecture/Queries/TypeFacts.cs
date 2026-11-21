@@ -13,6 +13,7 @@ public sealed record TypeFacts(
     public bool IsAbstract { get; init; }
     public TypeKind Kind { get; init; } = TypeKind.Class;
     public IReadOnlyList<string> Attributes { get; init; } = [];
+    public bool IsNested { get; init; }
 
     public bool Is(Type target) => Bases.Contains(target.FullName!);
 }

@@ -109,6 +109,35 @@ public sealed class ContentTests {
     }
 
     [Test]
+    public void The_name_and_kind_checks_do_not_read_a_nested_type() {
+        var mode = Item("Mode", "Touch") with { Kind = TypeKind.Enum, IsNested = true };
+        var definition = new CountArchitecture(
+            rules => rules.For<Item>().OnlyKind(TypeKind.StaticClass),
+            box => box.Add<Item>().Named(Name.OfGroup()).And<Tag>().InParentFolder());
+
+        Assert.Multiple(() => {
+            Assert.That(definition.Names(mode), Is.Empty);
+            Assert.That(definition.Kinds(mode), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void The_attribute_check_reads_a_nested_type() {
+        var definition = new CountArchitecture(rules => rules.For<Item>().Owns<MarkAttribute>());
+        var nested = MarkedTag() with { IsNested = true };
+
+        Assert.That(definition.Owners(nested), Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    public void An_owned_generic_attribute_matches_its_closed_form() {
+        var definition = new CountArchitecture(rules => rules.For<Item>().Owns<GroupMarkAttribute<int>>());
+        var tag = Fact("TagA", "a", typeof(ITagged)) with { Attributes = [typeof(GroupMarkAttribute<>).FullName!] };
+
+        Assert.That(definition.Owners(tag).Single().Message, Does.StartWith("TagA in Tag (Boxes/a) has [GroupMarkAttribute`1]"));
+    }
+
+    [Test]
     public void A_static_class_counts() {
         var definition = new CountArchitecture(rules => rules.For<Box>().Has<Item>(Depth.Self).AtMost(1));
 
@@ -126,7 +155,15 @@ public sealed class ContentTests {
     static TypeFacts MarkedTag() => Fact("TagA", "a", typeof(ITagged)) with { Attributes = [Mark] };
 
     [AttributeUsage(AttributeTargets.All)]
-    public sealed class MarkAttribute : Attribute;
+    public class MarkAttribute : Attribute;
+
+    public sealed class DerivedMarkAttribute : MarkAttribute;
+
+    [AttributeUsage(AttributeTargets.All)]
+    public sealed class GroupMarkAttribute<T> : Attribute;
+
+    [DerivedMark]
+    public sealed class MarkedByDerived;
 
     sealed class NoGroupArchitecture : Architecture {
         protected override void Define(Block block) {

@@ -245,7 +245,7 @@ The first access that is set wins:
 The rules of a count:
 
 - `T` includes each concept that is nested in `T` (the concept family). For example, `Has<Handlers>()` counts `Handlers.Commands` and `Handlers.Commands.Hooks`. `Has<T>(Depth.Self)` counts only `T`. The `Depth` of the concept does not apply to a count.
-- A helper that follows its user does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts. A static class counts: it is `abstract sealed` in IL, but it is not a base.
+- A helper that follows its user does not count, a nested type does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts. A static class counts: it is `abstract sealed` in IL, but it is not a base.
 - A count counts only the types of the app in the block folder. A type of an external DLL does not count.
 - A count with no limit stops the definition: "has no limit. Add AtLeast, AtMost, Exactly or OfOneKind."
 - The finding is at the first type of the instance (by file, then line), or at the type of the subject.
@@ -307,7 +307,11 @@ The rules of the content checks:
 
 - A name rule has no regex. The generic arity (for example `` `1 ``) is not part of the name. A `Name.OfGroup()` on a part with no group stops the definition.
 - `TypeKind` is a flags enum: `Class`, `StaticClass`, `AbstractClass`, `Record`, `Struct`, `Interface`, `Enum`, `Delegate`. Combine kinds with `|`. `TypeKind.None` allows no type. With no `OnlyKind`, each kind is allowed. Each type has one kind: an abstract record is an `AbstractClass`, and a record struct is a `Struct`.
-- If more than one statement owns an attribute, the attribute can be in each of their parts. The engine reads the attributes of the type and of its members.
+- If more than one statement owns an attribute, the attribute can be in each of their parts. The engine reads the attributes of the type and of its members. An attribute that derives from the owned attribute is also owned, and an owned generic attribute matches each closed form.
+- The engine does not read an attribute on a parameter, a return value, a generic parameter or a local function.
+- A nested type has the source file of its outer type, so the name and kind checks and the counts do not read it. The attribute check reads it.
+- A part has one name rule. If `Named` is called again, the later call wins.
+- A static class is not a subject of a match (`Takes<T>()`).
 - The checks do not read a helper that follows its user, a type of an external DLL or a type in a block place.
 - `ArchitectureTest.Problems(place)` gives the name, kind and attribute problems of one type.
 

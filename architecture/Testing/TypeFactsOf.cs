@@ -36,7 +36,8 @@ static class TypeFactsOf {
 
     static IEnumerable<string> Attributes(Type type) => type.GetCustomAttributesData()
         .Concat(type.GetMembers(Declared).SelectMany(m => m.GetCustomAttributesData()))
-        .Select(a => a.AttributeType.FullName ?? a.AttributeType.Name)
+        .SelectMany(a => new[] { a.AttributeType }.Concat(Inherited(a.AttributeType)))
+        .Select(NameOf)
         .Distinct();
 
     static IEnumerable<Type> Bases(Type type) => new[] { type }.Concat(Inherited(type)).Concat(type.GetInterfaces());

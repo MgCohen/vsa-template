@@ -31,8 +31,12 @@ static class TypeFactsReader {
         BaseArguments = [.. BaseArguments(type)],
         IsAbstract = type is Interface || type is Class { IsAbstract: true, IsSealed: not true },
         Kind = KindOf(type),
-        Attributes = [.. type.Attributes.Concat(type.Members.SelectMany(m => m.Attributes)).Select(a => a.FullName).Distinct()],
+        Attributes = [.. type.Attributes.Concat(type.Members.SelectMany(m => m.Attributes)).SelectMany(AttributeNames).Distinct()],
+        IsNested = type.IsNested,
     };
+
+    static IEnumerable<string> AttributeNames(ArchUnitNET.Domain.Attribute attribute) =>
+        new[] { attribute.FullName }.Concat(attribute.InheritedClasses.Select(c => c.FullName));
 
     static TypeKind KindOf(IType type) => type switch {
         Interface => TypeKind.Interface,
