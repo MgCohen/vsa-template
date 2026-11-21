@@ -119,15 +119,43 @@ public sealed class BlocksTests {
 
         Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp).FullName!, "umpire-engine")));
         Assert.That(app.Bases, Does.Contain("Umpire.Kernels.App"));
-        Assert.That(app.HasEmptyConstructor, Is.True);
+        Assert.That(app.Architecture, Is.EqualTo(new TypeName(typeof(EngineArchitecture).FullName!, "umpire-engine")));
     }
 
     [Test]
     public void The_leaves_of_the_app_classes_drop_each_base_app_class() {
-        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", true, ["Umpire.Kernels.App"]);
-        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", true, ["A.First", "Umpire.Kernels.App"]);
+        TypeName[] pack = [new("A.Pack", "A")];
+        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", pack, null, ["Umpire.Kernels.App"]);
+        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", pack, null, ["A.First", "Umpire.Kernels.App"]);
 
         Assert.That(AppClass.Leaves([first, second]), Is.EqualTo(new[] { second }));
+    }
+
+    [Test]
+    public void The_leaves_drop_an_app_class_nested_in_an_entry_with_the_same_pack() {
+        TypeName[] pack = [new("A.Pack", "A")];
+        var shell = new AppClass(new TypeName("A.GameShell", "A"), "A.cs", pack, null, []);
+        var inner = new AppClass(new TypeName("A.GameShell+Inner", "A"), "A.cs", pack, null, ["Umpire.Kernels.App"]);
+
+        Assert.That(AppClass.Leaves([shell, inner]), Is.EqualTo(new[] { shell }));
+    }
+
+    [Test]
+    public void The_leaves_keep_a_nested_app_class_with_another_pack() {
+        var shell = new AppClass(new TypeName("A.GameShell", "A"), "A.cs", [new("A.Pack", "A")], null, []);
+        var inner = new AppClass(new TypeName("A.GameShell+Inner", "A"), "A.cs", [new("A.Other", "A")], null, ["Umpire.Kernels.App"]);
+
+        Assert.That(AppClass.Leaves([shell, inner]), Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void The_launcher_of_the_shell_fixture_is_the_one_leaf_with_the_architecture_of_its_pack() {
+        var shell = Index.Dlls.Single(d => d.Name == "ShellApp");
+
+        var leaf = AppClass.Leaves(shell.AppClasses).Single();
+
+        Assert.That(leaf.Type.FullName, Is.EqualTo("ShellApp.App.Host.GameLauncher"));
+        Assert.That(leaf.Architecture?.FullName, Is.EqualTo("Umpire.Vsa.Definition.VsaArchitecture"));
     }
 
     [Test]

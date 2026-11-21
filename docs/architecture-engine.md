@@ -450,7 +450,7 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 | Versions | Each Umpire version slot of the block folder and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
-| Definition | The architecture of the check entry of the block. For an app class: `Pack.Architecture` of the one most derived app class (`App`). See "Engine codes" |
+| Definition | The architecture of the check entry of the block. For an app class: the one most derived closed class that implements `IAppEntry<TPack>` (`App<TPack>` does). The engine reads type argument 0 of `Pack<TArchitecture, TKernel, THost>` from the metadata and makes only that architecture. It does not make the app class, so a launcher (for example a Unity shell with a private `App<TPack>`) is an app class too. If the pack has no such argument, the engine makes the pack and reads `Pack.Architecture`. See "Engine codes" |
 | Unity DLLs | See "Unity projects" |
 
 ### Engine codes
@@ -475,8 +475,8 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030401` | 04 Versions | Error | An Umpire version is not the engine version (see "One version") |
 | `UMP030501` | 05 LoadApp | Error | No DLL of the host output has source files under the block folder |
 | `UMP030502` | 05 LoadApp | Error | The app has no app class |
-| `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class |
-| `UMP030504` | 05 LoadApp | Error | An app class has no public constructor with no parameters |
+| `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class. An app class nested in an entry with the same pack does not count |
+| `UMP030506` | 05 LoadApp | Error | An app class implements `IAppEntry<TPack>` for more than one pack |
 | `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
 A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.

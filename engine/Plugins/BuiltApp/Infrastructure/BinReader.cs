@@ -82,9 +82,10 @@ public sealed class BinReader : IDisposable {
                 continue;
             }
             try {
-                if (AppClass.Is(type)) {
-                    found.Add(new AppClass(Name(type), Path.GetFullPath(source.File),
-                        type.GetConstructor(Type.EmptyTypes) is not null, AppClass.BasesOf(type)));
+                if (AppClass.PacksOf(type) is [var pack, ..] and var packs) {
+                    var architecture = AppClass.ArchitectureOf(pack) is { } architectureType ? Name(architectureType) : null;
+                    found.Add(new AppClass(Name(type), Path.GetFullPath(source.File), [.. packs.Select(Name)], architecture,
+                        AppClass.BasesOf(type)));
                 }
             } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
                 continue;
