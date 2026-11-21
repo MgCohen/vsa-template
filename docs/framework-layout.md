@@ -11,7 +11,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Architecture | `architecture/` | The definition API and the rule answers | Each pack and the engine |
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
-| Engine | `engine/` | The rule engine app | No package: `tools/net10.0/` of Umpire.Sdk and Umpire.Sdk.Web |
+| Engine | `engine/` | The rule engine app | No package: `tools/net8.0/` of Umpire.Sdk and Umpire.Sdk.Web |
 | Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`), the bundle packages (`tools/bundle/`) and Umpire.Sdk | The developer |
 
 ```mermaid
@@ -34,7 +34,7 @@ The projects of the groups are for development: their references enforce the lay
 
 | Package | DLL | Source projects |
 |---|---|---|
-| `Umpire` | `Umpire.dll` (`net10.0`, `netstandard2.1`) | Markers, Architecture, Config, Kernels, Messages, Umpire.Vsa and each VSA layer base |
+| `Umpire` | `Umpire.dll` (`net8.0`, `netstandard2.1`) | Markers, Architecture, Config, Kernels, Messages, Umpire.Vsa and each VSA layer base |
 | `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views |
 | `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console |
 | `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit |

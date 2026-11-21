@@ -4,7 +4,7 @@ public static class BuildConfiguration {
     static readonly string[] Names = ["Debug", "Release"];
 
     public static string? Of(string bin) =>
-        bin.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Reverse()
+        bin.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).AsEnumerable().Reverse()
             .Select(Name).FirstOrDefault(name => name is not null);
 
     static string? Name(string folder) =>
