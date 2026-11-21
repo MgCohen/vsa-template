@@ -84,6 +84,7 @@ public sealed class CodeTests {
             Assert.That(BlocksCodes.CodeWins, Is.EqualTo("UMP030304"));
             Assert.That(BlocksCodes.NoUmpireSdk, Is.EqualTo("UMP030305"));
             Assert.That(BlocksCodes.NoConfigFile, Is.EqualTo("UMP030306"));
+            Assert.That(BlocksCodes.NewerRuntime, Is.EqualTo("UMP030307"));
             Assert.That(BuildCodes.Failed, Is.EqualTo("UMP030101"));
             Assert.That(ChangesCodes.Same, Is.EqualTo("UMP030201"));
             Assert.That(ChangesCodes.BlockSame, Is.EqualTo("UMP030202"));

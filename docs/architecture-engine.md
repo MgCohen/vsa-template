@@ -450,7 +450,7 @@ C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHand
 
 ## The checks of an app
 
-An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net8.0/` (property `UmpireEngineFile`). The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It loads the definition of the app, so the SDK hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
+An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net8.0/` (property `UmpireEngineFile`). The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It needs only `Microsoft.NETCore.App`: `AppLoader` loads the ASP.NET Core types of a web app from the shared folder of the runtime. It loads the definition of the app, so the SDK hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
 
 ```text
 umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Warn]
@@ -517,6 +517,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030304` | 03 Blocks | Warning | A folder has a check entry in code and the key `umpire.architecture` in its `.umpireconfig`. The entry in code wins |
 | `UMP030305` | 03 Blocks | Warning | A project of the block has no Umpire main SDK (see "Projects of a block") |
 | `UMP030306` | 03 Blocks | Warning | The block has more than one project and no `.umpireconfig` file |
+| `UMP030307` | 03 Blocks | Error | A DLL of the host output targets a newer .NET than the runtime of the engine, so the engine cannot load the app. Install that .NET, or run the engine with `dotnet exec --roll-forward LatestMajor`. The run stops |
 | `UMP030401` | 04 Versions | Error | An Umpire version is not the engine version (see "One version") |
 | `UMP030501` | 05 LoadApp | Error | No DLL of the host output has source files under the block folder |
 | `UMP030502` | 05 LoadApp | Error | The app has no app class |

@@ -87,7 +87,8 @@ public sealed class OneLineBuildTests {
     [Test]
     public void The_engine_of_the_sdk_package_targets_net8_with_roll_forward_Major() {
         var config = File.ReadAllText(Path.ChangeExtension(Engine, ".runtimeconfig.json"));
-        Assert.That(config, Does.Contain("\"tfm\": \"net8.0\"").And.Contain("\"rollForward\": \"Major\""), config);
+        Assert.That(config, Does.Contain("\"tfm\": \"net8.0\"").And.Contain("\"rollForward\": \"Major\"")
+            .And.Not.Contain("Microsoft.AspNetCore.App"), config);
     }
 
     [Test]
@@ -97,10 +98,32 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
+    public void The_package_path_gives_the_runtime_flag_before_the_engine_file() {
+        var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", "-v:n");
+        var command = Lines(run, "umpire-engine.dll\" --stage Check").FirstOrDefault() ?? "";
+
+        Assert.That(command, Does.Contain("exec --roll-forward LatestMajor \""), run.Output);
+    }
+
+    [Test]
     public void The_source_path_runs_the_engine_on_the_newest_runtime() {
         var value = Dotnet.Run(Repo.Root, null, "msbuild", Repo.Path("tests", "Fixtures", "Notes", "Notes.csproj"),
             "-getProperty:UmpireEngineRollForward", "-nodeReuse:false").EnsureSuccess();
         Assert.That(value.Output.Trim(), Is.EqualTo("LatestMajor"), value.Output);
+    }
+
+    [Test]
+    public void The_source_path_gives_the_runtime_flag_before_the_engine_file() {
+        var preprocessed = Path.Combine(TempFolder.Create(), "Notes.xml");
+        try {
+            Dotnet.Run(Repo.Root, null, "msbuild", Repo.Path("tests", "Fixtures", "Notes", "Notes.csproj"),
+                $"-preprocess:{preprocessed}", "-nodeReuse:false").EnsureSuccess();
+            var text = File.ReadAllText(preprocessed);
+
+            Assert.That(text, Does.Contain("exec --roll-forward $(UmpireEngineRollForward) &quot;$(UmpireEngineFile)&quot;"));
+        } finally {
+            TempFolder.Delete(Path.GetDirectoryName(preprocessed)!);
+        }
     }
 
     [Test]

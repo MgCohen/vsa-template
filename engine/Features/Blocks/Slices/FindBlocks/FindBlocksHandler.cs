@@ -14,6 +14,9 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
 
     Result<FindBlocksResult> Find(FindBlocksCommand command) {
         var project = Path.GetFullPath(command.Project);
+        if (TargetRuntime.NewerThanEngine(Path.GetFullPath(command.Bin)) is { } newer) {
+            return new Error(BlocksCodes.NewerRuntime, NewerRuntime(newer));
+        }
         using var reader = new BinReader(Path.GetFullPath(command.Bin), new ReadOptions(options.References, options.SourceRoot, options.IgnoredFolders));
         var bin = reader.Index();
         var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
@@ -28,6 +31,11 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         var used = UsedBlocks.Of(tree.Current.Folder, tree.Inner, entries, bin);
         return WithProjects(found.Value with { Blocks = tree with { Used = used } });
     }
+
+    public static string NewerRuntime(NewerDll newer) =>
+        $"{Path.GetFileName(newer.Dll)} targets .NET {newer.Runtime.Major}, and the engine runs on .NET {Environment.Version}, "
+        + $"so the engine cannot load the app. Install .NET {newer.Runtime.Major}, "
+        + "or run the engine with 'dotnet exec --roll-forward LatestMajor'.";
 
     FindBlocksResult WithProjects(FindBlocksResult found) {
         if (!options.ProjectChecks) {

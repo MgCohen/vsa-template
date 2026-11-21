@@ -76,7 +76,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
 | The `.umpireconfig` reader | `Umpire.Config` (Tomlyn, its `netstandard2.0` asset) | Yes. Tomlyn needs `System.Buffers`, `System.Collections.Immutable` and `System.Text.Json` 10 |
 | Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
-| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are only on `net8.0` |
+| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are not on `netstandard2.1` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
 | Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |

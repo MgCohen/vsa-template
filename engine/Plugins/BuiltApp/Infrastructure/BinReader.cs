@@ -1,7 +1,6 @@
 namespace BuiltApp.Infrastructure;
 
 using System.Reflection;
-using System.Runtime.InteropServices;
 using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 
@@ -11,7 +10,6 @@ public sealed class BinReader : IDisposable {
     const string BlockBase = "Umpire.Architecture.Block`1";
     const string ArchitectureBase = "Umpire.Architecture.Architecture";
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
-    const string AspNetCore = "Microsoft.AspNetCore.App";
 
     readonly string bin;
     readonly string[] dlls;
@@ -24,7 +22,7 @@ public sealed class BinReader : IDisposable {
         this.options = options ?? ReadOptions.None;
         dlls = [.. ReferencesFirst(bin, this.options.References)];
         projects = DepsFile.ProjectAssemblies(bin);
-        var shared = SharedFrameworks().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
+        var shared = SharedFrameworks.Folders().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
         context = new MetadataLoadContext(new PathAssemblyResolver(dlls.Concat(shared)));
     }
 
@@ -215,18 +213,6 @@ public sealed class BinReader : IDisposable {
         }
         return start;
     }
-
-    static IEnumerable<string> SharedFrameworks() {
-        var runtime = RuntimeEnvironment.GetRuntimeDirectory();
-        var shared = Path.GetDirectoryName(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(runtime)));
-        var web = shared is null ? null : Path.Combine(shared, AspNetCore);
-        var newest = web is not null && Directory.Exists(web)
-            ? Directory.GetDirectories(web).OrderByDescending(VersionOf).FirstOrDefault()
-            : null;
-        return newest is null ? [runtime] : [runtime, newest];
-    }
-
-    static Version VersionOf(string folder) => Version.TryParse(Path.GetFileName(folder), out var version) ? version : new Version();
 
     DllRead? Read(string dll) {
         SymbolReader symbols;

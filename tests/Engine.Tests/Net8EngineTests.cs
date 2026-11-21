@@ -9,23 +9,30 @@ public sealed class Net8EngineTests {
 
     [Test]
     public void The_engine_checks_its_own_block_on_a_dotnet_with_only_the_net8_runtime() {
-        if (Net8Dotnet.Find() is not { } dotnet) {
-            Assert.Ignore($"No dotnet folder with only the .NET 8 runtime. Set {Net8Root} to such a folder, "
-                + "for example the one in a Unity 6000.6 editor.");
-            return;
-        }
+        var dotnet = Net8Dotnet.Find() ?? throw new IgnoreException(
+            $"No dotnet folder with only the .NET 8 runtime. Set {Net8Root} to such a folder, "
+            + "for example the one in a Unity 6000.6 editor.");
         var bin = TempFolder.Create();
         try {
             TempFolder.Copy(EngineBin(), bin);
+            TempFolder.Delete(Repo.Path("engine", "artifacts~", "umpire-checks"));
 
             var run = dotnet.Run("exec", Path.Combine(bin, "umpire-engine.dll"), "--stage", "Check",
                 "--project", Repo.Path("engine"), "--block", Repo.Path("engine"), "--bin", bin);
 
             Assert.That(run.ExitCode, Is.EqualTo(0), run.Output);
-            Assert.That(run.Output, Does.Contain("umpire-engine: 0 errors").And.Not.Contain("UMP030201"), run.Output);
+            Assert.That(run.Output, Does.Contain("umpire-engine: 0 errors").And.Not.Contain("UMP030201")
+                .And.Not.Contain($"The block {Repo.Path("engine")} did not change"), run.Output);
         } finally {
             TempFolder.Delete(bin);
         }
+    }
+
+    [Test]
+    public void The_engine_needs_only_the_dotnet_runtime_and_no_other_shared_framework() {
+        var config = File.ReadAllText(Path.Combine(EngineBin(), "umpire-engine.runtimeconfig.json"));
+
+        Assert.That(config, Does.Contain("\"Microsoft.NETCore.App\"").And.Not.Contain("Microsoft.AspNetCore.App"), config);
     }
 
     static string EngineBin() {

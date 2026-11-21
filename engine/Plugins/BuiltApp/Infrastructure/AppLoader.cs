@@ -12,7 +12,7 @@ public sealed class AppLoader : AssemblyLoadContext {
     readonly AssemblyDependencyResolver? resolver;
 
     public AppLoader(string bin, IReadOnlyList<string>? references = null) : base("umpire-app", isCollectible: false) {
-        folders = [bin, .. references ?? []];
+        folders = [bin, .. references ?? [], .. SharedFrameworks.Web() is { } web ? [web] : Array.Empty<string>()];
         var main = Directory.GetFiles(bin, "*.deps.json")
             .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))
             .FirstOrDefault(File.Exists);
