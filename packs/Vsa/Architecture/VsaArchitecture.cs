@@ -96,6 +96,7 @@ public class VsaArchitecture : Architecture {
         rules.For<Views>().Uses<Presenters>();
         rules.For<Views>().Uses<Host>().Under<Kernel>();
         rules.For<Host>().Under<App>().Uses<Pack>();
+        rules.For<Host>().Under<App>().Uses<Module>();
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
         rules.For<Feature>().Has<Module>().Exactly(1);

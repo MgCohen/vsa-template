@@ -6,7 +6,7 @@ using Umpire.Vsa.Definition;
 
 sealed class EngineTestApp : App {
     public EngineTestApp(params Module[] modules) =>
-        Pack = new EnginePack(new AppHost { Modules = modules });
+        Pack = new EnginePack(new AppHost { ModuleProvider = new FixedModules(modules) });
 
     public override Pack Pack { get; }
 

@@ -239,8 +239,8 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 - Each source finds nothing where it does not apply, so the scan has no Unity case.
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
-- To select other modules, give a list in `AppHost.Modules`.
-- `Build` makes one `AppTypes` instance: `new AppTypes(Modules, app.GetType().Assembly)`. If `Modules` is `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
+- To select other modules, give a module provider in `AppHost.ModuleProvider` (`IModuleProvider`). The default is `ScannedModules` (the scan). `FixedModules(params Module[])` is a list by hand. A custom provider calls `types.ModulesIn(assemblies)` to scan only some assemblies, for example a host that runs several apps in one process.
+- `Build` makes one `AppTypes` instance: `AppTypes.Of(ModuleProvider, app.GetType().Assembly)`. The provider gets that instance, so the scan reads each assembly one time. The assemblies of the modules are also the scope of the other type scans (handlers, views, `[AutoRegister]`). The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
 - `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |

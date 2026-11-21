@@ -86,6 +86,7 @@ The kernel part `Host` of the VSA definition maps the assemblies and namespaces 
 | Rule | Check |
 |---|---|
 | `App/Host` uses `Composition` and the `Kernel` part itself | `UMP020101` |
+| `App/Host` uses the root class of a module (`Feature/Module`, `Plugin/Module`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
 | `Views` uses the `Host` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).

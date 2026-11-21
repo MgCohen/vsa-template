@@ -68,7 +68,7 @@ App/Host -> App [any] Deny
 App/Host -> App/Views [any] Deny
 App/Host -> Pack [any] Allow Public
 App/Host -> Plugin [any] Deny
-App/Host -> Plugin/Module [any] Deny
+App/Host -> Plugin/Module [any] Allow Public
 App/Host -> Plugin/Domain [any] Deny
 App/Host -> Plugin/Domain/Domain.Shared [any] Deny
 App/Host -> Plugin/Infrastructure [any] Deny
@@ -84,7 +84,7 @@ App/Host -> Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
 App/Host -> Plugin/Handlers/Handlers.Commands [any] Deny
 App/Host -> Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
 App/Host -> Feature [any] Deny
-App/Host -> Feature/Module [any] Deny
+App/Host -> Feature/Module [any] Allow Public
 App/Host -> Feature/Domain [any] Deny
 App/Host -> Feature/Domain/Domain.Shared [any] Deny
 App/Host -> Feature/Infrastructure [any] Deny

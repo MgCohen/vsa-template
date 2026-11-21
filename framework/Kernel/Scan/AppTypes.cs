@@ -9,6 +9,7 @@ public sealed class AppTypes {
     readonly AppAssemblies scan = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
     readonly Assembly? appAssembly;
+    readonly IModuleProvider provider;
     IReadOnlyList<Module>? modules;
     IReadOnlyList<ModuleRoot>? roots;
     Assembly[]? assemblies;
@@ -18,16 +19,25 @@ public sealed class AppTypes {
     Type[]? openRegistered;
     Type[]? declared;
 
-    public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null) {
-        this.modules = modules is null ? null : InOrder(modules);
+    public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null)
+        : this(modules is null ? new ScannedModules() : new FixedModules([.. modules]), appAssembly) {
+    }
+
+    AppTypes(IModuleProvider provider, Assembly? appAssembly) {
+        this.provider = provider;
         this.appAssembly = appAssembly;
     }
 
-    public IReadOnlyList<Module> Modules => modules ??= InOrder(Roots.Select(root => root.Create()));
+    public IReadOnlyList<Module> Modules => modules ??= InOrder(provider.Modules(this));
 
-    internal IReadOnlyList<ModuleRoot> Roots => roots ??= [.. scan.OfModules()
-        .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
-        .OrderBy(root => root.Name, StringComparer.Ordinal)];
+    internal IReadOnlyList<ModuleRoot> Roots => roots ??= RootsIn(scan.OfModules());
+
+    public static AppTypes Of(IModuleProvider provider, Assembly? appAssembly = null) => new(provider, appAssembly);
+
+    public IReadOnlyList<Module> ScannedModules() => [.. Roots.Select(root => root.Create())];
+
+    public IReadOnlyList<Module> ModulesIn(IEnumerable<Assembly> assemblies) =>
+        [.. RootsIn(assemblies).Select(root => root.Create())];
 
     internal static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
         .OrderBy(module => module.Order)
@@ -78,6 +88,11 @@ public sealed class AppTypes {
         .SelectMany(scan.TypesOf)
         .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false })
         .Where(t => t.IsSubclassOf(baseType))];
+
+    IReadOnlyList<ModuleRoot> RootsIn(IEnumerable<Assembly> assemblies) => [.. assemblies
+        .Distinct()
+        .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
+        .OrderBy(root => root.Name, StringComparer.Ordinal)];
 
     Type[] Loaded() => loaded ??= [.. Assemblies()
         .SelectMany(scan.TypesOf)
