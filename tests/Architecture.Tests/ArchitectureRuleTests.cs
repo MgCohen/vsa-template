@@ -9,7 +9,7 @@ public sealed class ArchitectureRuleTests {
     [Test]
     public void The_rules_give_the_codes_of_the_architecture_findings() =>
         Assert.That(ArchitectureRule.All.Select(rule => rule.Code), Is.EqualTo(new[] {
-            "UMP020101", "UMP020102", "UMP020201", "UMP020202", "UMP020203", "UMP020204",
+            "UMP020101", "UMP020102", "UMP020201", "UMP020202", "UMP020204", "UMP020205",
             "UMP020301", "UMP020302", "UMP020303", "UMP020304", "UMP020401", "UMP020402",
         }));
 
@@ -17,7 +17,6 @@ public sealed class ArchitectureRuleTests {
     public void Other_code_finds_a_rule_by_its_type() {
         Assert.Multiple(() => {
             Assert.That(ArchitectureRule.Of<DeniedUseRule>().Code, Is.EqualTo("UMP020101"));
-            Assert.That(ArchitectureRule.Of<MissingScriptAssembliesRule>().Severity, Is.EqualTo(FindingSeverity.Warning));
         });
     }
 

@@ -24,6 +24,7 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
         var given = envelope.Message;
         var run = given with { Mode = CheckMode.Of(given.Mode, Folder(given)) };
         options.FailFast = run.FailFast;
+        Apply(CheckSettings.Of(Folder(run), run.References, run.SourceRoot, run.IgnoredFolders, run.ProjectChecks));
         var findings = await Run(run, envelope.Cancellation);
         var report = await commands.SendAsync(new WriteReportCommand(run.Mode!.Value, findings), envelope.Cancellation);
         return report.IsSuccess ? new RunEngineResponse(report.Value.ExitCode, report.Value.Lines) : report.Error!;
@@ -55,9 +56,18 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
         }
     }
 
+    void Apply(CheckSettings settings) {
+        options.References = settings.References;
+        options.SourceRoot = settings.SourceRoot;
+        options.IgnoredFolders = settings.IgnoredFolders;
+        options.ProjectChecks = settings.ProjectChecks;
+    }
+
     static string Folder(RunEngineRequest run) => run.Block.Length > 0 ? run.Block : run.Project;
 
-    static string Inputs(RunEngineRequest run) => $"{run.Mode}|{run.Skip}|{run.Block}";
+    string Inputs(RunEngineRequest run) =>
+        $"{run.Mode}|{run.Skip}|{run.Block}|{string.Join(";", options.References)}|{options.SourceRoot}"
+        + $"|{string.Join(";", options.IgnoredFolders)}|{options.ProjectChecks}";
 
     async Task Rules(RunEngineRequest run, CancellationToken ct) {
         var used = await Block(run, new FindBlocksCommand(run.Project, run.Bin, run.Block), ct);

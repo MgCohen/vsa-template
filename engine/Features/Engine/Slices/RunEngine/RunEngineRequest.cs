@@ -11,5 +11,9 @@ public sealed record RunEngineRequest(
     ReportMode? Mode = null,
     string Skip = "",
     bool FailFast = false,
-    Stage Stage = Stage.All)
+    Stage Stage = Stage.All,
+    string References = "",
+    string SourceRoot = "",
+    string IgnoredFolders = "",
+    bool? ProjectChecks = null)
     : IRequest<RunEngineResponse>;

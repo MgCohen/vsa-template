@@ -5,6 +5,7 @@ using Umpire.Architecture;
 using Blocks.Domain.Shared;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
+using Rules.Domain;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
 
@@ -20,13 +21,15 @@ static class FixtureApps {
 
     public static string Block(string app) => Path.Combine(Root, app);
 
-    public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder) {
+    public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder, ReadOptions? options = null) {
         var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
-        using var reader = new BinReader(bin);
+        using var reader = new BinReader(bin, options);
         var index = reader.Index();
         var dlls = index.AppDlls(blockFolder, []).Concat(index.ExternalDlls(externals)).Distinct().ToList();
         var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
-        return ArchitectureCheck.Load(definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks);
+        return ArchitectureCheck.Load(
+            definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks, RuleConfig.Empty,
+            options?.IgnoredFolders, options?.References);
     }
 
     public static string Line(Finding finding) {

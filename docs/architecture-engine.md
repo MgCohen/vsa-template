@@ -353,16 +353,23 @@ public sealed class CardsArchitecture : VsaArchitecture {
 public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
 ```
 
-`AppReader` (`engine/Plugins/BuiltApp/Infrastructure`) also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
+### Check settings
 
-| Step | Unity project |
+The engine knows no host build system. A host that compiles the app in its own way (for example Unity) gives its folders to the engine with these settings. Each setting has a key in `.umpireconfig`, and a flag with the same name overrides it for one run. The order is: the flag, then `.umpireconfig`, then the default. A list is text with `,` or `;` between the items. A relative folder in `.umpireconfig` starts at the folder of that file, and a relative folder in a flag starts at the current folder.
+
+| Key | Flag | Default | Effect |
+|---|---|---|---|
+| `umpire.check.references` | `--references` | None | More folders of DLLs. The engine reads them as it reads `--bin`: a DLL with source files under the block is app code, and each DLL resolves the types of the others |
+| `umpire.check.source_root` | `--sourceroot` | None | The root of a relative source path in a PDB. With no root, a relative path stays relative and is not under the block |
+| `umpire.check.ignored_folders` | `--ignoredfolders` | None | Folders of the block (relative paths) that hold no app code, for example a package cache. The change check does not read them |
+| `umpire.check.project_checks` | `--projectchecks` | `true` | `false` stops the project checks (`UMP030305`, `UMP030306`), for example for project files that the host writes |
+
+| Case | Result |
 |---|---|
-| App DLLs | Also `Library/ScriptAssemblies/*.dll` |
-| No `Library/ScriptAssemblies/` | The warning `UMP020203` |
-| A DLL name in the host output too | The engine loads the host output DLL only |
-| A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
-| A relative source path in the PDB (Unity package code, `.\Packages\...`) | `SymbolReader` resolves it against the Unity project root: the nearest folder above the DLL with `ProjectSettings/ProjectVersion.txt` (`UnityProject.Root`) |
-| Source file under `Library/` | Not app code (package cache, generated types) |
+| A DLL name in `--bin` and in a reference folder | The engine reads the `--bin` DLL only |
+| A type in two DLLs | The engine loads it once. The copy in a reference folder wins |
+
+`CheckSettings` (`engine/Features/Engine/Infrastructure`) reads the settings, and `RunOptions` (`engine/Plugins/Steps`) gives them to the steps.
 
 ## The checks of the Rules step
 
@@ -382,8 +389,8 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020102` | `WideExposureRule` | `UseRule` (01) | Error | A type exposes a part with more access than its rule allows |
 | `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
 | `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
-| `UMP020203` | `MissingScriptAssembliesRule` | `PlaceRule` (02) | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
 | `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the `Named` rule of its part (see "Content of a part") |
+| `UMP020205` | `MissingReferenceRule` | `PlaceRule` (02) | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
 | `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
 | `UMP020303` | `WrongKindRule` | `StatementRule` (03) | Error | A type is of a kind that `OnlyKind` of its part does not allow (see "Content of a part") |

@@ -8,11 +8,11 @@ using Umpire.Kernels;
 
 public sealed class AppLoader : AssemblyLoadContext {
     public static readonly IReadOnlySet<string> Shared = SharedClosure(typeof(Architecture).Assembly);
-    readonly string bin;
+    readonly IReadOnlyList<string> folders;
     readonly AssemblyDependencyResolver? resolver;
 
-    public AppLoader(string bin) : base("umpire-app", isCollectible: false) {
-        this.bin = bin;
+    public AppLoader(string bin, IReadOnlyList<string>? references = null) : base("umpire-app", isCollectible: false) {
+        folders = [bin, .. references ?? []];
         var main = Directory.GetFiles(bin, "*.deps.json")
             .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))
             .FirstOrDefault(File.Exists);
@@ -44,11 +44,8 @@ public sealed class AppLoader : AssemblyLoadContext {
         if (Shared.Contains(assemblyName.Name!)) {
             return null;
         }
-        var path = resolver?.ResolveAssemblyToPath(assemblyName);
-        if (path is null) {
-            var local = Path.Combine(bin, assemblyName.Name + ".dll");
-            path = File.Exists(local) ? local : null;
-        }
+        var path = resolver?.ResolveAssemblyToPath(assemblyName)
+            ?? folders.Select(folder => Path.Combine(folder, assemblyName.Name + ".dll")).FirstOrDefault(File.Exists);
         return path is null ? null : LoadFromAssemblyPath(path);
     }
 

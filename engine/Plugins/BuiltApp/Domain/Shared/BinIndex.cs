@@ -3,6 +3,8 @@ namespace BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 
 public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyList<BlockEntry> Entries) {
+    public IReadOnlyList<string> IgnoredFolders { get; init; } = [];
+
     public static IReadOnlyDictionary<string, Source> Sources(IEnumerable<BinDll> dlls) {
         var sources = new Dictionary<string, Source>();
         foreach (var type in dlls.SelectMany(d => d.Types)) {
@@ -12,7 +14,7 @@ public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyL
     }
 
     public IReadOnlyList<BinDll> AppDlls(string blockFolder, IReadOnlyList<string> skip) =>
-        [.. Dlls.Where(d => !Skipped(d.Name, skip) && d.HasSourceUnder(blockFolder))];
+        [.. Dlls.Where(d => !Skipped(d.Name, skip) && d.HasSourceUnder(blockFolder, IgnoredFolders))];
 
     public IReadOnlyList<BinDll> ExternalDlls(IReadOnlyList<string> names) =>
         [.. Dlls.Where(d => names.Any(e => d.Name == e || d.Name.StartsWith(e + ".", StringComparison.Ordinal)))];

@@ -17,19 +17,32 @@ public sealed class BinReader : IDisposable {
     readonly string[] dlls;
     readonly IReadOnlySet<string> projects;
     readonly MetadataLoadContext context;
+    readonly ReadOptions options;
 
-    public BinReader(string bin) {
+    public BinReader(string bin, ReadOptions? options = null) {
         this.bin = bin;
-        dlls = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
+        this.options = options ?? ReadOptions.None;
+        dlls = [.. ReferencesFirst(bin, this.options.References)];
         projects = DepsFile.ProjectAssemblies(bin);
         var shared = SharedFrameworks().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
         context = new MetadataLoadContext(new PathAssemblyResolver(dlls.Concat(shared)));
     }
 
-    public static IReadOnlyDictionary<string, Source> Sources(IEnumerable<string> files) {
+    public static IEnumerable<string> ReferencesFirst(string bin, IReadOnlyList<string> references) {
+        var own = Dlls([bin]).ToList();
+        var names = own.Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return Dlls(references).Where(dll => !names.Contains(Path.GetFileName(dll))).Concat(own);
+    }
+
+    static IEnumerable<string> Dlls(IEnumerable<string> folders) =>
+        folders.Where(Directory.Exists)
+            .SelectMany(folder => Directory.GetFiles(folder, "*.dll"))
+            .DistinctBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase);
+
+    public static IReadOnlyDictionary<string, Source> Sources(IEnumerable<string> files, string? sourceRoot = null) {
         var sources = new Dictionary<string, Source>();
         foreach (var file in files) {
-            using var symbols = new SymbolReader(file);
+            using var symbols = new SymbolReader(file, sourceRoot);
             foreach (var type in symbols.TypeSources()) {
                 sources.TryAdd(type.FullName, type.Source);
             }
@@ -47,7 +60,9 @@ public sealed class BinReader : IDisposable {
 
     public BinIndex Index() {
         var read = dlls.Select(Read).OfType<DllRead>().ToList();
-        return new BinIndex(bin, [.. read.Select(r => r.Dll)], [.. read.SelectMany(r => r.Entries)]);
+        return new BinIndex(bin, [.. read.Select(r => r.Dll)], [.. read.SelectMany(r => r.Entries)]) {
+            IgnoredFolders = options.IgnoredFolders,
+        };
     }
 
     public BlockEntry Check(BlockEntry entry) =>
@@ -216,7 +231,7 @@ public sealed class BinReader : IDisposable {
     DllRead? Read(string dll) {
         SymbolReader symbols;
         try {
-            symbols = new SymbolReader(dll);
+            symbols = new SymbolReader(dll, options.SourceRoot);
         } catch (Exception e) when (e is BadImageFormatException or IOException or InvalidOperationException) {
             return null;
         }

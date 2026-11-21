@@ -2,25 +2,23 @@ namespace BuiltApp.Infrastructure;
 
 using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
+using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 
 public static class AppReader {
     public static LoadedApp Read(
-        IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, string blockFolder, ResolvedArchitecture architecture) {
-        var unity = UnityProject.Scripts(blockFolder, dlls, out var missingScriptAssemblies);
-        var files = unity.Concat(dlls).ToList();
-        var types = Distinct(Load(files), files);
-        var facts = TypeFactsReader.Read(types, WithUnity(BinReader.Sources(unity), sources), architecture);
-        return new LoadedApp(blockFolder, files, types, facts, missingScriptAssemblies);
+        IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, string blockFolder,
+        ResolvedArchitecture architecture, IReadOnlyList<string>? ignoredFolders = null) {
+        var types = Distinct(Load(dlls), dlls);
+        var facts = TypeFactsReader.Read(types, sources, architecture)
+            .Where(fact => !IsIgnored(fact, blockFolder, ignoredFolders ?? []))
+            .ToList();
+        return new LoadedApp(blockFolder, dlls, types, facts);
     }
 
-    static Dictionary<string, Source> WithUnity(IReadOnlyDictionary<string, Source> unity, IReadOnlyDictionary<string, Source> sources) {
-        var all = new Dictionary<string, Source>(unity);
-        foreach (var source in sources) {
-            all.TryAdd(source.Key, source.Value);
-        }
-        return all;
-    }
+    static bool IsIgnored(TypeFacts fact, string blockFolder, IReadOnlyList<string> ignoredFolders) =>
+        ignoredFolders.Count > 0 && fact.Source is { } source
+        && ReadOptions.IsIgnored(Path.GetRelativePath(blockFolder, Path.GetFullPath(source.File)), ignoredFolders);
 
     static ArchUnitNET.Domain.Architecture Load(IReadOnlyList<string> files) {
         var loader = new ArchLoader();

@@ -18,10 +18,10 @@ sealed class SymbolReader : IDisposable {
     readonly MetadataReader metadata;
     readonly MetadataReader? pdbOrNull;
     readonly Lazy<IReadOnlyList<string>> sourceFolders;
-    readonly string? unityRoot;
+    readonly string? sourceRoot;
     readonly Dictionary<DocumentHandle, string> documentNames = [];
 
-    public SymbolReader(string dll) {
+    public SymbolReader(string dll, string? sourceRoot = null) {
         image = new PEReader(File.OpenRead(dll));
         try {
             if (!image.HasMetadata) {
@@ -35,17 +35,17 @@ sealed class SymbolReader : IDisposable {
         symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb"));
         pdbOrNull = symbols?.GetMetadataReader();
         sourceFolders = new(SourceFoldersAndParents);
-        unityRoot = UnityProject.Root(Path.GetDirectoryName(Path.GetFullPath(dll)));
+        this.sourceRoot = sourceRoot;
     }
 
     public bool HasSymbols => pdbOrNull is not null;
 
     MetadataReader pdb => pdbOrNull!;
 
-    public static string Resolve(string? unityRoot, string document) =>
-        unityRoot is null || IsRooted(document)
+    public static string Resolve(string? sourceRoot, string document) =>
+        sourceRoot is null || IsRooted(document)
             ? document
-            : Path.GetFullPath(Path.Combine(unityRoot, document.Replace('\\', Path.DirectorySeparatorChar)));
+            : Path.GetFullPath(Path.Combine(sourceRoot, document.Replace('\\', Path.DirectorySeparatorChar)));
 
     public IReadOnlyList<string> References() =>
         [.. metadata.AssemblyReferences.Select(r => metadata.GetString(metadata.GetAssemblyReference(r).Name))];
@@ -164,7 +164,7 @@ sealed class SymbolReader : IDisposable {
 
     string DocumentName(DocumentHandle handle) {
         if (!documentNames.TryGetValue(handle, out var name)) {
-            name = Resolve(unityRoot, pdb.GetString(pdb.GetDocument(handle).Name));
+            name = Resolve(sourceRoot, pdb.GetString(pdb.GetDocument(handle).Name));
             documentNames[handle] = name;
         }
         return name;
