@@ -57,10 +57,10 @@ public class VsaArchitecture : Architecture {
 | `AddBlockGroup<T>()` | Each subfolder of the folder of `T` is the place of another block, for example `Packs/<Name>/` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
-| `Named(Name)` | The name of each type of the part (see "Content of a part") |
+| `NameStartsWith`, `NameEndsWith`, `NamedAfterGroup` | The name of each type of the part (see "Content of a part") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
 | `Has<T>()`, `Takes<T>()` | A count (type `Count`) or a match (type `Match`). See "Counts and matches" |
-| `OnlyKind(TypeKind)`, `Owns<TAttribute>()` | The kinds of type of a part, and the parts that can have an attribute. See "Content of a part" |
+| `Are(Trait)`, `Are<T>()`, `Type<T>().OnlyIn<P>()` | The traits of each type of a part, and the parts that can use a type. See "Content of a part" |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target. A filter applies to each entry before it in the chain |
 
 `Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth`, `Access` and `Required`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call, the group parameter or the `OfType` call), the concept, the architecture, then `Options.BuiltIn`.
@@ -275,45 +275,80 @@ part.OfType(typeof(RequestHandler<,>), required: true);
 
 ## Content of a part
 
-The name of a type is structure, so `Named` is in `Define`, next to `OfType`. The kind of type and the place of an attribute are statements, so they are in `Rules`, next to the counts.
+A name rule is a call on the part, in `Define`. A trait rule and a place rule are statements in `Rules`, next to the counts.
 
-| Kind | Call | Fails when | Code |
+| Rule | Call | Fails when | Code |
 |---|---|---|---|
-| Name | `part.Named(Name)` | The type name does not obey the name rule | `UMP020204` |
-| Kind of type | `rules.For<S>().OnlyKind(TypeKind)` | A type of `S` is of another kind | `UMP020303` |
-| Attribute place | `rules.For<S>().Owns<TAttribute>()` | A type outside `S`, or one of its members, has the attribute | `UMP020304` |
+| Name | `part.NameEndsWith("Hook")` | The type name does not obey the rule | `UMP020204` |
+| Traits | `rules.For<S>().Are<Static>()` | A type of `S` does not have the traits | `UMP020303` |
+| Type place | `rules.Type<T>().OnlyIn<S>()` | Code outside `S` uses `T` | `UMP020304` |
 
 ```csharp
-public sealed record CliCommand : Layer {
-    protected override void Define(Part part) {
-        part.Named(Name.OfGroup());
-    }
+protected override void Define(Block block) {
+    var feature = block.AddGroup<Feature>();
+    feature.Add<CliCommand>().NamedAfterGroup();
+}
 
-    protected override void Rules(RuleBook rules) {
-        rules.For<CliCommand>().OnlyKind(TypeKind.StaticClass);
-        rules.For<CliCommand>().Owns<CliCommandAttribute>();
-    }
+protected override void Rules(RuleBook rules) {
+    rules.For<CliCommand>().Are<Static>();
+    rules.Type<CliCommandAttribute>().OnlyIn<CliCommand>();
 }
 ```
 
-| Name rule | A good name |
+### Name rules
+
+| Call | A good name |
 |---|---|
-| `Name.Suffix("Hook")` | `ChimeHook` |
-| `Name.Prefix("I")` | `IClock` |
-| `Name.OfGroup()` | `Touch` in `Features/Touch/` (the nearest group instance) |
-| `Name.OfGroup<Feature>().WithSuffix("Settings")` | `TouchSettings` in `Features/Touch/` |
+| `NameEndsWith("Hook")` | `ChimeHook` |
+| `NameStartsWith("I")` | `IClock` |
+| `NamedAfterGroup()` | `Touch` in `Features/Touch/` (the nearest group) |
+| `NamedAfterGroup("Settings")` | `TouchSettings` in `Features/Touch/` |
+| `NamedAfterGroup<Feature>()` | `Billing` in `Features/Billing/Slices/Pay/` (the group `Feature`) |
 
-The rules of the content checks:
+- A name rule has no regex. The generic arity (for example `` `1 ``) is not part of the name.
+- `NameStartsWith` and `NameEndsWith` join, for example `NameStartsWith("I").NameEndsWith("Source")`. A second call of the same method replaces the first.
+- `NamedAfterGroup("Settings")` and `NameEndsWith("Settings")` set the same end text, so the later call wins. `NamedAfterGroup()` with no suffix keeps an earlier end text.
+- Use `NamedAfterGroup<T>()` only when the part is under two groups. A `NamedAfterGroup` on a part with no group stops the definition.
+- Put a name rule at the call site of the pack definition, not in the `Define` of a concept.
 
-- A name rule has no regex. The generic arity (for example `` `1 ``) is not part of the name. A `Name.OfGroup()` on a part with no group stops the definition.
-- `TypeKind` is a flags enum: `Class`, `StaticClass`, `AbstractClass`, `Record`, `Struct`, `Interface`, `Enum`, `Delegate`. Combine kinds with `|`. `TypeKind.None` allows no type. With no `OnlyKind`, each kind is allowed. Each type has one kind: an abstract record is an `AbstractClass`, and a record struct is a `Struct`.
-- If more than one statement owns an attribute, the attribute can be in each of their parts. The engine reads the attributes of the type and of its members. An attribute that derives from the owned attribute is also owned, and an owned generic attribute matches each closed form.
+### Traits
+
+A trait is one fact about a type. Each trait is a record in `Umpire.Architecture.Traits` that inherits `Trait`: `Static`, `Abstract`, `Sealed`, `Record`, `Struct`, `Interface`, `Enum` and `Delegate`. `Trait` has one static member for each trait, for example `Trait.Sealed`.
+
+```csharp
+rules.For<X>().Are<Static>();                                     // one trait
+rules.For<X>().Are<Sealed>().And<Record>();                       // a chain: each trait
+rules.For<X>().Are((Trait.Sealed & Trait.Record) | Trait.Enum);   // the operators &, | and !
+```
+
+- `Are` checks each type of the part, one type at a time. It does not count. A count is `Has<T>().AtMost(n)`.
+- `Abstract` is an abstract class, not an interface or a static class. `Sealed` is a sealed class, not a static class.
+- A trait reads only the facts in `TypeFacts`, so the framework gives the traits. A consumer combines them.
+- With no `Are`, each type is allowed.
+
+### Type places
+
+`rules.Type<T>().OnlyIn<S>()` keeps each use of `T` in the parts `S`. `T` can be any type: an attribute, a base class, an interface, or a type that code calls.
+
+```csharp
+rules.Type<CliCommandAttribute>().OnlyIn<CliCommand>();   // the attribute is only on code in CliCommand
+rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure uses HttpClient
+```
+
+- For an attribute, a use is the attribute on the type or on one of its members. An attribute that derives from `T` is also a use, and a generic `T` matches each closed form.
+- For another type, a use is a base type, a field, a parameter, a call or an attribute. The type `T` itself is not a use.
+- A use in a member that the compiler makes, for example the `ToString` of a record, is not a use.
+- If more than one statement names `T`, `T` can be in each of their parts.
 - The engine does not read an attribute on a parameter, a return value, a generic parameter or a local function.
-- A nested type has the source file of its outer type, so the name and kind checks and the counts do not read it. The attribute check reads it.
-- A part has one name rule. If `Named` is called again, the later call wins.
+
+### Shared rules of the content checks
+
+- A nested type has the source file of its outer type, so the name and trait checks and the counts do not read it. The place check reads it.
 - A static class is not a subject of a match (`Takes<T>()`).
-- The checks do not read a helper that follows its user, a type of an external DLL or a type in a block place.
-- `ArchitectureTest.Problems(place)` gives the name, kind and attribute problems of one type.
+- The name and trait checks do not read a helper that follows its user. The place check reads it.
+- No content check reads a type of an external DLL or a type in a block place.
+- The engine reads the method bodies, for example a call inside a lambda. The in-process facts of an `ArchitectureTest` read only the signatures: the base types, the fields, the properties and the parameters.
+- `ArchitectureTest.Problems(place)` gives the name, trait and place problems of one type.
 
 ## Binding
 
@@ -391,13 +426,13 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020102` | `WideExposureRule` | `UseRule` (01) | Error | A type exposes a part with more access than its rule allows |
 | `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
 | `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
-| `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the `Named` rule of its part (see "Content of a part") |
+| `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the name rule of its part (see "Content of a part") |
 | `UMP020205` | `MissingReferenceRule` | `PlaceRule` (02) | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
 | `UMP020206` | `BadFolderAliasRule` | `PlaceRule` (02) | Warning | A value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it |
 | `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
-| `UMP020303` | `WrongKindRule` | `StatementRule` (03) | Error | A type is of a kind that `OnlyKind` of its part does not allow (see "Content of a part") |
-| `UMP020304` | `AttributePlaceRule` | `StatementRule` (03) | Error | A type outside the owner parts of an attribute has the attribute (see "Content of a part") |
+| `UMP020303` | `WrongTraitRule` | `StatementRule` (03) | Error | A type does not have the traits that `Are` of its part needs (see "Content of a part") |
+| `UMP020304` | `TypePlaceRule` | `StatementRule` (03) | Error | Code outside the parts of `Type<T>().OnlyIn<S>()` uses `T` (see "Content of a part") |
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
 | `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
 

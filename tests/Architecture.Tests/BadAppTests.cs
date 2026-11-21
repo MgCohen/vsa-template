@@ -17,7 +17,7 @@ public sealed class BadAppTests {
 
     [Test]
     public void The_bad_app_has_only_the_known_findings() {
-        Assert.That(AllFindings.Value, Has.Count.EqualTo(18), Lines(null));
+        Assert.That(AllFindings.Value, Has.Count.EqualTo(19), Lines(null));
     }
 
     [Test]
@@ -161,26 +161,38 @@ public sealed class BadAppTests {
     }
 
     [Test]
-    public void A_type_of_a_kind_that_the_rule_does_not_allow_gives_UMP020303() {
+    public void A_type_without_the_traits_of_the_rule_gives_UMP020303() {
         Assert.That(Lines("UMP020303"), Is.EqualTo(
-            $"{Billing}/Commands/Invoices.cs(5): error UMP020303: Invoices is in Commands ({BillingPart}/Commands), but it is a Class: "
-            + "the rule \"Commands has only StaticClass\" allows only StaticClass. Change the type, or move it to another part."));
+            $"{Billing}/Commands/Invoices.cs(5): error UMP020303: Invoices is in Commands ({BillingPart}/Commands), but it is not static, "
+            + "so it breaks the rule \"Commands types are static\". Change the type, or move it to another part."));
     }
 
     [Test]
-    public void An_owned_attribute_on_a_member_of_another_part_gives_UMP020304() {
-        Assert.That(Lines("UMP020304"), Is.EqualTo(
+    public void An_attribute_on_a_member_of_another_part_gives_UMP020304() {
+        Assert.That(Lines("UMP020304"), Does.Contain(
             $"{Notes}/NotesModule.cs(5): error UMP020304: NotesModule in Module ({NotesPart}) has [CommandAttribute], "
-            + "but the rule \"Commands owns CommandAttribute\" keeps it in Commands. "
+            + "but the rule \"CommandAttribute is only in Commands\" keeps it in Commands. "
             + "Move the code with [CommandAttribute] to Commands, or remove the attribute."));
     }
 
     [Test]
-    public void The_type_facts_give_the_kind_and_the_member_attributes() {
+    public void A_use_of_an_external_type_in_a_lambda_outside_its_places_gives_UMP020304() {
+        Assert.That(Lines("UMP020304"), Does.Contain(
+            $"{Billing}/Presenters/Formatting.cs(4): error UMP020304: Formatting in Presenters ({BillingPart}/Presenters) uses StringBuilder, "
+            + "but the rule \"StringBuilder is only in Domain\" keeps it in Domain. "
+            + "Move the code that uses StringBuilder to Domain, or remove the use."));
+    }
+
+    [Test]
+    public void The_type_facts_give_the_traits_and_the_member_attributes() {
         var billing = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Commands.Billing");
+        var paid = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Domain.Paid");
 
         Assert.Multiple(() => {
-            Assert.That(billing.Kind, Is.EqualTo(Umpire.Architecture.TypeKind.StaticClass));
+            Assert.That(billing.IsStatic, Is.True);
+            Assert.That(billing.IsSealed, Is.False);
+            Assert.That(paid.IsDelegate, Is.True);
+            Assert.That(paid.IsSealed, Is.False);
             Assert.That(billing.IsAbstract, Is.False);
             Assert.That(billing.Attributes, Has.Member("Kit.CommandAttribute"));
         });

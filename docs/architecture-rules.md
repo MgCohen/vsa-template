@@ -37,13 +37,13 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP020102` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
 | `UMP020201` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
 | `UMP020202` | Architecture | Each type of the app is in a folder of a part. |
-| `UMP020204` | Architecture | Each type name obeys the `Named` rule of its part, for example the name of a hook ends with `Hook`. See "Content of a part" in `architecture-engine.md`. |
+| `UMP020204` | Architecture | Each type name obeys the name rule of its part, for example the name of a hook ends with `Hook`. See "Content of a part" in `architecture-engine.md`. |
 | `UMP020205` | Architecture | A warning: a reference folder (`umpire.check.references`) does not exist, so the checks do not read its DLLs. |
 | `UMP020206` | Architecture | A warning: a value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it. |
 | `UMP020301` | Architecture | Each count of the definition is in its limit, for example each slice has at least one handler. See "Counts and matches". |
 | `UMP020302` | Architecture | Each match of the definition holds, for example a request handler handles a request of its own slice. See "Counts and matches". |
-| `UMP020303` | Architecture | Each type of a part is of a kind that `OnlyKind` allows. See "Content of a part" in `architecture-engine.md`. |
-| `UMP020304` | Architecture | An attribute that a part owns (`Owns<TAttribute>()`) is only in that part. See "Content of a part" in `architecture-engine.md`. |
+| `UMP020303` | Architecture | Each type of a part has the traits that `Are` needs. See "Content of a part" in `architecture-engine.md`. |
+| `UMP020304` | Architecture | Each use of a type with `Type<T>().OnlyIn<S>()` is in the parts `S`. See "Content of a part" in `architecture-engine.md`. |
 | `UMP020401` | Architecture | No part of the definition covers the folder of another block. Mark the folder with `AddBlock<T>()` or `AddBlockGroup<T>()`. |
 | `UMP020402` | Architecture | Each block place holds a check entry. |
 | `UMP03xxxx` | Engine | The engine run: a step throws or is skipped, the check entries, the projects of a block, a version, the load of the app. One table: "Engine codes" in `architecture-engine.md`. |
@@ -246,7 +246,7 @@ The VSA definition has these count and match lines. S1 to S3 are in `Slice.Rules
 
 An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d are slice rules (implicit `Under<Slice>()`), so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 
-The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). Each hook part has `Named(Name.Suffix("Hook"))`, so the name of a hook ends with `Hook` (`UMP020204`). A hook has each use of the handlers of its kind. In a slice, the hook parts are siblings of the handler parts in the slice folder. In a plugin module, `Handlers.Commands.Hooks` is a child of `Handlers.Commands` (and the same for the events), with `InParentFolder()`. Reason: a plugin has one folder for each layer, so its hooks are in `Handlers/Commands/`, and only a child part can share that folder. A sibling with `InParentFolder()` would be in `Handlers/`.
+The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). Each hook part has `NameEndsWith("Hook")`, so the name of a hook ends with `Hook` (`UMP020204`). A hook has each use of the handlers of its kind. In a slice, the hook parts are siblings of the handler parts in the slice folder. In a plugin module, `Handlers.Commands.Hooks` is a child of `Handlers.Commands` (and the same for the events), with `InParentFolder()`. Reason: a plugin has one folder for each layer, so its hooks are in `Handlers/Commands/`, and only a child part can share that folder. A sibling with `InParentFolder()` would be in `Handlers/`.
 
 A validator (`Validator<T>`) in a slice is the optional part `Slice.Validators`, next to the handler. No part uses it: the pipeline finds it by type. It uses the kernel and plugin handlers and contracts, the contracts of its own slice, `Slice.Shared` of its feature, `Domain` (internal) and `Domain.Shared`. It does not use the infrastructure or the contracts of another slice. It is not a handler, so S1 and S2 do not count it.
 

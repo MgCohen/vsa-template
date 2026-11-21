@@ -30,7 +30,7 @@ public sealed class MatchTests {
 
     [Test]
     public void A_static_class_is_not_a_subject() {
-        var helper = Fact("TagTools", "a", typeof(ITagged)) with { Kind = TypeKind.StaticClass };
+        var helper = Fact("TagTools", "a", typeof(ITagged)) with { IsStatic = true };
 
         Assert.That(TagsTakeItemsInTheirBox.Matches(ItemA, helper), Is.Empty);
     }

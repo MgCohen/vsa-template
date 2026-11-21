@@ -7,7 +7,7 @@ public sealed class ContentPlaceTests : ArchitectureTest<ContentPlaceTests.MarkO
     [Test]
     public void A_derived_attribute_is_an_owned_attribute() {
         Assert.That(Problems(At<MarkedByDerived>("Boxes/a")), Is.EqualTo(new[] {
-            "MarkedByDerived in Box (Boxes/a) has [MarkAttribute], but the rule \"Item owns MarkAttribute\" keeps it in Item. "
+            "MarkedByDerived in Box (Boxes/a) has [MarkAttribute], but the rule \"MarkAttribute is only in Item\" keeps it in Item. "
             + "Move the code with [MarkAttribute] to Item, or remove the attribute.",
         }));
     }
@@ -18,7 +18,7 @@ public sealed class ContentPlaceTests : ArchitectureTest<ContentPlaceTests.MarkO
         }
 
         protected override void Rules(RuleBook rules) {
-            rules.For<Item>().Owns<MarkAttribute>();
+            rules.Type<MarkAttribute>().OnlyIn<Item>();
         }
     }
 }

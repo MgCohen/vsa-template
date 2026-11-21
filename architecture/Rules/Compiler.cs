@@ -22,8 +22,8 @@ internal sealed class Compiler {
         UseRules = CompileUseRules();
         Counts = [.. book.Counts.Select(Of), .. Required()];
         Matches = [.. book.Matches.Select(Of)];
-        Kinds = [.. book.Kinds.Select(Of)];
-        Owners = [.. book.Owners.Select(Of)];
+        Traits = [.. book.Traits.Select(Of)];
+        Places = [.. book.Places.Select(Of)];
         CheckNames();
     }
 
@@ -34,8 +34,8 @@ internal sealed class Compiler {
     public IReadOnlyList<PartRule> UseRules { get; }
     public IReadOnlyList<CountStatement> Counts { get; }
     public IReadOnlyList<MatchStatement> Matches { get; }
-    public IReadOnlyList<KindStatement> Kinds { get; }
-    public IReadOnlyList<OwnerStatement> Owners { get; }
+    public IReadOnlyList<TraitStatement> Traits { get; }
+    public IReadOnlyList<PlaceStatement> Places { get; }
 
     static IEnumerable<Part> Expand(Part part, Depth depth) => depth switch {
         Depth.Self => [part],
@@ -180,23 +180,24 @@ internal sealed class Compiler {
         return new MatchStatement(text, Subjects(match.Subjects, text), match.Taken, match.Group);
     }
 
-    KindStatement Of(KindLimit limit) {
-        var text = limit.ToString();
-        Validate(limit.Subjects, text);
-        return new KindStatement(text, Subjects(limit.Subjects, text), limit.Kinds);
+    TraitStatement Of(TraitRule rule) {
+        var text = rule.ToString();
+        Validate(rule.Subjects, text);
+        return new TraitStatement(text, Subjects(rule.Subjects, text), rule.Condition);
     }
 
-    OwnerStatement Of(Owner owner) {
-        var text = owner.ToString();
-        Validate(owner.Subjects, text);
-        return new OwnerStatement(text, Subjects(owner.Subjects, text), owner.Attribute);
+    PlaceStatement Of(PlaceLimit limit) {
+        var text = limit.ToString();
+        var places = limit.Places;
+        Validate(places, text);
+        return new PlaceStatement(text, Subjects(places, text), limit.Type);
     }
 
     void CheckNames() {
         foreach (var part in Parts.Where(p => p.NameRule is { OfAGroup: true } && p.NameRule.GroupOf(p) is null)) {
             var group = part.NameRule!.Group is { } concept ? Concept.Display(concept) : "group";
             throw new InvalidOperationException(
-                $"Define: {part.Name} has Named({part.NameRule}), but it is not under a {group}. "
+                $"Define: {part.Name} has the name rule \"{part.NameRule}\", but it is not under a {group}. "
                 + "Add the part under that group, or use another name rule.");
         }
     }

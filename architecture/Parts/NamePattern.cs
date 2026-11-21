@@ -1,7 +1,7 @@
 namespace Umpire.Architecture;
 
-public sealed record Name {
-    Name(string prefix, string suffix, bool ofGroup, Type? group) {
+internal sealed record NamePattern {
+    NamePattern(string prefix, string suffix, bool ofGroup, Type? group) {
         Start = prefix;
         End = suffix;
         OfAGroup = ofGroup;
@@ -13,17 +13,14 @@ public sealed record Name {
     internal bool OfAGroup { get; init; }
     internal Type? Group { get; init; }
 
-    public static Name Prefix(string text) => new(text, "", false, null);
+    internal static NamePattern Any { get; } = new("", "", false, null);
 
-    public static Name Suffix(string text) => new("", text, false, null);
+    internal NamePattern WithStart(string text) => this with { Start = text };
 
-    public static Name OfGroup() => new("", "", true, null);
+    internal NamePattern WithEnd(string text) => this with { End = text };
 
-    public static Name OfGroup<T>() where T : Concept => new("", "", true, typeof(T));
-
-    public Name WithPrefix(string text) => this with { Start = text };
-
-    public Name WithSuffix(string text) => this with { End = text };
+    internal NamePattern AfterGroup(Type? group, string suffix) =>
+        this with { OfAGroup = true, Group = group, End = suffix.Length > 0 ? suffix : End };
 
     public override string ToString() {
         if (OfAGroup) {

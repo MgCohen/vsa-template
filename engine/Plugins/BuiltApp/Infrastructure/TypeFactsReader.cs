@@ -30,24 +30,22 @@ static class TypeFactsReader {
             .Select(e => new TypeExposure(e.Target.FullName, e.Access, e.Member))]) {
         BaseArguments = [.. BaseArguments(type)],
         IsAbstract = type is Interface || type is Class { IsAbstract: true, IsSealed: not true },
-        Kind = KindOf(type),
+        IsStatic = type is Class { IsAbstract: true, IsSealed: true },
+        IsSealed = type is Class { IsSealed: true, IsAbstract: not true } && !IsDelegate(type),
+        IsRecord = type is Class { IsRecord: true },
+        IsStruct = type is Struct,
+        IsInterface = type is Interface,
+        IsEnum = type is ArchUnitNET.Domain.Enum,
+        IsDelegate = IsDelegate(type),
         Attributes = [.. type.Attributes.Concat(type.Members.SelectMany(m => m.Attributes)).SelectMany(AttributeNames).Distinct()],
+        References = [.. Referenced(type).Where(t => t != type).Select(t => t.FullName).Distinct()],
         IsNested = type.IsNested,
     };
 
     static IEnumerable<string> AttributeNames(ArchUnitNET.Domain.Attribute attribute) =>
         new[] { attribute.FullName }.Concat(attribute.InheritedClasses.Select(c => c.FullName));
 
-    static TypeKind KindOf(IType type) => type switch {
-        Interface => TypeKind.Interface,
-        ArchUnitNET.Domain.Enum => TypeKind.Enum,
-        Struct => TypeKind.Struct,
-        Class { BaseClass.FullName: "System.MulticastDelegate" } => TypeKind.Delegate,
-        Class { IsAbstract: true, IsSealed: true } => TypeKind.StaticClass,
-        Class { IsAbstract: true } => TypeKind.AbstractClass,
-        Class { IsRecord: true } => TypeKind.Record,
-        _ => TypeKind.Class,
-    };
+    static bool IsDelegate(IType type) => type is Class { BaseClass.FullName: "System.MulticastDelegate" };
 
     static IEnumerable<IType> Bases(IType type) => new[] { type }
         .Concat(type is Class c ? c.InheritedClasses : [])
@@ -60,6 +58,13 @@ static class TypeFactsReader {
         .SelectMany(d => d.TargetGenericArguments)
         .Select(argument => argument.Type.FullName)
         .Distinct();
+
+    static IEnumerable<IType> Referenced(IType type) => type.Dependencies
+        .Where(d => d is not IMemberTypeDependency { OriginMember: var member } || !IsCompilerMade(member))
+        .SelectMany(d => new[] { d.Target }.Concat(d.TargetGenericArguments.Select(g => g.Type)));
+
+    static bool IsCompilerMade(IMember member) => member.IsCompilerGenerated
+        || member.Attributes.Any(a => a.FullName == "System.Runtime.CompilerServices.CompilerGeneratedAttribute");
 
     static IEnumerable<IType> Mentions(IType type) =>
         type.Dependencies.SelectMany(d => new[] { d.Target }.Concat(d.TargetGenericArguments.Select(g => g.Type)));

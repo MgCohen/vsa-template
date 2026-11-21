@@ -20,13 +20,9 @@ public record Slice : Concept {
 public record Domain : Concept;
 
 public record Commands : Concept {
-    protected override void Define(Part part) {
-        part.Named(Name.OfGroup());
-    }
-
     protected override void Rules(RuleBook rules) {
-        rules.For<Commands>().OnlyKind(TypeKind.StaticClass);
-        rules.For<Commands>().Owns<CommandAttribute>();
+        rules.For<Commands>().Are<Umpire.Architecture.Traits.Static>();
+        rules.Type<CommandAttribute>().OnlyIn<Commands>();
     }
 }
 
@@ -75,7 +71,7 @@ public abstract class FixtureArchitecture : Architecture {
         var feature = block.AddGroup<Feature>();
         feature.Add<Module>().OfType<IModuleRoot>();
         feature.Add<Domain>();
-        feature.Add<Commands>();
+        feature.Add<Commands>().NamedAfterGroup();
         feature.Add<Presenters>();
         feature.AddGroup<Slice>()
             .Add<Contracts.Requests>().And<Contracts.Events>()
@@ -87,6 +83,7 @@ public abstract class FixtureArchitecture : Architecture {
         rules.For<Feature>().Uses<Feature>();
         rules.For<Feature>().Uses<KitLayer>();
         rules.For<Domain>().Denies<KitLayer>();
+        rules.Type<System.Text.StringBuilder>().OnlyIn<Domain>();
         rules.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
         rules.For<Slice>().Denies<Presenters>().And<Module>().InSame<Feature>();
         rules.For<Presenters>().Uses<Domain>(Access.Internal);
