@@ -19,6 +19,7 @@ sealed class SymbolReader : IDisposable {
     readonly MetadataReader? pdbOrNull;
     readonly Lazy<IReadOnlyList<string>> sourceFolders;
     readonly string? unityRoot;
+    readonly Dictionary<DocumentHandle, string> documentNames = [];
 
     public SymbolReader(string dll) {
         image = new PEReader(File.OpenRead(dll));
@@ -40,6 +41,11 @@ sealed class SymbolReader : IDisposable {
     public bool HasSymbols => pdbOrNull is not null;
 
     MetadataReader pdb => pdbOrNull!;
+
+    public static string Resolve(string? unityRoot, string document) =>
+        unityRoot is null || IsRooted(document)
+            ? document
+            : Path.GetFullPath(Path.Combine(unityRoot, document.Replace('\\', Path.DirectorySeparatorChar)));
 
     public IReadOnlyList<string> References() =>
         [.. metadata.AssemblyReferences.Select(r => metadata.GetString(metadata.GetAssemblyReference(r).Name))];
@@ -151,12 +157,18 @@ sealed class SymbolReader : IDisposable {
         return null;
     }
 
-    string DocumentName(DocumentHandle handle) => FullPath(pdb.GetString(pdb.GetDocument(handle).Name));
+    static bool IsRooted(string document) =>
+        Path.IsPathRooted(document)
+        || document.StartsWith(@"\\", StringComparison.Ordinal)
+        || document is [var drive, ':', '\\' or '/', ..] && char.IsAsciiLetter(drive);
 
-    string FullPath(string document) =>
-        unityRoot is null || Path.IsPathRooted(document)
-            ? document
-            : Path.GetFullPath(Path.Combine(unityRoot, document.Replace('\\', Path.DirectorySeparatorChar)));
+    string DocumentName(DocumentHandle handle) {
+        if (!documentNames.TryGetValue(handle, out var name)) {
+            name = Resolve(unityRoot, pdb.GetString(pdb.GetDocument(handle).Name));
+            documentNames[handle] = name;
+        }
+        return name;
+    }
 
     static bool IsGenerated(string file) => BuildOutput.Contains(file);
 
