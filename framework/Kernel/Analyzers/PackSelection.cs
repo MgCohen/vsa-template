@@ -27,8 +27,10 @@ public static class PackSelection {
         var bases = new[] { AppType, PackType, BlockType }.Select(compilation.GetTypeByMetadataName).ToArray();
         var entryInterface = compilation.GetTypeByMetadataName(AppEntryType);
         foreach (var type in SourceTypes(compilation.Assembly.GlobalNamespace)) {
-            if ((EntryBase(type, bases) ?? EntryInterface(type, entryInterface)) is { } entry
-                && entry.TypeArguments[0].TypeKind != TypeKind.TypeParameter) {
+            IEnumerable<INamedTypeSymbol> entries = EntryBase(type, bases) is { } entryBase
+                ? [entryBase]
+                : EntryInterfaces(type, entryInterface);
+            foreach (var entry in entries.Where(e => e.TypeArguments[0].TypeKind != TypeKind.TypeParameter)) {
                 yield return Assemblies(entry.TypeArguments[0]);
             }
         }
@@ -48,9 +50,10 @@ public static class PackSelection {
             : [];
     }
 
-    static INamedTypeSymbol? EntryInterface(INamedTypeSymbol type, INamedTypeSymbol? entryInterface) =>
-        entryInterface is null ? null
-            : type.AllInterfaces.FirstOrDefault(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, entryInterface));
+    static IEnumerable<INamedTypeSymbol> EntryInterfaces(INamedTypeSymbol type, INamedTypeSymbol? entryInterface) =>
+        entryInterface is null || type.IsAbstract
+            ? []
+            : type.AllInterfaces.Where(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, entryInterface));
 
     static INamedTypeSymbol? EntryBase(INamedTypeSymbol type, INamedTypeSymbol?[] bases) {
         for (var current = type.BaseType; current is not null; current = current.BaseType) {
