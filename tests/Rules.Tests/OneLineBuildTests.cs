@@ -9,7 +9,7 @@ public sealed class OneLineBuildTests {
     DotnetResult engine = null!;
     DotnetResult build = null!;
 
-    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.sdk.web", LocalFeed.Version, "tools", "net10.0",
+    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.sdk.web", LocalFeed.Version, "tools", "net8.0",
         "umpire-engine.dll");
 
     [OneTimeSetUp]
@@ -83,6 +83,25 @@ public sealed class OneLineBuildTests {
     [Test]
     public void The_sdk_package_has_the_rule_engine() =>
         Assert.That(File.Exists(Engine), Is.True, first.Output);
+
+    [Test]
+    public void The_engine_of_the_sdk_package_targets_net8_with_roll_forward_Major() {
+        var config = File.ReadAllText(Path.ChangeExtension(Engine, ".runtimeconfig.json"));
+        Assert.That(config, Does.Contain("\"tfm\": \"net8.0\"").And.Contain("\"rollForward\": \"Major\""), config);
+    }
+
+    [Test]
+    public void The_package_path_runs_the_engine_on_the_newest_runtime() {
+        var value = Evaluate("OneLine.csproj", "-getProperty:UmpireEngineRollForward");
+        Assert.That(value.Output.Trim(), Is.EqualTo("LatestMajor"), value.Output);
+    }
+
+    [Test]
+    public void The_source_path_runs_the_engine_on_the_newest_runtime() {
+        var value = Dotnet.Run(Repo.Root, null, "msbuild", Repo.Path("tests", "Fixtures", "Notes", "Notes.csproj"),
+            "-getProperty:UmpireEngineRollForward", "-nodeReuse:false").EnsureSuccess();
+        Assert.That(value.Output.Trim(), Is.EqualTo("LatestMajor"), value.Output);
+    }
 
     [Test]
     public void A_build_runs_the_architecture_check() =>

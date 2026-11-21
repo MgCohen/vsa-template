@@ -1,7 +1,7 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
   <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins.
-       It is not a package: Umpire.Sdk and Umpire.Sdk.Web hold the engine in tools/net10.0/ (Umpire.Sdk.Package.targets). -->
+       It is not a package: Umpire.Sdk and Umpire.Sdk.Web hold the engine in tools/net8.0/ (Umpire.Sdk.Package.targets). -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>umpire-engine</AssemblyName>

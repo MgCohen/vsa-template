@@ -113,7 +113,7 @@ Run ──► the stop runs on the thread of Run, after the wait
 | `App.Stop()` | 0 |
 | `AppStop.Request(code)`, from app code | `code` |
 | The end of the console operation | The exit code of the response |
-| Ctrl+C, or SIGTERM on `net10.0` (console and web hosts) | 0 |
+| Ctrl+C, or SIGTERM on `net8.0` and later (console and web hosts) | 0 |
 | `IHostApplicationLifetime.StopApplication()` (web host) | 0 |
 
 Code inside the app uses the same call in all hosts:
@@ -553,7 +553,7 @@ Modes = { easy = 1, hard = 5 }
 
 ## Portable target
 
-`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net8.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
 A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add a log provider of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
 

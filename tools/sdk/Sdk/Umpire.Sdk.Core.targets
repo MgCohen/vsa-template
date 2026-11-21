@@ -94,13 +94,13 @@
 
   <!-- The root project of the app runs the rule engine: the executable in the block root that is not a test project. A
        nested console project of the same block does not check the block again. UmpireEngine=false turns it off. The engine
-       is in this package, in tools/net10.0/ (Umpire.Sdk.Package.targets). -->
+       is in this package, in tools/net8.0/ (Umpire.Sdk.Package.targets). -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net10.0', 'umpire-engine.dll'))</UmpireEngineFile>
+    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net8.0', 'umpire-engine.dll'))</UmpireEngineFile>
   </PropertyGroup>
 
   <!-- Source mode (this repository): the engine is the output of engine/Engine.csproj. The engine checks itself with its own
@@ -122,6 +122,7 @@
        one build, and it wins over .umpireconfig. UmpireBlock gives the block folder (this repository has one global.json for
        many apps). -->
   <PropertyGroup>
+    <UmpireEngineRollForward Condition="'$(UmpireEngineRollForward)' == ''">LatestMajor</UmpireEngineRollForward>
     <_UmpireDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_UmpireDotnet>
     <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
   </PropertyGroup>
@@ -138,9 +139,11 @@
            Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Build engine/Engine.csproj with the same configuration, or give UmpireEngineFile." />
     <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no finding
          line (": error <CODE>: ", for example ": error UMP020101: ") is an engine crash, for example an exception or a
-         missing runtime: it fails the build too, with UMP030004. -->
+         missing runtime: it fails the build too, with UMP030004. The engine targets net8.0 and loads the definition of the
+         app, so it runs on the newest installed runtime (LatestMajor): RollForward Major alone selects .NET 8 when it is
+         installed, and a net10.0 app does not load there. -->
     <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high" ConsoleToMSBuild="true"
-          Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(UmpireEngineFile)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
+          Command="&quot;$(_UmpireDotnet)&quot; exec --roll-forward $(UmpireEngineRollForward) &quot;$(UmpireEngineFile)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
       <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
       <Output TaskParameter="ConsoleOutput" ItemName="_UmpireCheckLine" />
     </Exec>
