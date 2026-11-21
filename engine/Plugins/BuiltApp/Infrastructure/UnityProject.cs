@@ -5,6 +5,15 @@ using Umpire.Vsa.Definition;
 static class UnityProject {
     public const string ScriptAssembliesFolder = "Library/ScriptAssemblies";
 
+    public static string? Root(string? start) {
+        for (var folder = start; !string.IsNullOrEmpty(folder); folder = Path.GetDirectoryName(folder)) {
+            if (UnityLayout.Is(folder)) {
+                return folder;
+            }
+        }
+        return null;
+    }
+
     public static IReadOnlyList<string> Scripts(string blockFolder, IEnumerable<string> loaded, out bool missingScriptAssemblies) {
         missingScriptAssemblies = false;
         if (!UnityLayout.Is(blockFolder)) {

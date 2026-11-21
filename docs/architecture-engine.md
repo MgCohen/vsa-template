@@ -361,6 +361,7 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
 | No `Library/ScriptAssemblies/` | The warning `UMP020203` |
 | A DLL name in the host output too | The engine loads the host output DLL only |
 | A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
+| A relative source path in the PDB (Unity package code, `.\Packages\...`) | `SymbolReader` resolves it against the Unity project root: the nearest folder above the DLL with `ProjectSettings/ProjectVersion.txt` (`UnityProject.Root`) |
 | Source file under `Library/` | Not app code (package cache, generated types) |
 
 ## The checks of the Rules step

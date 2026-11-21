@@ -18,6 +18,7 @@ sealed class SymbolReader : IDisposable {
     readonly MetadataReader metadata;
     readonly MetadataReader? pdbOrNull;
     readonly Lazy<IReadOnlyList<string>> sourceFolders;
+    readonly string? unityRoot;
 
     public SymbolReader(string dll) {
         image = new PEReader(File.OpenRead(dll));
@@ -33,6 +34,7 @@ sealed class SymbolReader : IDisposable {
         symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb"));
         pdbOrNull = symbols?.GetMetadataReader();
         sourceFolders = new(SourceFoldersAndParents);
+        unityRoot = UnityProject.Root(Path.GetDirectoryName(Path.GetFullPath(dll)));
     }
 
     public bool HasSymbols => pdbOrNull is not null;
@@ -149,7 +151,12 @@ sealed class SymbolReader : IDisposable {
         return null;
     }
 
-    string DocumentName(DocumentHandle handle) => pdb.GetString(pdb.GetDocument(handle).Name);
+    string DocumentName(DocumentHandle handle) => FullPath(pdb.GetString(pdb.GetDocument(handle).Name));
+
+    string FullPath(string document) =>
+        unityRoot is null || Path.IsPathRooted(document)
+            ? document
+            : Path.GetFullPath(Path.Combine(unityRoot, document.Replace('\\', Path.DirectorySeparatorChar)));
 
     static bool IsGenerated(string file) => BuildOutput.Contains(file);
 
