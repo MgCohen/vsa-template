@@ -31,10 +31,16 @@ sealed class UnityProjectFolder : IDisposable {
         return path;
     }
 
-    public void Compile(string assemblyName, string outputFolder, params string[] sources) {
+    public void Compile(string assemblyName, string outputFolder, params string[] sources) =>
+        Emit(assemblyName, outputFolder, sources, path => path);
+
+    public void CompileWithRelativeDocuments(string assemblyName, string outputFolder, params string[] sources) =>
+        Emit(assemblyName, outputFolder, sources, path => @".\" + Path.GetRelativePath(Root, path).Replace('/', '\\'));
+
+    void Emit(string assemblyName, string outputFolder, string[] sources, Func<string, string> documentName) {
         Directory.CreateDirectory(outputFolder);
         var trees = sources.Select(path => CSharpSyntaxTree.ParseText(
-            SourceText.From(File.ReadAllText(path), Encoding.UTF8), new CSharpParseOptions(LanguageVersion.Latest), path));
+            SourceText.From(File.ReadAllText(path), Encoding.UTF8), new CSharpParseOptions(LanguageVersion.Latest), documentName(path)));
         var compilation = CSharpCompilation.Create(assemblyName, trees, References(),
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
         using var dll = File.Create(Path.Combine(outputFolder, assemblyName + ".dll"));
