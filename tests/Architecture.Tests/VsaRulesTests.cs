@@ -42,9 +42,12 @@ public sealed class VsaRulesTests {
     [TestCase("Kernel", "Composition", Permission.Allow)]
     [TestCase("Kernel", "Host", Permission.Allow)]
     [TestCase("Kernel", "Domain", Permission.Deny)]
-    [TestCase("Feature", "Module", Permission.Deny)]
-    [TestCase("Plugin", "Module", Permission.Deny)]
-    public void The_app_host_uses_only_the_framework_entry(string group, string to, Permission expected) {
+    [TestCase("Feature", "Module", Permission.Allow)]
+    [TestCase("Plugin", "Module", Permission.Allow)]
+    [TestCase("Feature", "Domain", Permission.Deny)]
+    [TestCase("Feature", "Infrastructure", Permission.Deny)]
+    [TestCase("Plugin", "Domain", Permission.Deny)]
+    public void The_app_host_uses_the_framework_entry_and_only_the_root_class_of_a_module(string group, string to, Permission expected) {
         Assert.That(MayUse(Place("App", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
     }
 

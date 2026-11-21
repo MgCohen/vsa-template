@@ -28,7 +28,7 @@ The reasons for the limits:
 
 | Unity replaces | Extension point | Doc |
 |---|---|---|
-| The type source of the modules | `AppHost.Modules`, `new AppTypes(modules)` | `docs/composition.md` |
+| The type source of the modules | `AppHost.ModuleProvider` (`IModuleProvider`, `FixedModules`, `ModuleScan.In`), `new AppTypes(provider)` | `docs/composition.md` |
 | The host | `UnityHost : AppHost` with `Configure`: `App<Vsa<UnityHost>>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
 | The configuration | The base host reads only `--Key=Value` and `--Key value` of `args` into `IConfiguration`, and it ignores other arguments (for example `-batchmode` or the player path). `UnityHost.Configuration(args)` can add other sources | `docs/composition.md` |

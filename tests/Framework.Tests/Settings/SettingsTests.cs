@@ -81,7 +81,7 @@ public sealed class SettingsTests {
         var services = new ServiceCollection();
         using var host = new SettingsHost(providers);
         host.Compose(services, new ConfigurationBuilder().Build(), new VsaKernel(),
-            new AppTypes([module], typeof(SettingsTests).Assembly));
+            new AppTypes(new FixedModules(module), typeof(SettingsTests).Assembly));
         return services;
     }
 

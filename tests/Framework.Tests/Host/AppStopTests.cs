@@ -188,7 +188,7 @@ public sealed class AppStopTests {
     [Test]
     public void An_OnStop_error_in_a_stop_on_the_thread_pool_goes_to_the_log() {
         using var logs = new CapturedLogs();
-        var app = new StopApp(() => new LogHost(logs) { Modules = [] }) { ThrowOnStop = true };
+        var app = new StopApp(() => new LogHost(logs) { ModuleProvider = new FixedModules() }) { ThrowOnStop = true };
         Task.Run(() => app.Start([])).Wait(limit);
 
         app.Services!.GetRequiredService<AppStop>().Request();
@@ -225,7 +225,7 @@ public sealed class AppStopTests {
     }
 
     sealed class StopApp(Func<AppHost>? host = null) : App {
-        public override Pack Pack { get; } = new TestPack(host ?? (() => new AppHost { Modules = [] }));
+        public override Pack Pack { get; } = new TestPack(host ?? (() => new AppHost { ModuleProvider = new FixedModules() }));
 
         public int? RequestOnStart { get; init; }
 

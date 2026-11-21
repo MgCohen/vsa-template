@@ -13,7 +13,7 @@ public sealed class TestPack<THost>(IReadOnlyList<Module> modules) : Pack where 
     public override Kernel Kernel { get; } = new VsaKernel();
 
     public override AppHost CreateHost() {
-        var host = new THost { Modules = modules };
+        var host = new THost { ModuleProvider = new FixedModules([.. modules]) };
         host.Actions.AddRange(Configure);
         return host;
     }

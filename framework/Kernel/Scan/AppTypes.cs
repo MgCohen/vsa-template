@@ -9,8 +9,9 @@ public sealed class AppTypes {
     readonly AppAssemblies scan = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
     readonly Assembly? appAssembly;
+    readonly IModuleProvider provider;
+    readonly ModuleScan moduleScan;
     IReadOnlyList<Module>? modules;
-    IReadOnlyList<ModuleRoot>? roots;
     Assembly[]? assemblies;
     Type[]? loaded;
     Type[]? registered;
@@ -18,16 +19,15 @@ public sealed class AppTypes {
     Type[]? openRegistered;
     Type[]? declared;
 
-    public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null) {
-        this.modules = modules is null ? null : InOrder(modules);
+    public AppTypes(IModuleProvider? provider = null, Assembly? appAssembly = null) {
+        this.provider = provider ?? new ScannedModules();
+        moduleScan = new ModuleScan(scan);
         this.appAssembly = appAssembly;
     }
 
-    public IReadOnlyList<Module> Modules => modules ??= InOrder(Roots.Select(root => root.Create()));
+    public IReadOnlyList<Module> Modules => modules ??= InOrder(provider.Modules(moduleScan));
 
-    internal IReadOnlyList<ModuleRoot> Roots => roots ??= [.. scan.OfModules()
-        .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
-        .OrderBy(root => root.Name, StringComparer.Ordinal)];
+    internal IReadOnlyList<ModuleRoot> Roots => moduleScan.Roots;
 
     internal static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
         .OrderBy(module => module.Order)

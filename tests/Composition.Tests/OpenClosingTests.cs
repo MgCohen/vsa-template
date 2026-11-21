@@ -215,7 +215,7 @@ public sealed class OpenClosingTests {
         var services = new ServiceCollection();
         using var host = new TestHost();
         host.Compose(services, new ConfigurationBuilder().Build(),
-            new Kernel(), new AppTypes([module]));
+            new Kernel(), new AppTypes(new FixedModules(module)));
         return services;
     }
 }

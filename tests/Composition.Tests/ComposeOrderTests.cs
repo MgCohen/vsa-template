@@ -7,7 +7,7 @@ using Umpire.Vsa.Composition;
 public sealed class ComposeOrderTests {
     [Test]
     public void Compose_runs_the_kernel_then_the_modules_in_order_then_the_host() {
-        var services = new TestApp(new LastModule(), new FirstModule())
+        var services = new TestApp(new Last.LastModule(), new First.FirstModule())
             .With(services => services.AddSingleton(new Step("host")))
             .Compose(new ServiceCollection());
 
@@ -33,7 +33,7 @@ public sealed class ComposeOrderTests {
         var services = new ServiceCollection();
         using var host = new TestHost();
         host.Compose(services, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(),
-            new VariantKernel(), new AppTypes([], typeof(ComposeOrderTests).Assembly));
+            new VariantKernel(), new AppTypes(new FixedModules(), typeof(ComposeOrderTests).Assembly));
 
         var requests = services.ToList().FindIndex(service => service.ServiceType.Name == "IRequestSender");
         var variant = services.ToList().FindIndex(s => s.ImplementationInstance is Step { Name: "variant" });
@@ -48,17 +48,5 @@ public sealed class ComposeOrderTests {
             base.Configure(services, types);
             services.AddSingleton(new Step("variant"));
         }
-    }
-
-    public sealed class FirstModule : Module {
-        protected internal override int Order => 1;
-
-        public override void Configure(IServiceCollection services) => services.AddSingleton(new Step("module:1"));
-    }
-
-    public sealed class LastModule : Module {
-        protected internal override int Order => 2;
-
-        public override void Configure(IServiceCollection services) => services.AddSingleton(new Step("module:2"));
     }
 }

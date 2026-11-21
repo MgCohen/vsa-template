@@ -45,7 +45,7 @@ public sealed class BroadcastTests {
 
     static ServiceProvider Services(Type[] handlers, PipelineBuilder<IntegrationEvent>? second) {
         var services = new ServiceCollection();
-        services.AddSingleton(new AppTypes([]));
+        services.AddSingleton(new AppTypes(new FixedModules()));
         services.AddSingleton<PingLog>();
         services.AddEventHandlers();
         services.AddPipeline(new PipelineBuilder<Pinged>().Handlers(handlers));
