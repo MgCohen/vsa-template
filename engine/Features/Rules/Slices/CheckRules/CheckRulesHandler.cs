@@ -11,7 +11,8 @@ sealed class CheckRulesHandler(RunOptions options) : CommandHandler<CheckRulesCo
     public override Task<Result<CheckRulesResult>> HandleAsync(IEnvelope<CheckRulesCommand> envelope) {
         var app = envelope.Message.App;
         var config = RuleConfig.Of(RuleKeys.Of(UmpireConfig.Find(app.Blocks.Current.Folder)));
-        var check = ArchitectureCheck.Load(app.Architecture, app.Dlls, app.Sources, app.Blocks, config, options.IgnoredFolders);
+        var check = ArchitectureCheck.Load(
+            app.Architecture, app.Dlls, app.Sources, app.Blocks, config, options.IgnoredFolders, options.References);
         return Task.FromResult<Result<CheckRulesResult>>(new CheckRulesResult(check.Findings()));
     }
 }

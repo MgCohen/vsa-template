@@ -1,8 +1,8 @@
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using LoadApp.Domain.Shared;
-using Umpire.Architecture;
 using Steps.Infrastructure;
+using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 

@@ -226,6 +226,23 @@ public sealed class RunEngineTests {
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
     }
 
+    [TestCase(null, 2)]
+    [TestCase(false, 0)]
+    public async Task The_project_checks_flag_stops_the_project_warnings(bool? projectChecks, int warnings) {
+        var block = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(block, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
+            File.WriteAllText(Path.Combine(block, "First.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+            File.WriteAllText(Path.Combine(block, "Second.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+
+            var result = await Run(project: block, projectChecks: projectChecks);
+
+            Assert.That(result.Lines.Count(line => line.Contains("UMP030305")), Is.EqualTo(warnings), string.Join("\n", result.Lines));
+        } finally {
+            TempFolder.Delete(block);
+        }
+    }
+
     [Test]
     public async Task An_app_with_no_app_class_gives_UMP030502() {
         var result = await Run(block: Repo.Path("tests", "Shared"));
@@ -283,7 +300,7 @@ public sealed class RunEngineTests {
 
     internal static async Task<RunEngineResponse> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
-        Stage stage = Stage.Check, bool keepStamp = false) {
+        Stage stage = Stage.Check, bool keepStamp = false, bool? projectChecks = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
             new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
@@ -293,7 +310,8 @@ public sealed class RunEngineTests {
         if (Directory.Exists(output) && keepStamp is false) {
             StampFile.Delete(output);
         }
-        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast, Stage: stage);
+        var request = new RunEngineRequest(
+            project ?? declared, output, declared, FailFast: failFast, Stage: stage, ProjectChecks: projectChecks);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }

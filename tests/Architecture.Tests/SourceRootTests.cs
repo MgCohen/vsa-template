@@ -63,7 +63,7 @@ public sealed class SourceRootTests {
 
     [TestCase(@"C:\build\Game\Note.cs")]
     [TestCase(@"c:/build/Game/Note.cs")]
-    [TestCase(@"\server\share\Game\Note.cs")]
+    [TestCase(@"\\server\share\Game\Note.cs")]
     public void A_Windows_absolute_document_stays_as_it_is_on_each_platform(string document) {
         Assert.That(SymbolReader.Resolve(project.Root, document), Is.EqualTo(document));
     }

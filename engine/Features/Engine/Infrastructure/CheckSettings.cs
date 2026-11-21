@@ -9,6 +9,7 @@ public sealed record CheckSettings(
     public const string IgnoredFoldersKey = "umpire.check.ignored_folders";
     public const string ProjectChecksKey = "umpire.check.project_checks";
     static readonly char[] ListSeparators = [',', ';'];
+    static readonly string[] Off = ["false", "0", "no", "off"];
 
     public static CheckSettings Of(
         string folder, string references, string sourceRoot, string ignoredFolders, bool? projectChecks) {
@@ -23,7 +24,7 @@ public sealed record CheckSettings(
             projectChecks ?? IsOn(config.Value(ProjectChecksKey)));
     }
 
-    static bool IsOn(string? value) => !string.Equals(value, "false", StringComparison.OrdinalIgnoreCase);
+    static bool IsOn(string? value) => !Off.Contains(value ?? "", StringComparer.OrdinalIgnoreCase);
 
     static string? RootOfSources(string given, string? configured, string root) =>
         given.Length > 0 ? Path.GetFullPath(given)

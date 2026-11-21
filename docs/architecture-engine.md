@@ -390,6 +390,7 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
 | `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
 | `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the `Named` rule of its part (see "Content of a part") |
+| `UMP020205` | `MissingReferenceRule` | `PlaceRule` (02) | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
 | `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
 | `UMP020303` | `WrongKindRule` | `StatementRule` (03) | Error | A type is of a kind that `OnlyKind` of its part does not allow (see "Content of a part") |

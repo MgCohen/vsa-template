@@ -55,6 +55,34 @@ public sealed class ChangesTests {
     }
 
     [Test]
+    public void A_new_DLL_in_a_reference_folder_changes_the_input_hash() {
+        var references = TempFolder.Create();
+        try {
+            var before = InputHash.Of(Notes, Bin, "run", [references]);
+            File.WriteAllText(Path.Combine(references, "New.dll"), "");
+
+            Assert.That(InputHash.Of(Notes, Bin, "run", [references]), Is.Not.EqualTo(before));
+        } finally {
+            TempFolder.Delete(references);
+        }
+    }
+
+    [Test]
+    public void The_input_hash_does_not_read_an_ignored_folder() {
+        var block = TempFolder.Create();
+        try {
+            Directory.CreateDirectory(Path.Combine(block, "Cache"));
+            var before = InputHash.Of(block, Bin, "run", ignoredFolders: ["./Cache"]);
+            File.WriteAllText(Path.Combine(block, "Cache", "Tool.csproj"), "<Project />");
+
+            Assert.That(InputHash.Of(block, Bin, "run", ignoredFolders: ["./Cache"]), Is.EqualTo(before));
+            Assert.That(InputHash.Of(block, Bin, "run"), Is.Not.EqualTo(before));
+        } finally {
+            TempFolder.Delete(block);
+        }
+    }
+
+    [Test]
     public void The_same_inputs_give_the_same_hash() {
         var first = InputHash.Of(Notes, Bin, "run");
 

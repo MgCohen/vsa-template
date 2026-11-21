@@ -11,9 +11,11 @@ public sealed class ReferenceFoldersTests {
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
     UnityProjectFolder project = null!;
+    ArchitectureCheck map = null!;
 
     string Scripts => Path.Combine(project.Root, "Scripts");
-    ArchitectureCheck map = null!;
+
+    string Missing => Path.Combine(project.Root, "Missing");
 
     [OneTimeSetUp]
     public void BuildTwoOutputsOfOneBlock() {
@@ -25,7 +27,7 @@ public sealed class ReferenceFoldersTests {
         var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
         project.Compile("Assembly-CSharp", Scripts, module, note, view, package);
         project.Compile("Game.Modules", project.Output, module, note, tasks);
-        map = FixtureApps.Load(new VsaArchitecture(), project.Output, project.Root, new ReadOptions([Scripts], null, ["Cache"]));
+        map = FixtureApps.Load(new VsaArchitecture(), project.Output, project.Root, new ReadOptions([Scripts, Missing], null, ["Cache"]));
     }
 
     [OneTimeTearDown]
@@ -49,14 +51,16 @@ public sealed class ReferenceFoldersTests {
     public void A_module_in_an_aliased_folder_binds_to_its_feature(string type, string part, string feature) {
         var binding = map.Bindings.All.Single(b => b.Type.FullName == type);
 
-        Assert.That((binding.Part.Name, binding.Values["Feature"]), Is.EqualTo((part, feature)));
+        Assert.That(binding.Part.Name, Is.EqualTo(part));
+        Assert.That(binding.Values["Feature"], Is.EqualTo(feature));
     }
 
     [Test]
     public void A_view_in_an_aliased_folder_binds_to_the_app_views() {
         var binding = map.Bindings.All.Single(b => b.Type.FullName == "Game.Views.Board");
 
-        Assert.That((binding.Part.Name, binding.Part.Parent!.Name), Is.EqualTo(("Views", "App")));
+        Assert.That(binding.Part.Name, Is.EqualTo("Views"));
+        Assert.That(binding.Part.Parent!.Name, Is.EqualTo("App"));
     }
 
     [Test]
@@ -69,5 +73,13 @@ public sealed class ReferenceFoldersTests {
     [Test]
     public void A_source_file_in_an_ignored_folder_is_not_app_code() {
         Assert.That(map.Bindings.AppTypes.Select(t => t.FullName), Has.None.EqualTo("Vendor.Tool"));
+    }
+
+    [Test]
+    public void A_reference_folder_that_does_not_exist_gives_the_warning_UMP020205() {
+        var warning = map.Findings().Single(f => f.Code == "UMP020205");
+
+        Assert.That(warning.Severity, Is.EqualTo(FindingSeverity.Warning));
+        Assert.That(warning.Message, Does.StartWith($"The reference folder {Missing} does not exist"));
     }
 }
