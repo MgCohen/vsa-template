@@ -25,6 +25,7 @@ sealed class ArchitectureCheck {
     public Bindings Bindings { get; }
     public IReadOnlyList<string> InnerFolders { get; }
     public IReadOnlyList<string> MissingReferences { get; }
+    public IReadOnlyList<string> BadFolderAliases { get; init; } = [];
     public IEnumerable<Binding> CheckedBindings => Bindings.All.Where(b => !b.External && !b.Part.IsBlockPlace);
 
     public static ArchitectureCheck Load(
@@ -34,12 +35,15 @@ sealed class ArchitectureCheck {
     public static ArchitectureCheck Load(
         Architecture definition, IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, BlockTree blocks,
         RuleConfig config, IReadOnlyList<string>? ignoredFolders = null,
-        IReadOnlyList<string>? references = null, IReadOnlyList<FolderAlias>? folderAliases = null) {
+        IReadOnlyList<string>? references = null, FolderAliasConfig? aliases = null) {
         var resolved = new ResolvedArchitecture(definition);
         var app = AppReader.Read(dlls, sources, blocks.Current.Folder, resolved, ignoredFolders);
-        var bindings = resolved.Place(app.Facts, app.BlockFolder, blocks.InnerFolders, folderAliases ?? []);
+        var configured = aliases ?? FolderAliasConfig.None;
+        var bindings = resolved.Place(app.Facts, app.BlockFolder, blocks.InnerFolders, configured.Aliases);
         var missing = (references ?? []).Where(folder => !Directory.Exists(folder)).ToList();
-        return new ArchitectureCheck(resolved, app, bindings, blocks.InnerFolders, config, missing);
+        return new ArchitectureCheck(resolved, app, bindings, blocks.InnerFolders, config, missing) {
+            BadFolderAliases = configured.BadKeys,
+        };
     }
 
     public IReadOnlyList<Finding> Findings() => [.. ArchitectureRule.All.SelectMany(rule => rule.Check(this, config))];

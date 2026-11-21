@@ -62,11 +62,10 @@ public sealed class UmpireConfig {
     public IEnumerable<KeyValuePair<string, string>> Values(string table) =>
         Node(table) is TomlTable found ? Leaves(found, table + Separator) : [];
 
-    public IEnumerable<KeyValuePair<string, IReadOnlyList<string>>> Lists(string table) =>
+    public IEnumerable<KeyValuePair<string, IReadOnlyList<string>?>> Lists(string table) =>
         Node(table) is TomlTable found
-            ? found.Where(pair => pair.Value is TomlArray)
-                .Select(pair => new KeyValuePair<string, IReadOnlyList<string>>(
-                    pair.Key, ((TomlArray)pair.Value).Select(Text).OfType<string>().ToList()))
+            ? found.Select(pair => new KeyValuePair<string, IReadOnlyList<string>?>(
+                pair.Key, pair.Value is TomlArray array ? array.Select(Text).OfType<string>().ToList() : null))
             : [];
 
     static UmpireConfig Parse(string toml, string? file) {

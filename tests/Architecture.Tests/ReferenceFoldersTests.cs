@@ -79,7 +79,7 @@ public sealed class ReferenceFoldersTests {
     }
 
     [Test]
-    public void With_no_folder_aliases_a_module_in_an_app_folder_is_not_in_a_feature() {
+    public void With_no_folder_aliases_a_view_in_an_app_folder_is_unmapped() {
         var plain = FixtureApps.Load(new VsaArchitecture(), project.Output, project.Root, new ReadOptions([Scripts], null, ["Cache"]));
 
         Assert.That(plain.Bindings.Unmapped.Select(u => u.Type.FullName), Does.Contain("Game.Views.Board"));

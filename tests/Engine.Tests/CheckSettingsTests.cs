@@ -1,6 +1,5 @@
 using Engine.Infrastructure;
 using Tests.Shared;
-using Umpire.Architecture;
 
 namespace Engine.Tests;
 
@@ -32,20 +31,6 @@ public sealed class CheckSettingsTests {
         Assert.That(settings.SourceRoot, Is.EqualTo(Path.GetFullPath(block)));
         Assert.That(settings.IgnoredFolders, Is.EqualTo(new[] { "Cache", "Temp" }));
         Assert.That(settings.ProjectChecks, Is.False);
-    }
-
-    [Test]
-    public void The_folder_aliases_come_from_their_table_in_the_config_file() {
-        File.AppendAllText(Path.Combine(block, ".umpireconfig"), """
-
-            [umpire.check.folder_aliases]
-            "Assets/Dice" = ["", "App"]
-            "Source" = [""]
-            """);
-
-        var aliases = CheckSettings.Of(block, "", "", "", null).FolderAliases;
-
-        Assert.That(aliases, Is.EqualTo(new[] { new FolderAlias("Assets/Dice", ""), new FolderAlias("Assets/Dice", "App"), new FolderAlias("Source", "") }));
     }
 
     [Test]

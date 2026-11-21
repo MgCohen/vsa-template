@@ -96,10 +96,14 @@ sealed class PartOf {
     }
 
     List<string> AliasedPaths(string relative) => [.. aliases
-        .Where(alias => relative.StartsWith(alias.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
-        .Select(alias => alias.As.Length == 0
-            ? relative[(alias.Folder.TrimEnd('/').Length + 1)..]
-            : $"{alias.As.TrimEnd('/')}/{relative[(alias.Folder.TrimEnd('/').Length + 1)..]}")];
+        .Where(alias => IsRoot(alias)
+            || relative.StartsWith(alias.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
+        .Select(alias => alias.As.Length == 0 ? Rest(alias, relative) : $"{alias.As.TrimEnd('/')}/{Rest(alias, relative)}")];
+
+    static bool IsRoot(FolderAlias alias) => alias.Folder.TrimEnd('/').Length == 0;
+
+    static string Rest(FolderAlias alias, string relative) =>
+        IsRoot(alias) ? relative : relative[(alias.Folder.TrimEnd('/').Length + 1)..];
 
     FolderMatch? Folder(IReadOnlyList<string> paths) => paths
         .Select(path => path.Split('/')[..^1])

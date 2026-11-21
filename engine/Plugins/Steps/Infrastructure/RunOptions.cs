@@ -1,7 +1,5 @@
 namespace Steps.Infrastructure;
 
-using Umpire.Architecture;
-
 public sealed class RunOptions {
     public bool FailFast { get; set; }
 
@@ -12,6 +10,4 @@ public sealed class RunOptions {
     public IReadOnlyList<string> IgnoredFolders { get; set; } = [];
 
     public bool ProjectChecks { get; set; } = true;
-
-    public IReadOnlyList<FolderAlias> FolderAliases { get; set; } = [];
 }
