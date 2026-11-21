@@ -23,7 +23,7 @@ public record Handlers : Layer {
 
         public record Hooks : Layer {
             protected override void Define(Part part) {
-                part.OfType(typeof(BeforeEventHook<>)).OfType(typeof(AfterEventHook<>));
+                part.OfType(typeof(BeforeEventHook<>)).OfType(typeof(AfterEventHook<>)).Named(Name.Suffix("Hook"));
             }
         }
     }
@@ -35,7 +35,7 @@ public record Handlers : Layer {
 
         public record Hooks : Layer {
             protected override void Define(Part part) {
-                part.OfType(typeof(BeforeCommandHook<>)).OfType(typeof(AfterCommandHook<,>));
+                part.OfType(typeof(BeforeCommandHook<>)).OfType(typeof(AfterCommandHook<,>)).Named(Name.Suffix("Hook"));
             }
         }
     }

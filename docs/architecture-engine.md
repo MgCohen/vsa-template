@@ -57,8 +57,10 @@ public class VsaArchitecture : Architecture {
 | `AddBlockGroup<T>()` | Each subfolder of the folder of `T` is the place of another block, for example `Packs/<Name>/` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
+| `Named(Name)` | The name of each type of the part (see "Content of a part") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
 | `Has<T>()`, `Takes<T>()` | A count (type `Count`) or a match (type `Match`). See "Counts and matches" |
+| `OnlyKind(TypeKind)`, `Owns<TAttribute>()` | The kinds of type of a part, and the parts that can have an attribute. See "Content of a part" |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target. A filter applies to each entry before it in the chain |
 
 `Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth`, `Access` and `Required`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call, the group parameter or the `OfType` call), the concept, the architecture, then `Options.BuiltIn`.
@@ -243,7 +245,7 @@ The first access that is set wins:
 The rules of a count:
 
 - `T` includes each concept that is nested in `T` (the concept family). For example, `Has<Handlers>()` counts `Handlers.Commands` and `Handlers.Commands.Hooks`. `Has<T>(Depth.Self)` counts only `T`. The `Depth` of the concept does not apply to a count.
-- A helper that follows its user does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts.
+- A helper that follows its user does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts. A static class counts: it is `abstract sealed` in IL, but it is not a base.
 - A count counts only the types of the app in the block folder. A type of an external DLL does not count.
 - A count with no limit stops the definition: "has no limit. Add AtLeast, AtMost, Exactly or OfOneKind."
 - The finding is at the first type of the instance (by file, then line), or at the type of the subject.
@@ -270,6 +272,44 @@ part.OfType(typeof(RequestHandler<,>), required: true);
 | 4 | `Options.BuiltIn` | `false`: the part is permitted, not required |
 
 `VsaArchitecture` sets no `Required`. Its counts are lines in `Rules` (see "Counts and matches" in `architecture-rules.md`).
+
+## Content of a part
+
+The name of a type is structure, so `Named` is in `Define`, next to `OfType`. The kind of type and the place of an attribute are statements, so they are in `Rules`, next to the counts.
+
+| Kind | Call | Fails when | Code |
+|---|---|---|---|
+| Name | `part.Named(Name)` | The type name does not obey the name rule | `UMP020204` |
+| Kind of type | `rules.For<S>().OnlyKind(TypeKind)` | A type of `S` is of another kind | `UMP020303` |
+| Attribute place | `rules.For<S>().Owns<TAttribute>()` | A type outside `S`, or one of its members, has the attribute | `UMP020304` |
+
+```csharp
+public sealed record CliCommand : Layer {
+    protected override void Define(Part part) {
+        part.Named(Name.OfGroup());
+    }
+
+    protected override void Rules(RuleBook rules) {
+        rules.For<CliCommand>().OnlyKind(TypeKind.StaticClass);
+        rules.For<CliCommand>().Owns<CliCommandAttribute>();
+    }
+}
+```
+
+| Name rule | A good name |
+|---|---|
+| `Name.Suffix("Hook")` | `ChimeHook` |
+| `Name.Prefix("I")` | `IClock` |
+| `Name.OfGroup()` | `Touch` in `Features/Touch/` (the nearest group instance) |
+| `Name.OfGroup<Feature>().WithSuffix("Settings")` | `TouchSettings` in `Features/Touch/` |
+
+The rules of the content checks:
+
+- A name rule has no regex. The generic arity (for example `` `1 ``) is not part of the name. A `Name.OfGroup()` on a part with no group stops the definition.
+- `TypeKind` is a flags enum: `Class`, `StaticClass`, `AbstractClass`, `Record`, `Struct`, `Interface`, `Enum`, `Delegate`. Combine kinds with `|`. `TypeKind.None` allows no type. With no `OnlyKind`, each kind is allowed. Each type has one kind: an abstract record is an `AbstractClass`, and a record struct is a `Struct`.
+- If more than one statement owns an attribute, the attribute can be in each of their parts. The engine reads the attributes of the type and of its members.
+- The checks do not read a helper that follows its user, a type of an external DLL or a type in a block place.
+- `ArchitectureTest.Problems(place)` gives the name, kind and attribute problems of one type.
 
 ## Binding
 
@@ -338,8 +378,11 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
 | `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
 | `UMP020203` | `MissingScriptAssembliesRule` | `PlaceRule` (02) | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
+| `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the `Named` rule of its part (see "Content of a part") |
 | `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
+| `UMP020303` | `WrongKindRule` | `StatementRule` (03) | Error | A type is of a kind that `OnlyKind` of its part does not allow (see "Content of a part") |
+| `UMP020304` | `AttributePlaceRule` | `StatementRule` (03) | Error | A type outside the owner parts of an attribute has the attribute (see "Content of a part") |
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
 | `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
 

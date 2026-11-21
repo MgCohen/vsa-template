@@ -35,7 +35,16 @@ public sealed class PartGroup : IPartChain {
         return this;
     }
 
+    public PartGroup Named(Name name) {
+        foreach (var part in parts) {
+            part.Named(name);
+        }
+        return this;
+    }
+
     IPartChain IPartChain.Add<T>() => Add<T>();
+
+    IPartChain IPartChain.Named(Name name) => Named(name);
 
     IPartChain IPartChain.InParentFolder() => InParentFolder();
 

@@ -4,21 +4,25 @@ public sealed class RuleBook {
     internal readonly List<Rule> Rules;
     internal readonly List<Count> Counts;
     internal readonly List<Match> Matches;
+    internal readonly List<KindLimit> Kinds;
+    internal readonly List<Owner> Owners;
     readonly Block block;
 
-    internal RuleBook(Block block) : this(block, null, [], [], []) { }
+    internal RuleBook(Block block) : this(block, null, [], [], [], [], []) { }
 
-    RuleBook(Block block, Type? scope, List<Rule> rules, List<Count> counts, List<Match> matches) {
+    RuleBook(Block block, Type? scope, List<Rule> rules, List<Count> counts, List<Match> matches, List<KindLimit> kinds, List<Owner> owners) {
         this.block = block;
         Scope = scope;
         Rules = rules;
         Counts = counts;
         Matches = matches;
+        Kinds = kinds;
+        Owners = owners;
     }
 
     internal Type? Scope { get; }
 
-    internal RuleBook Of(Type concept) => new(block, concept, Rules, Counts, Matches);
+    internal RuleBook Of(Type concept) => new(block, concept, Rules, Counts, Matches, Kinds, Owners);
 
     internal void RefuseOutOfScope(Type subject) {
         if (Scope is not { } concept || subject == concept || block.Walk().Any(p => p.Is(subject) && p.Under(concept))) {

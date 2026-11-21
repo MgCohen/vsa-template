@@ -43,7 +43,7 @@ sealed class ArmorHook : BeforeCommandHook<StrikeCommand> {
 }
 ```
 
-- Put each hook in its own slice, in a module of the app. Its name ends with `Hook` (`UMP010209`).
+- Put each hook in its own slice, in a module of the app. Its name ends with `Hook` (`UMP020204`).
 - A hook binds to the handlers part of its target kind: `Handlers.Commands` or `Handlers.Events`.
 - The constraint of each hook base takes only a command or an event, so no hook runs for a request.
 - Module code uses only the four hook bases. `IBeforeCall` and `IAfterCall` are public for the hook bases. No pipeline runs a class of a module that implements them for a request.

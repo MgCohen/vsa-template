@@ -26,6 +26,19 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     [Test]
+    public void A_hook_with_the_suffix_has_no_problems() {
+        Assert.That(Problems(At<SampleHook>(Slice)), Is.Empty);
+    }
+
+    [Test]
+    public void A_hook_without_the_suffix_gives_the_name_to_use() {
+        Assert.That(Problems(At<SampleChime>(Slice)), Is.EqualTo(new[] {
+            $"SampleChime is in Handlers.Commands.Hooks ({Slice}), but the name of a Handlers.Commands.Hooks type ends with Hook. "
+            + "Rename it to SampleChimeHook, or move it.",
+        }));
+    }
+
+    [Test]
     public void A_helper_follows_its_user_when_the_user_is_a_neighbor() {
         Assert.That(At<SampleDetail>(Slice, typeof(SampleRequest)).Part, Is.EqualTo("Contracts.Requests"));
     }
@@ -173,6 +186,11 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     public sealed class SampleHook : BeforeCommandHook<SampleCommand> {
+        public override Task<SampleCommand> BeforeAsync(Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) =>
+            Task.FromResult(envelope.Message);
+    }
+
+    public sealed class SampleChime : BeforeCommandHook<SampleCommand> {
         public override Task<SampleCommand> BeforeAsync(Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) =>
             Task.FromResult(envelope.Message);
     }

@@ -5,6 +5,8 @@ public sealed class ResolvedArchitecture {
     readonly IReadOnlyDictionary<Part, Options> partOptions;
     readonly IReadOnlyList<CountStatement> counts;
     readonly IReadOnlyList<MatchStatement> matches;
+    readonly IReadOnlyList<KindStatement> kinds;
+    readonly IReadOnlyList<OwnerStatement> owners;
 
     public ResolvedArchitecture(Architecture architecture) {
         var compiled = new Compiler(architecture);
@@ -16,6 +18,8 @@ public sealed class ResolvedArchitecture {
         partOptions = compiled.PartOptions;
         counts = compiled.Counts;
         matches = compiled.Matches;
+        kinds = compiled.Kinds;
+        owners = compiled.Owners;
         externalParts = [.. Parts.Where(p => p.IsExternal)];
     }
 
@@ -59,6 +63,12 @@ public sealed class ResolvedArchitecture {
 
     public IReadOnlyList<MatchResult> Matches(Bindings bindings) =>
         [.. matches.SelectMany(statement => MatchCheck.Failures(statement, bindings))];
+
+    public IReadOnlyList<ContentResult> Names(Bindings bindings) => ContentCheck.Names(bindings);
+
+    public IReadOnlyList<ContentResult> Kinds(Bindings bindings) => ContentCheck.Kinds(kinds, bindings);
+
+    public IReadOnlyList<ContentResult> Owners(Bindings bindings) => ContentCheck.Owners(owners, bindings);
 
     static bool IsUnder(string name, string external) =>
         name == external || name.StartsWith(external + ".", StringComparison.Ordinal);

@@ -31,6 +31,7 @@ public class Part : IPartChain {
     public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
     public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
+    public Name? NameRule { get; private set; }
 
     public string Path {
         get {
@@ -96,6 +97,11 @@ public class Part : IPartChain {
         return this;
     }
 
+    public Part Named(Name name) {
+        NameRule = name;
+        return this;
+    }
+
     internal void ClearTypes() {
         types.Clear();
         requiredAtCallSite.Clear();
@@ -110,6 +116,8 @@ public class Part : IPartChain {
     IPartChain IPartChain.OfType<T>(bool? required) => OfType<T>(required);
 
     IPartChain IPartChain.OfType(Type type, bool? required) => OfType(type, required);
+
+    IPartChain IPartChain.Named(Name name) => Named(name);
 
     public IEnumerable<Part> Walk() => new[] { this }.Concat(children.SelectMany(c => c.Walk()));
 
