@@ -8,7 +8,7 @@ using Umpire.Kernels;
 public sealed class OneAssemblyModuleTests {
     [Test]
     public void The_scan_reads_the_handlers_in_the_root_assembly_of_a_module() {
-        var types = new AppTypes([new OneAssemblyModule()]);
+        var types = new AppTypes(new FixedModules(new OneAssemblyModule()));
 
         var handlers = types.Implementations(typeof(CommandHandler<,>)).Select(found => found.Implementation);
 

@@ -33,7 +33,7 @@ public sealed class AppTypesTests {
 
     [Test]
     public void TheTypesKeepTheModulesInOrder() {
-        var types = new AppTypes([new ShelfModule(), new ToolboxPlugin()]);
+        var types = new AppTypes(new FixedModules(new ShelfModule(), new ToolboxPlugin()));
 
         Assert.That(types.Modules.Select(module => module.Name), Is.EqualTo(new[] { "Toolbox", "Shelf" }));
     }
@@ -65,7 +65,7 @@ public sealed class AppTypesTests {
 
     [Test]
     public void OneInstanceKeepsItsScan() {
-        var types = new AppTypes([new ShelfModule()]);
+        var types = new AppTypes(new FixedModules(new ShelfModule()));
         var roots = types.Roots;
         var modules = types.ConcreteTypesOf(typeof(Module));
 
@@ -75,7 +75,7 @@ public sealed class AppTypesTests {
 
     [Test]
     public void ConcreteTypesOfFindsTheClassesInTheModuleAssemblies() {
-        var types = new AppTypes([new ShelfModule()]).ConcreteTypesOf(typeof(Module));
+        var types = new AppTypes(new FixedModules(new ShelfModule())).ConcreteTypesOf(typeof(Module));
 
         Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Not.Contain(typeof(BareModule)));
         Assert.That(types, Has.None.Matches<Type>(type => type.IsAbstract));
@@ -83,7 +83,7 @@ public sealed class AppTypesTests {
 
     [Test]
     public void ConcreteTypesOfAlsoFindsTheClassesInTheAssemblyOfTheAppClass() {
-        var types = new AppTypes([new ShelfModule()], typeof(BareModule).Assembly).ConcreteTypesOf(typeof(Module));
+        var types = new AppTypes(new FixedModules(new ShelfModule()), typeof(BareModule).Assembly).ConcreteTypesOf(typeof(Module));
 
         Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Contain(typeof(BareModule)));
     }

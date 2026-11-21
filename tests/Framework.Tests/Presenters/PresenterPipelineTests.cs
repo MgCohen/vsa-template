@@ -291,7 +291,7 @@ public sealed class PresenterPipelineTests {
     static ServiceProvider Services(
         Type[] presenters, Action<IServiceCollection> more, ILogger<LiveScopesRunner>? logger = null) {
         var services = new ServiceCollection();
-        services.AddSingleton(new AppTypes([]));
+        services.AddSingleton(new AppTypes(new FixedModules()));
         services.AddSingleton(logger ?? NullLogger<LiveScopesRunner>.Instance);
         services.AddEventHandlers();
         services.AddSingleton<LiveScopes>();

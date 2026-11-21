@@ -10,8 +10,8 @@ public sealed class AppTypes {
     readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
     readonly Assembly? appAssembly;
     readonly IModuleProvider provider;
+    readonly ModuleScan moduleScan;
     IReadOnlyList<Module>? modules;
-    IReadOnlyList<ModuleRoot>? roots;
     Assembly[]? assemblies;
     Type[]? loaded;
     Type[]? registered;
@@ -19,25 +19,15 @@ public sealed class AppTypes {
     Type[]? openRegistered;
     Type[]? declared;
 
-    public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null)
-        : this(modules is null ? new ScannedModules() : new FixedModules([.. modules]), appAssembly) {
-    }
-
-    AppTypes(IModuleProvider provider, Assembly? appAssembly) {
-        this.provider = provider;
+    public AppTypes(IModuleProvider? provider = null, Assembly? appAssembly = null) {
+        this.provider = provider ?? new ScannedModules();
+        moduleScan = new ModuleScan(scan);
         this.appAssembly = appAssembly;
     }
 
-    public IReadOnlyList<Module> Modules => modules ??= InOrder(provider.Modules(this));
+    public IReadOnlyList<Module> Modules => modules ??= InOrder(provider.Modules(moduleScan));
 
-    internal IReadOnlyList<ModuleRoot> Roots => roots ??= RootsIn(scan.OfModules());
-
-    public static AppTypes Of(IModuleProvider provider, Assembly? appAssembly = null) => new(provider, appAssembly);
-
-    public IReadOnlyList<Module> ScannedModules() => [.. Roots.Select(root => root.Create())];
-
-    public IReadOnlyList<Module> ModulesIn(IEnumerable<Assembly> assemblies) =>
-        [.. RootsIn(assemblies).Select(root => root.Create())];
+    internal IReadOnlyList<ModuleRoot> Roots => moduleScan.Roots;
 
     internal static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
         .OrderBy(module => module.Order)
@@ -88,11 +78,6 @@ public sealed class AppTypes {
         .SelectMany(scan.TypesOf)
         .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false })
         .Where(t => t.IsSubclassOf(baseType))];
-
-    IReadOnlyList<ModuleRoot> RootsIn(IEnumerable<Assembly> assemblies) => [.. assemblies
-        .Distinct()
-        .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
-        .OrderBy(root => root.Name, StringComparer.Ordinal)];
 
     Type[] Loaded() => loaded ??= [.. Assemblies()
         .SelectMany(scan.TypesOf)

@@ -239,14 +239,17 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 - Each source finds nothing where it does not apply, so the scan has no Unity case.
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
-- To select other modules, give a module provider in `AppHost.ModuleProvider` (`IModuleProvider`). The default is `ScannedModules` (the scan). `FixedModules(params Module[])` is a list by hand. A custom provider calls `types.ModulesIn(assemblies)` to scan only some assemblies, for example a host that runs several apps in one process.
-- `Build` makes one `AppTypes` instance: `AppTypes.Of(ModuleProvider, app.GetType().Assembly)`. The provider gets that instance, so the scan reads each assembly one time. The assemblies of the modules are also the scope of the other type scans (handlers, views, `[AutoRegister]`). The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
+- To select other modules, give a module provider in `AppHost.ModuleProvider` (`IModuleProvider`). The default is `ScannedModules` (the scan). `FixedModules(params Module[])` is a list by hand. It refuses a module type or a module name that it has two times. A custom provider calls `scan.In(assemblies)` to scan only some assemblies, for example a host that runs several apps in one process. `scan.In` does not skip an assembly that references `nunit.framework`: the provider selects its assemblies itself.
+- A provider gets only the module scan (`ModuleScan`), not the `AppTypes` instance. Reason: the type scans of `AppTypes` read the assemblies of the modules, so a provider that read them would ask for its own modules again.
+- `Build` makes one `AppTypes` instance: `new AppTypes(ModuleProvider, app.GetType().Assembly)`. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. The assemblies of the modules are also the scope of the other type scans (handlers, views, `[AutoRegister]`). A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
 - `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |
 |---|---|
-| `new AppTypes(modules, appAssembly)` | The one constructor. With `null` modules, the instance finds the modules itself. `AppHost` gives the assembly of the app class (the root project) |
-| `Modules` | One module for each module root, or the given modules, in order |
+| `new AppTypes(provider, appAssembly)` | The one constructor. With no provider, it uses `ScannedModules`. `AppHost` gives the assembly of the app class (the root project) |
+| `Modules` | The modules of the provider, in order |
+| `IModuleProvider.Modules(scan)` | The modules of the app. `ScannedModules` gives `scan.All()`, `FixedModules` gives its list |
+| `ModuleScan.All()`, `ModuleScan.In(assemblies)` | One module for each module root of the scan, or of the given assemblies |
 | `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in the assemblies of the modules and the assembly of the app class. A type in another assembly, for example a test assembly, is not found |
 | `Registered()`, `Implementations(baseType)` | The marked types (see "One discovery path") |
 
@@ -566,7 +569,7 @@ An app that owns its container calls `Compose` and builds the container itself:
 
 ```csharp
 var host = new GameHost();
-host.Compose(collection, configuration, new VsaKernel(), new AppTypes(null, typeof(GameApp).Assembly));
+host.Compose(collection, configuration, new VsaKernel(), new AppTypes(appAssembly: typeof(GameApp).Assembly));
 ```
 
 A bridge to another container (fallback or side by side) reads `App.Services` after `Start`.

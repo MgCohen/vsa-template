@@ -109,7 +109,7 @@ public sealed class BaseHandlerTests {
     public async Task The_message_closes_an_open_validator_and_hook_one_time_next_to_a_type_argument_closure() {
         using var typed = new ServiceCollection()
             .AddSingleton<Calls>()
-            .AddSingleton(new AppTypes([new CheckModule()]))
+            .AddSingleton(new AppTypes(new FixedModules(new CheckModule())))
             .BuildServiceProvider();
         var pipeline = new PipelineBuilder<Check>()
             .Handlers(typeof(CheckHandler))
