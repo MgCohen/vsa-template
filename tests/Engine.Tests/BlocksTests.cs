@@ -119,13 +119,14 @@ public sealed class BlocksTests {
 
         Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp).FullName!, "umpire-engine")));
         Assert.That(app.Bases, Does.Contain("Umpire.Kernels.App"));
-        Assert.That(app.HasEmptyConstructor, Is.True);
+        Assert.That(app.Architecture, Is.EqualTo(new TypeName(typeof(EngineArchitecture).FullName!, "umpire-engine")));
     }
 
     [Test]
     public void The_leaves_of_the_app_classes_drop_each_base_app_class() {
-        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", true, ["Umpire.Kernels.App"]);
-        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", true, ["A.First", "Umpire.Kernels.App"]);
+        var pack = new TypeName("A.Pack", "A");
+        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", pack, null, ["Umpire.Kernels.App"]);
+        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", pack, null, ["A.First", "Umpire.Kernels.App"]);
 
         Assert.That(AppClass.Leaves([first, second]), Is.EqualTo(new[] { second }));
     }

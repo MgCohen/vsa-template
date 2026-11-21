@@ -46,24 +46,18 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
             return error;
         }
         var appClass = classes[0];
-        return loader.ArchitectureOfApp(appClass.Type, app.First(d => d.AppClasses.Contains(appClass)).Path);
+        return loader.ArchitectureOfApp(appClass, app.First(d => d.AppClasses.Contains(appClass)).Path);
     }
 
-    static Error? AppClassError(IReadOnlyList<AppClass> classes) {
-        var noConstructor = classes.Where(c => !c.HasEmptyConstructor).ToList();
-        if (noConstructor.Count > 0) {
-            return new Error(LoadAppCodes.NoEmptyConstructor,
-                $"The app class {Names(noConstructor)} has no public constructor with no parameters, "
-                + "so the engine cannot make it and read its architecture. Add a public constructor with no parameters.");
-        }
-        return classes.Count switch {
+    static Error? AppClassError(IReadOnlyList<AppClass> classes) =>
+        classes.Count switch {
             0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
-                + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>."),
+                + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>, "
+                + "or a class that implements IAppEntry<TPack>."),
             > 1 => new Error(LoadAppCodes.ManyAppClasses,
                 $"The app has more than one app class: {Names(classes)}. Keep one, or make one inherit the other."),
             _ => null,
         };
-    }
 
     static string Names(IEnumerable<AppClass> classes) =>
         string.Join(", ", classes.Select(c => c.Type.FullName).Order(StringComparer.Ordinal));

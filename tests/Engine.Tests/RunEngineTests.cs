@@ -41,12 +41,25 @@ public sealed class RunEngineTests {
 
     [Test]
     public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
-        var app = new TypeName(typeof(EngineApp).FullName!, typeof(EngineApp).Assembly.GetName().Name!);
+        using var reader = new BinReader(AppContext.BaseDirectory);
+        var app = reader.Index().Dlls.Single(d => d.Name == "umpire-engine").AppClasses.Single();
 
         var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
 
         Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
     }
+
+    [Test]
+    public void The_engine_makes_the_pack_when_the_pack_gives_no_architecture_type_argument() {
+        var pack = typeof(EngineApp).BaseType!.GetGenericArguments()[0];
+        var app = new AppClass(Name(typeof(EngineApp)), "", Name(pack), null, []);
+
+        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
+
+        Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
+    }
+
+    static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);
 
     [Test]
     public void A_dll_with_no_app_class_has_no_app_class_in_the_index() {
@@ -188,13 +201,10 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_app_class_with_no_empty_constructor_gives_UMP030504_with_its_name() {
-        var result = await Run(block: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
+    public async Task A_launcher_entry_with_a_private_app_class_and_no_empty_constructor_loads_its_architecture() {
+        var result = await Run(block: Repo.Path("tests", "Fixtures", "ShellApp"));
 
-        Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030504: The app class NoConstructorApp.App.Host.NamedApp "
-            + "has no public constructor with no parameters"));
-        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+        Assert.That(result.Lines, Has.None.Contains("UMP0305").And.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));
     }
 
     [Test]

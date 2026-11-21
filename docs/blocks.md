@@ -36,7 +36,7 @@ A block can have two entries. They answer two different questions.
 | Check entry | Which architecture checks this block? | Only an independent block |
 | Install point | What does the host install from this block? | Each kind, except a library |
 
-For an app, the app class is the check entry. Its install point is the custom host, if the app has one.
+For an app, the app class is the check entry: a closed class that implements `IAppEntry<TPack>`, for example `MyApp : App<TPack>` or a Unity shell. Its install point is the custom host, if the app has one.
 
 ## Entries of each kind
 

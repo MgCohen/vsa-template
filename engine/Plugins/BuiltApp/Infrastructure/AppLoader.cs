@@ -31,9 +31,12 @@ public sealed class AppLoader : AssemblyLoadContext {
         return (Architecture)withPacked.Invoke([CreateArchitecture(packed)]);
     }
 
-    public Architecture ArchitectureOfApp(TypeName appClass, string dll) {
-        var app = Activator.CreateInstance(LoadFromAssemblyPath(dll).GetType(appClass.FullName, throwOnError: true)!)!;
-        var pack = app.GetType().GetProperty(nameof(App.Pack))!.GetValue(app)!;
+    public Architecture ArchitectureOfApp(AppClass appClass, string dll) {
+        if (appClass.Architecture is { } architecture) {
+            return CreateArchitecture(architecture);
+        }
+        var entry = LoadFromAssemblyPath(dll).GetType(appClass.Type.FullName, throwOnError: true)!;
+        var pack = Activator.CreateInstance(AppClass.PackOf(entry)!)!;
         return (Architecture)pack.GetType().GetProperty(nameof(Pack.Architecture))!.GetValue(pack)!;
     }
 
