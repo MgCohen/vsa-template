@@ -330,28 +330,30 @@ The rules of the content checks:
 
 The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`BinReader`, one time for each run).
 
-## Unity projects
+## Folder aliases
 
-If the block folder has `ProjectSettings/ProjectVersion.txt`, the app is a Unity project. Unity compiles `Assets/`, so the folders of a Unity app are not the folders of a .NET app.
+A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder as if they were in another folder of the block. For example, a host that keeps the app in `Assets/Dice/` (Unity) gives the aliases below. With no alias, each folder binds as it is. The binder tries each path and keeps the deepest part.
 
-| Folder | Binds as | Contains |
-|---|---|---|
-| `Assets/<UnityApp>/` | The block | `Features/`, `Plugins/` |
-| `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
-| `<UnitySource>/` (default `Source`) | The block | `Features/`, `Plugins/` of the .NET projects |
-
-`Architecture.FolderAliases(blockFolder)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
-
-```csharp
-public sealed class CardsArchitecture : VsaArchitecture {
-    public CardsArchitecture() {
-        UnityApp = "Cards";
-        UnitySource = "Modules";
-    }
-}
-
-public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
+```toml
+[umpire.check.folder_aliases]
+"Assets/Dice" = ["", "App"]   # Assets/Dice/Features/... binds as Features/..., Assets/Dice/Views/... as App/Views/...
+"Source" = [""]               # Source/Features/... binds as Features/...
 ```
+
+| Source | Gives the aliases |
+|---|---|
+| `umpire.check.folder_aliases` in the `.umpireconfig` of the block folder | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). The Rules step reads the table for each block (`FolderAliasConfig`) |
+| `Architecture.FolderAliases(blockFolder)` | A definition adds aliases in code. The engine uses the aliases of the code and of the config file together |
+
+Rules:
+
+- With one alias or more, a file binds only through an alias. A folder with no alias is not read. To keep the folders at the block root, add the key `""` (or `"."`): `"" = [""]`.
+- Only the `.umpireconfig` in the block folder itself gives aliases, because each alias folder is a path in that block. An inner block with no `.umpireconfig` of its own has no aliases.
+- A key or a value with `\` or a leading `./` is normalized: `".\Assets\Dice"` is `Assets/Dice`.
+- A value that is not a list, for example `"Assets/Dice" = "App"`, gives the warning `UMP020206`. Put quotes on a key with `/` or `.`, because TOML reads an unquoted dotted key as a table.
+- `ArchitectureTest<T>` binds logical paths, for example `At<T>("Features/Notebook")`, so it uses no folder alias.
+
+The framework has no host layout of its own: the host package (for example vsa-unity) writes the aliases.
 
 ### Check settings
 
@@ -391,6 +393,7 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
 | `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the `Named` rule of its part (see "Content of a part") |
 | `UMP020205` | `MissingReferenceRule` | `PlaceRule` (02) | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
+| `UMP020206` | `BadFolderAliasRule` | `PlaceRule` (02) | Warning | A value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it |
 | `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
 | `UMP020303` | `WrongKindRule` | `StatementRule` (03) | Error | A type is of a kind that `OnlyKind` of its part does not allow (see "Content of a part") |
@@ -458,7 +461,7 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 | App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Definition | The architecture of the check entry of the block. For an app class: the one most derived closed class that implements `IAppEntry<TPack>` (`App<TPack>` does). The engine reads type argument 0 of `Pack<TArchitecture, TKernel, THost>` from the metadata and makes only that architecture. It does not make the app class, so a launcher (for example a Unity shell with a private `App<TPack>`) is an app class too. If the pack has no such argument, the engine makes the pack and reads `Pack.Architecture`. See "Engine codes" |
-| Unity DLLs | See "Unity projects" |
+| DLLs of a host build (for example Unity) | See "Check settings" and "Folder aliases" |
 
 ### Engine codes
 
@@ -592,7 +595,7 @@ public sealed class NotesArchitectureTests : VsaArchitectureTest {
 
 The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
 
-The folder is the path in the block with no Unity alias. In a Unity project, write `Features/Notebook`, not `Assets/<App>/Features/Notebook`.
+The folder is the path in the block with no folder alias. For an app with the alias `"Assets/<App>" = [""]`, write `Features/Notebook`, not `Assets/<App>/Features/Notebook`.
 
 The base has no test framework, and a test asserts with NUnit. It needs no build of the app and no DLL: only the type. An internal type is not visible to a test project, so name a public type of the same base, or a plain type with `At(folder)`.
 

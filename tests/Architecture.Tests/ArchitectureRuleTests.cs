@@ -9,7 +9,7 @@ public sealed class ArchitectureRuleTests {
     [Test]
     public void The_rules_give_the_codes_of_the_architecture_findings() =>
         Assert.That(ArchitectureRule.All.Select(rule => rule.Code), Is.EqualTo(new[] {
-            "UMP020101", "UMP020102", "UMP020201", "UMP020202", "UMP020204", "UMP020205",
+            "UMP020101", "UMP020102", "UMP020201", "UMP020202", "UMP020204", "UMP020205", "UMP020206",
             "UMP020301", "UMP020302", "UMP020303", "UMP020304", "UMP020401", "UMP020402",
         }));
 

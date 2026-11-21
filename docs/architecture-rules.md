@@ -39,6 +39,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP020202` | Architecture | Each type of the app is in a folder of a part. |
 | `UMP020204` | Architecture | Each type name obeys the `Named` rule of its part, for example the name of a hook ends with `Hook`. See "Content of a part" in `architecture-engine.md`. |
 | `UMP020205` | Architecture | A warning: a reference folder (`umpire.check.references`) does not exist, so the checks do not read its DLLs. |
+| `UMP020206` | Architecture | A warning: a value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it. |
 | `UMP020301` | Architecture | Each count of the definition is in its limit, for example each slice has at least one handler. See "Counts and matches". |
 | `UMP020302` | Architecture | Each match of the definition holds, for example a request handler handles a request of its own slice. See "Counts and matches". |
 | `UMP020303` | Architecture | Each type of a part is of a kind that `OnlyKind` allows. See "Content of a part" in `architecture-engine.md`. |
@@ -228,7 +229,7 @@ EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them 
 
 ## Architecture: the rule engine
 
-The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020204`, `UMP020301` to `UMP020304` and the warning `UMP020205`. The Umpire SDK runs it after each build of the host project. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the key `umpire.<code>.severity`, the same key as for the analyzers.
+The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020204`, `UMP020301` to `UMP020304` and the warnings `UMP020205` and `UMP020206`. The Umpire SDK runs it after each build of the host project. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the key `umpire.<code>.severity`, the same key as for the analyzers.
 
 ### Counts and matches
 

@@ -4,14 +4,6 @@ using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 
 public class VsaArchitecture : Architecture {
-    public const string DefaultUnitySource = "Source";
-
-    public string? UnityApp { get; init; }
-
-    public string UnitySource { get; init; } = DefaultUnitySource;
-
-    public override IReadOnlyList<FolderAlias> FolderAliases(string blockFolder) => UnityLayout.Aliases(blockFolder, UnityApp, UnitySource);
-
     protected override void Configure(Options defaults) {
         defaults.UseSameConcept = true;
         defaults.Boundary = Boundary.Closed;

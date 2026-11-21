@@ -44,7 +44,12 @@ public sealed class ResolvedArchitecture {
     public Bindings Place(IReadOnlyList<TypeFacts> types, string blockFolder) => Place(types, blockFolder, []);
 
     public Bindings Place(IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks) =>
-        PartOf.Bind(this, types, blockFolder, innerBlocks);
+        PartOf.Bind(this, types, blockFolder, innerBlocks, []);
+
+    public Bindings Place(
+        IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks,
+        IReadOnlyList<FolderAlias> folderAliases) =>
+        PartOf.Bind(this, types, blockFolder, innerBlocks, folderAliases);
 
     public IReadOnlyList<BlockPlace> CoveredBlocks(string blockFolder, IReadOnlyList<string> innerBlocks) =>
         BlockPlaces.Covered(this, blockFolder, innerBlocks);
