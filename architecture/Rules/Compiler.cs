@@ -194,10 +194,10 @@ internal sealed class Compiler {
     }
 
     void CheckNames() {
-        foreach (var part in Parts.Where(p => p.NameRule is { OfAGroup: true } && p.NameRule.GroupOf(p) is null)) {
-            var group = part.NameRule!.Group is { } concept ? Concept.Display(concept) : "group";
+        foreach (var part in Parts.Where(p => p.NamePattern is { OfAGroup: true } && p.NamePattern.GroupOf(p) is null)) {
+            var group = part.NamePattern!.Group is { } concept ? Concept.Display(concept) : "group";
             throw new InvalidOperationException(
-                $"Define: {part.Name} has the name rule \"{part.NameRule}\", but it is not under a {group}. "
+                $"Define: {part.Name} has the name rule \"{part.NamePattern}\", but it is not under a {group}. "
                 + "Add the part under that group, or use another name rule.");
         }
     }

@@ -31,7 +31,7 @@ public class Part : IPartChain {
     public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
     public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
-    internal NamePattern? NameRule { get; private set; }
+    internal NamePattern? NamePattern { get; private set; }
 
     public string Path {
         get {
@@ -97,17 +97,17 @@ public class Part : IPartChain {
         return this;
     }
 
-    public Part NameStartsWith(string text) => WithName((NameRule ?? NamePattern.Any).WithStart(text));
+    public Part NameStartsWith(string text) => WithName((NamePattern ?? NamePattern.Any).WithStart(text));
 
-    public Part NameEndsWith(string text) => WithName((NameRule ?? NamePattern.Any).WithEnd(text));
+    public Part NameEndsWith(string text) => WithName((NamePattern ?? NamePattern.Any).WithEnd(text));
 
-    public Part NamedAfterGroup(string suffix = "") => WithName((NameRule ?? NamePattern.Any).AfterGroup(null, suffix));
+    public Part NamedAfterGroup(string suffix = "") => WithName((NamePattern ?? NamePattern.Any).AfterGroup(null, suffix));
 
     public Part NamedAfterGroup<T>(string suffix = "") where T : Concept =>
-        WithName((NameRule ?? NamePattern.Any).AfterGroup(typeof(T), suffix));
+        WithName((NamePattern ?? NamePattern.Any).AfterGroup(typeof(T), suffix));
 
     Part WithName(NamePattern name) {
-        NameRule = name;
+        NamePattern = name;
         return this;
     }
 
