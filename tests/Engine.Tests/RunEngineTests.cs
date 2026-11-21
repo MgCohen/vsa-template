@@ -217,7 +217,12 @@ public sealed class RunEngineTests {
     public async Task A_launcher_entry_with_a_private_app_class_and_no_empty_constructor_loads_its_architecture() {
         var result = await Run(block: Repo.Path("tests", "Fixtures", "ShellApp"));
 
-        Assert.That(result.Lines, Has.None.Contains("UMP0305").And.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));
+        string[] loadAppCodes = [
+            LoadApp.Slices.LoadApp.LoadAppCodes.NoAppAssembly, LoadApp.Slices.LoadApp.LoadAppCodes.NoAppClass,
+            LoadApp.Slices.LoadApp.LoadAppCodes.ManyAppClasses, LoadApp.Slices.LoadApp.LoadAppCodes.ManyPacks,
+        ];
+        Assert.That(result.Lines.Where(line => loadAppCodes.Any(line.Contains)), Is.Empty, string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.Lines, Has.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
     }
 
