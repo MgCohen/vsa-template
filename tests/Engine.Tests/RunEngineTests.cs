@@ -52,11 +52,23 @@ public sealed class RunEngineTests {
     [Test]
     public void The_engine_makes_the_pack_when_the_pack_gives_no_architecture_type_argument() {
         var pack = typeof(EngineApp).BaseType!.GetGenericArguments()[0];
-        var app = new AppClass(Name(typeof(EngineApp)), "", Name(pack), null, []);
+        var app = new AppClass(Name(typeof(EngineApp)), "", [Name(pack)], null, []);
 
         var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
 
         Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
+    }
+
+    [Test]
+    public void An_app_class_that_implements_the_entry_for_two_packs_gives_UMP030506() {
+        var app = new AppClass(new TypeName("A.Shell", "A"), "A.cs", [new("A.First", "A"), new("A.Second", "A")], null, []);
+        var dll = new BinDll("A.dll", "A", false, [], [], [], [app]);
+        var entry = new BlockEntry("C:/a", EntryForm.App, null, "C:/a");
+
+        var result = LoadApp.Slices.LoadApp.LoadAppHandler.Definition(entry, [dll], new AppLoader(AppContext.BaseDirectory));
+
+        Assert.That((result.Error!.Code, result.Error.Message), Is.EqualTo(("UMP030506",
+            "The app class A.Shell implements IAppEntry<TPack> for more than one pack: A.First, A.Second. Implement it for one pack only.")));
     }
 
     static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);
@@ -205,6 +217,7 @@ public sealed class RunEngineTests {
         var result = await Run(block: Repo.Path("tests", "Fixtures", "ShellApp"));
 
         Assert.That(result.Lines, Has.None.Contains("UMP0305").And.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
     }
 
     [Test]
