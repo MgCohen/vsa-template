@@ -30,9 +30,9 @@ sealed class ArchitectureCheck {
 
     public static ArchitectureCheck Load(
         Architecture definition, IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, BlockTree blocks,
-        RuleConfig config) {
+        RuleConfig config, IReadOnlyList<string>? ignoredFolders = null) {
         var resolved = new ResolvedArchitecture(definition);
-        var app = AppReader.Read(dlls, sources, blocks.Current.Folder, resolved);
+        var app = AppReader.Read(dlls, sources, blocks.Current.Folder, resolved, ignoredFolders);
         var bindings = resolved.Place(app.Facts, app.BlockFolder, blocks.InnerFolders);
         return new ArchitectureCheck(resolved, app, bindings, blocks.InnerFolders, config);
     }

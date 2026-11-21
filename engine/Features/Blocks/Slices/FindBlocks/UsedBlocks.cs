@@ -16,7 +16,7 @@ static class UsedBlocks {
     }
 
     static string? Deepest(BinDll dll, IReadOnlyList<string> blocks) =>
-        blocks.Where(dll.HasSourceUnder).OrderByDescending(f => f.Length).FirstOrDefault();
+        blocks.Where(block => dll.HasSourceUnder(block)).OrderByDescending(f => f.Length).FirstOrDefault();
 
     static bool IsAtOrUnder(string path, string folder) =>
         Same(path, folder) || path.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);

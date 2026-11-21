@@ -30,7 +30,7 @@ public sealed class ChangesTests {
 
     [Test]
     public async Task A_stamp_with_the_same_inputs_stops_the_check() {
-        StampFile.Write(Bin, InputHash.Of(TwoApps, Bin, $"Error||{TwoApps}"));
+        StampFile.Write(Bin, InputHash.Of(TwoApps, Bin, $"Error||{TwoApps}||||True"));
 
         var result = await RunEngineTests.Run(block: TwoApps, keepStamp: true);
 
