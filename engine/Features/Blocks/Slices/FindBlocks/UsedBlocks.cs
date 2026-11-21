@@ -6,7 +6,7 @@ static class UsedBlocks {
     public static IReadOnlyList<string> Of(
         string folder, IReadOnlyList<BlockEntry> inner, IReadOnlyList<BlockEntry> entries, BinIndex bin) {
         var own = bin.AppDlls(folder, []);
-        var referenced = bin.ReferencedDlls(own, [], shared: true).Where(dll => dll.IsProject).ToList();
+        var referenced = bin.ReferencedDlls(own, []).Where(dll => dll.IsProject).ToList();
         var blocks = entries.Select(e => e.Folder).Where(f => !IsAtOrUnder(folder, f)).ToList();
         var used = referenced.Select(dll => Deepest(dll, blocks, bin.IgnoredFolders)).OfType<string>();
         return [.. inner.Select(e => e.Folder).Concat(used)

@@ -1,8 +1,12 @@
+using Blocks.Domain.Shared;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using LoadApp.Slices.LoadApp;
+using Microsoft.Extensions.DependencyInjection;
+using Steps.Infrastructure;
 using Tests.Shared;
 using Umpire.Architecture;
+using Umpire.Messages.Contracts;
 
 namespace Engine.Tests;
 
@@ -29,6 +33,21 @@ public sealed class LoadAppTests {
         var definition = LoadAppHandler.Definition(entry, [], new AppLoader(AppContext.BaseDirectory));
 
         Assert.That(definition.Error!.Code, Is.EqualTo("UMP030505"));
+    }
+
+    [Test]
+    public async Task The_dlls_to_check_have_each_shared_dll_that_the_block_references_with_no_external_name() {
+        using var reader = new BinReader(AppContext.BaseDirectory);
+        var bin = reader.Index();
+        var kernel = Repo.Path("framework", "Kernel");
+        var entry = bin.Entries.Single(e => Same(e.Folder, kernel) && e.Form == EntryForm.Metadata);
+        var command = new LoadAppCommand(new BlockTree(entry, []), bin, "");
+        using var services = new ServiceCollection().BuildServiceProvider();
+
+        var input = (await new LoadAppHandler(new RunOptions()).HandleAsync(Envelope.For(command, services))).Value;
+
+        Assert.That(new ResolvedArchitecture(input.Architecture).Parts.Where(p => p.IsExternal), Is.Empty);
+        Assert.That(input.Dlls.Select(Path.GetFileNameWithoutExtension), Does.Contain("Umpire.Architecture"));
     }
 
     static bool Same(string a, string b) =>
