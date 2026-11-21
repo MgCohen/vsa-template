@@ -72,6 +72,13 @@ public sealed class ContentTests {
     }
 
     [Test]
+    public void A_group_name_rule_keeps_an_earlier_end() {
+        var definition = Named(item => item.NameEndsWith("Settings").NamedAfterGroup());
+
+        Assert.That(definition.Names(Item("TouchSettings", "Touch")), Is.Empty);
+    }
+
+    [Test]
     public void A_group_name_rule_on_a_part_with_no_group_stops_the_definition() {
         var error = Assert.Throws<InvalidOperationException>(() => _ = new ResolvedArchitecture(new NoGroupArchitecture()));
 
@@ -85,7 +92,7 @@ public sealed class ContentTests {
         var results = definition.Traits(Item("Plain"), Item("Tool") with { IsStatic = true });
 
         Assert.That(results.Single().Message, Is.EqualTo(
-            "Plain is in Item (Boxes/a), but it is not static, and the rule \"Item are static\" needs that. "
+            "Plain is in Item (Boxes/a), but it is not static, so it breaks the rule \"Item types are static\". "
             + "Change the type, or move it to another part."));
     }
 
@@ -95,7 +102,7 @@ public sealed class ContentTests {
 
         var results = definition.Traits(Item("Plain") with { IsSealed = true }, Item("Data") with { IsSealed = true, IsRecord = true });
 
-        Assert.That(results.Single().Message, Does.StartWith("Plain is in Item (Boxes/a), but it is not sealed and record"));
+        Assert.That(results.Single().Message, Does.StartWith("Plain is in Item (Boxes/a), but it is not record, so it breaks"));
     }
 
     [Test]
@@ -104,7 +111,7 @@ public sealed class ContentTests {
 
         Assert.Multiple(() => {
             Assert.That(definition.Traits(Item("Color") with { IsEnum = true }), Is.Empty);
-            Assert.That(definition.Traits(Item("Plain")).Single().Rule, Is.EqualTo("Item are static or enum"));
+            Assert.That(definition.Traits(Item("Plain")).Single().Rule, Is.EqualTo("Item types are static or enum"));
         });
     }
 
@@ -114,8 +121,17 @@ public sealed class ContentTests {
 
         Assert.Multiple(() => {
             Assert.That(definition.Traits(Item("Plain")), Is.Empty);
-            Assert.That(definition.Traits(Item("Base") with { IsAbstract = true }).Single().Rule, Is.EqualTo("Item are not abstract"));
+            Assert.That(definition.Traits(Item("Base") with { IsAbstract = true }).Single().Rule, Is.EqualTo("Item types are not abstract"));
         });
+    }
+
+    [Test]
+    public void A_not_condition_names_the_trait_that_the_type_has() {
+        var definition = new CountArchitecture(rules => rules.For<Item>().Are(!Trait.Abstract));
+
+        Assert.That(definition.Traits(Item("Base") with { IsAbstract = true }).Single().Message, Is.EqualTo(
+            "Base is in Item (Boxes/a), but it is abstract, so it breaks the rule \"Item types are not abstract\". "
+            + "Change the type, or move it to another part."));
     }
 
     [Test]
@@ -193,6 +209,24 @@ public sealed class ContentTests {
     }
 
     [Test]
+    public void A_place_rule_of_a_concept_keeps_the_places_under_the_concept() {
+        var resolved = new ResolvedArchitecture(new ShelfArchitecture());
+        var onShelf = Marked("ItemA", "Shelves/s/Item");
+        var inCrate = Marked("ItemB", "Crates/c/Item");
+
+        var results = resolved.Places(resolved.Place([onShelf, inCrate], BlockFolder));
+
+        Assert.That(results.Single().Message, Does.StartWith("ItemB in Item (Crates/c/Item) has [MarkAttribute]"));
+    }
+
+    [Test]
+    public void A_place_rule_of_a_concept_refuses_a_place_outside_the_concept() {
+        var error = Assert.Throws<InvalidOperationException>(() => _ = new ResolvedArchitecture(new LooseShelfArchitecture()));
+
+        Assert.That(error!.Message, Does.StartWith("Rules of ContentTests.LooseShelf: OnlyIn<Tag>() names no part under ContentTests.LooseShelf."));
+    }
+
+    [Test]
     public void The_name_and_trait_checks_do_not_read_a_nested_type() {
         var mode = Item("Mode", "Touch") with { IsEnum = true, IsNested = true };
         var definition = new CountArchitecture(
@@ -249,6 +283,43 @@ public sealed class ContentTests {
     public sealed class MarkedByDerived;
 
     public class Tool;
+
+    public sealed record Shelf : Concept {
+        public override string GroupFolder => "Shelves";
+
+        protected override void Rules(RuleBook rules) {
+            rules.Type<MarkAttribute>().OnlyIn<Item>();
+        }
+    }
+
+    public sealed record LooseShelf : Concept {
+        public override string GroupFolder => "Shelves";
+
+        protected override void Rules(RuleBook rules) {
+            rules.Type<MarkAttribute>().OnlyIn<Tag>();
+        }
+    }
+
+    public sealed record Crate : Concept {
+        public override string GroupFolder => "Crates";
+    }
+
+    static TypeFacts Marked(string name, string folder) =>
+        new($"App.{name}", name, "App", new Source($"{BlockFolder}/{folder}/{name}.cs", 1), [], [], [], []) { Attributes = [Mark] };
+
+    sealed class ShelfArchitecture : Architecture {
+        protected override void Define(Block block) {
+            block.AddGroup<Shelf>().Add<Item>();
+            block.AddGroup<Crate>().Add<Item>();
+        }
+    }
+
+    sealed class LooseShelfArchitecture : Architecture {
+        protected override void Define(Block block) {
+            block.AddGroup<LooseShelf>().Add<Item>();
+            block.AddGroup<Crate>().Add<Tag>();
+        }
+    }
 
     sealed class NoGroupArchitecture : Architecture {
         protected override void Define(Block block) {

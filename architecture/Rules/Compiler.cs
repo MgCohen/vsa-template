@@ -188,8 +188,9 @@ internal sealed class Compiler {
 
     PlaceStatement Of(PlaceLimit limit) {
         var text = limit.ToString();
-        Validate(limit.Entries, text);
-        return new PlaceStatement(text, Subjects(limit.Entries, text), limit.Type);
+        var places = limit.Places;
+        Validate(places, text);
+        return new PlaceStatement(text, Subjects(places, text), limit.Type);
     }
 
     void CheckNames() {

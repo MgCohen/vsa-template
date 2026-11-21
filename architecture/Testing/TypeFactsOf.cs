@@ -1,6 +1,7 @@
 namespace Umpire.Architecture;
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 static class TypeFactsOf {
     const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic
@@ -18,14 +19,14 @@ static class TypeFactsOf {
         BaseArguments = [.. Arguments(type)],
         IsAbstract = type.IsAbstract && !type.IsSealed,
         IsStatic = type is { IsClass: true, IsAbstract: true, IsSealed: true },
-        IsSealed = type is { IsClass: true, IsSealed: true, IsAbstract: false },
+        IsSealed = type is { IsClass: true, IsSealed: true, IsAbstract: false } && !IsDelegate(type),
         IsRecord = type.IsClass && type.GetMethod("<Clone>$", Declared) is not null,
         IsStruct = type is { IsValueType: true, IsEnum: false },
         IsInterface = type.IsInterface,
         IsEnum = type.IsEnum,
-        IsDelegate = type.IsClass && typeof(MulticastDelegate).IsAssignableFrom(type),
+        IsDelegate = IsDelegate(type),
         Attributes = [.. Attributes(type)],
-        References = [.. Mentions(type).Where(t => t != type).Select(NameOf).Distinct()],
+        References = [.. Referenced(type).Where(t => t != type).Select(NameOf).Distinct()],
     };
 
     public static TypeFacts Plain(string name, Source source) => new(name, name, "", source, [name], [], [], []);
@@ -65,6 +66,17 @@ static class TypeFactsOf {
         .Concat(type.GetConstructors(Declared).SelectMany(c => c.GetParameters()).Select(p => p.ParameterType))
         .Concat(type.GetMethods(Declared).SelectMany(Signature))
         .SelectMany(Expand);
+
+    static IEnumerable<Type> Referenced(Type type) => DirectBases(type)
+        .Concat(type.GetFields(Declared).Where(IsWritten).Select(f => f.FieldType))
+        .Concat(type.GetProperties(Declared).Where(IsWritten).Select(p => p.PropertyType))
+        .Concat(type.GetConstructors(Declared).Where(IsWritten).SelectMany(c => c.GetParameters()).Select(p => p.ParameterType))
+        .Concat(type.GetMethods(Declared).Where(IsWritten).SelectMany(Signature))
+        .SelectMany(Expand);
+
+    static bool IsWritten(MemberInfo member) => !member.IsDefined(typeof(CompilerGeneratedAttribute), false);
+
+    static bool IsDelegate(Type type) => type.IsClass && typeof(MulticastDelegate).IsAssignableFrom(type);
 
     static IEnumerable<Type> Signature(MethodInfo method) =>
         method.GetParameters().Select(p => p.ParameterType).Append(method.ReturnType);

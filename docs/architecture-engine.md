@@ -307,6 +307,7 @@ protected override void Rules(RuleBook rules) {
 
 - A name rule has no regex. The generic arity (for example `` `1 ``) is not part of the name.
 - `NameStartsWith` and `NameEndsWith` join, for example `NameStartsWith("I").NameEndsWith("Source")`. A second call of the same method replaces the first.
+- `NamedAfterGroup("Settings")` and `NameEndsWith("Settings")` set the same end text, so the later call wins. `NamedAfterGroup()` with no suffix keeps an earlier end text.
 - Use `NamedAfterGroup<T>()` only when the part is under two groups. A `NamedAfterGroup` on a part with no group stops the definition.
 - Put a name rule at the call site of the pack definition, not in the `Define` of a concept.
 
@@ -331,7 +332,7 @@ rules.For<X>().Are((Trait.Sealed & Trait.Record) | Trait.Enum);   // the operato
 
 ```csharp
 rules.Type<CliCommandAttribute>().OnlyIn<CliCommand>();   // the attribute is only on code in CliCommand
-rules.Type<MonoBehaviour>().OnlyIn<Views>().And<Hosts>(); // only Views and Hosts inherit or use MonoBehaviour
+rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure uses HttpClient
 ```
 
 - For an attribute, a use is the attribute on the type or on one of its members. An attribute that derives from `T` is also a use, and a generic `T` matches each closed form.
@@ -344,7 +345,9 @@ rules.Type<MonoBehaviour>().OnlyIn<Views>().And<Hosts>(); // only Views and Host
 
 - A nested type has the source file of its outer type, so the name and trait checks and the counts do not read it. The place check reads it.
 - A static class is not a subject of a match (`Takes<T>()`).
-- The checks do not read a helper that follows its user, a type of an external DLL or a type in a block place.
+- The name and trait checks do not read a helper that follows its user. The place check reads it.
+- No content check reads a type of an external DLL or a type in a block place.
+- The engine reads the method bodies, for example a call inside a lambda. The in-process facts of an `ArchitectureTest` read only the signatures: the base types, the fields, the properties and the parameters.
 - `ArchitectureTest.Problems(place)` gives the name, trait and place problems of one type.
 
 ## Binding

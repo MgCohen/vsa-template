@@ -24,13 +24,24 @@ public sealed class RuleBook {
 
     internal RuleBook Of(Type concept) => new(block, concept, Rules, Counts, Matches, Traits, Places);
 
-    internal void RefuseOutOfScope(Type subject) {
+    internal List<Entry> InScope(List<Entry> entries, string call = "For") {
+        if (Scope is { } concept) {
+            var under = new Filter(FilterKind.Under, concept);
+            foreach (var entry in entries.Where(e => e.Target != concept && !e.Filters.Contains(under))) {
+                RefuseOutOfScope(entry.Target, call);
+                entry.Filters.Add(under);
+            }
+        }
+        return entries;
+    }
+
+    internal void RefuseOutOfScope(Type subject, string call = "For") {
         if (Scope is not { } concept || subject == concept || block.Walk().Any(p => p.Is(subject) && p.Under(concept))) {
             return;
         }
         var scope = Concept.Display(concept);
         throw new InvalidOperationException(
-            $"Rules of {scope}: For<{Concept.Display(subject)}>() names no part under {scope}. "
+            $"Rules of {scope}: {call}<{Concept.Display(subject)}>() names no part under {scope}. "
             + $"A concept rule has an implicit Under<{scope}>(). "
             + $"Move the rule to the Rules of the architecture, or name a part of {scope}.");
     }

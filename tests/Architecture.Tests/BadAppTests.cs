@@ -164,7 +164,7 @@ public sealed class BadAppTests {
     public void A_type_without_the_traits_of_the_rule_gives_UMP020303() {
         Assert.That(Lines("UMP020303"), Is.EqualTo(
             $"{Billing}/Commands/Invoices.cs(5): error UMP020303: Invoices is in Commands ({BillingPart}/Commands), but it is not static, "
-            + "and the rule \"Commands are static\" needs that. Change the type, or move it to another part."));
+            + "so it breaks the rule \"Commands types are static\". Change the type, or move it to another part."));
     }
 
     [Test]
@@ -176,7 +176,7 @@ public sealed class BadAppTests {
     }
 
     [Test]
-    public void A_use_of_an_external_type_outside_its_places_gives_UMP020304() {
+    public void A_use_of_an_external_type_in_a_lambda_outside_its_places_gives_UMP020304() {
         Assert.That(Lines("UMP020304"), Does.Contain(
             $"{Billing}/Presenters/Formatting.cs(4): error UMP020304: Formatting in Presenters ({BillingPart}/Presenters) uses StringBuilder, "
             + "but the rule \"StringBuilder is only in Domain\" keeps it in Domain. "
@@ -186,10 +186,13 @@ public sealed class BadAppTests {
     [Test]
     public void The_type_facts_give_the_traits_and_the_member_attributes() {
         var billing = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Commands.Billing");
+        var paid = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Domain.Paid");
 
         Assert.Multiple(() => {
             Assert.That(billing.IsStatic, Is.True);
             Assert.That(billing.IsSealed, Is.False);
+            Assert.That(paid.IsDelegate, Is.True);
+            Assert.That(paid.IsSealed, Is.False);
             Assert.That(billing.IsAbstract, Is.False);
             Assert.That(billing.Attributes, Has.Member("Kit.CommandAttribute"));
         });

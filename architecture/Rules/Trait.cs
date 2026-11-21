@@ -14,6 +14,8 @@ public abstract record Trait {
 
     internal abstract bool Fits(TypeFacts type);
 
+    internal virtual string Miss(TypeFacts type) => $"it is not {Text}";
+
     public sealed override string ToString() => Text;
 
     public static Trait operator |(Trait left, Trait right) => new AnyOf(left, right);
@@ -35,10 +37,14 @@ internal sealed record AllOf(Trait Left, Trait Right) : Trait {
     internal override string Text => $"{Left.Inside<AllOf>()} and {Right.Inside<AllOf>()}";
 
     internal override bool Fits(TypeFacts type) => Left.Fits(type) && Right.Fits(type);
+
+    internal override string Miss(TypeFacts type) => Left.Fits(type) ? Right.Miss(type) : Left.Miss(type);
 }
 
 internal sealed record Not(Trait Trait) : Trait {
     internal override string Text => $"not {Trait.Inside<Not>()}";
 
     internal override bool Fits(TypeFacts type) => !Trait.Fits(type);
+
+    internal override string Miss(TypeFacts type) => $"it is {Trait.Text}";
 }

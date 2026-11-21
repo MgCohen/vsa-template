@@ -19,7 +19,8 @@ internal sealed record NamePattern {
 
     internal NamePattern WithEnd(string text) => this with { End = text };
 
-    internal NamePattern AfterGroup(Type? group, string suffix) => this with { OfAGroup = true, Group = group, End = suffix };
+    internal NamePattern AfterGroup(Type? group, string suffix) =>
+        this with { OfAGroup = true, Group = group, End = suffix.Length > 0 ? suffix : End };
 
     public override string ToString() {
         if (OfAGroup) {

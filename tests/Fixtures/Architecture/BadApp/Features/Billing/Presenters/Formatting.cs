@@ -5,5 +5,5 @@ public static class Formatting {
         return amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    public static string Joined(params string[] lines) => new System.Text.StringBuilder().AppendJoin('\n', lines).ToString();
+    public static Func<string[], string> Joiner { get; } = lines => new System.Text.StringBuilder().AppendJoin('\n', lines).ToString();
 }

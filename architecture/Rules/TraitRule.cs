@@ -14,5 +14,5 @@ public sealed class TraitRule {
         return this;
     }
 
-    public override string ToString() => $"{string.Join(" and ", Subjects)} are {Condition}";
+    public override string ToString() => $"{string.Join(" and ", Subjects)} types are {Condition}";
 }

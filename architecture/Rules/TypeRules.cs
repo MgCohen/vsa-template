@@ -10,7 +10,7 @@ public sealed class TypeRules {
     }
 
     public PlaceLimit OnlyIn<T>(Depth? depth = null) where T : Concept {
-        var limit = new PlaceLimit(type, typeof(T), depth);
+        var limit = new PlaceLimit(type, typeof(T), depth, book);
         book.Places.Add(limit);
         return limit;
     }

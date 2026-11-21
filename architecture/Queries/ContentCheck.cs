@@ -11,8 +11,8 @@ internal static class ContentCheck {
         .SelectMany(statement => Checked(bindings).Where(b => !b.Type.IsNested)
             .Where(b => statement.Subjects.Contains(b.Part) && !statement.Condition.Fits(b.Type))
             .Select(b => new ContentResult(statement.Rule, b,
-                $"{b.Type.Name} is in {b.Where}, but it is not {statement.Condition}, and the rule \"{statement.Rule}\" "
-                + "needs that. Change the type, or move it to another part.")))];
+                $"{b.Type.Name} is in {b.Where}, but {statement.Condition.Miss(b.Type)}, so it breaks the rule "
+                + $"\"{statement.Rule}\". Change the type, or move it to another part.")))];
 
     public static IReadOnlyList<ContentResult> Places(IReadOnlyList<PlaceStatement> statements, Bindings bindings) => [.. statements
         .GroupBy(statement => statement.Type)
