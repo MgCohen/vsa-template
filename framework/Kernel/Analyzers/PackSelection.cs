@@ -11,6 +11,7 @@ public static class PackSelection {
     const string AppType = "Umpire.Kernels.App`1";
     const string BlockType = "Umpire.Architecture.Block`1";
     const string PackType = "Umpire.Kernels.Pack`3";
+    const string AppEntryType = "Umpire.Kernels.IAppEntry`1";
 
     public static bool Selects(Compilation compilation, string? architecture, string packNamespace) {
         var entries = CodeEntries(compilation).ToList();
@@ -24,8 +25,10 @@ public static class PackSelection {
 
     static IEnumerable<IReadOnlyList<string>> CodeEntries(Compilation compilation) {
         var bases = new[] { AppType, PackType, BlockType }.Select(compilation.GetTypeByMetadataName).ToArray();
+        var entryInterface = compilation.GetTypeByMetadataName(AppEntryType);
         foreach (var type in SourceTypes(compilation.Assembly.GlobalNamespace)) {
-            if (EntryBase(type, bases) is { } entry && entry.TypeArguments[0].TypeKind != TypeKind.TypeParameter) {
+            if ((EntryBase(type, bases) ?? EntryInterface(type, entryInterface)) is { } entry
+                && entry.TypeArguments[0].TypeKind != TypeKind.TypeParameter) {
                 yield return Assemblies(entry.TypeArguments[0]);
             }
         }
@@ -44,6 +47,10 @@ public static class PackSelection {
             : parts.Length > 1 ? [parts[1].Trim()]
             : [];
     }
+
+    static INamedTypeSymbol? EntryInterface(INamedTypeSymbol type, INamedTypeSymbol? entryInterface) =>
+        entryInterface is null ? null
+            : type.AllInterfaces.FirstOrDefault(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, entryInterface));
 
     static INamedTypeSymbol? EntryBase(INamedTypeSymbol type, INamedTypeSymbol?[] bases) {
         for (var current = type.BaseType; current is not null; current = current.BaseType) {

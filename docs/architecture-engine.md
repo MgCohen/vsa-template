@@ -367,11 +367,11 @@ The engine reads the source file and the first line of each type from the PDB fi
 
 ## Folder aliases
 
-A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder as if they were in another folder of the block. For example, a host that keeps the app in `Assets/Dice/` (Unity) gives the aliases below. With no alias, each folder binds as it is. The binder tries each path and keeps the deepest part.
+A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder as if they were in another folder of the block. For example, an app that keeps its code in `src/Game/` gives the aliases below. With no alias, each folder binds as it is. The binder tries each path and keeps the deepest part.
 
 ```toml
 [umpire.check.folder_aliases]
-"Assets/Dice" = ["", "App"]   # Assets/Dice/Features/... binds as Features/..., Assets/Dice/Views/... as App/Views/...
+"src/Game" = ["", "App"]      # src/Game/Features/... binds as Features/..., src/Game/Views/... as App/Views/...
 "Source" = [""]               # Source/Features/... binds as Features/...
 ```
 
@@ -384,8 +384,8 @@ Rules:
 
 - With one alias or more, a file binds only through an alias. A folder with no alias is not read. To keep the folders at the block root, add the key `""` (or `"."`): `"" = [""]`.
 - Only the `.umpireconfig` in the block folder itself gives aliases, because each alias folder is a path in that block. An inner block with no `.umpireconfig` of its own has no aliases.
-- A key or a value with `\` or a leading `./` is normalized: `".\Assets\Dice"` is `Assets/Dice`.
-- A value that is not a list, for example `"Assets/Dice" = "App"`, gives the warning `UMP020206`. Put quotes on a key with `/` or `.`, because TOML reads an unquoted dotted key as a table.
+- A key or a value with `\` or a leading `./` is normalized: `".\src\Game"` is `src/Game`.
+- A value that is not a list, for example `"src/Game" = "App"`, gives the warning `UMP020206`. Put quotes on a key with `/` or `.`, because TOML reads an unquoted dotted key as a table.
 - `ArchitectureTest<T>` binds logical paths, for example `At<T>("Features/Notebook")`, so it uses no folder alias.
 
 The framework has no host layout of its own: the host package (for example vsa-unity) writes the aliases.
@@ -630,7 +630,7 @@ public sealed class NotesArchitectureTests : VsaArchitectureTest {
 
 The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
 
-The folder is the path in the block with no folder alias. For an app with the alias `"Assets/<App>" = [""]`, write `Features/Notebook`, not `Assets/<App>/Features/Notebook`.
+The folder is the path in the block with no folder alias. For an app with the alias `"src/Game" = [""]`, write `Features/Notebook`, not `src/Game/Features/Notebook`.
 
 The base has no test framework, and a test asserts with NUnit. It needs no build of the app and no DLL: only the type. An internal type is not visible to a test project, so name a public type of the same base, or a plain type with `At(folder)`.
 
