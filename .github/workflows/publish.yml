@@ -72,3 +72,18 @@ jobs:
           --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
           --api-key "${{ secrets.GITHUB_TOKEN }}"
           --skip-duplicate
+
+      # The release archive for hosts that cannot restore NuGet packages (tools/archive/archive.cs): the netstandard2.1
+      # runtime, the analyzers and the engine, from the packages of this run. A version with a suffix is a prerelease.
+      - name: Make the release archive
+        run: dotnet run tools/archive/archive.cs -- --feed feed --version "$VERSION" --out release --commit "$GITHUB_SHA"
+
+      - name: Attach the archive to the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
+          gh release view "v$VERSION" > /dev/null 2>&1 \
+            || gh release create "v$VERSION" --verify-tag --title "v$VERSION" --notes "Umpire $VERSION" $prerelease
+          gh release upload "v$VERSION" "release/umpire-$VERSION.zip" --clobber

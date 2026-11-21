@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests of the release archive (tools/archive/archive.cs). They pack the framework one time (LocalFeed) and run
+       locally, also when CI is off. -->
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Tests.Shared.csproj" />
+  </ItemGroup>
+</Project>

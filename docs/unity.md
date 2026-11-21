@@ -42,7 +42,7 @@ The reasons for the limits:
 
 ## Vendored DLLs
 
-Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `vendor.cs` writes them: it publishes a `netstandard2.1` project with the package `Umpire`, then copies the DLLs to `Assets/Plugins/VSA`. The Umpire part is one `Umpire.dll`; the other DLLs are its third-party dependencies.
+Unity cannot restore NuGet packages. Each release has the archive `umpire-<version>.zip` on its GitHub release, with the `netstandard2.1` runtime, the two analyzer DLLs and the engine (see "Release archive" in `docs/consumers.md`). vsa-unity copies the DLLs from it into its package. The Umpire part is one `Umpire.dll`; the other DLLs are its third-party dependencies.
 
 ## Unity app build
 
@@ -85,9 +85,9 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 
 ## Rules for the netstandard2.1 target
 
-- `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
+- The archive holds each DLL of the runtime, also a DLL that Unity ships. vsa-unity does not copy a DLL that Unity ships: a second copy is a compile error. The manifest gives the version of each DLL.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. `vendor.cs` must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
+- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. vsa-unity must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
 
 ## Non-goals
 
