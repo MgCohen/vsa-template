@@ -62,14 +62,14 @@ public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<Par
         return resolved.Names(resolved.Place(types, BlockFolder));
     }
 
-    public IReadOnlyList<ContentResult> Kinds(params TypeFacts[] types) {
+    public IReadOnlyList<ContentResult> Traits(params TypeFacts[] types) {
         var resolved = new ResolvedArchitecture(this);
-        return resolved.Kinds(resolved.Place(types, BlockFolder));
+        return resolved.Traits(resolved.Place(types, BlockFolder));
     }
 
-    public IReadOnlyList<ContentResult> Owners(params TypeFacts[] types) {
+    public IReadOnlyList<ContentResult> Places(params TypeFacts[] types) {
         var resolved = new ResolvedArchitecture(this);
-        return resolved.Owners(resolved.Place(types, BlockFolder));
+        return resolved.Places(resolved.Place(types, BlockFolder));
     }
 
     public static TypeFacts Fact(string name, string box, Type? baseType = null, params string[] arguments) =>

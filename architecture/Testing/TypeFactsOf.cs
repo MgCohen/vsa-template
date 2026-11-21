@@ -17,22 +17,18 @@ static class TypeFactsOf {
         []) {
         BaseArguments = [.. Arguments(type)],
         IsAbstract = type.IsAbstract && !type.IsSealed,
-        Kind = KindOf(type),
+        IsStatic = type is { IsClass: true, IsAbstract: true, IsSealed: true },
+        IsSealed = type is { IsClass: true, IsSealed: true, IsAbstract: false },
+        IsRecord = type.IsClass && type.GetMethod("<Clone>$", Declared) is not null,
+        IsStruct = type is { IsValueType: true, IsEnum: false },
+        IsInterface = type.IsInterface,
+        IsEnum = type.IsEnum,
+        IsDelegate = type.IsClass && typeof(MulticastDelegate).IsAssignableFrom(type),
         Attributes = [.. Attributes(type)],
+        References = [.. Mentions(type).Where(t => t != type).Select(NameOf).Distinct()],
     };
 
     public static TypeFacts Plain(string name, Source source) => new(name, name, "", source, [name], [], [], []);
-
-    static TypeKind KindOf(Type type) => type switch {
-        { IsInterface: true } => TypeKind.Interface,
-        { IsEnum: true } => TypeKind.Enum,
-        { IsValueType: true } => TypeKind.Struct,
-        _ when typeof(MulticastDelegate).IsAssignableFrom(type) => TypeKind.Delegate,
-        { IsAbstract: true, IsSealed: true } => TypeKind.StaticClass,
-        { IsAbstract: true } => TypeKind.AbstractClass,
-        _ when type.GetMethod("<Clone>$", Declared) is not null => TypeKind.Record,
-        _ => TypeKind.Class,
-    };
 
     static IEnumerable<string> Attributes(Type type) => type.GetCustomAttributesData()
         .Concat(type.GetMembers(Declared).SelectMany(m => m.GetCustomAttributesData()))

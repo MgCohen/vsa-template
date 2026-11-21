@@ -34,7 +34,7 @@ public abstract class ArchitectureTest<TArchitecture> where TArchitecture : Arch
     protected IReadOnlyList<string> Problems(Place place) {
         var binding = place.Binding ?? throw NotMapped(place);
         var bindings = place.Placed!;
-        return [.. Resolved.Names(bindings).Concat(Resolved.Kinds(bindings)).Concat(Resolved.Owners(bindings))
+        return [.. Resolved.Names(bindings).Concat(Resolved.Traits(bindings)).Concat(Resolved.Places(bindings))
             .Where(result => result.At == binding)
             .Select(result => result.Message)];
     }

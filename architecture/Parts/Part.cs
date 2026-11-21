@@ -31,7 +31,7 @@ public class Part : IPartChain {
     public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
     public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
-    public Name? NameRule { get; private set; }
+    internal NamePattern? NameRule { get; private set; }
 
     public string Path {
         get {
@@ -97,7 +97,16 @@ public class Part : IPartChain {
         return this;
     }
 
-    public Part Named(Name name) {
+    public Part NameStartsWith(string text) => WithName((NameRule ?? NamePattern.Any).WithStart(text));
+
+    public Part NameEndsWith(string text) => WithName((NameRule ?? NamePattern.Any).WithEnd(text));
+
+    public Part NamedAfterGroup(string suffix = "") => WithName((NameRule ?? NamePattern.Any).AfterGroup(null, suffix));
+
+    public Part NamedAfterGroup<T>(string suffix = "") where T : Concept =>
+        WithName((NameRule ?? NamePattern.Any).AfterGroup(typeof(T), suffix));
+
+    Part WithName(NamePattern name) {
         NameRule = name;
         return this;
     }
@@ -117,7 +126,13 @@ public class Part : IPartChain {
 
     IPartChain IPartChain.OfType(Type type, bool? required) => OfType(type, required);
 
-    IPartChain IPartChain.Named(Name name) => Named(name);
+    IPartChain IPartChain.NameStartsWith(string text) => NameStartsWith(text);
+
+    IPartChain IPartChain.NameEndsWith(string text) => NameEndsWith(text);
+
+    IPartChain IPartChain.NamedAfterGroup(string suffix) => NamedAfterGroup(suffix);
+
+    IPartChain IPartChain.NamedAfterGroup<T>(string suffix) => NamedAfterGroup<T>(suffix);
 
     public IEnumerable<Part> Walk() => new[] { this }.Concat(children.SelectMany(c => c.Walk()));
 
