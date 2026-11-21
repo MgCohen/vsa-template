@@ -101,7 +101,9 @@ A handler of a base message type also handles each derived message. The pipeline
 | Kind | Handlers that run |
 |---|---|
 | Command, request | The handler of the nearest type: the exact type first, then the nearest base type or interface. If two handlers have the same distance, the send fails, and the error names both |
-| Event | Each handler of the event type and of each base type, one time each. The exact type comes first |
+| Event | Each handler of the event type, of each base type and of each interface, one time each. The nearest type comes first. Types at the same distance run in the order of their full names |
+
+The check for two handlers at the same distance runs at the first send of each message type, not at start. The pipelines are made at the first send, and a derived message type can come from any module, so the start does not know each message type. The send of that message type fails each time, with the same error.
 
 ```csharp
 public abstract record JsCommand<TResult> : JsCommand, ICommand<TResult>;
@@ -113,7 +115,7 @@ public sealed class JsCommandHandler<TResult>(IJSRuntime js) : CommandHandler<Js
 }
 ```
 
-The message also closes an open handler. For `MotionWait`, the pipeline reads `WaitResult` from the base chain and closes `JsCommandHandler<WaitResult>`, with a check of the constraints. Open validators and open hooks are closed the same way. The route of each message type is made one time. The open class can have more than one generic parameter, and its message type can nest them, for example `PutHandler<T> : CommandHandler<Put<T>, int>`. `OpenGenerics.Unify` solves the parameters and checks the constraints. If a type parameter of the handler is not in its message type, the start stops. If a sent message does not meet a constraint of the open handler, the error names the handler, the message and the constraint. In Unity (IL2CPP), the `[AutoClose]` types make the closed types exist at build time (`docs/composition.md`).
+The message also closes an open handler. For `MotionWait`, the pipeline reads `WaitResult` from the base chain and closes `JsCommandHandler<WaitResult>`, with a check of the constraints. Open validators and open hooks are closed the same way. The route of each message type is made one time. The open class can have more than one generic parameter, and its message type can nest them, for example `PutHandler<T> : CommandHandler<Put<T>, int>`. `OpenGenerics.Unify` solves the parameters and checks the constraints. If a type parameter of the handler is not in its message type, the start stops. An open handler in `Handlers(typeof(...))` gets the same check when its pipeline is made. A message can implement one generic interface two times, for example `IWrap<int>` and `IWrap<string>`. Then an open handler of `IWrap<T>` closes for each one: an event runs each closure, and a command fails with the error of two handlers at the same distance. If a sent message does not meet a constraint of the open handler, the error names the handler, the message and the constraint. In Unity (IL2CPP), the `[AutoClose]` types make the closed types exist at build time (`docs/composition.md`).
 
 ## Runners
 

@@ -41,15 +41,25 @@ static class MessageTypes {
             .GroupBy(typeOf)
             .Select(group => group.First());
 
-    internal static Type? Closed(Type open, Type pattern, Type message) =>
+    internal static IEnumerable<Type> Closed(Type open, Type pattern, Type message) =>
         OpenGenerics.ForMessage(open, pattern, message);
 
-    internal static string? CloseFailure(Type open, Type pattern, Type message) =>
-        OpenGenerics.MessageShapeOf(pattern, message) is { } shape
-        && OpenGenerics.Arguments(open, pattern, shape) is { } arguments
-        && OpenGenerics.Unmet(open, arguments) is { } unmet
-            ? $"{OpenGenerics.NameOf(open)} cannot close for {message.Name}: {unmet}."
-            : null;
+    internal static IEnumerable<string> CloseFailures(Type open, Type pattern, Type message) =>
+        OpenGenerics.MessageShapesOf(pattern, message)
+            .Select(shape => OpenGenerics.Arguments(open, pattern, shape) is { } arguments
+                && OpenGenerics.Unmet(open, arguments) is { } unmet
+                    ? $"{OpenGenerics.NameOf(open)} cannot close for {message.Name}: {unmet}."
+                    : null)
+            .OfType<string>();
+
+    internal static void CheckOpenHandler(Type open) {
+        if (!OfHandler(open).Any(pattern => OpenGenerics.UsesEachParameter(open, pattern))) {
+            throw new InvalidOperationException(
+                $"{OpenGenerics.NameOf(open)} cannot close from a message: its message type does not use "
+                + "each of its type parameters. Put each type parameter in the message type, "
+                + "or list a closed handler.");
+        }
+    }
 
     static Type DefinitionOf(Type type) => type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
 
