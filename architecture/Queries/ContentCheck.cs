@@ -2,10 +2,10 @@ namespace Umpire.Architecture;
 
 internal static class ContentCheck {
     public static IReadOnlyList<ContentResult> Names(Bindings bindings) => [.. Checked(bindings).Where(b => !b.Type.IsNested)
-        .Where(b => b.Part.NameRule is { } name && !name.Fits(b))
-        .Select(b => new ContentResult($"{b.Part.Name} name {b.Part.NameRule}", b,
-            $"{b.Type.Name} is in {b.Where}, but the name of a {b.Part.Name} type {b.Part.NameRule}. "
-            + $"Rename it to {b.Part.NameRule!.Fix(b)}, or move it."))];
+        .Where(b => b.Part.NamePattern is { } name && !name.Fits(b))
+        .Select(b => new ContentResult($"{b.Part.Name} name {b.Part.NamePattern}", b,
+            $"{b.Type.Name} is in {b.Where}, but the name of a {b.Part.Name} type {b.Part.NamePattern}. "
+            + $"Rename it to {b.Part.NamePattern!.Fix(b)}, or move it."))];
 
     public static IReadOnlyList<ContentResult> Traits(IReadOnlyList<TraitStatement> statements, Bindings bindings) => [.. statements
         .SelectMany(statement => Checked(bindings).Where(b => !b.Type.IsNested)
