@@ -110,8 +110,8 @@ sealed class OpenDescriptors {
         foreach (var definition in types.OpenRegistered()) {
             foreach (var shape in DispatchShapesOf(definition, dispatch).Distinct()) {
                 foreach (var message in types.Declared().Where(shape.Message.IsAssignableFrom)) {
-                    if (OpenGenerics.ForMessage(definition, shape.Pattern, message) is { } closed
-                        && !IsRegistered(closed)) {
+                    foreach (var closed in OpenGenerics.ForMessage(definition, shape.Pattern, message)
+                        .Where(closed => !IsRegistered(closed))) {
                         AutoRegistration.AddClosed(services, closed);
                         queue.Enqueue(closed);
                     }

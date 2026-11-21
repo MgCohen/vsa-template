@@ -122,6 +122,68 @@ public sealed class BaseHandlerTests {
         Assert.That(typed.GetRequiredService<Calls>().Lines, Is.EqualTo(new[] { "valid:SubCheck", "hook:SubCheck" }));
     }
 
+    [Test]
+    public async Task An_event_runs_the_handler_of_a_derived_type_before_the_handler_of_its_base() {
+        var pipeline = new PipelineBuilder<IntegrationEvent>()
+            .Handlers(typeof(BaseChangedHandler), typeof(ZoneMovedHandler))
+            .Build(services);
+        Log.Lines.Clear();
+
+        await pipeline.SendAsync<Unit>(new ZoneMoved());
+
+        Assert.That(Log.Lines, Is.EqualTo(new[] { "zone", "base" }));
+    }
+
+    [Test]
+    public async Task An_event_runs_the_handler_of_an_interface_that_it_implements() {
+        var pipeline = new PipelineBuilder<IntegrationEvent>()
+            .Handlers(typeof(ItemChangedHandler), typeof(StampHandler))
+            .Build(services);
+        Log.Lines.Clear();
+
+        await pipeline.SendAsync<Unit>(new StampedItem());
+
+        Assert.That(Log.Lines, Is.EqualTo(new[] { "stamp", "item" }));
+    }
+
+    [Test]
+    public async Task The_message_closes_an_open_handler_of_a_nested_pattern() {
+        var pipeline = new PipelineBuilder<Call>().Handlers(typeof(ListCallHandler<>)).Build(services);
+
+        var result = await pipeline.SendAsync<string>(new Call<List<int>>());
+
+        Assert.That(result.Value, Is.EqualTo("list:Int32"));
+    }
+
+    [Test]
+    public void A_command_with_two_shapes_of_an_open_pattern_stops_the_send_and_names_both() {
+        var pipeline = new PipelineBuilder<Call>().Handlers(typeof(WrapHandler<>)).Build(services);
+
+        var error = Assert.ThrowsAsync<InvalidOperationException>(
+            () => pipeline.SendAsync<string>(new DoubleWrap()));
+
+        Assert.That(error!.Message, Does.Contain("two nearest handlers")
+            .And.Contain("WrapHandler`1[[System.Int32").And.Contain("WrapHandler`1[[System.String"));
+    }
+
+    [Test]
+    public async Task An_event_with_two_shapes_of_an_open_pattern_runs_each_closure() {
+        var pipeline = new PipelineBuilder<IntegrationEvent>().Handlers(typeof(WrapAudit<>)).Build(services);
+        Log.Lines.Clear();
+
+        await pipeline.SendAsync<Unit>(new DoubleWrapped());
+
+        Assert.That(Log.Lines, Is.EquivalentTo(new[] { "wrap:Int32", "wrap:String" }));
+    }
+
+    [Test]
+    public void An_open_handler_with_a_parameter_outside_its_message_stops_the_build() {
+        var error = Assert.Throws<InvalidOperationException>(
+            () => new PipelineBuilder<Call>().Handlers(typeof(ExtraHandler<,>)).Build(services));
+
+        Assert.That(error!.Message, Does.Contain("ExtraHandler<T, TExtra>").And.Contain("type parameters"));
+    }
+
     Pipeline Commands(params Type[] handlers) =>
         new PipelineBuilder<Shape>().Handlers(handlers).Build(services);
 
@@ -219,6 +281,69 @@ public sealed class BaseHandlerTests {
         public override Task<Result<Unit>> HandleAsync(IEnvelope<TEvent> envelope) {
             calls.Lines.Add($"audit:{typeof(TEvent).Name}");
             return Done;
+        }
+    }
+
+    public record BaseChanged : IntegrationEvent;
+
+    public sealed record ZoneMoved : BaseChanged;
+
+    public sealed class BaseChangedHandler(Calls calls) : IntegrationEventHandler<BaseChanged> {
+        public override Task<Result<Unit>> HandleAsync(IEnvelope<BaseChanged> envelope) {
+            calls.Lines.Add("base");
+            return Done;
+        }
+    }
+
+    public sealed class ZoneMovedHandler(Calls calls) : IntegrationEventHandler<ZoneMoved> {
+        public override Task<Result<Unit>> HandleAsync(IEnvelope<ZoneMoved> envelope) {
+            calls.Lines.Add("zone");
+            return Done;
+        }
+    }
+
+    public interface IStamped;
+
+    public sealed record StampedItem : ItemChanged, IStamped;
+
+    public sealed class StampHandler(Calls calls) : IHandler<IStamped> {
+        public Task<IMessageResult> RunAsync(IEnvelope<IStamped> envelope) {
+            calls.Lines.Add("stamp");
+            return Task.FromResult<IMessageResult>((Result<Unit>)Unit.Value);
+        }
+    }
+
+    public abstract record Call;
+
+    public sealed record Call<T> : Call, ICommand<string>;
+
+    public sealed class ListCallHandler<T> : CommandHandler<Call<List<T>>, string> {
+        public override Task<Result<string>> HandleAsync(IEnvelope<Call<List<T>>> envelope) =>
+            Task.FromResult<Result<string>>($"list:{typeof(T).Name}");
+    }
+
+    public sealed class ExtraHandler<T, TExtra> : IHandler<Call<T>> {
+        public Task<IMessageResult> RunAsync(IEnvelope<Call<T>> envelope) =>
+            Task.FromResult<IMessageResult>((Result<string>)typeof(TExtra).Name);
+    }
+
+    public interface IWrap<T> : ICommand<string>;
+
+    public sealed record DoubleWrap : Call, IWrap<int>, IWrap<string>;
+
+    public sealed class WrapHandler<T> : CommandHandler<IWrap<T>, string> {
+        public override Task<Result<string>> HandleAsync(IEnvelope<IWrap<T>> envelope) =>
+            Task.FromResult<Result<string>>(typeof(T).Name);
+    }
+
+    public interface IWrapped<T>;
+
+    public sealed record DoubleWrapped : IntegrationEvent, IWrapped<int>, IWrapped<string>;
+
+    public sealed class WrapAudit<T>(Calls calls) : IHandler<IWrapped<T>> {
+        public Task<IMessageResult> RunAsync(IEnvelope<IWrapped<T>> envelope) {
+            calls.Lines.Add($"wrap:{typeof(T).Name}");
+            return Task.FromResult<IMessageResult>((Result<Unit>)Unit.Value);
         }
     }
 

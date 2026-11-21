@@ -13,18 +13,22 @@ public static class OpenGenerics {
     public static Type? Solve(Type openImplementation, Type pattern, Type actual) =>
         Arguments(openImplementation, pattern, actual) is { } arguments ? Close(openImplementation, arguments) : null;
 
-    public static Type? ForMessage(Type openImplementation, Type pattern, Type message) =>
-        MessageShapeOf(pattern, message) is { } closed ? Solve(openImplementation, pattern, closed) : null;
+    public static IEnumerable<Type> ForMessage(Type openImplementation, Type pattern, Type message) =>
+        MessageShapesOf(pattern, message)
+            .Select(shape => Solve(openImplementation, pattern, shape))
+            .OfType<Type>();
 
-    public static Type? MessageShapeOf(Type pattern, Type message) {
+    public static IReadOnlyList<Type> MessageShapesOf(Type pattern, Type message) {
         if (pattern.IsGenericParameter) {
-            return message;
+            return [message];
         }
         if (!pattern.IsGenericType) {
-            return null;
+            return [];
         }
         var definition = pattern.GetGenericTypeDefinition();
-        return ClosedBase.OfSelfOrBase(message, definition) ?? ClosedBase.InterfaceOf(message, definition);
+        return ClosedBase.OfSelfOrBase(message, definition) is { } closed
+            ? [closed]
+            : [.. message.GetInterfaces().Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == definition)];
     }
 
     public static Type[]? Arguments(Type openImplementation, Type pattern, Type actual) {

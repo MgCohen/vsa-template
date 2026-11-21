@@ -99,9 +99,11 @@ public sealed class Pipeline {
         return index;
     }
 
-    List<Type> OpenHandlers() => [.. Definition.HandlerBases.SelectMany(OpenHandlersOf)
-        .Concat(Definition.Handlers.Where(h => h.IsGenericTypeDefinition))
-        .Distinct()];
+    List<Type> OpenHandlers() {
+        List<Type> listed = [.. Definition.Handlers.Where(h => h.IsGenericTypeDefinition)];
+        listed.ForEach(MessageTypes.CheckOpenHandler);
+        return [.. Definition.HandlerBases.SelectMany(OpenHandlersOf).Concat(listed).Distinct()];
+    }
 
     void Add(Dictionary<Type, List<Type>> index, Type message, IEnumerable<Type> added) {
         if (!index.TryGetValue(message, out var list)) {
@@ -151,26 +153,24 @@ public sealed class Pipeline {
 
     IReadOnlyList<string> CloseFailuresFor(Type message) => [.. openHandlers
         .SelectMany(open => MessageTypes.OfHandler(open)
-            .Select(pattern => MessageTypes.CloseFailure(open, pattern, message))
-            .OfType<string>())
+            .SelectMany(pattern => MessageTypes.CloseFailures(open, pattern, message)))
         .Distinct()];
 
     IEnumerable<Type> ClosedFor(Type message) =>
         openHandlers.SelectMany(open => MessageTypes.OfHandler(open)
-                .Select(pattern => MessageTypes.Closed(open, pattern, message))
-                .OfType<Type>())
+                .SelectMany(pattern => MessageTypes.Closed(open, pattern, message)))
             .Distinct();
 
     IEnumerable<ServiceImplementation> FoundFor(Type genericBase, Type message) =>
         Found(genericBase).Concat((types?.OpenImplementations(genericBase) ?? [])
-            .Select(open => ClosedFor(open, genericBase, message))
-            .OfType<ServiceImplementation>());
+            .SelectMany(open => ClosedFor(open, genericBase, message)));
 
-    static ServiceImplementation? ClosedFor(ServiceImplementation open, Type genericBase, Type message) =>
-        MessageTypes.Closed(open.Implementation, open.Service.GetGenericArguments()[0], message) is { } closed
-        && (ClosedBase.Of(closed, genericBase) ?? ClosedBase.InterfaceOf(closed, genericBase)) is { } service
-            ? new ServiceImplementation(service, closed)
-            : null;
+    static IEnumerable<ServiceImplementation> ClosedFor(ServiceImplementation open, Type genericBase, Type message) =>
+        MessageTypes.Closed(open.Implementation, open.Service.GetGenericArguments()[0], message)
+            .Select(closed => (ClosedBase.Of(closed, genericBase) ?? ClosedBase.InterfaceOf(closed, genericBase)) is { } service
+                ? new ServiceImplementation(service, closed)
+                : null)
+            .OfType<ServiceImplementation>();
 
     MessageRoute Route(Type message) {
         var hooks = Definition.HookBases.SelectMany(b => FoundFor(b, message)).ToList();
