@@ -25,7 +25,7 @@ public sealed class SealedRecordRule : VsaRule {
     }
 
     void Check(INamedTypeSymbol type, INamedTypeSymbol request, SymbolAnalysisContext context) {
-        if (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Struct) {
+        if (type.IsAbstract || (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Struct)) {
             return;
         }
         var implemented = type.AllInterfaces.FirstOrDefault(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, request));
