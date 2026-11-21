@@ -32,16 +32,20 @@ sealed class UnityProjectFolder : IDisposable {
     }
 
     public void Compile(string assemblyName, string outputFolder, params string[] sources) =>
-        Emit(assemblyName, outputFolder, sources, path => path);
+        Emit(assemblyName, outputFolder, sources, path => path, []);
 
     public void CompileWithRelativeDocuments(string assemblyName, string outputFolder, params string[] sources) =>
-        Emit(assemblyName, outputFolder, sources, path => @".\" + Path.GetRelativePath(Root, path).Replace('/', '\\'));
+        Emit(assemblyName, outputFolder, sources, path => @".\" + Path.GetRelativePath(Root, path).Replace('/', '\\'), []);
 
-    void Emit(string assemblyName, string outputFolder, string[] sources, Func<string, string> documentName) {
+    public void CompileWithReferences(string assemblyName, string outputFolder, string[] references, params string[] sources) =>
+        Emit(assemblyName, outputFolder, sources, path => path, references);
+
+    void Emit(string assemblyName, string outputFolder, string[] sources, Func<string, string> documentName, string[] references) {
         Directory.CreateDirectory(outputFolder);
         var trees = sources.Select(path => CSharpSyntaxTree.ParseText(
             SourceText.From(File.ReadAllText(path), Encoding.UTF8), new CSharpParseOptions(LanguageVersion.Latest), documentName(path)));
-        var compilation = CSharpCompilation.Create(assemblyName, trees, References(),
+        var compilation = CSharpCompilation.Create(assemblyName, trees,
+            References().Concat(references.Select(path => MetadataReference.CreateFromFile(path))),
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
         using var dll = File.Create(Path.Combine(outputFolder, assemblyName + ".dll"));
         using var pdb = File.Create(Path.Combine(outputFolder, assemblyName + ".pdb"));

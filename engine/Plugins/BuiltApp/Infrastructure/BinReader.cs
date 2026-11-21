@@ -23,7 +23,7 @@ public sealed class BinReader : IDisposable {
         dlls = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
         projects = DepsFile.ProjectAssemblies(bin);
         var shared = SharedFrameworks().SelectMany(folder => Directory.GetFiles(folder, "*.dll"));
-        context = new MetadataLoadContext(new PathAssemblyResolver(dlls.Concat(shared)));
+        context = new MetadataLoadContext(new PathAssemblyResolver(dlls.Concat(UnityProject.References(bin)).Concat(shared)));
     }
 
     public static IReadOnlyDictionary<string, Source> Sources(IEnumerable<string> files) {

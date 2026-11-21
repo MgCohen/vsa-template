@@ -208,6 +208,26 @@ public sealed class RunEngineTests {
     }
 
     [Test]
+    public async Task A_Unity_project_skips_the_build_reads_its_script_assemblies_and_skips_its_generated_projects() {
+        var unity = TempFolder.Create();
+        try {
+            Directory.CreateDirectory(Path.Combine(unity, "ProjectSettings"));
+            File.WriteAllText(Path.Combine(unity, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.6.0f1");
+            Directory.CreateDirectory(Path.Combine(unity, "Library", "ScriptAssemblies"));
+            File.WriteAllText(Path.Combine(unity, "Assembly-CSharp.csproj"), "<Project />");
+            File.WriteAllText(Path.Combine(unity, "Game.csproj"), "<Project />");
+
+            var result = await Run(project: unity, bin: "", stage: Stage.All);
+
+            Assert.That(result.Lines, Has.One.Contains("UMP030102: ").And.Contains("is a Unity project"), string.Join("\n", result.Lines));
+            Assert.That(result.Lines, Has.None.Contains("UMP030101").And.None.Contains("UMP030305").And.None.Contains("UMP030306"));
+            Assert.That(result.Lines, Has.None.Contains("UMP030001"), string.Join("\n", result.Lines));
+        } finally {
+            TempFolder.Delete(unity);
+        }
+    }
+
+    [Test]
     public async Task An_app_with_no_app_class_gives_UMP030502() {
         var result = await Run(block: Repo.Path("tests", "Shared"));
 

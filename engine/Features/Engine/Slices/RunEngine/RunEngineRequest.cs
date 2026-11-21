@@ -6,7 +6,7 @@ using Umpire.Vsa.Contracts.Requests;
 
 public sealed record RunEngineRequest(
     string Project,
-    string Bin,
+    string Bin = "",
     string Block = "",
     ReportMode? Mode = null,
     string Skip = "",

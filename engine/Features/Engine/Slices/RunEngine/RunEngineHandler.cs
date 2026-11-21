@@ -22,7 +22,7 @@ using Versions.Slices.CheckVersions;
 sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions options) : RequestHandler<RunEngineRequest, RunEngineResponse> {
     public override async Task<Result<RunEngineResponse>> HandleAsync(IEnvelope<RunEngineRequest> envelope) {
         var given = envelope.Message;
-        var run = given with { Mode = CheckMode.Of(given.Mode, Folder(given)) };
+        var run = given with { Mode = CheckMode.Of(given.Mode, Folder(given)), Bin = Bin(given) };
         options.FailFast = run.FailFast;
         var findings = await Run(run, envelope.Cancellation);
         var report = await commands.SendAsync(new WriteReportCommand(run.Mode!.Value, findings), envelope.Cancellation);
@@ -56,6 +56,11 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
     }
 
     static string Folder(RunEngineRequest run) => run.Block.Length > 0 ? run.Block : run.Project;
+
+    static string Bin(RunEngineRequest run) =>
+        run.Bin.Length == 0 && UnityFolder.Root(Path.GetFullPath(Folder(run))) is { } unity
+            ? Path.Combine(unity, UnityFolder.ScriptAssemblies)
+            : run.Bin;
 
     static string Inputs(RunEngineRequest run) => $"{run.Mode}|{run.Skip}|{run.Block}";
 

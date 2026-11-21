@@ -3,10 +3,12 @@ namespace Blocks.Slices.FindBlocks;
 using Blocks.Domain;
 using Blocks.Infrastructure;
 using Steps.Domain.Shared;
+using BuiltApp.Domain.Shared;
 
 static class ProjectCheck {
     public static IReadOnlyList<Finding> Findings(
-        string folder, IReadOnlyList<BlockProject> projects, bool hasConfigFile) {
+        string folder, IReadOnlyList<BlockProject> all, bool hasConfigFile) {
+        var projects = UnityFolder.Is(folder) ? [.. all.Where(project => !IsUnityGenerated(folder, project))] : all;
         var findings = projects.Where(project => !project.HasUmpireSdk).Select(NoUmpireSdk).ToList();
         if (projects.Count > 1 && !hasConfigFile) {
             findings.Add(new Finding(BlocksCodes.NoConfigFile, FindingSeverity.Warning,
@@ -16,6 +18,10 @@ static class ProjectCheck {
         }
         return findings;
     }
+
+    static bool IsUnityGenerated(string unityRoot, BlockProject project) =>
+        string.Equals(Path.GetDirectoryName(Path.GetFullPath(project.File)), Path.GetFullPath(unityRoot).TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
 
     static Finding NoUmpireSdk(BlockProject project) =>
         new(BlocksCodes.NoUmpireSdk, FindingSeverity.Warning,

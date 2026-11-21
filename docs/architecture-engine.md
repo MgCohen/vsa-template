@@ -362,6 +362,9 @@ public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
 | A DLL name in the host output too | The engine loads the host output DLL only |
 | A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
 | A relative source path in the PDB (Unity package code, `.\Packages\...`) | `SymbolReader` resolves it against the Unity project root: the nearest folder above the DLL with `ProjectSettings/ProjectVersion.txt` (`UnityProject.Root`) |
+| A run on a Unity project | `dotnet umpire-engine.dll --project <Unity project>`, after a Unity compile. With no `--bin`, the engine reads `Library/ScriptAssemblies`. The Build step does not run (`UMP030102`) |
+| The types of the base classes | `MetadataLoadContext` also resolves the DLLs in `Packages/` and `Library/PackageCache/` and the Unity engine DLLs (`UnityProject.References`): the editor of `m_EditorVersion` in the Unity Hub folder, else the `UnityEngine.CoreModule.dll` folder in a generated `.csproj` file. Thus a shell on `MonoBehaviour` is an app class |
+| The `.csproj` files in the Unity project root | Unity writes them for the IDE, so the project checks (`UMP030305`, `UMP030306`) skip them |
 | Source file under `Library/` | Not app code (package cache, generated types) |
 
 ## The checks of the Rules step
@@ -465,6 +468,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030202` | 02 Changes | Info | The block did not change since its last clean check, so its check did not run |
 | `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and reports no finding, for example after a crash. The build fails |
 | `UMP030101` | 01 Build | Error | The build of the root project fails. The Check stage does not run |
+| `UMP030102` | 01 Build | Info | The project is in a Unity project (`ProjectSettings/ProjectVersion.txt` in a folder above it). Unity compiles it, so the Build step does not run |
 | `UMP030201` | 02 Changes | Info | No input changed since the last clean check, so the check did not run |
 | `UMP030301` | 03 Blocks | Error | A block has more than one check entry |
 | `UMP030302` | 03 Blocks | Error | A check entry names a type that does not load or that is not an `Architecture` |
