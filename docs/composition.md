@@ -494,9 +494,7 @@ Module code and the layer registrations use two shared interfaces from .NET:
 | DryIoc, Lamar, SimpleInjector | Their own integration packages |
 | VContainer | No support. The app routes to the Microsoft container |
 
-A Unity app that uses VContainer builds the Microsoft container from `Compose`, then routes to it. For each VSA service type, VContainer gets a registration that resolves the service from the Microsoft container. A singleton comes from the root. A scoped or transient service comes from one Microsoft scope for each VContainer scope. So VSA keeps the Microsoft semantics, and Unity classes get VSA services by constructor injection.
-
-A copy of each `ServiceDescriptor` into `IContainerBuilder` does not work. VContainer refuses two registrations of one implementation type, and VSA registers several instances of one type and reads them as a list (`AddPipeline`). The spike is on the branch `spike/compose-containers` of `vsa-consumer-unity`.
+An app with a container that cannot read `IServiceCollection` builds the Microsoft container from `Compose`, then routes to it: for each service type, its container gets a registration that resolves the service from the Microsoft container. So the services keep the Microsoft semantics. A copy of each `ServiceDescriptor` often does not work, because the app registers several instances of one type and reads them as a list (`AddPipeline`).
 
 ## Factories
 
@@ -550,16 +548,16 @@ Modes = { easy = 1, hard = 5 }
 | `IConfiguration` | `appsettings.json`, environment, `args` | `args` from the first option (`--key value`) | `args` (`--key value`, `--Section:Key=Value`) |
 | `IHostedService` start | Yes, inside `WebApplication` | No | No |
 
-## Unity target
+## Portable target
 
-`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
-A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM package (repo `vsa-unity`) calls `app.Start(args)` on the main thread and `app.Stop()`, and it owns the frame loop. `Start` keeps the Unity main thread as the app thread, so `AppStop.Request` from any thread stops the app on the main thread. A stop request stops the app only, and Unity continues. A game that must quit overrides `OnStop` and calls `Application.Quit`. The Unity host is an `AppHost` with `Configure`:
+A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add a log provider of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
 
 ```csharp
-public sealed class UnityHost : AppHost {
+public sealed class GameHost : AppHost {
     protected override void Configure(IServiceCollection services, AppTypes types) {
-        services.AddLogging(logging => logging.AddProvider(new UnityLogProvider()));
+        services.AddLogging(logging => logging.AddProvider(new GameLogProvider()));
     }
 }
 ```
@@ -567,11 +565,11 @@ public sealed class UnityHost : AppHost {
 An app that owns its container calls `Compose` and builds the container itself:
 
 ```csharp
-var host = new UnityHost();
+var host = new GameHost();
 host.Compose(collection, configuration, new VsaKernel(), new AppTypes(null, typeof(GameApp).Assembly));
 ```
 
-A bridge to another container (fallback or side by side) reads `App.Services` after `Start`. `UnityLogProvider` is app code that calls `Debug.Log`. The Unity check runs the EditMode tests of `vsa-consumer-unity` (Mono) against a local pack.
+A bridge to another container (fallback or side by side) reads `App.Services` after `Start`.
 
 ## Non-goals
 
@@ -589,6 +587,5 @@ A bridge to another container (fallback or side by side) reads `App.Services` af
 
 - Remote request sender: an `IRequestSender` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
-- IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
 - The pack: keep it as a join of architecture, kernel and host, or replace it at the app level (#198).
 - The copy of the base `Build` in `ConsoleHost` (#203).

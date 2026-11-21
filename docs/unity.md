@@ -45,15 +45,15 @@ Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `
 
 ## Unity app build
 
-Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). Umpire.Sdk does not compile `Assets/` (`UmpireExcludedFolders`).
+Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). vsa-unity sets `UmpireExcludedFolders` (for example `Assets`), so that Umpire.Sdk does not compile `Assets/`.
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. A Unity project puts the two DLLs in one folder and marks each one as an analyzer (label `RoslynAnalyzer`). It adds no other DLL to that folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
 
 ## Build output
 
-An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
+An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. A folder whose name ends with `~` is not source: the rule engine and `umpire init` do not read it.
 
 | Need | Do this in `Directory.Build.props` |
 |------|-------------------------------------|
@@ -87,14 +87,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 - `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. `vendor.cs` must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
-- IL2CPP makes no code at run time. Register a closed generic over a struct (for example `IHandler<MoveCommand>` for a struct `MoveCommand`) by its full type, not as an open generic.
-- In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
 
 ## Non-goals
 
 - No IL2CPP, stripping, `link.xml` or Unity reflection design in this repository. Reason: `vsa-unity` owns the Unity build, and it can test these limits in a Unity player.
-
-## Open questions
-
-- Unity CI: a Unity license in GitHub Actions needs a secret of the license. The Unity check runs on a dev machine only.
-- Unity package: a UPM package can replace the vendored DLLs.

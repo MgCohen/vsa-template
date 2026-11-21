@@ -32,7 +32,7 @@ Rules for all commands:
 - `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
 - `add pack` stops if `Packs/<Name>/` exists.
 - `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
-- `new app` writes no `Directory.Build.props`. The Umpire SDK is the main SDK of each project, so it puts all build output in `artifacts~/` in the app folder: the folder of the nearest `.umpireconfig`. No `bin/` or `obj/` folder is next to the code, and Unity does not import the DLLs a second time: it skips each folder whose name ends with `~`.
+- `new app` writes no `Directory.Build.props`. The Umpire SDK is the main SDK of each project, so it puts all build output in `artifacts~/` in the app folder: the folder of the nearest `.umpireconfig`. No `bin/` or `obj/` folder is next to the code. A folder whose name ends with `~` is not source: the rule engine and `umpire init` do not read it. To use another folder, set `ArtifactsPath` in `Directory.Build.props`.
 - `new app` writes a `.gitignore` for the build folders and the local files (`artifacts~/`, `bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
 - The app has one root project. A module, a request, a command and a plugin add only source files, and the root project compiles them.
 

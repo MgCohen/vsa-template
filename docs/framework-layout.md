@@ -65,7 +65,7 @@ This table is a guideline. **Not enforced in 0.1.0.**
 
 ```
 engine Rules step (engine/Features/Rules)
-├─ BuiltApp plugin: DLL, PDB and Unity facts      ArchUnitNET (the only place)
+├─ BuiltApp plugin: DLL and PDB facts             ArchUnitNET (the only place)
 ├─ ResolvedArchitecture.Place(facts)              architecture/Queries: PartOf
 ├─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Queries: ResolvedArchitecture
 └─ ResolvedArchitecture.Counts, Matches(bindings) architecture/Queries: CountCheck, MatchCheck

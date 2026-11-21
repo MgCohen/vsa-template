@@ -77,7 +77,7 @@ tests/Fixtures/Notes/
 |---|---|
 | Nested project | The parent project does not compile its folder |
 | `bin/`, `obj/` | Not source folders, at each depth |
-| `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
+| `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `node_modules` |
 | Framework references | Each project gets the base of each layer |
 
 A web root project uses Umpire.Sdk.Web, with the version. The SDK adds the web host and the views (`Umpire.Web`):
