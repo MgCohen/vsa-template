@@ -4,8 +4,6 @@ using Umpire.Markers;
 using Umpire.Messages.Contracts;
 
 [AutoRegister]
-[RequireDerived]
-[Preserve]
 public abstract class Validator<TMessage> : IValidation where TMessage : class {
     public abstract Error? Validate(IEnvelope<TMessage> envelope);
 

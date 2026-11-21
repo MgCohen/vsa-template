@@ -224,7 +224,7 @@ public sealed class BaseHandlerTests {
 
     public sealed class CheckModule : Module;
 
-    [TypeArgument]
+    [AutoClose]
     public record Check : ICommand<string>;
 
     public sealed record SubCheck : Check;

@@ -2,5 +2,5 @@ namespace Meters.Domain.Shared;
 
 using Umpire.Markers;
 
-[TypeArgument]
+[AutoClose]
 public readonly record struct Pressure;

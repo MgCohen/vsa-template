@@ -105,7 +105,7 @@ public sealed class OpenGenericTests {
     [TestCase(typeof(MarkedBaseClass), false)]
     [TestCase(typeof(IMarked), false)]
     public void A_type_is_a_type_argument_when_it_its_base_class_or_an_interface_has_the_marker(Type type, bool isKey) {
-        Assert.That(MarkedTypes.IsTypeArgument(type), Is.EqualTo(isKey));
+        Assert.That(MarkedTypes.IsAutoClose(type), Is.EqualTo(isKey));
     }
 
     [Test]
@@ -175,14 +175,14 @@ public sealed class OpenGenericTests {
 
     static TestApp App() => new(new MetersModule());
 
-    [TypeArgument]
+    [AutoClose]
     public interface IMarked;
 
     public interface IExtendsMarked : IMarked;
 
     public interface IUnmarked;
 
-    [TypeArgument]
+    [AutoClose]
     public readonly record struct MarkedStruct;
 
     public readonly record struct StructOfMarkedInterface : IMarked;
@@ -193,15 +193,15 @@ public sealed class OpenGenericTests {
 
     public readonly record struct UnmarkedStruct;
 
-    [TypeArgument]
+    [AutoClose]
     public readonly record struct MarkedStructWithText(string Text);
 
-    [TypeArgument]
+    [AutoClose]
     public readonly record struct MarkedStructWithNumbers(int Count, Zone Zone, MarkedStruct Inner);
 
     public enum Zone { Hand }
 
-    [TypeArgument]
+    [AutoClose]
     public abstract class MarkedBaseClass;
 
     public sealed class ClassOfMarkedBaseClass : MarkedBaseClass;

@@ -5,13 +5,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Umpire.Markers;
 
 public static class MarkedTypes {
-    public static readonly string TypeArgumentName = typeof(TypeArgumentAttribute).FullName!;
+    public static readonly string AutoCloseName = typeof(AutoCloseAttribute).FullName!;
     public static readonly string AutoRegisterName = typeof(AutoRegisterAttribute).FullName!;
 
-    public static bool IsTypeArgument(Type type) =>
+    public static bool IsAutoClose(Type type) =>
         !type.ContainsGenericParameters
         && (type.IsValueType || type is { IsClass: true, IsAbstract: false })
-        && Marker(type, TypeArgumentName) is not null;
+        && Marker(type, AutoCloseName) is not null;
 
     public static bool IsAutoRegistered(Type type) =>
         type is { IsClass: true, IsAbstract: false } && Marker(type, AutoRegisterName) is not null;
@@ -34,9 +34,9 @@ public static class MarkedTypes {
         }
     }
 
-    public static IEnumerable<Type> TypeArgumentsOf(Assembly assembly) =>
+    public static IEnumerable<Type> AutoCloseTypesOf(Assembly assembly) =>
         assembly.GetCustomAttributesData()
-            .Where(a => a.AttributeType.FullName == TypeArgumentName)
+            .Where(a => a.AttributeType.FullName == AutoCloseName)
             .Select(a => a.ConstructorArguments is [{ Value: Type type }] ? type : null)
             .OfType<Type>();
 

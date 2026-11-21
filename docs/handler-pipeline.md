@@ -113,7 +113,7 @@ public sealed class JsCommandHandler<TResult>(IJSRuntime js) : CommandHandler<Js
 }
 ```
 
-The message also closes an open handler. For `MotionWait`, the pipeline reads `WaitResult` from the base chain and closes `JsCommandHandler<WaitResult>`, with a check of the constraints. Open validators and open hooks are closed the same way. The route of each message type is made one time. The open class needs one generic parameter, and its message type uses that parameter. In Unity (IL2CPP), give each type argument with `[TypeArgument]`, so the closed types exist at build time (`docs/composition.md`).
+The message also closes an open handler. For `MotionWait`, the pipeline reads `WaitResult` from the base chain and closes `JsCommandHandler<WaitResult>`, with a check of the constraints. Open validators and open hooks are closed the same way. The route of each message type is made one time. The open class can have more than one generic parameter, and its message type can nest them, for example `PutHandler<T> : CommandHandler<Put<T>, int>`. `OpenGenerics.Unify` solves the parameters and checks the constraints. If a type parameter of the handler is not in its message type, the start stops. If a sent message does not meet a constraint of the open handler, the error names the handler, the message and the constraint. In Unity (IL2CPP), the `[AutoClose]` types make the closed types exist at build time (`docs/composition.md`).
 
 ## Runners
 

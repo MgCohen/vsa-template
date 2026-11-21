@@ -41,38 +41,17 @@ static class MessageTypes {
             .GroupBy(typeOf)
             .Select(group => group.First());
 
-    internal static Type? ArgumentFor(Type pattern, Type message) {
-        if (pattern.IsGenericParameter) {
-            return message;
-        }
-        if (!pattern.IsGenericType) {
-            return null;
-        }
-        var definition = pattern.GetGenericTypeDefinition();
-        var closed = ClosedBase.OfSelfOrBase(message, definition) ?? ClosedBase.InterfaceOf(message, definition);
-        return closed is null ? null : ArgumentIn(pattern.GetGenericArguments(), closed.GetGenericArguments());
-    }
-
     internal static Type? Closed(Type open, Type pattern, Type message) =>
-        ArgumentFor(pattern, message) is { } argument ? AppTypes.Closed(open, argument) : null;
+        OpenGenerics.ForMessage(open, pattern, message);
+
+    internal static string? CloseFailure(Type open, Type pattern, Type message) =>
+        OpenGenerics.MessageShapeOf(pattern, message) is { } shape
+        && OpenGenerics.Arguments(open, pattern, shape) is { } arguments
+        && OpenGenerics.Unmet(open, arguments) is { } unmet
+            ? $"{OpenGenerics.NameOf(open)} cannot close for {message.Name}: {unmet}."
+            : null;
 
     static Type DefinitionOf(Type type) => type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
-
-    static Type? ArgumentIn(Type[] pattern, Type[] closed) {
-        Type? argument = null;
-        for (var i = 0; i < pattern.Length; i++) {
-            if (!pattern[i].IsGenericParameter) {
-                if (pattern[i] != closed[i]) {
-                    return null;
-                }
-            } else if (argument is null) {
-                argument = closed[i];
-            } else if (argument != closed[i]) {
-                return null;
-            }
-        }
-        return argument;
-    }
 
     static Type? ArgumentOf(Type type, Type genericBase) => ClosedBase.OfSelfOrBase(type, genericBase)?.GetGenericArguments()[0];
 }

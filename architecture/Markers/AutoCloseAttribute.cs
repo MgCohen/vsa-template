@@ -4,13 +4,13 @@ namespace Umpire.Markers;
     AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Assembly,
     AllowMultiple = true,
     Inherited = true)]
-public sealed class TypeArgumentAttribute : Attribute
+public sealed class AutoCloseAttribute : Attribute
 {
-    public TypeArgumentAttribute()
+    public AutoCloseAttribute()
     {
     }
 
-    public TypeArgumentAttribute(Type type)
+    public AutoCloseAttribute(Type type)
     {
         Type = type;
     }

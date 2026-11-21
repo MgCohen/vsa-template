@@ -1,6 +1,5 @@
 namespace Umpire.Architecture;
 
-[Umpire.Markers.RequireDerived]
 public abstract class Architecture {
     public virtual IReadOnlyList<FolderAlias> FolderAliases(string blockFolder) => [];
 

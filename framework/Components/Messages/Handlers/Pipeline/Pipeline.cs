@@ -149,6 +149,12 @@ public sealed class Pipeline {
         return nearest.Count == 0 ? [] : [nearest[0]];
     }
 
+    IReadOnlyList<string> CloseFailuresFor(Type message) => [.. openHandlers
+        .SelectMany(open => MessageTypes.OfHandler(open)
+            .Select(pattern => MessageTypes.CloseFailure(open, pattern, message))
+            .OfType<string>())
+        .Distinct()];
+
     IEnumerable<Type> ClosedFor(Type message) =>
         openHandlers.SelectMany(open => MessageTypes.OfHandler(open)
                 .Select(pattern => MessageTypes.Closed(open, pattern, message))
@@ -174,6 +180,7 @@ public sealed class Pipeline {
             BeforeHooks = ByName(hooks.Where(h => typeof(IBeforeCall).IsAssignableFrom(h.Implementation)), message),
             AfterHooks = ByName(hooks.Where(h => typeof(IAfterCall).IsAssignableFrom(h.Implementation)), message),
             AfterSteps = Steps(Definition.AfterSteps, typeof(AfterStep<>), message),
+            CloseFailures = CloseFailuresFor(message),
         };
     }
 }
