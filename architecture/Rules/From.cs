@@ -28,6 +28,10 @@ public sealed class From : Chain<From> {
         return match;
     }
 
+    public void OnlyKind(TypeKind kinds) => book.Kinds.Add(new KindLimit(Subjects(), kinds));
+
+    public void Owns<TAttribute>() where TAttribute : Attribute => book.Owners.Add(new Owner(Subjects(), typeof(TAttribute)));
+
     Rule Start(Type to, Permission permission, Depth? depth, Access? access, Boundary? boundary) {
         var rule = new Rule { Permission = permission, From = Subjects() };
         rule.Begin(to, depth, access, boundary);

@@ -17,7 +17,7 @@ public sealed class BadAppTests {
 
     [Test]
     public void The_bad_app_has_only_the_known_findings() {
-        Assert.That(AllFindings.Value, Has.Count.EqualTo(14), Lines(null));
+        Assert.That(AllFindings.Value, Has.Count.EqualTo(18), Lines(null));
     }
 
     [Test]
@@ -146,6 +146,44 @@ public sealed class BadAppTests {
         Assert.That(Lines("UMP020202"), Is.EqualTo(
             $"{Billing}/Utils/Clock.cs(4): error UMP020202: Clock is in a folder that the definition does not have. "
             + "Move it to a part, or add the folder in Define."));
+    }
+
+    [Test]
+    public void A_type_with_a_name_that_breaks_its_name_rule_gives_UMP020204() {
+        Assert.That(Lines("UMP020204"), Is.EqualTo(
+            $"{Billing}/Commands/Invoices.cs(5): error UMP020204: Invoices is in Commands ({BillingPart}/Commands), "
+            + "but the name of a Commands type is <group>. Rename it to Billing, or move it."));
+    }
+
+    [Test]
+    public void A_count_counts_a_static_class() {
+        Assert.That(Lines("UMP020301"), Does.Contain("Feature Features/Billing has 2 Commands types (Billing, Invoices)"));
+    }
+
+    [Test]
+    public void A_type_of_a_kind_that_the_rule_does_not_allow_gives_UMP020303() {
+        Assert.That(Lines("UMP020303"), Is.EqualTo(
+            $"{Billing}/Commands/Invoices.cs(5): error UMP020303: Invoices is in Commands ({BillingPart}/Commands), but it is a Class: "
+            + "the rule \"Commands has only StaticClass\" allows only StaticClass. Change the type, or move it to another part."));
+    }
+
+    [Test]
+    public void An_owned_attribute_on_a_member_of_another_part_gives_UMP020304() {
+        Assert.That(Lines("UMP020304"), Is.EqualTo(
+            $"{Notes}/NotesModule.cs(5): error UMP020304: NotesModule in Module ({NotesPart}) has [CommandAttribute], "
+            + "but the rule \"Commands owns CommandAttribute\" keeps it in Commands. "
+            + "Move the code with [CommandAttribute] to Commands, or remove the attribute."));
+    }
+
+    [Test]
+    public void The_type_facts_give_the_kind_and_the_member_attributes() {
+        var billing = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Commands.Billing");
+
+        Assert.Multiple(() => {
+            Assert.That(billing.Kind, Is.EqualTo(Umpire.Architecture.TypeKind.StaticClass));
+            Assert.That(billing.IsAbstract, Is.False);
+            Assert.That(billing.Attributes, Has.Member("Kit.CommandAttribute"));
+        });
     }
 
     static string Lines(string? code) =>

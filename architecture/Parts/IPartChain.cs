@@ -14,4 +14,6 @@ public interface IPartChain {
     IPartChain OfType<T>(bool? required = null);
 
     IPartChain OfType(Type type, bool? required = null);
+
+    IPartChain Named(Name name);
 }

@@ -16,10 +16,29 @@ static class TypeFactsOf {
         [.. Mentions(type).Where(t => t != type).Select(NameOf).Distinct()],
         []) {
         BaseArguments = [.. Arguments(type)],
-        IsAbstract = type.IsAbstract,
+        IsAbstract = type.IsAbstract && !type.IsSealed,
+        Kind = KindOf(type),
+        Attributes = [.. Attributes(type)],
     };
 
     public static TypeFacts Plain(string name, Source source) => new(name, name, "", source, [name], [], [], []);
+
+    static TypeKind KindOf(Type type) => type switch {
+        { IsInterface: true } => TypeKind.Interface,
+        { IsEnum: true } => TypeKind.Enum,
+        { IsValueType: true } => TypeKind.Struct,
+        _ when typeof(MulticastDelegate).IsAssignableFrom(type) => TypeKind.Delegate,
+        { IsAbstract: true, IsSealed: true } => TypeKind.StaticClass,
+        { IsAbstract: true } => TypeKind.AbstractClass,
+        _ when type.GetMethod("<Clone>$", Declared) is not null => TypeKind.Record,
+        _ => TypeKind.Class,
+    };
+
+    static IEnumerable<string> Attributes(Type type) => type.GetCustomAttributesData()
+        .Concat(type.GetMembers(Declared).SelectMany(m => m.GetCustomAttributesData()))
+        .SelectMany(a => new[] { a.AttributeType }.Concat(Inherited(a.AttributeType)))
+        .Select(NameOf)
+        .Distinct();
 
     static IEnumerable<Type> Bases(Type type) => new[] { type }.Concat(Inherited(type)).Concat(type.GetInterfaces());
 

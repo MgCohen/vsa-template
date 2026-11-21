@@ -17,3 +17,6 @@ public interface IEntity;
 public interface IPresenterHandler<in TEvent> : IPresenter {
     System.Threading.Tasks.Task HandleAsync(TEvent e);
 }
+
+[System.AttributeUsage(System.AttributeTargets.Method)]
+public sealed class CommandAttribute : System.Attribute;

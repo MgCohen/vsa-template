@@ -22,6 +22,9 @@ internal sealed class Compiler {
         UseRules = CompileUseRules();
         Counts = [.. book.Counts.Select(Of), .. Required()];
         Matches = [.. book.Matches.Select(Of)];
+        Kinds = [.. book.Kinds.Select(Of)];
+        Owners = [.. book.Owners.Select(Of)];
+        CheckNames();
     }
 
     public Options Options { get; }
@@ -31,6 +34,8 @@ internal sealed class Compiler {
     public IReadOnlyList<PartRule> UseRules { get; }
     public IReadOnlyList<CountStatement> Counts { get; }
     public IReadOnlyList<MatchStatement> Matches { get; }
+    public IReadOnlyList<KindStatement> Kinds { get; }
+    public IReadOnlyList<OwnerStatement> Owners { get; }
 
     static IEnumerable<Part> Expand(Part part, Depth depth) => depth switch {
         Depth.Self => [part],
@@ -173,6 +178,27 @@ internal sealed class Compiler {
             RefuseNoGroup(group, $"InSame<{Concept.Display(group)}>", text);
         }
         return new MatchStatement(text, Subjects(match.Subjects, text), match.Taken, match.Group);
+    }
+
+    KindStatement Of(KindLimit limit) {
+        var text = limit.ToString();
+        Validate(limit.Subjects, text);
+        return new KindStatement(text, Subjects(limit.Subjects, text), limit.Kinds);
+    }
+
+    OwnerStatement Of(Owner owner) {
+        var text = owner.ToString();
+        Validate(owner.Subjects, text);
+        return new OwnerStatement(text, Subjects(owner.Subjects, text), owner.Attribute);
+    }
+
+    void CheckNames() {
+        foreach (var part in Parts.Where(p => p.NameRule is { OfAGroup: true } && p.NameRule.GroupOf(p) is null)) {
+            var group = part.NameRule!.Group is { } concept ? Concept.Display(concept) : "group";
+            throw new InvalidOperationException(
+                $"Define: {part.Name} has Named({part.NameRule}), but it is not under a {group}. "
+                + "Add the part under that group, or use another name rule.");
+        }
     }
 
     IEnumerable<CountStatement> Required() {

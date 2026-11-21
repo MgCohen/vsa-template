@@ -29,7 +29,24 @@ static class TypeFactsReader {
             .Where(e => loaded.Contains(e.Target))
             .Select(e => new TypeExposure(e.Target.FullName, e.Access, e.Member))]) {
         BaseArguments = [.. BaseArguments(type)],
-        IsAbstract = type is Interface || type is Class { IsAbstract: true },
+        IsAbstract = type is Interface || type is Class { IsAbstract: true, IsSealed: not true },
+        Kind = KindOf(type),
+        Attributes = [.. type.Attributes.Concat(type.Members.SelectMany(m => m.Attributes)).SelectMany(AttributeNames).Distinct()],
+        IsNested = type.IsNested,
+    };
+
+    static IEnumerable<string> AttributeNames(ArchUnitNET.Domain.Attribute attribute) =>
+        new[] { attribute.FullName }.Concat(attribute.InheritedClasses.Select(c => c.FullName));
+
+    static TypeKind KindOf(IType type) => type switch {
+        Interface => TypeKind.Interface,
+        ArchUnitNET.Domain.Enum => TypeKind.Enum,
+        Struct => TypeKind.Struct,
+        Class { BaseClass.FullName: "System.MulticastDelegate" } => TypeKind.Delegate,
+        Class { IsAbstract: true, IsSealed: true } => TypeKind.StaticClass,
+        Class { IsAbstract: true } => TypeKind.AbstractClass,
+        Class { IsRecord: true } => TypeKind.Record,
+        _ => TypeKind.Class,
     };
 
     static IEnumerable<IType> Bases(IType type) => new[] { type }

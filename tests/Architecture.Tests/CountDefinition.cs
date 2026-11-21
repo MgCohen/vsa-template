@@ -57,6 +57,21 @@ public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<Par
         return resolved.Matches(resolved.Place(types, BlockFolder));
     }
 
+    public IReadOnlyList<ContentResult> Names(params TypeFacts[] types) {
+        var resolved = new ResolvedArchitecture(this);
+        return resolved.Names(resolved.Place(types, BlockFolder));
+    }
+
+    public IReadOnlyList<ContentResult> Kinds(params TypeFacts[] types) {
+        var resolved = new ResolvedArchitecture(this);
+        return resolved.Kinds(resolved.Place(types, BlockFolder));
+    }
+
+    public IReadOnlyList<ContentResult> Owners(params TypeFacts[] types) {
+        var resolved = new ResolvedArchitecture(this);
+        return resolved.Owners(resolved.Place(types, BlockFolder));
+    }
+
     public static TypeFacts Fact(string name, string box, Type? baseType = null, params string[] arguments) =>
         new($"App.{box}.{name}", name, "App", new Source($"{BlockFolder}/Boxes/{box}/{name}.cs", 1),
             baseType is null ? [] : [baseType.FullName!], [], [], []) { BaseArguments = arguments };
