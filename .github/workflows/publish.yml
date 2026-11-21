@@ -75,6 +75,7 @@ jobs:
 
       # The release archive for hosts that cannot restore NuGet packages (tools/archive/archive.cs): the netstandard2.1
       # runtime, the analyzers and the engine, from the packages of this run. A version with a suffix is a prerelease.
+      # A new release gets the archive in its create call, so a listener of "release published" sees the archive.
       - name: Make the release archive
         run: dotnet run tools/archive/archive.cs -- --feed feed --version "$VERSION" --out release --commit "$GITHUB_SHA"
 
@@ -84,6 +85,9 @@ jobs:
         run: |
           prerelease=""
           case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
-          gh release view "v$VERSION" > /dev/null 2>&1 \
-            || gh release create "v$VERSION" --verify-tag --title "v$VERSION" --notes "Umpire $VERSION" $prerelease
-          gh release upload "v$VERSION" "release/umpire-$VERSION.zip" --clobber
+          archive="release/umpire-$VERSION.zip"
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            gh release upload "v$VERSION" "$archive" --clobber
+          else
+            gh release create "v$VERSION" "$archive" --verify-tag --title "v$VERSION" --notes "Umpire $VERSION" $prerelease
+          fi

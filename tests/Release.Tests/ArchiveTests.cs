@@ -9,17 +9,20 @@ namespace Release.Tests;
 [NonParallelizable]
 public sealed class ArchiveTests {
     const string Net8Root = "UMPIRE_NET8_DOTNET_ROOT";
+    const string Notices = "THIRD-PARTY-NOTICES.txt";
 
     string folder = null!;
     string tree = null!;
-    DotnetResult run = null!;
     JsonNode manifest = null!;
 
     [OneTimeSetUp]
     public void MakeTheArchive() {
         folder = TempFolder.Create();
-        run = Dotnet.Run(Repo.Root, null, "run", Repo.Path("tools", "archive", "archive.cs"), "--",
+        var run = Dotnet.Run(Repo.Root, null, "run", Repo.Path("tools", "archive", "archive.cs"), "--",
             "--feed", LocalFeed.Path, "--version", LocalFeed.Version, "--out", Path.Combine(folder, "out"));
+        Assert.That(run.Succeeded, Is.True,
+            "The archive script failed. It needs nuget.org for the third-party packages."
+            + Environment.NewLine + run.Output);
         tree = Path.Combine(folder, "tree");
         ZipFile.ExtractToDirectory(Path.Combine(folder, "out", $"umpire-{LocalFeed.Version}.zip"), tree);
         manifest = JsonNode.Parse(File.ReadAllText(Path.Combine(tree, "manifest.json")))!;
@@ -28,10 +31,8 @@ public sealed class ArchiveTests {
     [OneTimeTearDown]
     public void Delete() => TempFolder.Delete(folder);
 
-    [Test]
-    public void The_script_makes_the_archive() => Assert.That(run.Succeeded, Is.True, run.Output);
-
     [TestCase("manifest.json")]
+    [TestCase(Notices)]
     [TestCase("runtime/netstandard2.1/Umpire.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll")]
@@ -41,17 +42,59 @@ public sealed class ArchiveTests {
         Assert.That(File.Exists(Path.Combine(tree, path)), Is.True, path);
 
     [Test]
-    public void The_archive_has_only_the_manifest_and_the_three_parts() {
+    public void The_archive_has_only_the_manifest_the_notices_and_the_three_parts() {
         var top = Directory.EnumerateFileSystemEntries(tree).Select(Path.GetFileName);
-        Assert.That(top, Is.EquivalentTo(new[] { "manifest.json", "runtime", "analyzers", "engine" }));
+        Assert.That(top, Is.EquivalentTo(new[] { "manifest.json", Notices, "runtime", "analyzers", "engine" }));
     }
 
     [Test]
     public void The_runtime_has_the_third_party_closure() {
-        var runtime = Directory.GetFiles(Path.Combine(tree, "runtime", "netstandard2.1")).Select(Path.GetFileName);
+        var runtime = Runtime().Select(FileName);
         Assert.That(runtime, Does.Contain("Tomlyn.dll").And.Contain("Microsoft.Extensions.DependencyInjection.dll")
             .And.Contain("System.Text.Json.dll"));
     }
+
+    [Test]
+    public void Each_Microsoft_Extensions_file_of_the_runtime_is_version_8() {
+        var extensions = Runtime()
+            .Where(file => FileName(file).StartsWith("Microsoft.Extensions.", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.That(extensions, Is.Not.Empty);
+        Assert.Multiple(() => {
+            foreach (var file in extensions) {
+                Assert.That(Text(file, "assemblyVersion"), Does.StartWith("8.0."), FileName(file));
+                Assert.That(Text(file, "packageVersion"), Does.StartWith("8.0."), FileName(file));
+            }
+        });
+    }
+
+    [Test]
+    public void Each_file_of_the_runtime_comes_from_a_netstandard_asset() =>
+        Assert.That(Runtime().Select(file => Text(file, "asset")), Is.All.StartsWith("lib/netstandard2."));
+
+    [Test]
+    public void The_analyzer_files_come_from_the_analyzer_package() {
+        var analyzers = Files().Where(file => PathOf(file).StartsWith("analyzers/", StringComparison.Ordinal));
+        Assert.That(analyzers.Select(file => Text(file, "package")), Is.All.EqualTo("Umpire.Vsa.Analyzers"));
+    }
+
+    [Test]
+    public void A_file_that_is_not_a_dll_has_no_assembly_version() {
+        var config = Files().Single(file => PathOf(file) == "engine/net8.0/umpire-engine.runtimeconfig.json");
+        Assert.That(config["assemblyVersion"], Is.Null);
+    }
+
+    [Test]
+    public void The_notices_give_the_license_of_each_third_party_package() {
+        var notices = File.ReadAllText(Path.Combine(tree, Notices));
+        Assert.That(notices, Does.Contain("Tomlyn 2.10.2: BSD-2-Clause").And.Contain("TngTech.ArchUnitNET")
+            .And.Contain("Umpire.Kernels.Analyzers.dll embeds"));
+    }
+
+    [Test]
+    public void The_manifest_gives_the_commit() =>
+        Assert.That(manifest["commit"]!.GetValue<string>(), Does.Match("^[0-9a-f]{40}$"));
 
     [Test]
     public void The_manifest_gives_the_package_version() =>
@@ -64,19 +107,20 @@ public sealed class ArchiveTests {
     [Test]
     public void The_manifest_gives_the_runtime_of_the_engine() {
         var engine = manifest["engine"]!;
-        var frameworks = engine["frameworks"]!.AsArray().Select(framework => framework!["name"]!.GetValue<string>());
+        var frameworks = engine["frameworks"]!.AsArray()
+            .Select(framework => $"{Text(framework!, "name")} {Text(framework!, "version")}");
 
-        Assert.That(engine["targetFramework"]!.GetValue<string>(), Is.EqualTo("net8.0"));
-        Assert.That(engine["rollForward"]!.GetValue<string>(), Is.EqualTo("Major"));
-        Assert.That(frameworks, Is.EqualTo(new[] { "Microsoft.NETCore.App" }));
+        Assert.That(Text(engine, "targetFramework"), Is.EqualTo("net8.0"));
+        Assert.That(Text(engine, "rollForward"), Is.EqualTo("Major"));
+        Assert.That(frameworks, Is.EqualTo(new[] { "Microsoft.NETCore.App 8.0.0" }));
     }
 
     [Test]
     public void The_manifest_lists_each_file_of_the_three_parts() {
-        var listed = Files().Select(file => file["path"]!.GetValue<string>());
+        var listed = Files().Select(PathOf);
         var inTree = Directory.GetFiles(tree, "*", SearchOption.AllDirectories)
             .Select(file => Path.GetRelativePath(tree, file).Replace(Path.DirectorySeparatorChar, '/'))
-            .Where(path => path != "manifest.json");
+            .Where(path => path is not "manifest.json" and not Notices);
 
         Assert.That(listed, Is.EquivalentTo(inTree));
     }
@@ -85,21 +129,22 @@ public sealed class ArchiveTests {
     public void Each_file_of_the_manifest_has_its_sha256_and_its_package() {
         Assert.Multiple(() => {
             foreach (var file in Files()) {
-                var path = file["path"]!.GetValue<string>();
+                var path = PathOf(file);
                 using var stream = File.OpenRead(Path.Combine(tree, path));
                 var hash = Convert.ToHexStringLower(SHA256.HashData(stream));
 
-                Assert.That(file["sha256"]!.GetValue<string>(), Is.EqualTo(hash), path);
+                Assert.That(Text(file, "sha256"), Is.EqualTo(hash), path);
                 Assert.That(file["package"]?.GetValue<string>(), Is.Not.Null.And.Not.Empty, path);
                 Assert.That(file["packageVersion"]?.GetValue<string>(), Is.Not.Null.And.Not.Empty, path);
+                Assert.That(file["asset"]?.GetValue<string>(), Is.Not.Null.And.Not.Empty, path);
             }
         });
     }
 
     [Test]
     public void The_Umpire_files_have_the_package_version() {
-        var umpire = Files().Where(file => file["package"]!.GetValue<string>().StartsWith("Umpire", StringComparison.Ordinal));
-        Assert.That(umpire.Select(file => file["packageVersion"]!.GetValue<string>()), Is.All.EqualTo(LocalFeed.Version));
+        var umpire = Files().Where(file => Text(file, "package").StartsWith("Umpire", StringComparison.Ordinal));
+        Assert.That(umpire.Select(file => Text(file, "packageVersion")), Is.All.EqualTo(LocalFeed.Version));
     }
 
     [Test]
@@ -107,7 +152,8 @@ public sealed class ArchiveTests {
         var root = Environment.GetEnvironmentVariable(Net8Root) is { Length: > 0 } value
             ? value
             : throw new IgnoreException($"Set {Net8Root} to a dotnet folder with only the .NET 8 runtime.");
-        var start = new ProcessStartInfo(Path.Combine(root, OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet")) {
+        var dotnet = Path.Combine(root, OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet");
+        var start = new ProcessStartInfo(dotnet) {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -124,5 +170,14 @@ public sealed class ArchiveTests {
         Assert.That(output, Does.Contain("needs --Project"), output);
     }
 
+    static string PathOf(JsonNode file) => Text(file, "path");
+
+    static string FileName(JsonNode file) => Path.GetFileName(PathOf(file));
+
+    static string Text(JsonNode node, string key) => node[key]!.GetValue<string>();
+
     IEnumerable<JsonNode> Files() => manifest["files"]!.AsArray().Select(file => file!);
+
+    IEnumerable<JsonNode> Runtime() =>
+        Files().Where(file => PathOf(file).StartsWith("runtime/", StringComparison.Ordinal));
 }
