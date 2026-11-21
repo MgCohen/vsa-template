@@ -50,6 +50,12 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
     }
 
     static Error? AppClassError(IReadOnlyList<AppClass> classes) =>
+        classes.Where(c => c.HasManyPacks).ToList() is [_, ..] many
+            ? new Error(LoadAppCodes.ManyPacks, $"The app class {Names(many)} implements IAppEntry<TPack> for more than one pack: "
+                + $"{string.Join(", ", many.SelectMany(c => c.Packs).Select(p => p.FullName))}. Implement it for one pack only.")
+            : CountError(classes);
+
+    static Error? CountError(IReadOnlyList<AppClass> classes) =>
         classes.Count switch {
             0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
                 + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>, "

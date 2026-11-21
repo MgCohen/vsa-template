@@ -36,7 +36,7 @@ public sealed class AppLoader : AssemblyLoadContext {
             return CreateArchitecture(architecture);
         }
         var entry = LoadFromAssemblyPath(dll).GetType(appClass.Type.FullName, throwOnError: true)!;
-        var pack = Activator.CreateInstance(AppClass.PackOf(entry)!)!;
+        var pack = Activator.CreateInstance(AppClass.PacksOf(entry)[0])!;
         return (Architecture)pack.GetType().GetProperty(nameof(Pack.Architecture))!.GetValue(pack)!;
     }
 
