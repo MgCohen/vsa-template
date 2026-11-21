@@ -67,8 +67,9 @@ public sealed class RunEngineTests {
 
         var result = LoadApp.Slices.LoadApp.LoadAppHandler.Definition(entry, [dll], new AppLoader(AppContext.BaseDirectory));
 
-        Assert.That((result.Error!.Code, result.Error.Message), Is.EqualTo(("UMP030506",
-            "The app class A.Shell implements IAppEntry<TPack> for more than one pack: A.First, A.Second. Implement it for one pack only.")));
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030506"));
+        Assert.That(result.Error.Message, Is.EqualTo(
+            "The app class A.Shell implements IAppEntry<TPack> for more than one pack: A.First, A.Second. Implement it for one pack only."));
     }
 
     static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);

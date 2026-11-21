@@ -152,8 +152,10 @@ public sealed class BlocksTests {
     public void The_launcher_of_the_shell_fixture_is_the_one_leaf_with_the_architecture_of_its_pack() {
         var shell = Index.Dlls.Single(d => d.Name == "ShellApp");
 
-        Assert.That(AppClass.Leaves(shell.AppClasses).Select(a => (a.Type.FullName, a.Architecture?.FullName)),
-            Is.EqualTo(new[] { ("ShellApp.App.Host.GameLauncher", "Umpire.Vsa.Definition.VsaArchitecture") }));
+        var leaf = AppClass.Leaves(shell.AppClasses).Single();
+
+        Assert.That(leaf.Type.FullName, Is.EqualTo("ShellApp.App.Host.GameLauncher"));
+        Assert.That(leaf.Architecture?.FullName, Is.EqualTo("Umpire.Vsa.Definition.VsaArchitecture"));
     }
 
     [Test]
