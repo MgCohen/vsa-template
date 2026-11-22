@@ -3,6 +3,7 @@ namespace Umpire.Vsa.Definition;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Messages.Handlers;
+using MessagesParts = Umpire.Kernels.MessagesParts;
 
 public record Slice : Block {
     public override string GroupFolder => "Slices";
@@ -22,7 +23,8 @@ public record Slice : Block {
         rules.For<Contracts.Requests>().Has<Handlers.Requests>(Depth.Self).Exactly(1);
         rules.For<Handlers.Commands>().Takes<Contracts.Commands>().InSame<Slice>();
         rules.For<Contracts.Commands>().Has<Handlers.Commands>(Depth.Self).Exactly(1);
-        rules.For<Validators>().Uses<Handlers>().And<Contracts>().And<Shared>()
+        rules.For<Validators>().Uses<Handlers>().And<Contracts>().And<MessagesParts.Handlers>().And<MessagesParts.Contracts>()
+            .And<Shared>()
             .And<Domain>(Access.Internal).And<Domain.Shared>();
         rules.For<Validators>().Uses<Contracts.Requests>().And<Contracts.Commands>().And<Contracts.Events>()
             .InSame<Slice>();

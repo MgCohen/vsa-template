@@ -76,6 +76,11 @@ public class Part : IPartChain {
         return Attach(new Part(concept, folder ?? concept.Folder, this, blockPlace: true));
     }
 
+    internal Part AddOf(Type concept, string? folder) {
+        var record = (Concept)Activator.CreateInstance(concept)!;
+        return Attach(new Part(record, folder ?? record.Folder, this));
+    }
+
     public Part AddBlockGroup<T>(string? folder = null) where T : Concept, new() {
         var concept = new T();
         return Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true, blockPlace: true));

@@ -2,12 +2,10 @@ namespace Umpire.Kernels;
 
 using Umpire.Architecture;
 
-static class KernelParts {
+public static class KernelParts {
     public sealed record App : Concept;
 
     public sealed record Kernels : Concept;
-
-    public sealed record Hosts : Concept;
 
     public sealed record Operations : Concept;
 

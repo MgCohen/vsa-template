@@ -28,7 +28,7 @@ static class BlockPlaces {
         var inner = Relative(blockFolder, innerBlocks).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return [.. resolved.Parts.Where(p => p.IsBlockPlace)
             .SelectMany(place => Folders(blockFolder, place.Path.Split('/'))
-                .Where(folder => !inner.Contains(folder))
+                .Where(folder => !inner.Contains(folder) && Directory.Exists(Full(blockFolder, folder)))
                 .Select(folder => new BlockPlace(place, Full(blockFolder, folder), folder)))];
     }
 

@@ -3,6 +3,7 @@ namespace Engine.Tests;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Definition;
+using VsaKernel = Umpire.Vsa.Composition.VsaKernel;
 
 sealed class EngineTestApp : App {
     public EngineTestApp(params Module[] modules) =>

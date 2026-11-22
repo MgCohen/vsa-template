@@ -8,6 +8,6 @@ sealed class MessagesArchitecture : Architecture {
     }
 
     protected override void Define(Part root) {
-        root.Add<MessagesParts.Contracts>().And<MessagesParts.Handlers>();
+        root.Add<MessagesComponent>().InParentFolder();
     }
 }

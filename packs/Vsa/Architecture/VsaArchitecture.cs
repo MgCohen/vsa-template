@@ -2,58 +2,46 @@ namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
+using FrameworkKernel = Umpire.Kernels.FrameworkKernel;
+using MessagesComponent = Umpire.Kernels.MessagesComponent;
+using MessagesParts = Umpire.Kernels.MessagesParts;
 
 public class VsaArchitecture : Architecture {
+    protected override Type? PackKernel => typeof(VsaKernel);
+
     protected override void Configure(Options defaults) {
         defaults.UseSameConcept = true;
         defaults.Boundary = Boundary.Closed;
     }
 
     protected override void Define(Part root) {
-        DefineKernel(root.Add<Kernel>());
+        root.AddBlock<FrameworkKernel>();
+        root.AddBlock<MessagesComponent>();
+        root.AddBlock<VsaKernel>();
         root.Add<Host>().And<Views>();
         root.AddBlockGroup<Pack>("Packs");
         root.AddGroup<Plugin>(Boundary.Open);
         root.AddGroup<Feature>();
     }
 
-    protected override void DefineKernel(Part kernel) {
-        Bind(kernel.Add<Domain>(), "Umpire.Vsa.Domain");
-        Bind(kernel.Add<Infrastructure>(), "Umpire.Vsa.Infrastructure");
-        Bind(kernel.Add<Presenters>(), "Umpire.Vsa.Presenters");
-        var contracts = Bind(kernel.Add<Contracts>(), "Umpire.Messages.Contracts");
-        Bind(contracts.Add<Contracts.Requests>(), "Umpire.Vsa.Contracts.Requests");
-        Bind(contracts.Add<Contracts.Events>(), "Umpire.Vsa.Contracts.Events");
-        Bind(contracts.Add<Contracts.Commands>(), "Umpire.Vsa.Contracts.Commands");
-        var handlers = Bind(kernel.Add<Handlers>(), "Umpire.Messages.Handlers");
-        Bind(handlers.Add<Handlers.Requests>(), "Umpire.Vsa.Handlers.Requests");
-        Bind(handlers.Add<Handlers.Events>(), "Umpire.Vsa.Handlers.Events");
-        Bind(handlers.Add<Handlers.Commands>(), "Umpire.Vsa.Handlers.Commands");
-        Bind(kernel.Add<Views>(), "Umpire.Vsa.Views");
-        Bind(kernel.Add<Composition>(), "Umpire.Vsa.Composition");
-        if (kernel.IsExternal) {
-            kernel.Add<Hosts>().InAssembly("Umpire.Hosts");
-        }
-    }
-
-    protected override void KernelRules(RuleBook rules) {
-        AndOtherKernelLayers(AndOtherKernelLayers(rules.For<Domain>()).Uses<Domain>());
-    }
-
     protected override void Rules(RuleBook rules) {
         rules.For<Domain>().Uses<Domain.Shared>();
         rules.For<Infrastructure>().Uses<Domain>();
-        rules.For<Infrastructure>().Uses<Handlers>(Depth.Self).And<Contracts>(Depth.Self);
-        rules.For<Presenters>().Uses<Contracts>()
+        rules.For<Infrastructure>().Uses<Handlers>(Depth.Self).And<Contracts>(Depth.Self)
+            .And<MessagesParts.Handlers>().And<MessagesParts.Contracts>();
+        rules.For<Contracts>().Uses<MessagesParts.Contracts>();
+        rules.For<Handlers>().Uses<MessagesParts.Handlers>();
+        rules.For<Presenters>().Uses<Contracts>().And<MessagesParts.Contracts>()
             .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal)
             .And<Slice.Shared>(Access.Internal);
         rules.For<Presenters>().Uses<Contracts.Requests>().Under<Kernel>();
         ForContractParts(rules).And<Slice.Shared>()
-            .Uses<Contracts>().And<Domain.Shared>().And<Slice.Shared>();
+            .Uses<Contracts>().And<MessagesParts.Contracts>().And<Domain.Shared>().And<Slice.Shared>();
         UsesContractParts(rules.For<Slice.Shared>()).Under<Kernel>();
         UsesContractParts(rules.For<Slice.Shared>()).Under<Plugin>();
         ForHandlerParts(rules)
-            .Uses<Handlers>().And<Contracts>().And<Contracts.Commands>().And<Contracts.Events>().And<Slice.Shared>()
+            .Uses<Handlers>().And<Contracts>().And<MessagesParts.Handlers>().And<MessagesParts.Contracts>()
+            .And<Contracts.Commands>().And<Contracts.Events>().And<Slice.Shared>()
             .And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
         rules.For<Handlers.Events.Hooks>().Uses<Handlers.Events>();
@@ -67,11 +55,11 @@ public class VsaArchitecture : Architecture {
         ForHandlerParts(rules).Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-        rules.For<RootClass>().Uses<Kernel>().And<Plugin>(Access.Internal);
+        rules.For<RootClass>().Uses<Kernel>().And<MessagesComponent>().And<Plugin>(Access.Internal);
         rules.For<RootClass>().Denies<RootClass>().Under<Plugin>();
         rules.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal);
         rules.For<RootClass>().Under<Feature>().Denies<Composition>();
-        rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self).And<Hosts>();
+        rules.For<Host>().Uses<Composition>().And<FrameworkKernel>();
         rules.For<Views>().Uses<Presenters>();
         rules.For<Views>().Uses<Hosts>().Under<Kernel>();
         rules.For<Host>().Uses<Pack>();
@@ -81,13 +69,6 @@ public class VsaArchitecture : Architecture {
         rules.For<Feature>().Has<RootClass>().Exactly(1);
         rules.For<Plugin>().Has<RootClass>().Exactly(1);
     }
-
-    static TChain AndOtherKernelLayers<TChain>(TChain domain) where TChain : Chain<TChain> =>
-        domain.And<Infrastructure>().And<Presenters>().And<Contracts>().And<Contracts.Requests>()
-            .And<Contracts.Events>().And<Contracts.Commands>().And<Handlers>().And<Handlers.Requests>().And<Handlers.Events>()
-            .And<Handlers.Commands>().And<Views>().And<Composition>();
-
-    static Part Bind(Part part, string assembly) => part.IsExternal ? part.InAssembly(assembly) : part;
 
     protected static From ForContractParts(RuleBook rules) =>
         rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();

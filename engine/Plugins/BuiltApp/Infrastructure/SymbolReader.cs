@@ -32,7 +32,7 @@ sealed class SymbolReader : IDisposable {
             image.Dispose();
             throw;
         }
-        symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb"));
+        symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb")) ?? EmbeddedPdb(image);
         pdbOrNull = symbols?.GetMetadataReader();
         sourceFolders = new(SourceFoldersAndParents);
         this.sourceRoot = sourceRoot;
@@ -66,6 +66,11 @@ sealed class SymbolReader : IDisposable {
     public void Dispose() {
         symbols?.Dispose();
         image.Dispose();
+    }
+
+    static MetadataReaderProvider? EmbeddedPdb(PEReader image) {
+        var entry = image.ReadDebugDirectory().FirstOrDefault(e => e.Type == DebugDirectoryEntryType.EmbeddedPortablePdb);
+        return entry.DataSize == 0 ? null : image.ReadEmbeddedPortablePdbDebugDirectoryData(entry);
     }
 
     static MetadataReaderProvider? PortablePdb(string file) {
