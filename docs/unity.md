@@ -86,7 +86,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 ## Rules for the netstandard2.1 target
 
 - The archive holds each DLL of the runtime, also a DLL that Unity ships. vsa-unity does not copy a DLL that Unity ships: a second copy is a compile error. The manifest gives the version of each DLL.
-- `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
+- `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills~/` for that target (the name ends with `~`, so the engine does not count the file as a source of the block). The polyfill is internal, so each Unity assembly with a record has its own copy.
 - `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. vsa-unity must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
 
 ## Non-goals
