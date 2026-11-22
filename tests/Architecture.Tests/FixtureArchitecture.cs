@@ -59,7 +59,7 @@ public abstract class FixtureArchitecture : Architecture {
     protected override void Define(Part block) {
         block.Add<KitLayer>();
         var feature = block.AddGroup<Feature>();
-        feature.Add<Module>().OfType<IModuleRoot>();
+        feature.Add<RootClass>().OfType<IModuleRoot>();
         feature.Add<Domain>();
         feature.Add<Commands>().NamedAfterGroup();
         feature.Add<Presenters>();
@@ -75,7 +75,7 @@ public abstract class FixtureArchitecture : Architecture {
         rules.For<Domain>().Denies<KitLayer>();
         rules.Type<System.Text.StringBuilder>().OnlyIn<Domain>();
         rules.For<Slice>().Uses<Contracts.Events>().InOther<Feature>();
-        rules.For<Slice>().Denies<Presenters>().And<Module>().InSame<Feature>();
+        rules.For<Slice>().Denies<Presenters>().And<RootClass>().InSame<Feature>();
         rules.For<Presenters>().Uses<Domain>(Access.Internal);
         rules.For<Presenters>().Uses<Contracts.Events>(Access.Internal);
         rules.For<Feature>().Has<Commands>().AtMost(1);

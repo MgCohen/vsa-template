@@ -209,7 +209,7 @@ public sealed class RunEngineTests {
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Lines, Has.One.Contains("error UMP030503: The app has more than one app class: "
-            + "TwoApps.App.Host.FirstApp, TwoApps.App.Host.SecondApp."));
+            + "TwoApps.Host.FirstApp, TwoApps.Host.SecondApp."));
         Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
     }
 

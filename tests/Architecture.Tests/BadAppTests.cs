@@ -41,7 +41,7 @@ public sealed class BadAppTests {
         Assert.That(UseFailures, Does.Contain(
             $"{Billing}/Slices/CreateInvoice/CreateInvoiceHandler.cs(6): error UMP020101: CreateInvoiceHandler in Handlers.Requests "
             + $"({BillingPart}/Slices/CreateInvoice) uses InvoicePresenter in Presenters ({BillingPart}/Presenters): "
-            + "the rule \"Slice denies Presenters InSame<Feature> and Module InSame<Feature>\" denies it."));
+            + "the rule \"Slice denies Presenters InSame<Feature> and RootClass InSame<Feature>\" denies it."));
     }
 
     [Test]
@@ -170,7 +170,7 @@ public sealed class BadAppTests {
     [Test]
     public void An_attribute_on_a_member_of_another_part_gives_UMP020304() {
         Assert.That(Lines("UMP020304"), Does.Contain(
-            $"{Notes}/NotesModule.cs(5): error UMP020304: NotesModule in Module ({NotesPart}) has [CommandAttribute], "
+            $"{Notes}/NotesModule.cs(5): error UMP020304: NotesModule in RootClass ({NotesPart}) has [CommandAttribute], "
             + "but the rule \"CommandAttribute is only in Commands\" keeps it in Commands. "
             + "Move the code with [CommandAttribute] to Commands, or remove the attribute."));
     }

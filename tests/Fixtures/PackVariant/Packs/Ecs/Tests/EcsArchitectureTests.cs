@@ -10,7 +10,7 @@ using Umpire.Vsa.Testing.Unit;
 public sealed class EcsArchitectureTests : VsaArchitectureTest<EcsArchitecture> {
     [Test]
     public void The_module_class_of_an_ecs_feature_binds_to_its_module_root() {
-        Assert.That(At<CombatModule>("EcsFeatures/Combat").Part, Is.EqualTo("Module"));
+        Assert.That(At<CombatModule>("EcsFeatures/Combat").Part, Is.EqualTo("RootClass"));
     }
 
     [Test]

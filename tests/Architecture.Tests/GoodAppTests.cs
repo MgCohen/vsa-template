@@ -21,7 +21,7 @@ public sealed class GoodAppTests {
     [TestCase("CreateInvoiceHandler", "Handlers.Requests", "Features/Billing/Slices/CreateInvoice")]
     [TestCase("CreateInvoiceRequest", "Contracts.Requests", "Features/Billing/Slices/CreateInvoice")]
     [TestCase("InvoiceCreated", "Contracts.Events", "Features/Billing/Slices/CreateInvoice")]
-    [TestCase("BillingModule", "Module", "Features/Billing")]
+    [TestCase("BillingModule", "RootClass", "Features/Billing")]
     [TestCase("Invoice", "Domain", "Features/Billing/Domain")]
     public void Each_type_binds_to_its_part_and_place(string type, string part, string place) {
         var binding = Map.Bindings.All.Single(b => b.Type.Name == type && !b.External);

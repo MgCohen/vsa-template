@@ -27,7 +27,7 @@ public sealed class PackArchitectureTests {
     public void The_pack_class_is_in_the_pack_folder() {
         var bindings = Place(Pack());
 
-        Assert.That(bindings.All.Single().Part.Is(typeof(Umpire.Architecture.Blocks.Module)), Is.True);
+        Assert.That(bindings.All.Single().Part.Is(typeof(RootClass)), Is.True);
     }
 
     [Test]

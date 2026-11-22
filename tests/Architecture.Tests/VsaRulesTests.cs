@@ -40,23 +40,23 @@ public sealed class VsaRulesTests {
     }
 
     [TestCase("Kernel", "Composition", Permission.Allow)]
-    [TestCase("Kernel", "Host", Permission.Allow)]
+    [TestCase("Kernel", "Hosts", Permission.Allow)]
     [TestCase("Kernel", "Domain", Permission.Deny)]
-    [TestCase("Feature", "Module", Permission.Allow)]
-    [TestCase("Plugin", "Module", Permission.Allow)]
+    [TestCase("Feature", "RootClass", Permission.Allow)]
+    [TestCase("Plugin", "RootClass", Permission.Allow)]
     [TestCase("Feature", "Domain", Permission.Deny)]
     [TestCase("Feature", "Infrastructure", Permission.Deny)]
     [TestCase("Plugin", "Domain", Permission.Deny)]
     public void The_app_host_uses_the_framework_entry_and_only_the_root_class_of_a_module(string group, string to, Permission expected) {
-        Assert.That(MayUse(Place("App", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
+        Assert.That(MayUse(Place("(root)", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
     }
 
     [TestCase("Presenters", "Feature", "Domain.Shared", "A")]
     [TestCase("Presenters", "Feature", "Domain.Shared", "B")]
     [TestCase("Presenters", "Plugin", "Domain.Shared", "A")]
     [TestCase("Presenters", "Kernel", "Contracts.Events", "A")]
-    [TestCase("Module", "Feature", "Domain.Shared", "B")]
-    [TestCase("Module", "Plugin", "Infrastructure", "A")]
+    [TestCase("RootClass", "Feature", "Domain.Shared", "B")]
+    [TestCase("RootClass", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
         var decision = MayUse(Place("Feature", from), Place(group, to, feature));
 
@@ -65,7 +65,7 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var decision = MayUse(Place("Feature", "Module"), Place("Kernel", "Domain"));
+        var decision = MayUse(Place("Feature", "RootClass"), Place("Kernel", "Domain"));
 
         Assert.That((decision.Permission, decision.Rule?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
@@ -95,7 +95,7 @@ public sealed class VsaRulesTests {
         var kernel = Resolved.ExternalPart("Umpire.Vsa");
 
         Assert.That(kernel?.Name, Is.EqualTo("Kernel"));
-        Assert.That(MayUse(Place("App", "Host"), new PartPlace(kernel!, new Dictionary<string, string>())).Permission,
+        Assert.That(MayUse(Place("(root)", "Host"), new PartPlace(kernel!, new Dictionary<string, string>())).Permission,
             Is.EqualTo(Permission.Allow));
     }
 
@@ -110,7 +110,7 @@ public sealed class VsaRulesTests {
         });
     }
 
-    [TestCase("App", "Host", Permission.Allow)]
+    [TestCase("(root)", "Host", Permission.Allow)]
     [TestCase("Feature", "Domain", Permission.Allow)]
     [TestCase("Feature", "Handlers.Commands", Permission.Allow)]
     [TestCase("Plugin", "Infrastructure", Permission.Allow)]
@@ -143,8 +143,8 @@ public sealed class VsaRulesTests {
     }
 
     [Test]
-    public void The_module_rules_select_only_the_parts_of_the_module_classes() {
-        var modules = Resolved.Parts.Where(p => p.Is(typeof(Module))).ToList();
+    public void The_root_class_rules_select_only_the_parts_of_the_module_classes() {
+        var modules = Resolved.Parts.Where(p => p.Is(typeof(RootClass))).ToList();
 
         Assert.That(modules.Any(p => p.IsGroup), Is.False);
         Assert.That(modules.SelectMany(p => p.Types),
@@ -155,7 +155,7 @@ public sealed class VsaRulesTests {
     [TestCase("Umpire.Vsa.Handlers.Commands.CommandHandler`2", "Handlers.Commands")]
     [TestCase("Umpire.Messages.Contracts.Envelope`1", "Contracts")]
     [TestCase("Umpire.Vsa.Domain.Entity`1+Key", "Domain")]
-    [TestCase("Umpire.Hosts.Web.WebHost", "Host")]
+    [TestCase("Umpire.Hosts.Web.WebHost", "Hosts")]
     [TestCase("Umpire.Kernels.App", "Kernel")]
     public void A_type_of_the_one_runtime_DLL_binds_to_the_part_of_its_namespace(string type, string part) =>
         Assert.That(Resolved.ExternalPart("Umpire", type)?.Name, Is.EqualTo(part));

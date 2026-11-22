@@ -12,7 +12,7 @@ public sealed class FolderAliasConfigTests {
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
     const string AppAliases = """
         [umpire.check.folder_aliases]
-        "Assets/Game" = ["", "App"]
+        "Assets/Game" = [""]
         """;
 
     ProjectFolder project = null!;
@@ -44,8 +44,8 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), project.Root);
 
-        Assert.That(Part("Game.Views.Board", check), Is.EqualTo("App/Views"));
-        Assert.That(Part("Notes.NotesModule", check), Is.EqualTo("Feature/Module"));
+        Assert.That(Part("Game.Views.Board", check), Is.EqualTo("Views"));
+        Assert.That(Part("Notes.NotesModule", check), Is.EqualTo("Feature/RootClass"));
     }
 
     [Test]
@@ -54,7 +54,7 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), Inner);
 
-        Assert.That(Part("Lists.ListsModule", check), Is.EqualTo("Feature/Module"));
+        Assert.That(Part("Lists.ListsModule", check), Is.EqualTo("Feature/RootClass"));
     }
 
     [Test]
@@ -72,8 +72,8 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), project.Root);
 
-        Assert.That(Part("Root.RootModule", check), Is.EqualTo("Feature/Module"));
-        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("Feature/Module"));
+        Assert.That(Part("Root.RootModule", check), Is.EqualTo("Feature/RootClass"));
+        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("Feature/RootClass"));
     }
 
     [Test]
@@ -82,8 +82,8 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new SourceAliasArchitecture(), project.Root);
 
-        Assert.That(Part("Game.Views.Board", check), Is.EqualTo("App/Views"));
-        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("Feature/Module"));
+        Assert.That(Part("Game.Views.Board", check), Is.EqualTo("Views"));
+        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("Feature/RootClass"));
     }
 
     [Test]

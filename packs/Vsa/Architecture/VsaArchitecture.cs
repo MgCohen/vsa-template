@@ -11,7 +11,7 @@ public class VsaArchitecture : Architecture {
 
     protected override void Define(Part root) {
         DefineKernel(root.Add<Kernel>());
-        root.Add<App>().Add<Host>().And<Views>();
+        root.Add<Host>().And<Views>();
         root.AddBlockGroup<Pack>("Packs");
         DefinePlugin(root.AddGroup<Plugin>(Boundary.Open));
         DefineFeature(root.AddGroup<Feature>());
@@ -32,7 +32,7 @@ public class VsaArchitecture : Architecture {
         Bind(kernel.Add<Views>(), "Umpire.Vsa.Views");
         Bind(kernel.Add<Composition>(), "Umpire.Vsa.Composition");
         if (kernel.IsExternal) {
-            kernel.Add<Host>().InAssembly("Umpire.Hosts");
+            kernel.Add<Hosts>().InAssembly("Umpire.Hosts");
         }
     }
 
@@ -41,7 +41,7 @@ public class VsaArchitecture : Architecture {
     }
 
     protected virtual void DefinePlugin(PartGroup plugin) {
-        plugin.Add<Module>().OfType<Umpire.Vsa.Composition.Plugin>();
+        plugin.Add<RootClass>().OfType<Umpire.Vsa.Composition.Plugin>();
         plugin.Add<Domain>().Add<Domain.Shared>();
         plugin.Add<Infrastructure>().And<Presenters>();
         AddContractParts(plugin.Add<Contracts>());
@@ -52,7 +52,7 @@ public class VsaArchitecture : Architecture {
     }
 
     protected virtual void DefineFeature(PartGroup feature) {
-        feature.Add<Module>().OfType<Umpire.Kernels.Module>();
+        feature.Add<RootClass>().OfType<Umpire.Kernels.Module>();
         feature.Add<Domain>().Add<Domain.Shared>();
         feature.Add<Infrastructure>().And<Presenters>();
         feature.Add<Slice.Shared>();
@@ -84,23 +84,23 @@ public class VsaArchitecture : Architecture {
         rules.For<Domain>().Under<Plugin>().Denies<Domain>(Depth.Self).InOther<Plugin>();
 
         rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
-        rules.For<Presenters>().And<Module>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
+        rules.For<Presenters>().And<RootClass>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
         ForHandlerParts(rules).Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-        rules.For<Module>().Uses<Kernel>().And<Plugin>(Access.Internal);
-        rules.For<Module>().Denies<Module>().Under<Plugin>();
-        rules.For<Module>().Under<Feature>().Uses<Feature>(Access.Internal);
-        rules.For<Module>().Under<Feature>().Denies<Composition>();
-        rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self);
+        rules.For<RootClass>().Uses<Kernel>().And<Plugin>(Access.Internal);
+        rules.For<RootClass>().Denies<RootClass>().Under<Plugin>();
+        rules.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal);
+        rules.For<RootClass>().Under<Feature>().Denies<Composition>();
+        rules.For<Host>().Uses<Composition>().And<Kernel>(Depth.Self).And<Hosts>();
         rules.For<Views>().Uses<Presenters>();
-        rules.For<Views>().Uses<Host>().Under<Kernel>();
-        rules.For<Host>().Under<App>().Uses<Pack>();
-        rules.For<Host>().Under<App>().Uses<Module>();
+        rules.For<Views>().Uses<Hosts>().Under<Kernel>();
+        rules.For<Host>().Uses<Pack>();
+        rules.For<Host>().Uses<RootClass>();
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
-        rules.For<Feature>().Has<Module>().Exactly(1);
-        rules.For<Plugin>().Has<Module>().Exactly(1);
+        rules.For<Feature>().Has<RootClass>().Exactly(1);
+        rules.For<Plugin>().Has<RootClass>().Exactly(1);
     }
 
     static TChain AndOtherKernelLayers<TChain>(TChain domain) where TChain : Chain<TChain> =>

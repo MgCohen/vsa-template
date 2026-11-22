@@ -10,7 +10,7 @@ public sealed class VsaAppTests {
         new(() => FixtureApps.Load(new VsaArchitecture(), AppContext.BaseDirectory, FixtureApps.Block("VsaApp")));
 
     static readonly string[] Known = [
-        "VsaApp/App/Host/LeakyHost.cs(7): error UMP020101",
+        "VsaApp/Host/LeakyHost.cs(7): error UMP020101",
         Notebook + "Contracts/StrayContract.cs(3): error UMP020202",
         Notebook + "Slices/Archive/ArchiveAuditHook.cs(7): error UMP020301",
         Notebook + "Slices/Count/CountRequest.cs(6): error UMP020301",
@@ -35,12 +35,12 @@ public sealed class VsaAppTests {
 
     [Test]
     public void A_host_that_names_a_module_root_in_a_fixed_list_gives_no_finding() =>
-        Assert.That(Findings, Has.None.Contains("App/Host/FixedHost.cs"));
+        Assert.That(Findings, Has.None.Contains("Host/FixedHost.cs"));
 
     [Test]
     public void A_host_that_uses_the_domain_of_a_feature_gives_UMP020101() =>
         Assert.That(Findings,
-            Has.One.StartsWith("VsaApp/App/Host/LeakyHost.cs(7): error UMP020101: LeakyHost in Host (App/Host) uses Note in Domain"));
+            Has.One.StartsWith("VsaApp/Host/LeakyHost.cs(7): error UMP020101: LeakyHost in Host (Host) uses Note in Domain"));
 
     [TestCase(Notebook + "Contracts/StrayContract.cs", "UMP020202", "StrayContract is in a folder")]
     [TestCase("VsaApp/Plugins/Tools/Slices/Run/RunStep.cs", "UMP020202", "RunStep is in a folder")]
@@ -50,10 +50,10 @@ public sealed class VsaAppTests {
     [TestCase(Notebook + "Slices/Archive/ArchiveAuditHook.cs", "UMP020301", "has Handlers types of 2 kinds")]
     [TestCase(Notebook + "Slices/Count/CountRequest.cs", "UMP020301", "has 2 Handlers.Requests types that take it")]
     [TestCase(Notebook + "Slices/Pong/PongHandler.cs", "UMP020302", "takes PingRequest in Contracts.Requests")]
-    [TestCase("VsaApp/Features/Twin/TwinExtraModule.cs", "UMP020301", "Feature Features/Twin has 2 Module types")]
-    [TestCase("VsaApp/Features/Rogue/RoguePlugin.cs", "UMP020101", "the rule \"Module Under<Feature> denies Composition\" denies it")]
+    [TestCase("VsaApp/Features/Twin/TwinExtraModule.cs", "UMP020301", "Feature Features/Twin has 2 RootClass types")]
+    [TestCase("VsaApp/Features/Rogue/RoguePlugin.cs", "UMP020101", "the rule \"RootClass Under<Feature> denies Composition\" denies it")]
     [TestCase("VsaApp/Plugins/Stray/StrayModule.cs", "UMP020101", "uses Module in Kernel")]
-    [TestCase("VsaApp/Plugins/Stray/StrayModule.cs", "UMP020301", "Plugin Plugins/Stray has 0 Module types")]
+    [TestCase("VsaApp/Plugins/Stray/StrayModule.cs", "UMP020301", "Plugin Plugins/Stray has 0 RootClass types")]
     [TestCase("VsaApp/Plugins/Tools/Infrastructure/NoteReader.cs", "UMP020101", "the rule \"Plugin denies Feature\" denies it")]
     public void The_VSA_app_gives_the_finding_of_each_case(string file, string code, string text) {
         Assert.That(Findings, Has.Some.StartsWith(file).And.Contains($"error {code}: ").And.Contains(text));

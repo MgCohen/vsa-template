@@ -7,7 +7,7 @@ using Umpire.Config;
 
 public sealed class UmpireConfigTests {
     const string Text = """
-        umpire.architecture = "Notes.App.Host.NotesArchitecture"
+        umpire.architecture = "Notes.Host.NotesArchitecture"
         umpire.UMP010101.max = 60
         dotnet_diagnostic.UMP010106.severity = "none"
 
@@ -117,7 +117,7 @@ public sealed class UmpireConfigTests {
     [Test]
     public void Value_walks_a_dotted_path_with_no_case() {
         Assert.That(Config.Value("UMPIRE.ump010101.MAX"), Is.EqualTo("60"));
-        Assert.That(Config.Value("umpire.architecture"), Is.EqualTo("Notes.App.Host.NotesArchitecture"));
+        Assert.That(Config.Value("umpire.architecture"), Is.EqualTo("Notes.Host.NotesArchitecture"));
         Assert.That(Config.Value("umpire.missing"), Is.Null);
         Assert.That(Config.Value("Notebook"), Is.Null);
     }
@@ -125,7 +125,7 @@ public sealed class UmpireConfigTests {
     [Test]
     public void Values_gives_each_scalar_as_a_dotted_key() =>
         Assert.That(Config.Values().ToDictionary(pair => pair.Key, pair => pair.Value), Is.EqualTo(new Dictionary<string, string> {
-            ["umpire.architecture"] = "Notes.App.Host.NotesArchitecture",
+            ["umpire.architecture"] = "Notes.Host.NotesArchitecture",
             ["umpire.UMP010101.max"] = "60",
             ["dotnet_diagnostic.UMP010106.severity"] = "none",
             ["Notebook.MaxNotes"] = "50",

@@ -154,7 +154,7 @@ public sealed class BlocksTests {
 
         var leaf = AppClass.Leaves(shell.AppClasses).Single();
 
-        Assert.That(leaf.Type.FullName, Is.EqualTo("ShellApp.App.Host.GameLauncher"));
+        Assert.That(leaf.Type.FullName, Is.EqualTo("ShellApp.Host.GameLauncher"));
         Assert.That(leaf.Architecture?.FullName, Is.EqualTo("Umpire.Vsa.Definition.VsaArchitecture"));
     }
 

@@ -10,7 +10,7 @@ using Umpire.Vsa.Testing.Unit;
 public sealed class NotesArchitectureTests : VsaArchitectureTest {
     [Test]
     public void The_module_class_binds_to_the_module_root() {
-        Assert.That(At<NotebookModule>(Feature("Notebook")).Part, Is.EqualTo("Module"));
+        Assert.That(At<NotebookModule>(Feature("Notebook")).Part, Is.EqualTo("RootClass"));
     }
 
     [Test]

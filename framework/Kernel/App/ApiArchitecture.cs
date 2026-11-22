@@ -1,7 +1,7 @@
 namespace Umpire.Kernels;
 
 using Umpire.Architecture;
-using Root = Umpire.Architecture.Blocks.Library;
+using Root = Umpire.Architecture.Blocks.Component;
 
 sealed class ApiArchitecture : Architecture {
     protected override void Configure(Options defaults) {

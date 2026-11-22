@@ -1,7 +1,6 @@
 namespace Umpire.Kernels;
 
 using Umpire.Architecture;
-using PackClass = Umpire.Architecture.Blocks.Module;
 
 public sealed class PackArchitecture : Architecture {
     readonly Architecture? packed;
@@ -15,7 +14,7 @@ public sealed class PackArchitecture : Architecture {
     }
 
     protected override void Define(Part root) {
-        root.Add<PackClass>().OfType<Pack>(required: true);
+        root.Add<RootClass>().OfType<Pack>(required: true);
         root.Add<PackParts.Architecture>();
         packed?.DefineKernelPart(root.Add<PackParts.Kernel>());
         if (packed is null) {
@@ -25,7 +24,7 @@ public sealed class PackArchitecture : Architecture {
     }
 
     protected override void Rules(RuleBook rules) {
-        rules.For<PackClass>().Uses<PackParts.Architecture>().And<PackParts.Kernel>();
+        rules.For<RootClass>().Uses<PackParts.Architecture>().And<PackParts.Kernel>();
         rules.For<PackParts.Architecture>().Uses<PackParts.Kernel>();
         rules.For<PackParts.Tests>().Uses<PackParts.Architecture>().And<PackParts.Kernel>();
         packed?.AddKernelRules(rules);
