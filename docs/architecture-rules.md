@@ -75,20 +75,20 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | A module root uses the plugin modules | `UMP020101` |
 | `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `UMP020101` |
 | The root class of a plugin inherits `Plugin` | `UMP020101` and `UMP020301`, and the host at startup |
-| The root class of a feature module does not inherit `Plugin` (`Module Under<Feature> denies Composition`) | `UMP020101`, and the host at startup |
+| The root class of a feature module does not inherit `Plugin` (`RootClass Under<Feature> denies Composition`) | `UMP020101`, and the host at startup |
 | A plugin module has exactly one root class | `UMP020301`, and the host at startup |
 | A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
 | A plugin module has no `Slices/` folder | `UMP020202` |
 
 ## The host part
 
-The kernel part `Host` of the VSA definition maps the assemblies and namespaces `Umpire.Hosts.*` (`InAssembly("Umpire.Hosts")`): `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
+The app part `Host` is the folder `Host/` of the app. The kernel part `Hosts` is the folder `framework/Kernel/Hosts/` of `FrameworkKernel`: `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
 
 | Rule | Check |
 |---|---|
-| `App/Host` uses `Composition` and the `Kernel` part itself | `UMP020101` |
-| `App/Host` uses the root class of a module (`Feature/Module`, `Plugin/Module`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
-| `Views` uses the `Host` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
+| `Host` uses `Composition` and the framework kernel (`FrameworkKernel`, with `Hosts`) | `UMP020101` |
+| `Host` uses the root class of a module (`Feature/RootClass`, `Plugin/RootClass`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
+| `Views` uses the `Hosts` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
@@ -245,7 +245,7 @@ The VSA definition has these count and match lines. S1 to S3 are in `Slice.Rules
 | S3a | A request handler handles a request of its own slice | `For<Handlers.Requests>().Takes<Contracts.Requests>().InSame<Slice>()` | `UMP020302` |
 | S3b | Each request and each response of a feature has exactly one handler | `For<Contracts.Requests>().Has<Handlers.Requests>(Depth.Self).Exactly(1)` | `UMP020301` |
 | S3c, S3d | The same two lines for the commands | `Handlers.Commands`, `Contracts.Commands` | `UMP020302`, `UMP020301` |
-| M1 | A feature module and a plugin module have exactly one root class | `For<Feature>().Has<Module>().Exactly(1)`, the same for `Plugin` | `UMP020301` |
+| M1 | A feature module and a plugin module have exactly one root class | `For<Feature>().Has<RootClass>().Exactly(1)`, the same for `Plugin` | `UMP020301` |
 
 An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d are slice rules (implicit `Under<Slice>()`), so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 

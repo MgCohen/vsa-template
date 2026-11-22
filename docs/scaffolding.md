@@ -8,7 +8,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | The root project `<Name>.csproj`, `App/Host` (`Program.cs`, `<Name>App.cs`), `App/Views`, `Tests/`, `Features/`, `Plugins/`, then the setup files of `init` | None |
+| `new app <Name>` | The root project `<Name>.csproj`, `Host` (`Program.cs`, `<Name>App.cs`), `Views`, `Tests/`, `Features/`, `Plugins/`, then the setup files of `init` | None |
 | `init [--source <feed>] [--check true]` | Each missing setup file | Each setup file that has no Umpire setup: it adds the missing entry, element or line. See "Setup tasks" |
 | `add module <Name>` | Module root, published domain, status request, presenter, page, unit test | None |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
@@ -85,8 +85,8 @@ tools/cli/Templates/
 ├─ nuget.config.template             setup (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               setup
 ├─ appsettings.json, Properties/       new app
-├─ App/Host/, App/Views/              new app (App/Host/SampleAppApp.cs becomes <Name>App.cs)
-├─ App/Views/Pages/SampleModulePage.razor          add module
+├─ Host/, Views/              new app (Host/SampleAppApp.cs becomes <Name>App.cs)
+├─ Views/Pages/SampleModulePage.razor          add module
 ├─ Features/SampleModule/**                         add module
 │  ├─ Domain/Shared/SampleModuleKey.cs             add module (the published domain)
 │  ├─ Slices/GetStatus/**                          add module (the status request)
@@ -135,7 +135,7 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 `Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform. `umpire test` runs it with `dotnet run --project`, so the app needs no `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
 
-An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). The Umpire SDK package holds the engine and runs it after the build of the root project (an executable that is not a test project), so no project has an engine line. The engine reads the rules of `App/Host/<Name>App.cs`. The test project does not check the architecture.
+An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). The Umpire SDK package holds the engine and runs it after the build of the root project (an executable that is not a test project), so no project has an engine line. The engine reads the rules of `Host/<Name>App.cs`. The test project does not check the architecture.
 
 ## Setup tasks
 

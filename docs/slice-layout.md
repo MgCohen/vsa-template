@@ -56,7 +56,7 @@ An app can have its own packs in `Packs/<Name>/`. Each one is an inner block: it
 
 ```
 Shop/
-├─ App/  Features/  Plugins/
+├─ Host/  Views/  Features/  Plugins/
 ├─ EcsFeatures/Combat/      a module of the kind EcsFeature
 └─ Packs/Ecs/               EcsPack.cs, Architecture/, Kernel/
 ```
@@ -68,7 +68,7 @@ An app has one root project in the block folder. It compiles each file in its fo
 ```
 tests/Fixtures/Notes/
 ├─ Notes.csproj                 root project: App/, Features/, Plugins/
-├─ App/Host/  App/Views/
+├─ Host/  Views/
 ├─ Features/Notebook/  Features/Ping/
 └─ Tests/Notes.Tests.csproj     nested project: the root project does not compile Tests/
 ```

@@ -6,16 +6,16 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 
 | Path             | Purpose                                                              |
 |------------------|----------------------------------------------------------------------|
-| `SampleApp.csproj` | The one root project. It compiles `App/`, `Features/` and `Plugins/` |
-| `App/Host/`      | The web host. `Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : App<Vsa<WebHost>>` starts the app, finds the modules and the views, and gives the definition |
-| `App/Views/`     | The Blazor views. Each module has its page in `App/Views/Pages/`     |
+| `SampleApp.csproj` | The one root project. It compiles `Host/`, `Views/`, `Features/` and `Plugins/` |
+| `Host/`      | The web host. `Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : App<Vsa<WebHost>>` starts the app, finds the modules and the views, and gives the definition |
+| `Views/`     | The Blazor views. Each module has its page in `Views/Pages/`     |
 | `Features/<Name>/`| One feature module: its root class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
 | `Tests/`         | A nested project: one unit test file for each module                |
 
 The app has one root project. A module, a slice or a plugin needs no project: add only its files. A nested project (for example `Tests/`) is optional, and the root project does not compile its folder. The folders select the layers, and the rule engine checks each use against the VSA definition after the build.
 
-Each namespace starts with `SampleApp` and follows the folders, for example `SampleApp.Features.Billing.Slices.CreateInvoice` or `SampleApp.App.Host`. Put the `using` directives inside the namespace. Then a VSA type wins over a namespace of the app with the same name, for example `App` or `Views`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace.
+Each namespace starts with `SampleApp` and follows the folders, for example `SampleApp.Features.Billing.Slices.CreateInvoice` or `SampleApp.Host`. Put the `using` directives inside the namespace. Then a VSA type wins over a namespace of the app with the same name, for example `App` or `Views`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace.
 
 Write the input of a request or a command, and the output of its response or result, as record parameters. Each module root registers the services of its module in `Configure`, for example its repository: `services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();`.
 
@@ -38,7 +38,7 @@ dotnet tool exec Umpire.Cli@<version> -y -- doctor                          # th
 dotnet tool exec Umpire.Cli@<version> -y -- test                            # the tests of each *.Tests project
 ```
 
-The rule engine checks each type against the VSA definition. The Umpire SDK package holds the engine, and it runs the check after each build of the root project. `-p:UmpireCheck=false` stops the check for one build. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebHost>>`.
+The rule engine checks each type against the VSA definition. The Umpire SDK package holds the engine, and it runs the check after each build of the root project. `-p:UmpireCheck=false` stops the check for one build. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `Host/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebHost>>`.
 
 `.umpireconfig` is TOML. The top-level keys are the rule values, for example `umpire.UMP010101.max = 140`. A table with the name of a module holds its settings, for example `[Notebook]`. A string needs quotes.
 

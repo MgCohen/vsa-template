@@ -33,36 +33,39 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Kind | Meaning | Example |
 |---|---|---|
-| App | A block that runs. Its app class is the check entry and the install point | `NotesApp`, `EngineApp` |
+| App | The root of a definition. It runs, and its app class is the check entry. It has no record | `NotesApp`, `EngineApp` |
 | Pack | A block with one architecture and its kernel | `packs/Vsa/` |
-| Framework kernel | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, `Kernel`, `AppHost` |
-| Pack kernel | The layer bases of a pack. It extends the framework kernel | `packs/Vsa/Kernel/`, `VsaKernel` |
-| Component | Free code that a kernel installs by name | `framework/Components/Messages/` |
-| Module | A component that the host finds in the app. It ships with the app | A feature module, a plugin module |
-| Library | A block with no install point | `engine/Versions/` |
+| Framework kernel | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, the record `FrameworkKernel` |
+| Pack kernel | The layer bases of a pack. It extends the framework kernel | `packs/Vsa/Kernel/`, the record `VsaKernel` |
+| Component | Code that travels together, with no entry point. A kernel can install it by name | `framework/Components/Messages/` (`MessagesComponent`), `engine/Versions/` |
+| Module | A component that the host installs. It ships with the app | A feature module, a plugin module |
+| Slice | An owned block of a feature. It has no entry, and it does not travel | `Features/<Feature>/Slices/<Slice>` |
 
-Each block kind has a concept record in `Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `Module` and `Library`, on the base `BlockKind`. A component can have a layer shape. That does not make it a module. A plugin is a VSA module kind: the base of the same layers in each module. See `blocks.md`.
+Each block kind has a record in `Umpire.Architecture.Blocks`: `Pack`, `Kernel`, `Component` and `Module`, on the base `Block`. `Feature`, `Plugin` and `Slice` are VSA records. A component can have a layer shape. That does not make it a module. A plugin is a VSA module kind: the base of the same layers in each module. See `blocks.md`.
 
 ## Definition terms
 
 | Term | Meaning | Code names |
 |---|---|---|
-| Block | A folder tree of code with one entry. Also the top part of a definition | `Block` (the top part), `Block<TArchitecture>`, `BlockKind` (the base of the block kind records) |
+| Block | A folder tree of code with one entry. A block record is a concept with a body | `Block` (the base of the block records), `Block<TArchitecture>` (the check entry) |
+| Root | The top part of a definition. `Define(Part root)` starts there | `ResolvedArchitecture.Root`, the name `(root)` |
 | Independent block | A block with its own definition and check entry, for example an app or a pack | |
 | Owned block | A block that gets its shape from the definition around it, for example a feature module | |
 | Install point | The class or method that tells the host what to install from a block | `Pack.CreateHost()` |
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
 | Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, the key `umpire.architecture` in a `.umpireconfig` file |
-| Block place | A folder that an outer definition marks as the place of another block. The outer definition sees that block as one part | `AddBlock<T>()`, `AddBlockGroup<T>()` |
-| Concept | A kind of part that a definition names | `Concept`, `External`, `BlockKind`, `Layer` |
+| Block place | A folder that an outer definition marks as the place of another block. The place gets the body of the record | `AddBlock<T>()`, `AddBlockGroup<T>()` |
+| Overlay | A part that a definition adds to each placed block of a kind | `Extend<T>().Add<TPart>()` |
+| Owner | The architecture that a concept belongs to. Only the owner or a derived architecture can place it | `OwnedBy`, `IOwnedBy<T>`, `Concept<TOwner>` |
+| Concept | A kind of part that a definition names. It has data only | `Concept`, `External`, `Block`, `Layer`, `OfTypes` |
 | Part | One place in the folder tree of a definition | `Part`, `PartGroup` |
-| Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture`: `AddContractParts`, `AndHandlerParts`, `ForContractParts`, `UsesContractParts`, `ForHandlerParts` |
-| Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Host`, `Composition`, `Slice` |
-| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `Add<Module>()` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernels.Module` and `Plugin` |
+| Part set | A named list of parts that a definition uses more than one time | The part set helpers of `VsaArchitecture`: `ForContractParts`, `UsesContractParts`, `ForHandlerParts` |
+| Layer | A VSA concept for one kind of code, with its base in the pack kernel | `Layer`: `Domain`, `Contracts`, `Handlers`, `Presenters`, `Views`, `Infrastructure`, `Composition`. The core concepts `Host` and `Hosts` |
+| Module | A module of the app: a feature module or a plugin module. The record `Module` is the concept. The part `RootClass` holds the module class | The record `Umpire.Architecture.Blocks.Module`, the classes `Umpire.Kernels.Module` and `Plugin` |
 | Module kind | A group of modules with one shape. Each module kind record inherits `Module` | `Feature`, `Plugin`, the `EcsFeature` of a pack variant |
-| External part | A part that is a DLL, not a folder | `External`, `Kernel`, `IsExternalPartType` |
+| External part | A part that is an opaque DLL, not a folder | `External`, `IsExternalPartType` |
+| Root class | The part of the one root class of a block | `RootClass` |
 | System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` |
-| Define method | A `virtual` method of `VsaArchitecture.Define` for one base group | `DefineFeature(PartGroup feature)` |
 | Rule | Who may use whom | `rules.For<A>().Uses<B>()` |
 | Architecture rule | One class of the engine that gives the findings of one code. It sets its number; the group base sets the group | `DeniedUseRule : UseRule` |
 | Queries | The answers of the rules on plain facts (`architecture/Queries/`) | `PartOf` (which part), `DecisionFor` (allow or deny), `Counts`, `Matches` |

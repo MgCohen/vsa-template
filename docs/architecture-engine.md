@@ -25,20 +25,37 @@ The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` 
 
 ## Definition API
 
-A concept is a record that inherits `Concept`. A definition is a class that inherits `Architecture`. It adds the concepts to a tree in `Define`, and gives the rules in `Rules`. The block kinds of `blocks.md` are concept records in `Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `Module` and `Library`, on the base `BlockKind`. `Kernel` is an external part: the `Umpire.*` DLLs. Each VSA layer inherits `Layer : Concept`, and only a real layer inherits it. A module kind, for example `Feature` or `Plugin`, inherits `Module`. The part `Add<Module>()` holds the module class: it is in the folder of its parent, for example the root class of each feature. A rule on `Module` selects only these parts, because a rule compares the exact concept type, not its base.
+The model has three levels:
+
+| Level | Members | Role |
+|---|---|---|
+| `Concept` | `Folder`, `GroupFolder`, `OwnedBy`, `Configure`, `OfTypes`, `NameStartsWith`, `NameEndsWith` | A name for a part, with data only. No body |
+| `Block : Concept` | Adds `Define(Part part)` and `Rules(RuleBook rules)` | A concept with a body: its child parts and its rules |
+| `Architecture` | `FolderAliases`, `PackKernel`, `Configure`, `Define(Part root)`, `Rules` | The root of one check. It is not a concept |
+
+The block kinds of `blocks.md` are records in `Umpire.Architecture.Blocks`: `Pack`, `Kernel`, `Component` and `Module`, on the base `Block`. `Feature` and `Plugin` derive from `Module`, and `Slice` is a block. Each VSA layer inherits `Layer : Concept`. The core concept `RootClass` is the part of the one root class of a block, in the folder of its parent.
 
 ```csharp
-public record Feature : Module { public override string GroupFolder => "Features"; }
-public record Kernel : External { public override string Assembly => "Umpire"; }
+public record Feature : Module {
+    public override string GroupFolder => "Features";
+
+    protected override void Define(Part part) {
+        part.Add<RootClass>().OfType<Umpire.Kernels.Module>();
+        part.Add<Domain>().Add<Domain.Shared>();
+        part.AddGroup<Slice>();
+    }
+}
+
+public record Requests : Layer {
+    public override IReadOnlyList<Type> OfTypes => [typeof(IRequest), typeof(IResponse)];
+}
 
 public class VsaArchitecture : Architecture {
     protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
 
-    protected override void Define(Block block) {
-        block.Add<Kernel>();
-        var feature = block.AddGroup<Feature>();
-        feature.Add<Module>().OfType<Umpire.Kernels.Module>();
-        feature.AddGroup<Slice>().Add<Contracts.Requests>().And<Handlers.Requests>().InParentFolder();
+    protected override void Define(Part root) {
+        root.AddBlock<VsaKernel>();
+        root.AddGroup<Feature>();
     }
 
     protected override void Rules(RuleBook rules) {
@@ -48,14 +65,19 @@ public class VsaArchitecture : Architecture {
 }
 ```
 
+- A rule on a concept also covers each concept that derives from it. For example, a rule on `Module` covers `Feature`, `Plugin` and `EcsFeature`.
+- A rule covers each matching part in all blocks. If a rule is for one place only, add `Under<T>()`. If two places need different rules, use two concepts.
+- The engine calls `Configure`, `Define` and `Rules` of each class in the inheritance chain, from the base down. A level does not call its base level (`UMP010107`).
+
 | Call | Effect |
 |---|---|
 | `Add<T>()` | A part in the folder of the layer. It returns the `Part` |
 | `And<T>()` | A sibling part. It returns a `PartGroup`: the next call applies to each part in it |
 | `AddGroup<T>()` | A group: one part instance for each subfolder. It returns a `PartGroup` |
-| `AddBlock<T>()` | The place of another block in the folder of `T`. The place is one part, with no children (see "Blocks and check entries") |
+| `AddBlock<T>()` | The place of the block `T` in its folder. The place gets the body of the record `T` (see "Blocks and check entries") |
+| `Extend<T>()` | An overlay: the next `Add` adds a part to each placed block of kind `T`. It cannot remove a part |
 | `AddBlockGroup<T>()` | Each subfolder of the folder of `T` is the place of another block, for example `Packs/<Name>/` |
-| `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
+| `InParentFolder()` | The part shares the folder of its parent. Give it `OfType`, or give its concept `OfTypes` |
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
 | `NameStartsWith`, `NameEndsWith`, `NamedAfterGroup` | The name of each type of the part (see "Content of a part") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
@@ -98,16 +120,24 @@ A rule condition is a `Condition`: the groups that must have the same instance (
 
 `defaults.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
-`VsaArchitecture.Define` calls one `virtual` define method for each base group and for the kernel: `DefineKernel`, `DefinePlugin`, `DefineFeature` and `DefineSlice`. The parts of a slice are in `Slice.Define`, so `DefineSlice` is empty in the base. It runs after `Slice.Define`. A pack variant overrides one to add a part to each instance of that group (see `pack-variants.md`).
+The body of each block is in its record: `Feature`, `Plugin`, `Slice` and the kernel records. A derived block record gets the body of its base and adds its own. To add a part to each placed block of a kind, a derived architecture uses an overlay:
 
-Each architecture defines its kernel with two hooks of `Architecture`: `DefineKernel(Part kernel)` (the kernel parts) and `KernelRules(RuleBook rules)` (the rules inside the kernel). The kernel is defined on the architecture, never on the pack. Two checks use it:
+```csharp
+public sealed class UnityTestArchitecture : VsaArchitecture {
+    protected override void Define(Part root) {
+        root.Extend<Feature>().Add<PlayTests>();
+    }
+}
+```
 
-| Check | Kernel parent | Binding | Rules |
+The kernel is three blocks: `FrameworkKernel`, `MessagesComponent` and `VsaKernel`. `VsaArchitecture` places them, and `VsaArchitecture.PackKernel` names `VsaKernel` for the pack check. Two checks use the kernel:
+
+| Check | Kernel form | Binding | Rules |
 |---|---|---|---|
-| An app | The external `Kernel` part (`Define` calls `DefineKernel`) | By assembly, or by namespace in the bundled `Umpire.dll` | The rules of the app toward the kernel |
-| The pack | `PackParts.Kernel`, the folder `Kernel/` of the pack | By folder | `KernelRules` |
+| An app | A DLL: the project DLLs, or `Umpire.dll` in a package | By the PDB path of each type | The rules of the app toward the kernel |
+| The pack | Source: the folder `Kernel/` of the pack | By folder | The `Rules` of `VsaKernel` |
 
-For the pack check, the engine reads the architecture from the base chain of the pack class (`Pack<VsaArchitecture, …>`, `BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. The type requirements of the layer concepts (`OfType`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. Today `VsaArchitecture.KernelRules` allows each use between two kernel layers: the check covers the shape of the kernel, and the rules come later.
+For the pack check, the engine reads the architecture from the base chain of the pack class (`Pack<VsaArchitecture, …>`, `BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. `PackArchitecture` places `PackKernel` in `Kernel/`. The type requirements of the layer concepts (`OfTypes`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. Today `VsaKernel.Rules` allows each use between two kernel layers: the check covers the shape of the kernel, and the rules come later.
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
@@ -125,11 +155,11 @@ C# finds a name level by level, from the innermost namespace to the outermost. A
 
 ```csharp
 using Umpire.Architecture.Blocks;
-namespace Shop.App.Host {
+namespace Shop.Host {
     rules.For<App>();          // CS0118: 'App' is a namespace (Shop.App)
 }
 
-namespace Shop.App.Host {
+namespace Shop.Host {
     using Umpire.Architecture.Blocks;
     rules.For<App>();          // the record App
 }
@@ -151,6 +181,21 @@ namespace Umpire.Vsa.Definition.Ecs {
 
 Thus no one placement is correct for each file. `RuleBook.For<T>() where T : Concept` makes each wrong binding a compile error (`CS0104`, `CS0118` or `CS0311`), so no clash compiles silently. `IDE0065` selects files only by path, so it cannot make an exception for a definition file. If a rule is necessary after 0.1.0, write a custom analyzer.
 
+## Ownership
+
+A concept that is nested in an `Architecture` class belongs to it, at any depth. Only the owner, or an architecture that derives from the owner, can place it.
+
+| Form | Owner |
+|---|---|
+| `class BravoArchitecture { record B1 : Layer; }` | `BravoArchitecture` (the nesting) |
+| `record B2 : Layer, IOwnedBy<BravoArchitecture>;` | `BravoArchitecture` |
+| `record B3 : Concept<BravoArchitecture>;` | `BravoArchitecture` |
+| `OwnedBy => [typeof(BravoArchitecture)]` | `BravoArchitecture` |
+| `OwnedBy => []` | None, also when nested |
+| A top-level record with no owner | None: shared vocabulary |
+
+The check reads `OwnedBy` first, then the `IOwnedBy<T>` interfaces, then the nesting. An owner that is not an `Architecture` is an error. The body of a block adds parts as its home: the nesting architecture and the declared owners of the record. Thus a block with `OwnedBy => []` can still add the concepts of its home in another architecture.
+
 ## Boundary
 
 A closed group keeps its instances apart: an allow rule reaches a part in another instance of the group only if the rule crosses the group. The first value that is set wins:
@@ -160,7 +205,7 @@ A closed group keeps its instances apart: an allow rule reaches a part in anothe
 3. The concept body, for example `defaults.Boundary = Boundary.Closed` in `Configure(Options)` of the concept.
 4. `defaults.Boundary` of the architecture. Its default is `Boundary.Open`.
 
-In the example, the first rule reaches the Domain of the own feature, of Kernel and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Boundary does not change a deny rule, and it does not apply to a user outside the group: for example `App/Views` uses the presenters of each feature.
+In the example, the first rule reaches the Domain of the own feature, of Kernel and of the plugins. The second rule also reaches the `Domain.Shared` of the other features. A rule with `InOther<T>()` crosses the group `T` and each group inside it. Boundary does not change a deny rule, and it does not apply to a user outside the group: for example `Views` uses the presenters of each feature.
 
 ```csharp
 defaults.Boundary = Boundary.Closed;
@@ -170,9 +215,9 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 ## External parts
 
-An `External` part binds the types of a DLL by its name, not by its folder. `Kernel` binds `Umpire.dll` and each `Umpire.*.dll`. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`: `VsaArchitecture` gives `Contracts` the DLL `Umpire.Messages.Contracts`, and `Contracts.Requests` the DLL `Umpire.Vsa.Contracts.Requests`. A type also matches by its namespace, so the bundle `Umpire.dll` binds `Umpire.Vsa.Contracts.Requests.IRequest` to `Contracts.Requests`. The longest matching name wins. The types of an external DLL are rule targets: a rule can deny them.
+An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions` or ArchUnitNET. It binds the types of a DLL by its name, not by its folder. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`. A type also matches by its namespace. The longest matching name wins. The types of an external DLL are rule targets: a rule can deny them.
 
-`Umpire.Vsa.dll` (the pack: `Vsa<THost>`, `VsaArchitecture`) has no external part of its own. `Kernel` binds it by the name `Umpire`, and `App/Host` uses `Kernel` (`Uses<Kernel>(Depth.Self)`), so the app class can name the pack. Reason: no other part uses the pack, so a separate part gives no new rule.
+The Umpire DLLs are not externals. They are DLLs with structure: each type binds by its PDB path to the body of its placed block (see "Binding"). `Umpire.Vsa.dll` (the pack: `Vsa<THost>`, `VsaArchitecture`) binds to `VsaKernel`, and `Host` uses `Composition`, so the app class can name the pack.
 
 The definition stops at these shapes. The first four give one error, because a DLL name has no group segment, and the child of an external gets its DLL name from its parent:
 
@@ -284,9 +329,8 @@ A name rule is a call on the part, in `Define`. A trait rule and a place rule ar
 | Type place | `rules.Type<T>().OnlyIn<S>()` | Code outside `S` uses `T` | `UMP020304` |
 
 ```csharp
-protected override void Define(Block block) {
-    var feature = block.AddGroup<Feature>();
-    feature.Add<CliCommand>().NamedAfterGroup();
+protected override void Define(Part root) {
+    root.Extend<Feature>().Add<CliCommand>().NamedAfterGroup();
 }
 
 protected override void Rules(RuleBook rules) {
@@ -355,6 +399,7 @@ rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure 
 | Type | Part |
 |---|---|
 | In a DLL that an `External` part names | That part. The longest name wins |
+| In a DLL with a PDB, with a source outside the block folder | The body part of the placed block whose `Folder` matches the path, for example `/_/packs/Vsa/Kernel/Domain/Entity.cs` → `VsaKernel/Domain`. A target only. Two matching blocks give an error |
 | Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
 | Source file only in `obj/` or `bin/` | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
@@ -371,7 +416,7 @@ A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder 
 
 ```toml
 [umpire.check.folder_aliases]
-"src/Game" = ["", "App"]      # src/Game/Features/... binds as Features/..., src/Game/Views/... as App/Views/...
+"src/Game" = [""]            # src/Game/Features/... binds as Features/..., src/Game/Views/... as Views/...
 "Source" = [""]               # Source/Features/... binds as Features/...
 ```
 
@@ -385,7 +430,7 @@ Rules:
 - With one alias or more, a file binds only through an alias. A folder with no alias is not read. To keep the folders at the block root, add the key `""` (or `"."`): `"" = [""]`.
 - Only the `.umpireconfig` in the block folder itself gives aliases, because each alias folder is a path in that block. An inner block with no `.umpireconfig` of its own has no aliases.
 - A key or a value with `\` or a leading `./` is normalized: `".\src\Game"` is `src/Game`.
-- A value that is not a list, for example `"src/Game" = "App"`, gives the warning `UMP020206`. Put quotes on a key with `/` or `.`, because TOML reads an unquoted dotted key as a table.
+- A value that is not a list, for example `"src/Game" = ""`, gives the warning `UMP020206`. Put quotes on a key with `/` or `.`, because TOML reads an unquoted dotted key as a table.
 - `ArchitectureTest<T>` binds logical paths, for example `At<T>("Features/Notebook")`, so it uses no folder alias.
 
 The framework has no host layout of its own: the host package (for example vsa-unity) writes the aliases.
@@ -434,7 +479,7 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020303` | `WrongTraitRule` | `StatementRule` (03) | Error | A type does not have the traits that `Are` of its part needs (see "Content of a part") |
 | `UMP020304` | `TypePlaceRule` | `StatementRule` (03) | Error | Code outside the parts of `Type<T>().OnlyIn<S>()` uses `T` (see "Content of a part") |
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
-| `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
+| `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place folder (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry. A place with no folder is the DLL form |
 
 The Rules step reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` table as a dotted key, with no case (`RuleKeys` in the Steps plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
 
@@ -481,7 +526,7 @@ The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture
 
 The Changes step makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
-One definition applies to one block: the folder tree of code that the definition checks. The definition applies to its block folder, not to the repository. `Define(Block block)` starts at the block folder, and each part path is relative to it. A source file outside the block folder is not checked.
+One definition applies to one block: the folder tree of code that the definition checks. The definition applies to its block folder, not to the repository. `Define(Part root)` starts at the block folder, and each part path is relative to it. A source file outside the block folder is not checked.
 
 ```text
 umpire-engine.dll --project <host project folder> [--block <block folder>] --bin <host output>
@@ -495,6 +540,7 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 | Versions | Each Umpire version slot of the block folder and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
+| Referenced DLLs | Each DLL that an app DLL references, also a shared framework DLL (#293) |
 | Definition | The architecture of the check entry of the block. For an app class: the one most derived closed class that implements `IAppEntry<TPack>` (`App<TPack>` does). The engine reads type argument 0 of `Pack<TArchitecture, TKernel, THost>` from the metadata and makes only that architecture. It does not make the app class, so a launcher (for example a Unity shell with a private `App<TPack>`) is an app class too. If the pack has no such argument, the engine makes the pack and reads `Pack.Architecture`. See "Engine codes" |
 | DLLs of a host build (for example Unity) | See "Check settings" and "Folder aliases" |
 
@@ -545,8 +591,8 @@ A block is a folder tree of code with one check entry. The check entry names the
 - For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).
 - A typed base counts only for a type that is not abstract. Thus `Pack` (abstract, in `framework/Kernel/`) gives no entry, and `Vsa<THost>` gives one. Two types of one form with one architecture in one folder are one entry.
 - The nearest block wins: a source file belongs to the deepest block folder above it.
-- The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
-- An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place with no check entry gives `UMP020402`.
+- The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The place gets the body of its record, and an overlay (`Extend<T>()`) can add parts to it. The outer definition adds no other part to a place. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
+- An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place folder with no check entry gives `UMP020402`. A place with no folder is the DLL form: its types bind by their PDB path (see "Binding").
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
 - After the check of the block, the run checks each used block with its own definition, the same bin and the same steps (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
 - Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the bin) still skips the full run when no input of the run changed (`UMP030201`).
@@ -584,12 +630,11 @@ A file that does not exist gives no slot. `global.json` and a tool manifest give
 
 `umpire update` changes only the version text. A project file keeps its BOM and its line endings.
 
-The app class (`MyApp : App<Vsa<TArchitecture, THost>>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Call `base.Rules` first: a later rule wins.
+The app class (`MyApp : App<Vsa<TArchitecture, THost>>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Do not call `base.Rules`: the engine calls the `Rules` of each class in the chain, from the base down, so a later rule wins (`UMP010107`).
 
 ```csharp
 public sealed class MyArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
-        base.Rules(rules);
         rules.For<Presenters>().Denies<Contracts.Events>();
     }
 }

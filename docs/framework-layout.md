@@ -83,11 +83,11 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Architecture`, `Concept`, the block kind records (`Umpire.Architecture.Blocks`: `App`, `Pack`, `Kernel`, `Component`, `record Module : Component`, `Library`) | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaKernel`, `class Plugin : Module` |
+| Generic | `Architecture`, `Concept`, `RootClass`, `Host`, `Hosts`, the block kind records (`Umpire.Architecture.Blocks`: `Block`, `Pack`, `Kernel`, `Component`, `record Module : Component`), `FrameworkKernel`, `MessagesComponent` | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, `record VsaKernel : Kernel`, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaKernel`, `class Plugin : Module` |
 
-- The definition names a runtime class only by its `Type`, for example `feature.Add<Module>().OfType<Umpire.Kernels.Module>()`. Where two types have the same name, write the full name of the runtime class.
-- A definition `Module` is in the folder of its parent: it is the root part of a group instance.
+- The definition names a runtime class only by its `Type`, for example `part.Add<RootClass>().OfType<Umpire.Kernels.Module>()`. Where two types have the same name, write the full name of the runtime class, or use an alias, for example `using VsaKernel = Umpire.Vsa.Composition.VsaKernel;`.
+- The part `RootClass` is in the folder of its parent: it is the root class of a group instance.
 - A runtime `Module` has `Name`, `Order` and `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
 
 ## How the kernel starts an app

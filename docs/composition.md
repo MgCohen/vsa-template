@@ -24,10 +24,10 @@ App.Run(args)
 The calls go one way. The app calls `Build`, `Start` and `Dispose` on the host. The host calls only `Compose` and `AppStop.Request`.
 
 ```csharp
-// App/Host/Program.cs
+// Host/Program.cs
 return new ShopApp().Run(args);
 
-// App/Host/ShopApp.cs: the web host and the VSA rules
+// Host/ShopApp.cs: the web host and the VSA rules
 public class ShopApp : App<Vsa<WebHost>>;
 
 // The console host and an architecture of the app
@@ -62,7 +62,7 @@ The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (
 
 ## The app class
 
-`umpire new app <Name>` writes `App/Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`). The app class has the lifecycle only. It has no install point.
+`umpire new app <Name>` writes `Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`). The app class has the lifecycle only. It has no install point.
 
 | Member | Default | Override to |
 |---|---|---|
