@@ -2,12 +2,14 @@ namespace Umpire.Hosts.Console;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.InteropServices;
 using Umpire.Kernels;
 
 public class ConsoleHost : AppHost {
     readonly CancellationTokenSource stopping = new();
     Operation? operation;
     AppSignals? signals;
+    PosixSignalRegistration? terminate;
     Task? work;
 
     public override IServiceProvider Build(string[] args, App app) {
@@ -18,6 +20,10 @@ public class ConsoleHost : AppHost {
 
     public override void Start(IServiceProvider services, AppStop stop) {
         signals = AppSignals.Listen(stop);
+        terminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, context => {
+            context.Cancel = true;
+            stop.Request();
+        });
         work = HostWork.Run(() => CommandLine.Run(
             services, operation!, services.GetRequiredService<IConfiguration>(), stop, stopping.Token));
     }
@@ -25,6 +31,8 @@ public class ConsoleHost : AppHost {
     public override void Dispose() {
         signals?.Dispose();
         signals = null;
+        terminate?.Dispose();
+        terminate = null;
         stopping.Cancel();
         try {
             work?.GetAwaiter().GetResult();
