@@ -32,6 +32,7 @@ public class Part : IPartChain {
     public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
     internal NamePattern? NamePattern { get; private set; }
+    internal IReadOnlyList<Type> Placers { get; set; } = [];
 
     public string Path {
         get {
@@ -169,6 +170,9 @@ public class Part : IPartChain {
     Part Attach(Part child) {
         RefuseInBlockPlace(child);
         RefuseExternalNesting(child);
+        var owners = Owners.Of(child.Concept!);
+        RefuseOwned(child, owners);
+        child.Placers = child.Concept is Block && Owners.Home(child.Concept) is { Count: > 0 } home ? home : Placers;
         child.options = child.options.Over(Options.From(child.Concept!.ConfigureDefaults));
         children.Add(child);
         foreach (var type in child.Concept.OfTypes) {
@@ -184,6 +188,18 @@ public class Part : IPartChain {
             block.DefinePart(child);
         }
         return child;
+    }
+
+    void RefuseOwned(Part child, IReadOnlyList<Type> owners) {
+        if (Owners.MayPlace(owners, Placers)) {
+            return;
+        }
+        var owner = string.Join(" or ", owners.Select(o => o.Name));
+        var placer = string.Join(", ", Placers.Select(p => p.Name));
+        throw new InvalidOperationException(
+            $"Define: {placer} adds {child.Name}, but {child.Name} belongs to {owner}. "
+            + $"Only {owner}, or an architecture that derives from it, can place {child.Name}. "
+            + $"Add your own concept, place a block that holds {child.Name}, or give {child.Name} another OwnedBy.");
     }
 
     void RefuseInBlockPlace(Part child) {
