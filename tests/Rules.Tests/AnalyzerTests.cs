@@ -80,7 +80,7 @@ static class Analyzer {
         new DiagnosticResult(rule).WithLocation(location).WithArguments(arguments);
 }
 
-public sealed class SealedRecordRuleTests {
+public sealed class RecordPayloadRuleTests {
     const string Route = "public static HttpMethod Method => HttpMethod.Get; public static string Route => \"/items\";";
 
     [Test]
@@ -93,7 +93,7 @@ public sealed class SealedRecordRuleTests {
     public Task Request_class_fails() => Analyzer.Verify($$"""
         public sealed class {|#0:GetItems|} : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "GetItems", "a request"));
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request"));
 
     [Test]
     public Task Abstract_request_base_passes() => Analyzer.Verify($$"""
@@ -104,38 +104,51 @@ public sealed class SealedRecordRuleTests {
         """);
 
     [Test]
-    public Task Concrete_request_of_an_abstract_base_that_is_not_sealed_fails() => Analyzer.Verify($$"""
+    public Task Records_that_are_not_sealed_pass() => Analyzer.Verify($$"""
+        public record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Request_that_derives_from_a_concrete_request_passes() => Analyzer.Verify($$"""
+        public record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record GetRecentItems(int Days) : GetItems;
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Concrete_request_of_an_abstract_base_that_is_not_sealed_passes() => Analyzer.Verify($$"""
         public abstract record TestRequest<TResponse> : Umpire.Vsa.Contracts.Requests.IRequest<TResponse>
             where TResponse : Umpire.Vsa.Contracts.Requests.IResponse;
-        public record {|#0:GetItems|} : TestRequest<Items> { {{Route}} }
+        public record GetItems : TestRequest<Items> { {{Route}} }
         public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "GetItems", "a request"));
+        """);
 
     [Test]
     public Task Response_of_a_request_with_an_abstract_base_is_checked() => Analyzer.Verify($$"""
         public abstract record TestRequest<TResponse> : Umpire.Vsa.Contracts.Requests.IRequest<TResponse>
             where TResponse : Umpire.Vsa.Contracts.Requests.IResponse;
         public sealed record GetItems : TestRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems"));
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
 
     [Test]
-    public Task Response_record_that_is_not_sealed_fails() => Analyzer.Verify($$"""
+    public Task Response_class_fails() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems"));
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
 
     [Test]
     public Task Rule_option_turns_off_the_response_check() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        public sealed class Items : Umpire.Vsa.Contracts.Requests.IResponse { }
         """, "umpire.UMP010201.check_responses = false");
 
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, "umpire.check_responses = false\numpire.UMP010201.check_responses = true", Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems"));
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, "umpire.check_responses = false\numpire.UMP010201.check_responses = true", Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
 
     [Test]
     public Task Rule_with_severity_none_reports_nothing() => Analyzer.Verify($$"""
@@ -152,9 +165,9 @@ public sealed class SealedRecordRuleTests {
     [Test]
     public Task Umpire_severity_sets_the_severity_of_the_finding() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
         """, "umpire.UMP010201.severity = warning",
-        Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems")
+        Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems")
             .WithSeverity(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning));
 }
 

@@ -108,5 +108,5 @@ public sealed class PackSelectionTests {
         """, Found());
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Found() =>
-        Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "GetItems", "a request");
+        Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request");
 }
