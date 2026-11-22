@@ -153,24 +153,26 @@ public sealed class ArchiveTests {
 
     [Test]
     public void The_engine_of_the_archive_starts_on_a_dotnet_with_only_the_net8_runtime() {
-        var output = Engine();
+        var output = Engine(Net8DotnetRoot());
 
         Assert.That(output, Does.Contain("needs --Project"), output);
     }
 
     [Test]
     public void The_engine_of_the_archive_checks_an_app_with_its_own_concept_compiled_against_the_runtime() {
+        var root = Net8DotnetRoot();
         var app = AppOnTheRuntime(withStray: false);
-        var output = Engine("--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
+        var output = Engine(root, "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
             "--stage", "Check", "--projectchecks", "false");
 
-        Assert.That(output, Does.Contain("0 errors").And.Not.Contain("UMP030001"), output);
+        Assert.That(output, Does.Contain("umpire-engine: 0 errors,").And.Not.Contain("UMP030001"), output);
     }
 
     [Test]
     public void The_engine_of_the_archive_finds_a_wrong_type_in_an_app_compiled_against_the_runtime() {
+        var root = Net8DotnetRoot();
         var app = AppOnTheRuntime(withStray: true);
-        var output = Engine("--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
+        var output = Engine(root, "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
             "--stage", "Check", "--projectchecks", "false");
 
         Assert.That(output, Does.Contain("error UMP020202").And.Contain("Stray"), output);
@@ -181,6 +183,11 @@ public sealed class ArchiveTests {
     static string FileName(JsonNode file) => Path.GetFileName(PathOf(file));
 
     static string Text(JsonNode node, string key) => node[key]!.GetValue<string>();
+
+    static string Net8DotnetRoot() =>
+        Environment.GetEnvironmentVariable(Net8Root) is { Length: > 0 } value
+            ? value
+            : throw new IgnoreException($"Set {Net8Root} to a dotnet folder with only the .NET 8 runtime.");
 
     IEnumerable<JsonNode> Files() => manifest["files"]!.AsArray().Select(file => file!);
 
@@ -235,10 +242,7 @@ public sealed class ArchiveTests {
         return app;
     }
 
-    string Engine(params string[] arguments) {
-        var root = Environment.GetEnvironmentVariable(Net8Root) is { Length: > 0 } value
-            ? value
-            : throw new IgnoreException($"Set {Net8Root} to a dotnet folder with only the .NET 8 runtime.");
+    string Engine(string root, params string[] arguments) {
         var dotnet = Path.Combine(root, OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet");
         var start = new ProcessStartInfo(dotnet) {
             RedirectStandardOutput = true,

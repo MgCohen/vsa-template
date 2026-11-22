@@ -35,5 +35,4 @@ sealed class AppSignals : IDisposable {
         e.Cancel = true;
         stop.Request();
     }
-
 }

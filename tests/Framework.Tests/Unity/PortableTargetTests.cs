@@ -13,7 +13,8 @@ public sealed class PortableTargetTests {
     [TestCaseSource(typeof(PortableProjects), nameof(PortableProjects.Names))]
     public void A_portable_project_has_no_net8_0_library(string project) =>
         Assert.That(Directory.Exists(Output(project, "_net8.0")), Is.False,
-            "A portable project has one build, netstandard2.1, so an app and the engine see one shape of each type.");
+            "A portable project has one build, netstandard2.1, so an app and the engine see one shape of each type. "
+            + "If the folder is from an old build, delete artifacts~.");
 
     [Test]
     public void Each_project_with_a_netstandard2_1_library_is_in_the_portable_list() {
