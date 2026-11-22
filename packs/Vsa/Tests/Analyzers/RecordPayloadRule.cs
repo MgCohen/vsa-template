@@ -24,6 +24,10 @@ public sealed class RecordPayloadRule : VsaRule {
         start.RegisterSymbolAction(symbol => Check((INamedTypeSymbol)symbol.Symbol, request, symbol), SymbolKind.NamedType);
     }
 
+    static bool HasConcreteRequestBase(INamedTypeSymbol type, INamedTypeSymbol implemented) =>
+        type.BaseType is { IsAbstract: false } baseType
+        && baseType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, implemented));
+
     void Check(INamedTypeSymbol type, INamedTypeSymbol request, SymbolAnalysisContext context) {
         if (type.IsAbstract || (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Struct)) {
             return;
@@ -33,7 +37,7 @@ public sealed class RecordPayloadRule : VsaRule {
             return;
         }
         Report(type, "a request", context);
-        if (Values(context.Options).Bool(CheckResponsesKey) != true) {
+        if (Values(context.Options).Bool(CheckResponsesKey) != true || HasConcreteRequestBase(type, implemented)) {
             return;
         }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)

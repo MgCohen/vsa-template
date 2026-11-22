@@ -117,6 +117,25 @@ public sealed class RecordPayloadRuleTests {
         """);
 
     [Test]
+    public Task Response_class_of_a_derived_request_is_reported_one_time() => Analyzer.Verify($$"""
+        public record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record GetRecentItems(int Days) : GetItems;
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
+
+    [Test]
+    public Task Record_struct_request_passes() => Analyzer.Verify($$"""
+        public readonly record struct GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Struct_request_fails() => Analyzer.Verify($$"""
+        public struct {|#0:GetItems|} : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request"));
+
+    [Test]
     public Task Concrete_request_of_an_abstract_base_that_is_not_sealed_passes() => Analyzer.Verify($$"""
         public abstract record TestRequest<TResponse> : Umpire.Vsa.Contracts.Requests.IRequest<TResponse>
             where TResponse : Umpire.Vsa.Contracts.Requests.IResponse;
