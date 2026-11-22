@@ -4,6 +4,6 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Requests;
 
 sealed class PingHandler : RequestHandler<PingRequest, PingResponse> {
-    public override Task<Result<PingResponse>> HandleAsync(Envelope<PingRequest> envelope) =>
+    public override Task<Result<PingResponse>> HandleAsync(IEnvelope<PingRequest> envelope) =>
         Task.FromResult<Result<PingResponse>>(new PingResponse("pong"));
 }

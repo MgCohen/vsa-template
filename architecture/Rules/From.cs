@@ -28,6 +28,14 @@ public sealed class From : Chain<From> {
         return match;
     }
 
+    public TraitRule Are(Trait condition) {
+        var rule = new TraitRule(Subjects(), condition);
+        book.Traits.Add(rule);
+        return rule;
+    }
+
+    public TraitRule Are<T>() where T : Trait, new() => Are(new T());
+
     Rule Start(Type to, Permission permission, Depth? depth, Access? access, Boundary? boundary) {
         var rule = new Rule { Permission = permission, From = Subjects() };
         rule.Begin(to, depth, access, boundary);
@@ -35,14 +43,5 @@ public sealed class From : Chain<From> {
         return rule;
     }
 
-    List<Entry> Subjects() {
-        if (book.Scope is { } concept) {
-            var under = new Filter(FilterKind.Under, concept);
-            foreach (var entry in Entries.Where(e => e.Target != concept && !e.Filters.Contains(under))) {
-                book.RefuseOutOfScope(entry.Target);
-                entry.Filters.Add(under);
-            }
-        }
-        return Entries;
-    }
+    List<Entry> Subjects() => book.InScope(Entries);
 }

@@ -38,15 +38,16 @@ public sealed class OpenGenericTests {
     }
 
     [Test]
-    public void A_type_with_no_key_marker_gets_no_closed_handler() {
+    public async Task The_message_closes_the_open_handler_and_validator_for_a_type_with_no_key_marker() {
         using var host = App().Build();
-        using var scope = host.Services.CreateScope();
+        await using var scope = host.Services.CreateAsyncScope();
         var sender = scope.ServiceProvider.GetRequiredService<ICommandSender>();
 
-        var error = Assert.ThrowsAsync<InvalidOperationException>(
-            () => sender.SendAsync(new ChangeMeterCommand<Weight>(1), default));
+        var weight = await sender.SendAsync(new ChangeMeterCommand<Weight>(1), default);
+        var none = await sender.SendAsync(new ChangeMeterCommand<Weight>(0), default);
 
-        Assert.That(error!.Message, Does.Contain("has no handler"));
+        Assert.That(weight.Value, Is.EqualTo("Weight 1"));
+        Assert.That(none.Error, Is.EqualTo(MeterErrors.NoChange));
     }
 
     [Test]
@@ -64,7 +65,7 @@ public sealed class OpenGenericTests {
 
     [Test]
     public void The_module_types_hold_one_closed_type_for_each_key_and_no_generic_definition() {
-        var types = new AppTypes([new MetersModule()]);
+        var types = new AppTypes(new FixedModules(new MetersModule()));
 
         var handlers = types.Implementations(typeof(CommandHandler<,>));
         var validators = types.Implementations(typeof(Validator<>));
@@ -104,7 +105,7 @@ public sealed class OpenGenericTests {
     [TestCase(typeof(MarkedBaseClass), false)]
     [TestCase(typeof(IMarked), false)]
     public void A_type_is_a_type_argument_when_it_its_base_class_or_an_interface_has_the_marker(Type type, bool isKey) {
-        Assert.That(MarkedTypes.IsTypeArgument(type), Is.EqualTo(isKey));
+        Assert.That(MarkedTypes.IsAutoClose(type), Is.EqualTo(isKey));
     }
 
     [Test]
@@ -164,24 +165,24 @@ public sealed class OpenGenericTests {
 
     [Test]
     public void An_open_class_with_no_marker_is_not_closed_and_not_registered() {
-        var types = new AppTypes([new MetersModule()]);
+        var types = new AppTypes(new FixedModules(new MetersModule()));
 
         Assert.That(types.Registered().Select(t => t.Name), Has.None.EqualTo("MeterHelper`1"));
     }
 
     static Type Registered(string name) =>
-        new AppTypes([new MetersModule()]).Registered().First(t => t.Name == name).GetGenericTypeDefinition();
+        new AppTypes(new FixedModules(new MetersModule())).Registered().First(t => t.Name == name).GetGenericTypeDefinition();
 
     static TestApp App() => new(new MetersModule());
 
-    [TypeArgument]
+    [AutoClose]
     public interface IMarked;
 
     public interface IExtendsMarked : IMarked;
 
     public interface IUnmarked;
 
-    [TypeArgument]
+    [AutoClose]
     public readonly record struct MarkedStruct;
 
     public readonly record struct StructOfMarkedInterface : IMarked;
@@ -192,15 +193,15 @@ public sealed class OpenGenericTests {
 
     public readonly record struct UnmarkedStruct;
 
-    [TypeArgument]
+    [AutoClose]
     public readonly record struct MarkedStructWithText(string Text);
 
-    [TypeArgument]
+    [AutoClose]
     public readonly record struct MarkedStructWithNumbers(int Count, Zone Zone, MarkedStruct Inner);
 
     public enum Zone { Hand }
 
-    [TypeArgument]
+    [AutoClose]
     public abstract class MarkedBaseClass;
 
     public sealed class ClassOfMarkedBaseClass : MarkedBaseClass;

@@ -17,7 +17,7 @@ public abstract class ArchitectureTest<TArchitecture> where TArchitecture : Arch
             .Select(t => TypeFactsOf.Type(t, SourceIn(folder, t.Name)))
             .ToList();
         var bindings = Resolved.Place(facts, BlockFolder, InnerBlocks(folder));
-        return new Place(folder, bindings.Of(facts[0].FullName));
+        return new Place(folder, bindings.Of(facts[0].FullName)) { Placed = bindings };
     }
 
     protected Place At(string folder) {
@@ -29,6 +29,14 @@ public abstract class ArchitectureTest<TArchitecture> where TArchitecture : Arch
         var user = from.Binding ?? throw NotMapped(from);
         var target = to.Binding ?? throw NotMapped(to);
         return Resolved.DecisionFor(user, target);
+    }
+
+    protected IReadOnlyList<string> Problems(Place place) {
+        var binding = place.Binding ?? throw NotMapped(place);
+        var bindings = place.Placed!;
+        return [.. Resolved.Names(bindings).Concat(Resolved.Traits(bindings)).Concat(Resolved.Places(bindings))
+            .Where(result => result.At == binding)
+            .Select(result => result.Message)];
     }
 
     static Source SourceIn(string folder, string name) =>

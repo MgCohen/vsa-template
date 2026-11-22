@@ -1,18 +1,13 @@
 namespace Umpire.Messages.Handlers;
 
-using Umpire.Markers;
 using Umpire.Messages.Contracts;
 
-[RequireDerived]
-[Preserve]
 public abstract class AfterStep : IAfterCall {
     public abstract Task AfterAsync(Envelope envelope);
 
     Task IAfterCall.CallAsync(Envelope envelope) => AfterAsync(envelope);
 }
 
-[RequireDerived]
-[Preserve]
 public abstract class AfterStep<TMessage> : AfterStep where TMessage : class {
     public abstract Task AfterAsync(IEnvelope<TMessage> envelope);
 

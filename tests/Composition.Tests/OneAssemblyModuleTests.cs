@@ -8,7 +8,7 @@ using Umpire.Kernels;
 public sealed class OneAssemblyModuleTests {
     [Test]
     public void The_scan_reads_the_handlers_in_the_root_assembly_of_a_module() {
-        var types = new AppTypes([new OneAssemblyModule()]);
+        var types = new AppTypes(new FixedModules(new OneAssemblyModule()));
 
         var handlers = types.Implementations(typeof(CommandHandler<,>)).Select(found => found.Implementation);
 
@@ -20,6 +20,6 @@ public sealed class OneAssemblyModuleTests {
     public sealed record OneAssemblyCommand : ICommand<int>;
 
     public sealed class OneAssemblyHandler : CommandHandler<OneAssemblyCommand, int> {
-        public override Task<Result<int>> HandleAsync(Envelope<OneAssemblyCommand> envelope) => Task.FromResult<Result<int>>(1);
+        public override Task<Result<int>> HandleAsync(IEnvelope<OneAssemblyCommand> envelope) => Task.FromResult<Result<int>>(1);
     }
 }

@@ -3,9 +3,7 @@ namespace Umpire.Kernels;
 using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Umpire.Markers;
 
-[RequireDerived]
 public abstract class App : IApp {
     const int NoThread = -1;
 

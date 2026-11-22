@@ -26,6 +26,32 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
     }
 
     [Test]
+    public void A_hook_with_the_suffix_has_no_problems() {
+        Assert.That(Problems(At<SampleHook>(Slice)), Is.Empty);
+    }
+
+    [Test]
+    public void A_hook_without_the_suffix_gives_the_name_to_use() {
+        Assert.That(Problems(At<SampleChime>(Slice)), Is.EqualTo(new[] {
+            $"SampleChime is in Handlers.Commands.Hooks ({Slice}), but the name of a Handlers.Commands.Hooks type ends with Hook. "
+            + "Rename it to SampleChimeHook, or move it.",
+        }));
+    }
+
+    [Test]
+    public void An_event_hook_without_the_suffix_gives_the_name_to_use() {
+        Assert.That(Problems(At<SampleRing>(Slice)), Is.EqualTo(new[] {
+            $"SampleRing is in Handlers.Events.Hooks ({Slice}), but the name of a Handlers.Events.Hooks type ends with Hook. "
+            + "Rename it to SampleRingHook, or move it.",
+        }));
+    }
+
+    [Test]
+    public void A_hook_through_an_abstract_base_needs_the_suffix() {
+        Assert.That(Problems(At<SampleLoud>(Slice)), Has.Some.Contains("Rename it to SampleLoudHook"));
+    }
+
+    [Test]
     public void A_helper_follows_its_user_when_the_user_is_a_neighbor() {
         Assert.That(At<SampleDetail>(Slice, typeof(SampleRequest)).Part, Is.EqualTo("Contracts.Requests"));
     }
@@ -146,12 +172,12 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
 
     public sealed class SampleRequestHandler : RequestHandler<SampleRequest, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
-            Umpire.Messages.Contracts.Envelope<SampleRequest> envelope) => throw new NotSupportedException();
+            Umpire.Messages.Contracts.IEnvelope<SampleRequest> envelope) => throw new NotSupportedException();
     }
 
     public sealed class SampleCommandHandler : CommandHandler<SampleCommand, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
-            Umpire.Messages.Contracts.Envelope<SampleCommand> envelope) => throw new NotSupportedException();
+            Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) => throw new NotSupportedException();
     }
 
     public sealed class SampleValidator : Umpire.Messages.Handlers.Validator<SampleRequest> {
@@ -168,11 +194,29 @@ public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture
 
     public sealed class SampleCheckingHandler(SampleCheckBase check) : RequestHandler<SampleRequest, SampleResponse> {
         public override Task<Umpire.Messages.Contracts.Result<SampleResponse>> HandleAsync(
-            Umpire.Messages.Contracts.Envelope<SampleRequest> envelope) =>
+            Umpire.Messages.Contracts.IEnvelope<SampleRequest> envelope) =>
             check.Passes(envelope.Message) ? throw new NotSupportedException() : throw new InvalidOperationException();
     }
 
     public sealed class SampleHook : BeforeCommandHook<SampleCommand> {
+        public override Task<SampleCommand> BeforeAsync(Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) =>
+            Task.FromResult(envelope.Message);
+    }
+
+    public sealed class SampleChime : BeforeCommandHook<SampleCommand> {
+        public override Task<SampleCommand> BeforeAsync(Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) =>
+            Task.FromResult(envelope.Message);
+    }
+
+    public sealed record SampleRang : Umpire.Vsa.Contracts.Events.IntegrationEvent;
+
+    public sealed class SampleRing : Umpire.Vsa.Handlers.Events.AfterEventHook<SampleRang> {
+        public override Task AfterAsync(Umpire.Messages.Contracts.IEnvelope<SampleRang> envelope) => Task.CompletedTask;
+    }
+
+    public abstract class SampleBellHook : BeforeCommandHook<SampleCommand>;
+
+    public sealed class SampleLoud : SampleBellHook {
         public override Task<SampleCommand> BeforeAsync(Umpire.Messages.Contracts.IEnvelope<SampleCommand> envelope) =>
             Task.FromResult(envelope.Message);
     }

@@ -2,6 +2,7 @@ namespace EngineCore.Tests;
 
 using Umpire.Architecture;
 using Umpire.Kernels;
+using Umpire.Vsa.Definition;
 
 public sealed class PackArchitectureTests {
     const string PackFolder = "C:/packs/Sample";
@@ -43,6 +44,38 @@ public sealed class PackArchitectureTests {
         Assert.That(typeof(Pack).BaseType, Is.EqualTo(typeof(Block<PackArchitecture>)));
         Assert.That(typeof(Pack<,,>).IsAbstract, Is.True);
     }
+
+    [Test]
+    public void A_pack_with_its_architecture_has_the_kernel_of_that_architecture_as_folder_parts() {
+        var kernel = WithKernel().Parts.Where(p => p.Path.StartsWith("Kernel/", StringComparison.Ordinal)).ToList();
+
+        Assert.That(kernel.Select(p => p.Path), Does.Contain("Kernel/Domain").And.Contain("Kernel/Handlers/Commands"));
+        Assert.That(kernel, Has.All.Matches<Part>(p => !p.IsExternal && p.Types.Count == 0));
+    }
+
+    [Test]
+    public void A_type_in_a_kernel_layer_folder_binds_to_that_layer() {
+        var bindings = WithKernel().Place([Fact("Kernel/Handlers/Commands/CommandHandler.cs", "CommandHandler")], PackFolder);
+
+        Assert.That(bindings.All.Single().Part.Name, Is.EqualTo("Handlers.Commands"));
+    }
+
+    [Test]
+    public void Each_use_between_two_kernel_layers_is_allowed_until_the_kernel_has_rules() {
+        var resolved = WithKernel();
+        var layers = resolved.Parts.Where(p => p.Path.StartsWith("Kernel/", StringComparison.Ordinal)).ToList();
+        var none = new Dictionary<string, string>();
+
+        var denied = layers.SelectMany(from => layers.Where(to => to != from)
+                .Where(to => resolved.DecisionFor(from, none, to, none).Permission != Permission.Allow)
+                .Select(to => $"{from.Path} -> {to.Path}"))
+            .ToList();
+
+        Assert.That(layers, Has.Count.EqualTo(13));
+        Assert.That(denied, Is.Empty);
+    }
+
+    static ResolvedArchitecture WithKernel() => new(new PackArchitecture(new VsaArchitecture()));
 
     static Bindings Place(params TypeFacts[] types) => new ResolvedArchitecture(new PackArchitecture()).Place(types, PackFolder);
 

@@ -3,7 +3,8 @@ namespace Umpire.Architecture;
 internal static class MatchCheck {
     public static IEnumerable<MatchResult> Failures(MatchStatement statement, Bindings bindings) {
         var taken = Concept.Display(statement.Taken);
-        foreach (var subject in bindings.All.Where(b => !b.External && !b.FollowsUser && !b.Type.IsAbstract && statement.Subjects.Contains(b.Part))) {
+        foreach (var subject in bindings.All.Where(b => !b.External && !b.FollowsUser && !b.Type.IsAbstract && !b.Type.IsStatic
+            && statement.Subjects.Contains(b.Part))) {
             var arguments = subject.Type.BaseArguments.Select(bindings.Of).OfType<Binding>()
                 .Where(b => !b.External && b.Part.InFamily(statement.Taken)).Distinct().ToList();
             if (arguments.Count == 0) {

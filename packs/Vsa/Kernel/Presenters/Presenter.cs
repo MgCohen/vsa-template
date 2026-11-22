@@ -5,8 +5,6 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 
 [AutoRegister]
-[RequireDerived]
-[Preserve]
 public abstract class Presenter(IRequestSender requests) : IDisposable {
     public event Action? Changed;
 

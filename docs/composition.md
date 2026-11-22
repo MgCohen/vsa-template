@@ -113,14 +113,14 @@ Run ──► the stop runs on the thread of Run, after the wait
 | `App.Stop()` | 0 |
 | `AppStop.Request(code)`, from app code | `code` |
 | The end of the console operation | The exit code of the response |
-| Ctrl+C, or SIGTERM on `net10.0` (console and web hosts) | 0 |
+| Ctrl+C, or SIGTERM on `net8.0` and later (console and web hosts) | 0 |
 | `IHostApplicationLifetime.StopApplication()` (web host) | 0 |
 
 Code inside the app uses the same call in all hosts:
 
 ```csharp
 sealed class QuitHandler(AppStop stop) : CommandHandler<QuitCommand, Done> {
-    public override Task<Result<Done>> HandleAsync(Envelope<QuitCommand> envelope) {
+    public override Task<Result<Done>> HandleAsync(IEnvelope<QuitCommand> envelope) {
         stop.Request(envelope.Message.ExitCode);
         return Task.FromResult<Result<Done>>(new Done());
     }
@@ -153,7 +153,7 @@ A host is the platform. It builds the services and starts the host work. It does
 - `WebHost.Build` gives `args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
 - `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.
 - `AppHost` does no OS work, so a Unity app does not listen for Ctrl+C.
-- Each host has a public constructor with no parameters, and `AppHost` has `[RequireDerived]`.
+- Each host has a public constructor with no parameters.
 
 ## What Compose does
 
@@ -173,6 +173,7 @@ AppHost.Compose(services, configuration, kernel, types)    fixed order
 ├─ Module.Compose(services, settings)                      each module, in Order, then by name
 │  ├─ Module                                                Configure(services)
 │  └─ Module<TSettings>, Plugin<TSettings>                  get the settings, then Configure(services, settings)
+├─ CloseOpenDescriptors(services, types)                   closed descriptors for each open one (see "Open generics")
 └─ host.Configure(services, types)                         last
 ```
 
@@ -238,14 +239,17 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 - Each source finds nothing where it does not apply, so the scan has no Unity case.
 - If an assembly has types that do not load, the scan keeps the types that load (`ReflectionTypeLoadException`).
 - The scan skips each assembly that references `nunit.framework`: a test assembly is not part of the app.
-- To select other modules, give a list in `AppHost.Modules`.
-- `Build` makes one `AppTypes` instance: `new AppTypes(Modules, app.GetType().Assembly)`. If `Modules` is `null`, the instance finds the modules itself. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
+- To select other modules, give a module provider in `AppHost.ModuleProvider` (`IModuleProvider`). The default is `ScannedModules` (the scan). `FixedModules(params Module[])` is a list by hand. It refuses a module type or a module name that it has two times. A custom provider calls `scan.In(assemblies)` to scan only some assemblies, for example a host that runs several apps in one process. `scan.In` does not skip an assembly that references `nunit.framework`: the provider selects its assemblies itself.
+- A provider gets only the module scan (`ModuleScan`), not the `AppTypes` instance. Reason: the type scans of `AppTypes` read the assemblies of the modules, so a provider that read them would ask for its own modules again.
+- `Build` makes one `AppTypes` instance: `new AppTypes(ModuleProvider, app.GetType().Assembly)`. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. The assemblies of the modules are also the scope of the other type scans (handlers, views, `[AutoRegister]`). A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
 - `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |
 |---|---|
-| `new AppTypes(modules, appAssembly)` | The one constructor. With `null` modules, the instance finds the modules itself. `AppHost` gives the assembly of the app class (the root project) |
-| `Modules` | One module for each module root, or the given modules, in order |
+| `new AppTypes(provider, appAssembly)` | The one constructor. With no provider, it uses `ScannedModules`. `AppHost` gives the assembly of the app class (the root project) |
+| `Modules` | The modules of the provider, in order |
+| `IModuleProvider.Modules(scan)` | The modules of the app. `ScannedModules` gives `scan.All()`, `FixedModules` gives its list |
+| `ModuleScan.All()`, `ModuleScan.In(assemblies)` | One module for each module root of the scan, or of the given assemblies |
 | `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in the assemblies of the modules and the assembly of the app class. A type in another assembly, for example a test assembly, is not found |
 | `Registered()`, `Implementations(baseType)` | The marked types (see "One discovery path") |
 
@@ -263,7 +267,7 @@ The modules are in order of `Module.Order`, then by name: a plugin (`Order` 0) c
 ```text
 AppTypes.Registered()
 ├─ each concrete class with [AutoRegister]     closed class: as it is
-│  (on the class, a base class or an interface) open class: closed for each type argument
+│  (on the class, a base class or an interface) open class: closed for each [AutoClose] type that fits
 └─ the core step                               registers each type and each marked base
    The layer registrations                     add only the sender, the pipeline and the checks
 ```
@@ -271,23 +275,15 @@ AppTypes.Registered()
 | Marker | Side | Meaning |
 |---|---|---|
 | `[AutoRegister(lifetime)]` | Open or closed class, its base class or its interface | VSA registers each concrete class. Lifetime default: `Scoped`. |
-| `[TypeArgument]` | Type argument, its base class or its interface | A struct or a concrete class that closes the open classes. |
-| `[assembly: TypeArgument(typeof(int))]` | Type argument | A type that cannot have the attribute. |
+| `[AutoClose]` | Type argument, its base class or its interface | Closes open generic types over this type. A struct or a concrete class. |
+| `[assembly: AutoClose(typeof(int))]` | Type argument | A type that cannot have the attribute. |
 
-The markers are in `Umpire.Markers`. The same package has the stripping markers for IL2CPP. The UnityLinker finds them by class name, so do not rename them:
-
-| Marker | Target | The linker keeps | VSA puts it on |
-|---|---|---|---|
-| `[RequireDerived]` | Class | Each derived class | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, `Module`, `App`, `Pack`, `AppHost` |
-| `[RequireImplementors]` | Interface | Each implementor | `IApp`, `IRunner`, `IBeforeCall`, `IAfterCall` |
-| `[Preserve]` | Any | The marked member | The `[AutoRegister]` bases, `Presenter`, `BeforeStep`, `AfterStep` and their typed forms, the envelope create method and the typed handler call of the pipeline |
-
-The pipeline creates the runner, the envelope factory and the steps from a `Type` (`Activator`, `ActivatorUtilities`). The app makes its pack and the pack makes its host with `new()`. The linker cannot see these uses, so each of their bases has a marker. `MarkedTypes` names the marker types with `typeof`, so Umpire.Kernels uses the markers assembly in code.
+The markers are in `Umpire.Markers`. `MarkedTypes` reads them by full name. They are the only markers of the core, because the scan needs them on each host.
 
 The template bases have `[AutoRegister]`: `CommandHandler<,>`, `RequestHandler<,>`, `IntegrationEventHandler<>`, `Validator<>`, the four hook bases and `Presenter`. A class that derives from one of them needs no marker.
 
 ```csharp
-[TypeArgument]
+[AutoClose]
 public interface IResource;
 
 public readonly record struct Health(int Value) : IResource;
@@ -309,16 +305,85 @@ sealed class WeaponCache<T> where T : struct, IWeapon { ... }
 |---|---|
 | Registration | The class itself, and each base class or interface with the marker. |
 | One instance | Each marked base resolves the class itself, so a scope has one instance. |
-| Type arguments | Only marked types and assembly types. A type without the marker is never a type argument. |
-| Constraints | `class`, `struct`, `unmanaged` and each type constraint. A struct with a reference field does not meet `unmanaged`. |
-| Parameters | One generic parameter. An open class with two or more parameters stops the start, with a message. |
+| Type arguments | `[AutoClose]` types, assembly types and the constructor walk. |
+| Constraints | `class`, `struct`, `new()`, `unmanaged` and each type constraint. |
+| Parameters | One or more. Each parameter gets each `[AutoClose]` type that fits. |
 | No marker | VSA does not close or register the class. |
-| No type argument fits | The open class gets no closed type. A send of that command fails with "has no handler". |
+| No type argument fits | The start stops, with a message, except for an open handler (see below). |
 | Owner | A layer registration can register a class first. The core step does not replace it. |
 
 `AppTypes` is a singleton service. `Implementations(typeof(TBase))` gives a `ServiceImplementation(Service, Implementation)` for each registered type that derives from `TBase`, with that base as the service. A plugin reads its own types with it.
 
-The type arguments of an open class are the marked types that meet each constraint of its generic parameter (`ConstraintTypeArguments`, internal). An app cannot replace this source.
+The type arguments of an open class are the marked types that meet each constraint of its generic parameters (`ConstraintTypeArguments`, internal). The check substitutes the other parameters, so `where TTo : IRate<TFrom>` works. An app cannot replace this source.
+
+## Open generics
+
+The container never closes a generic type itself. `CloseOpenDescriptors` replaces each open descriptor with closed descriptors before the build. Reason: Microsoft DI copies the type arguments by position, so it cannot close a nested shape such as `Entry<T> : IEntry<Put<T>>`. IL2CPP and NativeAOT also refuse a struct type argument that has no code at build time.
+
+```text
+AppHost.Compose
+└─ CloseOpenDescriptors(services, types)
+   ├─ open descriptors       each module descriptor with an open ServiceType and ImplementationType
+   ├─ 1. [AutoClose] types   each fit closes the implementation; each matching service is added
+   ├─ declared messages      each open handler is closed for each concrete message of its shape
+   ├─ 2. constructor walk    each closed parameter, or the item of IEnumerable<T>, is a closed request
+   │                         OpenGenerics.Unify(open implementation, request) solves the type parameters
+   │                         an open [AutoRegister] class also answers a request
+   │                         repeat until no new type
+   ├─ remove                 an open descriptor with one or more known closed forms
+   ├─ remove duplicates      one descriptor for each (service, implementation), the last one stays
+   └─ stop the start         an open [AutoRegister] class with no closed type, except an open handler
+```
+
+| Item | Rule |
+|---|---|
+| Lifetime | Each closed descriptor has the lifetime of its open descriptor. |
+| Known closed form | A closed form that a module registers also counts. |
+| No closed form | The open descriptor stays, and the container closes it at use. |
+| Kernel descriptors | Not changed, for example `ILogger<>` and `IOptions<>`. |
+| Duplicates | A module registration of a scanned class gives one list item. |
+| Dispatch | The pipeline closes an open handler, validator or hook for a sent message with the same matcher. |
+
+`OpenGenerics.Unify(openImplementation, service)` matches the closed service against each type that the open class implements: the class, its base classes and its interfaces. It solves each type parameter, then it checks each constraint itself, because IL2CPP does not check constraints in `MakeGenericType`.
+
+```csharp
+OpenGenerics.Unify(typeof(Entry<>), typeof(IEntry<Put<Coin>>));          // Entry<Coin>
+OpenGenerics.Unify(typeof(Exchange<,>), typeof(IExchange<Gem, Coin>));    // Exchange<Gem, Coin>
+OpenGenerics.Unify(typeof(Counter<>), typeof(ICounter<int>));             // null: int is not IAmount
+```
+
+### Open handlers
+
+An open handler is an open class of a dispatch service: `IHandler<>`, `Validator<>` or a hook base of a pipeline. Each pipeline definition gives its message base and these services to the kernel (`IDispatchClose`). The message shape is the first type argument of the dispatch service.
+
+| Open handler | Message shape | Result |
+|---|---|---|
+| `PutHandler<T> : CommandHandler<Put<T>, int>` | `Put<T>` | Dispatch closes it. No marker |
+| `SwapHandler<TA, TB> : CommandHandler<Swap<TA, TB>, string>` | `Swap<TA, TB>` | Dispatch closes it. No marker |
+| `JsCommandHandler<TResult> : CommandHandler<JsCommand<TResult>, TResult>` | `JsCommand<TResult>` | Also closed at start for `MotionWait : JsCommand<WaitResult>` |
+| `Bad<T, U> : CommandHandler<Put<T>, int>` | `Put<T>`, no `U` | The start stops |
+
+- If each type parameter of the class is in the message shape, the dispatch can close it, so the start does not stop.
+- At start, each concrete message class of the module assemblies that has the shape closes the handler. The closed handler is registered as the scan registers it.
+- If a send finds no handler, and an open handler has the shape but a type argument does not meet a constraint, the error names the handler, the message and the constraint:
+
+```text
+Till.Slices.Pick.PickCommand`1[System.Int32] has no handler in its pipeline. Till.Slices.Pick.PickHandler<T> cannot close for PickCommand`1: Int32 does not meet the constraints of T: struct, IAmount. Change the message, or change the constraints of the open handler.
+```
+
+`MessageTypes.Closed` (the dispatch close) supports more than one type parameter: `OpenGenerics.ForMessage` finds the message shape in the message, its base classes or its interfaces, then it solves each parameter.
+
+### Start error
+
+Each other open `[AutoRegister]` class with no closed type stops the start, for example a service:
+
+```text
+Shop.Domain.Rack<T> has no type argument. Mark a type that meets the constraints of T with [AutoClose], or remove [AutoRegister].
+```
+
+The check applies to each open `[AutoRegister]` class of the module assemblies. These are the only assemblies that the scan reads. A library type that an app may not use has no `[AutoRegister]`, or it is outside the module assemblies. Thus `[AutoRegister]` has no opt-out (MgCohen/vsa-template#214).
+
+The guide with the use cases: https://claude.ai/artifact/5xxwYSBS2MNS3kupBP61rT (a private page). This file is the repository source.
 
 ### Reflection uses
 
@@ -329,8 +394,9 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `AppAssemblies` (Kernel) | `AppDomain.GetAssemblies`, `Assembly.Load`, `PEReader` | Finds the module assemblies. Only the `AppTypes` instance calls it |
 | `LoadedTypes.Of` (Architecture) | `GetTypes` | The one load-safe type read |
 | `ModuleRoot.Create` (Kernel) | `Activator.CreateInstance` | Creates the module class. A class with no public constructor with no parameters stops the start, with a message |
-| `AppTypes`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class for each type argument |
-| `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[TypeArgument]` by name |
+| `OpenGenerics`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class: the scan, the descriptor close and the dispatch |
+| `OpenDescriptors` (Kernel) | `GetConstructors`, `GetParameters` | The constructor walk and the declared message close of `CloseOpenDescriptors` |
+| `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[AutoClose]` by name |
 | `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope and the typed handler call of the runtime message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
@@ -373,14 +439,14 @@ If the app has one `ViewsRoot`, `WebHost` adds `AddRazorComponents().AddInteract
 ```
 framework/Kernel/                      Umpire.Kernels
   App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, TKernel, THost>, AppStop
-  Kernels/                             Kernel, the core step (AutoRegistration)
+  Kernels/                             Kernel, the core step (AutoRegistration), OpenDescriptors
   Operations/                          Operation, OperationInvoke, OperationResult
   Hosts/                               AppHost
   Hosts/Web/                           Umpire.Hosts.Web: WebHost, ViewsRoot, the HTTP API, the request binder
   Hosts/Console/                       Umpire.Hosts.Console: ConsoleHost, the command-line binder
   Modules/                             Module, Module<TSettings>, ModuleSettings, ISettingsProvider, UmpireConfigSettings
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
-  Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes
+  Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes, OpenGenerics
   Factories/                           IFactory<T>, AddFactory
 architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
 framework/Components/Messages/
@@ -431,9 +497,7 @@ Module code and the layer registrations use two shared interfaces from .NET:
 | DryIoc, Lamar, SimpleInjector | Their own integration packages |
 | VContainer | No support. The app routes to the Microsoft container |
 
-A Unity app that uses VContainer builds the Microsoft container from `Compose`, then routes to it. For each VSA service type, VContainer gets a registration that resolves the service from the Microsoft container. A singleton comes from the root. A scoped or transient service comes from one Microsoft scope for each VContainer scope. So VSA keeps the Microsoft semantics, and Unity classes get VSA services by constructor injection.
-
-A copy of each `ServiceDescriptor` into `IContainerBuilder` does not work. VContainer refuses two registrations of one implementation type, and VSA registers several instances of one type and reads them as a list (`AddPipeline`). The spike is on the branch `spike/compose-containers` of `vsa-consumer-unity`.
+An app with a container that cannot read `IServiceCollection` builds the Microsoft container from `Compose`, then routes to it: for each service type, its container gets a registration that resolves the service from the Microsoft container. So the services keep the Microsoft semantics. A copy of each `ServiceDescriptor` often does not work, because the app registers several instances of one type and reads them as a list (`AddPipeline`).
 
 ## Factories
 
@@ -487,16 +551,16 @@ Modes = { easy = 1, hard = 5 }
 | `IConfiguration` | `appsettings.json`, environment, `args` | `args` from the first option (`--key value`) | `args` (`--key value`, `--Section:Key=Value`) |
 | `IHostedService` start | Yes, inside `WebApplication` | No | No |
 
-## Unity target
+## Portable target
 
-`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net10.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The Unity limits and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `net8.0` and `netstandard2.1`. The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
-A Unity app has the app class `App<Vsa<UnityHost>>`. The shell of the UPM package (repo `vsa-unity`) calls `app.Start(args)` on the main thread and `app.Stop()`, and it owns the frame loop. `Start` keeps the Unity main thread as the app thread, so `AppStop.Request` from any thread stops the app on the main thread. A stop request stops the app only, and Unity continues. A game that must quit overrides `OnStop` and calls `Application.Quit`. The Unity host is an `AppHost` with `Configure`:
+A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add a log provider of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
 
 ```csharp
-public sealed class UnityHost : AppHost {
+public sealed class GameHost : AppHost {
     protected override void Configure(IServiceCollection services, AppTypes types) {
-        services.AddLogging(logging => logging.AddProvider(new UnityLogProvider()));
+        services.AddLogging(logging => logging.AddProvider(new GameLogProvider()));
     }
 }
 ```
@@ -504,11 +568,11 @@ public sealed class UnityHost : AppHost {
 An app that owns its container calls `Compose` and builds the container itself:
 
 ```csharp
-var host = new UnityHost();
-host.Compose(collection, configuration, new VsaKernel(), new AppTypes(null, typeof(GameApp).Assembly));
+var host = new GameHost();
+host.Compose(collection, configuration, new VsaKernel(), new AppTypes(appAssembly: typeof(GameApp).Assembly));
 ```
 
-A bridge to another container (fallback or side by side) reads `App.Services` after `Start`. `UnityLogProvider` is app code that calls `Debug.Log`. The Unity check runs the EditMode tests of `vsa-consumer-unity` (Mono) against a local pack.
+A bridge to another container (fallback or side by side) reads `App.Services` after `Start`.
 
 ## Non-goals
 
@@ -526,6 +590,5 @@ A bridge to another container (fallback or side by side) reads `App.Services` af
 
 - Remote request sender: an `IRequestSender` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
 - Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
-- IL2CPP check: the Unity check runs on Mono only. Run `AppTypes` and `Compose` in an IL2CPP player build of `vsa-consumer-unity`.
 - The pack: keep it as a join of architecture, kernel and host, or replace it at the app level (#198).
 - The copy of the base `Build` in `ConsoleHost` (#203).

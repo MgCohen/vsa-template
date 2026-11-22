@@ -18,8 +18,10 @@ sealed class SymbolReader : IDisposable {
     readonly MetadataReader metadata;
     readonly MetadataReader? pdbOrNull;
     readonly Lazy<IReadOnlyList<string>> sourceFolders;
+    readonly string? sourceRoot;
+    readonly Dictionary<DocumentHandle, string> documentNames = [];
 
-    public SymbolReader(string dll) {
+    public SymbolReader(string dll, string? sourceRoot = null) {
         image = new PEReader(File.OpenRead(dll));
         try {
             if (!image.HasMetadata) {
@@ -33,11 +35,17 @@ sealed class SymbolReader : IDisposable {
         symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb"));
         pdbOrNull = symbols?.GetMetadataReader();
         sourceFolders = new(SourceFoldersAndParents);
+        this.sourceRoot = sourceRoot;
     }
 
     public bool HasSymbols => pdbOrNull is not null;
 
     MetadataReader pdb => pdbOrNull!;
+
+    public static string Resolve(string? sourceRoot, string document) =>
+        sourceRoot is null || IsRooted(document)
+            ? document
+            : Path.GetFullPath(Path.Combine(sourceRoot, document.Replace('\\', Path.DirectorySeparatorChar)));
 
     public IReadOnlyList<string> References() =>
         [.. metadata.AssemblyReferences.Select(r => metadata.GetString(metadata.GetAssemblyReference(r).Name))];
@@ -149,7 +157,18 @@ sealed class SymbolReader : IDisposable {
         return null;
     }
 
-    string DocumentName(DocumentHandle handle) => pdb.GetString(pdb.GetDocument(handle).Name);
+    static bool IsRooted(string document) =>
+        Path.IsPathRooted(document)
+        || document.StartsWith(@"\\", StringComparison.Ordinal)
+        || document is [var drive, ':', '\\' or '/', ..] && char.IsAsciiLetter(drive);
+
+    string DocumentName(DocumentHandle handle) {
+        if (!documentNames.TryGetValue(handle, out var name)) {
+            name = Resolve(sourceRoot, pdb.GetString(pdb.GetDocument(handle).Name));
+            documentNames[handle] = name;
+        }
+        return name;
+    }
 
     static bool IsGenerated(string file) => BuildOutput.Contains(file);
 

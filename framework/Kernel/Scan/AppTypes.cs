@@ -9,23 +9,25 @@ public sealed class AppTypes {
     readonly AppAssemblies scan = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Type>> concreteTypes = new();
     readonly Assembly? appAssembly;
+    readonly IModuleProvider provider;
+    readonly ModuleScan moduleScan;
     IReadOnlyList<Module>? modules;
-    IReadOnlyList<ModuleRoot>? roots;
     Assembly[]? assemblies;
     Type[]? loaded;
     Type[]? registered;
-    Type[]? typeArguments;
+    Type[]? autoCloseTypes;
+    Type[]? openRegistered;
+    Type[]? declared;
 
-    public AppTypes(IReadOnlyList<Module>? modules, Assembly? appAssembly = null) {
-        this.modules = modules is null ? null : InOrder(modules);
+    public AppTypes(IModuleProvider? provider = null, Assembly? appAssembly = null) {
+        this.provider = provider ?? new ScannedModules();
+        moduleScan = new ModuleScan(scan);
         this.appAssembly = appAssembly;
     }
 
-    public IReadOnlyList<Module> Modules => modules ??= InOrder(Roots.Select(root => root.Create()));
+    public IReadOnlyList<Module> Modules => modules ??= InOrder(provider.Modules(moduleScan));
 
-    internal IReadOnlyList<ModuleRoot> Roots => roots ??= [.. scan.OfModules()
-        .SelectMany(assembly => ModuleRoot.In(assembly, scan.TypesOf(assembly)))
-        .OrderBy(root => root.Name, StringComparer.Ordinal)];
+    internal IReadOnlyList<ModuleRoot> Roots => moduleScan.Roots;
 
     internal static IReadOnlyList<Module> InOrder(IEnumerable<Module> modules) => [.. modules
         .OrderBy(module => module.Order)
@@ -39,16 +41,27 @@ public sealed class AppTypes {
 
     public IReadOnlyList<Type> Registered() => registered ??= [.. Loaded()
         .Where(MarkedTypes.IsAutoRegistered)
-        .SelectMany(type => type.IsGenericTypeDefinition ? Close(type) : [type])];
+        .SelectMany(type => type.IsGenericTypeDefinition ? OpenGenerics.CloseOver(type, AutoCloseTypes()) : [type])];
+
+    public IReadOnlyList<Type> Declared() => declared ??= [.. Loaded()
+        .Where(t => !t.ContainsGenericParameters && !t.IsAbstract && (t.IsClass || t.IsValueType))];
+
+    public IReadOnlyList<Type> OpenRegistered() => openRegistered ??= [.. Loaded()
+        .Where(type => type.IsGenericTypeDefinition && MarkedTypes.IsAutoRegistered(type))];
 
     public IReadOnlyList<ServiceImplementation> Implementations(Type baseType) =>
         [.. Registered()
             .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
             .OfType<ServiceImplementation>()];
 
-    internal IReadOnlyList<Type> TypeArguments() => typeArguments ??= [.. Loaded()
-        .Where(MarkedTypes.IsTypeArgument)
-        .Concat(Assemblies().SelectMany(MarkedTypes.TypeArgumentsOf))
+    public IReadOnlyList<ServiceImplementation> OpenImplementations(Type baseType) =>
+        [.. OpenRegistered()
+            .Select(type => ServiceOf(type, baseType) is { } service ? new ServiceImplementation(service, type) : null)
+            .OfType<ServiceImplementation>()];
+
+    public IReadOnlyList<Type> AutoCloseTypes() => autoCloseTypes ??= [.. Loaded()
+        .Where(MarkedTypes.IsAutoClose)
+        .Concat(Assemblies().SelectMany(MarkedTypes.AutoCloseTypesOf))
         .Distinct()];
 
     static Type? ServiceOf(Type type, Type baseType) {
@@ -56,18 +69,6 @@ public sealed class AppTypes {
             return baseType.IsAssignableFrom(type) && type != baseType ? baseType : null;
         }
         return ClosedBase.Of(type, baseType) ?? ClosedBase.InterfaceOf(type, baseType);
-    }
-
-    IEnumerable<Type> Close(Type definition) {
-        var parameters = definition.GetGenericArguments();
-        if (parameters.Length != 1) {
-            throw new InvalidOperationException(
-                $"{definition.FullName} has {parameters.Length} generic parameters. "
-                + "Umpire closes an open module type with one generic parameter only. "
-                + "Write one closed type for each type argument.");
-        }
-        return ConstraintTypeArguments.For(parameters[0], TypeArguments())
-            .Select(argument => definition.MakeGenericType(argument));
     }
 
     IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Assemblies()

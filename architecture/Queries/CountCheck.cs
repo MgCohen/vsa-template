@@ -26,7 +26,7 @@ internal static class CountCheck {
     }
 
     static List<Binding> Counted(CountStatement statement, IEnumerable<Binding> bindings) =>
-        [.. bindings.Where(b => !b.FollowsUser && !b.Type.IsAbstract && statement.Counts(b))];
+        [.. bindings.Where(b => !b.FollowsUser && !b.Type.IsAbstract && !b.Type.IsNested && statement.Counts(b))];
 
     static IEnumerable<CountResult> Check(CountStatement statement, string subject, string? group, List<Binding> found, Binding at) {
         var counted = group is null ? $"{statement.Counted} that take it" : statement.Counted;

@@ -8,17 +8,21 @@ sealed class PartOf {
     readonly string blockFolder;
     readonly IReadOnlyList<string> innerBlocks;
 
-    PartOf(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
+    PartOf(
+        ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks,
+        IReadOnlyList<FolderAlias> folderAliases) {
         this.resolved = resolved;
         folderParts = [.. resolved.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
         blockPlaces = [.. folderParts.Where(p => p.IsBlockPlace)];
-        aliases = resolved.Architecture.FolderAliases(blockFolder);
+        aliases = [.. resolved.Architecture.FolderAliases(blockFolder), .. folderAliases];
         this.blockFolder = blockFolder;
         this.innerBlocks = [.. innerBlocks.Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)];
     }
 
-    public static Bindings Bind(ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks) {
-        var partOf = new PartOf(resolved, blockFolder, innerBlocks);
+    public static Bindings Bind(
+        ResolvedArchitecture resolved, IReadOnlyList<TypeFacts> types, string blockFolder, IReadOnlyList<string> innerBlocks,
+        IReadOnlyList<FolderAlias> folderAliases) {
+        var partOf = new PartOf(resolved, blockFolder, innerBlocks, folderAliases);
         var bound = new List<Binding>();
         var unmapped = new List<UnmappedType>();
         foreach (var type in types) {
@@ -92,10 +96,14 @@ sealed class PartOf {
     }
 
     List<string> AliasedPaths(string relative) => [.. aliases
-        .Where(alias => relative.StartsWith(alias.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
-        .Select(alias => alias.As.Length == 0
-            ? relative[(alias.Folder.TrimEnd('/').Length + 1)..]
-            : $"{alias.As.TrimEnd('/')}/{relative[(alias.Folder.TrimEnd('/').Length + 1)..]}")];
+        .Where(alias => IsRoot(alias)
+            || relative.StartsWith(alias.Folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase))
+        .Select(alias => alias.As.Length == 0 ? Rest(alias, relative) : $"{alias.As.TrimEnd('/')}/{Rest(alias, relative)}")];
+
+    static bool IsRoot(FolderAlias alias) => alias.Folder.TrimEnd('/').Length == 0;
+
+    static string Rest(FolderAlias alias, string relative) =>
+        IsRoot(alias) ? relative : relative[(alias.Folder.TrimEnd('/').Length + 1)..];
 
     FolderMatch? Folder(IReadOnlyList<string> paths) => paths
         .Select(path => path.Split('/')[..^1])

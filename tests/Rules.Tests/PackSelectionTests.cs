@@ -83,6 +83,30 @@ public sealed class PackSelectionTests {
         public sealed class ShopApp : GameApp<OtherPack>;
         """);
 
+    [Test]
+    public Task A_launcher_that_implements_the_entry_interface_of_another_pack_runs_no_rule_of_this_pack() =>
+        Analyzer.Verify(QuietRequest + OtherPack + """
+        public abstract class Launcher<TPack> : Umpire.Kernels.IAppEntry<TPack> where TPack : Umpire.Kernels.Pack, new();
+        public sealed class GameLauncher : Launcher<OtherPack>;
+        """);
+
+    [Test]
+    public Task A_launcher_that_implements_the_entry_interface_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
+        public sealed class GameLauncher : Umpire.Kernels.IAppEntry<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        """, Found());
+
+    [Test]
+    public Task An_abstract_class_that_implements_the_entry_interface_is_no_entry() =>
+        Analyzer.Verify(QuietRequest + OtherPack + """
+        public abstract class Launcher : Umpire.Kernels.IAppEntry<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        """);
+
+    [Test]
+    public Task A_class_that_implements_the_entry_interface_for_two_packs_gives_an_entry_for_each() =>
+        Analyzer.Verify(Request + OtherPack + """
+        public sealed class GameLauncher : Umpire.Kernels.IAppEntry<OtherPack>, Umpire.Kernels.IAppEntry<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        """, Found());
+
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Found() =>
-        Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "GetItems", "a request");
+        Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request");
 }

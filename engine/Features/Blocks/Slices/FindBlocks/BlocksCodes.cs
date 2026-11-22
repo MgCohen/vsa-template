@@ -9,4 +9,5 @@ public static class BlocksCodes {
     public static readonly string CodeWins = StepCode.Of<FindBlocksCommand>(4);
     public static readonly string NoUmpireSdk = StepCode.Of<FindBlocksCommand>(5);
     public static readonly string NoConfigFile = StepCode.Of<FindBlocksCommand>(6);
+    public static readonly string NewerRuntime = StepCode.Of<FindBlocksCommand>(7);
 }

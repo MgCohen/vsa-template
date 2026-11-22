@@ -1,6 +1,7 @@
 namespace BuiltApp.Domain.Shared;
 
-public sealed record BlockEntry(string Folder, EntryForm Form, TypeName? Type, string Source, string? Problem = null) {
+public sealed record BlockEntry(
+    string Folder, EntryForm Form, TypeName? Type, string Source, string? Problem = null, TypeName? Packed = null) {
     public string Key => Form == EntryForm.App ? nameof(EntryForm.App) : $"{Form}: {Type}";
 
     public BlockEntry Names(string name, string problem) => this with { Problem = $"names \"{name}\", but {problem}" };

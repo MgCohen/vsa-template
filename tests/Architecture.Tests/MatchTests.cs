@@ -29,6 +29,13 @@ public sealed class MatchTests {
     }
 
     [Test]
+    public void A_static_class_is_not_a_subject() {
+        var helper = Fact("TagTools", "a", typeof(ITagged)) with { IsStatic = true };
+
+        Assert.That(TagsTakeItemsInTheirBox.Matches(ItemA, helper), Is.Empty);
+    }
+
+    [Test]
     public void A_subject_with_no_type_argument_of_the_concept_fails() {
         var tag = Fact("TagA", "a", typeof(ITagged));
 

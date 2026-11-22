@@ -1,21 +1,22 @@
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using LoadApp.Domain.Shared;
+using Steps.Infrastructure;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 namespace LoadApp.Slices.LoadApp;
 
-sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
-    public override Task<Result<AppInput>> HandleAsync(Envelope<LoadAppCommand> envelope) =>
+sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand, AppInput> {
+    public override Task<Result<AppInput>> HandleAsync(IEnvelope<LoadAppCommand> envelope) =>
         Task.FromResult(Load(envelope.Message));
 
-    static Result<AppInput> Load(LoadAppCommand command) {
+    Result<AppInput> Load(LoadAppCommand command) {
         var blocks = command.Blocks;
         var root = blocks.Current.Folder;
         var bin = command.Bin;
-        var loader = new AppLoader(bin.Bin);
+        var loader = new AppLoader(bin.Bin, options.References);
         var skip = Names(command.Skip);
         var app = bin.AppDlls(root, skip);
         if (app.Count == 0) {
@@ -32,33 +33,38 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
-    static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
+    internal static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
         if (entry.Form != EntryForm.App) {
-            return loader.CreateArchitecture(entry.Type!);
+            return entry.Packed is { } packed && !loader.TakesPacked(entry.Type!)
+                ? new Error(LoadAppCodes.NoPackedConstructor,
+                    $"The block architecture {entry.Type!.FullName} has no public constructor with one Architecture parameter, "
+                    + $"so the engine cannot check the kernel of the pack with {packed.FullName}. "
+                    + "Use the same Umpire version for the pack and the engine (see UMP030401).")
+                : loader.CreateArchitecture(entry.Type!, entry.Packed);
         }
         var classes = AppClass.Leaves([.. app.SelectMany(d => d.AppClasses)]);
         if (AppClassError(classes) is { } error) {
             return error;
         }
         var appClass = classes[0];
-        return loader.ArchitectureOfApp(appClass.Type, app.First(d => d.AppClasses.Contains(appClass)).Path);
+        return loader.ArchitectureOfApp(appClass, app.First(d => d.AppClasses.Contains(appClass)).Path);
     }
 
-    static Error? AppClassError(IReadOnlyList<AppClass> classes) {
-        var noConstructor = classes.Where(c => !c.HasEmptyConstructor).ToList();
-        if (noConstructor.Count > 0) {
-            return new Error(LoadAppCodes.NoEmptyConstructor,
-                $"The app class {Names(noConstructor)} has no public constructor with no parameters, "
-                + "so the engine cannot make it and read its architecture. Add a public constructor with no parameters.");
-        }
-        return classes.Count switch {
+    static Error? AppClassError(IReadOnlyList<AppClass> classes) =>
+        classes.Where(c => c.HasManyPacks).ToList() is [_, ..] many
+            ? new Error(LoadAppCodes.ManyPacks, $"The app class {Names(many)} implements IAppEntry<TPack> for more than one pack: "
+                + $"{string.Join(", ", many.SelectMany(c => c.Packs).Select(p => p.FullName))}. Implement it for one pack only.")
+            : CountError(classes);
+
+    static Error? CountError(IReadOnlyList<AppClass> classes) =>
+        classes.Count switch {
             0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
-                + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>."),
+                + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>, "
+                + "or a class that implements IAppEntry<TPack>."),
             > 1 => new Error(LoadAppCodes.ManyAppClasses,
                 $"The app has more than one app class: {Names(classes)}. Keep one, or make one inherit the other."),
             _ => null,
         };
-    }
 
     static string Names(IEnumerable<AppClass> classes) =>
         string.Join(", ", classes.Select(c => c.Type.FullName).Order(StringComparer.Ordinal));

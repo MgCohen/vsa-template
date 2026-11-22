@@ -6,13 +6,14 @@ The framework obeys the limits that Unity 6 gives, and a test checks each limit 
 
 | Limit | Value | Set in | Test |
 |---|---|---|---|
-| Target of the portable projects | `net10.0` and `netstandard2.1` | `Directory.Build.props` (`UmpirePortableLayer`) | `PortableTargetTests` |
+| Target of the portable projects | `net8.0` and `netstandard2.1` | `Directory.Build.props` (`UmpirePortableLayer`) | `PortableTargetTests` |
 | APIs of the portable projects | `netstandard2.1` only | The compiler, on the `netstandard2.1` target | The build |
 | `Microsoft.Extensions` on `netstandard2.1` | 8.0 | `Directory.Packages.props` | `PortableReferenceTests` |
 | Roslyn of the analyzers | 4.10 at most | The two analyzer project files | `AnalyzerRoslynTests` |
 | Target of the analyzers | `netstandard2.0` | The two analyzer project files | `AnalyzerRoslynTests` |
 | Compiler assemblies of the analyzers | SCI and `System.Reflection.Metadata` 8.0 at most, no other reference | The two analyzer project files, `Umpire.ConfigBundle.targets` | `AnalyzerRoslynTests` |
 | The analyzers load and read `.umpireconfig` in the Unity compiler | .NET 8, Roslyn 4.10, SCI 8.0 | `Umpire.ConfigBundle.targets` | `AnalyzerLoadTests` |
+| The engine runs on the .NET 8 of a Unity 6000.6 Editor | `net8.0`, `RollForward` `Major` | `Directory.Build.props` (`UmpireEngineLayer`) | `Net8EngineTests` (`UMPIRE_NET8_DOTNET_ROOT`) |
 | Target of `Umpire.Markers` | `netstandard2.0` | `architecture/Markers/Umpire.Markers.csproj` | `PortableTargetTests` |
 
 The tests are in `tests/Framework.Tests/Unity/`. They read the built DLLs in `artifacts~/bin/`, so `Framework.Tests` builds the `netstandard2.1` target of each portable project first. If you add a project to `UmpirePortableLayer`, also add it to `PortableProjects.cs` and to the table "Layers that Unity can use".
@@ -28,7 +29,7 @@ The reasons for the limits:
 
 | Unity replaces | Extension point | Doc |
 |---|---|---|
-| The type source of the modules | `AppHost.Modules`, `new AppTypes(modules)` | `docs/composition.md` |
+| The type source of the modules | `AppHost.ModuleProvider` (`IModuleProvider`, `FixedModules`, `ModuleScan.In`), `new AppTypes(provider)` | `docs/composition.md` |
 | The host | `UnityHost : AppHost` with `Configure`: `App<Vsa<UnityHost>>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
 | The configuration | The base host reads only `--Key=Value` and `--Key value` of `args` into `IConfiguration`, and it ignores other arguments (for example `-batchmode` or the player path). `UnityHost.Configuration(args)` can add other sources | `docs/composition.md` |
@@ -37,23 +38,23 @@ The reasons for the limits:
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
 | The module settings | `UnityHost.Settings(types)`: a provider, or a Tomlyn context for no reflection | `docs/composition.md` |
-| The source folders | `UmpireExcludedFolders`, `FolderAliases` | `docs/architecture-engine.md` |
+| The source folders | `UmpireExcludedFolders`, `umpire.check.folder_aliases` (and `FolderAliases` in code) | `docs/architecture-engine.md` |
 
 ## Vendored DLLs
 
-Unity cannot restore NuGet packages. The Unity repo keeps the DLLs in git, and `vendor.cs` writes them: it publishes a `netstandard2.1` project with the package `Umpire`, then copies the DLLs to `Assets/Plugins/VSA`. The Umpire part is one `Umpire.dll`; the other DLLs are its third-party dependencies.
+Unity cannot restore NuGet packages. Each release has the archive `umpire-<version>.zip` on its GitHub release, with the `netstandard2.1` runtime, the two analyzer DLLs and the engine (see "Release archive" in `docs/consumers.md`). vsa-unity copies the DLLs from it into its package. The Umpire part is one `Umpire.dll`; the other DLLs are its third-party dependencies.
 
 ## Unity app build
 
-Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). Umpire.Sdk does not compile `Assets/` (`UmpireExcludedFolders`).
+Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). vsa-unity sets `UmpireExcludedFolders` (for example `Assets`), so that Umpire.Sdk does not compile `Assets/`.
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. A Unity project puts the two DLLs in one folder and marks each one as an analyzer (label `RoslynAnalyzer`). It adds no other DLL to that folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
 
 ## Build output
 
-An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. Unity skips each folder whose name ends with `~`, so it does not import the DLLs of the build a second time.
+An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. A folder whose name ends with `~` is not source: the rule engine and `umpire init` do not read it.
 
 | Need | Do this in `Directory.Build.props` |
 |------|-------------------------------------|
@@ -75,7 +76,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
 | The `.umpireconfig` reader | `Umpire.Config` (Tomlyn, its `netstandard2.0` asset) | Yes. Tomlyn needs `System.Buffers`, `System.Collections.Immutable` and `System.Text.Json` 10 |
 | Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
-| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are only on `net10.0` |
+| Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are not on `netstandard2.1` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
 | Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
@@ -84,17 +85,10 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 
 ## Rules for the netstandard2.1 target
 
-- `vendor.cs` does not copy a DLL that Unity ships. A second copy is a compile error.
+- The archive holds each DLL of the runtime, also a DLL that Unity ships. vsa-unity does not copy a DLL that Unity ships: a second copy is a compile error. The manifest gives the version of each DLL.
 - `netstandard2.1` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills/` for that target. The polyfill is internal, so each Unity assembly with a record has its own copy.
-- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. `vendor.cs` must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
-- IL2CPP makes no code at run time. Register a closed generic over a struct (for example `IHandler<MoveCommand>` for a struct `MoveCommand`) by its full type, not as an open generic.
-- In Unity, an assembly definition (`.asmdef`) is one layer. Its `precompiledReferences` give the VSA DLLs that the layer can use.
+- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. vsa-unity must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
 
 ## Non-goals
 
 - No IL2CPP, stripping, `link.xml` or Unity reflection design in this repository. Reason: `vsa-unity` owns the Unity build, and it can test these limits in a Unity player.
-
-## Open questions
-
-- Unity CI: a Unity license in GitHub Actions needs a secret of the license. The Unity check runs on a dev machine only.
-- Unity package: a UPM package can replace the vendored DLLs.

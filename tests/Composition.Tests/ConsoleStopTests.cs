@@ -100,7 +100,7 @@ public sealed class ConsoleStopTests {
     public sealed record WaitResponse : IResponse;
 
     public sealed class WaitHandler : RequestHandler<WaitRequest, WaitResponse> {
-        public override async Task<Result<WaitResponse>> HandleAsync(Envelope<WaitRequest> envelope) {
+        public override async Task<Result<WaitResponse>> HandleAsync(IEnvelope<WaitRequest> envelope) {
             await Task.Delay(Timeout.Infinite, envelope.Cancellation);
             return new WaitResponse();
         }
@@ -113,7 +113,7 @@ public sealed class ConsoleStopTests {
 
         public static bool StopReturned { get; private set; }
 
-        public override Task<Result<WaitResponse>> HandleAsync(Envelope<HaltRequest> envelope) {
+        public override Task<Result<WaitResponse>> HandleAsync(IEnvelope<HaltRequest> envelope) {
             StopReturned = false;
             App!.Stop();
             StopReturned = true;
@@ -124,7 +124,7 @@ public sealed class ConsoleStopTests {
     public sealed record AbortRequest : IRequest<WaitResponse>;
 
     public sealed class AbortHandler : RequestHandler<AbortRequest, WaitResponse> {
-        public override Task<Result<WaitResponse>> HandleAsync(Envelope<AbortRequest> envelope) =>
+        public override Task<Result<WaitResponse>> HandleAsync(IEnvelope<AbortRequest> envelope) =>
             throw new OperationCanceledException("The operation gave up.");
     }
 }

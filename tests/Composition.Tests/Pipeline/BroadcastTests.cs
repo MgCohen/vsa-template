@@ -45,7 +45,7 @@ public sealed class BroadcastTests {
 
     static ServiceProvider Services(Type[] handlers, PipelineBuilder<IntegrationEvent>? second) {
         var services = new ServiceCollection();
-        services.AddSingleton(new AppTypes([]));
+        services.AddSingleton(new AppTypes(new FixedModules()));
         services.AddSingleton<PingLog>();
         services.AddEventHandlers();
         services.AddPipeline(new PipelineBuilder<Pinged>().Handlers(handlers));
@@ -65,21 +65,21 @@ public sealed class BroadcastTests {
     }
 
     sealed class ThrowingPing(PingLog log) : IntegrationEventHandler<Pinged> {
-        public override Task<Result<Unit>> HandleAsync(Envelope<Pinged> envelope) {
+        public override Task<Result<Unit>> HandleAsync(IEnvelope<Pinged> envelope) {
             log.Lines.Add("throwing");
             throw new InvalidOperationException("broken");
         }
     }
 
     sealed class CountingPing(PingLog log) : IntegrationEventHandler<Pinged> {
-        public override Task<Result<Unit>> HandleAsync(Envelope<Pinged> envelope) {
+        public override Task<Result<Unit>> HandleAsync(IEnvelope<Pinged> envelope) {
             log.Lines.Add("counting");
             return Task.FromResult<Result<Unit>>(Unit.Value);
         }
     }
 
     sealed class CancelledPing(PingLog log) : IntegrationEventHandler<Pinged> {
-        public override Task<Result<Unit>> HandleAsync(Envelope<Pinged> envelope) {
+        public override Task<Result<Unit>> HandleAsync(IEnvelope<Pinged> envelope) {
             envelope.Cancellation.ThrowIfCancellationRequested();
             log.Lines.Add("cancelled");
             return Task.FromResult<Result<Unit>>(Unit.Value);
@@ -87,7 +87,7 @@ public sealed class BroadcastTests {
     }
 
     sealed class AuditPing(PingLog log) : IIntegrationEventHandler<Pinged> {
-        public Task<Result<Unit>> HandleAsync(Envelope<Pinged> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Pinged> envelope) {
             log.Lines.Add("audit");
             return Task.FromResult<Result<Unit>>(Unit.Value);
         }

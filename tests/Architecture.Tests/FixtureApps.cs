@@ -5,6 +5,8 @@ using Umpire.Architecture;
 using Blocks.Domain.Shared;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
+using LoadApp.Domain.Shared;
+using Rules.Domain;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
 
@@ -20,13 +22,23 @@ static class FixtureApps {
 
     public static string Block(string app) => Path.Combine(Root, app);
 
-    public static ArchitectureCheck Load(Architecture definition, string bin, string blockFolder) {
+    public static ArchitectureCheck Load(
+        Architecture definition, string bin, string blockFolder, ReadOptions? options = null, IReadOnlyList<FolderAlias>? aliases = null) {
         var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
-        using var reader = new BinReader(bin);
+        using var reader = new BinReader(bin, options);
         var index = reader.Index();
         var dlls = index.AppDlls(blockFolder, []).Concat(index.ExternalDlls(externals)).Distinct().ToList();
         var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
-        return ArchitectureCheck.Load(definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks);
+        return ArchitectureCheck.Load(
+            definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks, RuleConfig.Empty,
+            options?.IgnoredFolders, options?.References, aliases is null ? null : new FolderAliasConfig(aliases, []));
+    }
+
+    public static AppInput Input(Architecture definition, string bin, string blockFolder, ReadOptions options) {
+        using var reader = new BinReader(bin, options);
+        var dlls = reader.Index().AppDlls(blockFolder, []);
+        var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
+        return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
     public static string Line(Finding finding) {

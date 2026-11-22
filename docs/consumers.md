@@ -12,14 +12,14 @@ flowchart LR
     T[Tag v version] --> W
     W --> F[GitHub Packages feed]
     F --> D[vsa-consumer-dotnet]
-    F --> V[vendor.cs]
-    V --> U[vsa-consumer-unity]
+    W --> R[GitHub release archive]
+    R --> U[vsa-unity]
 ```
 
 | Item | Value |
 |---|---|
 | Workflow | `.github/workflows/publish.yml` |
-| Steps | Test, get the version, pack each project under `framework/`, push |
+| Steps | Test, get the version, pack each project under `framework/`, push, make the release archive, attach it to the GitHub release |
 | Version on `main` | `<base>-preview.<n>`: `<base>` is `<Version>` in `Directory.Build.props`, `<n>` is the highest preview tag plus one |
 | Version on a tag | The tag name without `v` |
 | Tag on `main` | The workflow pushes `v<base>-preview.<n>` before the packages. A rerun of the same commit uses that tag again |
@@ -35,6 +35,46 @@ To release a stable version:
 3. Set `<Version>` in `Directory.Build.props` to the next version, for example `0.3.0`. If you do not, the next previews (`0.2.0-preview.<n>`) sort below `0.2.0`, and consumers do not get them.
 
 After a new version, update the Umpire version in each consumer repo, then make sure that its checks pass.
+
+## Release archive
+
+Each release tag `v<version>` has a GitHub release with one archive, `umpire-<version>.zip`. It is for a host that cannot restore NuGet packages, for example vsa-unity. A version with a suffix (`-preview.<n>`) is a prerelease. The repository is public, so a download needs no token. `tools/archive/archive.cs` makes the archive from the packed feed, so each file has the bytes of the NuGet packages.
+
+```text
+umpire-<version>.zip
+├── manifest.json            version, commit, Roslyn version, engine runtime, one entry for each file
+├── THIRD-PARTY-NOTICES.txt  the license of each third-party package, and the notices of the analyzer package
+├── runtime/netstandard2.1/  Umpire.dll and its full third-party closure
+├── analyzers/dotnet/cs/     Umpire.Kernels.Analyzers.dll, Umpire.Vsa.Analyzers.dll
+└── engine/net8.0/           umpire-engine.dll, its runtimeconfig, its deps.json and its DLLs
+```
+
+| Manifest key | Value |
+|---|---|
+| `version` | The exact package version, for example `0.2.0-preview.21` |
+| `commit` | The commit of the release (`--commit`, else the local `HEAD`) |
+| `analyzers.roslyn` | The highest Roslyn version that the analyzers reference, for example `4.10` |
+| `engine.targetFramework`, `engine.rollForward` | `net8.0`, `Major` |
+| `engine.frameworks` | Each shared framework that the engine needs, with its `name` and `version` |
+| `files[].path` | The path in the archive |
+| `files[].assemblyVersion` | The assembly version of a DLL. `null` for a file that is not a DLL |
+| `files[].package`, `files[].packageVersion` | The NuGet package that gives the bytes. The analyzer files are `Umpire.Vsa.Analyzers`, and the Umpire engine files are `Umpire.Sdk` |
+| `files[].asset` | The path of the file in that package, for example `lib/netstandard2.0/Tomlyn.dll` |
+| `files[].sha256` | The SHA-256 hash of the file |
+
+- The folder names and the file names stay the same in each release.
+- The runtime holds all its DLLs, also the DLLs that a host ships itself. The host skips its own DLLs: the archive has no host list.
+- The archive has no host files, for example no Unity `.meta` files.
+- The runtime files come only from `netstandard2.x` assets, and the `Microsoft.Extensions` files are 8.0 (`tests/Release.Tests`).
+- The script restores with the SDK of the `global.json` of this repository.
+
+While CI is off, make the release on a local computer, after the pack:
+
+1. Make the archive: `dotnet run tools/archive/archive.cs -- --feed feed --version <version> --out release --commit $(git rev-list -n1 v<version>)`.
+2. Make the release: `gh release create v<version> release/umpire-<version>.zip --verify-tag --title v<version> --notes "Umpire <version>"`.
+3. For a preview, add `--prerelease` to step 2.
+
+`tests/Release.Tests` makes an archive from the local feed and checks its layout and its manifest.
 
 ## Feed access
 

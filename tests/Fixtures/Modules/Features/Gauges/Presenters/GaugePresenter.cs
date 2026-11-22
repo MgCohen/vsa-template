@@ -10,7 +10,7 @@ public sealed class GaugePresenter<T>(IRequestSender requests) : Presenter(reque
     where T : struct, IGauge {
     public int Last { get; private set; }
 
-    public Task<Result<Unit>> HandleAsync(Envelope<GaugeRead> envelope) {
+    public Task<Result<Unit>> HandleAsync(IEnvelope<GaugeRead> envelope) {
         Last = envelope.Message.Value;
         return Task.FromResult<Result<Unit>>(Unit.Value);
     }

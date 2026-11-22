@@ -41,12 +41,38 @@ public sealed class RunEngineTests {
 
     [Test]
     public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
-        var app = new TypeName(typeof(EngineApp).FullName!, typeof(EngineApp).Assembly.GetName().Name!);
+        using var reader = new BinReader(AppContext.BaseDirectory);
+        var app = reader.Index().Dlls.Single(d => d.Name == "umpire-engine").AppClasses.Single();
 
         var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
 
         Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
     }
+
+    [Test]
+    public void The_engine_makes_the_pack_when_the_pack_gives_no_architecture_type_argument() {
+        var pack = typeof(EngineApp).BaseType!.GetGenericArguments()[0];
+        var app = new AppClass(Name(typeof(EngineApp)), "", [Name(pack)], null, []);
+
+        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
+
+        Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
+    }
+
+    [Test]
+    public void An_app_class_that_implements_the_entry_for_two_packs_gives_UMP030506() {
+        var app = new AppClass(new TypeName("A.Shell", "A"), "A.cs", [new("A.First", "A"), new("A.Second", "A")], null, []);
+        var dll = new BinDll("A.dll", "A", false, [], [], [], [app]);
+        var entry = new BlockEntry("C:/a", EntryForm.App, null, "C:/a");
+
+        var result = LoadApp.Slices.LoadApp.LoadAppHandler.Definition(entry, [dll], new AppLoader(AppContext.BaseDirectory));
+
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030506"));
+        Assert.That(result.Error.Message, Is.EqualTo(
+            "The app class A.Shell implements IAppEntry<TPack> for more than one pack: A.First, A.Second. Implement it for one pack only."));
+    }
+
+    static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);
 
     [Test]
     public void A_dll_with_no_app_class_has_no_app_class_in_the_index() {
@@ -188,13 +214,33 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public async Task An_app_class_with_no_empty_constructor_gives_UMP030504_with_its_name() {
-        var result = await Run(block: Repo.Path("tests", "Fixtures", "NoConstructorApp"));
+    public async Task A_launcher_entry_with_a_private_app_class_and_no_empty_constructor_loads_its_architecture() {
+        var result = await Run(block: Repo.Path("tests", "Fixtures", "ShellApp"));
 
-        Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Lines, Has.One.Contains("error UMP030504: The app class NoConstructorApp.App.Host.NamedApp "
-            + "has no public constructor with no parameters"));
-        Assert.That(result.Lines, Has.One.EqualTo(RulesSkipped));
+        string[] loadAppCodes = [
+            LoadApp.Slices.LoadApp.LoadAppCodes.NoAppAssembly, LoadApp.Slices.LoadApp.LoadAppCodes.NoAppClass,
+            LoadApp.Slices.LoadApp.LoadAppCodes.ManyAppClasses, LoadApp.Slices.LoadApp.LoadAppCodes.ManyPacks,
+        ];
+        Assert.That(result.Lines.Where(line => loadAppCodes.Any(line.Contains)), Is.Empty, string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.Lines, Has.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
+    }
+
+    [TestCase(null, 2)]
+    [TestCase(false, 0)]
+    public async Task The_project_checks_flag_stops_the_project_warnings(bool? projectChecks, int warnings) {
+        var block = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(block, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
+            File.WriteAllText(Path.Combine(block, "First.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+            File.WriteAllText(Path.Combine(block, "Second.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+
+            var result = await Run(project: block, projectChecks: projectChecks);
+
+            Assert.That(result.Lines.Count(line => line.Contains("UMP030305")), Is.EqualTo(warnings), string.Join("\n", result.Lines));
+        } finally {
+            TempFolder.Delete(block);
+        }
     }
 
     [Test]
@@ -254,7 +300,7 @@ public sealed class RunEngineTests {
 
     internal static async Task<RunEngineResponse> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
-        Stage stage = Stage.Check, bool keepStamp = false) {
+        Stage stage = Stage.Check, bool keepStamp = false, bool? projectChecks = null) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
             new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
@@ -264,7 +310,8 @@ public sealed class RunEngineTests {
         if (Directory.Exists(output) && keepStamp is false) {
             StampFile.Delete(output);
         }
-        var request = new RunEngineRequest(project ?? declared, output, declared, FailFast: failFast, Stage: stage);
+        var request = new RunEngineRequest(
+            project ?? declared, output, declared, FailFast: failFast, Stage: stage, ProjectChecks: projectChecks);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }

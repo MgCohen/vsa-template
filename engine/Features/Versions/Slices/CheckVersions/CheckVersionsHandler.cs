@@ -6,7 +6,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 sealed class CheckVersionsHandler : CommandHandler<CheckVersionsCommand, CheckVersionsResult> {
-    public override Task<Result<CheckVersionsResult>> HandleAsync(Envelope<CheckVersionsCommand> envelope) =>
+    public override Task<Result<CheckVersionsResult>> HandleAsync(IEnvelope<CheckVersionsCommand> envelope) =>
         Task.FromResult(Check(envelope.Message));
 
     static Result<CheckVersionsResult> Check(CheckVersionsCommand command) {

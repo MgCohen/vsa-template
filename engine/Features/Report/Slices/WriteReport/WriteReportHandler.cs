@@ -9,7 +9,7 @@ using Umpire.Vsa.Handlers.Commands;
 sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResult> {
     const string Origin = "umpire-engine";
 
-    public override Task<Result<ReportResult>> HandleAsync(Envelope<WriteReportCommand> envelope) {
+    public override Task<Result<ReportResult>> HandleAsync(IEnvelope<WriteReportCommand> envelope) {
         var command = envelope.Message;
         var warnOnly = command.Mode == ReportMode.Warn;
         var findings = command.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error

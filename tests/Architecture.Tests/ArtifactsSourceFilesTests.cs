@@ -7,12 +7,12 @@ public sealed class ArtifactsSourceFilesTests {
     const string ProjectOutput = "artifacts~/obj/Host/debug";
     const string Generator = "Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator";
 
-    UnityProjectFolder project = null!;
+    ProjectFolder project = null!;
     IReadOnlyDictionary<string, Source> sources = null!;
 
     [OneTimeSetUp]
     public void CompileGeneratedFilesInArtifacts() {
-        project = UnityProjectFolder.Create();
+        project = ProjectFolder.Create();
         project.Write("App/Host/Host.csproj", "<Project />");
         var code = project.Write("App/Host/HostApp.cs", "namespace Host; public sealed class HostApp { public int Value() => 1; }");
         var page = project.Write($"{ProjectOutput}/{Generator}/App/Views/Pages/NotesPage_razor.g.cs", "namespace Views; public sealed class NotesPage { }");

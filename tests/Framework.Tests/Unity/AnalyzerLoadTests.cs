@@ -14,8 +14,8 @@ public sealed class AnalyzerLoadTests {
     [OneTimeSetUp]
     public void CompileWithTheUnityCompiler() {
         if (Net8Compiler.Find() is not { } compiler) {
-            Assert.Ignore($"No .NET 8 SDK compiler. Install Unity 6 or a .NET 8 SDK, or set {Net8Root} "
-                + "to its dotnet folder.");
+            Assert.Ignore($"No .NET 8 SDK compiler. Install a .NET 8 SDK, or set {Net8Root} "
+                + "to the dotnet folder of a .NET 8 SDK, for example the one in a Unity 6 editor.");
             return;
         }
         var folder = TempFolder.Create();
@@ -73,13 +73,6 @@ public sealed class AnalyzerLoadTests {
         static IEnumerable<string> Roots() {
             if (Environment.GetEnvironmentVariable(Net8Root) is { Length: > 0 } root) {
                 yield return root;
-            }
-            var programs = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            var unity = Path.Combine(programs, "Unity", "Hub", "Editor");
-            if (Directory.Exists(unity)) {
-                foreach (var editor in Directory.EnumerateDirectories(unity)) {
-                    yield return Path.Combine(editor, "Editor", "Data", "DotNetSdk");
-                }
             }
             yield return Path.GetDirectoryName(Environment.ProcessPath)!;
         }

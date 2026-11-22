@@ -28,7 +28,7 @@ static class BlockSearch {
             return new Error(stop.Code, stop.Message);
         }
         var inner = scoped.Except(own).ToList();
-        var current = own.FirstOrDefault() ?? new BlockEntry(folder, EntryForm.App, null, folder);
+        var current = own.OrderBy(e => e.Packed is null).FirstOrDefault() ?? new BlockEntry(folder, EntryForm.App, null, folder);
         Finding[] findings = [.. shadowed.Select(CodeWins), .. Problems(inner)];
         return new FindBlocksResult(findings, new BlockTree(current with { Folder = folder }, inner), bin);
     }

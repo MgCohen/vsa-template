@@ -18,9 +18,17 @@
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
   </PropertyGroup>
 
+  <!-- The rule engine and its own projects target net8.0, so the engine runs on the .NET 8 of a Unity 6000.6 Editor and,
+       with RollForward Major, on each newer runtime. It loads the definition of an app, so the libraries also have a
+       net8.0 build (see docs/unity.md). -->
   <PropertyGroup>
-    <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true'">net10.0</TargetFramework>
-    <TargetFrameworks Condition="'$(UmpirePortableLayer)' == 'true'">net10.0;netstandard2.1</TargetFrameworks>
+    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true' and '$(UmpireEngineLayer)' != 'true'">net10.0</TargetFramework>
+    <TargetFramework Condition="'$(UmpireEngineLayer)' == 'true'">net8.0</TargetFramework>
+    <TargetFrameworks Condition="'$(UmpirePortableLayer)' == 'true'">net8.0;netstandard2.1</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <!-- The general build settings of each Umpire project: the same file as in Umpire.Sdk. -->

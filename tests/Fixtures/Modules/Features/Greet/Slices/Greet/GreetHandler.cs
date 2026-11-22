@@ -4,7 +4,7 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Requests;
 
 sealed class GreetHandler : RequestHandler<GreetRequest, GreetResponse> {
-    public override Task<Result<GreetResponse>> HandleAsync(Envelope<GreetRequest> envelope) {
+    public override Task<Result<GreetResponse>> HandleAsync(IEnvelope<GreetRequest> envelope) {
         var request = envelope.Message;
         if (request.Name.Length == 0) {
             return Task.FromResult<Result<GreetResponse>>(new Error("greet.name", "The name is empty."));

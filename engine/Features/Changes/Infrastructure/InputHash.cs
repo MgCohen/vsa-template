@@ -3,20 +3,22 @@ namespace Changes.Infrastructure;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 
 public static class InputHash {
-    const string ScriptAssemblies = "Library/ScriptAssemblies";
     static readonly string[] BinPatterns = ["*.dll", "*.pdb", "*.exe", "*.deps.json"];
     static readonly string[] InputNames = [".umpireconfig", "global.json"];
-    static readonly string[] LargeFolders = ["Library", "Temp", "Logs", "UserSettings", "node_modules"];
+    static readonly string[] LargeFolders = ["node_modules"];
     static readonly EnumerationOptions OneLevel = new() { IgnoreInaccessible = true };
 
-    public static string Of(string block, string bin, string run) {
+    public static string Of(
+        string block, string bin, string run,
+        IReadOnlyList<string>? references = null, IReadOnlyList<string>? ignoredFolders = null) {
         var lines = new List<string> { run, Engine() };
         lines.AddRange(Facts(Patterns(bin, BinPatterns)));
-        lines.AddRange(Facts(Patterns(Path.Combine(block, ScriptAssemblies), ["*.dll"])));
-        lines.AddRange(ConfigFacts(block));
+        lines.AddRange(Facts((references ?? []).SelectMany(folder => Patterns(folder, ["*.dll", "*.pdb"]))));
+        lines.AddRange(ConfigFacts(block, ignoredFolders));
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", lines)));
         return Convert.ToHexString(bytes);
     }
@@ -29,20 +31,22 @@ public static class InputHash {
                 && name.EndsWith(".props", StringComparison.OrdinalIgnoreCase));
     }
 
-    public static IEnumerable<string> ConfigFacts(string block) => [.. Facts(BlockFiles(block)), .. Facts(FilesAbove(block))];
+    public static IEnumerable<string> ConfigFacts(string block, IReadOnlyList<string>? ignoredFolders = null) =>
+        [.. Facts(BlockFiles(block, block, ignoredFolders ?? [])), .. Facts(FilesAbove(block))];
 
     public static string Engine() => typeof(InputHash).Assembly.ManifestModule.ModuleVersionId.ToString();
 
     static IEnumerable<string> Patterns(string folder, string[] patterns) =>
         Directory.Exists(folder) ? patterns.SelectMany(pattern => Directory.EnumerateFiles(folder, pattern, OneLevel)) : [];
 
-    static IEnumerable<string> BlockFiles(string folder) {
+    static IEnumerable<string> BlockFiles(string block, string folder, IReadOnlyList<string> ignoredFolders) {
         if (!Directory.Exists(folder)) {
             return [];
         }
         var files = Directory.EnumerateFiles(folder, "*", OneLevel).Where(IsInput);
-        var folders = Directory.EnumerateDirectories(folder, "*", OneLevel).Where(sub => !IsSkipped(Path.GetFileName(sub)));
-        return files.Concat(folders.SelectMany(BlockFiles));
+        var folders = Directory.EnumerateDirectories(folder, "*", OneLevel)
+            .Where(sub => !IsSkipped(Path.GetFileName(sub)) && !IsIgnored(block, sub, ignoredFolders));
+        return files.Concat(folders.SelectMany(sub => BlockFiles(block, sub, ignoredFolders)));
     }
 
     static IEnumerable<string> FilesAbove(string block) {
@@ -53,6 +57,10 @@ public static class InputHash {
             }
         }
     }
+
+    static bool IsIgnored(string block, string folder, IReadOnlyList<string> ignoredFolders) =>
+        ignoredFolders.Count > 0
+        && ReadOptions.IsIgnored(Path.GetRelativePath(block, folder) + "/", ignoredFolders);
 
     static bool IsSkipped(string name) =>
         BuildOutput.IsIgnored(name) || LargeFolders.Contains(name, StringComparer.OrdinalIgnoreCase);

@@ -291,7 +291,7 @@ public sealed class PresenterPipelineTests {
     static ServiceProvider Services(
         Type[] presenters, Action<IServiceCollection> more, ILogger<LiveScopesRunner>? logger = null) {
         var services = new ServiceCollection();
-        services.AddSingleton(new AppTypes([]));
+        services.AddSingleton(new AppTypes(new FixedModules()));
         services.AddSingleton(logger ?? NullLogger<LiveScopesRunner>.Instance);
         services.AddEventHandlers();
         services.AddSingleton<LiveScopes>();
@@ -325,7 +325,7 @@ public sealed class PresenterPipelineTests {
         public int Total { get; private set; }
         public IServiceProvider? Services { get; private set; }
 
-        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             Total += envelope.Message.By;
             Services = envelope.Services;
             return Done;
@@ -336,12 +336,12 @@ public sealed class PresenterPipelineTests {
         public int Total { get; private set; }
         public int Others { get; private set; }
 
-        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             Total += envelope.Message.By;
             return Done;
         }
 
-        public Task<Result<Unit>> HandleAsync(Envelope<Other> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Other> envelope) {
             Others++;
             return Done;
         }
@@ -357,7 +357,7 @@ public sealed class PresenterPipelineTests {
 
         public void Release() => gate.Release();
 
-        public async Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public async Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             MostAtOnce = Math.Max(MostAtOnce, Interlocked.Increment(ref running));
             Started.TrySetResult();
             await gate.WaitAsync();
@@ -368,17 +368,17 @@ public sealed class PresenterPipelineTests {
     }
 
     sealed class BrokenPresenter() : Presenter(null!), IPresenterHandler<Counted> {
-        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) => throw new InvalidOperationException("broken");
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) => throw new InvalidOperationException("broken");
     }
 
     sealed class ErrorPresenter() : Presenter(null!), IPresenterHandler<Counted> {
-        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) =>
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) =>
             Task.FromResult<Result<Unit>>(new Error("broken", "The presenter failed."));
     }
 
     sealed class PresenterWhoseRequestPublishes(IIntegrationEventPublisher events)
         : Presenter(null!), IPresenterHandler<Counted> {
-        public async Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public async Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             await events.PublishAsync(new Other(), CancellationToken.None);
             return Unit.Value;
         }
@@ -387,7 +387,7 @@ public sealed class PresenterPipelineTests {
     sealed class OtherPresenter() : Presenter(null!), IPresenterHandler<Other> {
         public int Seen { get; private set; }
 
-        public Task<Result<Unit>> HandleAsync(Envelope<Other> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Other> envelope) {
             Seen++;
             return Done;
         }
@@ -412,7 +412,7 @@ public sealed class PresenterPipelineTests {
         : Presenter(null!), IPresenterHandler<Knock> {
         public int Id { get; set; }
 
-        public async Task<Result<Unit>> HandleAsync(Envelope<Knock> envelope) {
+        public async Task<Result<Unit>> HandleAsync(IEnvelope<Knock> envelope) {
             if (envelope.Message.Scope != Id) {
                 return Unit.Value;
             }
@@ -436,7 +436,7 @@ public sealed class PresenterPipelineTests {
         public TaskCompletionSource Go { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task? Spawned { get; private set; }
 
-        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             Spawned = Task.Run(async () => {
                 await Go.Task;
                 await events.PublishAsync(new Other(), CancellationToken.None);
@@ -452,7 +452,7 @@ public sealed class PresenterPipelineTests {
 
         public void Release() => gate.Release();
 
-        public async Task<Result<Unit>> HandleAsync(Envelope<Slow> envelope) {
+        public async Task<Result<Unit>> HandleAsync(IEnvelope<Slow> envelope) {
             turns.Enter();
             Started.TrySetResult();
             await gate.WaitAsync();
@@ -464,7 +464,7 @@ public sealed class PresenterPipelineTests {
     sealed class TurnPresenter(Turns turns) : Presenter(null!), IPresenterHandler<Other> {
         public int Seen { get; private set; }
 
-        public Task<Result<Unit>> HandleAsync(Envelope<Other> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Other> envelope) {
             turns.Enter();
             Seen++;
             turns.Leave();
@@ -479,7 +479,7 @@ public sealed class PresenterPipelineTests {
 
         public void Release() => gate.Release();
 
-        public async Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public async Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             Started.TrySetResult();
             await gate.WaitAsync();
             envelope.Services.GetRequiredService<CountPresenter>();
@@ -488,7 +488,7 @@ public sealed class PresenterPipelineTests {
     }
 
     sealed class CancelledPresenter() : Presenter(null!), IPresenterHandler<Counted> {
-        public Task<Result<Unit>> HandleAsync(Envelope<Counted> envelope) {
+        public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             envelope.Cancellation.ThrowIfCancellationRequested();
             return Done;
         }

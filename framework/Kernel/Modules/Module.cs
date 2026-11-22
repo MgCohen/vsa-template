@@ -1,9 +1,7 @@
 namespace Umpire.Kernels;
 
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Markers;
 
-[RequireDerived]
 public abstract class Module {
     public string Name => AppTypes.NameOf(GetType());
 

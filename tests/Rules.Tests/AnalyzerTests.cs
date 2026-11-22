@@ -80,7 +80,7 @@ static class Analyzer {
         new DiagnosticResult(rule).WithLocation(location).WithArguments(arguments);
 }
 
-public sealed class SealedRecordRuleTests {
+public sealed class RecordPayloadRuleTests {
     const string Route = "public static HttpMethod Method => HttpMethod.Get; public static string Route => \"/items\";";
 
     [Test]
@@ -93,25 +93,81 @@ public sealed class SealedRecordRuleTests {
     public Task Request_class_fails() => Analyzer.Verify($$"""
         public sealed class {|#0:GetItems|} : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "GetItems", "a request"));
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request"));
 
     [Test]
-    public Task Response_record_that_is_not_sealed_fails() => Analyzer.Verify($$"""
+    public Task Abstract_request_base_passes() => Analyzer.Verify($$"""
+        public abstract record TestRequest<TResponse> : Umpire.Vsa.Contracts.Requests.IRequest<TResponse>
+            where TResponse : Umpire.Vsa.Contracts.Requests.IResponse;
+        public sealed record GetItems : TestRequest<Items> { {{Route}} }
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Records_that_are_not_sealed_pass() => Analyzer.Verify($$"""
+        public record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Request_that_derives_from_a_concrete_request_passes() => Analyzer.Verify($$"""
+        public record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record GetRecentItems(int Days) : GetItems;
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Response_class_of_a_derived_request_is_reported_one_time() => Analyzer.Verify($$"""
+        public record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record GetRecentItems(int Days) : GetItems;
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
+
+    [Test]
+    public Task Record_struct_request_passes() => Analyzer.Verify($$"""
+        public readonly record struct GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Struct_request_fails() => Analyzer.Verify($$"""
+        public struct {|#0:GetItems|} : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request"));
+
+    [Test]
+    public Task Concrete_request_of_an_abstract_base_that_is_not_sealed_passes() => Analyzer.Verify($$"""
+        public abstract record TestRequest<TResponse> : Umpire.Vsa.Contracts.Requests.IRequest<TResponse>
+            where TResponse : Umpire.Vsa.Contracts.Requests.IResponse;
+        public record GetItems : TestRequest<Items> { {{Route}} }
+        public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        """);
+
+    [Test]
+    public Task Response_of_a_request_with_an_abstract_base_is_checked() => Analyzer.Verify($$"""
+        public abstract record TestRequest<TResponse> : Umpire.Vsa.Contracts.Requests.IRequest<TResponse>
+            where TResponse : Umpire.Vsa.Contracts.Requests.IResponse;
+        public sealed record GetItems : TestRequest<Items> { {{Route}} }
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
+
+    [Test]
+    public Task Response_class_fails() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems"));
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
 
     [Test]
     public Task Rule_option_turns_off_the_response_check() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        public sealed class Items : Umpire.Vsa.Contracts.Requests.IResponse { }
         """, "umpire.UMP010201.check_responses = false");
 
     [Test]
     public Task Rule_option_wins_over_the_global_option() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
-        """, "umpire.check_responses = false\numpire.UMP010201.check_responses = true", Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems"));
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
+        """, "umpire.check_responses = false\numpire.UMP010201.check_responses = true", Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems"));
 
     [Test]
     public Task Rule_with_severity_none_reports_nothing() => Analyzer.Verify($$"""
@@ -128,9 +184,9 @@ public sealed class SealedRecordRuleTests {
     [Test]
     public Task Umpire_severity_sets_the_severity_of_the_finding() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
-        public record {|#0:Items|}(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
+        public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
         """, "umpire.UMP010201.severity = warning",
-        Analyzer.Diagnostic(new SealedRecordRule().Rule, 0, "Items", "the response of GetItems")
+        Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems")
             .WithSeverity(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning));
 }
 
@@ -146,21 +202,21 @@ public sealed class EventHandlerRequestRuleTests {
     [Test]
     public Task Event_handler_with_no_request_passes() => Analyzer.Verify(Types + """
         sealed class DoneHandler : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) => null!;
         }
         """);
 
     [Test]
     public Task Event_handler_with_the_request_sender_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler(Umpire.Vsa.Contracts.Requests.IRequestSender {|#0:requests|}) : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) => null!;
         }
         """, Analyzer.Diagnostic(new EventHandlerRequestRule().Rule, 0, "DoneHandler", "IRequestSender"));
 
     [Test]
     public Task Event_handler_that_makes_a_request_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) {
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) {
                 _ = {|#0:new Ping()|};
                 return null!;
             }
@@ -170,7 +226,7 @@ public sealed class EventHandlerRequestRuleTests {
     [Test]
     public Task Event_handler_with_the_request_base_fails() => Analyzer.Verify(Types + """
         sealed class DoneHandler(Umpire.Vsa.Contracts.Requests.IRequest {|#0:request|}) : Umpire.Vsa.Handlers.Events.IntegrationEventHandler<Done> {
-            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) => null!;
+            public override Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) => null!;
         }
         """, Analyzer.Diagnostic(new EventHandlerRequestRule().Rule, 0, "DoneHandler", "IRequest"));
 
@@ -191,7 +247,7 @@ public sealed class PresenterPublishRuleTests {
     [Test]
     public Task Presenter_that_shows_an_event_passes() => Analyzer.Verify(Types + """
         sealed class DonePresenter(Umpire.Vsa.Contracts.Requests.IRequestSender requests) : Umpire.Vsa.Presenters.Presenter(requests), Umpire.Vsa.Presenters.IPresenterHandler<Done> {
-            public Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.Envelope<Done> envelope) =>
+            public Task<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>> HandleAsync(Umpire.Messages.Contracts.IEnvelope<Done> envelope) =>
                 Task.FromResult<Umpire.Messages.Contracts.Result<Umpire.Messages.Contracts.Unit>>(Umpire.Messages.Contracts.Unit.Value);
         }
         """);
@@ -280,42 +336,4 @@ public sealed class VsaAnalyzerTests {
     [Test]
     public void Each_rule_has_a_unique_ID() =>
         Assert.That(Analyzer.AllRules.Select(r => r.Id), Is.Unique);
-}
-
-public sealed class HookNameRuleTests {
-    const string Bell = """
-        public sealed record Rang(string Bell) : Umpire.Vsa.Contracts.Events.IntegrationEvent;
-
-        """;
-
-    const string Chime = """
-        public override Task AfterAsync(Umpire.Messages.Contracts.IEnvelope<Rang> envelope) => Task.CompletedTask;
-        """;
-
-    [Test]
-    public Task Event_hook_with_the_suffix_passes() => Analyzer.VerifyIn("Bells.Handlers.Events", Bell + $$"""
-        sealed class ChimeHook : Umpire.Vsa.Handlers.Events.AfterEventHook<Rang> { {{Chime}} }
-        """);
-
-    [Test]
-    public Task Event_hook_without_the_suffix_fails() => Analyzer.VerifyIn("Bells.Handlers.Events", Bell + $$"""
-        sealed class {|#0:Chime|} : Umpire.Vsa.Handlers.Events.AfterEventHook<Rang> { {{Chime}} }
-        """, Analyzer.Diagnostic(new HookNameRule().Rule, 0, "Chime", "AfterEventHook", "ChimeHook"));
-
-    [Test]
-    public Task Class_that_derives_from_a_hook_through_a_base_fails() => Analyzer.VerifyIn("Bells.Handlers.Events", Bell + $$"""
-        abstract class BellHook : Umpire.Vsa.Handlers.Events.BeforeEventHook<Rang> { }
-        sealed class {|#0:Loud|} : BellHook {
-            public override Task<Rang> BeforeAsync(Umpire.Messages.Contracts.IEnvelope<Rang> envelope) => Task.FromResult(envelope.Message);
-        }
-        """, Analyzer.Diagnostic(new HookNameRule().Rule, 0, "Loud", "BeforeEventHook", "LoudHook"));
-
-    [Test]
-    public Task Command_hook_without_the_suffix_fails() => Analyzer.VerifyIn("Bells.Handlers.Commands", """
-        public sealed record Ring(int Times) : Umpire.Vsa.Contracts.Commands.ICommand<int>;
-        sealed class {|#0:CountRings|} : Umpire.Vsa.Handlers.Commands.AfterCommandHook<Ring, int> {
-            public override Task AfterAsync(Umpire.Messages.Contracts.IEnvelope<Ring> envelope, Umpire.Messages.Contracts.Result<int> outcome) =>
-                Task.CompletedTask;
-        }
-        """, Analyzer.Diagnostic(new HookNameRule().Rule, 0, "CountRings", "AfterCommandHook", "CountRingsHook"));
 }

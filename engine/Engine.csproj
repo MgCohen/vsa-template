@@ -1,17 +1,15 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
   <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins.
-       It is not a package: Umpire.Sdk and Umpire.Sdk.Web hold the engine in tools/net10.0/ (Umpire.Sdk.Package.targets). -->
+       It is not a package: Umpire.Sdk and Umpire.Sdk.Web hold the engine in tools/net8.0/ (Umpire.Sdk.Package.targets). -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>umpire-engine</AssemblyName>
     <RootNamespace>UmpireEngine</RootNamespace>
     <RollForward>Major</RollForward>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- A web app definition can need ASP.NET Core types when the engine makes its app class. -->
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
+  <!-- No ASP.NET Core framework reference: the .NET of a Unity Editor can have only Microsoft.NETCore.App. AppLoader loads
+       the ASP.NET Core types of a web app definition from the shared folder of the runtime (SharedFrameworks). -->
   <ItemGroup>
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
   </ItemGroup>

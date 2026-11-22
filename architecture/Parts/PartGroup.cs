@@ -35,7 +35,30 @@ public sealed class PartGroup : IPartChain {
         return this;
     }
 
+    public PartGroup NameStartsWith(string text) => Each(part => part.NameStartsWith(text));
+
+    public PartGroup NameEndsWith(string text) => Each(part => part.NameEndsWith(text));
+
+    public PartGroup NamedAfterGroup(string suffix = "") => Each(part => part.NamedAfterGroup(suffix));
+
+    public PartGroup NamedAfterGroup<T>(string suffix = "") where T : Concept => Each(part => part.NamedAfterGroup<T>(suffix));
+
+    PartGroup Each(Action<Part> name) {
+        foreach (var part in parts) {
+            name(part);
+        }
+        return this;
+    }
+
     IPartChain IPartChain.Add<T>() => Add<T>();
+
+    IPartChain IPartChain.NameStartsWith(string text) => NameStartsWith(text);
+
+    IPartChain IPartChain.NameEndsWith(string text) => NameEndsWith(text);
+
+    IPartChain IPartChain.NamedAfterGroup(string suffix) => NamedAfterGroup(suffix);
+
+    IPartChain IPartChain.NamedAfterGroup<T>(string suffix) => NamedAfterGroup<T>(suffix);
 
     IPartChain IPartChain.InParentFolder() => InParentFolder();
 

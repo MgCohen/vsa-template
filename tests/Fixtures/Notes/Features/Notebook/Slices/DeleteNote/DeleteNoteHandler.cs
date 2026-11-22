@@ -10,7 +10,7 @@ sealed class DeleteNoteHandler(IRepository<Note, NoteId> notes, IIntegrationEven
     : RequestHandler<DeleteNoteRequest, DeleteNoteResponse> {
     static readonly Error NotFound = new("notes.not_found", "The note does not exist.");
 
-    public override async Task<Result<DeleteNoteResponse>> HandleAsync(Envelope<DeleteNoteRequest> envelope) {
+    public override async Task<Result<DeleteNoteResponse>> HandleAsync(IEnvelope<DeleteNoteRequest> envelope) {
         if (await notes.GetAsync(new NoteId(envelope.Message.Id), envelope.Cancellation) is not { } note) {
             return NotFound;
         }

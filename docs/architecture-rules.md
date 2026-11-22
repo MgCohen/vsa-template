@@ -17,7 +17,7 @@ The editor and the build run the first group in each consumer project. The build
 
 | ID | Level | Rule |
 |---|---|---|
-| `UMP010201` | Analyzers | Requests and responses are sealed records. Option: `check_responses`. |
+| `UMP010201` | Analyzers | Requests and responses are records. A record that is not sealed passes, so a request can derive from another request. An abstract request base is not checked. Option: `check_responses`. A team that wants sealed payloads states it in its definition with the `Sealed` and `Record` traits. |
 | `UMP010202` | Analyzers | Event handlers do not use a request type or `IRequestSender`. |
 | `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. Disabled (#143). |
 | `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterHandler`); it does not publish them. |
@@ -33,19 +33,22 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010104` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
 | `UMP010105` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
 | `UMP010106` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
-| `UMP010209` | Analyzers | The name of a class that inherits a hook base (`BeforeCommandHook<>`, `AfterCommandHook<,>`, `BeforeEventHook<>`, `AfterEventHook<>`) ends with `Hook`. |
 | `UMP020101` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
 | `UMP020102` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
 | `UMP020201` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
 | `UMP020202` | Architecture | Each type of the app is in a folder of a part. |
-| `UMP020203` | Architecture | A warning: a Unity project has no `Library/ScriptAssemblies/` folder, so the checks do not read the code that only Unity compiles. |
+| `UMP020204` | Architecture | Each type name obeys the name rule of its part, for example the name of a hook ends with `Hook`. See "Content of a part" in `architecture-engine.md`. |
+| `UMP020205` | Architecture | A warning: a reference folder (`umpire.check.references`) does not exist, so the checks do not read its DLLs. |
+| `UMP020206` | Architecture | A warning: a value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it. |
 | `UMP020301` | Architecture | Each count of the definition is in its limit, for example each slice has at least one handler. See "Counts and matches". |
 | `UMP020302` | Architecture | Each match of the definition holds, for example a request handler handles a request of its own slice. See "Counts and matches". |
+| `UMP020303` | Architecture | Each type of a part has the traits that `Are` needs. See "Content of a part" in `architecture-engine.md`. |
+| `UMP020304` | Architecture | Each use of a type with `Type<T>().OnlyIn<S>()` is in the parts `S`. See "Content of a part" in `architecture-engine.md`. |
 | `UMP020401` | Architecture | No part of the definition covers the folder of another block. Mark the folder with `AddBlock<T>()` or `AddBlockGroup<T>()`. |
 | `UMP020402` | Architecture | Each block place holds a check entry. |
 | `UMP03xxxx` | Engine | The engine run: a step throws or is skipped, the check entries, the projects of a block, a version, the load of the app. One table: "Engine codes" in `architecture-engine.md`. |
 
-Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`, `UMP010002`, `UMP010003`), `01` Umpire.Kernels.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding, `03` counts and matches, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
+Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`, `UMP010002`, `UMP010003`), `01` Umpire.Kernels.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding and names, `03` counts, matches, kinds and attribute places, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
 ## Disabled rules
 
@@ -83,6 +86,7 @@ The kernel part `Host` of the VSA definition maps the assemblies and namespaces 
 | Rule | Check |
 |---|---|
 | `App/Host` uses `Composition` and the `Kernel` part itself | `UMP020101` |
+| `App/Host` uses the root class of a module (`Feature/Module`, `Plugin/Module`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
 | `Views` uses the `Host` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
@@ -104,16 +108,16 @@ The host configures the plugin modules first, then the other modules. In each gr
 `VsaAnalyzer` and `KernelAnalyzer` each find each `UmpireAnalyzerRule` of their assembly, ignore generated code, and do not run a rule with severity `none`. A rule sets its number, its text and the defaults of its options, and registers its actions. A rule option wins over a global option.
 
 ```csharp
-public sealed class SealedRecordRule : VsaRule {
+public sealed class RecordPayloadRule : VsaRule {
     public const string CheckResponsesKey = "check_responses";
 
     public override int Number => 1;
 
     public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(CheckResponsesKey, true)];
 
-    protected override string Title => "Requests and responses are sealed records";
+    protected override string Title => "Requests and responses are records";
 
-    protected override string Message => "{0} is {1}. Make it a sealed record.";
+    protected override string Message => "{0} is {1}. Make it a record.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSymbolAction(symbol => {
@@ -226,7 +230,7 @@ EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them 
 
 ## Architecture: the rule engine
 
-The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020301`, `UMP020302` and the warning `UMP020203`. The Umpire SDK runs it after each build of the host project. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the key `umpire.<code>.severity`, the same key as for the analyzers.
+The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020204`, `UMP020301` to `UMP020304` and the warnings `UMP020205` and `UMP020206`. The Umpire SDK runs it after each build of the host project. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the key `umpire.<code>.severity`, the same key as for the analyzers.
 
 ### Counts and matches
 
@@ -243,7 +247,7 @@ The VSA definition has these count and match lines. S1 to S3 are in `Slice.Rules
 
 An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d are slice rules (implicit `Under<Slice>()`), so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 
-The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). A hook has each use of the handlers of its kind. In a slice, the hook parts are siblings of the handler parts in the slice folder. In a plugin module, `Handlers.Commands.Hooks` is a child of `Handlers.Commands` (and the same for the events), with `InParentFolder()`. Reason: a plugin has one folder for each layer, so its hooks are in `Handlers/Commands/`, and only a child part can share that folder. A sibling with `InParentFolder()` would be in `Handlers/`.
+The hooks have their own parts: `Handlers.Commands.Hooks` (`BeforeCommandHook<>`, `AfterCommandHook<,>`) and `Handlers.Events.Hooks` (`BeforeEventHook<>`, `AfterEventHook<>`). Each hook part has `NameEndsWith("Hook")`, so the name of a hook ends with `Hook` (`UMP020204`). A hook has each use of the handlers of its kind. In a slice, the hook parts are siblings of the handler parts in the slice folder. In a plugin module, `Handlers.Commands.Hooks` is a child of `Handlers.Commands` (and the same for the events), with `InParentFolder()`. Reason: a plugin has one folder for each layer, so its hooks are in `Handlers/Commands/`, and only a child part can share that folder. A sibling with `InParentFolder()` would be in `Handlers/`.
 
 A validator (`Validator<T>`) in a slice is the optional part `Slice.Validators`, next to the handler. No part uses it: the pipeline finds it by type. It uses the kernel and plugin handlers and contracts, the contracts of its own slice, `Slice.Shared` of its feature, `Domain` (internal) and `Domain.Shared`. It does not use the infrastructure or the contracts of another slice. It is not a handler, so S1 and S2 do not count it.
 

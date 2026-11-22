@@ -32,7 +32,7 @@
       <None Include="$(_UmpireVersionFile)" Pack="true" PackagePath="Sdk" Visible="false" />
     </ItemGroup>
   </Target>
-  <!-- Each SDK package holds the rule engine in tools/net10.0/, so a consumer gets the engine with the SDK and no other
+  <!-- Each SDK package holds the rule engine in tools/net8.0/, so a consumer gets the engine with the SDK and no other
        package. The hook in Umpire.Sdk.Core.targets runs it from there. The engine builds with the global properties of the
        pack (configuration, version), on the bundles (_UmpireUseBundle), in its own output folder, and with no self-check:
        the source build of the engine checks it. -->
@@ -52,7 +52,7 @@
     </PropertyGroup>
     <ItemGroup>
       <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check" />
-      <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net10.0/%(RecursiveDir)" Visible="false" />
+      <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net8.0/%(RecursiveDir)" Visible="false" />
     </ItemGroup>
   </Target>
 </Project>

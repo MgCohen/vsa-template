@@ -31,6 +31,7 @@ public class Part : IPartChain {
     public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
     public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
+    internal NamePattern? NamePattern { get; private set; }
 
     public string Path {
         get {
@@ -96,6 +97,25 @@ public class Part : IPartChain {
         return this;
     }
 
+    public Part NameStartsWith(string text) => WithName((NamePattern ?? NamePattern.Any).WithStart(text));
+
+    public Part NameEndsWith(string text) => WithName((NamePattern ?? NamePattern.Any).WithEnd(text));
+
+    public Part NamedAfterGroup(string suffix = "") => WithName((NamePattern ?? NamePattern.Any).AfterGroup(null, suffix));
+
+    public Part NamedAfterGroup<T>(string suffix = "") where T : Concept =>
+        WithName((NamePattern ?? NamePattern.Any).AfterGroup(typeof(T), suffix));
+
+    Part WithName(NamePattern name) {
+        NamePattern = name;
+        return this;
+    }
+
+    internal void ClearTypes() {
+        types.Clear();
+        requiredAtCallSite.Clear();
+    }
+
     public bool? RequiredOf(Type type) => requiredAtCallSite.TryGetValue(type, out var value) ? value : options.Required;
 
     IPartChain IPartChain.Add<T>() => Add<T>();
@@ -105,6 +125,14 @@ public class Part : IPartChain {
     IPartChain IPartChain.OfType<T>(bool? required) => OfType<T>(required);
 
     IPartChain IPartChain.OfType(Type type, bool? required) => OfType(type, required);
+
+    IPartChain IPartChain.NameStartsWith(string text) => NameStartsWith(text);
+
+    IPartChain IPartChain.NameEndsWith(string text) => NameEndsWith(text);
+
+    IPartChain IPartChain.NamedAfterGroup(string suffix) => NamedAfterGroup(suffix);
+
+    IPartChain IPartChain.NamedAfterGroup<T>(string suffix) => NamedAfterGroup<T>(suffix);
 
     public IEnumerable<Part> Walk() => new[] { this }.Concat(children.SelectMany(c => c.Walk()));
 

@@ -19,7 +19,7 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the Umpire SDK packages hold the engine in `tools/net10.0/` |
+| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the Umpire SDK packages hold the engine in `tools/net8.0/` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` (`Pack.Architecture`), and Umpire.Sdk gives each project the package `Umpire` (one `Umpire.dll` with `Umpire.Architecture` and `Umpire.Vsa`). So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
@@ -57,8 +57,10 @@ public class VsaArchitecture : Architecture {
 | `AddBlockGroup<T>()` | Each subfolder of the folder of `T` is the place of another block, for example `Packs/<Name>/` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType` |
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
+| `NameStartsWith`, `NameEndsWith`, `NamedAfterGroup` | The name of each type of the part (see "Content of a part") |
 | `Uses<T>()`, `Denies<T>()` | A rule (type `Rule`). A later rule wins |
 | `Has<T>()`, `Takes<T>()` | A count (type `Count`) or a match (type `Match`). See "Counts and matches" |
+| `Are(Trait)`, `Are<T>()`, `Type<T>().OnlyIn<P>()` | The traits of each type of a part, and the parts that can use a type. See "Content of a part" |
 | `Under<T>()`, `InSame<T>()`, `InOther<T>()` | Filters: the place of the source or the target. A filter applies to each entry before it in the chain |
 
 `Options` sets `DefaultPermission` (the permission when no rule applies), `Boundary`, `UseSameConcept`, `Depth`, `Access` and `Required`. Each field is nullable: a field that is not set takes the next value. The engine resolves each value in this order: the part (the rule call, the group parameter or the `OfType` call), the concept, the architecture, then `Options.BuiltIn`.
@@ -97,6 +99,15 @@ A rule condition is a `Condition`: the groups that must have the same instance (
 `defaults.UseSameConcept = true` lets each part use each part of the same concept, in all places: for example a feature `Infrastructure` uses the `Infrastructure` of the framework and of a plugin. The engine adds these pairs before the layer bodies and the rules, so a rule can deny them. Boundary also limits them (see Boundary). The default is `false`.
 
 `VsaArchitecture.Define` calls one `virtual` define method for each base group and for the kernel: `DefineKernel`, `DefinePlugin`, `DefineFeature` and `DefineSlice`. The parts of a slice are in `Slice.Define`, so `DefineSlice` is empty in the base. It runs after `Slice.Define`. A pack variant overrides one to add a part to each instance of that group (see `pack-variants.md`).
+
+Each architecture defines its kernel with two hooks of `Architecture`: `DefineKernel(Part kernel)` (the kernel parts) and `KernelRules(RuleBook rules)` (the rules inside the kernel). The kernel is defined on the architecture, never on the pack. Two checks use it:
+
+| Check | Kernel parent | Binding | Rules |
+|---|---|---|---|
+| An app | The external `Kernel` part (`Define` calls `DefineKernel`) | By assembly, or by namespace in the bundled `Umpire.dll` | The rules of the app toward the kernel |
+| The pack | `PackParts.Kernel`, the folder `Kernel/` of the pack | By folder | `KernelRules` |
+
+For the pack check, the engine reads the architecture from the base chain of the pack class (`Pack<VsaArchitecture, …>`, `BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. The type requirements of the layer concepts (`OfType`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. Today `VsaArchitecture.KernelRules` allows each use between two kernel layers: the check covers the shape of the kernel, and the rules come later.
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 
@@ -204,7 +215,7 @@ The framework can require a public exposure, so the check ignores two exposures:
 | Exposure | Example |
 |---|---|
 | A base type or an interface of an `External` part, with its generic arguments | `: Presenter(bus), IPresenterHandler<Rang>` |
-| A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task<Result<Unit>> HandleAsync(Envelope<Rang> e)` |
+| A member that implements a member of such an interface. The name and the signature must match. An explicit implementation also matches | `public Task<Result<Unit>> HandleAsync(IEnvelope<Rang> e)` |
 
 An interface of the app or of .NET is not of an `External` part, so it counts. For example, `: IEquatable<Note>` and `public bool Equals(Note? other)` give `UMP020102` if the rule limits `Note`.
 
@@ -234,7 +245,7 @@ The first access that is set wins:
 The rules of a count:
 
 - `T` includes each concept that is nested in `T` (the concept family). For example, `Has<Handlers>()` counts `Handlers.Commands` and `Handlers.Commands.Hooks`. `Has<T>(Depth.Self)` counts only `T`. The `Depth` of the concept does not apply to a count.
-- A helper that follows its user does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts.
+- A helper that follows its user does not count, a nested type does not count, and an abstract class or an interface does not count. Only a concrete type that binds by its own base type counts. A static class counts: it is `abstract sealed` in IL, but it is not a base.
 - A count counts only the types of the app in the block folder. A type of an external DLL does not count.
 - A count with no limit stops the definition: "has no limit. Add AtLeast, AtMost, Exactly or OfOneKind."
 - The finding is at the first type of the instance (by file, then line), or at the type of the subject.
@@ -262,6 +273,83 @@ part.OfType(typeof(RequestHandler<,>), required: true);
 
 `VsaArchitecture` sets no `Required`. Its counts are lines in `Rules` (see "Counts and matches" in `architecture-rules.md`).
 
+## Content of a part
+
+A name rule is a call on the part, in `Define`. A trait rule and a place rule are statements in `Rules`, next to the counts.
+
+| Rule | Call | Fails when | Code |
+|---|---|---|---|
+| Name | `part.NameEndsWith("Hook")` | The type name does not obey the rule | `UMP020204` |
+| Traits | `rules.For<S>().Are<Static>()` | A type of `S` does not have the traits | `UMP020303` |
+| Type place | `rules.Type<T>().OnlyIn<S>()` | Code outside `S` uses `T` | `UMP020304` |
+
+```csharp
+protected override void Define(Block block) {
+    var feature = block.AddGroup<Feature>();
+    feature.Add<CliCommand>().NamedAfterGroup();
+}
+
+protected override void Rules(RuleBook rules) {
+    rules.For<CliCommand>().Are<Static>();
+    rules.Type<CliCommandAttribute>().OnlyIn<CliCommand>();
+}
+```
+
+### Name rules
+
+| Call | A good name |
+|---|---|
+| `NameEndsWith("Hook")` | `ChimeHook` |
+| `NameStartsWith("I")` | `IClock` |
+| `NamedAfterGroup()` | `Touch` in `Features/Touch/` (the nearest group) |
+| `NamedAfterGroup("Settings")` | `TouchSettings` in `Features/Touch/` |
+| `NamedAfterGroup<Feature>()` | `Billing` in `Features/Billing/Slices/Pay/` (the group `Feature`) |
+
+- A name rule has no regex. The generic arity (for example `` `1 ``) is not part of the name.
+- `NameStartsWith` and `NameEndsWith` join, for example `NameStartsWith("I").NameEndsWith("Source")`. A second call of the same method replaces the first.
+- `NamedAfterGroup("Settings")` and `NameEndsWith("Settings")` set the same end text, so the later call wins. `NamedAfterGroup()` with no suffix keeps an earlier end text.
+- Use `NamedAfterGroup<T>()` only when the part is under two groups. A `NamedAfterGroup` on a part with no group stops the definition.
+- Put a name rule at the call site of the pack definition, not in the `Define` of a concept.
+
+### Traits
+
+A trait is one fact about a type. Each trait is a record in `Umpire.Architecture.Traits` that inherits `Trait`: `Static`, `Abstract`, `Sealed`, `Record`, `Struct`, `Interface`, `Enum` and `Delegate`. `Trait` has one static member for each trait, for example `Trait.Sealed`.
+
+```csharp
+rules.For<X>().Are<Static>();                                     // one trait
+rules.For<X>().Are<Sealed>().And<Record>();                       // a chain: each trait
+rules.For<X>().Are((Trait.Sealed & Trait.Record) | Trait.Enum);   // the operators &, | and !
+```
+
+- `Are` checks each type of the part, one type at a time. It does not count. A count is `Has<T>().AtMost(n)`.
+- `Abstract` is an abstract class, not an interface or a static class. `Sealed` is a sealed class, not a static class.
+- A trait reads only the facts in `TypeFacts`, so the framework gives the traits. A consumer combines them.
+- With no `Are`, each type is allowed.
+
+### Type places
+
+`rules.Type<T>().OnlyIn<S>()` keeps each use of `T` in the parts `S`. `T` can be any type: an attribute, a base class, an interface, or a type that code calls.
+
+```csharp
+rules.Type<CliCommandAttribute>().OnlyIn<CliCommand>();   // the attribute is only on code in CliCommand
+rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure uses HttpClient
+```
+
+- For an attribute, a use is the attribute on the type or on one of its members. An attribute that derives from `T` is also a use, and a generic `T` matches each closed form.
+- For another type, a use is a base type, a field, a parameter, a call or an attribute. The type `T` itself is not a use.
+- A use in a member that the compiler makes, for example the `ToString` of a record, is not a use.
+- If more than one statement names `T`, `T` can be in each of their parts.
+- The engine does not read an attribute on a parameter, a return value, a generic parameter or a local function.
+
+### Shared rules of the content checks
+
+- A nested type has the source file of its outer type, so the name and trait checks and the counts do not read it. The place check reads it.
+- A static class is not a subject of a match (`Takes<T>()`).
+- The name and trait checks do not read a helper that follows its user. The place check reads it.
+- No content check reads a type of an external DLL or a type in a block place.
+- The engine reads the method bodies, for example a call inside a lambda. The in-process facts of an `ArchitectureTest` read only the signatures: the base types, the fields, the properties and the parameters.
+- `ArchitectureTest.Problems(place)` gives the name, trait and place problems of one type.
+
 ## Binding
 
 | Type | Part |
@@ -277,38 +365,48 @@ part.OfType(typeof(RequestHandler<,>), required: true);
 
 The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`BinReader`, one time for each run).
 
-## Unity projects
+## Folder aliases
 
-If the block folder has `ProjectSettings/ProjectVersion.txt`, the app is a Unity project. Unity compiles `Assets/`, so the folders of a Unity app are not the folders of a .NET app.
+A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder as if they were in another folder of the block. For example, an app that keeps its code in `src/Game/` gives the aliases below. With no alias, each folder binds as it is. The binder tries each path and keeps the deepest part.
 
-| Folder | Binds as | Contains |
-|---|---|---|
-| `Assets/<UnityApp>/` | The block | `Features/`, `Plugins/` |
-| `Assets/<UnityApp>/` | `App/` | `Views/`, `Host/` |
-| `<UnitySource>/` (default `Source`) | The block | `Features/`, `Plugins/` of the .NET projects |
-
-`Architecture.FolderAliases(blockFolder)` gives these folder aliases (`FolderAlias(Folder, As)`). With no aliases, each folder binds as it is. The binder tries each map and keeps the deepest part. `VsaArchitecture` gets them from `UnityLayout.Aliases`. `UnityLayout` finds `UnityApp`: the one folder in `Assets/` (not `Assets/Plugins/`) with `Features/`, `Plugins/` or `Views/`. If two folders match, set it in a definition class:
-
-```csharp
-public sealed class CardsArchitecture : VsaArchitecture {
-    public CardsArchitecture() {
-        UnityApp = "Cards";
-        UnitySource = "Modules";
-    }
-}
-
-public class MyApp : App<Vsa<CardsArchitecture, UnityHost>>;
+```toml
+[umpire.check.folder_aliases]
+"src/Game" = ["", "App"]      # src/Game/Features/... binds as Features/..., src/Game/Views/... as App/Views/...
+"Source" = [""]               # Source/Features/... binds as Features/...
 ```
 
-`AppReader` (`engine/Plugins/BuiltApp/Infrastructure`) also reads the DLLs that Unity compiles (`UnityProject.Scripts`):
-
-| Step | Unity project |
+| Source | Gives the aliases |
 |---|---|
-| App DLLs | Also `Library/ScriptAssemblies/*.dll` |
-| No `Library/ScriptAssemblies/` | The warning `UMP020203` |
-| A DLL name in the host output too | The engine loads the host output DLL only |
-| A type in two DLLs | The engine loads it once. The Unity copy wins, so the uses of the views stay checked |
-| Source file under `Library/` | Not app code (package cache, generated types) |
+| `umpire.check.folder_aliases` in the `.umpireconfig` of the block folder | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). The Rules step reads the table for each block (`FolderAliasConfig`) |
+| `Architecture.FolderAliases(blockFolder)` | A definition adds aliases in code. The engine uses the aliases of the code and of the config file together |
+
+Rules:
+
+- With one alias or more, a file binds only through an alias. A folder with no alias is not read. To keep the folders at the block root, add the key `""` (or `"."`): `"" = [""]`.
+- Only the `.umpireconfig` in the block folder itself gives aliases, because each alias folder is a path in that block. An inner block with no `.umpireconfig` of its own has no aliases.
+- A key or a value with `\` or a leading `./` is normalized: `".\src\Game"` is `src/Game`.
+- A value that is not a list, for example `"src/Game" = "App"`, gives the warning `UMP020206`. Put quotes on a key with `/` or `.`, because TOML reads an unquoted dotted key as a table.
+- `ArchitectureTest<T>` binds logical paths, for example `At<T>("Features/Notebook")`, so it uses no folder alias.
+
+The framework has no host layout of its own: the host package (for example vsa-unity) writes the aliases.
+
+### Check settings
+
+The engine knows no host build system. A host that compiles the app in its own way (for example Unity) gives its folders to the engine with these settings. Each setting has a key in `.umpireconfig`, and a flag with the same name overrides it for one run. The order is: the flag, then `.umpireconfig`, then the default. A list is text with `,` or `;` between the items. A relative folder in `.umpireconfig` starts at the folder of that file, and a relative folder in a flag starts at the current folder.
+
+| Key | Flag | Default | Effect |
+|---|---|---|---|
+| `umpire.check.references` | `--references` | None | More folders of DLLs. The engine reads them as it reads `--bin`: a DLL with source files under the block is app code, and each DLL resolves the types of the others |
+| `umpire.check.source_root` | `--sourceroot` | None | The root of a relative source path in a PDB. With no root, a relative path stays relative and is not under the block |
+| `umpire.check.ignored_folders` | `--ignoredfolders` | None | Folders of the block (relative paths) that hold no app code, for example a package cache. The change check does not read them |
+| `umpire.check.project_checks` | `--projectchecks` | `true` | `false` stops the project checks (`UMP030305`, `UMP030306`), for example for project files that the host writes |
+
+| Case | Result |
+|---|---|
+| A DLL name in `--bin` and in a reference folder | The engine reads the `--bin` DLL only |
+| A type in two DLLs | The engine loads it once. The copy in a reference folder wins |
+
+`CheckSettings` (`engine/Features/Engine/Infrastructure`) reads the settings, and `RunOptions` (`engine/Plugins/Steps`) gives them to the steps.
 
 ## The checks of the Rules step
 
@@ -328,9 +426,13 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020102` | `WideExposureRule` | `UseRule` (01) | Error | A type exposes a part with more access than its rule allows |
 | `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
 | `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
-| `UMP020203` | `MissingScriptAssembliesRule` | `PlaceRule` (02) | Warning | A Unity project has no `Library/ScriptAssemblies/` folder |
+| `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the name rule of its part (see "Content of a part") |
+| `UMP020205` | `MissingReferenceRule` | `PlaceRule` (02) | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
+| `UMP020206` | `BadFolderAliasRule` | `PlaceRule` (02) | Warning | A value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it |
 | `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
 | `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
+| `UMP020303` | `WrongTraitRule` | `StatementRule` (03) | Error | A type does not have the traits that `Are` of its part needs (see "Content of a part") |
+| `UMP020304` | `TypePlaceRule` | `StatementRule` (03) | Error | Code outside the parts of `Type<T>().OnlyIn<S>()` uses `T` (see "Content of a part") |
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
 | `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry |
 
@@ -348,7 +450,7 @@ C:/app/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHand
 
 ## The checks of an app
 
-An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net10.0/` (property `UmpireEngineFile`). See "The rule engine" in `AGENTS.md`.
+An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net8.0/` (property `UmpireEngineFile`). The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It needs only `Microsoft.NETCore.App`: `AppLoader` loads the ASP.NET Core types of a web app from the shared folder of the runtime. It loads the definition of the app, so the SDK hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
 
 ```text
 umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Warn]
@@ -393,8 +495,8 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 | Versions | Each Umpire version slot of the block folder and of the host output (see "One version") |
 | App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
-| Definition | The architecture of the check entry of the block. For an app class: `Pack.Architecture` of the one most derived app class (`App`). See "Engine codes" |
-| Unity DLLs | See "Unity projects" |
+| Definition | The architecture of the check entry of the block. For an app class: the one most derived closed class that implements `IAppEntry<TPack>` (`App<TPack>` does). The engine reads type argument 0 of `Pack<TArchitecture, TKernel, THost>` from the metadata and makes only that architecture. It does not make the app class, so a launcher (for example a Unity shell with a private `App<TPack>`) is an app class too. If the pack has no such argument, the engine makes the pack and reads `Pack.Architecture`. See "Engine codes" |
+| DLLs of a host build (for example Unity) | See "Check settings" and "Folder aliases" |
 
 ### Engine codes
 
@@ -415,11 +517,13 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030304` | 03 Blocks | Warning | A folder has a check entry in code and the key `umpire.architecture` in its `.umpireconfig`. The entry in code wins |
 | `UMP030305` | 03 Blocks | Warning | A project of the block has no Umpire main SDK (see "Projects of a block") |
 | `UMP030306` | 03 Blocks | Warning | The block has more than one project and no `.umpireconfig` file |
+| `UMP030307` | 03 Blocks | Error | A DLL of the host output targets a newer .NET than the runtime of the engine, so the engine cannot load the app. Install that .NET, or run the engine with `dotnet exec --roll-forward LatestMajor`. The run stops |
 | `UMP030401` | 04 Versions | Error | An Umpire version is not the engine version (see "One version") |
 | `UMP030501` | 05 LoadApp | Error | No DLL of the host output has source files under the block folder |
 | `UMP030502` | 05 LoadApp | Error | The app has no app class |
-| `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class |
-| `UMP030504` | 05 LoadApp | Error | An app class has no public constructor with no parameters |
+| `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class. An app class nested in an entry with the same pack does not count |
+| `UMP030506` | 05 LoadApp | Error | An app class implements `IAppEntry<TPack>` for more than one pack |
+| `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
 A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
 
@@ -527,7 +631,7 @@ public sealed class NotesArchitectureTests : VsaArchitectureTest {
 
 The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
 
-The folder is the path in the block with no Unity alias. In a Unity project, write `Features/Notebook`, not `Assets/<App>/Features/Notebook`.
+The folder is the path in the block with no folder alias. For an app with the alias `"src/Game" = [""]`, write `Features/Notebook`, not `src/Game/Features/Notebook`.
 
 The base has no test framework, and a test asserts with NUnit. It needs no build of the app and no DLL: only the type. An internal type is not visible to a test project, so name a public type of the same base, or a plain type with `At(folder)`.
 

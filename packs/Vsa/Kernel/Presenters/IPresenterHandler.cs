@@ -6,7 +6,7 @@ using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Handlers.Events;
 
 public interface IPresenterHandler<TEvent> : IIntegrationEventHandler<TEvent> where TEvent : IntegrationEvent {
-    async Task<IMessageResult> IHandler<TEvent>.RunAsync(Envelope<TEvent> envelope) {
+    async Task<IMessageResult> IHandler<TEvent>.RunAsync(IEnvelope<TEvent> envelope) {
         IMessageResult result;
         try {
             result = await HandleAsync(envelope);

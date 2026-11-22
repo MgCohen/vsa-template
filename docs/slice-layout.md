@@ -77,7 +77,7 @@ tests/Fixtures/Notes/
 |---|---|
 | Nested project | The parent project does not compile its folder |
 | `bin/`, `obj/` | Not source folders, at each depth |
-| `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `Assets;Library;Temp;Logs;UserSettings;node_modules` |
+| `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `node_modules` |
 | Framework references | Each project gets the base of each layer |
 
 A web root project uses Umpire.Sdk.Web, with the version. The SDK adds the web host and the views (`Umpire.Web`):
@@ -142,7 +142,7 @@ public sealed record ChangeResourceCommand(ResourceKey Resource, int Delta) : IC
 public sealed record ChangeResourceResult(bool Changed, int Value);
 
 sealed class ChangeResourceHandler(Wallet wallet) : CommandHandler<ChangeResourceCommand, ChangeResourceResult> {
-    public override Task<Result<ChangeResourceResult>> HandleAsync(Envelope<ChangeResourceCommand> envelope) {
+    public override Task<Result<ChangeResourceResult>> HandleAsync(IEnvelope<ChangeResourceCommand> envelope) {
         var changed = wallet.TryChange(envelope.Message.Resource, envelope.Message.Delta, out var value);
         return Task.FromResult<Result<ChangeResourceResult>>(new ChangeResourceResult(changed, value));
     }
@@ -154,7 +154,7 @@ To send a command, get `ICommandSender` from the services and call `SendAsync`:
 ```csharp
 // Features/Cards/Slices/PayCost/PayCostHandler.cs
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events) : CommandHandler<PayCostCommand, PayCostResult> {
-    public override async Task<Result<PayCostResult>> HandleAsync(Envelope<PayCostCommand> envelope) {
+    public override async Task<Result<PayCostResult>> HandleAsync(IEnvelope<PayCostCommand> envelope) {
         var cost = envelope.Message.Cost;
         var changed = await commands.SendAsync(new ChangeResourceCommand(cost.Resource, -cost.Amount), envelope.Cancellation);
         if (!changed.IsSuccess) {

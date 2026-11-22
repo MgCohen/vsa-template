@@ -5,8 +5,8 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Contracts.Events;
 
 public interface IIntegrationEventHandler<TEvent> : IHandler<TEvent> where TEvent : IntegrationEvent {
-    Task<Result<Unit>> HandleAsync(Envelope<TEvent> envelope);
+    Task<Result<Unit>> HandleAsync(IEnvelope<TEvent> envelope);
 
-    async Task<IMessageResult> IHandler<TEvent>.RunAsync(Envelope<TEvent> envelope) =>
+    async Task<IMessageResult> IHandler<TEvent>.RunAsync(IEnvelope<TEvent> envelope) =>
         await HandleAsync(envelope);
 }

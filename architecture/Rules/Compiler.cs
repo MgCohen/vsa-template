@@ -22,6 +22,9 @@ internal sealed class Compiler {
         UseRules = CompileUseRules();
         Counts = [.. book.Counts.Select(Of), .. Required()];
         Matches = [.. book.Matches.Select(Of)];
+        Traits = [.. book.Traits.Select(Of)];
+        Places = [.. book.Places.Select(Of)];
+        CheckNames();
     }
 
     public Options Options { get; }
@@ -31,6 +34,8 @@ internal sealed class Compiler {
     public IReadOnlyList<PartRule> UseRules { get; }
     public IReadOnlyList<CountStatement> Counts { get; }
     public IReadOnlyList<MatchStatement> Matches { get; }
+    public IReadOnlyList<TraitStatement> Traits { get; }
+    public IReadOnlyList<PlaceStatement> Places { get; }
 
     static IEnumerable<Part> Expand(Part part, Depth depth) => depth switch {
         Depth.Self => [part],
@@ -173,6 +178,28 @@ internal sealed class Compiler {
             RefuseNoGroup(group, $"InSame<{Concept.Display(group)}>", text);
         }
         return new MatchStatement(text, Subjects(match.Subjects, text), match.Taken, match.Group);
+    }
+
+    TraitStatement Of(TraitRule rule) {
+        var text = rule.ToString();
+        Validate(rule.Subjects, text);
+        return new TraitStatement(text, Subjects(rule.Subjects, text), rule.Condition);
+    }
+
+    PlaceStatement Of(PlaceLimit limit) {
+        var text = limit.ToString();
+        var places = limit.Places;
+        Validate(places, text);
+        return new PlaceStatement(text, Subjects(places, text), limit.Type);
+    }
+
+    void CheckNames() {
+        foreach (var part in Parts.Where(p => p.NamePattern is { OfAGroup: true } && p.NamePattern.GroupOf(p) is null)) {
+            var group = part.NamePattern!.Group is { } concept ? Concept.Display(concept) : "group";
+            throw new InvalidOperationException(
+                $"Define: {part.Name} has the name rule \"{part.NamePattern}\", but it is not under a {group}. "
+                + "Add the part under that group, or use another name rule.");
+        }
     }
 
     IEnumerable<CountStatement> Required() {

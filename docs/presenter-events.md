@@ -31,7 +31,7 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 
 | Part | Project | Job |
 |---|---|---|
-| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(Envelope<TEvent>)`. It has no `[AutoRegister]` |
+| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(IEnvelope<TEvent>)`. It has no `[AutoRegister]` |
 | `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. Its `RunAsync` raises `Changed` after `HandleAsync`, also when it fails |
 | `Presenter` | `Umpire.Vsa.Presenters` | The base of each presenter. It has `[AutoRegister]`, so the core step registers each presenter as scoped |
 | `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. It has the queue of the deliveries to the scope |
@@ -80,7 +80,7 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 - A delivery that starts later keeps the token of its publish. If that token is cancelled, an `OperationCanceledException` stops the delivery to that scope, and it is not an error.
 - `IIntegrationEventHandler<TEvent>` has no `[AutoRegister]`. The event pipeline takes the classes of `IntegrationEventHandler<TEvent>`, and the presenter pipeline takes the classes of `IPresenterHandler<TEvent>`. Thus a presenter is never a module handler.
 - One presenter can show many events: it implements `IPresenterHandler<T>` one time for each event.
-- An open presenter, for example `GaugePresenter<T> where T : struct, IGauge`, is closed for each `[TypeArgument]` type that meets its constraints, the same as an open handler (`docs/composition.md`). If no type argument fits, the presenter gets no registration and no start error, the same as each open class (MgCohen/vsa-template#214).
+- An open presenter, for example `GaugePresenter<T> where T : struct, IGauge`, is closed for each `[AutoClose]` type that meets its constraints, the same as an open handler (`docs/composition.md`). If its event type does not use each type parameter (here `GaugeRead`), the presenter needs one `[AutoClose]` type that fits, else the start stops with a message (MgCohen/vsa-template#214). A presenter of an event that uses each type parameter is an open handler (`docs/composition.md`).
 - `Presenter` is a service, with one forward for each presenter. Thus `GetServices<Presenter>()` in a scope makes each presenter of that scope.
 - The presenter pipeline has the validators of the event, so each `Validator<TEvent>` runs one time for the event pipeline and one time for each live scope. Keep validators of events cheap and free of side effects.
 - Each scope gets its own envelope. `Envelope.Services` is the provider of the presenter scope, and `Envelope.Cancellation` is the token of the publish.
@@ -95,7 +95,7 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IPresenterHandler<Rang> {
     public string? Last { get; private set; }
 
-    public Task<Result<Unit>> HandleAsync(Envelope<Rang> envelope) {
+    public Task<Result<Unit>> HandleAsync(IEnvelope<Rang> envelope) {
         Last = envelope.Message.Bell;
         return Task.FromResult<Result<Unit>>(Unit.Value);
     }

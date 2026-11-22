@@ -1,6 +1,7 @@
 namespace Umpire.Messages.Handlers;
 
 using Umpire.Architecture;
+using Umpire.Kernels;
 
 static class MessageTypes {
     internal static IReadOnlyList<Type> OfHandler(Type handler) {
@@ -17,6 +18,50 @@ static class MessageTypes {
 
     internal static bool DerivesFrom(Type type, Type baseType) =>
         baseType.IsAssignableFrom(type) || ClosedBase.OfSelfOrBase(type, baseType) is not null;
+
+    internal static bool Applies(Type part, Type message) => part.IsAssignableFrom(message);
+
+    internal static bool IsNarrower(Type message, Type than) => message != than && than.IsAssignableFrom(message);
+
+    internal static List<T> Narrowest<T>(IReadOnlyList<T> items, Func<T, Type> messageOf) =>
+        [.. items.Where(item => !items.Any(other => IsNarrower(messageOf(other), messageOf(item))))];
+
+    internal static List<T> NearestFirst<T>(IEnumerable<T> items, Func<T, Type> messageOf) {
+        var list = items.ToList();
+        return [.. list
+            .OrderByDescending(item => list.Count(other => IsNarrower(messageOf(item), messageOf(other))))
+            .ThenBy(item => messageOf(item).FullName, StringComparer.Ordinal)];
+    }
+
+    internal static IEnumerable<T> NearestPerDefinition<T>(
+        IEnumerable<T> nearestFirst, Func<T, Type> typeOf, Func<T, Type> messageOf) =>
+        nearestFirst
+            .GroupBy(item => DefinitionOf(typeOf(item)))
+            .SelectMany(group => Narrowest(group.ToList(), messageOf))
+            .GroupBy(typeOf)
+            .Select(group => group.First());
+
+    internal static IEnumerable<Type> Closed(Type open, Type pattern, Type message) =>
+        OpenGenerics.ForMessage(open, pattern, message);
+
+    internal static IEnumerable<string> CloseFailures(Type open, Type pattern, Type message) =>
+        OpenGenerics.MessageShapesOf(pattern, message)
+            .Select(shape => OpenGenerics.Arguments(open, pattern, shape) is { } arguments
+                && OpenGenerics.Unmet(open, arguments) is { } unmet
+                    ? $"{OpenGenerics.NameOf(open)} cannot close for {message.Name}: {unmet}."
+                    : null)
+            .OfType<string>();
+
+    internal static void CheckOpenHandler(Type open) {
+        if (!OfHandler(open).Any(pattern => OpenGenerics.UsesEachParameter(open, pattern))) {
+            throw new InvalidOperationException(
+                $"{OpenGenerics.NameOf(open)} cannot close from a message: its message type does not use "
+                + "each of its type parameters. Put each type parameter in the message type, "
+                + "or list a closed handler.");
+        }
+    }
+
+    static Type DefinitionOf(Type type) => type.IsConstructedGenericType ? type.GetGenericTypeDefinition() : type;
 
     static Type? ArgumentOf(Type type, Type genericBase) => ClosedBase.OfSelfOrBase(type, genericBase)?.GetGenericArguments()[0];
 }

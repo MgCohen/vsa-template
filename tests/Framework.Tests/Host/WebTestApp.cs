@@ -36,7 +36,7 @@ sealed class WebTestApp : App {
     }
 
     WebTestHost CreateHost() {
-        var host = new WebTestHost { Modules = modules };
+        var host = new WebTestHost { ModuleProvider = new FixedModules(modules) };
         host.Actions.AddRange(configure);
         return host;
     }

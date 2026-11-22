@@ -10,6 +10,7 @@ public sealed class VsaAppTests {
         new(() => FixtureApps.Load(new VsaArchitecture(), AppContext.BaseDirectory, FixtureApps.Block("VsaApp")));
 
     static readonly string[] Known = [
+        "VsaApp/App/Host/LeakyHost.cs(7): error UMP020101",
         Notebook + "Contracts/StrayContract.cs(3): error UMP020202",
         Notebook + "Slices/Archive/ArchiveAuditHook.cs(7): error UMP020301",
         Notebook + "Slices/Count/CountRequest.cs(6): error UMP020301",
@@ -31,6 +32,15 @@ public sealed class VsaAppTests {
     ];
 
     static IReadOnlyList<string> Findings => [.. VsaMap.Value.Findings().Select(FixtureApps.Line)];
+
+    [Test]
+    public void A_host_that_names_a_module_root_in_a_fixed_list_gives_no_finding() =>
+        Assert.That(Findings, Has.None.Contains("App/Host/FixedHost.cs"));
+
+    [Test]
+    public void A_host_that_uses_the_domain_of_a_feature_gives_UMP020101() =>
+        Assert.That(Findings,
+            Has.One.StartsWith("VsaApp/App/Host/LeakyHost.cs(7): error UMP020101: LeakyHost in Host (App/Host) uses Note in Domain"));
 
     [TestCase(Notebook + "Contracts/StrayContract.cs", "UMP020202", "StrayContract is in a folder")]
     [TestCase("VsaApp/Plugins/Tools/Slices/Run/RunStep.cs", "UMP020202", "RunStep is in a folder")]

@@ -8,22 +8,35 @@ using Umpire.Kernels;
 
 public sealed class AppLoader : AssemblyLoadContext {
     public static readonly IReadOnlySet<string> Shared = SharedClosure(typeof(Architecture).Assembly);
-    readonly string bin;
+    readonly IReadOnlyList<string> folders;
     readonly AssemblyDependencyResolver? resolver;
 
-    public AppLoader(string bin) : base("umpire-app", isCollectible: false) {
-        this.bin = bin;
+    public AppLoader(string bin, IReadOnlyList<string>? references = null) : base("umpire-app", isCollectible: false) {
+        folders = [bin, .. references ?? [], .. SharedFrameworks.Web() is { } web ? [web] : Array.Empty<string>()];
         var main = Directory.GetFiles(bin, "*.deps.json")
             .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))
             .FirstOrDefault(File.Exists);
         resolver = main is null ? null : new AssemblyDependencyResolver(main);
     }
 
-    public Architecture CreateArchitecture(TypeName name) => (Architecture)Create(name);
+    public bool TakesPacked(TypeName name) => PackedConstructor(TypeOf(name)) is not null;
 
-    public Architecture ArchitectureOfApp(TypeName appClass, string dll) {
-        var app = Activator.CreateInstance(LoadFromAssemblyPath(dll).GetType(appClass.FullName, throwOnError: true)!)!;
-        var pack = app.GetType().GetProperty(nameof(App.Pack))!.GetValue(app)!;
+    public Architecture CreateArchitecture(TypeName name, TypeName? packed = null) {
+        var type = TypeOf(name);
+        if (packed is null) {
+            return (Architecture)Activator.CreateInstance(type)!;
+        }
+        var withPacked = PackedConstructor(type)
+            ?? throw new InvalidOperationException($"{type.FullName} has no public constructor with one {nameof(Architecture)} parameter.");
+        return (Architecture)withPacked.Invoke([CreateArchitecture(packed)]);
+    }
+
+    public Architecture ArchitectureOfApp(AppClass appClass, string dll) {
+        if (appClass.Architecture is { } architecture) {
+            return CreateArchitecture(architecture);
+        }
+        var entry = LoadFromAssemblyPath(dll).GetType(appClass.Type.FullName, throwOnError: true)!;
+        var pack = Activator.CreateInstance(AppClass.PacksOf(entry)[0])!;
         return (Architecture)pack.GetType().GetProperty(nameof(Pack.Architecture))!.GetValue(pack)!;
     }
 
@@ -31,11 +44,8 @@ public sealed class AppLoader : AssemblyLoadContext {
         if (Shared.Contains(assemblyName.Name!)) {
             return null;
         }
-        var path = resolver?.ResolveAssemblyToPath(assemblyName);
-        if (path is null) {
-            var local = Path.Combine(bin, assemblyName.Name + ".dll");
-            path = File.Exists(local) ? local : null;
-        }
+        var path = resolver?.ResolveAssemblyToPath(assemblyName)
+            ?? folders.Select(folder => Path.Combine(folder, assemblyName.Name + ".dll")).FirstOrDefault(File.Exists);
         return path is null ? null : LoadFromAssemblyPath(path);
     }
 
@@ -47,8 +57,8 @@ public sealed class AppLoader : AssemblyLoadContext {
         return names;
     }
 
-    object Create(TypeName name) {
-        var type = LoadFromAssemblyName(new AssemblyName(name.Assembly)).GetType(name.FullName, throwOnError: true)!;
-        return Activator.CreateInstance(type)!;
-    }
+    static ConstructorInfo? PackedConstructor(Type type) => type.GetConstructor([typeof(Architecture)]);
+
+    Type TypeOf(TypeName name) =>
+        LoadFromAssemblyName(new AssemblyName(name.Assembly)).GetType(name.FullName, throwOnError: true)!;
 }

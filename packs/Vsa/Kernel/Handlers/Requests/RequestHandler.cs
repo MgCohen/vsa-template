@@ -6,13 +6,11 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Contracts.Requests;
 
 [AutoRegister]
-[RequireDerived]
-[Preserve]
 public abstract class RequestHandler<TRequest, TResponse> : IHandler<TRequest>
     where TRequest : class, IRequest<TResponse>
     where TResponse : IResponse {
-    public abstract Task<Result<TResponse>> HandleAsync(Envelope<TRequest> envelope);
+    public abstract Task<Result<TResponse>> HandleAsync(IEnvelope<TRequest> envelope);
 
-    async Task<IMessageResult> IHandler<TRequest>.RunAsync(Envelope<TRequest> envelope) =>
+    async Task<IMessageResult> IHandler<TRequest>.RunAsync(IEnvelope<TRequest> envelope) =>
         await HandleAsync(envelope);
 }

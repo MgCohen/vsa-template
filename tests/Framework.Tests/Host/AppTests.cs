@@ -180,7 +180,7 @@ public sealed class AppTests {
     sealed class RulesApp : App<Vsa<RulesArchitecture, WebHost>>;
 
     sealed class LifecycleApp : App {
-        public override Pack Pack { get; } = new TestPack(() => new AppHost { Modules = [] });
+        public override Pack Pack { get; } = new TestPack(() => new AppHost { ModuleProvider = new FixedModules() });
 
         public bool StopOnStart { get; init; }
 

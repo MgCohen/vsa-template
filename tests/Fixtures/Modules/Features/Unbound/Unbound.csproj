@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>

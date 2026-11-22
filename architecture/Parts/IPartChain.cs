@@ -14,4 +14,12 @@ public interface IPartChain {
     IPartChain OfType<T>(bool? required = null);
 
     IPartChain OfType(Type type, bool? required = null);
+
+    IPartChain NameStartsWith(string text);
+
+    IPartChain NameEndsWith(string text);
+
+    IPartChain NamedAfterGroup(string suffix = "");
+
+    IPartChain NamedAfterGroup<T>(string suffix = "") where T : Concept;
 }
