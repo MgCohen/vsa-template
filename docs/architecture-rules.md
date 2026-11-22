@@ -17,7 +17,7 @@ The editor and the build run the first group in each consumer project. The build
 
 | ID | Level | Rule |
 |---|---|---|
-| `UMP010201` | Analyzers | Requests and responses are sealed records. An abstract request base is not checked. Option: `check_responses`. |
+| `UMP010201` | Analyzers | Requests and responses are records. A record that is not sealed passes, so a request can derive from another request. An abstract request base is not checked. Option: `check_responses`. A team that wants sealed payloads states it in its definition with the `Sealed` and `Record` traits. |
 | `UMP010202` | Analyzers | Event handlers do not use a request type or `IRequestSender`. |
 | `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. Disabled (#143). |
 | `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterHandler`); it does not publish them. |
@@ -108,16 +108,16 @@ The host configures the plugin modules first, then the other modules. In each gr
 `VsaAnalyzer` and `KernelAnalyzer` each find each `UmpireAnalyzerRule` of their assembly, ignore generated code, and do not run a rule with severity `none`. A rule sets its number, its text and the defaults of its options, and registers its actions. A rule option wins over a global option.
 
 ```csharp
-public sealed class SealedRecordRule : VsaRule {
+public sealed class RecordPayloadRule : VsaRule {
     public const string CheckResponsesKey = "check_responses";
 
     public override int Number => 1;
 
     public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(CheckResponsesKey, true)];
 
-    protected override string Title => "Requests and responses are sealed records";
+    protected override string Title => "Requests and responses are records";
 
-    protected override string Message => "{0} is {1}. Make it a sealed record.";
+    protected override string Message => "{0} is {1}. Make it a record.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) =>
         start.RegisterSymbolAction(symbol => {

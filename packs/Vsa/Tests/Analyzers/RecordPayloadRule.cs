@@ -5,17 +5,17 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class SealedRecordRule : VsaRule {
+public sealed class RecordPayloadRule : VsaRule {
     public const string CheckResponsesKey = "check_responses";
 
     public override int Number => 1;
 
     public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(CheckResponsesKey, true)];
 
-    protected override string Title => "Requests and responses are sealed records";
+    protected override string Title => "Requests and responses are records";
 
     protected override string Message =>
-        "{0} is {1}. Make it a sealed record.";
+        "{0} is {1}. Make it a record.";
 
     protected internal override void Register(CompilationStartAnalysisContext start) {
         if (start.Compilation.GetTypeByMetadataName("Umpire.Vsa.Contracts.Requests.IRequest`1") is not { } request) {
@@ -23,6 +23,10 @@ public sealed class SealedRecordRule : VsaRule {
         }
         start.RegisterSymbolAction(symbol => Check((INamedTypeSymbol)symbol.Symbol, request, symbol), SymbolKind.NamedType);
     }
+
+    static bool HasConcreteRequestBase(INamedTypeSymbol type, INamedTypeSymbol implemented) =>
+        type.BaseType is { IsAbstract: false } baseType
+        && baseType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, implemented));
 
     void Check(INamedTypeSymbol type, INamedTypeSymbol request, SymbolAnalysisContext context) {
         if (type.IsAbstract || (type.TypeKind != TypeKind.Class && type.TypeKind != TypeKind.Struct)) {
@@ -33,7 +37,7 @@ public sealed class SealedRecordRule : VsaRule {
             return;
         }
         Report(type, "a request", context);
-        if (Values(context.Options).Bool(CheckResponsesKey) != true) {
+        if (Values(context.Options).Bool(CheckResponsesKey) != true || HasConcreteRequestBase(type, implemented)) {
             return;
         }
         if (implemented.TypeArguments[0] is INamedTypeSymbol response && response.Locations.Any(l => l.IsInSource)
@@ -43,7 +47,7 @@ public sealed class SealedRecordRule : VsaRule {
     }
 
     void Report(INamedTypeSymbol type, string role, SymbolAnalysisContext context) {
-        if (type.IsRecord && (type.IsSealed || type.IsValueType)) {
+        if (type.IsRecord) {
             return;
         }
         context.ReportDiagnostic(Create(type.Locations[0], type.Name, role));
