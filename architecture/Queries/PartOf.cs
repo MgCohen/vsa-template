@@ -74,8 +74,8 @@ sealed class PartOf {
         if (!paths.Any(path => !path.Contains('/'))) {
             return null;
         }
-        var part = Select(resolved.Block, type);
-        return part == resolved.Block ? null : part;
+        var part = Select(resolved.Root, type);
+        return part == resolved.Root ? null : part;
     }
 
     bool InInnerBlock(string file) => innerBlocks.Any(folder => file.StartsWith(folder, StringComparison.OrdinalIgnoreCase));

@@ -11,20 +11,14 @@ public record Contracts : Layer {
     }
 
     public record Requests : Layer {
-        protected override void Define(Part part) {
-            part.OfType(typeof(IRequest)).OfType<IResponse>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IRequest), typeof(IResponse)];
     }
 
     public record Events : Layer {
-        protected override void Define(Part part) {
-            part.OfType<IntegrationEvent>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IntegrationEvent)];
     }
 
     public record Commands : Layer {
-        protected override void Define(Part part) {
-            part.OfType(typeof(ICommand<>));
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(ICommand<>)];
     }
 }

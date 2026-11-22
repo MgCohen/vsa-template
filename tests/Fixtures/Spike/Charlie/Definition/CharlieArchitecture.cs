@@ -5,9 +5,9 @@ using Umpire.Architecture;
 using static Spike.Charlie.Definition.CharlieParts;
 
 public sealed class CharlieArchitecture : AlphaArchitecture {
-    protected override void Define(Block block) {
-        base.Define(block);
-        block.Add<C1>();
+    protected override void Define(Part root) {
+        base.Define(root);
+        root.Add<C1>();
     }
 
     protected override void Rules(RuleBook rules) {

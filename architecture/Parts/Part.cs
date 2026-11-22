@@ -28,7 +28,7 @@ public class Part : IPartChain {
     public bool IsExternal => Assembly is not null;
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
-    public string Name => Concept is null ? "(block)" : Concept.Display(Concept.GetType());
+    public string Name => Concept is null ? "(root)" : Concept.Display(Concept.GetType());
     public Options Options => options.Over(new Options());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
     internal NamePattern? NamePattern { get; private set; }
@@ -168,10 +168,21 @@ public class Part : IPartChain {
 
     Part Attach(Part child) {
         RefuseInBlockPlace(child);
-        Block(child);
+        RefuseExternalNesting(child);
         child.options = child.options.Over(Options.From(child.Concept!.ConfigureDefaults));
         children.Add(child);
-        child.Concept!.DefinePart(child);
+        foreach (var type in child.Concept.OfTypes) {
+            child.OfType(type);
+        }
+        if (child.Concept.NameStartsWith.Length > 0) {
+            child.NameStartsWith(child.Concept.NameStartsWith);
+        }
+        if (child.Concept.NameEndsWith.Length > 0) {
+            child.NameEndsWith(child.Concept.NameEndsWith);
+        }
+        if (child.Concept is Block block) {
+            block.DefinePart(child);
+        }
         return child;
     }
 
@@ -187,7 +198,7 @@ public class Part : IPartChain {
         }
     }
 
-    void Block(Part child) {
+    void RefuseExternalNesting(Part child) {
         var name = child.Name;
         var group = SelfAndAncestors().FirstOrDefault(p => p.IsGroup);
         var external = child.Concept is External;

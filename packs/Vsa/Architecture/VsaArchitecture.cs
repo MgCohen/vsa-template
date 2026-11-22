@@ -9,12 +9,12 @@ public class VsaArchitecture : Architecture {
         defaults.Boundary = Boundary.Closed;
     }
 
-    protected override void Define(Block block) {
-        DefineKernel(block.Add<Kernel>());
-        block.Add<App>().Add<Host>().And<Views>();
-        block.AddBlockGroup<Pack>("Packs");
-        DefinePlugin(block.AddGroup<Plugin>(Boundary.Open));
-        DefineFeature(block.AddGroup<Feature>());
+    protected override void Define(Part root) {
+        DefineKernel(root.Add<Kernel>());
+        root.Add<App>().Add<Host>().And<Views>();
+        root.AddBlockGroup<Pack>("Packs");
+        DefinePlugin(root.AddGroup<Plugin>(Boundary.Open));
+        DefineFeature(root.AddGroup<Feature>());
     }
 
     protected override void DefineKernel(Part kernel) {

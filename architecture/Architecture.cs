@@ -5,7 +5,7 @@ public abstract class Architecture {
 
     protected virtual void Configure(Options defaults) { }
 
-    protected abstract void Define(Block block);
+    protected abstract void Define(Part root);
 
     protected virtual void Rules(RuleBook rules) { }
 
@@ -15,7 +15,7 @@ public abstract class Architecture {
 
     internal void ConfigureDefaults(Options defaults) => Configure(defaults);
 
-    internal void DefineBlock(Block block) => Define(block);
+    internal void DefineRoot(Part root) => Define(root);
 
     internal void AddRules(RuleBook rules) => Rules(rules);
 

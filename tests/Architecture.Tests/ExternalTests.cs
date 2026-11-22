@@ -14,8 +14,8 @@ public record Group : Concept;
 
 public record Child : Concept;
 
-public sealed class InlineArchitecture(Action<Block> define) : Architecture {
-    protected override void Define(Block block) {
+public sealed class InlineArchitecture(Action<Part> define) : Architecture {
+    protected override void Define(Part block) {
         define(block);
     }
 }
@@ -71,7 +71,7 @@ public sealed class ExternalTests {
         Blocks(block => block.Add<Lib>().InParentFolder(), "An external part has no InParentFolder");
     }
 
-    static void Blocks(Action<Block> define, string message) {
+    static void Blocks(Action<Part> define, string message) {
         var definition = new InlineArchitecture(define);
 
         Assert.That(() => new ResolvedArchitecture(definition), Throws.InvalidOperationException.With.Message.Contains(message));

@@ -6,11 +6,11 @@ public sealed class RuleBook {
     internal readonly List<Match> Matches;
     internal readonly List<TraitRule> Traits;
     internal readonly List<PlaceLimit> Places;
-    readonly Block block;
+    readonly Part block;
 
-    internal RuleBook(Block block) : this(block, null, [], [], [], [], []) { }
+    internal RuleBook(Part block) : this(block, null, [], [], [], [], []) { }
 
-    RuleBook(Block block, Type? scope, List<Rule> rules, List<Count> counts, List<Match> matches, List<TraitRule> traits, List<PlaceLimit> places) {
+    RuleBook(Part block, Type? scope, List<Rule> rules, List<Count> counts, List<Match> matches, List<TraitRule> traits, List<PlaceLimit> places) {
         this.block = block;
         Scope = scope;
         Rules = rules;

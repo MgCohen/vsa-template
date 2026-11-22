@@ -37,7 +37,7 @@ public sealed class AccessArchitecture<TTarget>(Access options, Access? method) 
         defaults.Access = options;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<User>();
         block.Add<TTarget>();
     }

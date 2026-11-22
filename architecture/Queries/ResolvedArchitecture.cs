@@ -12,7 +12,7 @@ public sealed class ResolvedArchitecture {
         var compiled = new Compiler(architecture);
         Architecture = architecture;
         Options = compiled.Options;
-        Block = compiled.Block;
+        Root = compiled.Root;
         Parts = compiled.Parts;
         UseRules = compiled.UseRules;
         partOptions = compiled.PartOptions;
@@ -25,7 +25,7 @@ public sealed class ResolvedArchitecture {
 
     public Architecture Architecture { get; }
     public Options Options { get; }
-    public Block Block { get; }
+    public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }
     public IReadOnlyList<PartRule> UseRules { get; }
 

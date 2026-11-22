@@ -7,8 +7,8 @@ sealed class KernelArchitecture : Architecture {
         defaults.DefaultPermission = Permission.Allow;
     }
 
-    protected override void Define(Block block) {
-        block.Add<KernelParts.App>().And<KernelParts.Kernels>().And<KernelParts.Hosts>().And<KernelParts.Operations>()
+    protected override void Define(Part root) {
+        root.Add<KernelParts.App>().And<KernelParts.Kernels>().And<KernelParts.Hosts>().And<KernelParts.Operations>()
             .And<KernelParts.Modules>().And<KernelParts.Scan>().And<KernelParts.Factories>().And<KernelParts.Services>()
             .And<KernelParts.Analyzers>();
     }

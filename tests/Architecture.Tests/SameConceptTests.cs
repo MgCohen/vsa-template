@@ -14,7 +14,7 @@ public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture 
         defaults.UseSameConcept = useSameConcept;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<Target>();
         block.AddGroup<Package>().Add<Target>().And<User>();
     }
@@ -64,7 +64,7 @@ public sealed class DenyingSameLayerArchitecture : Architecture {
         defaults.UseSameConcept = true;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<Target>();
         block.AddGroup<Package>().Add<Target>();
     }

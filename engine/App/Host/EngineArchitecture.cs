@@ -5,12 +5,12 @@ using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class EngineArchitecture : VsaArchitecture {
-    protected override void Define(Block block) {
-        base.Define(block);
-        block.Add<EngineLibraries>();
-        block.Add<VersionLibraries>();
-        block.Add<ArchUnitLibraries>();
-        block.Add<ConfigLibraries>();
+    protected override void Define(Part root) {
+        base.Define(root);
+        root.Add<EngineLibraries>();
+        root.Add<VersionLibraries>();
+        root.Add<ArchUnitLibraries>();
+        root.Add<ConfigLibraries>();
     }
 
     protected override void Rules(RuleBook rules) {

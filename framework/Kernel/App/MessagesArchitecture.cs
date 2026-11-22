@@ -7,7 +7,7 @@ sealed class MessagesArchitecture : Architecture {
         defaults.DefaultPermission = Permission.Allow;
     }
 
-    protected override void Define(Block block) {
-        block.Add<MessagesParts.Contracts>().And<MessagesParts.Handlers>();
+    protected override void Define(Part root) {
+        root.Add<MessagesParts.Contracts>().And<MessagesParts.Handlers>();
     }
 }

@@ -11,7 +11,7 @@ public record PackPlace : Concept {
 }
 
 public sealed class PlaceArchitecture : Architecture {
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         var box = block.AddGroup<Box>();
         box.Add<Item>().InParentFolder();
         box.Add<Tag>();
@@ -142,6 +142,6 @@ public sealed class BlockPlaceTests {
     IReadOnlyList<string> Inner(params string[] folders) => [.. folders.Select(f => Path.Combine(block, f))];
 
     sealed class PlaceWithChild : Architecture {
-        protected override void Define(Block block) => block.AddBlock<Tool>().Add<Item>();
+        protected override void Define(Part block) => block.AddBlock<Tool>().Add<Item>();
     }
 }

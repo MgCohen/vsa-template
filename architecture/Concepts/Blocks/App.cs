@@ -1,3 +1,3 @@
 namespace Umpire.Architecture.Blocks;
 
-public record App : BlockKind;
+public record App : Block;

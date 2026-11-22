@@ -7,9 +7,9 @@ using static Spike.Alpha.Definition.AlphaParts;
 public class AlphaArchitecture : Architecture {
     protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
 
-    protected override void Define(Block block) {
-        block.Add<AlphaParts.Definition>().And<A1>().And<Bravo>();
-        block.Add<A2>().Add<Store>();
+    protected override void Define(Part root) {
+        root.Add<AlphaParts.Definition>().And<A1>().And<Bravo>();
+        root.Add<A2>().Add<Store>();
     }
 
     protected override void Rules(RuleBook rules) {

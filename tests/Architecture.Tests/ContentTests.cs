@@ -1,6 +1,7 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 using Umpire.Architecture.Traits;
 using static EngineCore.Tests.CountArchitecture;
 
@@ -284,7 +285,7 @@ public sealed class ContentTests {
 
     public class Tool;
 
-    public sealed record Shelf : Concept {
+    public sealed record Shelf : Block {
         public override string GroupFolder => "Shelves";
 
         protected override void Rules(RuleBook rules) {
@@ -292,7 +293,7 @@ public sealed class ContentTests {
         }
     }
 
-    public sealed record LooseShelf : Concept {
+    public sealed record LooseShelf : Block {
         public override string GroupFolder => "Shelves";
 
         protected override void Rules(RuleBook rules) {
@@ -308,21 +309,21 @@ public sealed class ContentTests {
         new($"App.{name}", name, "App", new Source($"{BlockFolder}/{folder}/{name}.cs", 1), [], [], [], []) { Attributes = [Mark] };
 
     sealed class ShelfArchitecture : Architecture {
-        protected override void Define(Block block) {
+        protected override void Define(Part block) {
             block.AddGroup<Shelf>().Add<Item>();
             block.AddGroup<Crate>().Add<Item>();
         }
     }
 
     sealed class LooseShelfArchitecture : Architecture {
-        protected override void Define(Block block) {
+        protected override void Define(Part block) {
             block.AddGroup<LooseShelf>().Add<Item>();
             block.AddGroup<Crate>().Add<Tag>();
         }
     }
 
     sealed class NoGroupArchitecture : Architecture {
-        protected override void Define(Block block) {
+        protected override void Define(Part block) {
             block.Add<Item>().NamedAfterGroup();
         }
     }

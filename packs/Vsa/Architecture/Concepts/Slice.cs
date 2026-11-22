@@ -4,7 +4,7 @@ using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Messages.Handlers;
 
-public record Slice : Layer {
+public record Slice : Block {
     public override string GroupFolder => "Slices";
 
     protected override void Define(Part part) {
@@ -39,8 +39,6 @@ public record Slice : Layer {
     }
 
     public record Validators : Layer {
-        protected override void Define(Part part) {
-            part.OfType(typeof(Validator<>));
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(Validator<>)];
     }
 }
