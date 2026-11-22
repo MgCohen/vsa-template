@@ -7,7 +7,6 @@ using Umpire.Vsa.Definition;
 
 public sealed class EcsArchitecture : VsaArchitecture {
     protected override void Define(Part root) {
-        base.Define(root);
         var ecs = root.AddGroup<EcsFeature>();
         ecs.Add<RootClass>().OfType<Umpire.Kernels.Module>();
         ecs.Add<Components>();
@@ -15,7 +14,6 @@ public sealed class EcsArchitecture : VsaArchitecture {
     }
 
     protected override void Rules(RuleBook rules) {
-        base.Rules(rules);
         rules.For<Systems>().Uses<Components>().And<Pack>();
         rules.For<RootClass>().Under<EcsFeature>().Uses<EcsFeature>(Access.Internal);
         rules.For<EcsFeature>().Has<RootClass>().Exactly(1);
