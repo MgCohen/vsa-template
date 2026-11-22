@@ -12,5 +12,6 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Blocks/Blocks.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/NoConstructorApp/NoConstructorApp.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Spike/Charlie/Spike.Charlie.csproj" />
   </ItemGroup>
 </Project>
