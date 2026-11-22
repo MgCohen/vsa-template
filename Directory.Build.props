@@ -19,8 +19,9 @@
   </PropertyGroup>
 
   <!-- The rule engine and its own projects target net8.0, so the engine runs on the .NET 8 of a Unity 6000.6 Editor and,
-       with RollForward Major, on each newer runtime. It loads the definition of an app, so the libraries also have a
-       net8.0 build (see docs/unity.md). -->
+       with RollForward Major, on each newer runtime. The portable libraries (Umpire.dll) have one build, netstandard2.1, for
+       Unity, for .NET apps and for the engine. The engine loads the definition of an app, and a record of a net8.0 build and
+       of a netstandard2.1 build have different methods, so one build keeps one shape (see docs/unity.md). -->
   <PropertyGroup>
     <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
   </PropertyGroup>
@@ -28,7 +29,7 @@
   <PropertyGroup>
     <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true' and '$(UmpireEngineLayer)' != 'true'">net10.0</TargetFramework>
     <TargetFramework Condition="'$(UmpireEngineLayer)' == 'true'">net8.0</TargetFramework>
-    <TargetFrameworks Condition="'$(UmpirePortableLayer)' == 'true'">net8.0;netstandard2.1</TargetFrameworks>
+    <TargetFramework Condition="'$(UmpirePortableLayer)' == 'true'">netstandard2.1</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <!-- The general build settings of each Umpire project: the same file as in Umpire.Sdk. -->

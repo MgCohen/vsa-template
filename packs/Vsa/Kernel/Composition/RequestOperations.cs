@@ -8,15 +8,17 @@ using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Handlers.Requests;
 
 public static class RequestOperations {
+    const string GroupMember = "Group";
+    const string NameMember = "Name";
+    const string EffectMember = "Effect";
+
     public static IServiceCollection AddRequestOperations(this IServiceCollection services, AppTypes types) {
-#if NET
         var create = typeof(RequestOperations).GetMethod(nameof(Create), BindingFlags.NonPublic | BindingFlags.Static)!;
         foreach (var handler in types.Implementations(typeof(RequestHandler<,>))) {
             var arguments = handler.Service.GetGenericArguments();
             var operation = (Operation)create.MakeGenericMethod(arguments).Invoke(null, [types])!;
             services.AddSingleton(operation);
         }
-#endif
         return services;
     }
 
@@ -44,15 +46,26 @@ public static class RequestOperations {
         return Kebab(module is null ? AppTypes.NameOf(request) : AppTypes.NameOf(module));
     }
 
-#if NET
     static Operation Create<TRequest, TResponse>(AppTypes types)
         where TRequest : IRequest<TResponse>
         where TResponse : IResponse =>
-        new(TRequest.Group ?? GroupOf(typeof(TRequest), types),
-            TRequest.Name ?? NameOf(typeof(TRequest)),
-            TRequest.Effect,
+        new(GroupValue<TRequest>() ?? GroupOf(typeof(TRequest), types),
+            NameValue<TRequest>() ?? NameOf(typeof(TRequest)),
+            EffectValue<TRequest>(),
             typeof(TRequest),
             Invoke<TRequest, TResponse>);
+
+    static string? GroupValue<TRequest>() => StaticValue<string?>(typeof(TRequest), GroupMember, null);
+
+    static string? NameValue<TRequest>() => StaticValue<string?>(typeof(TRequest), NameMember, null);
+
+    static Effect EffectValue<TRequest>() => StaticValue(typeof(TRequest), EffectMember, Effect.Write);
+
+    static TValue StaticValue<TValue>(Type request, string member, TValue fallback) =>
+        request.GetProperty(member, BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            is { } property && property.GetValue(null) is TValue value
+            ? value
+            : fallback;
 
     static async Task<OperationResult> Invoke<TRequest, TResponse>(
         IServiceProvider services, object input, CancellationToken ct)
@@ -63,5 +76,4 @@ public static class RequestOperations {
     }
 
     static int ExitCodeOf(Error? error, object? value) => error is not null ? 1 : value is IExitCode code ? code.ExitCode : 0;
-#endif
 }

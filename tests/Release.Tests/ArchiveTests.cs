@@ -116,6 +116,10 @@ public sealed class ArchiveTests {
     }
 
     [Test]
+    public void The_manifest_gives_the_Umpire_build_of_the_engine() =>
+        Assert.That(Text(manifest["engine"]!, "umpireBuild"), Is.EqualTo("netstandard2.1"));
+
+    [Test]
     public void The_manifest_lists_each_file_of_the_three_parts() {
         var listed = Files().Select(PathOf);
         var inTree = Directory.GetFiles(tree, "*", SearchOption.AllDirectories)
@@ -149,25 +153,27 @@ public sealed class ArchiveTests {
 
     [Test]
     public void The_engine_of_the_archive_starts_on_a_dotnet_with_only_the_net8_runtime() {
-        var root = Environment.GetEnvironmentVariable(Net8Root) is { Length: > 0 } value
-            ? value
-            : throw new IgnoreException($"Set {Net8Root} to a dotnet folder with only the .NET 8 runtime.");
-        var dotnet = Path.Combine(root, OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet");
-        var start = new ProcessStartInfo(dotnet) {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-        start.ArgumentList.Add("exec");
-        start.ArgumentList.Add(Path.Combine(tree, "engine", "net8.0", "umpire-engine.dll"));
-        start.Environment["DOTNET_ROOT"] = root;
-        start.Environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
-        using var process = Process.Start(start)!;
-        var error = process.StandardError.ReadToEndAsync();
-        var output = process.StandardOutput.ReadToEnd() + error.Result;
-        process.WaitForExit();
+        var output = Engine();
 
         Assert.That(output, Does.Contain("needs --Project"), output);
+    }
+
+    [Test]
+    public void The_engine_of_the_archive_checks_an_app_with_its_own_concept_compiled_against_the_runtime() {
+        var app = AppOnTheRuntime(withStray: false);
+        var output = Engine("--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
+            "--stage", "Check", "--projectchecks", "false");
+
+        Assert.That(output, Does.Contain("0 errors").And.Not.Contain("UMP030001"), output);
+    }
+
+    [Test]
+    public void The_engine_of_the_archive_finds_a_wrong_type_in_an_app_compiled_against_the_runtime() {
+        var app = AppOnTheRuntime(withStray: true);
+        var output = Engine("--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
+            "--stage", "Check", "--projectchecks", "false");
+
+        Assert.That(output, Does.Contain("error UMP020202").And.Contain("Stray"), output);
     }
 
     static string PathOf(JsonNode file) => Text(file, "path");
@@ -180,4 +186,76 @@ public sealed class ArchiveTests {
 
     IEnumerable<JsonNode> Runtime() =>
         Files().Where(file => PathOf(file).StartsWith("runtime/", StringComparison.Ordinal));
+
+    string AppOnTheRuntime(bool withStray) {
+        var app = Path.Combine(folder, withStray ? "stray-app" : "concept-app");
+        var umpire = Path.Combine(tree, "runtime", "netstandard2.1", "Umpire.dll");
+        Directory.CreateDirectory(Path.Combine(app, "App", "Host"));
+        File.WriteAllText(Path.Combine(app, "DiceGame.csproj"), $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>netstandard2.1</TargetFramework>
+                <LangVersion>latest</LangVersion>
+                <Nullable>enable</Nullable>
+                <ImplicitUsings>disable</ImplicitUsings>
+              </PropertyGroup>
+              <ItemGroup>
+                <Reference Include="Umpire" HintPath="{umpire}" />
+              </ItemGroup>
+            </Project>
+            """);
+        File.WriteAllText(Path.Combine(app, "App", "Host", "DiceShell.cs"), """
+            namespace DiceGame.App.Host;
+
+            using Umpire.Architecture;
+            using Umpire.Kernels;
+            using Umpire.Vsa;
+            using Umpire.Vsa.Definition;
+
+            public sealed class DiceArchitecture : VsaArchitecture {
+                protected override void Define(Block block) {
+                    base.Define(block);
+                    block.Add<HostViews>();
+                }
+            }
+
+            public sealed record HostViews : External {
+                public override string Assembly => "Host.Views";
+            }
+
+            public sealed class DiceShell : IAppEntry<Vsa<DiceArchitecture, AppHost>> { }
+            """);
+        if (withStray) {
+            Directory.CreateDirectory(Path.Combine(app, "Misc"));
+            File.WriteAllText(Path.Combine(app, "Misc", "Stray.cs"),
+                "namespace DiceGame.Misc;\npublic sealed class Stray { }\n");
+        }
+        var build = Dotnet.Run(app, null, "build", "-o", Path.Combine(app, "out"));
+        Assert.That(build.Succeeded, Is.True, build.Output);
+        return app;
+    }
+
+    string Engine(params string[] arguments) {
+        var root = Environment.GetEnvironmentVariable(Net8Root) is { Length: > 0 } value
+            ? value
+            : throw new IgnoreException($"Set {Net8Root} to a dotnet folder with only the .NET 8 runtime.");
+        var dotnet = Path.Combine(root, OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet");
+        var start = new ProcessStartInfo(dotnet) {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        start.ArgumentList.Add("exec");
+        start.ArgumentList.Add(Path.Combine(tree, "engine", "net8.0", "umpire-engine.dll"));
+        foreach (var argument in arguments) {
+            start.ArgumentList.Add(argument);
+        }
+        start.Environment["DOTNET_ROOT"] = root;
+        start.Environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        using var process = Process.Start(start)!;
+        var error = process.StandardError.ReadToEndAsync();
+        var output = process.StandardOutput.ReadToEnd() + error.Result;
+        process.WaitForExit();
+        return output;
+    }
 }

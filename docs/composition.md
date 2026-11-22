@@ -113,7 +113,7 @@ Run ──► the stop runs on the thread of Run, after the wait
 | `App.Stop()` | 0 |
 | `AppStop.Request(code)`, from app code | `code` |
 | The end of the console operation | The exit code of the response |
-| Ctrl+C, or SIGTERM on `net8.0` and later (console and web hosts) | 0 |
+| Ctrl+C, or SIGTERM (console and web hosts) | 0 |
 | `IHostApplicationLifetime.StopApplication()` (web host) | 0 |
 
 Code inside the app uses the same call in all hosts:
@@ -200,13 +200,7 @@ Command line → {group} {name} --arg value → Operation → RequestHandler<,> 
 A request is the message that comes from outside the app. A command is the message between features, so a host does not expose commands. The VSA kernel makes one `Operation` for each request handler. `Invoke` sends the request with `IRequestSender`. The hosts read only the `Operation` list, so they know no VSA type.
 
 ```csharp
-public interface IRequest : IMessage {
-#if NET
-    static virtual string? Group => null;
-    static virtual string? Name => null;
-    static virtual Effect Effect => Effect.Write;
-#endif
-}
+public interface IRequest : IMessage;
 
 public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
     public static Effect Effect => Effect.Read;
@@ -218,6 +212,8 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 | `Group` | The module name, kebab case | Route segment | First word, optional |
 | `Name` | The type name with no `Request` suffix, kebab case | Route segment | Second word, optional |
 | `Effect` | `Write` | `Read` GET, `Write` POST, `Delete` DELETE | Not used |
+
+A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestOperations` reads them by reflection, so the same request works on each target. `Umpire.dll` has one build, `netstandard2.1`, so `IRequest` has no `static virtual` members.
 
 - `Effect` is in `Umpire.Messages.Contracts` (#199).
 - On `netstandard2.1`, `IRequest` has no members (`#if NET`, #200). Unity has no transport, so it reads nothing.

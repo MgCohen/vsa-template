@@ -6,7 +6,7 @@ The framework obeys the limits that Unity 6 gives, and a test checks each limit 
 
 | Limit | Value | Set in | Test |
 |---|---|---|---|
-| Target of the portable projects | `net8.0` and `netstandard2.1` | `Directory.Build.props` (`UmpirePortableLayer`) | `PortableTargetTests` |
+| Target of the portable projects | `netstandard2.1` only (one build for Unity, .NET apps and the engine) | `Directory.Build.props` (`UmpirePortableLayer`) | `PortableTargetTests` |
 | APIs of the portable projects | `netstandard2.1` only | The compiler, on the `netstandard2.1` target | The build |
 | `Microsoft.Extensions` on `netstandard2.1` | 8.0 | `Directory.Packages.props` | `PortableReferenceTests` |
 | Roslyn of the analyzers | 4.10 at most | The two analyzer project files | `AnalyzerRoslynTests` |
