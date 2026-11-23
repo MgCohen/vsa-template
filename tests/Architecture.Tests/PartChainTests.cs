@@ -22,7 +22,7 @@ public sealed class PartChainTests {
     public void And_on_an_AddGroup_result_gives_a_sibling_of_the_group() {
         var block = new ResolvedArchitecture(new InlineArchitecture(block => block.AddGroup<Group>().And<Child>().OfType<string>())).Root;
 
-        Assert.That(ParentNames<Child>(block), Is.EqualTo(new[] { "(root)" }));
+        Assert.That(ParentNames<Child>(block), Is.EqualTo(new[] { "App" }));
         Assert.That(PartsOf<Group>(block).Single().Types, Is.EqualTo(new[] { typeof(string) }));
     }
 

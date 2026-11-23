@@ -10,16 +10,19 @@ public sealed class PackArchitecture : Architecture {
 
     public PackArchitecture(Architecture packed) => this.packed = packed;
 
-    protected override void Configure(PartOptions defaults) {
-        defaults.UseSameConcept = true;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.UseSameConcept = true;
     }
 
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         root.Add<RootClass>().OfType<Pack>(required: true);
         root.Add<PackParts.Architecture>();
-        var kernel = packed?.KernelOfPack is { } record ? root.AddOf(record, "Kernel") : root.Add<PackParts.Kernel>();
+        packed?.DefineKernel(kernel);
         foreach (var part in kernel.Walk()) {
             part.ClearTypes();
+        }
+        if (kernel.Children.Count == 0) {
+            root.Add<PackParts.Kernel>();
         }
         root.Add<PackParts.Tests>();
     }
@@ -28,5 +31,8 @@ public sealed class PackArchitecture : Architecture {
         rules.For<RootClass>().Uses<PackParts.Architecture>().And<KernelBlock>();
         rules.For<PackParts.Architecture>().Uses<KernelBlock>();
         rules.For<PackParts.Tests>().Uses<PackParts.Architecture>().And<KernelBlock>();
+        if (packed is not null) {
+            rules.For<KernelBlock>().Uses<KernelBlock>();
+        }
     }
 }

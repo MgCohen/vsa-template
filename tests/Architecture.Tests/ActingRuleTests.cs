@@ -38,7 +38,7 @@ public sealed class ActingRuleTests {
     public sealed record TopTarget : Concept;
 
     public class AllowingBase : Architecture {
-        protected override void Define(Part root) => root.Add<TopUser>().And<TopTarget>();
+        protected override void Define(Part root, Part kernel) => root.Add<TopUser>().And<TopTarget>();
 
         protected override void Rules(RuleBook rules) => rules.For<TopUser>().Uses<TopTarget>();
     }
@@ -48,9 +48,9 @@ public sealed class ActingRuleTests {
     }
 
     public class DenyingBase : Architecture {
-        protected override void Configure(PartOptions defaults) => defaults.DefaultPermission = Permission.Allow;
+        protected override void Configure(ArchitectureConfig config) => config.Defaults.DefaultPermission = Permission.Allow;
 
-        protected override void Define(Part root) => root.Add<TopUser>().And<TopTarget>();
+        protected override void Define(Part root, Part kernel) => root.Add<TopUser>().And<TopTarget>();
 
         protected override void Rules(RuleBook rules) => rules.For<TopUser>().Denies<TopTarget>();
     }

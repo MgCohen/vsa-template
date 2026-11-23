@@ -71,7 +71,7 @@ static class Archive {
     const string ArchiveProject = "UmpireArchive";
 
     public static IReadOnlyDictionary<string, PackageName> Runtime(
-        PartOptions options, string repo, string publish, IEnumerable<PackageName> engine, string target) {
+        Options options, string repo, string publish, IEnumerable<PackageName> engine, string target) {
         var project = Path.Combine(publish, "project");
         Directory.CreateDirectory(project);
         File.Copy(Path.Combine(repo, "global.json"), Path.Combine(project, "global.json"));
@@ -102,7 +102,7 @@ static class Archive {
     }
 
     public static IReadOnlyDictionary<string, PackageName> FromPackage(
-        PartOptions options, string package, string folder, string target) {
+        Options options, string package, string folder, string target) {
         using var zip = ZipFile.OpenRead(Package(options, package));
         var entries = zip.Entries
             .Where(entry => entry.FullName.StartsWith(folder, StringComparison.Ordinal) && entry.Name.Length > 0)
@@ -125,7 +125,7 @@ static class Archive {
         return names;
     }
 
-    public static string PackageText(PartOptions options, string package, string file) {
+    public static string PackageText(Options options, string package, string file) {
         using var zip = ZipFile.OpenRead(Package(options, package));
         var entry = zip.GetEntry(file) ?? throw new InvalidOperationException($"{package} has no {file}.");
         using var reader = new StreamReader(entry.Open());
@@ -201,7 +201,7 @@ static class Archive {
         return output;
     }
 
-    static string Package(PartOptions options, string package) {
+    static string Package(Options options, string package) {
         var file = Path.Combine(options.Feed, $"{package}.{options.Version}.nupkg");
         return File.Exists(file)
             ? file
@@ -275,7 +275,7 @@ static class Archive {
     }
 
     public sealed record Options(string Feed, string Version, string Out, string? Commit) {
-        public static PartOptions? Parse(string[] args) {
+        public static Options? Parse(string[] args) {
             var values = new Dictionary<string, string>(StringComparer.Ordinal);
             for (var i = 0; i + 1 < args.Length; i += 2) {
                 values[args[i]] = args[i + 1];

@@ -6,9 +6,16 @@ internal sealed class Compiler {
     readonly Dictionary<Part, PartOptions> partOptions = [];
 
     internal Compiler(Architecture architecture) {
-        Options = PartOptions.From(architecture.ConfigureDefaults).Over(PartOptions.BuiltIn);
+        Config = new ArchitectureConfig();
+        architecture.ConfigureAll(Config);
+        Options = Config.Defaults.Over(PartOptions.BuiltIn);
         Root = new Part(null, "", null) { Placers = [architecture.GetType()] };
-        architecture.DefineRoot(Root);
+        var roots = Config.Roots.Records.Select(Root.AddRoot).ToList();
+        var kernel = Root.AddKernelRoot();
+        architecture.DefineRoots(roots.FirstOrDefault(r => r.Concept is Blocks.App) ?? Root, kernel);
+        if (kernel.Children.Count == 0) {
+            Root.Remove(kernel);
+        }
         Parts = [.. Root.Walk().Skip(1)];
         CheckShared();
         CheckSameFolder();
@@ -35,6 +42,7 @@ internal sealed class Compiler {
         CheckNames();
     }
 
+    public ArchitectureConfig Config { get; }
     public PartOptions Options { get; }
     public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }

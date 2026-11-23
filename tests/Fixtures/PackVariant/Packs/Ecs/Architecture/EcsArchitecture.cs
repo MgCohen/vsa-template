@@ -6,7 +6,7 @@ using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class EcsArchitecture : VsaArchitecture {
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         var ecs = root.AddGroup<EcsFeature>();
         ecs.Add<RootClass>().OfType<Umpire.Kernels.Module>();
         ecs.Add<Components>();

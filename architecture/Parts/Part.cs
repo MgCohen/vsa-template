@@ -36,6 +36,7 @@ public class Part : IPartChain {
     internal NamePattern? NamePattern { get; private set; }
     internal IReadOnlyList<Type> Placers { get; set; } = [];
     internal List<Extension> Extensions { get; } = [];
+    internal bool IsKernelRoot { get; private set; }
 
     public string Path {
         get {
@@ -82,6 +83,18 @@ public class Part : IPartChain {
         var record = (Concept)Activator.CreateInstance(concept)!;
         return Attach(new Part(record, folder ?? record.Folder, this));
     }
+
+    internal Part AddRoot(Concept record) =>
+        Attach(new Part(record, record.Folder.Length == 0 ? null : record.Folder, this,
+            blockPlace: record is Block and not App and not Definition));
+
+    internal Part AddKernelRoot() {
+        var kernel = Attach(new Part(new Kernel(), "Kernel", this));
+        kernel.IsKernelRoot = true;
+        return kernel;
+    }
+
+    internal void Remove(Part child) => children.Remove(child);
 
     internal void AddExtension(Extension extension) => SelfAndAncestors().Last().Extensions.Add(extension);
 

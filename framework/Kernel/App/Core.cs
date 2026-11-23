@@ -3,8 +3,8 @@ namespace Umpire.Kernels;
 using Umpire.Architecture;
 using KernelBlock = Umpire.Architecture.Blocks.Kernel;
 
-public sealed record FrameworkKernel : KernelBlock {
-    public override string Folder => "Kernel";
+public sealed record Core : KernelBlock {
+    public override string Folder => "framework/Kernel";
 
     protected override void Define(Part part) {
         part.Add<KernelParts.App>().And<KernelParts.Kernels>().And<Hosts>().And<KernelParts.Operations>()

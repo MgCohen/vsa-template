@@ -51,12 +51,12 @@ public record Handlers : Concept {
 }
 
 public abstract class FixtureArchitecture : Architecture {
-    protected override void Configure(PartOptions defaults) {
-        defaults.DefaultPermission = Permission.Deny;
-        defaults.Boundary = Boundary.Closed;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.DefaultPermission = Permission.Deny;
+        config.Defaults.Boundary = Boundary.Closed;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         var feature = block.AddGroup<Feature>();
         feature.Add<RootClass>().OfType<IModuleRoot>();
         feature.Add<Domain>();

@@ -32,11 +32,11 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
 
     string GroupName => closedConcept ? nameof(ClosedPackage) : nameof(Package);
 
-    protected override void Configure(PartOptions defaults) {
-        defaults.Boundary = architecture;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.Boundary = architecture;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         var group = closedConcept ? Group<ClosedPackage>(block) : Group<Package>(block);
         group.Add<Target>().And<User>();
     }
@@ -50,7 +50,7 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
 }
 
 public sealed class EmptyArchitecture : Architecture {
-    protected override void Define(Part block) { }
+    protected override void Define(Part block, Part kernel) { }
 }
 
 public sealed class OptionsTests {

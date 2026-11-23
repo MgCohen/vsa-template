@@ -26,7 +26,7 @@ public record StrayRoom : Block {
 }
 
 public sealed class StrayRoomArchitecture : Architecture {
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<Target>();
         block.Add<User>();
         block.AddGroup<StrayRoom>();
@@ -41,7 +41,7 @@ public sealed class RoomArchitecture(bool denyInRooms) : Architecture {
             ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<Target>();
         block.Add<User>();
         block.AddGroup<Room>();
@@ -55,7 +55,7 @@ public sealed class RoomArchitecture(bool denyInRooms) : Architecture {
 }
 
 public sealed class LostRoomArchitecture : Architecture {
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<Target>();
         block.Add<LostRoom>();
     }

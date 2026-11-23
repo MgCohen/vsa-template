@@ -2,29 +2,32 @@ namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
-using FrameworkKernel = Umpire.Kernels.FrameworkKernel;
+using Core = Umpire.Kernels.Core;
+using CoreArchitecture = Umpire.Kernels.CoreArchitecture;
 using MessagesComponent = Umpire.Kernels.MessagesComponent;
 using MessagesParts = Umpire.Kernels.MessagesParts;
 
-public class VsaArchitecture : Architecture {
-    protected override Type? PackKernel => typeof(VsaKernel);
-
-    protected override void Configure(PartOptions defaults) {
-        defaults.UseSameConcept = true;
-        defaults.Boundary = Boundary.Closed;
+public class VsaArchitecture : CoreArchitecture {
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.UseSameConcept = true;
+        config.Defaults.Boundary = Boundary.Closed;
+        config.Roots.Add<Views>();
     }
 
-    protected override void Define(Part root) {
-        root.AddBlock<FrameworkKernel>();
+    protected override void Define(Part root, Part kernel) {
+        kernel.Add<Domain>().And<Infrastructure>().And<Presenters>();
+        kernel.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+        kernel.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
+        kernel.Add<Views>().And<Composition>();
         root.AddBlock<MessagesComponent>();
-        root.AddBlock<VsaKernel>();
-        root.Add<Host>().And<Views>();
+        root.Add<Host>();
         root.AddBlockGroup<Pack>("Packs");
         root.AddGroup<Plugin>(Boundary.Open);
         root.AddGroup<Feature>();
     }
 
     protected override void Rules(RuleBook rules) {
+        rules.For<Kernel>().Uses<Kernel>();
         rules.For<Domain>().Uses<Domain.Shared>();
         rules.For<Infrastructure>().Uses<Domain>();
         rules.For<Infrastructure>().Uses<Handlers>(Depth.Self).And<Contracts>(Depth.Self)
@@ -59,7 +62,7 @@ public class VsaArchitecture : Architecture {
         rules.For<RootClass>().Denies<RootClass>().Under<Plugin>();
         rules.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal);
         rules.For<RootClass>().Under<Feature>().Denies<Composition>();
-        rules.For<Host>().Uses<Composition>().And<FrameworkKernel>().And<UmpireLibraries>();
+        rules.For<Host>().Uses<Composition>().And<Core>().And<UmpireLibraries>();
         rules.For<Views>().Uses<Presenters>();
         rules.For<Views>().Uses<Hosts>().Under<Kernel>();
         rules.For<Host>().Uses<Pack>();

@@ -25,7 +25,7 @@ public sealed class ContentFactsTests : ArchitectureTest<ContentFactsTests.Facts
     public sealed class SampleSealed;
 
     public sealed class FactsArchitecture : Architecture {
-        protected override void Define(Part block) {
+        protected override void Define(Part block, Part kernel) {
             block.AddGroup<Box>().Add<Item>().And<Tag>().InParentFolder();
         }
 

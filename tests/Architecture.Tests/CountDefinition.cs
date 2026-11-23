@@ -73,11 +73,11 @@ public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<Par
 
     public static TypeFacts Using(TypeFacts user, TypeFacts helper) => user with { Mentions = [helper.FullName] };
 
-    protected override void Configure(PartOptions defaults) {
-        defaults.Required = required;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.Required = required;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         var box = block.AddGroup<Box>();
         if (parts is null) {
             box.Add<Item>().And<Item.Small>().And<Tag>().InParentFolder();

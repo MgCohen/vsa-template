@@ -11,6 +11,7 @@ public sealed class ResolvedArchitecture {
     public ResolvedArchitecture(Architecture architecture) {
         var compiled = new Compiler(architecture);
         Architecture = architecture;
+        Config = compiled.Config;
         Options = compiled.Options;
         Root = compiled.Root;
         Parts = compiled.Parts;
@@ -24,6 +25,7 @@ public sealed class ResolvedArchitecture {
     }
 
     public Architecture Architecture { get; }
+    public ArchitectureConfig Config { get; }
     public PartOptions Options { get; }
     public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }

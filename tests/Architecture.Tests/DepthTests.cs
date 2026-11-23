@@ -23,11 +23,11 @@ public record TargetChild : Concept;
 public sealed class DepthArchitecture<TTarget>(Depth options, Depth? method) : Architecture where TTarget : Concept, new() {
     public bool UserUsesTheChild => new ResolvedArchitecture(this).UseRules.Any(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TargetChild)));
 
-    protected override void Configure(PartOptions defaults) {
-        defaults.Depth = options;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.Depth = options;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<User>();
         block.Add<TTarget>().Add<TargetChild>();
     }

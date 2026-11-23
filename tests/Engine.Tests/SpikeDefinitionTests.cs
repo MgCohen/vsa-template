@@ -101,7 +101,7 @@ public sealed class SpikeDefinitionTests {
     sealed record SpikeUse(string From, string To);
 
     sealed class OwnedB1Architecture : Architecture {
-        protected override void Define(Part root) => root.Add<BravoArchitecture.B1>();
+        protected override void Define(Part root, Part kernel) => root.Add<BravoArchitecture.B1>();
     }
 
     sealed class SpikeView<TArchitecture> : ArchitectureTest<TArchitecture> where TArchitecture : Architecture, new() {

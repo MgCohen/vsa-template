@@ -14,11 +14,11 @@ public sealed class BoundaryArchitecture(Boundary options, Boundary? group, Cros
             target, new Dictionary<string, string> { ["Package"] = toPackage }).Permission;
     }
 
-    protected override void Configure(PartOptions defaults) {
-        defaults.Boundary = options;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.Boundary = options;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         var package = group is { } boundary ? block.AddGroup<Package>(boundary) : block.AddGroup<Package>();
         package.Add<Target>().And<User>();
     }
@@ -102,7 +102,7 @@ public sealed class BoundaryTests {
 }
 
 public sealed class InlineRulesArchitecture(Action<Part> define, Action<RuleBook> rules) : Architecture {
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         define(block);
     }
 

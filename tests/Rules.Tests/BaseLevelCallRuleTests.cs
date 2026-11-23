@@ -11,7 +11,7 @@ public sealed class BaseLevelCallRuleTests {
         using Umpire.Architecture;
 
         public class First : Architecture {
-            protected override void Define(Part root) { }
+            protected override void Define(Part root, Part kernel) { }
         }
 
         public sealed class Second : First {
@@ -38,7 +38,7 @@ public sealed class BaseLevelCallRuleTests {
         using Umpire.Architecture;
 
         public sealed class Only : Architecture {
-            protected override void Define(Part root) { }
+            protected override void Define(Part root, Part kernel) { }
 
             protected override void Rules(RuleBook rules) { }
         }
