@@ -192,9 +192,10 @@
     <None Include="$(UmpireConfigFile)" Link=".umpireconfig" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
-  <!-- netstandard2.1 does not have the type that the compiler needs for init and records. -->
+  <!-- netstandard2.1 does not have the type that the compiler needs for init and records. The folder name ends with ~, so the
+       engine does not count the file as a source of the block. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <Compile Include="$(MSBuildThisFileDirectory)../Polyfills/*.cs" Visible="false" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Polyfills~/*.cs" Visible="false" />
   </ItemGroup>
 
   <!-- EF Core writes the files in Infrastructure/Migrations/, so they are generated code: the style rules do not check them.

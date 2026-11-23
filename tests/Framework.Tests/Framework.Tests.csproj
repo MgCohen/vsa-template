@@ -43,7 +43,7 @@
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Presenters/Umpire.Vsa.Presenters.csproj" />
     <PortableProject Include="$(RepoRoot)tools/bundle/Umpire/Umpire.csproj" />
-    <ProjectReference Include="@(PortableProject)" SetTargetFramework="TargetFramework=netstandard2.1" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="@(PortableProject)" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)architecture/Markers/Umpire.Markers.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" ReferenceOutputAssembly="false" />
