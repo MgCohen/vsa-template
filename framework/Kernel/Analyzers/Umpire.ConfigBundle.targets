@@ -5,7 +5,11 @@
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_UmpireConfigInPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" VersionOverride="8.0.0" PrivateAssets="all" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../Components/Config/Umpire.Config.csproj" />
     <PackageReference Include="Tomlyn" GeneratePathProperty="true" ExcludeAssets="analyzers" />
     <None Include="$(PkgTomlyn)/lib/netstandard2.0/Tomlyn.dll" CopyToOutputDirectory="PreserveNewest" Pack="true"
