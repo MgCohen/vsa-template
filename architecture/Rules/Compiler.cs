@@ -10,7 +10,7 @@ internal sealed class Compiler {
         architecture.ConfigureAll(Config);
         Options = Config.Defaults.Over(PartOptions.BuiltIn);
         Root = new Part(null, "", null) { Placers = [architecture.GetType()] };
-        var roots = Config.Roots.Records.Select(Root.AddRoot).ToList();
+        var roots = Config.Roots.Places.Select(place => Root.AddRoot(place.Record, place.Folder)).ToList();
         var kernel = Root.AddKernelRoot();
         architecture.DefineRoots(roots.FirstOrDefault(r => r.Concept is Blocks.App) ?? Root, kernel);
         if (kernel.Children.Count == 0) {

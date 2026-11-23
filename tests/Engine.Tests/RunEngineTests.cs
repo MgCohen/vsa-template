@@ -137,8 +137,8 @@ public sealed class RunEngineTests {
     }
 
     [TestCase("packs", "Vsa")]
-    [TestCase("tests", "Fixtures", "Blocks", "Packs", "Alpha")]
-    [TestCase("tests", "Fixtures", "PackVariant", "Packs", "Ecs")]
+    [TestCase("tests", "Fixtures", "Blocks", "App", "Packs", "Alpha")]
+    [TestCase("tests", "Fixtures", "PackVariant", "App", "Packs", "Ecs")]
     public async Task A_pack_block_passes_its_own_check(params string[] folder) {
         var result = await Run(project: Repo.Path(folder));
 
@@ -147,15 +147,15 @@ public sealed class RunEngineTests {
 
     [Test]
     public async Task An_unmarked_block_in_a_part_folder_gives_UMP020401() {
-        var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
+        var store = Path.Combine(Notes, "App", "Features", "Notebook", "Infrastructure", "Store");
         Directory.CreateDirectory(store);
         try {
             File.WriteAllText(Path.Combine(store, ".umpireconfig"), "umpire.architecture = \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\"");
 
             var result = await Run(project: Notes);
 
-            Assert.That(result.Lines, Has.One.Contains("error UMP020401: Infrastructure (Features/{feature}/Infrastructure) covers "
-                + "the folder Features/Notebook/Infrastructure/Store"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP020401: Infrastructure (App/Features/{feature}/Infrastructure) covers "
+                + "the folder App/Features/Notebook/Infrastructure/Store"));
         } finally {
             Directory.Delete(store, recursive: true);
         }
@@ -163,7 +163,7 @@ public sealed class RunEngineTests {
 
     [Test]
     public async Task A_severity_of_none_in_the_umpireconfig_of_the_block_turns_a_rule_off() {
-        var store = Path.Combine(Notes, "Features", "Notebook", "Infrastructure", "Store");
+        var store = Path.Combine(Notes, "App", "Features", "Notebook", "Infrastructure", "Store");
         var config = Path.Combine(Notes, ".umpireconfig");
         var original = File.ReadAllText(config);
         Directory.CreateDirectory(store);
@@ -196,7 +196,7 @@ public sealed class RunEngineTests {
 
     [Test]
     public async Task A_step_that_fails_skips_the_steps_that_use_its_output() {
-        var result = await Run(block: Path.Combine(Notes, "Features", "Missing"));
+        var result = await Run(block: Path.Combine(Notes, "App", "Features", "Missing"));
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Lines, Has.One.Contains("error UMP030501"));

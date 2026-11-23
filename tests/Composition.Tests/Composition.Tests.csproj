@@ -4,19 +4,19 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />
-    <ProjectReference Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Echo/Echo.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Arena/Arena.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Answers/Answers.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Signals/Signals.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Meters/Meters.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Greet/Greet.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Till/Till.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Unclosed/Unclosed.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Unbound/Unbound.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Relay/Relay.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Echo/Echo.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Arena/Arena.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Answers/Answers.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Signals/Signals.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Meters/Meters.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Cards/Cards.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Resources/Resources.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Greet/Greet.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Till/Till.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Unclosed/Unclosed.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Unbound/Unbound.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Relay/Relay.csproj" />
   </ItemGroup>
 </Project>

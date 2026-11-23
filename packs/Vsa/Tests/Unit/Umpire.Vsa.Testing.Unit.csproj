@@ -5,7 +5,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../../architecture/Umpire.Architecture.csproj" />
-    <ProjectReference Include="../../Architecture/Umpire.Vsa.csproj" />
+    <ProjectReference Include="../../Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="../../Kernel/Handlers/Requests/Umpire.Vsa.Handlers.Requests.csproj" />
     <ProjectReference Include="../../Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
     <ProjectReference Include="../../Kernel/Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />

@@ -17,7 +17,7 @@ public sealed class BuildCheckTests {
         var again = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
         Assert.That(again.Output, Does.Contain("UMP030201"), "A build with no change runs the check again.");
 
-        var probe = Path.Combine(workspace.Src, "Host", "Probe.cs");
+        var probe = Path.Combine(Directory.CreateDirectory(Path.Combine(workspace.Src, "App", "Host")).FullName, "Probe.cs");
         File.WriteAllText(probe, """
             namespace Notes.Host;
 
@@ -37,7 +37,7 @@ public sealed class BuildCheckTests {
         Assert.That(warned.Output, Does.Contain($"{probe}(4,90): warning UMP020101: Probe in Host"));
 
         File.Delete(probe);
-        var domainProbe = Path.Combine(workspace.Src, "Features", "Notebook", "Domain", "SenderProbe.cs");
+        var domainProbe = Path.Combine(workspace.Src, "App", "Features", "Notebook", "Domain", "SenderProbe.cs");
         File.WriteAllText(domainProbe, """
             namespace Notes.Features.Notebook.Domain;
 

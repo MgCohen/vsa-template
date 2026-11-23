@@ -55,7 +55,7 @@
     <UmpireWeb Condition="'$(UmpireWeb)' == ''">$(UsingMicrosoftNETSdkWeb)</UmpireWeb>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireDefaultPack)' == 'true'">
-    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Architecture" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
     <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" Package="Umpire.Testing" Bundle="tools/bundle/Testing" />
     <_UmpireFramework Include="Umpire.Vsa.Views" Path="packs/Vsa/Kernel/Views" Package="Umpire.Web" Bundle="tools/bundle/Web" Condition="'$(UmpireWeb)' == 'true'" />

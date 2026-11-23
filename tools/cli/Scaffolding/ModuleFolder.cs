@@ -1,7 +1,7 @@
 namespace Umpire.Cli.Scaffolding;
 
 static class ModuleFolder {
-    const string Modules = "Features";
+    const string Modules = "App/Features";
 
     public static string Find(string block, string module) {
         var modules = Path.Combine(block, Modules);

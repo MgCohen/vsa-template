@@ -22,7 +22,7 @@ sealed record AddKind(
         TemplateGroup.Module,
         Templates.Module,
         "Adds a module with all layers and a starter page.",
-        Folder: "Features",
+        Folder: "App/Features",
         IsModule: true,
         NextStep: name => $"The page of the module is /{Names.Kebab(name)}.");
 
@@ -32,7 +32,7 @@ sealed record AddKind(
         TemplateGroup.Plugin,
         Templates.Plugin,
         "Adds a plugin module: a base of the same layers in each module.",
-        Folder: "Plugins",
+        Folder: "App/Plugins",
         IsModule: true,
         NextStep: name => $"Derive a module command from {name}Step<TResult>.");
 
@@ -42,7 +42,7 @@ sealed record AddKind(
         TemplateGroup.Pack,
         Templates.Pack,
         "Adds a pack variant: a pack class and an architecture that inherits VsaArchitecture.",
-        Folder: "Packs",
+        Folder: "App/Packs",
         BaseNames: ["Vsa"],
         NextStep: name => $"Change the app class to App<{name}<WebHost>>, then add parts and rules to "
             + $"{name}Architecture. See docs/pack-variants.md.");

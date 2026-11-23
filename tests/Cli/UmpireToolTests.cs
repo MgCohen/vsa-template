@@ -27,7 +27,7 @@ public sealed class UmpireToolTests {
         Tool(app, "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
         Tool(app, "add", "command", "ChangeLimit", "-m", "Billing").EnsureSuccess();
         Tool(app, "add", "command", "CloseInvoice", "-m", "Billing").EnsureSuccess();
-        Assert.That(Directory.GetFiles(Path.Combine(app, "Features"), "*.csproj", SearchOption.AllDirectories), Is.Empty);
+        Assert.That(Directory.GetFiles(Path.Combine(app, "App", "Features"), "*.csproj", SearchOption.AllDirectories), Is.Empty);
         Assert.That(Tool(app, "doctor").EnsureSuccess().Output, Does.Contain($"OK: all use Umpire {LocalFeed.Version}."));
 
         var again = Tool(app, "add", "request", "CreateInvoice", "-m", "Billing");
@@ -42,15 +42,15 @@ public sealed class UmpireToolTests {
         Assert.That(unknown.Succeeded, Is.False);
         Assert.That(unknown.Output, Does.Contain("The module Shipping does not exist"));
 
-        Directory.CreateDirectory(Path.Combine(app, "Plugins", "Pipeline"));
+        Directory.CreateDirectory(Path.Combine(app, "App", "Plugins", "Pipeline"));
         var plugin = Tool(app, "add", "module", "Pipeline");
         Assert.That(plugin.Succeeded, Is.False);
         Assert.That(plugin.Output, Does.Contain("The plugin module Pipeline exists"));
-        Directory.Delete(Path.Combine(app, "Plugins", "Pipeline"), recursive: true);
+        Directory.Delete(Path.Combine(app, "App", "Plugins", "Pipeline"), recursive: true);
 
         Tool(app, "add", "plugin", "Game").EnsureSuccess();
-        Assert.That(File.Exists(Path.Combine(app, "Plugins", "Game", "GamePlugin.cs")), Is.True);
-        Assert.That(File.Exists(Path.Combine(app, "Plugins", "Game", "Contracts", "Commands", "GameStep.cs")), Is.True);
+        Assert.That(File.Exists(Path.Combine(app, "App", "Plugins", "Game", "GamePlugin.cs")), Is.True);
+        Assert.That(File.Exists(Path.Combine(app, "App", "Plugins", "Game", "Contracts", "Commands", "GameStep.cs")), Is.True);
         var pluginAgain = Tool(app, "add", "plugin", "Game");
         Assert.That(pluginAgain.Succeeded, Is.False);
         Assert.That(pluginAgain.Output, Does.Contain("The plugin module Game exists"));
@@ -95,7 +95,7 @@ public sealed class UmpireToolTests {
     [CancelAfter(600_000)]
     public void ADefinitionInTheAppNamesEachLayerWithNoFullName() {
         var app = NewApp("Shop");
-        File.WriteAllText(Path.Combine(app, "Host", "ShopArchitecture.cs"), """
+        File.WriteAllText(Path.Combine(Directory.CreateDirectory(Path.Combine(app, "Definition")).FullName, "ShopArchitecture.cs"), """
             namespace Shop.Host;
 
             using Umpire.Architecture;
@@ -149,7 +149,7 @@ public sealed class UmpireToolTests {
         Assert.That(clean.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
         Assert.That(File.Exists(Path.Combine(app, "artifacts~", "bin", "Hello", "debug", ".umpire-check")), Is.True, clean.Output);
 
-        var probe = Path.Combine(app, "Host", "Probe.cs");
+        var probe = Path.Combine(Directory.CreateDirectory(Path.Combine(app, "App", "Host")).FullName, "Probe.cs");
         File.WriteAllText(probe, """
             namespace Hello.Host;
 

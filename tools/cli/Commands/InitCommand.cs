@@ -57,7 +57,7 @@ sealed class InitCommand : ToolCommand {
 
     static string Next(string project) => $"""
         Next:
-          If the app has no app class, write Host/{project}App.cs and call it from Program.cs (UMP030502).
+          If the app has no app class, write App/{project}App.cs, and move Program.cs to App/Program.cs (UMP030502).
           dotnet build
         """;
 

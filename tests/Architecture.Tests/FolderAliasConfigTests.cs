@@ -25,10 +25,10 @@ public sealed class FolderAliasConfigTests {
     public void CompileAnAppWithAnAppFolderARootFeatureAndAnInnerBlock() {
         project = ProjectFolder.Create();
         var view = project.Write("Assets/Game/Views/Board.cs", "namespace Game.Views; public sealed class Board { }");
-        var notes = project.Write("Assets/Game/Features/Notes/NotesModule.cs", "namespace Notes; " + string.Format(ModuleClass, "NotesModule"));
-        var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
-        var root = project.Write("Features/Root/RootModule.cs", "namespace Root; " + string.Format(ModuleClass, "RootModule"));
-        var lists = project.Write("Inner/Features/Lists/ListsModule.cs", "namespace Lists; " + string.Format(ModuleClass, "ListsModule"));
+        var notes = project.Write("Assets/Game/App/Features/Notes/NotesModule.cs", "namespace Notes; " + string.Format(ModuleClass, "NotesModule"));
+        var tasks = project.Write("Source/App/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
+        var root = project.Write("App/Features/Root/RootModule.cs", "namespace Root; " + string.Format(ModuleClass, "RootModule"));
+        var lists = project.Write("Inner/App/Features/Lists/ListsModule.cs", "namespace Lists; " + string.Format(ModuleClass, "ListsModule"));
         project.Compile("Game", project.Output, view, notes, tasks, root, lists);
     }
 

@@ -49,7 +49,7 @@ static partial class Templates {
         Files(TemplateGroup.Setup, new Dictionary<string, string>(), version).Single(file => file.Path == path).Content;
 
     public static TemplateGroup GroupOf(string pathInTemplates) {
-        var inModuleFolder = pathInTemplates.StartsWith($"Features/{Module}/", StringComparison.Ordinal)
+        var inModuleFolder = pathInTemplates.StartsWith($"App/Features/{Module}/", StringComparison.Ordinal)
             || Path.GetFileName(pathInTemplates).Contains(Module, StringComparison.Ordinal);
         return pathInTemplates.Contains(Request, StringComparison.Ordinal) ? TemplateGroup.Request
             : pathInTemplates.Contains(Command, StringComparison.Ordinal) ? TemplateGroup.Command

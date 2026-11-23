@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="SampleApp.csproj" />
   <Folder Name="/Tests/">
-    <Project Path="Tests/App.Tests.csproj" />
+    <Project Path="App/Tests/App.Tests.csproj" />
   </Folder>
 </Solution>

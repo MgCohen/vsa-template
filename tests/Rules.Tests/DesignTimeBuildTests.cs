@@ -11,7 +11,7 @@ public sealed class DesignTimeBuildTests {
     [OneTimeSetUp]
     public void Build() {
         using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
-        build = workspace.Dotnet("msbuild", "Features/Styled/Styled.csproj", "-restore", "-nodeReuse:false",
+        build = workspace.Dotnet("msbuild", "App/Features/Styled/Styled.csproj", "-restore", "-nodeReuse:false",
             "-t:Compile", "-p:DesignTimeBuild=true", "-p:SkipCompilerExecution=true", "-p:ProvideCommandLineArgs=true",
             "-getItem:CscCommandLineArgs", "-getProperty:RunAnalyzersDuringLiveAnalysis", "-getProperty:RunAnalyzers");
         Assert.That(build.Succeeded, Is.True, build.Output);

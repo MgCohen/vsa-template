@@ -182,7 +182,7 @@ public sealed class AppFilesTests {
 
     [Test]
     public void AddRequestUsesTheModuleNameFromTheDisk() {
-        Write("Features/Billing/BillingModule.cs", "namespace Billing;");
+        Write("App/Features/Billing/BillingModule.cs", "namespace Billing;");
 
         Assert.That(ModuleFolder.Find(root, "billing"), Is.EqualTo("Billing"));
         Assert.That(() => ModuleFolder.Find(root, "Shipping"), Throws.TypeOf<UmpireException>().With.Message.Contain("does not exist"));

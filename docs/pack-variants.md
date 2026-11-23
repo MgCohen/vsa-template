@@ -130,10 +130,10 @@ The concept records have the names of folders, so a name can resolve to a namesp
 2. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace.
 3. Add an alias inside the namespace.
 
-In the fixture, step 1 is enough. `EcsArchitecture` is in `PackVariant.Packs.Ecs.Architecture`, and the `using` inside the namespace wins over the sibling namespace `PackVariant.Packs.Ecs.Kernel`:
+In the fixture, step 1 is enough. `EcsArchitecture` is in `PackVariant.Packs.Ecs.Definition`, and the `using` inside the namespace wins over the sibling namespace `PackVariant.Packs.Ecs.Kernel`:
 
 ```csharp
-namespace PackVariant.Packs.Ecs.Architecture;
+namespace PackVariant.Packs.Ecs.Definition;
 
 using PackVariant.Packs.Ecs.Kernel;
 using Umpire.Architecture;

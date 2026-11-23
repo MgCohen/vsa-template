@@ -95,7 +95,7 @@ public sealed class CommandTests {
     public void AddPackWritesThePackClassAndItsArchitecture() {
         var files = FilesAfter(["add", "pack", "Ecs"], app: "Shop");
 
-        Assert.That(files, Is.EquivalentTo(new[] { "Packs/Ecs/EcsPack.cs", "Packs/Ecs/Architecture/EcsArchitecture.cs" }));
+        Assert.That(files, Is.EquivalentTo(new[] { "App/Packs/Ecs/EcsPack.cs", "App/Packs/Ecs/Definition/EcsArchitecture.cs" }));
     }
 
     [Test]
@@ -105,13 +105,13 @@ public sealed class CommandTests {
 
     [Test]
     public void AddPackStopsIfThePackExists() =>
-        Assert.That(() => RunInFolder(["add", "pack", "Ecs"], "Shop", folder => Directory.CreateDirectory(Path.Combine(folder, "Packs", "Ecs"))),
-            Throws.TypeOf<UmpireException>().With.Message.Contain("The pack Ecs exists: Packs/Ecs."));
+        Assert.That(() => RunInFolder(["add", "pack", "Ecs"], "Shop", folder => Directory.CreateDirectory(Path.Combine(folder, "App", "Packs", "Ecs"))),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("The pack Ecs exists: App/Packs/Ecs."));
 
-    [TestCase("module", "Features", "The module Billing exists: Features/Billing. Use a different name.")]
-    [TestCase("plugin", "Plugins", "The plugin module Billing exists: Plugins/Billing. Use a different name.")]
-    [TestCase("module", "Plugins", "The plugin module Billing exists: Plugins/Billing. A module and a plugin module")]
-    [TestCase("plugin", "Features", "The module Billing exists: Features/Billing. A module and a plugin module")]
+    [TestCase("module", "App/Features", "The module Billing exists: App/Features/Billing. Use a different name.")]
+    [TestCase("plugin", "App/Plugins", "The plugin module Billing exists: App/Plugins/Billing. Use a different name.")]
+    [TestCase("module", "App/Plugins", "The plugin module Billing exists: App/Plugins/Billing. A module and a plugin module")]
+    [TestCase("plugin", "App/Features", "The module Billing exists: App/Features/Billing. A module and a plugin module")]
     public void AModuleStopsIfItsFolderOrTheFolderOfTheOtherModuleKindExists(string kind, string folder, string message) =>
         Assert.That(() => RunInFolder(["add", kind, "Billing"], "Shop", root => Directory.CreateDirectory(Path.Combine(root, folder, "Billing"))),
             Throws.TypeOf<UmpireException>().With.Message.Contain(message));

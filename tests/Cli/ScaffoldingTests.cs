@@ -67,32 +67,32 @@ public sealed class ScaffoldingTests {
             (".gitignore.template", Setup),
             (".umpireconfig", Setup),
             ("AGENTS.md.template", App),
-            ("Features/.gitkeep", App),
-            ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
-            ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
-            ("Features/SampleModule/SampleModuleModule.cs", Module),
-            ("Features/SampleModule/Slices/GetStatus/GetStatusHandler.cs", Module),
-            ("Features/SampleModule/Slices/GetStatus/GetStatusRequest.cs", Module),
-            ("Features/SampleModule/Slices/GetStatus/GetStatusResponse.cs", Module),
-            ("Features/SampleModule/Slices/SampleAction/SampleActionHandler.cs", Request),
-            ("Features/SampleModule/Slices/SampleAction/SampleActionRequest.cs", Request),
-            ("Features/SampleModule/Slices/SampleAction/SampleActionResponse.cs", Request),
-            ("Features/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
-            ("Features/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
-            ("Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
-            ("Host/Program.cs", App),
-            ("Host/SampleAppApp.cs", App),
-            ("Packs/SamplePack/Architecture/SamplePackArchitecture.cs", Pack),
-            ("Packs/SamplePack/SamplePackPack.cs", Pack),
-            ("Plugins/.gitkeep", App),
-            ("Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
-            ("Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),
+            ("App/Features/.gitkeep", App),
+            ("App/Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
+            ("App/Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
+            ("App/Features/SampleModule/SampleModuleModule.cs", Module),
+            ("App/Features/SampleModule/Slices/GetStatus/GetStatusHandler.cs", Module),
+            ("App/Features/SampleModule/Slices/GetStatus/GetStatusRequest.cs", Module),
+            ("App/Features/SampleModule/Slices/GetStatus/GetStatusResponse.cs", Module),
+            ("App/Features/SampleModule/Slices/SampleAction/SampleActionHandler.cs", Request),
+            ("App/Features/SampleModule/Slices/SampleAction/SampleActionRequest.cs", Request),
+            ("App/Features/SampleModule/Slices/SampleAction/SampleActionResponse.cs", Request),
+            ("App/Features/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
+            ("App/Features/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
+            ("App/Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
+            ("App/Packs/SamplePack/Definition/SamplePackArchitecture.cs", Pack),
+            ("App/Packs/SamplePack/SamplePackPack.cs", Pack),
+            ("App/Plugins/.gitkeep", App),
+            ("App/Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
+            ("App/Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),
+            ("App/Program.cs", App),
+            ("App/SampleAppApp.cs", App),
+            ("App/Tests/App.Tests.csproj", App),
+            ("App/Tests/SampleAppArchitectureTests.cs", App),
+            ("App/Tests/SampleModuleStatusTests.cs", Module),
             ("Properties/launchSettings.json", App),
             ("SampleApp.csproj", App),
             ("SampleApp.slnx.template", App),
-            ("Tests/App.Tests.csproj", App),
-            ("Tests/SampleAppArchitectureTests.cs", App),
-            ("Tests/SampleModuleStatusTests.cs", Module),
             ("Views/App.razor", App),
             ("Views/Pages/Home.razor", App),
             ("Views/Pages/SampleModulePage.razor", Module),
@@ -123,14 +123,14 @@ public sealed class ScaffoldingTests {
         var paths = files.Select(f => f.Path).ToList();
 
         Assert.That(paths, Does.Contain("AGENTS.md"));
-        Assert.That(paths, Does.Contain("Host/Program.cs"));
+        Assert.That(paths, Does.Contain("App/Program.cs"));
         Assert.That(paths, Does.Contain("Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "Host/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
-        Assert.That(files.Single(f => f.Path == "Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebHost>>;"));
-        Assert.That(files.Single(f => f.Path == "Host/HelloApp.cs").Content, Does.Contain("namespace Hello.Host;"));
-        Assert.That(files.Single(f => f.Path == "Host/Program.cs").Content, Does.Contain("using Hello.Host;"));
+        Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
+        Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebHost>>;"));
+        Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("namespace Hello.Host;"));
+        Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("using Hello.Host;"));
     }
 
     [Test]
@@ -153,7 +153,7 @@ public sealed class ScaffoldingTests {
         var files = NewApp("Hello");
 
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\""));
-        Assert.That(files.Single(f => f.Path == "Tests/App.Tests.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk/{Version}\">"));
+        Assert.That(files.Single(f => f.Path == "App/Tests/App.Tests.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk/{Version}\">"));
         Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
     }
@@ -170,7 +170,7 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
         var projects = files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Path).Order(StringComparer.Ordinal);
 
-        Assert.That(projects, Is.EqualTo(["Hello.csproj", "Tests/App.Tests.csproj"]));
+        Assert.That(projects, Is.EqualTo(["App/Tests/App.Tests.csproj", "Hello.csproj"]));
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
             Is.EqualTo($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\" />\n"));
     }
@@ -200,7 +200,7 @@ public sealed class ScaffoldingTests {
         var versions = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Packages.props")).Descendants("PackageVersion")
             .Where(e => e.Parent!.Attribute("Condition") is null)
             .ToDictionary(e => (string)e.Attribute("Include")!, e => (string)e.Attribute("Version")!);
-        var project = System.Xml.Linq.XDocument.Load(Repo.Path("tools", "cli", "Templates", "Tests", "App.Tests.csproj"));
+        var project = System.Xml.Linq.XDocument.Load(Repo.Path("tools", "cli", "Templates", "App", "Tests", "App.Tests.csproj"));
 
         foreach (var reference in project.Descendants("PackageReference")) {
             var id = (string)reference.Attribute("Include")!;
@@ -211,7 +211,7 @@ public sealed class ScaffoldingTests {
     [Test]
     public void NewModuleHasAUnitTest() {
         var files = Templates.Files(TemplateGroup.Module, new Dictionary<string, string> { [Templates.Module] = "Billing", [Templates.App] = "Shop" }, Version);
-        var test = files.Single(f => f.Path == "Tests/BillingStatusTests.cs").Content;
+        var test = files.Single(f => f.Path == "App/Tests/BillingStatusTests.cs").Content;
 
         Assert.That(test, Does.Contain("using Shop.Features.Billing.Slices.GetStatus;"));
         Assert.That(test, Does.Contain("new GetStatusResponse(\"Billing\", \"Ready\")"));
@@ -231,9 +231,9 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(TemplateGroup.Module, new Dictionary<string, string> { [Templates.Module] = "OrderHistory", [Templates.App] = "Shop" }, Version);
 
         Assert.That(files.Select(f => f.Path), Has.None.EndsWith(".csproj"));
-        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory;"));
+        Assert.That(files.Single(f => f.Path == "App/Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory;"));
         Assert.That(files.Single(f => f.Path == "Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
-        Assert.That(files.Single(f => f.Path == "Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory.Domain.Shared;"));
+        Assert.That(files.Single(f => f.Path == "App/Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory.Domain.Shared;"));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
     }
 
@@ -244,9 +244,9 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Features/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs",
-                        "Features/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
-                        "Features/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
+            Is.EqualTo(["App/Features/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs",
+                        "App/Features/Billing/Slices/CreateInvoice/CreateInvoiceRequest.cs",
+                        "App/Features/Billing/Slices/CreateInvoice/CreateInvoiceResponse.cs"]));
         Assert.That(string.Concat(files.Select(f => f.Content)), Does.Not.Contain("Route"));
         Assert.That(files.Select(f => f.Content), Has.All.Contain("namespace Shop.Features.Billing.Slices.CreateInvoice;"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
@@ -259,9 +259,9 @@ public sealed class ScaffoldingTests {
 
         Assert.That(
             files.Select(f => f.Path).Order(StringComparer.Ordinal),
-            Is.EqualTo(["Features/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
-                        "Features/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
-                        "Features/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
+            Is.EqualTo(["App/Features/Billing/Slices/ChangeLimit/ChangeLimitCommand.cs",
+                        "App/Features/Billing/Slices/ChangeLimit/ChangeLimitHandler.cs",
+                        "App/Features/Billing/Slices/ChangeLimit/ChangeLimitResult.cs"]));
         Assert.That(files.Single(f => f.Path.EndsWith("ChangeLimitCommand.cs")).Content, Does.Contain("ChangeLimitCommand : ICommand<ChangeLimitResult>"));
         Assert.That(files.Select(f => f.Content), Has.All.Contain("namespace Shop.Features.Billing.Slices.ChangeLimit;"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
