@@ -1,13 +1,14 @@
 namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
-using Umpire.Architecture.Blocks;
+using Umpire.Kernels.Blocks;
 
 public record Plugin : Module {
     public override string GroupFolder => "Plugins";
 
+    protected override void Rules(RuleBook rules) => rules.For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().Exactly(1);
+
     protected override void Define(Part part) {
-        part.Add<RootClass>().OfType<Umpire.Vsa.Composition.Plugin>();
         part.Add<Domain>().Add<Domain.Shared>();
         part.Add<Infrastructure>().And<Presenters>();
         part.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();

@@ -8,4 +8,5 @@ internal sealed record CountStatement(
     string Counted,
     int? Min,
     int? Max,
-    bool OneKind);
+    bool OneKind,
+    bool PerPart = false);

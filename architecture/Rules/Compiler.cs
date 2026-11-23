@@ -211,9 +211,15 @@ internal sealed class Compiler {
             throw new InvalidOperationException(
                 $"Rules: \"{text}\" has no limit. Add AtLeast, AtMost, Exactly or OfOneKind.");
         }
-        RefuseNoFamily(count.Counted, text);
         var counted = count.Counted;
-        return new CountStatement(text, Subjects(count.Subjects, text), false,
+        var subjects = Subjects(count.Subjects, text);
+        if (count.Types) {
+            var self = count.Subjects.All(entry => entry.Depth == Depth.Self);
+            return new CountStatement(text, subjects, false, b => b.Type.Is(counted) && (!self || subjects.Contains(b.Part)),
+                $"types of {counted.Name}", count.Min, count.Max, count.OneKind, PerPart: true);
+        }
+        RefuseNoFamily(counted, text);
+        return new CountStatement(text, subjects, false,
             b => count.Depth == Depth.Self ? b.Part.Is(counted) : b.Part.InFamily(counted),
             $"{Concept.Display(counted)} types", count.Min, count.Max, count.OneKind);
     }

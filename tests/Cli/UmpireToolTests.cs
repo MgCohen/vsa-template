@@ -108,7 +108,7 @@ public sealed class UmpireToolTests {
                     rules.For<Host>().Uses<Composition>().And<Kernel>();
                     rules.For<Views>().Uses<Presenters>();
                     rules.For<Feature>().And<Plugin>().Uses<Kernel>();
-                    rules.For<RootClass>().Uses<Domain>().And<Domain.Shared>();
+                    rules.For<Feature>(Depth.Self).Uses<Domain>().And<Domain.Shared>();
                     rules.For<Slice>().Uses<Domain.Shared>();
                     rules.For<Infrastructure>().Uses<Domain>();
                     rules.For<Handlers>().Uses<Contracts>();

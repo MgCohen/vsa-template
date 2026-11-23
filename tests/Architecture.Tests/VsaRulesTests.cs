@@ -2,6 +2,7 @@ namespace EngineCore.Tests;
 
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
+using Umpire.Kernels.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class VsaRulesTests {
@@ -42,8 +43,8 @@ public sealed class VsaRulesTests {
     [TestCase("Kernel", "Composition", Permission.Allow)]
     [TestCase("Core", "Hosts", Permission.Allow)]
     [TestCase("Kernel", "Domain", Permission.Deny)]
-    [TestCase("Feature", "RootClass", Permission.Allow)]
-    [TestCase("Plugin", "RootClass", Permission.Allow)]
+    [TestCase("Feature", "Feature", Permission.Allow)]
+    [TestCase("Plugin", "Plugin", Permission.Allow)]
     [TestCase("Feature", "Domain", Permission.Deny)]
     [TestCase("Feature", "Infrastructure", Permission.Deny)]
     [TestCase("Plugin", "Domain", Permission.Deny)]
@@ -55,8 +56,8 @@ public sealed class VsaRulesTests {
     [TestCase("Presenters", "Feature", "Domain.Shared", "B")]
     [TestCase("Presenters", "Plugin", "Domain.Shared", "A")]
     [TestCase("Presenters", "Kernel", "Contracts.Events", "A")]
-    [TestCase("RootClass", "Feature", "Domain.Shared", "B")]
-    [TestCase("RootClass", "Plugin", "Infrastructure", "A")]
+    [TestCase("Feature", "Feature", "Domain.Shared", "B")]
+    [TestCase("Feature", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
         var decision = MayUse(Place("Feature", from), Place(group, to, feature));
 
@@ -65,7 +66,7 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var decision = MayUse(Place("Feature", "RootClass"), Place("Kernel", "Domain"));
+        var decision = MayUse(Place("Feature", "Feature"), Place("Kernel", "Domain"));
 
         Assert.That((decision.Permission, decision.Rule?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
@@ -136,15 +137,6 @@ public sealed class VsaRulesTests {
     public void A_module_kind_is_a_module_and_not_a_layer(Type kind) {
         Assert.That(kind.IsAssignableTo(typeof(Module)), Is.True);
         Assert.That(kind.IsAssignableTo(typeof(Layer)), Is.False);
-    }
-
-    [Test]
-    public void The_root_class_rules_select_only_the_parts_of_the_module_classes() {
-        var modules = Resolved.Parts.Where(p => p.Is(typeof(RootClass))).ToList();
-
-        Assert.That(modules.Any(p => p.IsGroup), Is.False);
-        Assert.That(modules.SelectMany(p => p.Types),
-            Is.EquivalentTo(new[] { typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
     }
 
     [TestCase("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", "Contracts.Requests", "Kernel")]

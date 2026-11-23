@@ -22,6 +22,12 @@ public sealed class From : Chain<From> {
         return count;
     }
 
+    public Count HasTypes<T>() {
+        var count = new Count(Subjects(), typeof(T), null, types: true);
+        book.Counts.Add(count);
+        return count;
+    }
+
     public Match Takes<T>() where T : Concept {
         var match = new Match(Subjects(), typeof(T));
         book.Matches.Add(match);

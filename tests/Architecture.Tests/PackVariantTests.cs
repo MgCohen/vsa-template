@@ -3,6 +3,7 @@ namespace EngineCore.Tests;
 using PackVariant.Packs.Ecs.Architecture;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
+using Umpire.Kernels.Blocks;
 using Umpire.Vsa.Definition;
 
 public sealed class PackVariantTests {

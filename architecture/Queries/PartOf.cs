@@ -124,7 +124,8 @@ sealed class PartOf {
         if (!paths.Any(path => !path.Contains('/'))) {
             return null;
         }
-        var part = Select(resolved.Root, type);
+        var top = resolved.Root.Children.FirstOrDefault(p => p.Concept is Blocks.App && !p.HasFolder) ?? resolved.Root;
+        var part = Select(top, type);
         return part == resolved.Root ? null : part;
     }
 

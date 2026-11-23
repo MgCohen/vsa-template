@@ -8,7 +8,7 @@ internal static class CountCheck {
         }
         return statement.Subjects.SelectMany(subject => subject.IsGroup
             ? GroupFailures(statement, subject, app)
-            : TypeFailures(statement, subject, app));
+            : statement.PerPart ? PartFailures(statement, subject, app) : TypeFailures(statement, subject, app));
     }
 
     static IEnumerable<CountResult> GroupFailures(CountStatement statement, Part subject, List<Binding> app) =>
@@ -17,6 +17,11 @@ internal static class CountCheck {
             .OrderBy(instance => instance.Key, StringComparer.Ordinal)
             .SelectMany(instance => Check(statement, $"{subject.Name} {instance.Key}", subject.Name,
                 Counted(statement, instance), First(instance)));
+
+    static IEnumerable<CountResult> PartFailures(CountStatement statement, Part subject, List<Binding> app) {
+        var inPart = app.Where(b => subject.Holds(b.Part)).ToList();
+        return inPart.Count == 0 ? [] : Check(statement, subject.Name, subject.Name, Counted(statement, inPart), First(inPart));
+    }
 
     static IEnumerable<CountResult> TypeFailures(CountStatement statement, Part subject, List<Binding> app) {
         var candidates = Counted(statement, app);

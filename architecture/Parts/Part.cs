@@ -53,7 +53,7 @@ public class Part : IPartChain {
 
     public Part Add<T>() where T : Concept, new() {
         var concept = new T();
-        var part = new Part(concept, concept is RootClass ? null : concept.Folder, this);
+        var part = new Part(concept, concept.Folder, this);
         RefuseInBlockPlace(part);
         if (children.FirstOrDefault(c => c.Concept!.GetType() == typeof(T) && !c.IsGroup && !c.IsBlockPlace) is { } added) {
             return added;

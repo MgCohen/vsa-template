@@ -45,7 +45,7 @@ public sealed class FolderAliasConfigTests {
         var check = Check(new VsaArchitecture(), project.Root);
 
         Assert.That(Part("Game.Views.Board", check), Is.EqualTo("Views"));
-        Assert.That(Part("Notes.NotesModule", check), Is.EqualTo("Feature/RootClass"));
+        Assert.That(Part("Notes.NotesModule", check), Is.EqualTo("App/Feature"));
     }
 
     [Test]
@@ -54,7 +54,7 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), Inner);
 
-        Assert.That(Part("Lists.ListsModule", check), Is.EqualTo("Feature/RootClass"));
+        Assert.That(Part("Lists.ListsModule", check), Is.EqualTo("App/Feature"));
     }
 
     [Test]
@@ -72,8 +72,8 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), project.Root);
 
-        Assert.That(Part("Root.RootModule", check), Is.EqualTo("Feature/RootClass"));
-        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("Feature/RootClass"));
+        Assert.That(Part("Root.RootModule", check), Is.EqualTo("App/Feature"));
+        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("App/Feature"));
     }
 
     [Test]
@@ -83,7 +83,7 @@ public sealed class FolderAliasConfigTests {
         var check = Check(new SourceAliasArchitecture(), project.Root);
 
         Assert.That(Part("Game.Views.Board", check), Is.EqualTo("Views"));
-        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("Feature/RootClass"));
+        Assert.That(Part("Tasks.TasksModule", check), Is.EqualTo("App/Feature"));
     }
 
     [Test]

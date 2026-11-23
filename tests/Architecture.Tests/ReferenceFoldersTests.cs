@@ -48,9 +48,9 @@ public sealed class ReferenceFoldersTests {
         Assert.That(copies.Select(t => t.Assembly.Name.Split(',')[0]), Is.EqualTo(new[] { "Assembly-CSharp" }));
     }
 
-    [TestCase("Notes.NotesModule", "RootClass", "Notes")]
+    [TestCase("Notes.NotesModule", "Feature", "Notes")]
     [TestCase("Notes.Domain.Note", "Domain", "Notes")]
-    [TestCase("Tasks.TasksModule", "RootClass", "Tasks")]
+    [TestCase("Tasks.TasksModule", "Feature", "Tasks")]
     public void A_module_in_an_aliased_folder_binds_to_its_feature(string type, string part, string feature) {
         var binding = map.Bindings.All.Single(b => b.Type.FullName == type);
 
