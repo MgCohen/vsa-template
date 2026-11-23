@@ -8,15 +8,16 @@ using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Handlers.Requests;
 
 public static class RequestOperations {
+    const string GroupMember = "Group";
+    const string NameMember = "Name";
+    const string EffectMember = "Effect";
+    const BindingFlags Statics = BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+
     public static IServiceCollection AddRequestOperations(this IServiceCollection services, AppTypes types) {
-#if NET
-        var create = typeof(RequestOperations).GetMethod(nameof(Create), BindingFlags.NonPublic | BindingFlags.Static)!;
         foreach (var handler in types.Implementations(typeof(RequestHandler<,>))) {
             var arguments = handler.Service.GetGenericArguments();
-            var operation = (Operation)create.MakeGenericMethod(arguments).Invoke(null, [types])!;
-            services.AddSingleton(operation);
+            services.AddSingleton(Create(arguments[0], arguments[1], types));
         }
-#endif
         return services;
     }
 
@@ -44,17 +45,23 @@ public static class RequestOperations {
         return Kebab(module is null ? AppTypes.NameOf(request) : AppTypes.NameOf(module));
     }
 
-#if NET
-    static Operation Create<TRequest, TResponse>(AppTypes types)
-        where TRequest : IRequest<TResponse>
-        where TResponse : IResponse =>
-        new(TRequest.Group ?? GroupOf(typeof(TRequest), types),
-            TRequest.Name ?? NameOf(typeof(TRequest)),
-            TRequest.Effect,
-            typeof(TRequest),
-            Invoke<TRequest, TResponse>);
+    static Operation Create(Type request, Type response, AppTypes types) =>
+        new(StaticValue<string?>(request, GroupMember, null) ?? GroupOf(request, types),
+            StaticValue<string?>(request, NameMember, null) ?? NameOf(request),
+            StaticValue(request, EffectMember, Effect.Write),
+            request,
+            (services, input, ct) => Invoke(request, response, services, input, ct));
 
-    static async Task<OperationResult> Invoke<TRequest, TResponse>(
+    static TValue StaticValue<TValue>(Type request, string member, TValue fallback) =>
+        request.GetProperty(member, Statics) is { } property && property.GetValue(null) is TValue value ? value : fallback;
+
+    static Task<OperationResult> Invoke(
+        Type request, Type response, IServiceProvider services, object input, CancellationToken ct) {
+        var send = typeof(RequestOperations).GetMethod(nameof(Send), BindingFlags.NonPublic | BindingFlags.Static)!;
+        return (Task<OperationResult>)send.MakeGenericMethod(request, response).Invoke(null, [services, input, ct])!;
+    }
+
+    static async Task<OperationResult> Send<TRequest, TResponse>(
         IServiceProvider services, object input, CancellationToken ct)
         where TRequest : IRequest<TResponse>
         where TResponse : IResponse {
@@ -63,5 +70,4 @@ public static class RequestOperations {
     }
 
     static int ExitCodeOf(Error? error, object? value) => error is not null ? 1 : value is IExitCode code ? code.ExitCode : 0;
-#endif
 }

@@ -55,6 +55,7 @@ umpire-<version>.zip
 | `commit` | The commit of the release (`--commit`, else the local `HEAD`) |
 | `analyzers.roslyn` | The highest Roslyn version that the analyzers reference, for example `4.10` |
 | `engine.targetFramework`, `engine.rollForward` | `net8.0`, `Major` |
+| `engine.umpireBuild` | `netstandard2.1`: the build of `Umpire.dll` that the engine uses. Code that compiles against `runtime/netstandard2.1` has the same shape |
 | `engine.frameworks` | Each shared framework that the engine needs, with its `name` and `version` |
 | `files[].path` | The path in the archive |
 | `files[].assemblyVersion` | The assembly version of a DLL. `null` for a file that is not a DLL |
