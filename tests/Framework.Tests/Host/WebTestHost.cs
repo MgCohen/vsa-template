@@ -9,6 +9,8 @@ using Umpire.Kernels;
 sealed class WebTestHost : WebHost {
     public List<Action<IServiceCollection>> Actions { get; } = [];
 
+    protected override AppTypes TypesOf(App app) => new(ModuleProvider);
+
     protected override void Configure(IServiceCollection services, AppTypes types) {
         services.AddSingleton<IServer, TestServer>();
         foreach (var add in Actions) {

@@ -24,7 +24,7 @@ public class TestApp<THost>(params Module[] modules) : App where THost : AppHost
     public IServiceCollection Compose(IServiceCollection services, IConfiguration? configuration = null) {
         var host = Pack.CreateHost();
         host.Compose(services, configuration ?? new ConfigurationBuilder().Build(), Pack.Kernel,
-            new AppTypes(new FixedModules([.. modules]), GetType().Assembly));
+            new AppTypes(new FixedModules([.. modules])));
         return services;
     }
 }

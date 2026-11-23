@@ -1,6 +1,5 @@
 namespace Umpire.Messages.Handlers;
 
-using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Messages.Contracts;
 
@@ -8,25 +7,25 @@ static class PipelineRun {
     internal static async Task ExecuteAsync(MessageRoute route, Envelope envelope) {
         CurrentEnvelope.Value = envelope;
         envelope.State = EnvelopeState.Running;
-        ExceptionDispatchInfo? fault = null;
+        var fault = new FirstFault(envelope);
         try {
             await UntilHandledAsync(route, envelope);
         } catch (Exception e) {
-            envelope.Fault(e);
-            fault = ExceptionDispatchInfo.Capture(e);
+            fault.Add(e);
         }
-        try {
-            await AfterAsync(route, envelope);
-        } catch (Exception e) when (fault is null) {
-            envelope.Fault(e);
-            fault = ExceptionDispatchInfo.Capture(e);
-        } catch (Exception) when (fault is not null) {
-        }
+        envelope.Stage = EnvelopeStage.AfterHooks;
+        await EachAfterAsync(route.AfterHooks, envelope, fault);
+        envelope.Stage = EnvelopeStage.AfterSteps;
+        await EachAfterAsync(route.AfterSteps, envelope, fault);
         envelope.Stage = EnvelopeStage.Done;
-        fault?.Throw();
+        fault.ThrowIfAny();
     }
 
     static async Task UntilHandledAsync(MessageRoute route, Envelope envelope) {
+        envelope.Stage = EnvelopeStage.BeforeSteps;
+        if (!await BeforeAsync(Instances<IBeforeCall>(route.BeforeValidationSteps, envelope), envelope)) {
+            return;
+        }
         envelope.Stage = EnvelopeStage.Validate;
         foreach (var validator in Instances<IValidation>(route.Validators, envelope)) {
             if (validator.Validate(envelope) is { } error) {
@@ -93,14 +92,13 @@ static class PipelineRun {
         }
     }
 
-    static async Task AfterAsync(MessageRoute route, Envelope envelope) {
-        envelope.Stage = EnvelopeStage.AfterHooks;
-        foreach (var call in Instances<IAfterCall>(route.AfterHooks, envelope)) {
-            await call.CallAsync(envelope);
-        }
-        envelope.Stage = EnvelopeStage.AfterSteps;
-        foreach (var call in Instances<IAfterCall>(route.AfterSteps, envelope)) {
-            await call.CallAsync(envelope);
+    static async Task EachAfterAsync(IReadOnlyList<Type> calls, Envelope envelope, FirstFault fault) {
+        foreach (var call in calls) {
+            try {
+                await Resolve<IAfterCall>(call, envelope).CallAsync(envelope);
+            } catch (Exception e) {
+                fault.Add(e);
+            }
         }
     }
 

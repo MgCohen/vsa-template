@@ -7,6 +7,8 @@ using Umpire.Kernels;
 public sealed class TestConsoleHost : ConsoleHost, ITestHost {
     public List<Action<IServiceCollection>> Actions { get; } = [];
 
+    protected override AppTypes TypesOf(App app) => new(ModuleProvider);
+
     protected override void Configure(IServiceCollection services, AppTypes types) {
         foreach (var add in Actions) {
             add(services);

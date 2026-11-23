@@ -7,10 +7,11 @@ sealed record PipelineDefinition(
     IReadOnlyList<Type> HandlerBases,
     IReadOnlyList<Type> Handlers,
     IReadOnlyList<Type> HookBases,
+    IReadOnlyList<Type> ValidatorBases,
     Type Runner,
-    IReadOnlyList<Type> BeforeSteps,
-    IReadOnlyList<Type> AfterSteps) : IDispatchClose {
-    public IReadOnlyList<Type> ClosedServices => [typeof(IHandler<>), typeof(Validator<>), .. HookBases];
+    IReadOnlyList<PipelineStep> BeforeSteps,
+    IReadOnlyList<PipelineStep> AfterSteps) : IDispatchClose {
+    public IReadOnlyList<Type> ClosedServices => [typeof(IHandler<>), .. ValidatorBases, .. HookBases];
 
     internal IEnumerable<Type> SelectedBases => HandlerBases.Concat(Handlers);
 

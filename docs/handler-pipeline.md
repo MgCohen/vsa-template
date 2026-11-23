@@ -7,21 +7,74 @@ Each message (a command, a request or an event) goes through a pipeline on its w
 ```text
 SendAsync ──▶ Envelope (id, parent, depth) ──▶ Runner: run now, or keep the envelope
                                                  │
-   Validate ─▶ before steps ─▶ Before hooks ─▶ Handle ─▶ After hooks ─▶ after steps ─▶ Outcome
+   early steps ─▶ Validate ─▶ before steps ─▶ Before hooks ─▶ Handle ─▶ After hooks ─▶ after steps ─▶ Outcome
                                                  │
 SendAsync ◀── Result<T> (the value or the Error, with its envelope)
 ```
 
 | Stage | Who gives it | Rule |
 |---|---|---|
-| Validate | Each `Validator<TMessage>` of the modules | It checks the message as it is at this stage. The first `Error` rejects the message: the handler does not run |
-| Before steps | `.BeforeStep<T>()` in the builder of the pipeline | In the order of the builder. It returns the message: the same one, or a copy made with `with` |
+| Early steps | `.BeforeStep<T>(priority)` with a priority below 0 | Lowest priority first, then the order of the builder. Same rules as a before step |
+| Validate | Each validator of the validator bases of the pipeline (default `Validator<TMessage>`) | It checks the message as it is at this stage. The first `Error` rejects the message: the handler does not run |
+| Before steps | `.BeforeStep<T>()` in the builder of the pipeline, priority 0 or more | Lowest priority first, then the order of the builder. It returns the message: the same one, or a copy made with `with` |
 | Before hooks | Each Before hook of the modules, if the pipeline names its base | By full type name. It returns the message, or rejects it with `envelope.Reject(error)` |
 | Handle | The handler of the message | One handler for a command or a request, zero or more for an event. If one event handler throws, its error goes in the result, and the next handler runs. A cancellation stops the run |
 | After hooks | Each After hook of the modules, if the pipeline names its base | By full type name. Each outcome, also a fault |
-| After steps | `.AfterStep<T>()` in the builder | In the order of the builder. Each outcome, also a fault |
+| After steps | `.AfterStep<T>(priority)` in the builder | Highest priority first, then the order of the builder. Each outcome, also a fault |
 
-The validators run by full type name. A validator, a hook or a typed step for a message type also applies to each type that derives from it. `AfterCommandHook<ArenaCommand<int>, int>` sees each move, and `AfterCommandHook<StrikeCommand, int>` sees only strikes.
+Validation has the priority 0 (`Pipeline.ValidationPriority`). The default priority of a step is 0, so a step runs after validation unless its priority is lower. The validators run by full type name. A validator, a hook or a typed step for a message type also applies to each type that derives from it. `AfterCommandHook<ArenaCommand<int>, int>` sees each move, and `AfterCommandHook<StrikeCommand, int>` sees only strikes.
+
+## Each after call runs
+
+The After hooks and the after steps run in each run: after an accept, a reject and a fault. Each one runs also when an earlier After hook or after step throws. The first exception of the run faults the envelope and goes to the caller. The later exceptions do not.
+
+## A step that holds a lock
+
+A lock or a serial queue for each match scope is a pair of steps with the same low priority. The before step takes the lock before validation. The after step with the same priority runs after the other after steps, and it releases the lock.
+
+```csharp
+.BeforeStep<EnterLock>(-10)
+.AfterStep<ExitLock>(-10)
+```
+
+```text
+EnterLock ─▶ Validate ─▶ before steps ─▶ Before hooks ─▶ Handle ─▶ After hooks ─▶ after steps ─▶ ExitLock
+```
+
+```csharp
+public sealed class EnterLock : BeforeStep {
+    public override async Task<object> BeforeAsync(Envelope envelope) {
+        await envelope.Services.GetRequiredService<MatchQueue>().EnterAsync();
+        envelope.Items["match.lock"] = true;
+        return envelope.Message;
+    }
+}
+
+public sealed class ExitLock : AfterStep {
+    public override Task AfterAsync(Envelope envelope) {
+        if (envelope.Items.Remove("match.lock")) {
+            envelope.Services.GetRequiredService<MatchQueue>().Exit();
+        }
+        return Task.CompletedTask;
+    }
+}
+```
+
+- The after step runs also when an early step threw before the lock, so it releases only a lock that the run holds (`envelope.Items`).
+- A send from a handler inside the lock runs the same steps. If it goes to the same queue, the step must let the child run, for example with `envelope.Parent`.
+- The pipeline gets each step from `envelope.Services` (`ActivatorUtilities.GetServiceOrCreateInstance`). Register the step type with a factory or an instance to give its values.
+
+## Validator bases
+
+Each pipeline runs the validators of its validator bases. With no `ValidatorsOf`, the base is `Validator<>`. A validator for an interface or a base type of the message also runs, for example `Validator<IScoreEvent>`.
+
+| Pipeline | Validator base |
+|---|---|
+| Commands, events, requests, a module pipeline | `Validator<>` |
+| Presenters | `PresenterValidator<>` (Umpire.Vsa.Presenters) |
+| A module pipeline with `.ValidatorsOf(typeof(MyCheck<>))` | `MyCheck<>` only |
+
+A validator base is an open generic type with one type parameter, the message, and it implements `IValidation`. Give it `[AutoRegister]`, so the scan finds its validators.
 
 ## Steps and hooks
 
@@ -128,7 +181,7 @@ The runner of the pipeline of the message decides when a send runs. A `SendAsync
 
 ## Define a pipeline
 
-A pipeline names types only: the message base, the handlers, the hook bases, the runner and the steps.
+A pipeline names types only: the message base, the handlers, the hook bases, the validator bases, the runner and the steps.
 
 ```csharp
 public sealed class ArenaModule : Module {
@@ -150,7 +203,8 @@ public sealed class ArenaModule : Module {
 | `.Handlers(typeof(A), typeof(B))` | Only these handlers |
 | `.HooksOf(typeof(A<>), typeof(B<,>))` | Each hook of the modules that derives from these bases. A step base is not a hook base. With no `HooksOf`, no hook runs |
 | `.Runner<TRunner>()` | The runner. Default: `InlineRunner` |
-| `.BeforeStep<T>()`, `.AfterStep<T>()` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep`. Add each step one time |
+| `.ValidatorsOf(typeof(A<>))` | The validator bases of this pipeline. Default: `Validator<>` |
+| `.BeforeStep<T>(priority)`, `.AfterStep<T>(priority)` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep`. Default priority 0. Add each step one time |
 | `.Build(services)` | A new `Pipeline` with its own runner. `pipeline.SendAsync<TResult>(message)` runs a message of `TMessage` on it, and a message of another type fails. Keep the builder to build more instances, for example one for each match |
 | `services.AddPipeline(builder)` | The app instance: `ICommandSender`, `IRequestSender` and the publisher send each message of `TMessage` to it, if the handler bases of the builder select it |
 
@@ -168,7 +222,7 @@ Each kind adds its default pipeline with `AddPipeline`, as a module does:
 |---|---|---|
 | Commands | `CommandHandler<,>` | `BeforeCommandHook<>`, `AfterCommandHook<,>` |
 | Events | `IntegrationEventHandler<>` | `BeforeEventHook<>`, `AfterEventHook<>` |
-| Presenters | `IPresenterHandler<>`, runner `LiveScopesRunner` | None |
+| Presenters | `IPresenterHandler<>`, runner `LiveScopesRunner`, validators `PresenterValidator<>` | None |
 | Requests | `RequestHandler<,>` | None |
 
 A message base has one pipeline for each handler base: a second `AddPipeline` with the same message base and a related handler base fails. Two handler bases are related if one derives from the other. A listed handler counts as a handler base. The command and the request defaults both have the base `IMessage`, with different handler bases.
@@ -199,11 +253,11 @@ IIntegrationEventPublisher.PublishAsync(event)
 | Project | Types |
 |---|---|
 | Umpire.Messages.Contracts | `IMessage`, `IBroadcastMessage`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
-| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `IHandler<T>`, `IRunner`, `InlineRunner`, `Validator<T>`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
+| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `IHandler<T>`, `IRunner`, `InlineRunner`, `Validator<T>`, `IValidation`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
 | Umpire.Vsa.Handlers.Commands, .Events, .Requests | The handler bases, the hook bases, the senders, and the default pipeline of each kind |
 
 The folders of Umpire.Messages.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`.
 
-`AddPipeline` registers the pipeline and `Pipelines`, the one service that selects a pipeline for each send. Each pipeline reads `AppTypes` from the services: it finds its handlers, the validators and the hooks of its hook bases. A pipeline built from services with no `AppTypes` takes only listed handlers, and `HandlersOf` fails. All these projects also target `netstandard2.1`, for Unity.
+`AddPipeline` registers the pipeline and `Pipelines`, the one service that selects a pipeline for each send. Each pipeline reads `AppTypes` from the services: it finds its handlers, the validators of its validator bases and the hooks of its hook bases. A pipeline built from services with no `AppTypes` takes only listed handlers, and `HandlersOf` fails. All these projects also target `netstandard2.1`, for Unity.
 
 Later, on the same envelope: typed metadata (`Envelope<TMessage, TMeta>`), limits on depth and loops, queries over the call chain, subscriptions at run time, and runs that suspend and resume.

@@ -32,7 +32,7 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 | Part | Project | Job |
 |---|---|---|
 | `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(IEnvelope<TEvent>)`. It has no `[AutoRegister]` |
-| `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. Its `RunAsync` raises `Changed` after `HandleAsync`, also when it fails |
+| `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. Its `RunAsync` raises `Changed` after a `HandleAsync` that completes, also with an error result |
 | `Presenter` | `Umpire.Vsa.Presenters` | The base of each presenter. It has `[AutoRegister]`, so the core step registers each presenter as scoped |
 | `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. It has the queue of the deliveries to the scope |
 | `LiveScopes` | `Umpire.Vsa.Presenters` | The live presenter scopes, for the whole app |
@@ -76,13 +76,13 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 - The cost of a publish: the publish runs the presenters of each idle live scope, one scope after the other. It does not wait for a busy scope. The flow that runs the queue of a scope also runs the deliveries that other flows add during that time. Keep presenter handlers short: a slow handler makes each publish to an idle scope slow.
 - The runner checks that the scope is live before the delivery. If the scope ends during the delivery, the next handlers cannot resolve, and the runner logs no error for an ended scope.
 - If a handler throws or returns an error, the next handler runs. The log gets each exception with its stack trace (`Envelope.HandlerExceptions`). If no handler throws, it gets the first error of the delivery.
-- `Changed` is raised after each handler that completes or throws, but not after a cancellation. A `Changed` listener that throws is an error of its handler. If the handler and the listener both throw, the log gets an `AggregateException` with both.
+- `Changed` is raised after each handler that completes, also with an error result. It is not raised after a handler that throws or after a cancellation, so a view does not render a state that a throw left half changed. A `Changed` listener that throws is an error of its handler.
 - A delivery that starts later keeps the token of its publish. If that token is cancelled, an `OperationCanceledException` stops the delivery to that scope, and it is not an error.
 - `IIntegrationEventHandler<TEvent>` has no `[AutoRegister]`. The event pipeline takes the classes of `IntegrationEventHandler<TEvent>`, and the presenter pipeline takes the classes of `IPresenterHandler<TEvent>`. Thus a presenter is never a module handler.
 - One presenter can show many events: it implements `IPresenterHandler<T>` one time for each event.
 - An open presenter, for example `GaugePresenter<T> where T : struct, IGauge`, is closed for each `[AutoClose]` type that meets its constraints, the same as an open handler (`docs/composition.md`). If its event type does not use each type parameter (here `GaugeRead`), the presenter needs one `[AutoClose]` type that fits, else the start stops with a message (MgCohen/vsa-template#214). A presenter of an event that uses each type parameter is an open handler (`docs/composition.md`).
 - `Presenter` is a service, with one forward for each presenter. Thus `GetServices<Presenter>()` in a scope makes each presenter of that scope.
-- The presenter pipeline has the validators of the event, so each `Validator<TEvent>` runs one time for the event pipeline and one time for each live scope. Keep validators of events cheap and free of side effects.
+- The presenter pipeline runs only the validators of `PresenterValidator<TEvent>`, one time for each live scope. A `Validator<TEvent>` runs one time, in the event pipeline. A presenter validator that rejects keeps the event from the presenters of that scope, and the publish stays accepted.
 - Each scope gets its own envelope. `Envelope.Services` is the provider of the presenter scope, and `Envelope.Cancellation` is the token of the publish.
 - A view renders on its own thread: `PresenterWatcher` calls `InvokeAsync(StateHasChanged)`.
 - The presenter pipeline runs after the event pipeline. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.

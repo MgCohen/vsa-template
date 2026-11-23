@@ -13,6 +13,7 @@ public sealed class AppTypes {
     readonly ModuleScan moduleScan;
     IReadOnlyList<Module>? modules;
     Assembly[]? assemblies;
+    Assembly[]? scanned;
     Type[]? loaded;
     Type[]? registered;
     Type[]? autoCloseTypes;
@@ -61,7 +62,7 @@ public sealed class AppTypes {
 
     public IReadOnlyList<Type> AutoCloseTypes() => autoCloseTypes ??= [.. Loaded()
         .Where(MarkedTypes.IsAutoClose)
-        .Concat(Assemblies().SelectMany(MarkedTypes.AutoCloseTypesOf))
+        .Concat(Scanned().SelectMany(MarkedTypes.AutoCloseTypesOf))
         .Distinct()];
 
     static Type? ServiceOf(Type type, Type baseType) {
@@ -71,17 +72,16 @@ public sealed class AppTypes {
         return ClosedBase.Of(type, baseType) ?? ClosedBase.InterfaceOf(type, baseType);
     }
 
-    IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Assemblies()
-        .Append(appAssembly)
-        .OfType<Assembly>()
-        .Distinct()
+    IReadOnlyList<Type> FindConcreteTypes(Type baseType) => [.. Scanned()
         .SelectMany(scan.TypesOf)
         .Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false })
         .Where(t => t.IsSubclassOf(baseType))];
 
-    Type[] Loaded() => loaded ??= [.. Assemblies()
+    Type[] Loaded() => loaded ??= [.. Scanned()
         .SelectMany(scan.TypesOf)
         .Where(t => !t.IsDefined(typeof(CompilerGeneratedAttribute)))];
 
     Assembly[] Assemblies() => assemblies ??= [.. Modules.Select(module => module.GetType().Assembly).Distinct()];
+
+    Assembly[] Scanned() => scanned ??= [.. Assemblies().Append(appAssembly).OfType<Assembly>().Distinct()];
 }

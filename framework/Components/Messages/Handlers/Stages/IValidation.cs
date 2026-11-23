@@ -2,6 +2,6 @@ namespace Umpire.Messages.Handlers;
 
 using Umpire.Messages.Contracts;
 
-interface IValidation {
+public interface IValidation {
     Error? Validate(Envelope envelope);
 }
