@@ -3,7 +3,7 @@ namespace UmpireEngine;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
-using FrameworkKernel = Umpire.Kernels.FrameworkKernel;
+using KernelParts = Umpire.Kernels.KernelParts;
 
 public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Define(Part root) {
@@ -17,7 +17,7 @@ public sealed class EngineArchitecture : VsaArchitecture {
         rules.For<Contracts.Commands>().And<Handlers.Commands>().And<Infrastructure>().And<Domain.Shared>()
             .Uses<EngineLibraries>().And<VersionLibraries>().And<ConfigLibraries>();
         rules.For<Infrastructure>().Uses<ArchUnitLibraries>();
-        rules.For<Infrastructure>().Under<Plugin>().Uses<FrameworkKernel>();
+        rules.For<Infrastructure>().Under<Plugin>().Uses<KernelParts.App>();
         rules.For<Host>().Uses<EngineLibraries>().And<VersionLibraries>();
     }
 }

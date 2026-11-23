@@ -37,18 +37,18 @@ sealed class PartOf {
         if (LoadedTypes.IsCompilerGenerated(type.Name)) {
             return;
         }
-        if (resolved.ExternalPart(type.Assembly, IsInBlock(type) ? "" : type.FullName) is { } external) {
-            bound.Add(new Binding(type, external, new Dictionary<string, string>(), null));
-            return;
-        }
-        if (type.Source is not { } source) {
+        var external = resolved.ExternalPart(type.Assembly, IsInBlock(type) ? "" : type.FullName);
+        if (type.Source is not { } source || (external is not null && IsInBlock(type))) {
+            if (external is not null) {
+                bound.Add(ExternalBinding(type, external));
+            }
             return;
         }
         var file = Path.GetFullPath(source.File);
         var relative = Path.GetRelativePath(blockFolder, file).Replace('\\', '/');
         if (Outside(relative)) {
-            if (InPlacedBlock(file, type, source with { File = file }) is { } placed) {
-                bound.Add(placed);
+            if (external is not null) {
+                bound.Add(InPlacedBlock(file, type, source with { File = file }) ?? ExternalBinding(type, external));
             }
             return;
         }
@@ -74,6 +74,8 @@ sealed class PartOf {
             bound.Add(BindTo(match, type, located));
         }
     }
+
+    static Binding ExternalBinding(TypeFacts type, Part external) => new(type, external, new Dictionary<string, string>(), null);
 
     static bool Outside(string relative) => relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative);
 

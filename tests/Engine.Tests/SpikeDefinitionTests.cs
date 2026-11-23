@@ -70,7 +70,11 @@ public sealed class SpikeDefinitionTests {
 
     [Test]
     public void The_child_part_Store_gets_the_uses_of_its_parent_A2() {
-        Assert.That(alpha.Decide("A2/Store", "A1"), Is.EqualTo(Permission.Allow));
+        Assert.Multiple(() => {
+            Assert.That(alpha.Decide("A2/Store", "A1"), Is.EqualTo(Permission.Allow));
+            Assert.That(charlie.Decide("A2/Store", "A1"), Is.EqualTo(Permission.Allow));
+            Assert.That(charlie.PartAt("A2/Store"), Is.EqualTo(alpha.PartAt("A2/Store")));
+        });
     }
 
     [Test]

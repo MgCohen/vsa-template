@@ -10,6 +10,12 @@ public record PackPlace : Concept {
     public override string Folder => "Packs";
 }
 
+public sealed record ToolKit : Umpire.Architecture.Blocks.Block {
+    public override string Folder => "Kit";
+
+    protected override void Define(Part part) => part.Add<Item>();
+}
+
 public sealed class PlaceArchitecture : Architecture {
     protected override void Define(Part block) {
         var box = block.AddGroup<Box>();
@@ -116,8 +122,15 @@ public sealed class BlockPlaceTests {
     }
 
     [Test]
-    public void A_place_with_no_folder_is_the_DLL_form_and_no_problem() {
-        Assert.That(Resolved().EmptyPlaces(block, []), Is.Empty);
+    public void A_place_with_no_folder_and_no_body_is_a_problem() {
+        var empty = Resolved().EmptyPlaces(block, []);
+
+        Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Tools") }));
+    }
+
+    [Test]
+    public void A_place_of_a_block_with_a_body_and_no_folder_is_the_DLL_form_and_no_problem() {
+        Assert.That(new ResolvedArchitecture(new BodyPlaceArchitecture()).EmptyPlaces(block, []), Is.Empty);
     }
 
     [Test]
@@ -149,5 +162,9 @@ public sealed class BlockPlaceTests {
 
     sealed class PlaceWithChild : Architecture {
         protected override void Define(Part block) => block.AddBlock<Tool>().Add<Item>();
+    }
+
+    sealed class BodyPlaceArchitecture : Architecture {
+        protected override void Define(Part block) => block.AddBlock<ToolKit>();
     }
 }

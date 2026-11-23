@@ -18,6 +18,7 @@ public class VsaArchitecture : Architecture {
         root.AddBlock<FrameworkKernel>();
         root.AddBlock<MessagesComponent>();
         root.AddBlock<VsaKernel>();
+        root.Add<UmpireLibraries>();
         root.Add<Host>().And<Views>();
         root.AddBlockGroup<Pack>("Packs");
         root.AddGroup<Plugin>(Boundary.Open);
@@ -55,11 +56,11 @@ public class VsaArchitecture : Architecture {
         ForHandlerParts(rules).Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-        rules.For<RootClass>().Uses<Kernel>().And<MessagesComponent>().And<Plugin>(Access.Internal);
+        rules.For<RootClass>().Uses<Kernel>().And<MessagesComponent>().And<UmpireLibraries>().And<Plugin>(Access.Internal);
         rules.For<RootClass>().Denies<RootClass>().Under<Plugin>();
         rules.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal);
         rules.For<RootClass>().Under<Feature>().Denies<Composition>();
-        rules.For<Host>().Uses<Composition>().And<FrameworkKernel>();
+        rules.For<Host>().Uses<Composition>().And<FrameworkKernel>().And<UmpireLibraries>();
         rules.For<Views>().Uses<Presenters>();
         rules.For<Views>().Uses<Hosts>().Under<Kernel>();
         rules.For<Host>().Uses<Pack>();
