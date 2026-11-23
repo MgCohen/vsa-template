@@ -1,0 +1,14 @@
+diff --git a/engine/Features/LoadApp/Slices/LoadApp/LoadAppHandler.cs b/engine/Features/LoadApp/Slices/LoadApp/LoadAppHandler.cs
+index 4538acbf..47f2f157 100644
+--- a/engine/Features/LoadApp/Slices/LoadApp/LoadAppHandler.cs
++++ b/engine/Features/LoadApp/Slices/LoadApp/LoadAppHandler.cs
+@@ -27,8 +27,7 @@ sealed class LoadAppHandler : CommandHandler<LoadAppCommand, AppInput> {
+             return error;
+         }
+         var definition = found.Value;
+-        var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
+-        var dlls = app.Concat(bin.ExternalDlls(externals)).Concat(bin.ReferencedDlls(app, skip)).Distinct().ToList();
++        var dlls = app.Concat(bin.ReferencedDlls(app, skip)).Distinct().ToList();
+         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
+     }
+ 
