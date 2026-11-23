@@ -8,7 +8,7 @@ using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
 public sealed class FolderAliasConfigTests {
-    const string ModuleClass = "public sealed class {0} : Umpire.Kernels.Module {{ public override void Configure("
+    const string ModuleClass = "public sealed class {0} : Umpire.Kernels.Module {{ protected override void Configure("
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
     const string AppAliases = """
         [umpire.check.folder_aliases]

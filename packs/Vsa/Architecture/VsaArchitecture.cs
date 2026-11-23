@@ -3,7 +3,7 @@ namespace Umpire.Vsa.Definition;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Kernels.Blocks;
-using Core = Umpire.Kernels.Core;
+using Core = Umpire.Kernels.Blocks.Core;
 using CoreArchitecture = Umpire.Kernels.CoreArchitecture;
 using MessagesComponent = Umpire.Kernels.MessagesComponent;
 using MessagesParts = Umpire.Kernels.MessagesParts;

@@ -7,8 +7,8 @@ public abstract class Module {
 
     protected internal virtual int Order => 1;
 
-    public virtual void Configure(IServiceCollection services) {
-    }
+    public virtual void Install(IServiceCollection services, ModuleSettings settings) => Configure(services);
 
-    internal virtual void Compose(IServiceCollection services, ModuleSettings settings) => Configure(services);
+    protected virtual void Configure(IServiceCollection services) {
+    }
 }

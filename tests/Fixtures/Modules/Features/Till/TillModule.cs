@@ -6,7 +6,7 @@ using Till.Domain.Shared;
 using Umpire.Kernels;
 
 public sealed class TillModule : Module {
-    public override void Configure(IServiceCollection services) {
+    protected override void Configure(IServiceCollection services) {
         services.AddSingleton<TillLog>();
         services.AddSingleton<Register>();
         services.AddSingleton(typeof(IStock<>), typeof(Stock<>));

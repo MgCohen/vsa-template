@@ -7,7 +7,7 @@ using Umpire.Vsa.Handlers.Commands;
 using Umpire.Kernels;
 
 public sealed class ArenaModule : Module {
-    public override void Configure(IServiceCollection services) {
+    protected override void Configure(IServiceCollection services) {
         services.AddSingleton<ArenaLog>();
         services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))

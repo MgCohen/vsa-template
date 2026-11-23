@@ -9,7 +9,7 @@ using Umpire.Vsa.Handlers.Commands;
 using Umpire.Kernels;
 
 public sealed class StepsPlugin : Plugin {
-    public override void Configure(IServiceCollection services) {
+    protected override void Configure(IServiceCollection services) {
         services.AddScoped<StepLog>();
         services.AddScoped<RunOptions>();
         services.AddPipeline(new PipelineBuilder<IEngineStep>()

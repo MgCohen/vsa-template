@@ -6,6 +6,6 @@ using Umpire.Kernels;
 public sealed class LastModule : Module {
     protected internal override int Order => 2;
 
-    public override void Configure(IServiceCollection services) =>
+    protected override void Configure(IServiceCollection services) =>
         services.AddSingleton(new ComposeOrderTests.Step("module:2"));
 }

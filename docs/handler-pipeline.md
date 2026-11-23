@@ -132,7 +132,7 @@ A pipeline names types only: the message base, the handlers, the hook bases, the
 
 ```csharp
 public sealed class ArenaModule : Module {
-    public override void Configure(IServiceCollection services) {
+    protected override void Configure(IServiceCollection services) {
         services.AddSingleton<ArenaLog>();
         services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))

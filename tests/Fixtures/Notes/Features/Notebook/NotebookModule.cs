@@ -7,7 +7,7 @@ using Umpire.Vsa.Infrastructure;
 using Umpire.Kernels;
 
 public sealed class NotebookModule : Module {
-    public override void Configure(IServiceCollection services) {
+    protected override void Configure(IServiceCollection services) {
         services.AddSingleton<NoteStore>();
         services.AddScoped<IRepository<Note, NoteId>, NoteRepository>();
     }

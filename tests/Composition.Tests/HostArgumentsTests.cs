@@ -49,7 +49,7 @@ public sealed class HostArgumentsTests {
     public sealed record Probe(string? Value);
 
     public sealed class ProbeModule : Module {
-        public override void Configure(IServiceCollection services) =>
+        protected override void Configure(IServiceCollection services) =>
             services.AddSingleton(provider => new Probe(provider.GetRequiredService<IConfiguration>()["Probe:Value"]));
     }
 }

@@ -5,5 +5,5 @@ using Resources.Domain;
 using Umpire.Kernels;
 
 public sealed class ResourcesModule : Module {
-    public override void Configure(IServiceCollection services) => services.AddSingleton<Wallet>();
+    protected override void Configure(IServiceCollection services) => services.AddSingleton<Wallet>();
 }

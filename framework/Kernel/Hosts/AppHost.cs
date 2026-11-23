@@ -26,11 +26,12 @@ public class AppHost : IDisposable {
     }
 
     public void Compose(IServiceCollection services, IConfiguration configuration, Kernel kernel, AppTypes types) {
-        kernel.Install(services, types, configuration);
+        new Core(configuration).Install(services, types);
+        kernel.Install(services, types);
         var kernelServices = OpenDescriptors.Snapshot(services);
         var settings = new ModuleSettings(Settings(types));
         foreach (var module in types.Modules) {
-            module.Compose(services, settings);
+            module.Install(services, settings);
         }
         CloseOpenDescriptors(services, types, kernelServices);
         Configure(services, types);

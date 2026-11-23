@@ -96,7 +96,7 @@ public sealed class SettingsTests {
     sealed class SamplePlugin : Plugin<SampleSettings> {
         public SampleSettings? Settings { get; private set; }
 
-        public override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
+        protected override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
     }
 
     public sealed class SampleSettings {
@@ -110,7 +110,7 @@ public sealed class SettingsTests {
     sealed class SampleModule : Module<SampleSettings> {
         public SampleSettings? Settings { get; private set; }
 
-        public override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
+        protected override void Configure(IServiceCollection services, SampleSettings settings) => Settings = settings;
 
         protected override IEnumerable<string> Validate(SampleSettings settings) {
             if (settings.Name == "bad") {
