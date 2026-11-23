@@ -13,5 +13,6 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/ShellApp/ShellApp.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Spike/Charlie/Spike.Charlie.csproj" />
+    <ProjectReference Include="$(RepoRoot)tools/bundle/Umpire/Umpire.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

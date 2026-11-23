@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Definition;
+using VsaKernel = Umpire.Vsa.Composition.VsaKernel;
 
 public sealed class TestPack<THost>(IReadOnlyList<Module> modules) : Pack where THost : AppHost, ITestHost, new() {
     public IReadOnlyList<Action<IServiceCollection>> Configure { get; set; } = [];

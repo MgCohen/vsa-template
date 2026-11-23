@@ -4,6 +4,7 @@ sealed class PartOf {
     readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<Part> folderParts;
     readonly IReadOnlyList<Part> blockPlaces;
+    readonly IReadOnlyList<Part> dllPlaces;
     readonly IReadOnlyList<FolderAlias> aliases;
     readonly string blockFolder;
     readonly IReadOnlyList<string> innerBlocks;
@@ -14,6 +15,7 @@ sealed class PartOf {
         this.resolved = resolved;
         folderParts = [.. resolved.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
         blockPlaces = [.. folderParts.Where(p => p.IsBlockPlace)];
+        dllPlaces = [.. blockPlaces.Where(p => !p.IsGroup && p.Concept is Blocks.Block && p.Children.Count > 0)];
         aliases = [.. resolved.Architecture.FolderAliases(blockFolder), .. folderAliases];
         this.blockFolder = blockFolder;
         this.innerBlocks = [.. innerBlocks.Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)];
@@ -44,6 +46,12 @@ sealed class PartOf {
         }
         var file = Path.GetFullPath(source.File);
         var relative = Path.GetRelativePath(blockFolder, file).Replace('\\', '/');
+        if (Outside(relative)) {
+            if (InPlacedBlock(file, type, source with { File = file }) is { } placed) {
+                bound.Add(placed);
+            }
+            return;
+        }
         var paths = PathsInBlock(relative);
         if (paths.Count == 0 || BuildOutput.Contains(relative)) {
             return;
@@ -66,6 +74,46 @@ sealed class PartOf {
             bound.Add(BindTo(match, type, located));
         }
     }
+
+    static bool Outside(string relative) => relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative);
+
+    Binding? InPlacedBlock(string file, TypeFacts type, Source located) {
+        var segments = file.Replace('\\', '/').Split('/');
+        var found = dllPlaces
+            .SelectMany(place => RootsOf(place, segments).Select(rest => new PlacedRoot(place, rest)))
+            .ToList();
+        var places = found.Select(f => f.Place).Distinct().ToList();
+        if (places.Count > 1) {
+            throw new InvalidOperationException(
+                $"{type.FullName} ({file}) is in the folders of {string.Join(" and ", places.Select(p => p.Name))}. "
+                + "The engine looked in the source paths of a DLL and found two block roots. "
+                + "Give one block record a longer Folder, for example \"Vsa/Kernel\".");
+        }
+        if (found.Count == 0) {
+            return null;
+        }
+        var root = found[0];
+        var relative = $"{root.Place.Path}/{root.Rest}";
+        var match = Folder([relative], root.Place);
+        return match is null ? null : BindTo(match, type, located) with { FromDll = true };
+    }
+
+    static IEnumerable<string> RootsOf(Part place, string[] segments) {
+        var root = place.Concept!.Folder.Split('/');
+        var bodyFolders = place.Children
+            .Where(c => c.HasFolder && c.Path.Length > place.Path.Length)
+            .Select(c => c.Path[(place.Path.Length + 1)..].Split('/')[0])
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        for (var start = 0; start + root.Length < segments.Length - 1; start++) {
+            var next = segments[start + root.Length];
+            if (root.Select((s, i) => string.Equals(s, segments[start + i], StringComparison.OrdinalIgnoreCase)).All(x => x)
+                && bodyFolders.Contains(next)) {
+                yield return string.Join("/", segments[(start + root.Length)..]);
+            }
+        }
+    }
+
+    sealed record PlacedRoot(Part Place, string Rest);
 
     bool IsInBlock(TypeFacts type) =>
         type.Source is { } source && !Path.GetRelativePath(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
@@ -105,9 +153,10 @@ sealed class PartOf {
     static string Rest(FolderAlias alias, string relative) =>
         IsRoot(alias) ? relative : relative[(alias.Folder.TrimEnd('/').Length + 1)..];
 
-    FolderMatch? Folder(IReadOnlyList<string> paths) => paths
+    FolderMatch? Folder(IReadOnlyList<string> paths, Part? within = null) => paths
         .Select(path => path.Split('/')[..^1])
         .SelectMany(folders => folderParts
+            .Where(p => within is null || p.SelfAndAncestors().Contains(within))
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
             .Where(m => m.Matches))
         .OrderByDescending(m => m.Pattern.Length)

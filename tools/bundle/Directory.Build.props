@@ -1,11 +1,15 @@
 <Project>
-  <!-- The bundle projects compile the source files of the runtime projects into the shipped assemblies. The runtime projects stay
-       for development: their references enforce the layers. The bundles are the packages. Each file comes from the folder of its
-       runtime project, so a new file is in the bundle with no change here (BundleSourceTests). -->
+  <!-- The bundle projects compile the source files of the runtime projects into the shipped assemblies. The runtime
+       projects stay for development: their references enforce the layers. The bundles are the packages. Each file comes
+       from the folder of its runtime project, so a new file is in the bundle with no change here (BundleSourceTests).
+       The shipped assemblies embed their PDB, with the source paths under /_/, so that the rule engine finds the block
+       of each type (decision d47). -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <UmpireRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</UmpireRoot>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <_UmpireNotBundled>$(UmpireRoot)**/artifacts~/**;$(UmpireRoot)**/bin/**;$(UmpireRoot)**/obj/**</_UmpireNotBundled>
+    <DebugType>embedded</DebugType>
+    <PathMap>$(UmpireRoot)=/_/</PathMap>
   </PropertyGroup>
 </Project>

@@ -109,9 +109,15 @@ public sealed class BlockPlaceTests {
 
     [Test]
     public void A_place_with_no_block_is_a_problem() {
+        Directory.CreateDirectory(Path.Combine(block, "Tools"));
         var empty = Resolved().EmptyPlaces(block, []);
 
         Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Tools") }));
+    }
+
+    [Test]
+    public void A_place_with_no_folder_is_the_DLL_form_and_no_problem() {
+        Assert.That(Resolved().EmptyPlaces(block, []), Is.Empty);
     }
 
     [Test]

@@ -3,6 +3,7 @@ namespace Framework.Tests.Host;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Definition;
+using VsaKernel = Umpire.Vsa.Composition.VsaKernel;
 
 sealed class TestPack(Func<AppHost> create) : Pack {
     public override Umpire.Architecture.Architecture Architecture { get; } = new VsaArchitecture();

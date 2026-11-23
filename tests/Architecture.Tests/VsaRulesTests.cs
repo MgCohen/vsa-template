@@ -39,9 +39,9 @@ public sealed class VsaRulesTests {
         Assert.That(owners, Is.EqualTo(new[] { "Contracts.Requests" }));
     }
 
-    [TestCase("Kernel", "Composition", Permission.Allow)]
-    [TestCase("Kernel", "Hosts", Permission.Allow)]
-    [TestCase("Kernel", "Domain", Permission.Deny)]
+    [TestCase("VsaKernel", "Composition", Permission.Allow)]
+    [TestCase("FrameworkKernel", "Hosts", Permission.Allow)]
+    [TestCase("VsaKernel", "Domain", Permission.Deny)]
     [TestCase("Feature", "RootClass", Permission.Allow)]
     [TestCase("Plugin", "RootClass", Permission.Allow)]
     [TestCase("Feature", "Domain", Permission.Deny)]
@@ -54,7 +54,7 @@ public sealed class VsaRulesTests {
     [TestCase("Presenters", "Feature", "Domain.Shared", "A")]
     [TestCase("Presenters", "Feature", "Domain.Shared", "B")]
     [TestCase("Presenters", "Plugin", "Domain.Shared", "A")]
-    [TestCase("Presenters", "Kernel", "Contracts.Events", "A")]
+    [TestCase("Presenters", "VsaKernel", "Contracts.Events", "A")]
     [TestCase("RootClass", "Feature", "Domain.Shared", "B")]
     [TestCase("RootClass", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
@@ -65,7 +65,7 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var decision = MayUse(Place("Feature", "RootClass"), Place("Kernel", "Domain"));
+        var decision = MayUse(Place("Feature", "RootClass"), Place("VsaKernel", "Domain"));
 
         Assert.That((decision.Permission, decision.Rule?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
@@ -91,12 +91,8 @@ public sealed class VsaRulesTests {
     }
 
     [Test]
-    public void The_pack_assembly_binds_to_the_kernel_and_the_app_host_uses_it() {
-        var kernel = Resolved.ExternalPart("Umpire.Vsa");
-
-        Assert.That(kernel?.Name, Is.EqualTo("Kernel"));
-        Assert.That(MayUse(Place("(root)", "Host"), new PartPlace(kernel!, new Dictionary<string, string>())).Permission,
-            Is.EqualTo(Permission.Allow));
+    public void The_app_host_uses_the_framework_kernel() {
+        Assert.That(MayUse(Place("(root)", "Host"), Place("FrameworkKernel", "KernelParts.App")).Permission, Is.EqualTo(Permission.Allow));
     }
 
     [TestCase("Contracts.Requests")]
@@ -151,19 +147,36 @@ public sealed class VsaRulesTests {
             Is.EquivalentTo(new[] { typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
     }
 
-    [TestCase("Umpire.Vsa.Contracts.Requests.IRequestSender", "Contracts.Requests")]
-    [TestCase("Umpire.Vsa.Handlers.Commands.CommandHandler`2", "Handlers.Commands")]
-    [TestCase("Umpire.Messages.Contracts.Envelope`1", "Contracts")]
-    [TestCase("Umpire.Vsa.Domain.Entity`1+Key", "Domain")]
-    [TestCase("Umpire.Hosts.Web.WebHost", "Hosts")]
-    [TestCase("Umpire.Kernels.App", "Kernel")]
-    public void A_type_of_the_one_runtime_DLL_binds_to_the_part_of_its_namespace(string type, string part) =>
-        Assert.That(Resolved.ExternalPart("Umpire", type)?.Name, Is.EqualTo(part));
+    [TestCase("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", "Contracts.Requests", "VsaKernel")]
+    [TestCase("/_/packs/Vsa/Kernel/Handlers/Commands/CommandHandler.cs", "Handlers.Commands", "VsaKernel")]
+    [TestCase("/_/framework/Components/Messages/Contracts/Envelope.cs", "MessagesParts.Contracts", "MessagesComponent")]
+    [TestCase("C:/repo/packs/Vsa/Kernel/Domain/Entity.cs", "Domain", "VsaKernel")]
+    [TestCase("/_/framework/Kernel/Hosts/Web/WebHost.cs", "Hosts", "FrameworkKernel")]
+    [TestCase("/_/framework/Kernel/App/App.cs", "KernelParts.App", "FrameworkKernel")]
+    public void A_type_of_a_DLL_binds_to_the_body_part_of_its_source_path(string file, string part, string block) {
+        var type = new TypeFacts("Umpire.Some.Type", "Type", "Umpire", new Source(file, 1), [], [], [], []);
+
+        var bound = Resolved.Place([type], Path.GetFullPath("Demo")).Of(type.FullName);
+
+        Assert.Multiple(() => {
+            Assert.That(bound?.Part.Name, Is.EqualTo(part));
+            Assert.That(bound?.Part.SelfAndAncestors().Select(p => p.Name), Does.Contain(block));
+            Assert.That(bound?.External, Is.True);
+        });
+    }
+
+    [Test]
+    public void A_type_of_a_DLL_with_no_folder_of_a_placed_block_is_not_bound() {
+        var type = new TypeFacts("Other.Type", "Type", "Other", new Source("/_/src/Other/Type.cs", 1), [], [], [], []);
+
+        Assert.That(Resolved.Place([type], Path.GetFullPath("Demo")).Of(type.FullName), Is.Null);
+    }
 
     [Test]
     public void A_domain_use_of_a_request_sender_in_the_one_runtime_DLL_is_denied() {
         var block = Path.GetFullPath("Demo");
-        var sender = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire", null, [], [], [], []);
+        var sender = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire",
+            new Source("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", 1), [], [], [], []);
         var order = AppType(block, "Demo.Features.Shop.Domain.Order", "Features/Shop/Domain/Order.cs") with { Mentions = [sender.FullName] };
 
         var bindings = Resolved.Place([order, sender], block);

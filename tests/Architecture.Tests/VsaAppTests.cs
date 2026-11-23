@@ -52,7 +52,7 @@ public sealed class VsaAppTests {
     [TestCase(Notebook + "Slices/Pong/PongHandler.cs", "UMP020302", "takes PingRequest in Contracts.Requests")]
     [TestCase("VsaApp/Features/Twin/TwinExtraModule.cs", "UMP020301", "Feature Features/Twin has 2 RootClass types")]
     [TestCase("VsaApp/Features/Rogue/RoguePlugin.cs", "UMP020101", "the rule \"RootClass Under<Feature> denies Composition\" denies it")]
-    [TestCase("VsaApp/Plugins/Stray/StrayModule.cs", "UMP020101", "uses Module in Kernel")]
+    [TestCase("VsaApp/Plugins/Stray/StrayModule.cs", "UMP020101", "uses Module in KernelParts.Modules")]
     [TestCase("VsaApp/Plugins/Stray/StrayModule.cs", "UMP020301", "Plugin Plugins/Stray has 0 RootClass types")]
     [TestCase("VsaApp/Plugins/Tools/Infrastructure/NoteReader.cs", "UMP020101", "the rule \"Plugin denies Feature\" denies it")]
     public void The_VSA_app_gives_the_finding_of_each_case(string file, string code, string text) {
