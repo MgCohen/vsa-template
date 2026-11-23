@@ -58,7 +58,7 @@ public sealed class BlockBodyTests {
         var parts = Parts(root => {
             root.AddBlock<Crate>();
             root.Add<Group>().AddBlock<Crate>();
-            root.Extend<Crate>().Add<User>();
+            root.For<Crate>().Add<User>();
         });
 
         Assert.That(parts, Is.EqualTo(new[] { "Crate", "Child", "User", "Group", "Crate", "Child", "User" }));
@@ -68,7 +68,7 @@ public sealed class BlockBodyTests {
     public void An_overlay_of_a_base_kind_covers_a_derived_kind() {
         var parts = Parts(root => {
             root.AddBlock<LargeCrate>();
-            root.Extend<Crate>().Add<User>();
+            root.For<Crate>().Add<User>();
         });
 
         Assert.That(parts, Does.Contain("User"));
@@ -76,9 +76,9 @@ public sealed class BlockBodyTests {
 
     [Test]
     public void An_overlay_with_no_placed_block_is_an_error() {
-        var error = Assert.Throws<InvalidOperationException>(() => Parts(root => root.Extend<Crate>().Add<User>()))!;
+        var error = Assert.Throws<InvalidOperationException>(() => Parts(root => root.For<Crate>().Add<User>()))!;
 
-        Assert.That(error.Message, Does.Contain("Extend<Crate>() finds no placed Crate"));
+        Assert.That(error.Message, Does.Contain("For<Crate>() finds no placed Crate"));
     }
 
     [Test]

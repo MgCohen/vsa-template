@@ -76,7 +76,8 @@ public class VsaArchitecture : Architecture {
 | `And<T>()` | A sibling part. It returns a `PartGroup`: the next call applies to each part in it |
 | `AddGroup<T>()` | A group: one part instance for each subfolder. It returns a `PartGroup` |
 | `AddBlock<T>()` | The place of the block `T` in its folder. The place gets the body of the record `T` (see "Blocks and check entries") |
-| `Extend<T>()` | An overlay: the next `Add` adds a part to each placed block of kind `T`. It cannot remove a part |
+| `For<T>()` | A find: `For<T>().Add<TPart>()` adds a part to each placed part of concept `T`, a block or a plain concept. `Under<S>()` narrows the find, and more `Under` calls go deeper. `For<T>().ExtendedBy<TBlock>()` stacks the body of the block record on each found part and adds its rules one time. A find with no match is an error. It only adds: it cannot remove, move or replace a part |
+| Two `Add<T>()` calls | Two calls of one concept under one parent give one part: the second call returns the first part. Two different concepts with one folder under one parent give a Define error |
 | `AddBlockGroup<T>()` | Each subfolder of the folder of `T` is the place of another block, for example `Packs/<Name>/` |
 | `InParentFolder()` | The part shares the folder of its parent. Give it `OfType`, or give its concept `OfTypes` |
 | `OfType<T>(required)` | Each type of the part must be assignable to `T`. `required: true` also needs one type of `T` in each instance (see "Required") |
@@ -126,7 +127,7 @@ The body of each block is in its record: `Feature`, `Plugin`, `Slice` and the ke
 ```csharp
 public sealed class UnityTestArchitecture : VsaArchitecture {
     protected override void Define(Part root) {
-        root.Extend<Feature>().Add<PlayTests>();
+        root.For<Feature>().Add<PlayTests>();
     }
 }
 ```
@@ -330,7 +331,7 @@ A name rule is a call on the part, in `Define`. A trait rule and a place rule ar
 
 ```csharp
 protected override void Define(Part root) {
-    root.Extend<Feature>().Add<CliCommand>().NamedAfterGroup();
+    root.For<Feature>().Add<CliCommand>().NamedAfterGroup();
 }
 
 protected override void Rules(RuleBook rules) {
@@ -592,7 +593,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 - For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).
 - A typed base counts only for a type that is not abstract. Thus `Pack` (abstract, in `framework/Kernel/`) gives no entry, and `Vsa<THost>` gives one. Two types of one form with one architecture in one folder are one entry.
 - The nearest block wins: a source file belongs to the deepest block folder above it.
-- The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The place gets the body of its record, and an overlay (`Extend<T>()`) can add parts to it. The outer definition adds no other part to a place. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
+- The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The place gets the body of its record, and an overlay (`For<T>().Add<TPart>()` or `For<T>().ExtendedBy<TBlock>()`) can add parts to it. The outer definition adds no other part to a place. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
 - An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place folder with no check entry gives `UMP020402`. A place of a block with a body and no folder is the DLL form: its types bind by their PDB path (see "Binding"). A place with no body and no folder gives `UMP020402`.
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
 - After the check of the block, the run checks each used block with its own definition, the same bin and the same steps (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
