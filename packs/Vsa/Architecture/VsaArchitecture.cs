@@ -12,6 +12,7 @@ public class VsaArchitecture : CoreArchitecture {
     protected override void Configure(ArchitectureConfig config) {
         config.Defaults.UseSameConcept = true;
         config.Defaults.Boundary = Boundary.Closed;
+        config.Roots.Add<App>("App");
         config.Roots.Add<Views>();
     }
 

@@ -84,8 +84,8 @@ public class Part : IPartChain {
         return Attach(new Part(record, folder ?? record.Folder, this));
     }
 
-    internal Part AddRoot(Concept record) =>
-        Attach(new Part(record, record.Folder.Length == 0 ? null : record.Folder, this,
+    internal Part AddRoot(Concept record, string? folder) =>
+        Attach(new Part(record, (folder ?? record.Folder) is { Length: > 0 } path ? path : null, this,
             blockPlace: record is Block and not App and not Definition));
 
     internal Part AddKernelRoot() {
