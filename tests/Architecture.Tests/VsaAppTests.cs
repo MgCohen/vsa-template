@@ -79,6 +79,14 @@ public sealed class VsaAppTests {
     }
 
     [Test]
+    public void A_settings_module_with_a_nested_type_and_a_lambda_gives_no_count_finding() {
+        Assert.Multiple(() => {
+            Assert.That(VsaMap.Value.Bindings.Of("VsaApp.Features.Settled.SettledModule")?.Part.Name, Is.EqualTo("Feature"));
+            Assert.That(Findings, Has.None.Contains("Features/Settled/"));
+        });
+    }
+
+    [Test]
     public void The_VSA_app_gives_only_the_known_findings() {
         var actual = Findings.Select(line => line[..(line.IndexOf("error ", StringComparison.Ordinal) + "error UMP000000".Length)]);
 

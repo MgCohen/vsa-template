@@ -218,7 +218,7 @@ internal sealed class Compiler {
             var self = count.Subjects.All(entry => entry.Depth == Depth.Self);
             return new CountStatement(text, subjects, false,
                 b => (counted == typeof(object) || b.Type.Is(counted)) && (!self || subjects.Contains(b.Part)),
-                counted == typeof(object) ? "types" : $"types of {counted.Name}", count.Min, count.Max, count.OneKind, PerPart: true);
+                counted == typeof(object) ? "types" : $"types of {counted.Name}", count.Min, count.Max, count.OneKind, PerPart: true, SkipTaken: counted == typeof(object));
         }
         RefuseNoFamily(counted, text);
         return new CountStatement(text, subjects, false,

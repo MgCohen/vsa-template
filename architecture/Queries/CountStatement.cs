@@ -9,4 +9,5 @@ internal sealed record CountStatement(
     int? Min,
     int? Max,
     bool OneKind,
-    bool PerPart = false);
+    bool PerPart = false,
+    bool SkipTaken = false);
