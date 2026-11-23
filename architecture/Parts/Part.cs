@@ -6,6 +6,7 @@ public class Part : IPartChain {
     readonly List<Part> children = [];
     readonly List<Type> types = [];
     readonly Dictionary<Type, bool> requiredAtCallSite = [];
+    readonly HashSet<Type> stacked = [];
     Options options = new();
     string? folder;
     bool open;
@@ -24,6 +25,7 @@ public class Part : IPartChain {
     public bool IsGroup { get; }
     public bool IsBlockPlace { get; }
     public bool HasFolder => folder is not null;
+    internal string? Folder => folder;
     public string? Assembly => Concept is External library ? library.Assembly : null;
     public bool IsExternal => Assembly is not null;
     public IReadOnlyList<Part> Children => children;
@@ -33,6 +35,7 @@ public class Part : IPartChain {
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
     internal NamePattern? NamePattern { get; private set; }
     internal IReadOnlyList<Type> Placers { get; set; } = [];
+    internal List<Extension> Extensions { get; } = [];
 
     public string Path {
         get {
@@ -49,22 +52,17 @@ public class Part : IPartChain {
 
     public Part Add<T>() where T : Concept, new() {
         var concept = new T();
-        return Attach(new Part(concept, concept is RootClass ? null : concept.Folder, this));
+        var part = new Part(concept, concept is RootClass ? null : concept.Folder, this);
+        RefuseInBlockPlace(part);
+        if (children.FirstOrDefault(c => c.Concept!.GetType() == typeof(T) && !c.IsGroup && !c.IsBlockPlace) is { } added) {
+            return added;
+        }
+        return Attach(part);
     }
 
     public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() => new([Group<T>(folder, null)]);
 
-    public PartGroup Extend<T>() where T : Block {
-        var placed = Walk().Where(p => p.Is(typeof(T))).ToList();
-        if (placed.Count == 0) {
-            throw new InvalidOperationException(
-                $"Define: Extend<{Concept.Display(typeof(T))}>() finds no placed {Concept.Display(typeof(T))}. Place the block first, or remove the overlay.");
-        }
-        foreach (var part in placed) {
-            part.open = true;
-        }
-        return new(placed);
-    }
+    public PartFind For<T>() where T : Concept => new(this, typeof(T));
 
     public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() => new([Group<T>(folder, boundary)]);
 
@@ -72,12 +70,46 @@ public class Part : IPartChain {
 
     public Part AddBlock<T>(string? folder = null) where T : Concept, new() {
         var concept = new T();
-        return Attach(new Part(concept, folder ?? concept.Folder, this, blockPlace: true));
+        var part = new Part(concept, folder ?? concept.Folder, this, blockPlace: true);
+        RefuseInBlockPlace(part);
+        if (children.FirstOrDefault(c => c.Concept!.GetType() == typeof(T) && !c.IsGroup && c.IsBlockPlace && c.folder == part.folder) is { } placed) {
+            return placed;
+        }
+        return Attach(part);
     }
 
     internal Part AddOf(Type concept, string? folder) {
         var record = (Concept)Activator.CreateInstance(concept)!;
         return Attach(new Part(record, folder ?? record.Folder, this));
+    }
+
+    internal void AddExtension(Extension extension) => SelfAndAncestors().Last().Extensions.Add(extension);
+
+    internal T Overlay<T>(Func<Part, T> add) {
+        var wasOpen = open;
+        open = true;
+        try {
+            return add(this);
+        } finally {
+            open = wasOpen;
+        }
+    }
+
+    internal void StackBody(Block body) {
+        if (stacked.Contains(body.GetType())) {
+            return;
+        }
+        stacked.Add(body.GetType());
+        var placers = Placers;
+        Placers = Owners.Home(body) is { Count: > 0 } home ? home : Placers;
+        try {
+            Overlay(part => {
+                body.DefinePart(part);
+                return part;
+            });
+        } finally {
+            Placers = placers;
+        }
     }
 
     public Part AddBlockGroup<T>(string? folder = null) where T : Concept, new() {

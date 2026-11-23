@@ -55,7 +55,7 @@ Each block kind has a record in `Umpire.Architecture.Blocks`: `Pack`, `Kernel`, 
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
 | Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, the key `umpire.architecture` in a `.umpireconfig` file |
 | Block place | A folder that an outer definition marks as the place of another block. The place gets the body of the record | `AddBlock<T>()`, `AddBlockGroup<T>()` |
-| Overlay | A part that a definition adds to each placed block of a kind | `Extend<T>().Add<TPart>()` |
+| Overlay | A part that a definition adds to each placed part of a concept | `For<T>().Add<TPart>()`, `For<T>().ExtendedBy<TBlock>()` |
 | Owner | The architecture that a concept belongs to. Only the owner or a derived architecture can place it | `OwnedBy`, `IOwnedBy<T>`, `Concept<TOwner>` |
 | Concept | A kind of part that a definition names. It has data only | `Concept`, `External`, `Block`, `Layer`, `OfTypes` |
 | Part | One place in the folder tree of a definition | `Part`, `PartGroup` |

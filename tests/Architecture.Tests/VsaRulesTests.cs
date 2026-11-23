@@ -216,7 +216,7 @@ public sealed class VsaRulesTests {
 
     sealed class ExtraFeaturePart : VsaArchitecture {
         protected override void Define(Part root) {
-            root.Extend<Umpire.Vsa.Definition.Feature>().Add<Extra>();
+            root.For<Umpire.Vsa.Definition.Feature>().Add<Extra>();
         }
     }
 

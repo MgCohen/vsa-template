@@ -96,7 +96,7 @@ The body of each base group is in its record: `Feature.Define`, `Plugin.Define`,
 
 ```csharp
 protected override void Define(Part root) {
-    root.Extend<Feature>().Add<Systems>();
+    root.For<Feature>().Add<Systems>();
 }
 ```
 
@@ -157,12 +157,12 @@ A plugin module has the layer folders of the framework. Another folder gives `UM
 
 | Case | Form |
 |---|---|
-| Each plugin can have the folder | Add the concept with `Extend<Plugin>()`, and write rules with `Under<Plugin>()` |
+| Each plugin can have the folder | Add the concept with `For<Plugin>().Add<T>()`, and write rules with `Under<Plugin>()` |
 | Only some plugins have the folder | Add a new plugin kind with its own group folder, as `EcsFeature` |
 
 ```csharp
 protected override void Define(Part root) {
-    root.Extend<Plugin>().Add<Runners>();
+    root.For<Plugin>().Add<Runners>();
 }
 
 protected override void Rules(RuleBook rules) {

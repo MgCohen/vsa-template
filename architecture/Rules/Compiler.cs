@@ -11,12 +11,16 @@ internal sealed class Compiler {
         architecture.DefineRoot(Root);
         Parts = [.. Root.Walk().Skip(1)];
         CheckShared();
+        CheckSameFolder();
         foreach (var part in Parts) {
             partOptions[part] = part.Options.Over(Options);
         }
         book = new RuleBook(Root);
         foreach (var block in Parts.Select(p => p.Concept).OfType<Blocks.Block>().GroupBy(b => b.GetType()).Select(g => g.First())) {
             block.AddRules(book.Of(block.GetType()));
+        }
+        foreach (var extension in Root.Extensions.GroupBy(e => new ExtensionKey(e.Body.GetType(), e.Target, string.Join(",", e.Under))).Select(g => g.First())) {
+            extension.Body.AddRules(book.Of(extension.Target, extension.Under));
         }
         architecture.AddRules(book);
         Parts = [.. Parts, .. RuleExternals()];
@@ -79,6 +83,18 @@ internal sealed class Compiler {
     }
 
     Options OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
+
+    void CheckSameFolder() {
+        var clash = Parts.Where(p => p.HasFolder && p.Folder!.Length > 0)
+            .GroupBy(p => p.Path.ToUpperInvariant())
+            .Select(g => g.ToList())
+            .FirstOrDefault(parts => parts.Select(p => p.Concept!.GetType()).Distinct().Count() > 1 && !parts.All(p => p.IsBlockPlace));
+        if (clash is not null) {
+            throw new InvalidOperationException(
+                $"Define: {string.Join(" and ", clash.Select(p => p.Name).Distinct())} have the same folder \"{clash[0].Folder}\" "
+                + $"at {clash[0].Path}. Two concepts cannot share one folder. Give one of them another Folder.");
+        }
+    }
 
     void CheckShared() {
         var groups = Parts.Where(p => !p.HasFolder && !p.IsGroup).GroupBy(p => p.Parent).Where(g => g.Count() > 1);

@@ -8,7 +8,7 @@ using static Spike.Charlie.Definition.CharlieParts;
 public sealed class CharlieArchitecture : AlphaArchitecture {
     protected override void Define(Part root) {
         root.Add<C1>();
-        root.Extend<Zulu>().Add<Z3>();
+        root.For<Zulu>().Add<Z3>();
     }
 
     protected override void Rules(RuleBook rules) {

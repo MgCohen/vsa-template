@@ -8,11 +8,12 @@ public sealed class RuleBook {
     internal readonly List<PlaceLimit> Places;
     readonly Part block;
 
-    internal RuleBook(Part block) : this(block, null, [], [], [], [], []) { }
+    internal RuleBook(Part block) : this(block, null, [], [], [], [], [], []) { }
 
-    RuleBook(Part block, Type? scope, List<Rule> rules, List<Count> counts, List<Match> matches, List<TraitRule> traits, List<PlaceLimit> places) {
+    RuleBook(Part block, Type? scope, IReadOnlyList<Type> under, List<Rule> rules, List<Count> counts, List<Match> matches, List<TraitRule> traits, List<PlaceLimit> places) {
         this.block = block;
         Scope = scope;
+        Under = under;
         Rules = rules;
         Counts = counts;
         Matches = matches;
@@ -21,8 +22,11 @@ public sealed class RuleBook {
     }
 
     internal Type? Scope { get; }
+    internal IReadOnlyList<Type> Under { get; }
 
-    internal RuleBook Of(Type concept) => new(block, concept, Rules, Counts, Matches, Traits, Places);
+    internal RuleBook Of(Type concept) => Of(concept, []);
+
+    internal RuleBook Of(Type concept, IReadOnlyList<Type> under) => new(block, concept, under, Rules, Counts, Matches, Traits, Places);
 
     internal List<Entry> InScope(List<Entry> entries, string call = "For") {
         if (Scope is { } concept) {
@@ -30,6 +34,7 @@ public sealed class RuleBook {
             foreach (var entry in entries.Where(e => e.Target != concept && !e.Filters.Contains(under))) {
                 RefuseOutOfScope(entry.Target, call);
                 entry.Filters.Add(under);
+                entry.Filters.AddRange(Under.Select(type => new Filter(FilterKind.Under, type)).Where(filter => !entry.Filters.Contains(filter)));
             }
         }
         return entries;

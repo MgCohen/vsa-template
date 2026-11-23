@@ -93,7 +93,7 @@ The framework kernel and each component have one install point. **Not enforced i
 |---|---|
 | A source file belongs to the nearest block folder above it | Checked (`FindBlocks`) |
 | `AddBlock<T>()` marks a place, and the place gets the body of the record `T` | Checked (binding) |
-| The outer definition adds no part to a block place directly. An overlay `Extend<T>()` adds a part to each placed block of kind `T` | Checked (`Define` error) |
+| The outer definition adds no part to a block place directly. An overlay `For<T>().Add<TPart>()` adds a part to each placed part of concept `T` | Checked (`Define` error) |
 | A block that places itself, directly or through another block, is an error | Checked (`Define` error) |
 | A part that covers the folder of an inner block is an error | Checked (`UMP020401`) |
 | A place folder with no check entry is an error. A place with no folder is the DLL form | Checked (`UMP020402`) |
