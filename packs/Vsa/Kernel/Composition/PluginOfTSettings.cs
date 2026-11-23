@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernels;
 
 public abstract class Plugin<TSettings> : Plugin where TSettings : class, new() {
-    public sealed override void Install(IServiceCollection services, ModuleSettings settings) =>
+    internal sealed override void InstallWith(IServiceCollection services, ModuleSettings settings) =>
         Configure(services, settings.Use<TSettings>(services, this, Validate));
 
     protected sealed override void Configure(IServiceCollection services) {

@@ -88,6 +88,7 @@ The app part `Host` is the folder `App/Host/` of the app, for custom host code o
 |---|---|
 | `Host` uses `Composition`, the core (`Core`, with `Hosts`) and `UmpireLibraries` | `UMP020101` |
 | `Host` uses the module class of a module (`For<Host>().Uses<Module>(Depth.Self)`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
+| The top of a module folder holds only the module class: exactly one `Umpire.Kernels.Module` class, and at most one type (`For<Module>(Depth.Self).HasTypes<object>().AtMost(1)`). Move a helper into a layer folder | `UMP020301` |
 | The `App` root (`Depth.Self`) uses `Host`, `Definition`, `Composition`, `Core`, `UmpireLibraries` and `Pack` | `UMP020101` |
 | `Views` uses the `Hosts` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 

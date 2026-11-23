@@ -150,7 +150,6 @@ using Umpire.Vsa.Definition;
 | `App` is the record and the namespace `<App>.App` | 1 |
 | `Pack` is the record `Umpire.Kernels.Blocks.Pack` and the class `Umpire.Kernels.Pack` | 3: `using Pack = Umpire.Kernels.Blocks.Pack;` |
 | `Module` is the record `Umpire.Kernels.Blocks.Module` and the class `Umpire.Kernels.Module` | 3: `using Module = Umpire.Kernels.Blocks.Module;` |
-| `Core` is the record `Umpire.Kernels.Blocks.Core` and the class `Umpire.Kernels.Core` | 3: `using Core = Umpire.Kernels.Blocks.Core;` |
 | `Plugin` is the record and the class `Umpire.Vsa.Composition.Plugin` | 3: `using Plugin = Umpire.Vsa.Definition.Plugin;` |
 | A variant in `Umpire.Vsa.Definition.*` | 2 |
 

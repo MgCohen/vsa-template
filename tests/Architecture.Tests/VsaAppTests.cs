@@ -25,6 +25,8 @@ public sealed class VsaAppTests {
         Notebook + "Slices/Pong/PongHandler.cs(9): error UMP020101",
         "VsaApp/App/Features/Rogue/RoguePlugin.cs(1): error UMP020101",
         "VsaApp/App/Features/Twin/TwinExtraModule.cs(1): error UMP020301",
+        "VsaApp/App/Features/Twin/TwinExtraModule.cs(1): error UMP020301",
+        "VsaApp/App/Features/Helped/HelpedModule.cs(1): error UMP020301",
         "VsaApp/App/Plugins/Stray/StrayModule.cs(1): error UMP020301",
         "VsaApp/App/Plugins/Tools/Infrastructure/NoteReader.cs(6): error UMP020101",
         "VsaApp/App/Plugins/Tools/Slices/Run/RunStep.cs(3): error UMP020202",
@@ -50,6 +52,7 @@ public sealed class VsaAppTests {
     [TestCase(Notebook + "Slices/Count/CountRequest.cs", "UMP020301", "has 2 Handlers.Requests types that take it")]
     [TestCase(Notebook + "Slices/Pong/PongHandler.cs", "UMP020302", "takes PingRequest in Contracts.Requests")]
     [TestCase("VsaApp/App/Features/Twin/TwinExtraModule.cs", "UMP020301", "Feature App/Features/Twin has 2 types of Module")]
+    [TestCase("VsaApp/App/Features/Helped/HelpedModule.cs", "UMP020301", "Feature App/Features/Helped has 2 types (HelpedModule, Helper)")]
     [TestCase("VsaApp/App/Features/Rogue/RoguePlugin.cs", "UMP020101", "the rule \"Feature(Self) denies Composition\" denies it")]
     [TestCase("VsaApp/App/Plugins/Stray/StrayModule.cs", "UMP020301", "Plugin App/Plugins/Stray has 0 types of Plugin")]
     [TestCase("VsaApp/App/Plugins/Tools/Infrastructure/NoteReader.cs", "UMP020101", "the rule \"Plugin denies Feature\" denies it")]

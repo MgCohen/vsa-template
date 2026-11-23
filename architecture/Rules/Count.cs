@@ -39,5 +39,5 @@ public sealed class Count {
     }
 
     public override string ToString() =>
-        $"{string.Join(" and ", Subjects)} has {(Types ? $"types of {Counted.Name}" : Concept.Display(Counted))}{(Depth is null ? "" : $"({Depth})")} {Limits.Need(Min, Max, OneKind)}";
+        $"{string.Join(" and ", Subjects)} has {(Types ? Counted == typeof(object) ? "types" : $"types of {Counted.Name}" : Concept.Display(Counted))}{(Depth is null ? "" : $"({Depth})")} {Limits.Need(Min, Max, OneKind)}";
 }

@@ -3,7 +3,7 @@ namespace Umpire.Kernels;
 using Microsoft.Extensions.DependencyInjection;
 
 public abstract class Module<TSettings> : Module where TSettings : class, new() {
-    public sealed override void Install(IServiceCollection services, ModuleSettings settings) =>
+    internal sealed override void InstallWith(IServiceCollection services, ModuleSettings settings) =>
         Configure(services, settings.Use<TSettings>(services, this, Validate));
 
     protected sealed override void Configure(IServiceCollection services) {

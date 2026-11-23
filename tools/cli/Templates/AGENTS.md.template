@@ -12,10 +12,11 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `App/Features/<Name>/`| One feature module: its module class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `App/Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
 | `App/Tests/`     | A nested project: one unit test file for each module                |
+| `Definition/`    | Optional: the architecture class of the app (`Definition/<Name>Architecture.cs`), its records and its externals |
 
 The app has one root project. A module, a slice or a plugin needs no project: add only its files. A nested project (for example `App/Tests/`) is optional, and the root project does not compile its folder. The folders select the layers, and the rule engine checks each use against the VSA definition after the build.
 
-Each namespace starts with `SampleApp` and follows the folders under `App/`, for example `SampleApp.Features.Billing.Slices.CreateInvoice` or `SampleApp.Host`. Put the `using` directives inside the namespace. Then a VSA type wins over a namespace of the app with the same name, for example `App` or `Views`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace.
+Each namespace starts with `SampleApp` and follows the folders under `App/`, for example `SampleApp.Features.Billing.Slices.CreateInvoice`. The app class and `Program.cs` keep the namespace `SampleApp.Host` for now (tracker item V15). Put the `using` directives inside the namespace. Then a VSA type wins over a namespace of the app with the same name, for example `App` or `Views`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace.
 
 Write the input of a request or a command, and the output of its response or result, as record parameters. Each module class registers the services of its module in `protected override void Configure`, for example its repository: `services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();`.
 

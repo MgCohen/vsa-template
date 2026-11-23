@@ -126,6 +126,15 @@ public sealed class VsaRulesTests {
     }
 
     [Test]
+    public void A_type_at_the_block_root_of_a_VSA_app_has_no_part() {
+        var type = new TypeFacts("App.Stray", "Stray", "App", new Source("C:/app/Stray.cs", 1), [], [], [], []);
+
+        var bindings = Resolved.Place([type], "C:/app");
+
+        Assert.That(bindings.Unmapped.Select(u => u.Type.Name), Is.EqualTo(new[] { "Stray" }));
+    }
+
+    [Test]
     public void A_hook_override_adds_a_part_to_each_feature() {
         var paths = new ResolvedArchitecture(new ExtraFeaturePart()).Parts.Select(p => p.Path);
 

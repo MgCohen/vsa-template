@@ -20,7 +20,10 @@ internal static class CountCheck {
 
     static IEnumerable<CountResult> PartFailures(CountStatement statement, Part subject, List<Binding> app) {
         var inPart = app.Where(b => subject.Holds(b.Part)).ToList();
-        return inPart.Count == 0 ? [] : Check(statement, subject.Name, subject.Name, Counted(statement, inPart), First(inPart));
+        if (inPart.Count == 0) {
+            return app.Count == 0 || statement.Min is not > 0 ? [] : Check(statement, subject.Name, subject.Name, [], First(app));
+        }
+        return Check(statement, subject.Name, subject.Name, Counted(statement, inPart), First(inPart));
     }
 
     static IEnumerable<CountResult> TypeFailures(CountStatement statement, Part subject, List<Binding> app) {
