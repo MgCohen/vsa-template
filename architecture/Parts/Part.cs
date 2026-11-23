@@ -138,7 +138,7 @@ public class Part : IPartChain {
 
     public IEnumerable<Part> SelfAndAncestors() => new[] { this }.Concat(Ancestors());
 
-    public bool Is(Type concept) => Concept?.GetType() == concept;
+    public bool Is(Type concept) => Concept is not null && concept.IsInstanceOfType(Concept);
 
     internal IEnumerable<Part> Ancestors() {
         for (var p = Parent; p is not null; p = p.Parent) {
