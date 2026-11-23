@@ -15,6 +15,17 @@ static class Levels {
         }
     }
 
+    internal static void Call<TBase, TFirst, TSecond>(TBase target, string method, TFirst first, TSecond second) where TBase : class {
+        foreach (var level in Chain(target.GetType(), typeof(TBase))) {
+            if (level.GetMethod(method, Declared, null, [typeof(TFirst), typeof(TSecond)], null) is not { IsAbstract: false } own) {
+                continue;
+            }
+            var call = (Action<TFirst, TSecond>)Activator.CreateInstance(
+                typeof(Action<TFirst, TSecond>), target, own.MethodHandle.GetFunctionPointer())!;
+            call(first, second);
+        }
+    }
+
     static List<Type> Chain(Type type, Type root) {
         var chain = new List<Type>();
         for (var level = type; level is not null; level = level.BaseType) {

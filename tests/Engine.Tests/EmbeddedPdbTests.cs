@@ -6,7 +6,8 @@ using Umpire.Vsa.Definition;
 namespace Engine.Tests;
 
 public sealed class EmbeddedPdbTests {
-    static readonly string Bundle = Directory.GetFiles(Repo.Path("artifacts~", "bin", "Umpire"), "Umpire.dll", SearchOption.AllDirectories)
+    static readonly string Bundle = Directory
+        .GetFiles(Repo.Path("artifacts~", "bin", "Umpire"), "Umpire.dll", SearchOption.AllDirectories)
         .OrderByDescending(File.GetLastWriteTimeUtc).First();
 
     [Test]
@@ -18,12 +19,19 @@ public sealed class EmbeddedPdbTests {
     }
 
     [Test]
+    public void A_record_with_no_body_in_the_shipped_assembly_has_its_source_path() {
+        var sources = BinReader.Sources([Bundle]);
+
+        Assert.That(sources["Umpire.Architecture.Blocks.Definition"].File, Does.StartWith("/_/architecture/Concepts/Blocks/"));
+    }
+
+    [Test]
     public void A_type_of_the_shipped_assembly_binds_to_the_body_of_its_kernel_block() {
         var source = BinReader.Sources([Bundle])["Umpire.Vsa.Contracts.Requests.IRequestSender"];
         var type = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire", source, [], [], [], []);
 
         var bound = new ResolvedArchitecture(new VsaArchitecture()).Place([type], Path.GetFullPath("Demo")).Of(type.FullName);
 
-        Assert.That(bound?.Part.SelfAndAncestors().Select(p => p.Name), Is.EqualTo(new[] { "Contracts.Requests", "Contracts", "VsaKernel", "(root)" }));
+        Assert.That(bound?.Part.SelfAndAncestors().Select(p => p.Name), Is.EqualTo(new[] { "Contracts.Requests", "Contracts", "Kernel", "(root)" }));
     }
 }

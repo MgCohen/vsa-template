@@ -8,7 +8,7 @@ public sealed class PartFind {
     readonly List<Type> under = [];
 
     internal PartFind(Part start, Type concept) {
-        this.start = start;
+        this.start = start.SelfAndAncestors().Last();
         this.concept = concept;
     }
 

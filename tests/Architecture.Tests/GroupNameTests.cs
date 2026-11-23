@@ -35,7 +35,7 @@ public sealed class GroupNameTests : ArchitectureTest<GroupNameTests.ModulesArch
     public record Cli : Concept;
 
     public sealed class ModulesArchitecture : Architecture {
-        protected override void Define(Part block) {
+        protected override void Define(Part block, Part kernel) {
             block.AddGroup<FeatureModule>().Add<Cli>().NamedAfterGroup();
             block.AddGroup<PluginModule>().Add<Cli>().NamedAfterGroup();
         }

@@ -6,7 +6,7 @@ using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Contracts.Requests;
 
 public record Contracts : Layer {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Depth = Depth.Self;
     }
 

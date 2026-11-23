@@ -15,7 +15,7 @@ public record Group : Concept;
 public record Child : Concept;
 
 public sealed class InlineArchitecture(Action<Part> define, Action<RuleBook>? rules = null) : Architecture {
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         define(block);
     }
 

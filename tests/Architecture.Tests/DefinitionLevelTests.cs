@@ -3,11 +3,11 @@ namespace EngineCore.Tests;
 using Umpire.Architecture;
 
 public class BaseLevelArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
-        defaults.DefaultPermission = Permission.Deny;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.DefaultPermission = Permission.Deny;
     }
 
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         root.Add<User>();
         root.Add<Target>();
     }
@@ -18,7 +18,7 @@ public class BaseLevelArchitecture : Architecture {
 }
 
 public sealed class DerivedLevelArchitecture : BaseLevelArchitecture {
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         root.Add<Child>();
     }
 
@@ -32,7 +32,7 @@ public sealed class DefinitionLevelTests {
 
     [Test]
     public void A_derived_definition_keeps_the_parts_of_its_base_with_no_base_call() {
-        Assert.That(Resolved.Parts.Select(p => p.Name), Is.EquivalentTo(new[] { "User", "Target", "Child" }));
+        Assert.That(Resolved.Parts.WithoutRoots().Select(p => p.Name), Is.EquivalentTo(new[] { "User", "Target", "Child" }));
     }
 
     [Test]

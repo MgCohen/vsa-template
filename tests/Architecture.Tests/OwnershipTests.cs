@@ -4,7 +4,7 @@ using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 
 public class OwnerArchitecture : Architecture {
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         root.Add<Nested>();
     }
 
@@ -26,7 +26,7 @@ public class OwnerArchitecture : Architecture {
 public sealed class DerivedOwnerArchitecture : OwnerArchitecture;
 
 public sealed class OtherArchitecture(Action<Part> define) : Architecture {
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         define(root);
     }
 }
@@ -53,7 +53,7 @@ public sealed class OwnershipTests {
 
     [Test]
     public void An_architecture_that_derives_from_the_owner_places_a_nested_concept() {
-        Assert.That(new ResolvedArchitecture(new DerivedOwnerArchitecture()).Parts.Select(p => p.Name),
+        Assert.That(new ResolvedArchitecture(new DerivedOwnerArchitecture()).Parts.WithoutRoots().Select(p => p.Name),
             Is.EqualTo(new[] { "OwnerArchitecture.Nested" }));
     }
 
@@ -87,7 +87,7 @@ public sealed class OwnershipTests {
     public void A_block_body_adds_the_concepts_of_its_home_in_another_architecture() {
         var resolved = new ResolvedArchitecture(new OtherArchitecture(root => root.Add<OwnerArchitecture.Shelf>()));
 
-        Assert.That(resolved.Parts.Select(p => p.Name), Is.EqualTo(new[] { "OwnerArchitecture.Shelf", "OwnerArchitecture.Nested" }));
+        Assert.That(resolved.Parts.WithoutRoots().Select(p => p.Name), Is.EqualTo(new[] { "OwnerArchitecture.Shelf", "OwnerArchitecture.Nested" }));
     }
 
     [Test]

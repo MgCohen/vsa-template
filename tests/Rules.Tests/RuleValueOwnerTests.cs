@@ -53,7 +53,7 @@ public sealed partial class RuleValueOwnerTests {
 
     [Test]
     public void No_key_is_a_definition_option() {
-        var definition = typeof(Umpire.Architecture.Options).GetProperties()
+        var definition = typeof(Umpire.Architecture.PartOptions).GetProperties()
             .Select(property => Plain(property.Name))
             .ToHashSet();
 

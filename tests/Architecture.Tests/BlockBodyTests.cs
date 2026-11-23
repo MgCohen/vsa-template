@@ -94,5 +94,5 @@ public sealed class BlockBodyTests {
     }
 
     static IReadOnlyList<string> Parts(Action<Part> define) =>
-        [.. new ResolvedArchitecture(new InlineArchitecture(define)).Parts.Select(p => p.Name)];
+        [.. new ResolvedArchitecture(new InlineArchitecture(define)).Parts.WithoutRoots().Select(p => p.Name)];
 }

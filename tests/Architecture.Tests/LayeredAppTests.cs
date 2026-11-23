@@ -11,11 +11,11 @@ public record Logic : Concept;
 public record Data : Concept;
 
 public sealed class LayeredArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
-        defaults.DefaultPermission = Permission.Deny;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.DefaultPermission = Permission.Deny;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<Ui>();
         block.Add<Logic>();
         block.Add<Data>();

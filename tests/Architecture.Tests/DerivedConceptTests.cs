@@ -7,11 +7,11 @@ public record BaseKind : Concept;
 public record DerivedKind : BaseKind;
 
 public sealed class DerivedKindArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
-        defaults.DefaultPermission = Permission.Deny;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.DefaultPermission = Permission.Deny;
     }
 
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         root.Add<DerivedKind>();
         root.Add<User>();
         root.Add<Target>();

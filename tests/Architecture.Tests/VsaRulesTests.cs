@@ -39,22 +39,22 @@ public sealed class VsaRulesTests {
         Assert.That(owners, Is.EqualTo(new[] { "Contracts.Requests" }));
     }
 
-    [TestCase("VsaKernel", "Composition", Permission.Allow)]
-    [TestCase("FrameworkKernel", "Hosts", Permission.Allow)]
-    [TestCase("VsaKernel", "Domain", Permission.Deny)]
+    [TestCase("Kernel", "Composition", Permission.Allow)]
+    [TestCase("Core", "Hosts", Permission.Allow)]
+    [TestCase("Kernel", "Domain", Permission.Deny)]
     [TestCase("Feature", "RootClass", Permission.Allow)]
     [TestCase("Plugin", "RootClass", Permission.Allow)]
     [TestCase("Feature", "Domain", Permission.Deny)]
     [TestCase("Feature", "Infrastructure", Permission.Deny)]
     [TestCase("Plugin", "Domain", Permission.Deny)]
     public void The_app_host_uses_the_framework_entry_and_only_the_root_class_of_a_module(string group, string to, Permission expected) {
-        Assert.That(MayUse(Place("(root)", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
+        Assert.That(MayUse(Place("App", "Host"), Place(group, to)).Permission, Is.EqualTo(expected));
     }
 
     [TestCase("Presenters", "Feature", "Domain.Shared", "A")]
     [TestCase("Presenters", "Feature", "Domain.Shared", "B")]
     [TestCase("Presenters", "Plugin", "Domain.Shared", "A")]
-    [TestCase("Presenters", "VsaKernel", "Contracts.Events", "A")]
+    [TestCase("Presenters", "Kernel", "Contracts.Events", "A")]
     [TestCase("RootClass", "Feature", "Domain.Shared", "B")]
     [TestCase("RootClass", "Plugin", "Infrastructure", "A")]
     public void A_use_only_target_is_allowed_with_internal_access(string from, string group, string to, string feature) {
@@ -65,7 +65,7 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_module_root_uses_the_framework_with_public_access() {
-        var decision = MayUse(Place("Feature", "RootClass"), Place("VsaKernel", "Domain"));
+        var decision = MayUse(Place("Feature", "RootClass"), Place("Kernel", "Domain"));
 
         Assert.That((decision.Permission, decision.Rule?.Access), Is.EqualTo((Permission.Allow, (Access?)Access.Public)));
     }
@@ -92,7 +92,7 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void The_app_host_uses_the_framework_kernel() {
-        Assert.That(MayUse(Place("(root)", "Host"), Place("FrameworkKernel", "KernelParts.App")).Permission, Is.EqualTo(Permission.Allow));
+        Assert.That(MayUse(Place("App", "Host"), Place("Core", "KernelParts.App")).Permission, Is.EqualTo(Permission.Allow));
     }
 
     [TestCase("Contracts.Requests")]
@@ -147,12 +147,12 @@ public sealed class VsaRulesTests {
             Is.EquivalentTo(new[] { typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin) }));
     }
 
-    [TestCase("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", "Contracts.Requests", "VsaKernel")]
-    [TestCase("/_/packs/Vsa/Kernel/Handlers/Commands/CommandHandler.cs", "Handlers.Commands", "VsaKernel")]
+    [TestCase("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", "Contracts.Requests", "Kernel")]
+    [TestCase("/_/packs/Vsa/Kernel/Handlers/Commands/CommandHandler.cs", "Handlers.Commands", "Kernel")]
     [TestCase("/_/framework/Components/Messages/Contracts/Envelope.cs", "MessagesParts.Contracts", "MessagesComponent")]
-    [TestCase("C:/repo/packs/Vsa/Kernel/Domain/Entity.cs", "Domain", "VsaKernel")]
-    [TestCase("/_/framework/Kernel/Hosts/Web/WebHost.cs", "Hosts", "FrameworkKernel")]
-    [TestCase("/_/framework/Kernel/App/App.cs", "KernelParts.App", "FrameworkKernel")]
+    [TestCase("C:/repo/packs/Vsa/Kernel/Domain/Entity.cs", "Domain", "Kernel")]
+    [TestCase("/_/framework/Kernel/Hosts/Web/WebHost.cs", "Hosts", "Core")]
+    [TestCase("/_/framework/Kernel/App/App.cs", "KernelParts.App", "Core")]
     public void A_type_of_a_DLL_binds_to_the_body_part_of_its_source_path(string file, string part, string block) {
         var type = new TypeFacts("Umpire.Some.Type", "Type", "Umpire", new Source(file, 1), [], [], [], []);
 
@@ -215,7 +215,7 @@ public sealed class VsaRulesTests {
     sealed record PartPlace(Part Part, IReadOnlyDictionary<string, string> Values);
 
     sealed class ExtraFeaturePart : VsaArchitecture {
-        protected override void Define(Part root) {
+        protected override void Define(Part root, Part kernel) {
             root.For<Umpire.Vsa.Definition.Feature>().Add<Extra>();
         }
     }

@@ -121,6 +121,6 @@ public sealed class FolderAliasConfigTests {
     }
 
     sealed class SourceAliasArchitecture : VsaArchitecture {
-        public override IReadOnlyList<FolderAlias> FolderAliases(string blockFolder) => [new("Source", "")];
+        protected override void Configure(ArchitectureConfig config) => config.FolderAliases.Add(new("Source", ""));
     }
 }

@@ -15,8 +15,8 @@ sealed class PartOf {
         this.resolved = resolved;
         folderParts = [.. resolved.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup))];
         blockPlaces = [.. folderParts.Where(p => p.IsBlockPlace)];
-        dllPlaces = [.. blockPlaces.Where(p => !p.IsGroup && p.Concept is Blocks.Block && p.Children.Count > 0)];
-        aliases = [.. resolved.Architecture.FolderAliases(blockFolder), .. folderAliases];
+        dllPlaces = [.. folderParts.Where(p => (p.IsBlockPlace || p.IsKernelRoot) && !p.IsGroup && p.Concept is Blocks.Block && p.Children.Count > 0)];
+        aliases = [.. resolved.Config.FolderAliases, .. folderAliases];
         this.blockFolder = blockFolder;
         this.innerBlocks = [.. innerBlocks.Select(folder => Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar)];
     }

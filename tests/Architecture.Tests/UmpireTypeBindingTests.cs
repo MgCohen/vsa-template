@@ -30,7 +30,7 @@ public sealed class UmpireTypeBindingTests {
             "Umpire.Vsa.Contracts.Requests.IRequestSender", "Umpire.Vsa.Contracts.Requests",
             "C:/repo/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs"));
 
-        Assert.That(sender?.Part.SelfAndAncestors().Select(p => p.Name), Is.EqualTo(new[] { "Contracts.Requests", "Contracts", "VsaKernel", "(root)" }));
+        Assert.That(sender?.Part.SelfAndAncestors().Select(p => p.Name), Is.EqualTo(new[] { "Contracts.Requests", "Contracts", "Kernel", "(root)" }));
     }
 
     [Test]

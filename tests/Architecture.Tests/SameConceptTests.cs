@@ -12,11 +12,11 @@ public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture 
             ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
-    protected override void Configure(Options defaults) {
-        defaults.UseSameConcept = useSameConcept;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.UseSameConcept = useSameConcept;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<Target>();
         block.AddGroup<Package>().Add<Target>().And<User>();
     }
@@ -64,11 +64,11 @@ public sealed class DenyingSameLayerArchitecture : Architecture {
             ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
-    protected override void Configure(Options defaults) {
-        defaults.UseSameConcept = true;
+    protected override void Configure(ArchitectureConfig config) {
+        config.Defaults.UseSameConcept = true;
     }
 
-    protected override void Define(Part block) {
+    protected override void Define(Part block, Part kernel) {
         block.Add<Target>();
         block.AddGroup<Package>().Add<Target>();
     }

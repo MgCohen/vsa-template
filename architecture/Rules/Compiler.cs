@@ -3,12 +3,19 @@ namespace Umpire.Architecture;
 internal sealed class Compiler {
     const string SameConceptText = "same concept";
     readonly RuleBook book;
-    readonly Dictionary<Part, Options> partOptions = [];
+    readonly Dictionary<Part, PartOptions> partOptions = [];
 
     internal Compiler(Architecture architecture) {
-        Options = Options.From(architecture.ConfigureDefaults).Over(Options.BuiltIn);
+        Config = new ArchitectureConfig();
+        architecture.ConfigureAll(Config);
+        Options = Config.Defaults.Over(PartOptions.BuiltIn);
         Root = new Part(null, "", null) { Placers = [architecture.GetType()] };
-        architecture.DefineRoot(Root);
+        var roots = Config.Roots.Records.Select(Root.AddRoot).ToList();
+        var kernel = Root.AddKernelRoot();
+        architecture.DefineRoots(roots.FirstOrDefault(r => r.Concept is Blocks.App) ?? Root, kernel);
+        if (kernel.Children.Count == 0) {
+            Root.Remove(kernel);
+        }
         Parts = [.. Root.Walk().Skip(1)];
         CheckShared();
         CheckSameFolder();
@@ -35,10 +42,11 @@ internal sealed class Compiler {
         CheckNames();
     }
 
-    public Options Options { get; }
+    public ArchitectureConfig Config { get; }
+    public PartOptions Options { get; }
     public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }
-    public IReadOnlyDictionary<Part, Options> PartOptions => partOptions;
+    public IReadOnlyDictionary<Part, PartOptions> OptionsByPart => partOptions;
     public IReadOnlyList<PartRule> UseRules { get; }
     public IReadOnlyList<CountStatement> Counts { get; }
     public IReadOnlyList<MatchStatement> Matches { get; }
@@ -82,7 +90,7 @@ internal sealed class Compiler {
         return condition;
     }
 
-    Options OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
+    PartOptions OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
 
     void CheckSameFolder() {
         var clash = Parts.Where(p => p.HasFolder && p.Folder!.Length > 0)

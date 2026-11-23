@@ -6,7 +6,7 @@ using Umpire.Architecture;
 using static Spike.Charlie.Definition.CharlieParts;
 
 public sealed class CharlieArchitecture : AlphaArchitecture {
-    protected override void Define(Part root) {
+    protected override void Define(Part root, Part kernel) {
         root.Add<C1>();
         root.For<Zulu>().Add<Z3>();
     }

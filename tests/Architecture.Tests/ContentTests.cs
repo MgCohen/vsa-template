@@ -309,21 +309,21 @@ public sealed class ContentTests {
         new($"App.{name}", name, "App", new Source($"{BlockFolder}/{folder}/{name}.cs", 1), [], [], [], []) { Attributes = [Mark] };
 
     sealed class ShelfArchitecture : Architecture {
-        protected override void Define(Part block) {
+        protected override void Define(Part block, Part kernel) {
             block.AddGroup<Shelf>().Add<Item>();
             block.AddGroup<Crate>().Add<Item>();
         }
     }
 
     sealed class LooseShelfArchitecture : Architecture {
-        protected override void Define(Part block) {
+        protected override void Define(Part block, Part kernel) {
             block.AddGroup<LooseShelf>().Add<Item>();
             block.AddGroup<Crate>().Add<Tag>();
         }
     }
 
     sealed class NoGroupArchitecture : Architecture {
-        protected override void Define(Part block) {
+        protected override void Define(Part block, Part kernel) {
             block.Add<Item>().NamedAfterGroup();
         }
     }
