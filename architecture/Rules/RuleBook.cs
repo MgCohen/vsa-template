@@ -47,6 +47,11 @@ public sealed class RuleBook {
     }
 
     public From For<T>(Depth? depth = null) where T : Concept {
+        if (typeof(External).IsAssignableFrom(typeof(T))) {
+            throw new InvalidOperationException(
+                $"Rules: For<{Concept.Display(typeof(T))}>(): {Concept.Display(typeof(T))} is an External. An External is only the target of a rule, "
+                + $"never its subject, because the engine does not check the code of a DLL. Use it as a target, for example Uses<{Concept.Display(typeof(T))}>().");
+        }
         if (!block.Walk().Any(p => p.Is(typeof(T)))) {
             throw new InvalidOperationException(
                 $"Rules: For<{Concept.Display(typeof(T))}>() names a concept that the definition does not have. Add it in Define, or remove the rule.");

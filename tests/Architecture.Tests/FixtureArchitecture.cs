@@ -57,7 +57,6 @@ public abstract class FixtureArchitecture : Architecture {
     }
 
     protected override void Define(Part block) {
-        block.Add<KitLayer>();
         var feature = block.AddGroup<Feature>();
         feature.Add<RootClass>().OfType<IModuleRoot>();
         feature.Add<Domain>();

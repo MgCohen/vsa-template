@@ -60,8 +60,10 @@ public sealed class ResolvedArchitecture {
     public Decision DecisionFor(Binding from, Binding to) => DecisionFor(from.Part, from.Values, to.Part, to.Values);
 
     public Decision DecisionFor(Part from, IReadOnlyDictionary<string, string> fromValues, Part to, IReadOnlyDictionary<string, string> toValues) =>
-        new(UseRules.LastOrDefault(rule => rule.From == from && rule.To == to && rule.Condition.Holds(fromValues, toValues)),
-            OptionsOf(to).DefaultPermission!.Value);
+        new(ActingRule(from, fromValues, to, toValues), OptionsOf(to).DefaultPermission!.Value);
+
+    public PartRule? ActingRule(Part from, IReadOnlyDictionary<string, string> fromValues, Part to, IReadOnlyDictionary<string, string> toValues) =>
+        UseRules.LastOrDefault(rule => rule.From == from && rule.To == to && rule.Condition.Holds(fromValues, toValues));
 
     public IReadOnlyList<CountResult> Counts(Bindings bindings) =>
         [.. counts.SelectMany(statement => CountCheck.Failures(statement, bindings))];
