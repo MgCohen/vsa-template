@@ -9,28 +9,28 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | `SampleApp.csproj` | The one root project. It compiles `App/` and `Views/` |
 | `App/`       | The runtime code. `App/Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : App<Vsa<WebHost>>` starts the app, finds the modules and the views, and gives the definition |
 | `Views/`     | The Blazor views. Each module has its page in `Views/Pages/`     |
-| `App/Features/<Name>/`| One feature module: its root class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
+| `App/Features/<Name>/`| One feature module: its module class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `App/Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
 | `App/Tests/`     | A nested project: one unit test file for each module                |
 
 The app has one root project. A module, a slice or a plugin needs no project: add only its files. A nested project (for example `App/Tests/`) is optional, and the root project does not compile its folder. The folders select the layers, and the rule engine checks each use against the VSA definition after the build.
 
-Each namespace starts with `SampleApp` and follows the folders, for example `SampleApp.Features.Billing.Slices.CreateInvoice` or `SampleApp.Host`. Put the `using` directives inside the namespace. Then a VSA type wins over a namespace of the app with the same name, for example `App` or `Views`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace.
+Each namespace starts with `SampleApp` and follows the folders under `App/`, for example `SampleApp.Features.Billing.Slices.CreateInvoice` or `SampleApp.Host`. Put the `using` directives inside the namespace. Then a VSA type wins over a namespace of the app with the same name, for example `App` or `Views`. This is a guideline, not an enforced rule. If the file is inside the namespace of the concept records, put some `using` directives outside the namespace. If that is not enough, add an alias inside the namespace.
 
-Write the input of a request or a command, and the output of its response or result, as record parameters. Each module root registers the services of its module in `Configure`, for example its repository: `services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();`.
+Write the input of a request or a command, and the output of its response or result, as record parameters. Each module class registers the services of its module in `protected override void Configure`, for example its repository: `services.AddScoped<IRepository<Order, OrderId>, OrderRepository>();`.
 
 A command goes from one module to another module. It has one handler and one result. A module sends it with `ICommandSender`. The command is `<Name>Command`, its result `<Name>Result` and its handler `<Name>Handler`, in `Slices/<Name>/`.
 
 `Domain/Shared/` is the published domain of a module. Other modules read its types, for example the keys in a command. A type there is immutable and holds data only, with no methods. The rules `UMP010205` to `UMP010207` that check it are off until the review in #143. The rest of `Domain/` stays private to the module. A published domain uses only its own module. The messages, handlers and presenters of a module can use the published domain of all modules.
 
-A plugin module is for base types of the app, as the framework is the base of each layer: for example a command base in `App/Plugins/Game/Contracts/Commands/GameStep.cs`. A plugin module has the layout of the framework: one folder for each layer, for example `Contracts/Commands/` and `Handlers/Commands/`, and no `Slices/`. Each layer of each module can use the same layer of each plugin module. A plugin module never uses a module. Its root has one class that inherits `Plugin` (`UMP020101`, `UMP020301`). The host configures the plugin modules first, by name, and it loads them through the modules.
+A plugin module is for base types of the app, as the framework is the base of each layer: for example a command base in `App/Plugins/Game/Contracts/Commands/GameStep.cs`. A plugin module has the layout of the framework: one folder for each layer, for example `Contracts/Commands/` and `Handlers/Commands/`, and no `Slices/`. Each layer of each module can use the same layer of each plugin module. A plugin module never uses a module. Its module class inherits `Plugin` (`UMP020101`, `UMP020301`). The host configures the plugin modules first, by name, and it loads them through the modules.
 
 ## Commands
 
 Use the `umpire` tool to add code. It writes only new files, and it does not write over a file. Write the version on the first line of `SampleApp.csproj` in place of `<version>`, for example `Umpire.Sdk.Web/1.2.3` gives `1.2.3`.
 
 ```bash
-dotnet tool exec Umpire.Cli@<version> -y -- add module <Name>               # the module root, a status request and a page
+dotnet tool exec Umpire.Cli@<version> -y -- add module <Name>               # the module class, a status request and a page
 dotnet tool exec Umpire.Cli@<version> -y -- add request <Name> -m <Module>  # a request, its response and its handler
 dotnet tool exec Umpire.Cli@<version> -y -- add command <Name> -m <Module>  # a command, its result and its handler
 dotnet tool exec Umpire.Cli@<version> -y -- add plugin <Name>               # a plugin module with a base command

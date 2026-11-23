@@ -43,7 +43,7 @@ The projects of the groups are for development: their references enforce the lay
 
 ## Kinds of block
 
-Each group holds blocks of one or more kinds: app, pack, kernel, component, module and library. The kinds, their entries and the composition guidelines are in `blocks.md`. The terms are in `vocabulary.md`.
+Each group holds blocks of one or more kinds: app, definition, pack, kernel, component, module and library. The kinds, their entries and the composition guidelines are in `blocks.md`. The terms are in `vocabulary.md`.
 
 ## Where a new part goes
 
@@ -55,16 +55,16 @@ This table is a guideline. **Not enforced in 0.1.0.**
 | A rule question on plain data | `architecture/Queries/` |
 | A type that each app needs to start | `framework/Kernel/` |
 | A free block for two or more packs | `framework/Components/<Name>/` |
-| A new architecture | `packs/<Name>/`: `<Name>Pack.cs`, `Architecture/`, `Kernel/`, `Tests/` |
-| A pack variant of an app | `Packs/<Name>/` of the app (`pack-variants.md`) |
-| A new fact of a built app | `engine/Plugins/BuiltApp/` |
-| A step of the engine run | `engine/Features/<Step>/`: one feature module, one command |
+| A new architecture | `packs/<Name>/`: `<Name>Pack.cs`, `Definition/`, `Kernel/`, `Tests/` |
+| A pack variant of an app | `App/Packs/<Name>/` of the app (`pack-variants.md`) |
+| A new fact of a built app | `engine/App/Plugins/BuiltApp/` |
+| A step of the engine run | `engine/App/Features/<Step>/`: one feature module, one command |
 | A tool command | `tools/cli/Commands/`, on a base in `Commands/Bases/` |
 
 ## Where the rule answers are
 
 ```
-engine Rules step (engine/Features/Rules)
+engine Rules step (engine/App/Features/Rules)
 ├─ BuiltApp plugin: DLL and PDB facts             ArchUnitNET (the only place)
 ├─ ResolvedArchitecture.Place(facts)              architecture/Queries: PartOf
 ├─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Queries: ResolvedArchitecture
@@ -83,12 +83,12 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Architecture`, `Concept`, `RootClass`, `Host`, `Hosts`, the block kind records (`Umpire.Architecture.Blocks`: `Block`, `Pack`, `Kernel`, `Component`, `record Module : Component`), `FrameworkKernel`, `MessagesComponent` | `App`, `Pack`, `AppHost`, `class Module`, `AppTypes` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, `record VsaKernel : Kernel`, the module kinds `record Feature : Module` and `record Plugin : Module` | `Vsa<THost>`, `VsaKernel`, `class Plugin : Module` |
+| Generic | `Architecture`, `CoreArchitecture`, `Concept`, `External`, `Host`, `Hosts`, the block kind records (`Umpire.Architecture.Blocks`: `Block`, `App`, `Definition`, `Kernel`, `Component`; `Umpire.Kernels.Blocks`: `Core`, `record Module : Component`, `Pack`), `MessagesComponent` | `App`, `Pack`, `AppHost`, `Kernel`, `Core`, `class Module`, `AppTypes` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module`, `UmpireLibraries` | `Vsa<THost>`, `VsaKernel`, `class Plugin : Module` |
 
-- The definition names a runtime class only by its `Type`, for example `part.Add<RootClass>().OfType<Umpire.Kernels.Module>()`. Where two types have the same name, write the full name of the runtime class, or use an alias, for example `using VsaKernel = Umpire.Vsa.Composition.VsaKernel;`.
-- The part `RootClass` is in the folder of its parent: it is the root class of a group instance.
-- A runtime `Module` has `Name`, `Order` and `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Configure`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
+- The definition names a runtime class only by its `Type`, for example `rules.For<Module>(Depth.Self).HasTypes<Umpire.Kernels.Module>().Exactly(1)`. Where two types have the same name, write the full name of the runtime class, or use an alias, for example `using VsaKernel = Umpire.Vsa.Composition.VsaKernel;`.
+- A class at the top of a block folder binds to the block part, for example the module class of a feature module binds to `Feature`.
+- A runtime `Module` has `Name`, `Order`, the public `Install(IServiceCollection, ModuleSettings)` and the protected `Configure(IServiceCollection)`. The kernel finds each one, sorts them by `Order`, then by name, and calls `Install`. A `Plugin` has `Order` 0, and a `Module` has `Order` 1.
 
 ## How the kernel starts an app
 
@@ -98,8 +98,9 @@ App.Run(args)                             Umpire.Kernels
 │  ├─ Pack.CreateHost()                   a new AppHost for each start
 │  ├─ AppHost.Build(args, app)            open: plain, console or web
 │  │  └─ Compose(services, configuration, Pack.Kernel, types)    fixed
-│  │     ├─ Kernel.Install                the core, then Kernel.Configure (VsaKernel: the VSA layers)
-│  │     ├─ Module.Configure              each module, in Order, then by name
+│  │     ├─ Core.Install                  the core services
+│  │     ├─ Kernel.Install                Kernel.Configure (VsaKernel: the VSA layers)
+│  │     ├─ Module.Install                each module, in Order, then by name
 │  │     └─ AppHost.Configure             open, last
 │  └─ AppHost.Start(services, stop)       open: the host work and its stop sources
 ├─ wait for a stop request

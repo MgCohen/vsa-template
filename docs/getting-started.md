@@ -56,7 +56,7 @@ Each later command of the tool runs the same way, with the version on the first 
 To add Umpire to an existing app, run `init` in the folder of its root project: `dotnet tool exec Umpire.Cli@<version> -y -- init`. It adds only the missing setup, and a second run changes nothing. It does not write the app class. Without an app class, the rule engine gives `UMP030502`. For a console app `Shop`, write these two files:
 
 ```csharp
-// Host/ShopApp.cs
+// App/ShopApp.cs
 namespace Shop.Host;
 
 using Umpire.Hosts.Console;
@@ -67,7 +67,7 @@ public class ShopApp : App<Vsa<ConsoleHost>>;
 ```
 
 ```csharp
-// Host/Program.cs
+// App/Program.cs
 return new Shop.Host.ShopApp().Run(args);
 ```
 
@@ -78,13 +78,13 @@ The setup tasks are in [scaffolding.md](scaffolding.md) ("Setup tasks").
 ```text
 Hello/
 ├─ Hello.csproj            the one root project: <Project Sdk="Umpire.Sdk.Web/<version>">, it compiles each file in its folder tree
-├─ Hello.slnx              the root project and Tests/
+├─ Hello.slnx              the root project and App/Tests/
 ├─ appsettings.json        the settings of the web host
 ├─ Properties/             launchSettings.json: the start settings
-├─ Host/               Program.cs and HelloApp.cs: the app class, the host and the definition
-├─ Views/              the Blazor views
-├─ Features/  Plugins/     the feature modules and the plugin modules (empty)
-├─ Tests/                  App.Tests.csproj: the unit tests and HelloArchitectureTests.cs
+├─ App/                    the App root: Program.cs and HelloApp.cs, the app class with the host and the definition
+│  ├─ Features/  Plugins/   the feature modules and the plugin modules (empty)
+│  └─ Tests/                App.Tests.csproj: the unit tests and HelloArchitectureTests.cs
+├─ Views/                  the Views root: the Blazor views
 ├─ AGENTS.md               the instructions for an agent in this app
 ├─ .umpireconfig           the Umpire file (TOML): the anchor of artifacts~/, the rule values and the module settings
 ├─ nuget.config            the Umpire feed, with the token in GITHUB_TOKEN
@@ -98,7 +98,7 @@ The root project gets its packages from two places:
 | `Umpire` | Umpire.Sdk | One `Umpire.dll`: the app start, the markers, the definition API and the VSA pack with the base of each layer |
 | `Umpire.Vsa.Analyzers` | `Umpire` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
 | `Umpire.Web` | Umpire.Sdk.Web | The web host and the presenter views |
-| `Umpire.Testing` | Umpire.Sdk, in `Tests/` | The test bases |
+| `Umpire.Testing` | Umpire.Sdk, in `App/Tests/` | The test bases |
 
 Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
 
@@ -139,15 +139,15 @@ The build can also show .NET warnings, for example `IDE0005` (an unused `using`)
 The module `Billing` has these files:
 
 ```text
-Features/Billing/
-├─ BillingModule.cs                   module root: registers the services of the module
+App/Features/Billing/
+├─ BillingModule.cs                   module class: registers the services of the module
 ├─ Domain/Shared/BillingKey.cs        published domain: other modules read it
 ├─ Presenters/BillingPresenter.cs
 └─ Slices/
    ├─ GetStatus/                      a status request: request, response, handler
    └─ CreateInvoice/                  CreateInvoiceRequest.cs, CreateInvoiceResponse.cs, CreateInvoiceHandler.cs
 Views/Pages/BillingPage.razor     the page of the module, at /billing
-Tests/BillingStatusTests.cs           a unit test of the status request
+App/Tests/BillingStatusTests.cs       a unit test of the status request
 ```
 
 Each slice is one folder with its request, its response and its handler. A slice uses only its own types and `Slices/Shared/`. The tool writes only new files: it never writes over a file.
@@ -156,7 +156,7 @@ Each slice is one folder with its request, its response and its handler. A slice
 
 ### Plant the error
 
-Make the handler of `CreateInvoice` use the response of the slice `GetStatus`. Replace the content of `Features/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs`:
+Make the handler of `CreateInvoice` use the response of the slice `GetStatus`. Replace the content of `App/Features/Billing/Slices/CreateInvoice/CreateInvoiceHandler.cs`:
 
 ```csharp
 namespace Hello.Features.Billing.Slices.CreateInvoice;
@@ -176,7 +176,7 @@ sealed class CreateInvoiceHandler : RequestHandler<CreateInvoiceRequest, CreateI
 Build again. The compile passes, but the build fails with one error of the rule engine:
 
 ```text
-C:\src\Hello\Features\Billing\Slices\CreateInvoice\CreateInvoiceHandler.cs(8,1): error UMP020101: CreateInvoiceHandler in Handlers.Requests (Features/Billing/Slices/CreateInvoice) uses GetStatusResponse in Contracts.Requests (Features/Billing/Slices/GetStatus): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules. [C:\src\Hello\Hello.csproj]
+C:\src\Hello\App\Features\Billing\Slices\CreateInvoice\CreateInvoiceHandler.cs(8,1): error UMP020101: CreateInvoiceHandler in Handlers.Requests (App/Features/Billing/Slices/CreateInvoice) uses GetStatusResponse in Contracts.Requests (App/Features/Billing/Slices/GetStatus): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules. [C:\src\Hello\Hello.csproj]
   umpire-engine: 1 errors, 0 warnings, 3583 ms.
 ```
 
@@ -187,9 +187,9 @@ C:\src\Hello\Features\Billing\Slices\CreateInvoice\CreateInvoiceHandler.cs(8,1):
 | Place | `CreateInvoiceHandler.cs(8,1)` | The file, and the member with the use |
 | Code | `UMP020101` | A type uses a part that the rules deny |
 | From | `CreateInvoiceHandler in Handlers.Requests` | The type, and the part of its folder |
-| From instance | `(Features/Billing/Slices/CreateInvoice)` | The folder of that part |
+| From instance | `(App/Features/Billing/Slices/CreateInvoice)` | The folder of that part |
 | To | `GetStatusResponse in Contracts.Requests` | The used type, and its part |
-| To instance | `(Features/Billing/Slices/GetStatus)` | A different slice |
+| To instance | `(App/Features/Billing/Slices/GetStatus)` | A different slice |
 | Rule | `no rule allows it (DefaultPermission = Deny)` | A use is denied when no rule allows it |
 | Fix | `Remove the use, or change the rule in Rules.` | The two ways to fix it |
 
@@ -210,7 +210,7 @@ To remove the use:
 1. In `CreateInvoiceHandler.cs`, delete the line `var status = ...` and the `using` of `GetStatus`.
 2. Build again. The engine gives `0 errors`.
 
-To share the type, move `GetStatusResponse.cs` to `Features/Billing/Slices/Shared/`. The engine then binds it to the part `Slice.Shared`, and each slice of `Billing` can use it. To change a rule, see [architecture-rules.md](architecture-rules.md).
+To share the type, move `GetStatusResponse.cs` to `App/Features/Billing/Slices/Shared/`. The engine then binds it to the part `Slice.Shared`, and each slice of `Billing` can use it. To change a rule, see [architecture-rules.md](architecture-rules.md).
 
 ## Next
 

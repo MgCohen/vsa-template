@@ -24,10 +24,10 @@ App.Run(args)
 The calls go one way. The app calls `Build`, `Start` and `Dispose` on the host. The host calls only `Compose` and `AppStop.Request`.
 
 ```csharp
-// Host/Program.cs
+// App/Program.cs
 return new ShopApp().Run(args);
 
-// Host/ShopApp.cs: the web host and the VSA rules
+// App/ShopApp.cs: the web host and the VSA rules
 public class ShopApp : App<Vsa<WebHost>>;
 
 // The console host and an architecture of the app
@@ -50,19 +50,20 @@ The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<T
 | `IApp` | Umpire.Kernels | `State`, `Services`, `Start`, `Stop`, `Run`. A shell makes the app class through it |
 | `App`, `App<TPack>` | Umpire.Kernels | The lifecycle of the app. `App<TPack>` makes its pack with `new TPack()` |
 | `Pack`, `Pack<TArchitecture, TKernel, THost>` | Umpire.Kernels | Gives `Architecture`, `Kernel` and `CreateHost()` |
-| `Kernel` | Umpire.Kernels | The install point of an architecture: `Install` (the core, fixed), then `Configure` |
+| `Kernel` | Umpire.Kernels | The install point of an architecture: the public `Install` calls the protected `Configure` |
+| `Core` | Umpire.Kernels | The kernel of the core services: `IConfiguration`, logging, `AppTypes`, `AppStop`, `[AutoRegister]` |
 | `AppHost` | Umpire.Kernels | The platform: `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
 | `AppState` | Umpire.Kernels | `Stopped`, `Running` or `Stopping` |
 | `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` stops the app. The first request gives the exit code |
 | `Operation` | Umpire.Kernels | A request that a host exposes: `Group`, `Name`, `Effect`, `Input`, `Invoke` |
-| `Module`, `Module<TSettings>` | Umpire.Kernels | The root class of a module. `Order` 1 |
+| `Module`, `Module<TSettings>` | Umpire.Kernels | The module class at the top of a module folder: the public `Install` and the protected `Configure`. `Order` 1 |
 | `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
 
-The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa. It adds `VsaKernel`, `Plugin` and `Plugin<TSettings>` (the root class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
+The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa. It adds `VsaKernel` (`packs/Vsa/Kernel/VsaKernel.cs`), `Plugin` and `Plugin<TSettings>` (the module class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
 
 ## The app class
 
-`umpire new app <Name>` writes `Host/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`). The app class has the lifecycle only. It has no install point.
+`umpire new app <Name>` writes `App/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`). The app class has the lifecycle only. It has no install point.
 
 | Member | Default | Override to |
 |---|---|---|
@@ -159,25 +160,25 @@ A host is the platform. It builds the services and starts the host work. It does
 
 ```
 AppHost.Compose(services, configuration, kernel, types)    fixed order
-├─ kernel.Install(services, types, configuration)          Umpire.Kernels
+├─ new Core(configuration).Install(services, types)        Umpire.Kernels
 │  ├─ IConfiguration                                        keep one that exists, else the given one
 │  ├─ AddLogging                                            no log provider
 │  ├─ AppTypes, AppStop                                     singletons
-│  ├─ auto-register                                         each [AutoRegister] type
-│  └─ Configure(services, types)                            VsaKernel:
-│     ├─ AddRequestHandlers                                 each kind adds its sender and calls AddPipeline
-│     ├─ AddEventHandlers, AddCommandHandlers
-│     ├─ AddPresenters
-│     └─ AddRequestOperations                               one Operation for each request handler
+│  └─ auto-register                                         each [AutoRegister] type
+├─ kernel.Install(services, types)                          calls Configure(services, types). VsaKernel:
+│  ├─ AddRequestHandlers                                    each kind adds its sender and calls AddPipeline
+│  ├─ AddEventHandlers, AddCommandHandlers
+│  ├─ AddPresenters
+│  └─ AddRequestOperations                                  one Operation for each request handler
 ├─ settings = new ModuleSettings(Settings(types))           the providers of the host
-├─ Module.Compose(services, settings)                      each module, in Order, then by name
+├─ module.Install(services, settings)                       each module, in Order, then by name
 │  ├─ Module                                                Configure(services)
 │  └─ Module<TSettings>, Plugin<TSettings>                  get the settings, then Configure(services, settings)
 ├─ CloseOpenDescriptors(services, types)                   closed descriptors for each open one (see "Open generics")
 └─ host.Configure(services, types)                         last
 ```
 
-The order is inside `Compose`, so a host cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). A pack variant kernel derives from `VsaKernel` and calls `base.Configure` first. An app that owns its container calls `Compose` with its own services, configuration, kernel and `AppTypes`.
+The order is inside `Compose`, so a host cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). A pack variant kernel derives from `VsaKernel`, overrides the protected `Configure` and calls `base.Configure` first. An app that owns its container calls `Compose` with its own services, configuration, kernel and `AppTypes`.
 
 ## Definitions and transports
 
@@ -245,7 +246,7 @@ A request declares `Group`, `Name` and `Effect` as public static properties, by 
 | `new AppTypes(provider, appAssembly)` | The one constructor. With no provider, it uses `ScannedModules`. `AppHost` gives the assembly of the app class (the root project) |
 | `Modules` | The modules of the provider, in order |
 | `IModuleProvider.Modules(scan)` | The modules of the app. `ScannedModules` gives `scan.All()`, `FixedModules` gives its list |
-| `ModuleScan.All()`, `ModuleScan.In(assemblies)` | One module for each module root of the scan, or of the given assemblies |
+| `ModuleScan.All()`, `ModuleScan.In(assemblies)` | One module for each module class of the scan, or of the given assemblies |
 | `ConcreteTypesOf(baseType)` | The concrete classes that derive from `baseType`, in the assemblies of the modules and the assembly of the app class. A type in another assembly, for example a test assembly, is not found |
 | `Registered()`, `Implementations(baseType)` | The marked types (see "One discovery path") |
 
@@ -450,14 +451,15 @@ framework/Components/Messages/
   Handlers/                            PipelineBuilder, Pipeline, Pipelines, InlineRunner, Validator, Before, After, AddPipeline
 packs/Vsa/
   VsaPack.cs                           Umpire.Vsa: Vsa<THost>, Vsa<TArchitecture, THost>
-  Architecture/                        Umpire.Vsa.Definition: VsaArchitecture, the VSA layers, Feature and Plugin
+  Definition/                          Umpire.Vsa.Definition: VsaArchitecture, the VSA layers, Feature and Plugin
   Kernel/
+    VsaKernel.cs                       Umpire.Vsa.Composition: VsaKernel
     Handlers/Events/                   AddEventHandlers, InProcessEventPublisher
     Handlers/Commands/                 AddCommandHandlers, InProcessCommandSender
     Handlers/Requests/                 RequestHandler, AddRequestHandlers
     Presenters/                        AddPresenters
     Views/                             PresenterWatcher, PresenterComponent<T>
-    Composition/                       Umpire.Vsa.Composition: VsaKernel, RequestOperations, Plugin, Plugin<TSettings>
+    Composition/                       Umpire.Vsa.Composition: RequestOperations, Plugin, Plugin<TSettings>
 ```
 
 ```mermaid
@@ -474,7 +476,7 @@ flowchart BT
 - The kernel knows no layer. `VsaKernel.Configure` calls each layer registration by a direct call, in a fixed order.
 - No host knows VSA. The hosts read only `Operation`.
 - `Umpire.Kernels` does not reference `Microsoft.Extensions.Hosting`. Only `Umpire.Hosts.Web` uses a .NET Generic Host, inside `WebApplication`.
-- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition names `Module` and `Plugin` with `OfType`, and `Vsa<THost>` names `VsaKernel`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
+- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition counts the `Plugin` classes with `HasTypes`, and `Vsa<THost>` names `VsaKernel`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
 
 ## The container
 
@@ -517,7 +519,7 @@ A factory resolves its service on each `Create`, from the scope that resolved th
 ## Module settings
 
 ```text
-module.Compose(services, settings)                 internal, from AppHost.Compose
+module.Install(services, settings)                 public, from AppHost.Compose
 └─ settings.Use<TSettings>(services, this, Validate)
    ├─ providers[0].Get<TSettings>(module) → null
    ├─ providers[1].Get<TSettings>(module) → TSettings   the first answer wins

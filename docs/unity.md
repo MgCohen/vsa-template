@@ -38,7 +38,7 @@ The reasons for the limits:
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
 | The module settings | `UnityHost.Settings(types)`: a provider, or a Tomlyn context for no reflection | `docs/composition.md` |
-| The source folders | `UmpireExcludedFolders`, `umpire.check.folder_aliases` (and `FolderAliases` in code) | `docs/architecture-engine.md` |
+| The source folders | `UmpireExcludedFolders`, `umpire.check.folder_aliases`, `config.FolderAliases`. `Assets/<App>/` binds as the block root | `docs/architecture-engine.md` |
 
 ## Vendored DLLs
 
