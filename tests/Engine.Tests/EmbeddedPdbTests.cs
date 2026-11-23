@@ -6,7 +6,8 @@ using Umpire.Vsa.Definition;
 namespace Engine.Tests;
 
 public sealed class EmbeddedPdbTests {
-    static readonly string Bundle = Repo.Path("artifacts~", "bin", "Umpire", "debug_net8.0", "Umpire.dll");
+    static readonly string Bundle = Directory.GetFiles(Repo.Path("artifacts~", "bin", "Umpire"), "Umpire.dll", SearchOption.AllDirectories)
+        .OrderByDescending(File.GetLastWriteTimeUtc).First();
 
     [Test]
     public void The_shipped_assembly_gives_the_source_path_of_each_type_under_the_mapped_root() {
