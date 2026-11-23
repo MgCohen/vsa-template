@@ -24,6 +24,7 @@ FrameworkKernel -> VsaKernel/Handlers/Handlers.Events [any] Deny
 FrameworkKernel -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel -> VsaKernel/Views [any] Deny
 FrameworkKernel -> VsaKernel/Composition [any] Deny
+FrameworkKernel -> UmpireLibraries [any] Deny
 FrameworkKernel -> Host [any] Deny
 FrameworkKernel -> Views [any] Deny
 FrameworkKernel -> Pack [any] Deny
@@ -86,6 +87,7 @@ FrameworkKernel/KernelParts.App -> VsaKernel/Handlers/Handlers.Events [any] Deny
 FrameworkKernel/KernelParts.App -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.App -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.App -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.App -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.App -> Host [any] Deny
 FrameworkKernel/KernelParts.App -> Views [any] Deny
 FrameworkKernel/KernelParts.App -> Pack [any] Deny
@@ -148,6 +150,7 @@ FrameworkKernel/KernelParts.Kernels -> VsaKernel/Handlers/Handlers.Events [any] 
 FrameworkKernel/KernelParts.Kernels -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Kernels -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Kernels -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Kernels -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Kernels -> Host [any] Deny
 FrameworkKernel/KernelParts.Kernels -> Views [any] Deny
 FrameworkKernel/KernelParts.Kernels -> Pack [any] Deny
@@ -210,6 +213,7 @@ FrameworkKernel/Hosts -> VsaKernel/Handlers/Handlers.Events [any] Deny
 FrameworkKernel/Hosts -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/Hosts -> VsaKernel/Views [any] Deny
 FrameworkKernel/Hosts -> VsaKernel/Composition [any] Deny
+FrameworkKernel/Hosts -> UmpireLibraries [any] Deny
 FrameworkKernel/Hosts -> Host [any] Deny
 FrameworkKernel/Hosts -> Views [any] Deny
 FrameworkKernel/Hosts -> Pack [any] Deny
@@ -272,6 +276,7 @@ FrameworkKernel/KernelParts.Operations -> VsaKernel/Handlers/Handlers.Events [an
 FrameworkKernel/KernelParts.Operations -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Operations -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Operations -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Operations -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Operations -> Host [any] Deny
 FrameworkKernel/KernelParts.Operations -> Views [any] Deny
 FrameworkKernel/KernelParts.Operations -> Pack [any] Deny
@@ -334,6 +339,7 @@ FrameworkKernel/KernelParts.Modules -> VsaKernel/Handlers/Handlers.Events [any] 
 FrameworkKernel/KernelParts.Modules -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Modules -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Modules -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Modules -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Modules -> Host [any] Deny
 FrameworkKernel/KernelParts.Modules -> Views [any] Deny
 FrameworkKernel/KernelParts.Modules -> Pack [any] Deny
@@ -396,6 +402,7 @@ FrameworkKernel/KernelParts.Scan -> VsaKernel/Handlers/Handlers.Events [any] Den
 FrameworkKernel/KernelParts.Scan -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Scan -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Scan -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Scan -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Scan -> Host [any] Deny
 FrameworkKernel/KernelParts.Scan -> Views [any] Deny
 FrameworkKernel/KernelParts.Scan -> Pack [any] Deny
@@ -458,6 +465,7 @@ FrameworkKernel/KernelParts.Factories -> VsaKernel/Handlers/Handlers.Events [any
 FrameworkKernel/KernelParts.Factories -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Factories -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Factories -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Factories -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Factories -> Host [any] Deny
 FrameworkKernel/KernelParts.Factories -> Views [any] Deny
 FrameworkKernel/KernelParts.Factories -> Pack [any] Deny
@@ -520,6 +528,7 @@ FrameworkKernel/KernelParts.Services -> VsaKernel/Handlers/Handlers.Events [any]
 FrameworkKernel/KernelParts.Services -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Services -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Services -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Services -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Services -> Host [any] Deny
 FrameworkKernel/KernelParts.Services -> Views [any] Deny
 FrameworkKernel/KernelParts.Services -> Pack [any] Deny
@@ -582,6 +591,7 @@ FrameworkKernel/KernelParts.Analyzers -> VsaKernel/Handlers/Handlers.Events [any
 FrameworkKernel/KernelParts.Analyzers -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 FrameworkKernel/KernelParts.Analyzers -> VsaKernel/Views [any] Deny
 FrameworkKernel/KernelParts.Analyzers -> VsaKernel/Composition [any] Deny
+FrameworkKernel/KernelParts.Analyzers -> UmpireLibraries [any] Deny
 FrameworkKernel/KernelParts.Analyzers -> Host [any] Deny
 FrameworkKernel/KernelParts.Analyzers -> Views [any] Deny
 FrameworkKernel/KernelParts.Analyzers -> Pack [any] Deny
@@ -644,6 +654,7 @@ MessagesComponent -> VsaKernel/Handlers/Handlers.Events [any] Deny
 MessagesComponent -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 MessagesComponent -> VsaKernel/Views [any] Deny
 MessagesComponent -> VsaKernel/Composition [any] Deny
+MessagesComponent -> UmpireLibraries [any] Deny
 MessagesComponent -> Host [any] Deny
 MessagesComponent -> Views [any] Deny
 MessagesComponent -> Pack [any] Deny
@@ -706,6 +717,7 @@ MessagesComponent/MessagesParts.Contracts -> VsaKernel/Handlers/Handlers.Events 
 MessagesComponent/MessagesParts.Contracts -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 MessagesComponent/MessagesParts.Contracts -> VsaKernel/Views [any] Deny
 MessagesComponent/MessagesParts.Contracts -> VsaKernel/Composition [any] Deny
+MessagesComponent/MessagesParts.Contracts -> UmpireLibraries [any] Deny
 MessagesComponent/MessagesParts.Contracts -> Host [any] Deny
 MessagesComponent/MessagesParts.Contracts -> Views [any] Deny
 MessagesComponent/MessagesParts.Contracts -> Pack [any] Deny
@@ -768,6 +780,7 @@ MessagesComponent/MessagesParts.Handlers -> VsaKernel/Handlers/Handlers.Events [
 MessagesComponent/MessagesParts.Handlers -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 MessagesComponent/MessagesParts.Handlers -> VsaKernel/Views [any] Deny
 MessagesComponent/MessagesParts.Handlers -> VsaKernel/Composition [any] Deny
+MessagesComponent/MessagesParts.Handlers -> UmpireLibraries [any] Deny
 MessagesComponent/MessagesParts.Handlers -> Host [any] Deny
 MessagesComponent/MessagesParts.Handlers -> Views [any] Deny
 MessagesComponent/MessagesParts.Handlers -> Pack [any] Deny
@@ -830,6 +843,7 @@ VsaKernel -> VsaKernel/Handlers/Handlers.Events [any] Deny
 VsaKernel -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 VsaKernel -> VsaKernel/Views [any] Deny
 VsaKernel -> VsaKernel/Composition [any] Deny
+VsaKernel -> UmpireLibraries [any] Deny
 VsaKernel -> Host [any] Deny
 VsaKernel -> Views [any] Deny
 VsaKernel -> Pack [any] Deny
@@ -892,6 +906,7 @@ VsaKernel/Domain -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Domain -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Domain -> VsaKernel/Views [any] Allow Public
 VsaKernel/Domain -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Domain -> UmpireLibraries [any] Deny
 VsaKernel/Domain -> Host [any] Deny
 VsaKernel/Domain -> Views [any] Allow Public
 VsaKernel/Domain -> Pack [any] Deny
@@ -954,6 +969,7 @@ VsaKernel/Infrastructure -> VsaKernel/Handlers/Handlers.Events [any] Allow Publi
 VsaKernel/Infrastructure -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Infrastructure -> VsaKernel/Views [any] Allow Public
 VsaKernel/Infrastructure -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Infrastructure -> UmpireLibraries [any] Deny
 VsaKernel/Infrastructure -> Host [any] Deny
 VsaKernel/Infrastructure -> Views [any] Allow Public
 VsaKernel/Infrastructure -> Pack [any] Deny
@@ -1016,6 +1032,7 @@ VsaKernel/Presenters -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Presenters -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Presenters -> VsaKernel/Views [any] Allow Public
 VsaKernel/Presenters -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Presenters -> UmpireLibraries [any] Deny
 VsaKernel/Presenters -> Host [any] Deny
 VsaKernel/Presenters -> Views [any] Allow Public
 VsaKernel/Presenters -> Pack [any] Deny
@@ -1078,6 +1095,7 @@ VsaKernel/Contracts -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Contracts -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Contracts -> VsaKernel/Views [any] Allow Public
 VsaKernel/Contracts -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Contracts -> UmpireLibraries [any] Deny
 VsaKernel/Contracts -> Host [any] Deny
 VsaKernel/Contracts -> Views [any] Allow Public
 VsaKernel/Contracts -> Pack [any] Deny
@@ -1140,6 +1158,7 @@ VsaKernel/Contracts/Contracts.Requests -> VsaKernel/Handlers/Handlers.Events [an
 VsaKernel/Contracts/Contracts.Requests -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Contracts/Contracts.Requests -> VsaKernel/Views [any] Allow Public
 VsaKernel/Contracts/Contracts.Requests -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Contracts/Contracts.Requests -> UmpireLibraries [any] Deny
 VsaKernel/Contracts/Contracts.Requests -> Host [any] Deny
 VsaKernel/Contracts/Contracts.Requests -> Views [any] Allow Public
 VsaKernel/Contracts/Contracts.Requests -> Pack [any] Deny
@@ -1202,6 +1221,7 @@ VsaKernel/Contracts/Contracts.Events -> VsaKernel/Handlers/Handlers.Events [any]
 VsaKernel/Contracts/Contracts.Events -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Contracts/Contracts.Events -> VsaKernel/Views [any] Allow Public
 VsaKernel/Contracts/Contracts.Events -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Contracts/Contracts.Events -> UmpireLibraries [any] Deny
 VsaKernel/Contracts/Contracts.Events -> Host [any] Deny
 VsaKernel/Contracts/Contracts.Events -> Views [any] Allow Public
 VsaKernel/Contracts/Contracts.Events -> Pack [any] Deny
@@ -1264,6 +1284,7 @@ VsaKernel/Contracts/Contracts.Commands -> VsaKernel/Handlers/Handlers.Events [an
 VsaKernel/Contracts/Contracts.Commands -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Contracts/Contracts.Commands -> VsaKernel/Views [any] Allow Public
 VsaKernel/Contracts/Contracts.Commands -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Contracts/Contracts.Commands -> UmpireLibraries [any] Deny
 VsaKernel/Contracts/Contracts.Commands -> Host [any] Deny
 VsaKernel/Contracts/Contracts.Commands -> Views [any] Allow Public
 VsaKernel/Contracts/Contracts.Commands -> Pack [any] Deny
@@ -1326,6 +1347,7 @@ VsaKernel/Handlers -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Handlers -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Handlers -> VsaKernel/Views [any] Allow Public
 VsaKernel/Handlers -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Handlers -> UmpireLibraries [any] Deny
 VsaKernel/Handlers -> Host [any] Deny
 VsaKernel/Handlers -> Views [any] Allow Public
 VsaKernel/Handlers -> Pack [any] Deny
@@ -1388,6 +1410,7 @@ VsaKernel/Handlers/Handlers.Requests -> VsaKernel/Handlers/Handlers.Events [any]
 VsaKernel/Handlers/Handlers.Requests -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Handlers/Handlers.Requests -> VsaKernel/Views [any] Allow Public
 VsaKernel/Handlers/Handlers.Requests -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Handlers/Handlers.Requests -> UmpireLibraries [any] Deny
 VsaKernel/Handlers/Handlers.Requests -> Host [any] Deny
 VsaKernel/Handlers/Handlers.Requests -> Views [any] Allow Public
 VsaKernel/Handlers/Handlers.Requests -> Pack [any] Deny
@@ -1450,6 +1473,7 @@ VsaKernel/Handlers/Handlers.Events -> VsaKernel/Handlers/Handlers.Requests [any]
 VsaKernel/Handlers/Handlers.Events -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Handlers/Handlers.Events -> VsaKernel/Views [any] Allow Public
 VsaKernel/Handlers/Handlers.Events -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Handlers/Handlers.Events -> UmpireLibraries [any] Deny
 VsaKernel/Handlers/Handlers.Events -> Host [any] Deny
 VsaKernel/Handlers/Handlers.Events -> Views [any] Allow Public
 VsaKernel/Handlers/Handlers.Events -> Pack [any] Deny
@@ -1512,6 +1536,7 @@ VsaKernel/Handlers/Handlers.Commands -> VsaKernel/Handlers/Handlers.Requests [an
 VsaKernel/Handlers/Handlers.Commands -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Handlers/Handlers.Commands -> VsaKernel/Views [any] Allow Public
 VsaKernel/Handlers/Handlers.Commands -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Handlers/Handlers.Commands -> UmpireLibraries [any] Deny
 VsaKernel/Handlers/Handlers.Commands -> Host [any] Deny
 VsaKernel/Handlers/Handlers.Commands -> Views [any] Allow Public
 VsaKernel/Handlers/Handlers.Commands -> Pack [any] Deny
@@ -1574,6 +1599,7 @@ VsaKernel/Views -> VsaKernel/Handlers/Handlers.Requests [any] Allow Public
 VsaKernel/Views -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Views -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Views -> VsaKernel/Composition [any] Allow Public
+VsaKernel/Views -> UmpireLibraries [any] Deny
 VsaKernel/Views -> Host [any] Deny
 VsaKernel/Views -> Views [any] Allow Public
 VsaKernel/Views -> Pack [any] Deny
@@ -1636,6 +1662,7 @@ VsaKernel/Composition -> VsaKernel/Handlers/Handlers.Requests [any] Allow Public
 VsaKernel/Composition -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 VsaKernel/Composition -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 VsaKernel/Composition -> VsaKernel/Views [any] Allow Public
+VsaKernel/Composition -> UmpireLibraries [any] Deny
 VsaKernel/Composition -> Host [any] Deny
 VsaKernel/Composition -> Views [any] Allow Public
 VsaKernel/Composition -> Pack [any] Deny
@@ -1699,6 +1726,7 @@ Host -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Host -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Host -> VsaKernel/Views [any] Deny
 Host -> VsaKernel/Composition [any] Allow Public
+Host -> UmpireLibraries [any] Allow Public
 Host -> Views [any] Deny
 Host -> Pack [any] Allow Public
 Host -> Plugin [any] Deny
@@ -1761,6 +1789,7 @@ Views -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Views -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Views -> VsaKernel/Views [any] Allow Public
 Views -> VsaKernel/Composition [any] Deny
+Views -> UmpireLibraries [any] Deny
 Views -> Host [any] Deny
 Views -> Pack [any] Deny
 Views -> Plugin [any] Deny
@@ -1823,6 +1852,7 @@ Pack -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Pack -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Pack -> VsaKernel/Views [any] Deny
 Pack -> VsaKernel/Composition [any] Deny
+Pack -> UmpireLibraries [any] Deny
 Pack -> Host [any] Deny
 Pack -> Views [any] Deny
 Pack -> Pack [any] Deny
@@ -1886,6 +1916,7 @@ Plugin -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin -> VsaKernel/Views [any] Deny
 Plugin -> VsaKernel/Composition [any] Deny
+Plugin -> UmpireLibraries [any] Deny
 Plugin -> Host [any] Deny
 Plugin -> Views [any] Deny
 Plugin -> Pack [any] Allow Public
@@ -1949,6 +1980,7 @@ Plugin/RootClass -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 Plugin/RootClass -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Plugin/RootClass -> VsaKernel/Views [any] Allow Public
 Plugin/RootClass -> VsaKernel/Composition [any] Allow Public
+Plugin/RootClass -> UmpireLibraries [any] Allow Public
 Plugin/RootClass -> Host [any] Deny
 Plugin/RootClass -> Views [any] Deny
 Plugin/RootClass -> Pack [any] Allow Public
@@ -2012,6 +2044,7 @@ Plugin/Domain -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin/Domain -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Domain -> VsaKernel/Views [any] Deny
 Plugin/Domain -> VsaKernel/Composition [any] Deny
+Plugin/Domain -> UmpireLibraries [any] Deny
 Plugin/Domain -> Host [any] Deny
 Plugin/Domain -> Views [any] Deny
 Plugin/Domain -> Pack [any] Allow Public
@@ -2075,6 +2108,7 @@ Plugin/Domain/Domain.Shared -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin/Domain/Domain.Shared -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Domain/Domain.Shared -> VsaKernel/Views [any] Deny
 Plugin/Domain/Domain.Shared -> VsaKernel/Composition [any] Deny
+Plugin/Domain/Domain.Shared -> UmpireLibraries [any] Deny
 Plugin/Domain/Domain.Shared -> Host [any] Deny
 Plugin/Domain/Domain.Shared -> Views [any] Deny
 Plugin/Domain/Domain.Shared -> Pack [any] Allow Public
@@ -2138,6 +2172,7 @@ Plugin/Infrastructure -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin/Infrastructure -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Infrastructure -> VsaKernel/Views [any] Deny
 Plugin/Infrastructure -> VsaKernel/Composition [any] Deny
+Plugin/Infrastructure -> UmpireLibraries [any] Deny
 Plugin/Infrastructure -> Host [any] Deny
 Plugin/Infrastructure -> Views [any] Deny
 Plugin/Infrastructure -> Pack [any] Allow Public
@@ -2201,6 +2236,7 @@ Plugin/Presenters -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin/Presenters -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Presenters -> VsaKernel/Views [any] Deny
 Plugin/Presenters -> VsaKernel/Composition [any] Deny
+Plugin/Presenters -> UmpireLibraries [any] Deny
 Plugin/Presenters -> Host [any] Deny
 Plugin/Presenters -> Views [any] Deny
 Plugin/Presenters -> Pack [any] Allow Public
@@ -2264,6 +2300,7 @@ Plugin/Contracts -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin/Contracts -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Contracts -> VsaKernel/Views [any] Deny
 Plugin/Contracts -> VsaKernel/Composition [any] Deny
+Plugin/Contracts -> UmpireLibraries [any] Deny
 Plugin/Contracts -> Host [any] Deny
 Plugin/Contracts -> Views [any] Deny
 Plugin/Contracts -> Pack [any] Allow Public
@@ -2327,6 +2364,7 @@ Plugin/Contracts/Contracts.Requests -> VsaKernel/Handlers/Handlers.Events [any] 
 Plugin/Contracts/Contracts.Requests -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Requests -> VsaKernel/Views [any] Deny
 Plugin/Contracts/Contracts.Requests -> VsaKernel/Composition [any] Deny
+Plugin/Contracts/Contracts.Requests -> UmpireLibraries [any] Deny
 Plugin/Contracts/Contracts.Requests -> Host [any] Deny
 Plugin/Contracts/Contracts.Requests -> Views [any] Deny
 Plugin/Contracts/Contracts.Requests -> Pack [any] Allow Public
@@ -2390,6 +2428,7 @@ Plugin/Contracts/Contracts.Events -> VsaKernel/Handlers/Handlers.Events [any] De
 Plugin/Contracts/Contracts.Events -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Events -> VsaKernel/Views [any] Deny
 Plugin/Contracts/Contracts.Events -> VsaKernel/Composition [any] Deny
+Plugin/Contracts/Contracts.Events -> UmpireLibraries [any] Deny
 Plugin/Contracts/Contracts.Events -> Host [any] Deny
 Plugin/Contracts/Contracts.Events -> Views [any] Deny
 Plugin/Contracts/Contracts.Events -> Pack [any] Allow Public
@@ -2453,6 +2492,7 @@ Plugin/Contracts/Contracts.Commands -> VsaKernel/Handlers/Handlers.Events [any] 
 Plugin/Contracts/Contracts.Commands -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Contracts/Contracts.Commands -> VsaKernel/Views [any] Deny
 Plugin/Contracts/Contracts.Commands -> VsaKernel/Composition [any] Deny
+Plugin/Contracts/Contracts.Commands -> UmpireLibraries [any] Deny
 Plugin/Contracts/Contracts.Commands -> Host [any] Deny
 Plugin/Contracts/Contracts.Commands -> Views [any] Deny
 Plugin/Contracts/Contracts.Commands -> Pack [any] Allow Public
@@ -2516,6 +2556,7 @@ Plugin/Handlers -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Plugin/Handlers -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Handlers -> VsaKernel/Views [any] Deny
 Plugin/Handlers -> VsaKernel/Composition [any] Deny
+Plugin/Handlers -> UmpireLibraries [any] Deny
 Plugin/Handlers -> Host [any] Deny
 Plugin/Handlers -> Views [any] Deny
 Plugin/Handlers -> Pack [any] Allow Public
@@ -2579,6 +2620,7 @@ Plugin/Handlers/Handlers.Requests -> VsaKernel/Handlers/Handlers.Events [any] De
 Plugin/Handlers/Handlers.Requests -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Requests -> VsaKernel/Views [any] Deny
 Plugin/Handlers/Handlers.Requests -> VsaKernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Requests -> UmpireLibraries [any] Deny
 Plugin/Handlers/Handlers.Requests -> Host [any] Deny
 Plugin/Handlers/Handlers.Requests -> Views [any] Deny
 Plugin/Handlers/Handlers.Requests -> Pack [any] Allow Public
@@ -2642,6 +2684,7 @@ Plugin/Handlers/Handlers.Events -> VsaKernel/Handlers/Handlers.Events [any] Allo
 Plugin/Handlers/Handlers.Events -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Events -> VsaKernel/Views [any] Deny
 Plugin/Handlers/Handlers.Events -> VsaKernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Events -> UmpireLibraries [any] Deny
 Plugin/Handlers/Handlers.Events -> Host [any] Deny
 Plugin/Handlers/Handlers.Events -> Views [any] Deny
 Plugin/Handlers/Handlers.Events -> Pack [any] Allow Public
@@ -2705,6 +2748,7 @@ Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> VsaKernel/Handlers/Hand
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> VsaKernel/Views [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> VsaKernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> UmpireLibraries [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Host [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Views [any] Deny
 Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Pack [any] Allow Public
@@ -2768,6 +2812,7 @@ Plugin/Handlers/Handlers.Commands -> VsaKernel/Handlers/Handlers.Events [any] De
 Plugin/Handlers/Handlers.Commands -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Plugin/Handlers/Handlers.Commands -> VsaKernel/Views [any] Deny
 Plugin/Handlers/Handlers.Commands -> VsaKernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Commands -> UmpireLibraries [any] Deny
 Plugin/Handlers/Handlers.Commands -> Host [any] Deny
 Plugin/Handlers/Handlers.Commands -> Views [any] Deny
 Plugin/Handlers/Handlers.Commands -> Pack [any] Allow Public
@@ -2831,6 +2876,7 @@ Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> VsaKernel/Handlers/
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> VsaKernel/Views [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> VsaKernel/Composition [any] Deny
+Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> UmpireLibraries [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Host [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Views [any] Deny
 Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Pack [any] Allow Public
@@ -2894,6 +2940,7 @@ Feature -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature -> VsaKernel/Views [any] Deny
 Feature -> VsaKernel/Composition [any] Deny
+Feature -> UmpireLibraries [any] Deny
 Feature -> Host [any] Deny
 Feature -> Views [any] Deny
 Feature -> Pack [any] Allow Public
@@ -2958,6 +3005,7 @@ Feature/RootClass -> VsaKernel/Handlers/Handlers.Events [any] Allow Public
 Feature/RootClass -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Feature/RootClass -> VsaKernel/Views [any] Allow Public
 Feature/RootClass -> VsaKernel/Composition [any] Deny
+Feature/RootClass -> UmpireLibraries [any] Allow Public
 Feature/RootClass -> Host [any] Deny
 Feature/RootClass -> Views [any] Deny
 Feature/RootClass -> Pack [any] Allow Public
@@ -3056,6 +3104,7 @@ Feature/Domain -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Domain -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Domain -> VsaKernel/Views [any] Deny
 Feature/Domain -> VsaKernel/Composition [any] Deny
+Feature/Domain -> UmpireLibraries [any] Deny
 Feature/Domain -> Host [any] Deny
 Feature/Domain -> Views [any] Deny
 Feature/Domain -> Pack [any] Allow Public
@@ -3119,6 +3168,7 @@ Feature/Domain/Domain.Shared -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Domain/Domain.Shared -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Domain/Domain.Shared -> VsaKernel/Views [any] Deny
 Feature/Domain/Domain.Shared -> VsaKernel/Composition [any] Deny
+Feature/Domain/Domain.Shared -> UmpireLibraries [any] Deny
 Feature/Domain/Domain.Shared -> Host [any] Deny
 Feature/Domain/Domain.Shared -> Views [any] Deny
 Feature/Domain/Domain.Shared -> Pack [any] Allow Public
@@ -3182,6 +3232,7 @@ Feature/Infrastructure -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Infrastructure -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Infrastructure -> VsaKernel/Views [any] Deny
 Feature/Infrastructure -> VsaKernel/Composition [any] Deny
+Feature/Infrastructure -> UmpireLibraries [any] Deny
 Feature/Infrastructure -> Host [any] Deny
 Feature/Infrastructure -> Views [any] Deny
 Feature/Infrastructure -> Pack [any] Allow Public
@@ -3246,6 +3297,7 @@ Feature/Presenters -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Presenters -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Presenters -> VsaKernel/Views [any] Deny
 Feature/Presenters -> VsaKernel/Composition [any] Deny
+Feature/Presenters -> UmpireLibraries [any] Deny
 Feature/Presenters -> Host [any] Deny
 Feature/Presenters -> Views [any] Deny
 Feature/Presenters -> Pack [any] Allow Public
@@ -3316,6 +3368,7 @@ Feature/Slice.Shared -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Slice.Shared -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice.Shared -> VsaKernel/Views [any] Deny
 Feature/Slice.Shared -> VsaKernel/Composition [any] Deny
+Feature/Slice.Shared -> UmpireLibraries [any] Deny
 Feature/Slice.Shared -> Host [any] Deny
 Feature/Slice.Shared -> Views [any] Deny
 Feature/Slice.Shared -> Pack [any] Allow Public
@@ -3379,6 +3432,7 @@ Feature/Slice -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Slice -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice -> VsaKernel/Views [any] Deny
 Feature/Slice -> VsaKernel/Composition [any] Deny
+Feature/Slice -> UmpireLibraries [any] Deny
 Feature/Slice -> Host [any] Deny
 Feature/Slice -> Views [any] Deny
 Feature/Slice -> Pack [any] Allow Public
@@ -3443,6 +3497,7 @@ Feature/Slice/Contracts.Requests -> VsaKernel/Handlers/Handlers.Events [any] Den
 Feature/Slice/Contracts.Requests -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Requests -> VsaKernel/Views [any] Deny
 Feature/Slice/Contracts.Requests -> VsaKernel/Composition [any] Deny
+Feature/Slice/Contracts.Requests -> UmpireLibraries [any] Deny
 Feature/Slice/Contracts.Requests -> Host [any] Deny
 Feature/Slice/Contracts.Requests -> Views [any] Deny
 Feature/Slice/Contracts.Requests -> Pack [any] Allow Public
@@ -3507,6 +3562,7 @@ Feature/Slice/Contracts.Events -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Slice/Contracts.Events -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Events -> VsaKernel/Views [any] Deny
 Feature/Slice/Contracts.Events -> VsaKernel/Composition [any] Deny
+Feature/Slice/Contracts.Events -> UmpireLibraries [any] Deny
 Feature/Slice/Contracts.Events -> Host [any] Deny
 Feature/Slice/Contracts.Events -> Views [any] Deny
 Feature/Slice/Contracts.Events -> Pack [any] Allow Public
@@ -3571,6 +3627,7 @@ Feature/Slice/Contracts.Commands -> VsaKernel/Handlers/Handlers.Events [any] Den
 Feature/Slice/Contracts.Commands -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice/Contracts.Commands -> VsaKernel/Views [any] Deny
 Feature/Slice/Contracts.Commands -> VsaKernel/Composition [any] Deny
+Feature/Slice/Contracts.Commands -> UmpireLibraries [any] Deny
 Feature/Slice/Contracts.Commands -> Host [any] Deny
 Feature/Slice/Contracts.Commands -> Views [any] Deny
 Feature/Slice/Contracts.Commands -> Pack [any] Allow Public
@@ -3635,6 +3692,7 @@ Feature/Slice/Handlers.Requests -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Requests -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Requests -> VsaKernel/Views [any] Deny
 Feature/Slice/Handlers.Requests -> VsaKernel/Composition [any] Deny
+Feature/Slice/Handlers.Requests -> UmpireLibraries [any] Deny
 Feature/Slice/Handlers.Requests -> Host [any] Deny
 Feature/Slice/Handlers.Requests -> Views [any] Deny
 Feature/Slice/Handlers.Requests -> Pack [any] Allow Public
@@ -3705,6 +3763,7 @@ Feature/Slice/Handlers.Events -> VsaKernel/Handlers/Handlers.Events [any] Allow 
 Feature/Slice/Handlers.Events -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Events -> VsaKernel/Views [any] Deny
 Feature/Slice/Handlers.Events -> VsaKernel/Composition [any] Deny
+Feature/Slice/Handlers.Events -> UmpireLibraries [any] Deny
 Feature/Slice/Handlers.Events -> Host [any] Deny
 Feature/Slice/Handlers.Events -> Views [any] Deny
 Feature/Slice/Handlers.Events -> Pack [any] Allow Public
@@ -3772,6 +3831,7 @@ Feature/Slice/Handlers.Commands -> VsaKernel/Handlers/Handlers.Events [any] Deny
 Feature/Slice/Handlers.Commands -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Feature/Slice/Handlers.Commands -> VsaKernel/Views [any] Deny
 Feature/Slice/Handlers.Commands -> VsaKernel/Composition [any] Deny
+Feature/Slice/Handlers.Commands -> UmpireLibraries [any] Deny
 Feature/Slice/Handlers.Commands -> Host [any] Deny
 Feature/Slice/Handlers.Commands -> Views [any] Deny
 Feature/Slice/Handlers.Commands -> Pack [any] Allow Public
@@ -3839,6 +3899,7 @@ Feature/Slice/Handlers.Events.Hooks -> VsaKernel/Handlers/Handlers.Events [any] 
 Feature/Slice/Handlers.Events.Hooks -> VsaKernel/Handlers/Handlers.Commands [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> VsaKernel/Views [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> VsaKernel/Composition [any] Deny
+Feature/Slice/Handlers.Events.Hooks -> UmpireLibraries [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Host [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Views [any] Deny
 Feature/Slice/Handlers.Events.Hooks -> Pack [any] Allow Public
@@ -3909,6 +3970,7 @@ Feature/Slice/Handlers.Commands.Hooks -> VsaKernel/Handlers/Handlers.Events [any
 Feature/Slice/Handlers.Commands.Hooks -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Feature/Slice/Handlers.Commands.Hooks -> VsaKernel/Views [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> VsaKernel/Composition [any] Deny
+Feature/Slice/Handlers.Commands.Hooks -> UmpireLibraries [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Host [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Views [any] Deny
 Feature/Slice/Handlers.Commands.Hooks -> Pack [any] Allow Public
@@ -3979,6 +4041,7 @@ Feature/Slice/Slice.Validators -> VsaKernel/Handlers/Handlers.Events [any] Allow
 Feature/Slice/Slice.Validators -> VsaKernel/Handlers/Handlers.Commands [any] Allow Public
 Feature/Slice/Slice.Validators -> VsaKernel/Views [any] Deny
 Feature/Slice/Slice.Validators -> VsaKernel/Composition [any] Deny
+Feature/Slice/Slice.Validators -> UmpireLibraries [any] Deny
 Feature/Slice/Slice.Validators -> Host [any] Deny
 Feature/Slice/Slice.Validators -> Views [any] Deny
 Feature/Slice/Slice.Validators -> Pack [any] Allow Public

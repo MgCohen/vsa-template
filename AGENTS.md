@@ -86,6 +86,7 @@ Each first folder in `tests/Fixtures/` is one block:
 | `Notes/` | A full web app with its own unit tests. Engine.Tests and Consumer.Tests use it |
 | `TwoApps/`, `ShellApp/` | Engine cases: a block with two apps, and a launcher entry (`IAppEntry<TPack>`) with a private app class and no empty constructor |
 | `PackVariant/` | An app with its own pack variant `Packs/Ecs/` and the module kind `EcsFeature`. Engine.Tests and Architecture.Tests use it |
+| `Spike/` | The ABC spike (#256): the blocks Alpha, Bravo and Charlie, each with its own `AssemblyMetadata` check entry, under one `UmpireBlock`. `SpikeDefinitionTests` and `SpikeRunTests` in Engine.Tests use it |
 
 There are two kinds of fixture:
 

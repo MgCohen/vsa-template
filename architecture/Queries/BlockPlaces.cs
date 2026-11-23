@@ -28,9 +28,11 @@ static class BlockPlaces {
         var inner = Relative(blockFolder, innerBlocks).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return [.. resolved.Parts.Where(p => p.IsBlockPlace)
             .SelectMany(place => Folders(blockFolder, place.Path.Split('/'))
-                .Where(folder => !inner.Contains(folder) && Directory.Exists(Full(blockFolder, folder)))
+                .Where(folder => !inner.Contains(folder) && (Directory.Exists(Full(blockFolder, folder)) || !HasDllForm(place)))
                 .Select(folder => new BlockPlace(place, Full(blockFolder, folder), folder)))];
     }
+
+    static bool HasDllForm(Part place) => !place.IsGroup && place.Concept is Blocks.Block && place.Children.Count > 0;
 
     static bool Overlaps(string[] pattern, string[] inner) =>
         Enumerable.Range(0, Math.Min(pattern.Length, inner.Length)).All(i => Fits(pattern[i], inner[i]));

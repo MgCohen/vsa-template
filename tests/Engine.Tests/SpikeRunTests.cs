@@ -5,6 +5,7 @@ using Tests.Shared;
 
 namespace Engine.Tests;
 
+[NonParallelizable]
 public sealed class SpikeRunTests {
     static readonly string spike = Repo.Path("tests", "Fixtures", "Spike");
     static readonly string alpha = Path.Combine(spike, "Alpha");
@@ -45,7 +46,10 @@ public sealed class SpikeRunTests {
             Has.One.Contains(alpha + " ").And.One.Contains(bravo + " "), string.Join(Environment.NewLine, lower.Lines));
     }
 
-    static string Bin(string project) => Path.Combine(spike, "artifacts~", "bin", project, "debug");
+    static string Bin(string project) => Path.Combine(spike, "artifacts~", "bin", project, Configuration());
+
+    static string Configuration() =>
+        Path.GetFileName(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
     static string[] Stamps(string block) {
         var folder = Path.GetDirectoryName(BlockStamp.In(block, "view"))!;
