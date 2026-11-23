@@ -18,7 +18,6 @@ public class VsaArchitecture : Architecture {
         root.AddBlock<FrameworkKernel>();
         root.AddBlock<MessagesComponent>();
         root.AddBlock<VsaKernel>();
-        root.Add<UmpireLibraries>();
         root.Add<Host>().And<Views>();
         root.AddBlockGroup<Pack>("Packs");
         root.AddGroup<Plugin>(Boundary.Open);

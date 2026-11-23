@@ -19,6 +19,10 @@ internal sealed class Compiler {
             block.AddRules(book.Of(block.GetType()));
         }
         architecture.AddRules(book);
+        Parts = [.. Parts, .. RuleExternals()];
+        foreach (var part in Parts.Where(p => !partOptions.ContainsKey(p))) {
+            partOptions[part] = part.Options.Over(Options);
+        }
         UseRules = CompileUseRules();
         Counts = [.. book.Counts.Select(Of), .. Required()];
         Matches = [.. book.Matches.Select(Of)];
@@ -113,8 +117,28 @@ internal sealed class Compiler {
         }
     }
 
+    IEnumerable<Part> RuleExternals() =>
+        [.. book.Rules.SelectMany(rule => rule.Targets).Select(entry => entry.Target)
+            .Where(target => typeof(External).IsAssignableFrom(target) && !Parts.Any(p => p.Concept!.GetType() == target))
+            .Distinct()
+            .Select(RefuseAbstractExternal)
+            .Select(target => Root.AddExternal((External)Activator.CreateInstance(target)!))];
+
+    static Type RefuseAbstractExternal(Type target) =>
+        target.IsAbstract || target.GetConstructor(Type.EmptyTypes) is null
+            ? throw new InvalidOperationException(
+                $"Rules: {Concept.Display(target)} is an abstract External or has no empty constructor, so it names no DLL. "
+                + "Name a sealed External record with an Assembly, for example Uses<ArchUnitLibraries>().")
+            : target;
+
     void AddRule(List<PartRule> all, Rule rule) {
         var text = rule.ToString();
+        if (rule.From.FirstOrDefault(entry => typeof(External).IsAssignableFrom(entry.Target)) is { } library) {
+            throw new InvalidOperationException(
+                $"Rules: \"{text}\": {Concept.Display(library.Target)} is an External. An External is only the target of a rule, "
+                + "never its subject, because the engine does not check the code of a DLL. Use it as a target, for example Uses<"
+                + $"{Concept.Display(library.Target)}>().");
+        }
         Validate(rule.From.Concat(rule.Targets), text);
         var fromParts = rule.From.SelectMany(e => Branch(e).Where(p => PassesFilters(p, e))).Distinct().ToList();
         foreach (var entry in rule.Targets) {
@@ -229,7 +253,10 @@ internal sealed class Compiler {
     void Validate(IEnumerable<Entry> entries, string text) {
         foreach (var entry in entries) {
             foreach (var target in entry.Filters.Select(f => f.Target).Append(entry.Target).Where(t => !Parts.Any(p => p.Is(t)))) {
-                throw new InvalidOperationException($"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
+                throw new InvalidOperationException(typeof(External).IsAssignableFrom(target)
+                    ? $"Rules: \"{text}\" names the External {Concept.Display(target)} only in a filter or a count. "
+                        + $"An External gets its part from a use rule that names it as the target, for example Uses<{Concept.Display(target)}>()."
+                    : $"Rules: \"{text}\" names {Concept.Display(target)}, but the definition has no part of that concept.");
             }
             foreach (var filter in entry.Filters.Where(f => f.Kind != FilterKind.Under)) {
                 RefuseNoGroup(filter.Target, filter.ToString(), text);

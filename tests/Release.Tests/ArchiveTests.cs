@@ -220,10 +220,7 @@ public sealed class ArchiveTests {
             using Umpire.Vsa.Definition;
 
             public sealed class DiceArchitecture : VsaArchitecture {
-                protected override void Define(Block block) {
-                    base.Define(block);
-                    block.Add<HostViews>();
-                }
+                protected override void Rules(RuleBook rules) => rules.For<Views>().Uses<HostViews>();
             }
 
             public sealed record HostViews : External {

@@ -8,8 +8,8 @@ public class Part : IPartChain {
     readonly Dictionary<Type, bool> requiredAtCallSite = [];
     Options options = new();
     string? folder;
-    string? assembly;
     bool open;
+    bool external;
 
     protected internal Part(Concept? concept, string? folder, Part? parent, bool group = false, bool blockPlace = false) {
         Concept = concept;
@@ -24,8 +24,7 @@ public class Part : IPartChain {
     public bool IsGroup { get; }
     public bool IsBlockPlace { get; }
     public bool HasFolder => folder is not null;
-    public string? Assembly => assembly ?? (Concept is External external ? external.Assembly
-        : Parent?.Assembly is { } parent ? $"{parent}.{folder}" : null);
+    public string? Assembly => Concept is External library ? library.Assembly : null;
     public bool IsExternal => Assembly is not null;
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
@@ -87,20 +86,7 @@ public class Part : IPartChain {
     }
 
     public Part InParentFolder() {
-        if (IsExternal) {
-            throw new InvalidOperationException(
-                $"Define: {Name} is in the external {Assembly}. An external part has no InParentFolder, because its name is a DLL name segment. Remove InParentFolder.");
-        }
         folder = null;
-        return this;
-    }
-
-    public Part InAssembly(string name) {
-        if (!IsExternal) {
-            throw new InvalidOperationException(
-                $"Define: {Name} is not in an external, so it has no DLL. Remove InAssembly, or add the part under an external.");
-        }
-        assembly = name;
         return this;
     }
 
@@ -185,9 +171,18 @@ public class Part : IPartChain {
         return Attach(part);
     }
 
+    internal Part AddExternal(External library) {
+        external = true;
+        try {
+            return Attach(new Part(library, library.Folder, this));
+        } finally {
+            external = false;
+        }
+    }
+
     Part Attach(Part child) {
         RefuseInBlockPlace(child);
-        RefuseExternalNesting(child);
+        RefuseExternal(child);
         var owners = Owners.Of(child.Concept!);
         RefuseOwned(child, owners);
         child.Placers = child.Concept is Block && Owners.Home(child.Concept) is { Count: > 0 } home ? home : Placers;
@@ -238,26 +233,15 @@ public class Part : IPartChain {
                 $"Define: {child.Name} is under {Name}, but {Name} is the place of another block. The block in that place has its own definition. "
                 + $"Remove the part, or add it in the definition of the block in {Path}.");
         }
-        if (child.IsBlockPlace && (IsExternal || child.Concept is External)) {
-            throw new InvalidOperationException(
-                $"Define: the block place {child.Name} is an external or under an external. A block place is a folder. Add it outside the externals.");
-        }
     }
 
-    void RefuseExternalNesting(Part child) {
-        var name = child.Name;
-        var group = SelfAndAncestors().FirstOrDefault(p => p.IsGroup);
-        var external = child.Concept is External;
-        if (!(external && (child.IsGroup || group is not null || IsExternal)) && !(child.IsGroup && IsExternal)) {
+    void RefuseExternal(Part child) {
+        if (child.Concept is not External || external) {
             return;
         }
-        var call = child.IsGroup ? $"AddGroup<{name}>()" : $"Add<{name}>()";
-        var place = IsExternal ? $"is under the external {Assembly}"
-            : group is not null ? $"is under the group {group.Name}"
-            : "makes a group of an external";
+        var call = child.IsGroup ? $"AddGroup<{child.Name}>()" : $"Add<{child.Name}>()";
         throw new InvalidOperationException(
-            $"Define: {call} {place}. A DLL name has no group segment, and the child of an external gets its DLL name from its parent. "
-            + "So an external is not a group, and it is not under a group or another external. A group is not under an external. "
-            + $"Use Add<{name}>(), and add each external outside the groups and the other externals.");
+            $"Define: {call} adds an External. An External is a DLL, not a folder, so it has no place in Define. "
+            + $"Name it in a rule, for example rules.For<Infrastructure>().Uses<{child.Name}>(). The rule gives it its part.");
     }
 }

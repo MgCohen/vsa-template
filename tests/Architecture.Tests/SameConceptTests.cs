@@ -7,7 +7,9 @@ public record Package : Concept;
 public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture {
     public Permission Decision(string fromPath, string toPath) {
         var resolved = new ResolvedArchitecture(this);
-        return resolved.UseRules.LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? resolved.Options.DefaultPermission!.Value;
+        var sameGroups = resolved.Parts.Where(p => p.IsGroup).Select(p => p.Name).Distinct().ToDictionary(name => name, _ => "one");
+        return resolved.ActingRule(resolved.Parts.First(p => p.Path == fromPath), sameGroups, resolved.Parts.First(p => p.Path == toPath), sameGroups)
+            ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
     protected override void Configure(Options defaults) {
@@ -57,7 +59,9 @@ public sealed class SameConceptTests {
 public sealed class DenyingSameLayerArchitecture : Architecture {
     public Permission Decision(string fromPath, string toPath) {
         var resolved = new ResolvedArchitecture(this);
-        return resolved.UseRules.LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? resolved.Options.DefaultPermission!.Value;
+        var sameGroups = resolved.Parts.Where(p => p.IsGroup).Select(p => p.Name).Distinct().ToDictionary(name => name, _ => "one");
+        return resolved.ActingRule(resolved.Parts.First(p => p.Path == fromPath), sameGroups, resolved.Parts.First(p => p.Path == toPath), sameGroups)
+            ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
     protected override void Configure(Options defaults) {

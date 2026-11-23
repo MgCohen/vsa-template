@@ -68,6 +68,7 @@ public class VsaArchitecture : Architecture {
 - A rule on a concept also covers each concept that derives from it. For example, a rule on `Module` covers `Feature`, `Plugin` and `EcsFeature`.
 - A rule covers each matching part in all blocks. If a rule is for one place only, add `Under<T>()`. If two places need different rules, use two concepts.
 - The engine calls `Configure`, `Define` and `Rules` of each class in the inheritance chain, from the base down. A level does not call its base level (`UMP010107`).
+- For a pair of parts, the last matching use rule wins. The levels add their rules in stack order, so the level on top wins, both to loosen and to tighten a rule of its base. One method selects that rule: `ResolvedArchitecture.ActingRule(from, fromValues, to, toValues)`, and `DecisionFor` calls it.
 
 | Call | Effect |
 |---|---|
@@ -215,21 +216,18 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 ## External parts
 
-An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions` or ArchUnitNET. It binds the types of a DLL by its name, not by its folder. A child of an external gets the DLL name of its parent and its folder, for example `Lib.Child`. A child can also name its own DLL with `InAssembly`. A type also matches by its namespace. The longest matching name wins. The types of an external DLL are rule targets: a rule can deny them.
+An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions` or ArchUnitNET. It binds the types of a DLL by its name, not by its folder. A type also matches by its namespace. The longest matching name wins. A rule that names an `External` gives it its part: `rules.For<Infrastructure>().Uses<ArchUnitLibraries>()`. The types of an external DLL are rule targets only: a rule can allow or deny them, and an `External` is never the subject of a rule.
 
 The Umpire DLLs are DLLs with structure. A type in a kernel body (`FrameworkKernel`, `MessagesComponent`, `VsaKernel`) binds to that body by its PDB path (see "Binding"). Each other Umpire type, for example a marker, `UmpireConfig`, `Vsa<THost>` or `VsaArchitecture`, binds to the External `UmpireLibraries` (`Assembly => "Umpire"`). The module root classes and `Host` can use `UmpireLibraries`, so the app class can name the pack. Other parts cannot.
 
-The engine binds a DLL type by its PDB path only if an `External` names its assembly. Thus a placed block in a DLL whose name does not start with `Umpire` needs an `External` for its assembly. Without it, the types of that DLL have no part, and their uses are allowed. This gate stops a false part for a library with the same folder names, for example `../Shared/Messages/Contracts/`.
+The engine binds a DLL type by its PDB path only if an `External` names its assembly. Thus a placed block in a DLL whose name does not start with `Umpire` needs a rule that names an `External` for its assembly. Without it, the types of that DLL have no part, and their uses are allowed. This gate stops a false part for a library with the same folder names, for example `../Shared/Messages/Contracts/`.
 
-The definition stops at these shapes. The first four give one error, because a DLL name has no group segment, and the child of an external gets its DLL name from its parent:
+The definition stops at these shapes:
 
 | Definition | Error |
 |---|---|
-| `AddGroup<External>()` | `AddGroup<Lib>() makes a group of an external.` |
-| An external under a group | `Add<Lib>() is under the group Group.` |
-| An external under an external | `Add<OtherLib>() is under the external Lib.` |
-| `AddGroup` under an external | `AddGroup<Child>() is under the external Lib.` |
-| `InParentFolder()` on an external part | Its name is a DLL name segment |
+| `Add<Lib>()` or `AddGroup<Lib>()` of an `External` | `Define: Add<Lib>() adds an External. An External is a DLL, not a folder, so it has no place in Define.` Name it in a rule |
+| `rules.For<Lib>()` | `Lib is an External. An External is only the target of a rule, never its subject` |
 
 ## Depth
 

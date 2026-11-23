@@ -14,61 +14,59 @@ public record Group : Concept;
 
 public record Child : Concept;
 
-public sealed class InlineArchitecture(Action<Part> define) : Architecture {
+public sealed class InlineArchitecture(Action<Part> define, Action<RuleBook>? rules = null) : Architecture {
     protected override void Define(Part block) {
         define(block);
+    }
+
+    protected override void Rules(RuleBook book) {
+        rules?.Invoke(book);
     }
 }
 
 public sealed class ExternalTests {
     [Test]
-    public void A_part_under_an_external_gets_its_DLL_name_from_the_parent() {
-        Part? child = null;
-        _ = new ResolvedArchitecture(new InlineArchitecture(block => child = block.Add<Lib>().Add<Child>()));
+    public void A_rule_that_names_an_external_gives_it_its_part() {
+        var resolved = new ResolvedArchitecture(new InlineArchitecture(block => block.Add<Child>(), rules => rules.For<Child>().Uses<Lib>()));
 
-        Assert.That((child!.Assembly, child.IsExternal), Is.EqualTo(("Lib.Child", true)));
+        Assert.That(resolved.ExternalPart("Lib")?.Name, Is.EqualTo(nameof(Lib)));
     }
 
     [Test]
-    public void A_part_under_an_external_can_name_its_own_DLL() {
-        Part? child = null;
-        Part? grandchild = null;
-        _ = new ResolvedArchitecture(new InlineArchitecture(block => {
-            child = block.Add<Lib>().Add<Child>().InAssembly("Other.Name");
-            grandchild = child.Add<Group>();
-        }));
+    public void An_external_that_no_rule_names_has_no_part() {
+        var resolved = new ResolvedArchitecture(new InlineArchitecture(block => block.Add<Child>(), rules => rules.For<Child>().Uses<Lib>()));
 
-        Assert.That((child!.Assembly, grandchild!.Assembly), Is.EqualTo(("Other.Name", "Other.Name.Group")));
+        Assert.That(resolved.ExternalPart("OtherLib"), Is.Null);
     }
 
     [Test]
-    public void InAssembly_on_a_part_that_is_not_external_throws() {
-        Blocks(block => block.Add<Child>().InAssembly("Other.Name"), "Define: Child is not in an external, so it has no DLL.");
+    public void Two_rules_that_name_one_external_give_one_part() {
+        var resolved = new ResolvedArchitecture(new InlineArchitecture(
+            block => block.Add<Child>().And<Group>(),
+            rules => {
+                rules.For<Child>().Uses<Lib>();
+                rules.For<Group>().Denies<Lib>();
+            }));
+
+        Assert.That(resolved.Parts.Count(p => p.Concept is Lib), Is.EqualTo(1));
     }
 
     [Test]
-    public void AddMany_of_an_external_throws() {
-        Blocks(block => block.AddGroup<Lib>(), "Define: AddGroup<Lib>() makes a group of an external.");
+    public void Add_of_an_external_throws() {
+        Blocks(block => block.Add<Lib>(), "Define: Add<Lib>() adds an External. An External is a DLL, not a folder");
     }
 
     [Test]
-    public void An_external_under_a_group_throws() {
-        Blocks(block => block.AddGroup<Group>().Add<Lib>(), "Define: Add<Lib>() is under the group Group.");
+    public void AddGroup_of_an_external_throws() {
+        Blocks(block => block.AddGroup<Lib>(), "Define: AddGroup<Lib>() adds an External.");
     }
 
     [Test]
-    public void An_external_under_an_external_throws() {
-        Blocks(block => block.Add<Lib>().Add<OtherLib>(), "Define: Add<OtherLib>() is under the external Lib.");
-    }
+    public void An_external_as_the_subject_of_a_rule_throws() {
+        var definition = new InlineArchitecture(block => block.Add<Child>(), rules => rules.For<Lib>().Uses<Child>());
 
-    [Test]
-    public void AddMany_under_an_external_throws() {
-        Blocks(block => block.Add<Lib>().AddGroup<Child>(), "Define: AddGroup<Child>() is under the external Lib.");
-    }
-
-    [Test]
-    public void NoFolder_on_an_external_part_throws() {
-        Blocks(block => block.Add<Lib>().InParentFolder(), "An external part has no InParentFolder");
+        Assert.That(() => new ResolvedArchitecture(definition),
+            Throws.InvalidOperationException.With.Message.Contains("Lib is an External. An External is only the target of a rule"));
     }
 
     static void Blocks(Action<Part> define, string message) {
