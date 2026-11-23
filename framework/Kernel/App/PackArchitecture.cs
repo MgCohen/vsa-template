@@ -1,6 +1,7 @@
 namespace Umpire.Kernels;
 
 using Umpire.Architecture;
+using AppRoot = Umpire.Architecture.Blocks.App;
 using KernelBlock = Umpire.Architecture.Blocks.Kernel;
 
 public sealed class PackArchitecture : Architecture {
@@ -15,7 +16,6 @@ public sealed class PackArchitecture : Architecture {
     }
 
     protected override void Define(Part root, Part kernel) {
-        root.Add<RootClass>().OfType<Pack>(required: true);
         root.Add<PackParts.Architecture>();
         packed?.DefineKernel(kernel);
         foreach (var part in kernel.Walk()) {
@@ -28,7 +28,8 @@ public sealed class PackArchitecture : Architecture {
     }
 
     protected override void Rules(RuleBook rules) {
-        rules.For<RootClass>().Uses<PackParts.Architecture>().And<KernelBlock>();
+        rules.For<AppRoot>(Depth.Self).HasTypes<Pack>().AtLeast(1);
+        rules.For<AppRoot>(Depth.Self).Uses<PackParts.Architecture>().And<KernelBlock>();
         rules.For<PackParts.Architecture>().Uses<KernelBlock>();
         rules.For<PackParts.Tests>().Uses<PackParts.Architecture>().And<KernelBlock>();
         if (packed is not null) {

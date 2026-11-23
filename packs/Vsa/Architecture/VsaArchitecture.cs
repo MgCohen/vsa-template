@@ -2,6 +2,7 @@ namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
+using Umpire.Kernels.Blocks;
 using Core = Umpire.Kernels.Core;
 using CoreArchitecture = Umpire.Kernels.CoreArchitecture;
 using MessagesComponent = Umpire.Kernels.MessagesComponent;
@@ -54,23 +55,21 @@ public class VsaArchitecture : CoreArchitecture {
         rules.For<Domain>().Under<Plugin>().Denies<Domain>(Depth.Self).InOther<Plugin>();
 
         rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
-        rules.For<Presenters>().And<RootClass>().Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
+        rules.For<Presenters>().And<Feature>(Depth.Self).Under<Feature>().Uses<Domain.Shared>(Access.Internal).InOther<Feature>();
         ForHandlerParts(rules).Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-        rules.For<RootClass>().Uses<Kernel>().And<MessagesComponent>().And<UmpireLibraries>().And<Plugin>(Access.Internal);
-        rules.For<RootClass>().Denies<RootClass>().Under<Plugin>();
-        rules.For<RootClass>().Under<Feature>().Uses<Feature>(Access.Internal);
-        rules.For<RootClass>().Under<Feature>().Denies<Composition>();
+        rules.For<Module>(Depth.Self).Uses<Kernel>().And<MessagesComponent>().And<UmpireLibraries>().And<Plugin>(Access.Internal);
+        rules.For<Module>(Depth.Self).Denies<Plugin>(Depth.Self);
+        rules.For<Feature>(Depth.Self).Uses<Feature>(Access.Internal);
+        rules.For<Feature>(Depth.Self).Denies<Composition>();
         rules.For<Host>().Uses<Composition>().And<Core>().And<UmpireLibraries>();
         rules.For<Views>().Uses<Presenters>();
         rules.For<Views>().Uses<Hosts>().Under<Kernel>();
         rules.For<Host>().Uses<Pack>();
-        rules.For<Host>().Uses<RootClass>();
+        rules.For<Host>().Uses<Module>(Depth.Self);
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
-        rules.For<Feature>().Has<RootClass>().Exactly(1);
-        rules.For<Plugin>().Has<RootClass>().Exactly(1);
     }
 
     protected static From ForContractParts(RuleBook rules) =>
