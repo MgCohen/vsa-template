@@ -3,7 +3,8 @@
        The analyzers run in the compiler, so the reader also targets netstandard2.0. -->
   <PropertyGroup>
     <Description>Reads the .umpireconfig file of an Umpire block (TOML).</Description>
-    <TargetFrameworks>$(TargetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Tomlyn" />
