@@ -286,7 +286,7 @@ App/Host -> App/Feature/Slice/Handlers.Commands [any] Deny
 App/Host -> App/Feature/Slice/Handlers.Events.Hooks [any] Deny
 App/Host -> App/Feature/Slice/Handlers.Commands.Hooks [any] Deny
 App/Host -> App/Feature/Slice/Slice.Validators [any] Deny
-App/Host -> Definition [any] Deny
+App/Host -> Definition [any] Allow Public
 App/Host -> Core [any] Allow Public
 App/Host -> Core/KernelParts.App [any] Allow Public
 App/Host -> Core/KernelParts.Kernels [any] Allow Public

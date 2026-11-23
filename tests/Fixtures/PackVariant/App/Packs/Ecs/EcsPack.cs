@@ -1,6 +1,6 @@
 namespace PackVariant.Packs.Ecs;
 
-using PackVariant.Packs.Ecs.Architecture;
+using PackVariant.Packs.Ecs.Definition;
 using Umpire.Kernels;
 using Umpire.Vsa;
 

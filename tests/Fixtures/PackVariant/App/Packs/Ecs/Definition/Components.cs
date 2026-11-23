@@ -1,4 +1,4 @@
-namespace PackVariant.Packs.Ecs.Architecture;
+namespace PackVariant.Packs.Ecs.Definition;
 
 using Umpire.Vsa.Definition;
 

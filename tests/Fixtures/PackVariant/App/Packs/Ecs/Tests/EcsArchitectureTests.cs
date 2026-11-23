@@ -3,7 +3,7 @@ namespace PackVariant.Packs.Ecs.Tests;
 using NUnit.Framework;
 using PackVariant.EcsFeatures.Combat;
 using PackVariant.EcsFeatures.Combat.Systems;
-using PackVariant.Packs.Ecs.Architecture;
+using PackVariant.Packs.Ecs.Definition;
 using Umpire.Architecture;
 using Umpire.Vsa.Testing.Unit;
 

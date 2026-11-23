@@ -34,7 +34,7 @@ public sealed class VsaAppTests {
 
     [Test]
     public void A_host_that_names_a_module_root_in_a_fixed_list_gives_no_finding() =>
-        Assert.That(Findings, Has.None.Contains("Host/FixedHost.cs"));
+        Assert.That(Findings, Has.None.Contains("App/Host/FixedHost.cs"));
 
     [Test]
     public void A_host_that_uses_the_domain_of_a_feature_gives_UMP020101() =>

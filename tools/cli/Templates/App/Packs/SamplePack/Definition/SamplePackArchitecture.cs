@@ -1,4 +1,4 @@
-namespace SampleApp.Packs.SamplePack.Architecture;
+namespace SampleApp.Packs.SamplePack.Definition;
 
 using Umpire.Vsa.Definition;
 

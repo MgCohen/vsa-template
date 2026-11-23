@@ -1,6 +1,6 @@
 namespace EngineCore.Tests;
 
-using PackVariant.Packs.Ecs.Architecture;
+using PackVariant.Packs.Ecs.Definition;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Kernels.Blocks;

@@ -72,6 +72,7 @@ public class VsaArchitecture : CoreArchitecture {
         rules.For<App>(Depth.Self).Uses<Host>().And<DefinitionRoot>().And<Composition>().And<Core>().And<UmpireLibraries>()
             .And<Pack>();
         rules.For<DefinitionRoot>().Uses<Core>().And<UmpireLibraries>();
+        rules.For<Host>().Uses<DefinitionRoot>();
         rules.For<Host>().Uses<Module>(Depth.Self);
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 

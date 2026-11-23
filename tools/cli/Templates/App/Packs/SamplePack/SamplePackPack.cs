@@ -1,6 +1,6 @@
 namespace SampleApp.Packs.SamplePack;
 
-using SampleApp.Packs.SamplePack.Architecture;
+using SampleApp.Packs.SamplePack.Definition;
 using Umpire.Kernels;
 using Umpire.Vsa;
 

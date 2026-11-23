@@ -51,7 +51,7 @@ public sealed class BlocksTests {
     }
 
     [TestCase("packs/Vsa", "Umpire.Vsa.Definition.VsaArchitecture")]
-    [TestCase("tests/Fixtures/PackVariant/App/Packs/Ecs", "PackVariant.Packs.Ecs.Architecture.EcsArchitecture")]
+    [TestCase("tests/Fixtures/PackVariant/App/Packs/Ecs", "PackVariant.Packs.Ecs.Definition.EcsArchitecture")]
     public void A_pack_entry_names_the_architecture_of_the_pack(string folder, string architecture) {
         var packed = Entries.Where(e => Same(e.Folder, Repo.Path(folder.Split('/'))) && e.Packed is not null)
             .Select(e => e.Packed!.FullName).Distinct();

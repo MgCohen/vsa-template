@@ -1,7 +1,7 @@
 namespace EngineCore.Tests;
 
 using PackVariant.EcsFeatures.Combat.Systems;
-using PackVariant.Packs.Ecs.Architecture;
+using PackVariant.Packs.Ecs.Definition;
 using Umpire.Architecture;
 
 public sealed class ArchitectureTestVariantTests : ArchitectureTest<EcsArchitecture> {
