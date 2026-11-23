@@ -7,7 +7,7 @@ internal sealed class Compiler {
 
     internal Compiler(Architecture architecture) {
         Options = Options.From(architecture.ConfigureDefaults).Over(Options.BuiltIn);
-        Root = new Part(null, "", null);
+        Root = new Part(null, "", null) { Placers = [architecture.GetType()] };
         architecture.DefineRoot(Root);
         Parts = [.. Root.Walk().Skip(1)];
         CheckShared();

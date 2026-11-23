@@ -6,6 +6,7 @@ public abstract record Concept {
     public virtual IReadOnlyList<Type> OfTypes => [];
     public virtual string NameStartsWith => "";
     public virtual string NameEndsWith => "";
+    public virtual IReadOnlyList<Type>? OwnedBy => null;
 
     protected virtual void Configure(Options defaults) { }
 
