@@ -31,7 +31,10 @@ public sealed class RunEngineTests {
         var modules = AppTypes.InOrder(AppTypes.Find(new ConstraintKeys()).Roots.Where(root => root.Assembly == engine).Select(root => root.Create()))
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Baseline", "Blocks", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] {
+            "BuiltApp", "Scaffold", "Steps", "Baseline", "Blocks", "Engine", "LoadApp", "LoadTemplates", "PlanScaffold", "Report",
+            "Rules", "Versions", "WriteScaffold",
+        }));
     }
 
     [Test]

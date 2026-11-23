@@ -119,6 +119,52 @@ The tool also replaces the kebab form of each name, for routes: `sample-module` 
 
 The suffix `.template` keeps a file inactive in this repository, for example a `global.json` that would change the SDK of the template build. The tool removes the suffix. In each template file, the tool replaces `{{UmpireVersion}}` with its own version.
 
+## Scaffold from the definition
+
+The rule engine also writes a slice from a template set. It finds the tokens and the target folder from the architecture definition of the app, not from a list of names.
+
+```mermaid
+flowchart LR
+    T[Template block] -->|Place| L[LoadTemplates]
+    A[App] -->|LoadApp| L
+    L -->|template sets| P[PlanScaffold]
+    P -->|planned files| W[WriteScaffold]
+```
+
+| Step | Group | Does |
+|---|---|---|
+| LoadTemplates | 7 | Binds the types of the built template block to the parts of the app definition |
+| PlanScaffold | 8 | Selects the set of the kind, finds the group folder, replaces the tokens |
+| WriteScaffold | 9 | Writes the planned files (`UMP030901` for each file) |
+
+- **Template set:** the types of one slice of the template block whose name starts with `Sample`, for example `Slices/SampleAction/`. A slice with another name, for example `Slices/GetStatus/`, belongs to the module template.
+- **Kind:** the handler part of the set, in the singular and in lower case. `Handlers.Requests` gives `request`, and `Handlers.Commands` gives `command`.
+- **Tokens:** the group values of each binding (`Slice=SampleAction`, `Feature=SampleModule`), and the assembly name of the template (`SampleApp`). Each token also has its kebab form. The longest token is replaced first.
+- **Values:** the name, the group values of the input, and the assembly of the app. A group value comes from the binding of the existing group in the app, so its case on disk wins (`notebook` gives `Notebook`).
+- **Target folder:** the folder of the existing group in the app, then the rest of the part path. In a Unity block, this is the folder under `Assets/<App>/`.
+- **Files:** each `.cs` file in the folder of the set.
+
+The build hook runs the scaffold instead of the check:
+
+```bash
+dotnet build -p:UmpireScaffoldKind=request -p:UmpireScaffoldName=CreateNote -p:UmpireScaffoldGroups=Feature=Notebook -p:UmpireScaffoldTemplates=<template block> -p:UmpireScaffoldTemplatesBin=<template output>
+```
+
+Separate two group values with `,`, because MSBuild splits a property value at `;`. The engine switches are `--scaffoldkind`, `--scaffoldname`, `--scaffoldgroups`, `--scaffoldtemplates` and `--scaffoldtemplatesbin`.
+
+| Code | Step | Cause |
+|---|---|---|
+| `UMP030701` | LoadTemplates | The template block or its output folder does not exist |
+| `UMP030702` | LoadTemplates | No assembly in the output folder has sources in the template block |
+| `UMP030703` | LoadTemplates | The template block has no template set |
+| `UMP030801` | PlanScaffold | No template set has the kind |
+| `UMP030802` | PlanScaffold | The name is not a PascalCase identifier, or it contains `Sample` |
+| `UMP030803` | PlanScaffold | The input has no value for a group of the set |
+| `UMP030804` | PlanScaffold | The group value does not exist in the app |
+| `UMP030805` | PlanScaffold | A planned file exists. The scaffold writes no file |
+
+The `umpire add request` and `add command` commands still use `Templates.cs`. The template block does not ship in a package yet, so a consumer cannot give the template block to the engine.
+
 ## Source mode and package mode
 
 The templates build in this repository in source mode, as the fixtures do. The tool changes each `.csproj` to package mode:

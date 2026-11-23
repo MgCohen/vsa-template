@@ -10,5 +10,10 @@ public sealed record RunEngineCommand(
     string Mode = "Error",
     string Skip = "",
     bool FailFast = false,
-    bool UpdateBaseline = false)
+    bool UpdateBaseline = false,
+    string ScaffoldKind = "",
+    string ScaffoldName = "",
+    string ScaffoldGroups = "",
+    string ScaffoldTemplates = "",
+    string ScaffoldTemplatesBin = "")
     : IConsoleCommand<ReportResult>;

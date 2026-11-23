@@ -19,7 +19,7 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Architecture/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030201`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Baseline, Report. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET and `MetadataLoadContext`. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
+| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Baseline, Report, and the scaffold steps LoadTemplates, PlanScaffold, WriteScaffold. `Plugins/BuiltApp` reads the DLL and PDB files with ArchUnitNET and `MetadataLoadContext`. Its root project `engine/Engine.csproj` makes the build hook package `Umpire.Engine.Build` |
 
 The runtime of an app references `Umpire.Architecture` through `Umpire.Kernel` (`Pack.Architecture`), and Umpire.Sdk gives each project `Umpire.Vsa`. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 

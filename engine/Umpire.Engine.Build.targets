@@ -5,7 +5,10 @@
        The engine finds the block folder of the project. UmpireBlock sets it (this repository has one global.json for many apps).
        The nearest umpire-baseline.txt above the project is the baseline of its block.
        The stamp file skips the check when no input changed. Each stamp name tells if umpire-baseline.txt exists,
-       so a delete of the baseline runs the check again. An update never skips. -->
+       so a delete of the baseline runs the check again. An update never skips.
+       UmpireScaffoldKind runs the scaffold instead of the check: it writes the files of one template set of the template block
+       UmpireScaffoldTemplates (built to UmpireScaffoldTemplatesBin), with the name UmpireScaffoldName and the group values
+       UmpireScaffoldGroups, for example Feature=Notebook. -->
   <PropertyGroup>
     <UmpireCheck Condition="'$(UmpireCheck)' == ''">true</UmpireCheck>
     <UmpireCheckMode Condition="'$(UmpireCheckMode)' == ''">Error</UmpireCheckMode>
@@ -31,7 +34,7 @@
   </Target>
 
   <Target Name="UmpireCheck" AfterTargets="Build" DependsOnTargets="_UmpireCheckInputs"
-          Condition="'$(UmpireCheck)' == 'true' and '$(DesignTimeBuild)' != 'true'"
+          Condition="'$(UmpireCheck)' == 'true' and '$(UmpireScaffoldKind)' == '' and '$(DesignTimeBuild)' != 'true'"
           Inputs="@(_UmpireCheckInput)" Outputs="$(_UmpireCheckStamp)">
     <Error Condition="!Exists('$(_UmpireEngine)')" Code="UMP030003"
            Text="The rule engine $(_UmpireEngine) does not exist. Restore the Umpire.Engine.Build package again." />
@@ -40,5 +43,13 @@
       <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
     </Exec>
     <Touch Condition="'$(_UmpireCheckExit)' == '0' and '$(UmpireUpdateBaseline)' != 'true'" Files="$(_UmpireCheckStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="UmpireScaffold" AfterTargets="Build" DependsOnTargets="_UmpireCheckInputs"
+          Condition="'$(UmpireScaffoldKind)' != '' and '$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('$(_UmpireEngine)')" Code="UMP030003"
+           Text="The rule engine $(_UmpireEngine) does not exist. Restore the Umpire.Engine.Build package again." />
+    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high"
+          Command="&quot;$(_UmpireDotnet)&quot; exec &quot;$(_UmpireEngine)&quot; --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --scaffoldkind &quot;$(UmpireScaffoldKind)&quot; --scaffoldname &quot;$(UmpireScaffoldName)&quot; --scaffoldgroups &quot;$(UmpireScaffoldGroups)&quot; --scaffoldtemplates &quot;$(UmpireScaffoldTemplates.TrimEnd('\').TrimEnd('/'))&quot; --scaffoldtemplatesbin &quot;$(UmpireScaffoldTemplatesBin.TrimEnd('\').TrimEnd('/'))&quot;" />
   </Target>
 </Project>

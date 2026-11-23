@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Tests of the rule engine app. They run the engine modules in the test process on tests/Fixtures/Notes,
-       whose assemblies are in the test output. -->
+       whose assemblies are in the test output. The scaffold tests read the built template block tools/cli/Templates. -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -12,5 +12,6 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Blocks/Blocks.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/NoConstructorApp/NoConstructorApp.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
+    <ProjectReference Include="$(RepoRoot)tools/cli/Templates/SampleApp.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>
