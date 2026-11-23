@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <PropertyGroup>
+    <UmpireDefaultPack>false</UmpireDefaultPack>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="Umpire.Architecture" Value="Spike.Bravo.Definition.BravoArchitecture, Spike.Bravo" />
+  </ItemGroup>
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>

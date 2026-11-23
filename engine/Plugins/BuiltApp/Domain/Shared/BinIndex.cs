@@ -19,16 +19,14 @@ public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyL
     public IReadOnlyList<BinDll> ExternalDlls(IReadOnlyList<string> names) =>
         [.. Dlls.Where(d => names.Any(e => d.Name == e || d.Name.StartsWith(e + ".", StringComparison.Ordinal)))];
 
-    public IReadOnlyList<BinDll> ReferencedDlls(
-        IReadOnlyList<BinDll> app, IReadOnlyList<string> skip, bool shared = false) {
+    public IReadOnlyList<BinDll> ReferencedDlls(IReadOnlyList<BinDll> app, IReadOnlyList<string> skip) {
         var byName = Dlls.ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
         var found = new Dictionary<string, BinDll>(StringComparer.OrdinalIgnoreCase);
         var next = new Queue<BinDll>(app);
         while (next.TryDequeue(out var dll)) {
             foreach (var reference in dll.References) {
                 if (BinDll.IsSystem(reference) || found.ContainsKey(reference) || Skipped(reference, skip)
-                    || app.Any(a => a.Name == reference) || !byName.TryGetValue(reference, out var referenced)
-                    || (referenced.IsShared && !shared)) {
+                    || app.Any(a => a.Name == reference) || !byName.TryGetValue(reference, out var referenced)) {
                     continue;
                 }
                 found[reference] = referenced;
