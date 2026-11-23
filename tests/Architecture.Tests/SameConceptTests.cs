@@ -12,7 +12,7 @@ public sealed class SameConceptArchitecture(bool useSameConcept) : Architecture 
             ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.UseSameConcept = useSameConcept;
     }
 
@@ -64,7 +64,7 @@ public sealed class DenyingSameLayerArchitecture : Architecture {
             ?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.UseSameConcept = true;
     }
 

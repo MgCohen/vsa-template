@@ -5,7 +5,7 @@ public abstract class Architecture {
 
     protected virtual Type? PackKernel => null;
 
-    protected virtual void Configure(Options defaults) { }
+    protected virtual void Configure(PartOptions defaults) { }
 
     protected abstract void Define(Part root);
 
@@ -13,7 +13,7 @@ public abstract class Architecture {
 
     internal Type? KernelOfPack => PackKernel;
 
-    internal void ConfigureDefaults(Options defaults) => Levels.Call<Architecture, Options>(this, nameof(Configure), defaults);
+    internal void ConfigureDefaults(PartOptions defaults) => Levels.Call<Architecture, PartOptions>(this, nameof(Configure), defaults);
 
     internal void DefineRoot(Part root) => Levels.Call<Architecture, Part>(this, nameof(Define), root);
 

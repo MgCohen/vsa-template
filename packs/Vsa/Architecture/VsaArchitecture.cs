@@ -9,7 +9,7 @@ using MessagesParts = Umpire.Kernels.MessagesParts;
 public class VsaArchitecture : Architecture {
     protected override Type? PackKernel => typeof(VsaKernel);
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.UseSameConcept = true;
         defaults.Boundary = Boundary.Closed;
     }

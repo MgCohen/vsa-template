@@ -7,7 +7,7 @@ public class Part : IPartChain {
     readonly List<Type> types = [];
     readonly Dictionary<Type, bool> requiredAtCallSite = [];
     readonly HashSet<Type> stacked = [];
-    Options options = new();
+    PartOptions options = new();
     string? folder;
     bool open;
     bool external;
@@ -31,7 +31,7 @@ public class Part : IPartChain {
     public IReadOnlyList<Part> Children => children;
     public IReadOnlyList<Type> Types => types;
     public string Name => Concept is null ? "(root)" : Concept.Display(Concept.GetType());
-    public Options Options => options.Over(new Options());
+    public PartOptions Options => options.Over(new PartOptions());
     public IEnumerable<Part> Groups => SelfAndAncestors().Where(p => p.IsGroup);
     internal NamePattern? NamePattern { get; private set; }
     internal IReadOnlyList<Type> Placers { get; set; } = [];
@@ -218,7 +218,7 @@ public class Part : IPartChain {
         var owners = Owners.Of(child.Concept!);
         RefuseOwned(child, owners);
         child.Placers = child.Concept is Block && Owners.Home(child.Concept) is { Count: > 0 } home ? home : Placers;
-        child.options = child.options.Over(Options.From(child.Concept!.ConfigureDefaults));
+        child.options = child.options.Over(PartOptions.From(child.Concept!.ConfigureDefaults));
         children.Add(child);
         foreach (var type in child.Concept.OfTypes) {
             child.OfType(type);

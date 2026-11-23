@@ -48,7 +48,7 @@ public sealed class ActingRuleTests {
     }
 
     public class DenyingBase : Architecture {
-        protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Allow;
+        protected override void Configure(PartOptions defaults) => defaults.DefaultPermission = Permission.Allow;
 
         protected override void Define(Part root) => root.Add<TopUser>().And<TopTarget>();
 

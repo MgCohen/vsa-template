@@ -4,7 +4,7 @@ using Umpire.Architecture;
 using Root = Umpire.Architecture.Blocks.Component;
 
 sealed class ApiArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.DefaultPermission = Permission.Allow;
     }
 

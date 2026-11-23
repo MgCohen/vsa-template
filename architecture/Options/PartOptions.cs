@@ -1,7 +1,7 @@
 namespace Umpire.Architecture;
 
-public sealed class Options {
-    public static Options BuiltIn => new() {
+public sealed class PartOptions {
+    public static PartOptions BuiltIn => new() {
         DefaultPermission = Permission.Deny,
         Boundary = Umpire.Architecture.Boundary.Open,
         UseSameConcept = false,
@@ -17,13 +17,13 @@ public sealed class Options {
     public Access? Access { get; set; }
     public bool? Required { get; set; }
 
-    internal static Options From(Action<Options> configure) {
-        var options = new Options();
+    internal static PartOptions From(Action<PartOptions> configure) {
+        var options = new PartOptions();
         configure(options);
         return options;
     }
 
-    internal Options Over(Options fallback) => new() {
+    internal PartOptions Over(PartOptions fallback) => new() {
         DefaultPermission = DefaultPermission ?? fallback.DefaultPermission,
         Boundary = Boundary ?? fallback.Boundary,
         UseSameConcept = UseSameConcept ?? fallback.UseSameConcept,

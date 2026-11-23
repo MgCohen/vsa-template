@@ -5,7 +5,7 @@ using Umpire.Architecture;
 using static Spike.Alpha.Definition.AlphaParts;
 
 public class AlphaArchitecture : Architecture {
-    protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
+    protected override void Configure(PartOptions defaults) => defaults.DefaultPermission = Permission.Deny;
 
     protected override void Define(Part root) {
         root.Add<AlphaParts.Definition>().And<A1>().And<Zulu>();

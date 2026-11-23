@@ -6,7 +6,7 @@ using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Handlers.Requests;
 
 public record Handlers : Layer {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Depth = Depth.Self;
     }
 

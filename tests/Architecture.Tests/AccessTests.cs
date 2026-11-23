@@ -7,7 +7,7 @@ using BuiltApp.Infrastructure;
 public record OpenTarget : Concept;
 
 public record ClosedTarget : Concept {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Access = Access.Internal;
     }
 }
@@ -33,7 +33,7 @@ public class VisibilityShapes {
 public sealed class AccessArchitecture<TTarget>(Access options, Access? method) : Architecture where TTarget : Concept, new() {
     public Access UserAccess => new ResolvedArchitecture(this).UseRules.Single(p => p.From.Is(typeof(User)) && p.To.Is(typeof(TTarget))).Access;
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Access = options;
     }
 
@@ -80,7 +80,7 @@ public sealed class AccessTests {
 
     [Test]
     public void With_no_options_set_the_access_is_public() {
-        Assert.That(Options.BuiltIn.Access, Is.EqualTo(Access.Public));
+        Assert.That(PartOptions.BuiltIn.Access, Is.EqualTo(Access.Public));
     }
 
     [Test]

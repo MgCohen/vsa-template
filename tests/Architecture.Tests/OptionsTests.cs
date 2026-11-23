@@ -3,19 +3,19 @@ namespace EngineCore.Tests;
 using Umpire.Architecture;
 
 public record ClosedPackage : Concept {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Boundary = Boundary.Closed;
     }
 }
 
 public record OpenConcept : Concept {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.DefaultPermission = Permission.Allow;
     }
 }
 
 public record SameConceptConcept : Concept {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.UseSameConcept = true;
     }
 }
@@ -32,7 +32,7 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
 
     string GroupName => closedConcept ? nameof(ClosedPackage) : nameof(Package);
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Boundary = architecture;
     }
 
@@ -70,7 +70,7 @@ public sealed class OptionsTests {
     [Test]
     public void An_architecture_that_sets_no_value_has_the_built_in_options() {
         var options = new ResolvedArchitecture(new EmptyArchitecture()).Options;
-        var builtIn = Options.BuiltIn;
+        var builtIn = PartOptions.BuiltIn;
 
         Assert.That(new object?[] { options.DefaultPermission, options.Boundary, options.UseSameConcept, options.Depth, options.Access, options.Required },
             Is.EqualTo(new object?[] { builtIn.DefaultPermission, builtIn.Boundary, builtIn.UseSameConcept, builtIn.Depth, builtIn.Access, builtIn.Required }));

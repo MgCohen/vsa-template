@@ -11,7 +11,7 @@ public record Logic : Concept;
 public record Data : Concept;
 
 public sealed class LayeredArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.DefaultPermission = Permission.Deny;
     }
 

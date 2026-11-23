@@ -14,7 +14,7 @@ public sealed class BoundaryArchitecture(Boundary options, Boundary? group, Cros
             target, new Dictionary<string, string> { ["Package"] = toPackage }).Permission;
     }
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Boundary = options;
     }
 

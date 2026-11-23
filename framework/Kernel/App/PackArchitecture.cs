@@ -10,7 +10,7 @@ public sealed class PackArchitecture : Architecture {
 
     public PackArchitecture(Architecture packed) => this.packed = packed;
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.UseSameConcept = true;
     }
 

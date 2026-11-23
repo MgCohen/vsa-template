@@ -3,7 +3,7 @@ namespace EngineCore.Tests;
 using Umpire.Architecture;
 
 public class BaseLevelArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.DefaultPermission = Permission.Deny;
     }
 

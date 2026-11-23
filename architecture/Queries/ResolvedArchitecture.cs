@@ -2,7 +2,7 @@ namespace Umpire.Architecture;
 
 public sealed class ResolvedArchitecture {
     readonly IReadOnlyList<Part> externalParts;
-    readonly IReadOnlyDictionary<Part, Options> partOptions;
+    readonly IReadOnlyDictionary<Part, PartOptions> partOptions;
     readonly IReadOnlyList<CountStatement> counts;
     readonly IReadOnlyList<MatchStatement> matches;
     readonly IReadOnlyList<TraitStatement> traits;
@@ -15,7 +15,7 @@ public sealed class ResolvedArchitecture {
         Root = compiled.Root;
         Parts = compiled.Parts;
         UseRules = compiled.UseRules;
-        partOptions = compiled.PartOptions;
+        partOptions = compiled.OptionsByPart;
         counts = compiled.Counts;
         matches = compiled.Matches;
         traits = compiled.Traits;
@@ -24,12 +24,12 @@ public sealed class ResolvedArchitecture {
     }
 
     public Architecture Architecture { get; }
-    public Options Options { get; }
+    public PartOptions Options { get; }
     public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }
     public IReadOnlyList<PartRule> UseRules { get; }
 
-    public Options OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
+    public PartOptions OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
 
     public Part? ExternalPart(string assembly) => ExternalPart(assembly, "");
 

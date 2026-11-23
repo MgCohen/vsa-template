@@ -51,7 +51,7 @@ public record Handlers : Concept {
 }
 
 public abstract class FixtureArchitecture : Architecture {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.DefaultPermission = Permission.Deny;
         defaults.Boundary = Boundary.Closed;
     }

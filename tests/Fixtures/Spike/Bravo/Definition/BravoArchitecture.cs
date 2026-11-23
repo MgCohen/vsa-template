@@ -4,7 +4,7 @@ using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 
 public sealed class BravoArchitecture : Architecture {
-    protected override void Configure(Options defaults) => defaults.DefaultPermission = Permission.Deny;
+    protected override void Configure(PartOptions defaults) => defaults.DefaultPermission = Permission.Deny;
 
     protected override void Define(Part root) {
         root.Add<BravoParts.Definition>().And<B1>().And<Zulu>();

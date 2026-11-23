@@ -27,7 +27,7 @@ public record Tag : Concept {
 }
 
 public record NeededByConcept : Concept {
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Required = true;
     }
 
@@ -73,7 +73,7 @@ public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<Par
 
     public static TypeFacts Using(TypeFacts user, TypeFacts helper) => user with { Mentions = [helper.FullName] };
 
-    protected override void Configure(Options defaults) {
+    protected override void Configure(PartOptions defaults) {
         defaults.Required = required;
     }
 

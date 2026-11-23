@@ -3,10 +3,10 @@ namespace Umpire.Architecture;
 internal sealed class Compiler {
     const string SameConceptText = "same concept";
     readonly RuleBook book;
-    readonly Dictionary<Part, Options> partOptions = [];
+    readonly Dictionary<Part, PartOptions> partOptions = [];
 
     internal Compiler(Architecture architecture) {
-        Options = Options.From(architecture.ConfigureDefaults).Over(Options.BuiltIn);
+        Options = PartOptions.From(architecture.ConfigureDefaults).Over(PartOptions.BuiltIn);
         Root = new Part(null, "", null) { Placers = [architecture.GetType()] };
         architecture.DefineRoot(Root);
         Parts = [.. Root.Walk().Skip(1)];
@@ -35,10 +35,10 @@ internal sealed class Compiler {
         CheckNames();
     }
 
-    public Options Options { get; }
+    public PartOptions Options { get; }
     public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }
-    public IReadOnlyDictionary<Part, Options> PartOptions => partOptions;
+    public IReadOnlyDictionary<Part, PartOptions> OptionsByPart => partOptions;
     public IReadOnlyList<PartRule> UseRules { get; }
     public IReadOnlyList<CountStatement> Counts { get; }
     public IReadOnlyList<MatchStatement> Matches { get; }
@@ -82,7 +82,7 @@ internal sealed class Compiler {
         return condition;
     }
 
-    Options OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
+    PartOptions OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
 
     void CheckSameFolder() {
         var clash = Parts.Where(p => p.HasFolder && p.Folder!.Length > 0)
