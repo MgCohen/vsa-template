@@ -17,9 +17,9 @@ public sealed class BuildCheckTests {
         var again = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();
         Assert.That(again.Output, Does.Contain("UMP030201"), "A build with no change runs the check again.");
 
-        var probe = Path.Combine(workspace.Src, "App", "Host", "Probe.cs");
+        var probe = Path.Combine(workspace.Src, "Host", "Probe.cs");
         File.WriteAllText(probe, """
-            namespace Notes.App.Host;
+            namespace Notes.Host;
 
             public static class Probe {
                 public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }

@@ -12,7 +12,7 @@ public sealed class SourceRootTests {
     [OneTimeSetUp]
     public void CompileCodeWithRelativeDocuments() {
         project = ProjectFolder.Create();
-        var host = project.Write($"{PackageFolder}/App/Host/GameHost.cs", "namespace Game.App.Host; public sealed class GameHost { public int Value() => 1; }");
+        var host = project.Write($"{PackageFolder}/App/Host/GameHost.cs", "namespace Game.Host; public sealed class GameHost { public int Value() => 1; }");
         var tool = project.Write("Cache/com.vendor.tool/Tool.cs", "namespace Vendor; public sealed class Tool { public int Value() => 1; }");
         output = Path.Combine(project.Root, "Out");
         project.CompileWithRelativeDocuments("Game.Package", output, host);
@@ -26,7 +26,7 @@ public sealed class SourceRootTests {
     public void A_relative_document_resolves_against_the_source_root() {
         var sources = BinReader.Sources([Path.Combine(output, "Game.Package.dll")], project.Root);
 
-        Assert.That(sources["Game.App.Host.GameHost"].File,
+        Assert.That(sources["Game.Host.GameHost"].File,
             Is.EqualTo(Path.Combine(project.Root, "Packages", "com.vendor.game", "App", "Host", "GameHost.cs")));
     }
 

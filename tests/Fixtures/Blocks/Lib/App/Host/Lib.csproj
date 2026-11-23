@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- A library with no Umpire reference. Its check entry is AssemblyMetadata, and Umpire.Root puts its block two folders up. -->
-  <ItemGroup>
-    <AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" />
-    <AssemblyMetadata Include="Umpire.Root" Value="../.." />
-  </ItemGroup>
-</Project>

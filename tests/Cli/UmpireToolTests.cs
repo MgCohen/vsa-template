@@ -95,8 +95,8 @@ public sealed class UmpireToolTests {
     [CancelAfter(600_000)]
     public void ADefinitionInTheAppNamesEachLayerWithNoFullName() {
         var app = NewApp("Shop");
-        File.WriteAllText(Path.Combine(app, "App", "Host", "ShopArchitecture.cs"), """
-            namespace Shop.App.Host;
+        File.WriteAllText(Path.Combine(app, "Host", "ShopArchitecture.cs"), """
+            namespace Shop.Host;
 
             using Umpire.Architecture;
             using Umpire.Architecture.Blocks;
@@ -106,11 +106,10 @@ public sealed class UmpireToolTests {
             public sealed class ShopArchitecture : VsaArchitecture {
                 protected override void Rules(RuleBook rules) {
                     base.Rules(rules);
-                    rules.For<App>().Uses<Kernel>();
                     rules.For<Host>().Uses<Composition>().And<Kernel>();
                     rules.For<Views>().Uses<Presenters>();
                     rules.For<Feature>().And<Plugin>().Uses<Kernel>();
-                    rules.For<Module>().Uses<Domain>().And<Domain.Shared>();
+                    rules.For<RootClass>().Uses<Domain>().And<Domain.Shared>();
                     rules.For<Slice>().Uses<Domain.Shared>();
                     rules.For<Infrastructure>().Uses<Domain>();
                     rules.For<Handlers>().Uses<Contracts>();
@@ -151,9 +150,9 @@ public sealed class UmpireToolTests {
         Assert.That(clean.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
         Assert.That(File.Exists(Path.Combine(app, "artifacts~", "bin", "Hello", "debug", ".umpire-check")), Is.True, clean.Output);
 
-        var probe = Path.Combine(app, "App", "Host", "Probe.cs");
+        var probe = Path.Combine(app, "Host", "Probe.cs");
         File.WriteAllText(probe, """
-            namespace Hello.App.Host;
+            namespace Hello.Host;
 
             public static class Probe {
                 public static Hello.Features.Billing.Slices.CreateInvoice.CreateInvoiceRequest? Request { get; set; }

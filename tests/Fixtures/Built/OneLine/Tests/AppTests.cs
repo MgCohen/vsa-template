@@ -1,6 +1,6 @@
 namespace OneLine.Tests;
 
-using OneLine.App.Host;
+using OneLine.Host;
 
 public sealed class AppTests {
     [Test]

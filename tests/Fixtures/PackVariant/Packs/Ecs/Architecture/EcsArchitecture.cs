@@ -9,7 +9,7 @@ public sealed class EcsArchitecture : VsaArchitecture {
     protected override void Define(Part root) {
         base.Define(root);
         var ecs = root.AddGroup<EcsFeature>();
-        ecs.Add<Module>().OfType<Umpire.Kernels.Module>();
+        ecs.Add<RootClass>().OfType<Umpire.Kernels.Module>();
         ecs.Add<Components>();
         ecs.Add<Systems>().OfType<EcsSystem>();
     }
@@ -17,8 +17,8 @@ public sealed class EcsArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
         base.Rules(rules);
         rules.For<Systems>().Uses<Components>().And<Pack>();
-        rules.For<Module>().Under<EcsFeature>().Uses<EcsFeature>(Access.Internal);
-        rules.For<EcsFeature>().Has<Module>().Exactly(1);
+        rules.For<RootClass>().Under<EcsFeature>().Uses<EcsFeature>(Access.Internal);
+        rules.For<EcsFeature>().Has<RootClass>().Exactly(1);
         rules.For<EcsFeature>().Has<Systems>().AtLeast(1);
     }
 }

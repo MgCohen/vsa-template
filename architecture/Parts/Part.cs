@@ -48,7 +48,7 @@ public class Part : IPartChain {
 
     public Part Add<T>() where T : Concept, new() {
         var concept = new T();
-        return Attach(new Part(concept, concept is Module ? null : concept.Folder, this));
+        return Attach(new Part(concept, concept is RootClass ? null : concept.Folder, this));
     }
 
     public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() => new([Group<T>(folder, null)]);

@@ -67,13 +67,6 @@ public sealed class ScaffoldingTests {
             (".gitignore.template", Setup),
             (".umpireconfig", Setup),
             ("AGENTS.md.template", App),
-            ("App/Host/Program.cs", App),
-            ("App/Host/SampleAppApp.cs", App),
-            ("App/Views/App.razor", App),
-            ("App/Views/Pages/Home.razor", App),
-            ("App/Views/Pages/SampleModulePage.razor", Module),
-            ("App/Views/Routes.razor", App),
-            ("App/Views/_Imports.razor", App),
             ("Features/.gitkeep", App),
             ("Features/SampleModule/Domain/Shared/SampleModuleKey.cs", Module),
             ("Features/SampleModule/Presenters/SampleModulePresenter.cs", Module),
@@ -87,6 +80,8 @@ public sealed class ScaffoldingTests {
             ("Features/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
             ("Features/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
             ("Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
+            ("Host/Program.cs", App),
+            ("Host/SampleAppApp.cs", App),
             ("Packs/SamplePack/Architecture/SamplePackArchitecture.cs", Pack),
             ("Packs/SamplePack/SamplePackPack.cs", Pack),
             ("Plugins/.gitkeep", App),
@@ -98,6 +93,11 @@ public sealed class ScaffoldingTests {
             ("Tests/App.Tests.csproj", App),
             ("Tests/SampleAppArchitectureTests.cs", App),
             ("Tests/SampleModuleStatusTests.cs", Module),
+            ("Views/App.razor", App),
+            ("Views/Pages/Home.razor", App),
+            ("Views/Pages/SampleModulePage.razor", Module),
+            ("Views/Routes.razor", App),
+            ("Views/_Imports.razor", App),
             ("appsettings.json", App),
             ("nuget.config.template", Setup),
         ];
@@ -123,14 +123,14 @@ public sealed class ScaffoldingTests {
         var paths = files.Select(f => f.Path).ToList();
 
         Assert.That(paths, Does.Contain("AGENTS.md"));
-        Assert.That(paths, Does.Contain("App/Host/Program.cs"));
-        Assert.That(paths, Does.Contain("App/Views/Pages/Home.razor"));
+        Assert.That(paths, Does.Contain("Host/Program.cs"));
+        Assert.That(paths, Does.Contain("Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
-        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebHost>>;"));
-        Assert.That(files.Single(f => f.Path == "App/Host/HelloApp.cs").Content, Does.Contain("namespace Hello.App.Host;"));
-        Assert.That(files.Single(f => f.Path == "App/Host/Program.cs").Content, Does.Contain("using Hello.App.Host;"));
+        Assert.That(files.Single(f => f.Path == "Host/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
+        Assert.That(files.Single(f => f.Path == "Host/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebHost>>;"));
+        Assert.That(files.Single(f => f.Path == "Host/HelloApp.cs").Content, Does.Contain("namespace Hello.Host;"));
+        Assert.That(files.Single(f => f.Path == "Host/Program.cs").Content, Does.Contain("using Hello.Host;"));
     }
 
     [Test]
@@ -232,7 +232,7 @@ public sealed class ScaffoldingTests {
 
         Assert.That(files.Select(f => f.Path), Has.None.EndsWith(".csproj"));
         Assert.That(files.Single(f => f.Path == "Features/OrderHistory/OrderHistoryModule.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory;"));
-        Assert.That(files.Single(f => f.Path == "App/Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
+        Assert.That(files.Single(f => f.Path == "Views/Pages/OrderHistoryPage.razor").Content, Does.Contain("@page \"/order-history\""));
         Assert.That(files.Single(f => f.Path == "Features/OrderHistory/Domain/Shared/OrderHistoryKey.cs").Content, Does.Contain("namespace Shop.Features.OrderHistory.Domain.Shared;"));
         Assert.That(files.Select(f => f.Path + f.Content), Has.None.Contains("Sample"));
     }
