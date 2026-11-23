@@ -8,6 +8,6 @@ sealed class KernelArchitecture : Architecture {
     }
 
     protected override void Define(Part root, Part kernel) {
-        root.Add<Core>().InParentFolder();
+        root.Add<Blocks.Core>().InParentFolder();
     }
 }

@@ -34,6 +34,7 @@ public sealed class PackArchitecture : Architecture {
         rules.For<PackParts.Tests>().Uses<PackParts.Architecture>().And<KernelBlock>();
         if (packed is not null) {
             rules.For<KernelBlock>().Uses<KernelBlock>();
+            rules.For<KernelBlock>(Depth.Self).HasTypes<Kernel>().AtMost(1);
         }
     }
 }

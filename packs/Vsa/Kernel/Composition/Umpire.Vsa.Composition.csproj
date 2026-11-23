@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <Compile Include="../VsaKernel.cs" Link="VsaKernel.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../../../framework/Kernel/Umpire.Kernels.csproj" />
     <ProjectReference Include="../../../../framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
     <ProjectReference Include="../Handlers/Events/Umpire.Vsa.Handlers.Events.csproj" />

@@ -1,4 +1,4 @@
-namespace Umpire.Kernels;
+namespace Umpire.Kernels.Blocks;
 
 using Umpire.Architecture;
 using KernelBlock = Umpire.Architecture.Blocks.Kernel;

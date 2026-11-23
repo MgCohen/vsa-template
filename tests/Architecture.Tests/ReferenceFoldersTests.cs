@@ -8,7 +8,7 @@ using Umpire.Vsa.Definition;
 using Umpire.Kernels;
 
 public sealed class ReferenceFoldersTests {
-    const string ModuleClass = "public sealed class {0} : Umpire.Kernels.Module {{ public override void Configure("
+    const string ModuleClass = "public sealed class {0} : Umpire.Kernels.Module {{ protected override void Configure("
         + "Microsoft.Extensions.DependencyInjection.IServiceCollection services) {{ }} }}";
 
     ProjectFolder project = null!;
