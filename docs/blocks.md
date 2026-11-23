@@ -97,7 +97,7 @@ The framework kernel and each component have one install point. **Not enforced i
 | A block that places itself, directly or through another block, is an error | Checked (`Define` error) |
 | A part that covers the folder of an inner block is an error | Checked (`UMP020401`) |
 | A place folder with no check entry is an error. A place with no folder is the DLL form | Checked (`UMP020402`) |
-| A type of a DLL binds to the body of its placed block by the PDB path. It is a target only | Checked (binding) |
+| A type of a DLL that an `External` names binds to the body of its placed block by the PDB path. It is a target only | Checked (binding) |
 | The block of the type that makes a use decides that use | Checked (binding) |
 | A module with a different style is a new module kind of a pack variant | Not enforced in 0.1.0 |
 | A module is source in its app | Not enforced in 0.1.0 |
