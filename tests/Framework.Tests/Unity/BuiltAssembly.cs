@@ -20,6 +20,11 @@ public sealed record BuiltAssembly(string Path, string TargetFramework, IReadOnl
     public static BuiltAssembly OfSingleTarget(string project) =>
         Read(System.IO.Path.Combine(BinFolder, project, Configuration, $"{project}.dll"));
 
+    public static BuiltAssembly OfPortable(string project) =>
+        Directory.Exists(System.IO.Path.Combine(BinFolder, project, $"{Configuration}_netstandard2.1"))
+            ? OfMultiTarget(project, "netstandard2.1")
+            : OfSingleTarget(project);
+
     static BuiltAssembly Read(string path) {
         using var stream = File.OpenRead(path);
         using var pe = new PEReader(stream);

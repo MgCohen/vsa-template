@@ -34,7 +34,7 @@ The projects of the groups are for development: their references enforce the lay
 
 | Package | DLL | Source projects |
 |---|---|---|
-| `Umpire` | `Umpire.dll` (`net8.0`, `netstandard2.1`) | Markers, Architecture, Config, Kernels, Messages, Umpire.Vsa and each VSA layer base |
+| `Umpire` | `Umpire.dll` (`netstandard2.1`) | Markers, Architecture, Config, Kernels, Messages, Umpire.Vsa and each VSA layer base |
 | `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views |
 | `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console |
 | `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit |

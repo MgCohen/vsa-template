@@ -3,11 +3,13 @@ namespace Umpire.Hosts.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Runtime.InteropServices;
 using Umpire.Kernels;
 
 public class WebHost : AppHost {
     WebApplication? web;
     AppSignals? signals;
+    PosixSignalRegistration? terminate;
     CancellationTokenRegistration stopping;
 
     public override IServiceProvider Build(string[] args, App app) {
@@ -35,11 +37,17 @@ public class WebHost : AppHost {
         web!.StartAsync().GetAwaiter().GetResult();
         stopping = web.Lifetime.ApplicationStopping.Register(() => stop.Request());
         signals = AppSignals.Listen(stop);
+        terminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, context => {
+            context.Cancel = true;
+            stop.Request();
+        });
     }
 
     public override void Dispose() {
         signals?.Dispose();
         signals = null;
+        terminate?.Dispose();
+        terminate = null;
         stopping.Dispose();
         if (web is { } running) {
             web = null;
