@@ -13,6 +13,8 @@ using System.Xml.Linq;
 const string RuntimeFolder = "runtime/netstandard2.1";
 const string AnalyzerFolder = "analyzers/dotnet/cs";
 const string EngineFolder = "engine/net8.0";
+const string EngineBuild = "netstandard2.1";
+const string EnginePackageFolder = "tools/net8.0/";
 const string Notices = "THIRD-PARTY-NOTICES.txt";
 const string Usage = "Usage: dotnet run tools/archive/archive.cs -- --feed <folder> --version <version> "
     + "--out <folder> [--commit <sha>]";
@@ -32,7 +34,7 @@ try {
     var tree = Path.Combine(work, "tree");
     var analyzers = Archive.FromPackage(options, "Umpire.Vsa.Analyzers", "analyzers/dotnet/cs/",
         Path.Combine(tree, AnalyzerFolder));
-    var engine = Archive.FromPackage(options, "Umpire.Sdk", "tools/net8.0/", Path.Combine(tree, EngineFolder));
+    var engine = Archive.FromPackage(options, "Umpire.Sdk", EnginePackageFolder, Path.Combine(tree, EngineFolder));
     var publish = Path.Combine(work, "publish");
     var runtime = Archive.Runtime(options, repo, publish, engine.Values, Path.Combine(tree, RuntimeFolder));
     List<Archive.FileEntry> files = [
@@ -46,7 +48,8 @@ try {
         ["version"] = options.Version,
         ["commit"] = options.Commit ?? Archive.Run(repo, "git", "rev-parse", "HEAD").Trim(),
         ["analyzers"] = new JsonObject { ["roslyn"] = Archive.Roslyn(Path.Combine(tree, AnalyzerFolder)) },
-        ["engine"] = Archive.EngineRuntime(Path.Combine(tree, EngineFolder, "umpire-engine.runtimeconfig.json")),
+        ["engine"] = Archive.EngineRuntime(
+            Path.Combine(tree, EngineFolder, "umpire-engine.runtimeconfig.json"), EngineBuild),
         ["files"] = new JsonArray([
             .. files.OrderBy(file => file.Path, StringComparer.Ordinal).Select(file => file.Json())]),
     };
@@ -165,13 +168,14 @@ static class Archive {
         return $"{highest.Major}.{highest.Minor}";
     }
 
-    public static JsonObject EngineRuntime(string runtimeConfig) {
+    public static JsonObject EngineRuntime(string runtimeConfig, string umpireBuild) {
         var options = JsonNode.Parse(File.ReadAllText(runtimeConfig))!["runtimeOptions"]!;
         var frameworks = options["frameworks"]?.AsArray() ?? new JsonArray(options["framework"]!.DeepClone());
         return new JsonObject {
             ["targetFramework"] = options["tfm"]!.GetValue<string>(),
             ["rollForward"] = options["rollForward"]?.GetValue<string>(),
             ["frameworks"] = new JsonArray([.. frameworks.Select(Framework)]),
+            ["umpireBuild"] = umpireBuild,
         };
     }
 
