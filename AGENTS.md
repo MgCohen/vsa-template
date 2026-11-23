@@ -21,7 +21,7 @@ Umpire: a framework and a rule engine that check the architecture of an app. Its
 | `tools/bundle/` | The bundle packages `Umpire`, `Umpire.Web`, `Umpire.Console` and `Umpire.Testing`: each one compiles the source files of its runtime projects into one DLL. They are the shipped runtime |
 | `tools/sdk/` | Umpire.Sdk and Umpire.Sdk.Web (`Web/`): the build setup of each project: the general framework references, the default pack (`Umpire.Vsa`, `UmpireDefaultPack`), the source folders and the compiler polyfills (`Polyfills~/`: the name ends with `~`, so the engine does not count it as a source folder). The values of the Umpire rules come with each analyzer package |
 | `tests/` | Tests of the framework itself, with fixtures. Does not ship |
-| `docs/` | Architecture decisions, conventions, and guides. The first app is in `docs/getting-started.md`, the terms are in `docs/vocabulary.md`, and the kinds of block in `docs/blocks.md` |
+| `docs/` | Architecture decisions, conventions, and guides. The first app is in `docs/getting-started.md`, the terms are in `docs/vocabulary.md`, the kinds of block in `docs/blocks.md`, and the requirements that each design decision about the check system obeys in `docs/requirements.md` |
 
 The framework groups and their references are in `docs/framework-layout.md`.
 
