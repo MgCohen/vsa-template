@@ -105,7 +105,6 @@ public sealed class UmpireToolTests {
 
             public sealed class ShopArchitecture : VsaArchitecture {
                 protected override void Rules(RuleBook rules) {
-                    base.Rules(rules);
                     rules.For<Host>().Uses<Composition>().And<Kernel>();
                     rules.For<Views>().Uses<Presenters>();
                     rules.For<Feature>().And<Plugin>().Uses<Kernel>();

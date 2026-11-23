@@ -5,7 +5,7 @@ public abstract record Block : Concept {
 
     protected virtual void Rules(RuleBook rules) { }
 
-    internal void DefinePart(Part part) => Define(part);
+    internal void DefinePart(Part part) => Levels.Call<Block, Part>(this, nameof(Define), part);
 
-    internal void AddRules(RuleBook rules) => Rules(rules);
+    internal void AddRules(RuleBook rules) => Levels.Call<Block, RuleBook>(this, nameof(Rules), rules);
 }

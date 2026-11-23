@@ -13,11 +13,11 @@ public abstract class Architecture {
 
     protected virtual void KernelRules(RuleBook rules) { }
 
-    internal void ConfigureDefaults(Options defaults) => Configure(defaults);
+    internal void ConfigureDefaults(Options defaults) => Levels.Call<Architecture, Options>(this, nameof(Configure), defaults);
 
-    internal void DefineRoot(Part root) => Define(root);
+    internal void DefineRoot(Part root) => Levels.Call<Architecture, Part>(this, nameof(Define), root);
 
-    internal void AddRules(RuleBook rules) => Rules(rules);
+    internal void AddRules(RuleBook rules) => Levels.Call<Architecture, RuleBook>(this, nameof(Rules), rules);
 
     internal void DefineKernelPart(Part kernel) {
         DefineKernel(kernel);

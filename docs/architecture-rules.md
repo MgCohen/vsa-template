@@ -33,6 +33,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010104` | Analyzers | A file has one top-level type. Option `allow_same_name` permits `Module` and `Module<T>`. Formatting, warning. |
 | `UMP010105` | Analyzers | Members are ordered by kind, then by access, then static before instance. Options: `kind_order`, `access_order`, `static_first`. Formatting, warning. |
 | `UMP010106` | Analyzers | The code has no comments: no `//`, no `/* */`, no `///` and no `/** */`, also after a directive such as `#pragma`. A directive, for example `#region`, is not a comment. Code in an inactive `#if` is not checked. Formatting, warning. |
+| `UMP010107` | Analyzers | A `Configure`, `Define` or `Rules` override of a definition (an `Architecture`, a `Block` record or a concept) does not call its base level. The engine calls each level of the inheritance chain, from the base down. Warning. |
 | `UMP020101` | Architecture | Each type uses only the parts that the VSA definition permits. A plugin module is a base, and it uses no module. |
 | `UMP020102` | Architecture | Each type exposes another part only within the access of its rule, for example a handler uses `Domain` but does not expose it outside its assembly. |
 | `UMP020201` | Architecture | Each type is assignable to the `OfType` of its part, for example a handler in `Handlers.Requests` inherits `RequestHandler<,>`. |
@@ -210,6 +211,7 @@ In this repository, the formatting rules are warnings, so a build does not fail 
 | `UMP010104` | One top-level type in a file | `umpire.UMP010104.allow_same_name` |
 | `UMP010105` | Member order | `umpire.UMP010105.kind_order`, `access_order`, `static_first` |
 | `UMP010106` | No comments | |
+| `UMP010107` | No base call in a definition level | |
 
 A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `kind_order` and `access_order`, a name that the list does not have comes after the names of the list.
 

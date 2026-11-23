@@ -6,7 +6,6 @@ using Vsa = Umpire.Vsa.Definition;
 
 public sealed class RulesArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
-        base.Rules(rules);
         rules.For<Vsa.Presenters>().Denies<Vsa.Contracts.Events>();
     }
 }

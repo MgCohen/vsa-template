@@ -172,7 +172,6 @@ public sealed class AppTests {
 
     sealed class RulesArchitecture : VsaArchitecture {
         protected override void Rules(RuleBook rules) {
-            base.Rules(rules);
             rules.For<Concepts.Presenters>().Denies<Concepts.Contracts.Events>();
         }
     }
