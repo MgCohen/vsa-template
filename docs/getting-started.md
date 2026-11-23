@@ -56,8 +56,8 @@ Each later command of the tool runs the same way, with the version on the first 
 To add Umpire to an existing app, run `init` in the folder of its root project: `dotnet tool exec Umpire.Cli@<version> -y -- init`. It adds only the missing setup, and a second run changes nothing. It does not write the app class. Without an app class, the rule engine gives `UMP030502`. For a console app `Shop`, write these two files:
 
 ```csharp
-// App/Host/ShopApp.cs
-namespace Shop.App.Host;
+// Host/ShopApp.cs
+namespace Shop.Host;
 
 using Umpire.Hosts.Console;
 using Umpire.Kernels;
@@ -67,8 +67,8 @@ public class ShopApp : App<Vsa<ConsoleHost>>;
 ```
 
 ```csharp
-// App/Host/Program.cs
-return new Shop.App.Host.ShopApp().Run(args);
+// Host/Program.cs
+return new Shop.Host.ShopApp().Run(args);
 ```
 
 The setup tasks are in [scaffolding.md](scaffolding.md) ("Setup tasks").
@@ -81,8 +81,8 @@ Hello/
 ├─ Hello.slnx              the root project and Tests/
 ├─ appsettings.json        the settings of the web host
 ├─ Properties/             launchSettings.json: the start settings
-├─ App/Host/               Program.cs and HelloApp.cs: the app class, the host and the definition
-├─ App/Views/              the Blazor views
+├─ Host/               Program.cs and HelloApp.cs: the app class, the host and the definition
+├─ Views/              the Blazor views
 ├─ Features/  Plugins/     the feature modules and the plugin modules (empty)
 ├─ Tests/                  App.Tests.csproj: the unit tests and HelloArchitectureTests.cs
 ├─ AGENTS.md               the instructions for an agent in this app
@@ -146,7 +146,7 @@ Features/Billing/
 └─ Slices/
    ├─ GetStatus/                      a status request: request, response, handler
    └─ CreateInvoice/                  CreateInvoiceRequest.cs, CreateInvoiceResponse.cs, CreateInvoiceHandler.cs
-App/Views/Pages/BillingPage.razor     the page of the module, at /billing
+Views/Pages/BillingPage.razor     the page of the module, at /billing
 Tests/BillingStatusTests.cs           a unit test of the status request
 ```
 

@@ -6,7 +6,7 @@ A pack variant is a pack that inherits the architecture of another pack and adds
 
 | Need | Form |
 |---|---|
-| Some rules about the code of one app | An architecture class in the app, for example `engine/App/Host/EngineArchitecture.cs` |
+| Some rules about the code of one app | An architecture class in the app, for example `engine/Host/EngineArchitecture.cs` |
 | A new module kind, its bases and its rules | A pack variant in `Packs/<Name>/` |
 | A part in each module of a base kind | A pack variant that overrides a define method |
 | A different architecture, not VSA | A new definition that inherits `Architecture` (`tests/Fixtures/Architecture/LayeredApp`) |
@@ -15,7 +15,7 @@ A pack variant is a pack that inherits the architecture of another pack and adds
 
 ```
 PackVariant/                             app block: check entry PackVariantApp, definition EcsArchitecture
-├─ App/Host/PackVariantApp.cs            public class PackVariantApp : App<Ecs<AppHost>>;
+├─ Host/PackVariantApp.cs            public class PackVariantApp : App<Ecs<AppHost>>;
 ├─ Features/Inventory/                   a feature module
 ├─ EcsFeatures/Combat/                   an EcsFeature module
 │  ├─ CombatModule.cs, Components/, Systems/
@@ -34,10 +34,10 @@ public class Ecs<THost> : Vsa<EcsArchitecture, THost> where THost : AppHost, new
 
 | Check | Block folder | Definition | Checks |
 |---|---|---|---|
-| App | `PackVariant/` | `EcsArchitecture`, from the app class | `App/`, `Features/`, `EcsFeatures/`. `Packs/Ecs/` is one part |
+| App | `PackVariant/` | `EcsArchitecture`, from the app class | `Host/`, `Features/`, `EcsFeatures/`. `Packs/Ecs/` is one part |
 | Pack | `PackVariant/Packs/Ecs/` | `PackArchitecture`, from `Ecs<THost>` | The pack class, `Architecture/`, `Kernel/`, `Tests/` |
 
-`VsaArchitecture` marks `Packs/` with `AddBlockGroup<Pack>()`. So the app check binds each type of `Packs/<Name>/` to the part `Pack`, and the pack check checks its uses. The app host (`App/Host/`) and each feature and plugin module may use `Pack`. The app views (`App/Views/`) may not use `Pack`: a view uses only presenters. A pack place uses nothing in the app. The root project compiles `Packs/`, so the pack types are in the app DLL.
+`VsaArchitecture` marks `Packs/` with `AddBlockGroup<Pack>()`. So the app check binds each type of `Packs/<Name>/` to the part `Pack`, and the pack check checks its uses. The app host (`Host/`) and each feature and plugin module may use `Pack`. The app views (`Views/`) may not use `Pack`: a view uses only presenters. A pack place uses nothing in the app. The root project compiles `Packs/`, so the pack types are in the app DLL.
 
 The build of the app checks only the app block ([MgCohen/vsa-template#150](https://github.com/MgCohen/vsa-template/issues/150)). Run the pack check by hand:
 
@@ -47,23 +47,21 @@ dotnet umpire-engine.dll --project Packs/Ecs --bin <host output>
 
 ## The variant architecture
 
-A variant overrides `Define` and `Rules`, calls the base first, and adds:
+A variant overrides `Define` and `Rules`, and writes only its additions. It does not call the base: the engine calls each level of the chain, from the base down (`UMP010107`).
 
 ```csharp
 public sealed class EcsArchitecture : VsaArchitecture {
-    protected override void Define(Block block) {
-        base.Define(block);
-        var ecs = block.AddGroup<EcsFeature>();
-        ecs.Add<Module>().OfType<Umpire.Kernels.Module>();
+    protected override void Define(Part root) {
+        var ecs = root.AddGroup<EcsFeature>();
+        ecs.Add<RootClass>().OfType<Umpire.Kernels.Module>();
         ecs.Add<Components>();
         ecs.Add<Systems>().OfType<EcsSystem>();
     }
 
     protected override void Rules(RuleBook rules) {
-        base.Rules(rules);
         rules.For<Systems>().Uses<Components>().And<Pack>();
-        rules.For<Module>().Under<EcsFeature>().Uses<EcsFeature>(Access.Internal);
-        rules.For<EcsFeature>().Has<Module>().Exactly(1);
+        rules.For<RootClass>().Under<EcsFeature>().Uses<EcsFeature>(Access.Internal);
+        rules.For<EcsFeature>().Has<RootClass>().Exactly(1);
         rules.For<EcsFeature>().Has<Systems>().AtLeast(1);
     }
 }
@@ -89,27 +87,20 @@ The host finds `CombatModule`, because it inherits `Module`. A new module kind n
 | A rule with `Under<Feature>()` or `InOther<Feature>()` | No. Write the rule again with `EcsFeature` |
 | A rule with `Feature` as its subject, for example `For<Feature>().And<Plugin>().Uses<Pack>()` | No. `EcsArchitecture` writes `Systems` uses `Pack` again |
 | The closed boundary of a group | Yes: one `EcsFeature` does not use another `EcsFeature` |
-| `For<Module>().Uses<Kernel>()` | Yes |
+| A rule on `Module`, the base of `EcsFeature` | Yes: a rule on a concept covers each derived concept |
+| `For<RootClass>().Uses<Kernel>()` | Yes, for the root class of the kind |
 
-## Define methods
+## Overlays and derived records
 
-`VsaArchitecture.Define` calls one `virtual` define method for each base group and for the kernel. A variant overrides one to add a part to each instance of that group.
-
-| Define method | Gets | Base parts |
-|---|---|---|
-| `DefineKernel(Part kernel)` | The kernel: the external `Kernel` part in an app, `Kernel/` in the pack check | The VSA layers |
-| `DefinePlugin(PartGroup plugin)` | `Plugins/{plugin}` | The plugin root and the layers |
-| `DefineFeature(PartGroup feature)` | `Features/{feature}` | The module root, the layers, `Slices/Shared/`, the slice group |
-| `DefineSlice(PartGroup slice)` | `Features/{feature}/Slices/{slice}` | None. `Slice.Define` adds the contracts, the handlers, the hooks and the validators before this method |
+The body of each base group is in its record: `Feature.Define`, `Plugin.Define`, `Slice.Define` and `VsaKernel.Define`. A variant adds a part to each placed block of a kind with an overlay:
 
 ```csharp
-protected override void DefineFeature(PartGroup feature) {
-    base.DefineFeature(feature);
-    feature.Add<Systems>();
+protected override void Define(Part root) {
+    root.Extend<Feature>().Add<Systems>();
 }
 ```
 
-A define method can also give a new group the shape of a base group: `DefineFeature(block.AddGroup<EcsFeature>())`. Then the new group has the feature parts, but only the rules in the table above.
+A new kind can derive from a base record to get its body: `record EcsFeature : Feature`. Then the new group has the feature parts and adds its own in its `Define`. The rules that name `Feature` also cover it.
 
 A variant does not remove or move a base part. `PackVariantTests` checks that the variant keeps each decision of `VsaArchitecture`.
 
@@ -166,17 +157,15 @@ A plugin module has the layer folders of the framework. Another folder gives `UM
 
 | Case | Form |
 |---|---|
-| Each plugin can have the folder | Override `DefinePlugin`, add the concept, and write rules with `Under<Plugin>()` |
+| Each plugin can have the folder | Add the concept with `Extend<Plugin>()`, and write rules with `Under<Plugin>()` |
 | Only some plugins have the folder | Add a new plugin kind with its own group folder, as `EcsFeature` |
 
 ```csharp
-protected override void DefinePlugin(PartGroup plugin) {
-    base.DefinePlugin(plugin);
-    plugin.Add<Runners>();
+protected override void Define(Part root) {
+    root.Extend<Plugin>().Add<Runners>();
 }
 
 protected override void Rules(RuleBook rules) {
-    base.Rules(rules);
     rules.For<Runners>().Under<Plugin>().Uses<Handlers.Commands>();
 }
 ```
