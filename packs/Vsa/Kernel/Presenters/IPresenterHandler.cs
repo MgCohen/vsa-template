@@ -7,17 +7,7 @@ using Umpire.Vsa.Handlers.Events;
 
 public interface IPresenterHandler<TEvent> : IIntegrationEventHandler<TEvent> where TEvent : IntegrationEvent {
     async Task<IMessageResult> IHandler<TEvent>.RunAsync(IEnvelope<TEvent> envelope) {
-        IMessageResult result;
-        try {
-            result = await HandleAsync(envelope);
-        } catch (Exception handlerError) when (!envelope.Cancellation.IsCancellationRequested) {
-            try {
-                (this as Presenter)?.RaiseChanged();
-            } catch (Exception listenerError) {
-                throw new AggregateException(handlerError, listenerError);
-            }
-            throw;
-        }
+        var result = await HandleAsync(envelope);
         (this as Presenter)?.RaiseChanged();
         return result;
     }

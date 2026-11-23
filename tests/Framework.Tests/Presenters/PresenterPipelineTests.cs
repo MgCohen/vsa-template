@@ -236,17 +236,29 @@ public sealed class PresenterPipelineTests {
     }
 
     [Test]
-    public async Task AThrowAndAThrowingListenerKeepBothExceptions() {
+    public async Task AHandlerThatThrowsRaisesNoChanged() {
         var errors = new ErrorLog();
         using var services = Services([typeof(BrokenPresenter)], errors);
         using var scope = LiveScope(services);
-        scope.ServiceProvider.GetRequiredService<BrokenPresenter>().Changed +=
-            () => throw new InvalidOperationException("listener");
+        var changed = 0;
+        scope.ServiceProvider.GetRequiredService<BrokenPresenter>().Changed += () => changed++;
 
         await Publish(services, new Counted(1), CancellationToken.None);
 
-        var both = errors.Exceptions.Single() as AggregateException;
-        Assert.That(both?.InnerExceptions.Select(e => e.Message), Is.EqualTo(new[] { "broken", "listener" }));
+        Assert.That(changed, Is.Zero);
+        Assert.That(errors.Exceptions.Select(e => e.Message), Is.EqualTo(new[] { "broken" }));
+    }
+
+    [Test]
+    public async Task AHandlerWithAnErrorResultRaisesChanged() {
+        using var services = Services([typeof(ErrorPresenter)]);
+        using var scope = LiveScope(services);
+        var changed = 0;
+        scope.ServiceProvider.GetRequiredService<ErrorPresenter>().Changed += () => changed++;
+
+        await Publish(services, new Counted(1), CancellationToken.None);
+
+        Assert.That(changed, Is.EqualTo(1));
     }
 
     [Test]
@@ -320,7 +332,6 @@ public sealed class PresenterPipelineTests {
     sealed record Knock(int Scope) : IntegrationEvent;
 
     sealed record Slow : IntegrationEvent;
-
     sealed class CountPresenter() : Presenter(null!), IPresenterHandler<Counted> {
         public int Total { get; private set; }
         public IServiceProvider? Services { get; private set; }

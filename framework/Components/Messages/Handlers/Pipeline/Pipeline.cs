@@ -7,6 +7,8 @@ using Umpire.Kernels;
 using Umpire.Messages.Contracts;
 
 public sealed class Pipeline {
+    public const int ValidationPriority = 0;
+
     readonly IServiceProvider services;
     readonly IRunner runner;
     readonly AppTypes? types;
@@ -69,8 +71,14 @@ public sealed class Pipeline {
 
     static Type MessageOf(ServiceImplementation found) => found.Service.GetGenericArguments()[0];
 
-    static Type[] Steps(IReadOnlyList<Type> steps, Type typedStepBase, Type message) =>
-        [.. steps.Where(step => MessageTypes.Applies(MessageTypes.OfStep(step, typedStepBase), message))];
+    static List<PipelineStep> Steps(IReadOnlyList<PipelineStep> steps, Type typedStepBase, Type message) =>
+        [.. steps.Where(step => MessageTypes.Applies(MessageTypes.OfStep(step.Step, typedStepBase), message))];
+
+    static Type[] LowestFirst(IEnumerable<PipelineStep> steps) =>
+        [.. steps.OrderBy(step => step.Priority).Select(step => step.Step)];
+
+    static Type[] HighestFirst(IEnumerable<PipelineStep> steps) =>
+        [.. steps.OrderByDescending(step => step.Priority).Select(step => step.Step)];
 
     IReadOnlyList<ServiceImplementation> Found(Type genericBase) =>
         types?.Implementations(genericBase) ?? [];
@@ -174,12 +182,14 @@ public sealed class Pipeline {
 
     MessageRoute Route(Type message) {
         var hooks = Definition.HookBases.SelectMany(b => FoundFor(b, message)).ToList();
+        var beforeSteps = Steps(Definition.BeforeSteps, typeof(BeforeStep<>), message);
         return new MessageRoute(message, HandlersFor(message), many) {
-            Validators = ByName(FoundFor(typeof(Validator<>), message), message),
-            BeforeSteps = Steps(Definition.BeforeSteps, typeof(BeforeStep<>), message),
+            BeforeValidationSteps = LowestFirst(beforeSteps.Where(step => step.Priority < ValidationPriority)),
+            Validators = ByName(Definition.ValidatorBases.SelectMany(b => FoundFor(b, message)), message),
+            BeforeSteps = LowestFirst(beforeSteps.Where(step => step.Priority >= ValidationPriority)),
             BeforeHooks = ByName(hooks.Where(h => typeof(IBeforeCall).IsAssignableFrom(h.Implementation)), message),
             AfterHooks = ByName(hooks.Where(h => typeof(IAfterCall).IsAssignableFrom(h.Implementation)), message),
-            AfterSteps = Steps(Definition.AfterSteps, typeof(AfterStep<>), message),
+            AfterSteps = HighestFirst(Steps(Definition.AfterSteps, typeof(AfterStep<>), message)),
             CloseFailures = CloseFailuresFor(message),
         };
     }

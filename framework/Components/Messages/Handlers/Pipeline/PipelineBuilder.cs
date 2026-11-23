@@ -4,8 +4,9 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
     readonly List<Type> handlerBases = [];
     readonly List<Type> handlers = [];
     readonly List<Type> hookBases = [];
-    readonly List<Type> beforeSteps = [];
-    readonly List<Type> afterSteps = [];
+    readonly List<Type> validatorBases = [];
+    readonly List<PipelineStep> beforeSteps = [];
+    readonly List<PipelineStep> afterSteps = [];
     Type runner = typeof(InlineRunner);
 
     public PipelineBuilder<TMessage> Handlers<THandlerBase>() where THandlerBase : class =>
@@ -38,18 +39,36 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         return this;
     }
 
+    public PipelineBuilder<TMessage> ValidatorsOf(params Type[] validatorBases) {
+        foreach (var validatorBase in validatorBases ?? throw new ArgumentNullException(nameof(validatorBases))) {
+            if (!IsValidatorBase(validatorBase)) {
+                throw new ArgumentException(
+                    $"{validatorBase?.FullName ?? "null"} is not a validator base. "
+                    + "A validator base is an open generic type with one type parameter, the message, "
+                    + "and it implements IValidation, for example Validator<>.",
+                    nameof(validatorBases));
+            }
+            if (!this.validatorBases.Contains(validatorBase)) {
+                this.validatorBases.Add(validatorBase);
+            }
+        }
+        return this;
+    }
+
     public PipelineBuilder<TMessage> Runner<TRunner>() where TRunner : IRunner {
         runner = typeof(TRunner);
         return this;
     }
 
-    public PipelineBuilder<TMessage> BeforeStep<TStep>() where TStep : BeforeStep {
-        AddOnce(beforeSteps, typeof(TStep), "a before");
+    public PipelineBuilder<TMessage> BeforeStep<TStep>(int priority = Pipeline.ValidationPriority)
+        where TStep : BeforeStep {
+        AddOnce(beforeSteps, new PipelineStep(typeof(TStep), priority), "a before");
         return this;
     }
 
-    public PipelineBuilder<TMessage> AfterStep<TStep>() where TStep : AfterStep {
-        AddOnce(afterSteps, typeof(TStep), "an after");
+    public PipelineBuilder<TMessage> AfterStep<TStep>(int priority = Pipeline.ValidationPriority)
+        where TStep : AfterStep {
+        AddOnce(afterSteps, new PipelineStep(typeof(TStep), priority), "an after");
         return this;
     }
 
@@ -57,8 +76,14 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         new(Definition(), services ?? throw new ArgumentNullException(nameof(services)));
 
     internal PipelineDefinition Definition() =>
-        new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases], runner,
+        new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases],
+            validatorBases.Count > 0 ? [.. validatorBases] : [typeof(Validator<>)], runner,
             [.. beforeSteps], [.. afterSteps]);
+
+    static bool IsValidatorBase(Type? type) =>
+        type is { IsGenericTypeDefinition: true }
+        && type.GetGenericArguments().Length == 1
+        && typeof(IValidation).IsAssignableFrom(type);
 
     static bool IsHookBase(Type? type) =>
         type is not null
@@ -68,10 +93,10 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
     static bool IsStep(Type type) =>
         typeof(BeforeStep).IsAssignableFrom(type) || typeof(AfterStep).IsAssignableFrom(type);
 
-    static void AddOnce(List<Type> steps, Type step, string stage) {
-        if (steps.Contains(step)) {
+    static void AddOnce(List<PipelineStep> steps, PipelineStep step, string stage) {
+        if (steps.Exists(added => added.Step == step.Step)) {
             throw new InvalidOperationException(
-                $"{step.FullName} is already {stage} step of the pipeline of {typeof(TMessage).Name}. "
+                $"{step.Step.FullName} is already {stage} step of the pipeline of {typeof(TMessage).Name}. "
                 + "Add each step one time.");
         }
         steps.Add(step);

@@ -4,7 +4,10 @@ using Bare;
 using Shelf;
 using Toolbox;
 using Twin;
+using Shelf.Presenters;
+using Signals.Presenters;
 using Umpire.Kernels;
+using Umpire.Vsa.Presenters;
 
 public sealed class AppTypesTests {
     [Test]
@@ -86,6 +89,24 @@ public sealed class AppTypesTests {
         var types = new AppTypes(new FixedModules(new ShelfModule()), typeof(BareModule).Assembly).ConcreteTypesOf(typeof(Module));
 
         Assert.That(types, Does.Contain(typeof(ShelfModule)).And.Contain(typeof(BareModule)));
+    }
+
+    [Test]
+    public void RegisteredAlsoFindsTheMarkedClassesInTheAssemblyOfTheAppClass() {
+        var withApp = new AppTypes(new FixedModules(new ShelfModule()), typeof(BellPresenter).Assembly)
+            .Registered();
+        var withoutApp = new AppTypes(new FixedModules(new ShelfModule())).Registered();
+
+        Assert.That(withApp, Does.Contain(typeof(BellPresenter)).And.Contain(typeof(ShelfPresenter)));
+        Assert.That(withoutApp, Does.Not.Contain(typeof(BellPresenter)));
+    }
+
+    [Test]
+    public void RegisteredAndConcreteTypesOfReadTheSameAssemblies() {
+        var types = new AppTypes(new FixedModules(new ShelfModule()), typeof(BellPresenter).Assembly);
+
+        Assert.That(types.ConcreteTypesOf(typeof(Presenter)),
+            Is.EquivalentTo(types.Registered().Where(type => type.IsSubclassOf(typeof(Presenter)))));
     }
 
     [Test]

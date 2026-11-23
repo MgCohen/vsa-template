@@ -20,6 +20,7 @@ sealed class MessageRoute {
     internal IReadOnlyList<RouteHandler> Handlers { get; }
     internal bool Many { get; }
     internal Func<object, Envelope?, IServiceProvider, CancellationToken, Envelope> Create { get; }
+    internal IReadOnlyList<Type> BeforeValidationSteps { get; init; } = [];
     internal IReadOnlyList<Type> Validators { get; init; } = [];
     internal IReadOnlyList<Type> BeforeSteps { get; init; } = [];
     internal IReadOnlyList<Type> BeforeHooks { get; init; } = [];

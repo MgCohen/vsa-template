@@ -12,6 +12,7 @@ public static class PresenterServiceCollectionExtensions {
         services.AddScoped<PresenterScope>();
         services.AddPipeline(new PipelineBuilder<IntegrationEvent>()
             .HandlersOf(typeof(IPresenterHandler<>))
+            .ValidatorsOf(typeof(PresenterValidator<>))
             .Runner<LiveScopesRunner>());
         return services;
     }
