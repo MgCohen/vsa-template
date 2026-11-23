@@ -17,7 +17,7 @@ public sealed class PartFind {
         return this;
     }
 
-    public PartGroup Add<T>() where T : Concept, new() => new(Found().Select(part => part.Overlay(found => found.Add<T>())));
+    public PartGroup Add<T>() where T : Concept, new() => new PartGroup(Found(), overlay: true).Add<T>();
 
     public PartGroup ExtendedBy<T>() where T : Block, new() {
         var body = new T();
@@ -26,7 +26,7 @@ public sealed class PartFind {
             part.StackBody(body);
         }
         start.AddExtension(new Extension(body, concept, [.. under]));
-        return new(found);
+        return new(found, overlay: true);
     }
 
     IReadOnlyList<Part> Found() {

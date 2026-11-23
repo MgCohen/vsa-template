@@ -96,11 +96,12 @@ internal sealed class Compiler {
         var clash = Parts.Where(p => p.HasFolder && p.Folder!.Length > 0)
             .GroupBy(p => p.Path.ToUpperInvariant())
             .Select(g => g.ToList())
-            .FirstOrDefault(parts => parts.Select(p => p.Concept!.GetType()).Distinct().Count() > 1 && !parts.All(p => p.IsBlockPlace));
+            .FirstOrDefault(parts => parts.Count > 1
+                && !(parts.All(p => p.IsBlockPlace) && parts.Select(p => p.Concept!.GetType()).Distinct().Count() == parts.Count));
         if (clash is not null) {
             throw new InvalidOperationException(
                 $"Define: {string.Join(" and ", clash.Select(p => p.Name).Distinct())} have the same folder \"{clash[0].Folder}\" "
-                + $"at {clash[0].Path}. Two concepts cannot share one folder. Give one of them another Folder.");
+                + $"at {clash[0].Path}. Two parts cannot share one folder. Give one of them another Folder, or add the concept one time.");
         }
     }
 
@@ -215,8 +216,9 @@ internal sealed class Compiler {
         var subjects = Subjects(count.Subjects, text);
         if (count.Types) {
             var self = count.Subjects.All(entry => entry.Depth == Depth.Self);
-            return new CountStatement(text, subjects, false, b => b.Type.Is(counted) && (!self || subjects.Contains(b.Part)),
-                $"types of {counted.Name}", count.Min, count.Max, count.OneKind, PerPart: true);
+            return new CountStatement(text, subjects, false,
+                b => (counted == typeof(object) || b.Type.Is(counted)) && (!self || subjects.Contains(b.Part)),
+                counted == typeof(object) ? "types" : $"types of {counted.Name}", count.Min, count.Max, count.OneKind, PerPart: true, SkipTaken: counted == typeof(object));
         }
         RefuseNoFamily(counted, text);
         return new CountStatement(text, subjects, false,

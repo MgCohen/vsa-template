@@ -127,7 +127,9 @@ public class Part : IPartChain {
 
     public Part AddBlockGroup<T>(string? folder = null) where T : Concept, new() {
         var concept = new T();
-        return Attach(new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true, blockPlace: true));
+        var part = new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true, blockPlace: true);
+        RefuseInBlockPlace(part);
+        return Same(part) ?? Attach(part);
     }
 
     public Part InParentFolder() {
@@ -212,9 +214,16 @@ public class Part : IPartChain {
     internal Part Group<T>(string? folder, Boundary? boundary) where T : Concept, new() {
         var concept = new T();
         var part = new Part(concept, folder ?? concept.GroupFolder ?? concept.Folder, this, group: true);
+        RefuseInBlockPlace(part);
+        if (Same(part) is { } added) {
+            return added;
+        }
         part.options.Boundary = boundary;
         return Attach(part);
     }
+
+    Part? Same(Part part) => children.FirstOrDefault(c => c.Concept!.GetType() == part.Concept!.GetType()
+        && c.IsGroup == part.IsGroup && c.IsBlockPlace == part.IsBlockPlace && c.folder == part.folder);
 
     internal Part AddExternal(External library) {
         external = true;
@@ -284,7 +293,12 @@ public class Part : IPartChain {
         if (child.Concept is not External || external) {
             return;
         }
-        var call = child.IsGroup ? $"AddGroup<{child.Name}>()" : $"Add<{child.Name}>()";
+        var call = (child.IsGroup, child.IsBlockPlace) switch {
+            (true, true) => $"AddBlockGroup<{child.Name}>()",
+            (false, true) => $"AddBlock<{child.Name}>()",
+            (true, false) => $"AddGroup<{child.Name}>()",
+            _ => $"Add<{child.Name}>()",
+        };
         throw new InvalidOperationException(
             $"Define: {call} adds an External. An External is a DLL, not a folder, so it has no place in Define. "
             + $"Name it in a rule, for example rules.For<Infrastructure>().Uses<{child.Name}>(). The rule gives it its part.");

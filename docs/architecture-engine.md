@@ -193,7 +193,7 @@ public sealed class UnityArchitecture : VsaArchitecture {
 }
 ```
 
-`ExtendedBy<TBlock>()` stacks the `Define` body of `TBlock` on each found part, and it adds the `Rules` of `TBlock` one time, with the scope of the found concept.
+`ExtendedBy<TBlock>()` stacks the `Define` body of `TBlock` on each found part, and it adds the `Rules` of `TBlock` one time, with the scope of the found concept. The rules apply to each part of the found concept inside the `Under` filters, not only to the found parts. The compiler adds the rules in this order: the same-concept rules, the block bodies, the extensions, then the levels of the architecture from the base to the top. Thus a rule of the architecture wins over a rule of an extension body.
 
 The test `VsaDecisionsTests` writes the decision of the VSA definition for each pair of parts to `tests/Architecture.Tests/VsaDecisions.txt`. If a change to the definition changes a decision, the test fails and writes `VsaDecisions.actual.txt`. Compare the two files. If the change is correct, copy the new file over the baseline.
 

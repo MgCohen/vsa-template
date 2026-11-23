@@ -20,7 +20,12 @@ internal static class CountCheck {
 
     static IEnumerable<CountResult> PartFailures(CountStatement statement, Part subject, List<Binding> app) {
         var inPart = app.Where(b => subject.Holds(b.Part)).ToList();
-        return inPart.Count == 0 ? [] : Check(statement, subject.Name, subject.Name, Counted(statement, inPart), First(inPart));
+        if (inPart.Count == 0) {
+            return app.Count == 0 || statement.Min is not > 0
+                ? []
+                : Check(statement, subject.Name, subject.Name, [], First(app));
+        }
+        return Check(statement, subject.Name, subject.Name, Counted(statement, inPart), First(inPart));
     }
 
     static IEnumerable<CountResult> TypeFailures(CountStatement statement, Part subject, List<Binding> app) {
@@ -30,8 +35,12 @@ internal static class CountCheck {
                 [.. candidates.Where(c => c.Type.BaseArguments.Contains(type.Type.FullName))], type));
     }
 
-    static List<Binding> Counted(CountStatement statement, IEnumerable<Binding> bindings) =>
-        [.. bindings.Where(b => !b.FollowsUser && !b.Type.IsAbstract && !b.Type.IsNested && statement.Counts(b))];
+    static List<Binding> Counted(CountStatement statement, IEnumerable<Binding> bindings) {
+        var all = bindings.ToList();
+        var taken = statement.SkipTaken ? all.SelectMany(b => b.Type.BaseArguments).ToHashSet() : [];
+        return [.. all.Where(b => !b.FollowsUser && !b.Type.IsAbstract && !b.Type.IsNested
+            && !taken.Contains(b.Type.FullName) && statement.Counts(b))];
+    }
 
     static IEnumerable<CountResult> Check(CountStatement statement, string subject, string? group, List<Binding> found, Binding at) {
         var counted = group is null ? $"{statement.Counted} that take it" : statement.Counted;

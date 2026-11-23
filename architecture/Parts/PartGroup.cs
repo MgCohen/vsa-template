@@ -2,22 +2,27 @@ namespace Umpire.Architecture;
 
 public sealed class PartGroup : IPartChain {
     readonly List<Part> parts;
+    readonly bool overlay;
 
-    internal PartGroup(IEnumerable<Part> parts) {
+    internal PartGroup(IEnumerable<Part> parts, bool overlay = false) {
         this.parts = [.. parts];
+        this.overlay = overlay;
     }
 
-    public PartGroup Add<T>() where T : Concept, new() => new(parts.Select(p => p.Add<T>()));
+    public PartGroup Add<T>() where T : Concept, new() => new(parts.Select(p => In(p, part => part.Add<T>())), overlay);
 
-    public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() => new(parts.Select(p => p.Group<T>(folder, null)));
+    public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() =>
+        new(parts.Select(p => In(p, part => part.Group<T>(folder, null))), overlay);
 
     public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() =>
-        new(parts.Select(p => p.Group<T>(folder, boundary)));
+        new(parts.Select(p => In(p, part => part.Group<T>(folder, boundary))), overlay);
 
     public PartGroup And<T>() where T : Concept, new() {
         var parents = parts.Select(p => p.Parent ?? throw new InvalidOperationException("The block has no sibling.")).Distinct();
-        return new(parts.Concat(parents.Select(p => p.Add<T>())));
+        return new(parts.Concat(parents.Select(p => In(p, part => part.Add<T>()))), overlay);
     }
+
+    Part In(Part parent, Func<Part, Part> add) => overlay ? parent.Overlay(add) : add(parent);
 
     public PartGroup InParentFolder() {
         foreach (var part in parts) {

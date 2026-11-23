@@ -40,6 +40,15 @@ public sealed class PackArchitectureTests {
     }
 
     [Test]
+    public void A_pack_with_code_only_in_its_kernel_fails_the_count() {
+        var resolved = new ResolvedArchitecture(new PackArchitecture(new Umpire.Vsa.Definition.VsaArchitecture()));
+
+        var counts = resolved.Counts(resolved.Place([Fact("Kernel/Domain/Entity.cs", "Entity")], PackFolder));
+
+        Assert.That(counts.Select(c => c.Message), Has.Some.Contains("types of Pack"));
+    }
+
+    [Test]
     public void The_pack_base_is_the_check_entry_of_the_pack_architecture() {
         Assert.That(typeof(Pack).BaseType, Is.EqualTo(typeof(Block<PackArchitecture>)));
         Assert.That(typeof(Pack<,,>).IsAbstract, Is.True);

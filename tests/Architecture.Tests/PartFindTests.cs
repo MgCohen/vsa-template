@@ -116,8 +116,9 @@ public sealed class PartFindTests {
         }));
 
         var audits = resolved.Parts.Where(p => p.Concept is Audit);
+        var counts = audits.Select(audit => resolved.UseRules.Count(rule => rule.From == audit));
 
-        Assert.That(audits.Select(audit => resolved.UseRules.Count(rule => rule.From == audit)), Has.All.GreaterThan(0));
+        Assert.That(counts, Has.All.GreaterThan(0));
     }
 
     [Test]
@@ -129,6 +130,57 @@ public sealed class PartFindTests {
         });
 
         Assert.That(paths.Count(path => path == "Desk/Audit"), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void ExtendedBy_two_times_adds_the_rules_of_the_body_one_time() {
+        var resolved = new ResolvedArchitecture(new InlineArchitecture(root => {
+            root.Add<Desk>().Add<Drawer>();
+            root.For<Desk>().ExtendedBy<Audited>();
+            root.For<Desk>().ExtendedBy<Audited>();
+        }));
+        var audit = resolved.Parts.Single(p => p.Concept is Audit);
+        var drawer = resolved.Parts.Single(p => p.Concept is Drawer);
+
+        Assert.That(resolved.UseRules.Count(rule => rule.From == audit && rule.To == drawer), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void And_after_a_find_adds_a_sibling_inside_the_found_block_place() {
+        var paths = Paths(root => {
+            root.AddBlock<Cabinet>();
+            root.For<Cabinet>().Add<Label>().And<Desk>();
+        });
+
+        Assert.That(paths, Does.Contain("Cabinet/Label").And.Contain("Cabinet/Desk"));
+    }
+
+    [Test]
+    public void Add_after_ExtendedBy_adds_a_part_inside_the_found_block_place() {
+        var paths = Paths(root => {
+            root.AddBlock<Cabinet>();
+            root.For<Cabinet>().ExtendedBy<Audited>().Add<Label>();
+        });
+
+        Assert.That(paths, Does.Contain("Cabinet/Label").And.Contain("Cabinet/Audit"));
+    }
+
+    [Test]
+    public void Two_AddGroup_calls_of_one_concept_fold_into_one_group() {
+        var paths = Paths(root => {
+            root.AddGroup<Shelf>();
+            root.AddGroup<Shelf>();
+        });
+
+        Assert.That(paths.Count(path => path.StartsWith("Shelves/", StringComparison.Ordinal)), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void A_part_and_a_block_place_of_one_concept_in_one_folder_are_an_error() {
+        Assert.Throws<InvalidOperationException>(() => Paths(root => {
+            root.Add<Cabinet>();
+            root.AddBlock<Cabinet>();
+        }));
     }
 
     [Test]

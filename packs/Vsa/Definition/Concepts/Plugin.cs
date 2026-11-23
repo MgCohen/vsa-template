@@ -6,7 +6,7 @@ using Umpire.Kernels.Blocks;
 public record Plugin : Module {
     public override string GroupFolder => "Plugins";
 
-    protected override void Rules(RuleBook rules) => rules.For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().Exactly(1);
+    protected override void Rules(RuleBook rules) => rules.For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().AtLeast(1);
 
     protected override void Define(Part part) {
         part.Add<Domain>().Add<Domain.Shared>();
