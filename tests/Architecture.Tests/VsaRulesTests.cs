@@ -202,9 +202,8 @@ public sealed class VsaRulesTests {
     sealed record PartPlace(Part Part, IReadOnlyDictionary<string, string> Values);
 
     sealed class ExtraFeaturePart : VsaArchitecture {
-        protected override void DefineFeature(PartGroup feature) {
-            base.DefineFeature(feature);
-            feature.Add<Extra>();
+        protected override void Define(Part root) {
+            root.Extend<Umpire.Vsa.Definition.Feature>().Add<Extra>();
         }
     }
 

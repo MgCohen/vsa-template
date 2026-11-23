@@ -13,8 +13,8 @@ public class VsaArchitecture : Architecture {
         DefineKernel(root.Add<Kernel>());
         root.Add<Host>().And<Views>();
         root.AddBlockGroup<Pack>("Packs");
-        DefinePlugin(root.AddGroup<Plugin>(Boundary.Open));
-        DefineFeature(root.AddGroup<Feature>());
+        root.AddGroup<Plugin>(Boundary.Open);
+        root.AddGroup<Feature>();
     }
 
     protected override void DefineKernel(Part kernel) {
@@ -39,27 +39,6 @@ public class VsaArchitecture : Architecture {
     protected override void KernelRules(RuleBook rules) {
         AndOtherKernelLayers(AndOtherKernelLayers(rules.For<Domain>()).Uses<Domain>());
     }
-
-    protected virtual void DefinePlugin(PartGroup plugin) {
-        plugin.Add<RootClass>().OfType<Umpire.Vsa.Composition.Plugin>();
-        plugin.Add<Domain>().Add<Domain.Shared>();
-        plugin.Add<Infrastructure>().And<Presenters>();
-        AddContractParts(plugin.Add<Contracts>());
-        var pluginHandlers = plugin.Add<Handlers>();
-        pluginHandlers.Add<Handlers.Requests>();
-        pluginHandlers.Add<Handlers.Events>().Add<Handlers.Events.Hooks>().InParentFolder();
-        pluginHandlers.Add<Handlers.Commands>().Add<Handlers.Commands.Hooks>().InParentFolder();
-    }
-
-    protected virtual void DefineFeature(PartGroup feature) {
-        feature.Add<RootClass>().OfType<Umpire.Kernels.Module>();
-        feature.Add<Domain>().Add<Domain.Shared>();
-        feature.Add<Infrastructure>().And<Presenters>();
-        feature.Add<Slice.Shared>();
-        DefineSlice(feature.AddGroup<Slice>());
-    }
-
-    protected virtual void DefineSlice(PartGroup slice) { }
 
     protected override void Rules(RuleBook rules) {
         rules.For<Domain>().Uses<Domain.Shared>();
@@ -109,9 +88,6 @@ public class VsaArchitecture : Architecture {
             .And<Handlers.Commands>().And<Views>().And<Composition>();
 
     static Part Bind(Part part, string assembly) => part.IsExternal ? part.InAssembly(assembly) : part;
-
-    protected static PartGroup AddContractParts(IPartChain parent) =>
-        parent.Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
 
     protected static From ForContractParts(RuleBook rules) =>
         rules.For<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();

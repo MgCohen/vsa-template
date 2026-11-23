@@ -9,6 +9,7 @@ public class Part : IPartChain {
     Options options = new();
     string? folder;
     string? assembly;
+    bool open;
 
     protected internal Part(Concept? concept, string? folder, Part? parent, bool group = false, bool blockPlace = false) {
         Concept = concept;
@@ -53,6 +54,18 @@ public class Part : IPartChain {
     }
 
     public PartGroup AddGroup<T>(string? folder = null) where T : Concept, new() => new([Group<T>(folder, null)]);
+
+    public PartGroup Extend<T>() where T : Block {
+        var placed = Walk().Where(p => p.Is(typeof(T))).ToList();
+        if (placed.Count == 0) {
+            throw new InvalidOperationException(
+                $"Define: Extend<{Concept.Display(typeof(T))}>() finds no placed {Concept.Display(typeof(T))}. Place the block first, or remove the overlay.");
+        }
+        foreach (var part in placed) {
+            part.open = true;
+        }
+        return new(placed);
+    }
 
     public PartGroup AddGroup<T>(Boundary boundary, string? folder = null) where T : Concept, new() => new([Group<T>(folder, boundary)]);
 
@@ -185,9 +198,21 @@ public class Part : IPartChain {
             child.NameEndsWith(child.Concept.NameEndsWith);
         }
         if (child.Concept is Block block) {
+            RefuseLoop(child);
+            child.open = true;
             block.DefinePart(child);
+            child.open = false;
         }
         return child;
+    }
+
+    void RefuseLoop(Part child) {
+        var type = child.Concept!.GetType();
+        if (SelfAndAncestors().FirstOrDefault(p => p.Concept?.GetType() == type) is { } outer) {
+            throw new InvalidOperationException(
+                $"Define: {child.Name} is placed inside {outer.Name}, so the block places itself. "
+                + $"Remove the place of {child.Name} from its own body, or from the block that places it.");
+        }
     }
 
     void RefuseOwned(Part child, IReadOnlyList<Type> owners) {
@@ -203,7 +228,7 @@ public class Part : IPartChain {
     }
 
     void RefuseInBlockPlace(Part child) {
-        if (IsBlockPlace) {
+        if (IsBlockPlace && !open) {
             throw new InvalidOperationException(
                 $"Define: {child.Name} is under {Name}, but {Name} is the place of another block. The block in that place has its own definition. "
                 + $"Remove the part, or add it in the definition of the block in {Path}.");
