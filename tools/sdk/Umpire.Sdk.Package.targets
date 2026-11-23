@@ -8,9 +8,10 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="Polyfills/**" Pack="true" PackagePath="Polyfills" />
-    <!-- Polyfills/ holds sources for the module projects and the framework projects, not for this project. -->
-    <Compile Remove="Sdk/**;Web/**;Polyfills/**" />
+    <None Include="Polyfills~/**" Pack="true" PackagePath="Polyfills~" />
+    <!-- Polyfills~/ holds sources for the module projects and the framework projects, not for this project. Its name ends
+         with ~, so the engine does not count it as a source folder of a block. -->
+    <Compile Remove="Sdk/**;Web/**;Polyfills~/**" />
   </ItemGroup>
   <!-- The SDK adds the Umpire.* packages with its own version, so all packages stay at one version.
        The NUnit versions of a test project come from Directory.Packages.props of this repository. -->
