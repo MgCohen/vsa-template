@@ -22,7 +22,7 @@ sealed class TestCommand : AppCommand {
         var projects = TestProjects(block);
         if (projects is []) {
             throw new UmpireException($"The app in {block} has no test project. A test project is a project "
-                + "whose name ends with .Tests, for example Tests/MyApp.Tests.csproj.");
+                + "whose name ends with .Tests, for example App/Tests/MyApp.Tests.csproj.");
         }
         string[] configuration = input.Single(Configuration) is string value ? ["-c", value] : [];
         var failed = projects

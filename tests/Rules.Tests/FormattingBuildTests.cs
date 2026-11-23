@@ -13,7 +13,7 @@ public sealed class FormattingBuildTests {
     [OneTimeSetUp]
     public void Build() {
         using var workspace = StyledWorkspace();
-        build = workspace.Dotnet(["build", "Features/Styled/Styled.csproj", "-nodeReuse:false", .. RepositoryStyle()]);
+        build = workspace.Dotnet(["build", "App/Features/Styled/Styled.csproj", "-nodeReuse:false", .. RepositoryStyle()]);
     }
 
     [Test]
@@ -94,7 +94,7 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Umpire_Sdk_gives_a_consumer_no_style() {
         using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
-        var result = workspace.Dotnet("build", "Features/Styled/Styled.csproj", "-nodeReuse:false");
+        var result = workspace.Dotnet("build", "App/Features/Styled/Styled.csproj", "-nodeReuse:false");
         var style = result.Output.Split('\n').Where(line => line.Contains(" warning IDE", StringComparison.Ordinal));
         Assert.That(style, Is.Empty, result.Output);
     }

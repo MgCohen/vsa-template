@@ -11,7 +11,7 @@
     <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../PackVariant.csproj" />
+    <ProjectReference Include="../../../../PackVariant.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" />
   </ItemGroup>
 </Project>

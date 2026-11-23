@@ -17,7 +17,7 @@
        definition of an app, so its Architecture type must come from the same Umpire.dll as the app. -->
   <ItemGroup Condition="'$(_UmpireUseBundle)' != 'true'">
     <ProjectReference Include="$(UmpireFrameworkSourceDir)architecture/Umpire.Architecture.csproj" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>

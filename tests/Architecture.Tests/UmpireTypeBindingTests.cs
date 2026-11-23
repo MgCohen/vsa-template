@@ -16,7 +16,7 @@ public sealed class UmpireTypeBindingTests {
 
     [Test]
     public void A_domain_type_cannot_use_an_Umpire_type_outside_the_kernel_bodies() {
-        var domain = Bind(Fact("App.Features.Notes.Domain.Note", "App", $"{AppFolder}/Features/Notes/Domain/Note.cs"))!;
+        var domain = Bind(Fact("App.Features.Notes.Domain.Note", "App", $"{AppFolder}/App/Features/Notes/Domain/Note.cs"))!;
         var config = Bind(Fact("Umpire.Config.UmpireConfig", "Umpire.Config", "C:/repo/framework/Components/Config/UmpireConfig.cs"))!;
 
         var decision = Resolved.DecisionFor(domain.Part, domain.Values, config.Part, config.Values);

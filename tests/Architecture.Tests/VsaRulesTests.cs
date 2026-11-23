@@ -117,9 +117,9 @@ public sealed class VsaRulesTests {
 
     [Test]
     public void A_folder_in_Packs_is_the_place_of_a_pack_block() {
-        var type = new TypeFacts("App.Packs.Ecs.Kernel.EcsSystem", "EcsSystem", "App", new Source("C:/app/Packs/Ecs/Kernel/EcsSystem.cs", 1), [], [], [], []);
+        var type = new TypeFacts("App.Packs.Ecs.Kernel.EcsSystem", "EcsSystem", "App", new Source("C:/app/App/Packs/Ecs/Kernel/EcsSystem.cs", 1), [], [], [], []);
 
-        var bindings = Resolved.Place([type], "C:/app", ["C:/app/Packs/Ecs"]);
+        var bindings = Resolved.Place([type], "C:/app", ["C:/app/App/Packs/Ecs"]);
 
         Assert.That(bindings.Unmapped, Is.Empty);
         Assert.That(bindings.All.Single().Part.Is(typeof(Pack)), Is.True);
@@ -129,7 +129,7 @@ public sealed class VsaRulesTests {
     public void A_hook_override_adds_a_part_to_each_feature() {
         var paths = new ResolvedArchitecture(new ExtraFeaturePart()).Parts.Select(p => p.Path);
 
-        Assert.That(paths, Does.Contain("Features/{feature}/Extra"));
+        Assert.That(paths, Does.Contain("App/Features/{feature}/Extra"));
     }
 
     [TestCase(typeof(Umpire.Vsa.Definition.Feature))]
@@ -169,7 +169,7 @@ public sealed class VsaRulesTests {
         var block = Path.GetFullPath("Demo");
         var sender = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire",
             new Source("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", 1), [], [], [], []);
-        var order = AppType(block, "Demo.Features.Shop.Domain.Order", "Features/Shop/Domain/Order.cs") with { Mentions = [sender.FullName] };
+        var order = AppType(block, "Demo.Features.Shop.Domain.Order", "App/Features/Shop/Domain/Order.cs") with { Mentions = [sender.FullName] };
 
         var bindings = Resolved.Place([order, sender], block);
 
@@ -180,12 +180,24 @@ public sealed class VsaRulesTests {
     [Test]
     public void An_app_type_with_an_Umpire_namespace_binds_to_its_folder_and_not_to_the_kernel() {
         var block = Path.GetFullPath("Demo");
-        var order = AppType(block, "Umpire.Demo.Features.Shop.Domain.Order", "Features/Shop/Domain/Order.cs");
+        var order = AppType(block, "Umpire.Demo.Features.Shop.Domain.Order", "App/Features/Shop/Domain/Order.cs");
 
         var bound = Resolved.Place([order], block).Of(order.FullName);
 
         Assert.That(bound?.External, Is.False);
         Assert.That(bound?.Part.Name, Is.EqualTo("Domain"));
+    }
+
+    [Test]
+    public void An_app_folder_named_Kernel_in_the_runtime_root_does_not_bind_to_the_kernel_root() {
+        var block = Path.GetFullPath("Demo");
+        var thing = AppType(block, "Demo.Features.X.Kernel.Thing", "App/Features/X/Kernel/Thing.cs");
+
+        var bound = Resolved.Place([thing], block).Of(thing.FullName);
+
+        Assert.That(bound?.External, Is.Not.True);
+        Assert.That(bound?.Part.SelfAndAncestors().Select(p => p.Concept?.GetType()) ?? [],
+            Has.None.EqualTo(typeof(Umpire.Architecture.Blocks.Kernel)));
     }
 
     static TypeFacts AppType(string block, string fullName, string file) =>

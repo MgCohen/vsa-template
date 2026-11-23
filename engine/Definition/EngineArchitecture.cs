@@ -3,6 +3,7 @@ namespace UmpireEngine;
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
+using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
 using KernelParts = Umpire.Kernels.KernelParts;
 
 public sealed class EngineArchitecture : VsaArchitecture {
@@ -11,6 +12,7 @@ public sealed class EngineArchitecture : VsaArchitecture {
             .Uses<EngineLibraries>().And<VersionLibraries>().And<ConfigLibraries>();
         rules.For<Infrastructure>().Uses<ArchUnitLibraries>();
         rules.For<Infrastructure>().Under<Plugin>().Uses<KernelParts.App>();
-        rules.For<Host>().Uses<EngineLibraries>().And<VersionLibraries>();
+        rules.For<Host>().And<App>(Depth.Self).Uses<EngineLibraries>().And<VersionLibraries>();
+        rules.For<DefinitionRoot>().Uses<EngineLibraries>();
     }
 }

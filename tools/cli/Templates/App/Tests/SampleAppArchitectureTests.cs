@@ -6,8 +6,8 @@ using Umpire.Vsa.Testing.Unit;
 
 public sealed class SampleAppArchitectureTests : VsaArchitectureTest {
     [Test]
-    public void The_app_class_binds_to_the_app_host() {
-        Assert.That(At<SampleAppApp>("Host").Part, Is.EqualTo("Host"));
+    public void The_app_class_binds_to_the_app_root() {
+        Assert.That(At<SampleAppApp>("App").Part, Is.EqualTo("App"));
     }
 
     [Test]

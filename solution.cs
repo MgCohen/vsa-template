@@ -4,7 +4,7 @@ using System.Text;
 var root = Path.GetDirectoryName(Here())!;
 
 string[] builtByTheirTests = ["tests/Fixtures/"];
-string[] fixturesWithOwnTests = ["tests/Fixtures/Notes/", "tests/Fixtures/PackVariant/Packs/Ecs/Tests/"];
+string[] fixturesWithOwnTests = ["tests/Fixtures/Notes/", "tests/Fixtures/PackVariant/App/Packs/Ecs/Tests/"];
 
 var projects = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
     .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/'))

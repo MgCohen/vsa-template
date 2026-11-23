@@ -1,8 +1,8 @@
 App -> App/MessagesComponent [any] Deny
 App -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
 App -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
-App -> App/Host [any] Deny
-App -> App/Pack [any] Deny
+App -> App/Host [any] Allow Public
+App -> App/Pack [any] Allow Public
 App -> App/Plugin [any] Deny
 App -> App/Plugin/Domain [any] Deny
 App -> App/Plugin/Domain/Domain.Shared [any] Deny
@@ -34,17 +34,17 @@ App -> App/Feature/Slice/Handlers.Commands [any] Deny
 App -> App/Feature/Slice/Handlers.Events.Hooks [any] Deny
 App -> App/Feature/Slice/Handlers.Commands.Hooks [any] Deny
 App -> App/Feature/Slice/Slice.Validators [any] Deny
-App -> Definition [any] Deny
-App -> Core [any] Deny
-App -> Core/KernelParts.App [any] Deny
-App -> Core/KernelParts.Kernels [any] Deny
-App -> Core/Hosts [any] Deny
-App -> Core/KernelParts.Operations [any] Deny
-App -> Core/KernelParts.Modules [any] Deny
-App -> Core/KernelParts.Scan [any] Deny
-App -> Core/KernelParts.Factories [any] Deny
-App -> Core/KernelParts.Services [any] Deny
-App -> Core/KernelParts.Analyzers [any] Deny
+App -> Definition [any] Allow Public
+App -> Core [any] Allow Public
+App -> Core/KernelParts.App [any] Allow Public
+App -> Core/KernelParts.Kernels [any] Allow Public
+App -> Core/Hosts [any] Allow Public
+App -> Core/KernelParts.Operations [any] Allow Public
+App -> Core/KernelParts.Modules [any] Allow Public
+App -> Core/KernelParts.Scan [any] Allow Public
+App -> Core/KernelParts.Factories [any] Allow Public
+App -> Core/KernelParts.Services [any] Allow Public
+App -> Core/KernelParts.Analyzers [any] Allow Public
 App -> Views [any] Deny
 App -> Kernel [any] Deny
 App -> Kernel/Domain [any] Deny
@@ -59,8 +59,8 @@ App -> Kernel/Handlers/Handlers.Requests [any] Deny
 App -> Kernel/Handlers/Handlers.Events [any] Deny
 App -> Kernel/Handlers/Handlers.Commands [any] Deny
 App -> Kernel/Views [any] Deny
-App -> Kernel/Composition [any] Deny
-App -> UmpireLibraries [any] Deny
+App -> Kernel/Composition [any] Allow Public
+App -> UmpireLibraries [any] Allow Public
 App/MessagesComponent -> App [any] Deny
 App/MessagesComponent -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
 App/MessagesComponent -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
@@ -2484,16 +2484,16 @@ Definition -> App/Feature/Slice/Handlers.Commands [any] Deny
 Definition -> App/Feature/Slice/Handlers.Events.Hooks [any] Deny
 Definition -> App/Feature/Slice/Handlers.Commands.Hooks [any] Deny
 Definition -> App/Feature/Slice/Slice.Validators [any] Deny
-Definition -> Core [any] Deny
-Definition -> Core/KernelParts.App [any] Deny
-Definition -> Core/KernelParts.Kernels [any] Deny
-Definition -> Core/Hosts [any] Deny
-Definition -> Core/KernelParts.Operations [any] Deny
-Definition -> Core/KernelParts.Modules [any] Deny
-Definition -> Core/KernelParts.Scan [any] Deny
-Definition -> Core/KernelParts.Factories [any] Deny
-Definition -> Core/KernelParts.Services [any] Deny
-Definition -> Core/KernelParts.Analyzers [any] Deny
+Definition -> Core [any] Allow Public
+Definition -> Core/KernelParts.App [any] Allow Public
+Definition -> Core/KernelParts.Kernels [any] Allow Public
+Definition -> Core/Hosts [any] Allow Public
+Definition -> Core/KernelParts.Operations [any] Allow Public
+Definition -> Core/KernelParts.Modules [any] Allow Public
+Definition -> Core/KernelParts.Scan [any] Allow Public
+Definition -> Core/KernelParts.Factories [any] Allow Public
+Definition -> Core/KernelParts.Services [any] Allow Public
+Definition -> Core/KernelParts.Analyzers [any] Allow Public
 Definition -> Views [any] Deny
 Definition -> Kernel [any] Deny
 Definition -> Kernel/Domain [any] Deny
@@ -2509,7 +2509,7 @@ Definition -> Kernel/Handlers/Handlers.Events [any] Deny
 Definition -> Kernel/Handlers/Handlers.Commands [any] Deny
 Definition -> Kernel/Views [any] Deny
 Definition -> Kernel/Composition [any] Deny
-Definition -> UmpireLibraries [any] Deny
+Definition -> UmpireLibraries [any] Allow Public
 Core -> App [any] Deny
 Core -> App/MessagesComponent [any] Deny
 Core -> App/MessagesComponent/MessagesParts.Contracts [any] Deny

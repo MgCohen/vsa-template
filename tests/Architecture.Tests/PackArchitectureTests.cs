@@ -7,7 +7,7 @@ using Umpire.Vsa.Definition;
 public sealed class PackArchitectureTests {
     const string PackFolder = "C:/packs/Sample";
 
-    [TestCase("Architecture/SampleArchitecture.cs")]
+    [TestCase("Definition/SampleArchitecture.cs")]
     [TestCase("Kernel/Hosting/SampleHost.cs")]
     [TestCase("Tests/Unit/SampleTests.cs")]
     public void The_three_pack_folders_are_parts(string file) {

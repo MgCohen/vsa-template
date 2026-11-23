@@ -11,7 +11,7 @@
     <Compile Include="$(UmpireRoot)framework/Kernel/**/*.cs"
              Exclude="$(_UmpireNotBundled);$(UmpireRoot)framework/Kernel/Analyzers/**;$(UmpireRoot)framework/Kernel/Hosts/Web/**;$(UmpireRoot)framework/Kernel/Hosts/Console/**" />
     <Compile Include="$(UmpireRoot)packs/Vsa/Kernel/**/*.cs" Exclude="$(_UmpireNotBundled);$(UmpireRoot)packs/Vsa/Kernel/Views/**" />
-    <Compile Include="$(UmpireRoot)packs/Vsa/Architecture/**/*.cs;$(UmpireRoot)packs/Vsa/VsaPack.cs" Exclude="$(_UmpireNotBundled)" />
+    <Compile Include="$(UmpireRoot)packs/Vsa/Definition/**/*.cs;$(UmpireRoot)packs/Vsa/VsaPack.cs" Exclude="$(_UmpireNotBundled)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Tomlyn" />

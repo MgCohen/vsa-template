@@ -16,9 +16,9 @@ public sealed class OneLineBuildTests {
     public void Build() {
         workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "OneLine"));
         File.Delete(Path.Combine(workspace.Root, "Directory.Build.props"));
-        first = workspace.Dotnet("build", "Tests/OneLine.Tests.csproj", "-nodeReuse:false");
+        first = workspace.Dotnet("build", "App/Tests/OneLine.Tests.csproj", "-nodeReuse:false");
         engine = RunEngine();
-        build = workspace.Dotnet("build", "Tests/OneLine.Tests.csproj", "--no-incremental", "-nodeReuse:false");
+        build = workspace.Dotnet("build", "App/Tests/OneLine.Tests.csproj", "--no-incremental", "-nodeReuse:false");
     }
 
     [OneTimeTearDown]
@@ -43,9 +43,9 @@ public sealed class OneLineBuildTests {
 
     [TestCase("bin")]
     [TestCase("obj")]
-    [TestCase("Tests/bin")]
-    [TestCase("Tests/obj")]
-    [TestCase("Tests/artifacts~")]
+    [TestCase("App/Tests/bin")]
+    [TestCase("App/Tests/obj")]
+    [TestCase("App/Tests/artifacts~")]
     public void No_output_folder_is_next_to_the_code(string folder) =>
         Assert.That(Directory.Exists(Path.Combine(workspace.Src, folder)), Is.False);
 
@@ -171,7 +171,7 @@ public sealed class OneLineBuildTests {
 
     [Test]
     public void The_test_project_runs_its_tests() {
-        var result = workspace.Dotnet("test", "--project", "Tests/OneLine.Tests.csproj");
+        var result = workspace.Dotnet("test", "--project", "App/Tests/OneLine.Tests.csproj");
         Assert.That(result.Succeeded, Is.True, result.Output);
     }
 
@@ -192,7 +192,7 @@ public sealed class OneLineBuildTests {
 
     [Test]
     public void An_artifacts_path_of_a_Directory_Build_props_file_wins() {
-        var props = Path.Combine(workspace.Src, "Tests", "Directory.Build.props");
+        var props = Path.Combine(workspace.Src, "App", "Tests", "Directory.Build.props");
         File.WriteAllText(props, """
             <Project>
               <PropertyGroup>
@@ -201,7 +201,7 @@ public sealed class OneLineBuildTests {
             </Project>
             """);
         try {
-            var path = Evaluate("Tests/OneLine.Tests.csproj", "-getProperty:ArtifactsPath");
+            var path = Evaluate("App/Tests/OneLine.Tests.csproj", "-getProperty:ArtifactsPath");
             Assert.That(path.Output.Trim(), Does.EndWith("out~"), path.Output);
         } finally {
             File.Delete(props);
@@ -227,7 +227,7 @@ public sealed class OneLineBuildTests {
     }
 
     [TestCase("OneLine.csproj", "-p:UmpireEngine=false")]
-    [TestCase("Tests/OneLine.Tests.csproj")]
+    [TestCase("App/Tests/OneLine.Tests.csproj")]
     public void A_project_runs_no_rule_engine(string project, params string[] switches) {
         var value = Evaluate([project, "-getProperty:UmpireEngine", .. switches]);
         Assert.That(value.Output.Trim(), Is.EqualTo("false"), value.Output);
@@ -248,7 +248,7 @@ public sealed class OneLineBuildTests {
 
     [Test]
     public void The_test_bases_of_the_default_pack_can_be_left_out() {
-        var references = Evaluate("Tests/OneLine.Tests.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
+        var references = Evaluate("App/Tests/OneLine.Tests.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
         Assert.That(references.Output, Does.Not.Contain("\"Umpire.Testing\""), references.Output);
     }
 

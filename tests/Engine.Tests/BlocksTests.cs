@@ -36,7 +36,7 @@ public sealed class BlocksTests {
     [TestCase("Alpha")]
     [TestCase("Beta")]
     public void A_concrete_pack_class_is_the_check_entry_of_its_own_folder(string pack) {
-        var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "Packs", pack)));
+        var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "App", "Packs", pack)));
 
         Assert.That(entry.Form, Is.EqualTo(EntryForm.Base));
         Assert.That(entry.Type, Is.EqualTo(TypeName.Parse(PackArchitecture)));
@@ -47,11 +47,11 @@ public sealed class BlocksTests {
         var app = Repo.Path("tests", "Fixtures", "PackVariant");
 
         Assert.That(EntriesIn(app), Is.EqualTo(new[] { EntryForm.App }));
-        Assert.That(EntriesIn(Path.Combine(app, "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Base }));
+        Assert.That(EntriesIn(Path.Combine(app, "App", "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Base }));
     }
 
     [TestCase("packs/Vsa", "Umpire.Vsa.Definition.VsaArchitecture")]
-    [TestCase("tests/Fixtures/PackVariant/Packs/Ecs", "PackVariant.Packs.Ecs.Architecture.EcsArchitecture")]
+    [TestCase("tests/Fixtures/PackVariant/App/Packs/Ecs", "PackVariant.Packs.Ecs.Architecture.EcsArchitecture")]
     public void A_pack_entry_names_the_architecture_of_the_pack(string folder, string architecture) {
         var packed = Entries.Where(e => Same(e.Folder, Repo.Path(folder.Split('/'))) && e.Packed is not null)
             .Select(e => e.Packed!.FullName).Distinct();
@@ -73,7 +73,7 @@ public sealed class BlocksTests {
 
     [Test]
     public void Assembly_metadata_with_Umpire_Root_is_the_check_entry_of_the_folder_above_the_project() {
-        var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "Lib")));
+        var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "App", "Lib")));
 
         Assert.That(entry.Form, Is.EqualTo(EntryForm.Metadata));
         Assert.That(entry.Type, Is.EqualTo(TypeName.Parse(VsaArchitecture)));
@@ -370,7 +370,7 @@ public sealed class BlocksTests {
 
     [Test]
     public void The_Tools_fixture_names_its_architecture_with_the_key() {
-        var entry = EntryFiles.Read(Path.Combine(Fixture, "Tools", EntryFiles.Name))!;
+        var entry = EntryFiles.Read(Path.Combine(Fixture, "App", "Tools", EntryFiles.Name))!;
 
         Assert.That(entry.Form, Is.EqualTo(EntryForm.File));
         Assert.That(entry.Type, Is.EqualTo(TypeName.Parse(VsaArchitecture)));

@@ -33,12 +33,12 @@ public sealed class UsedBlocksTests {
     [Test]
     public void An_inner_block_is_a_used_block() {
         var app = Repo.Path("tests", "Fixtures", "PackVariant");
-        var packs = Path.Combine(app, "Packs");
+        var packs = Path.Combine(app, "App", "Packs");
         var inner = Index.Entries.Where(e => e.Folder.StartsWith(packs, StringComparison.OrdinalIgnoreCase)).ToList();
 
         var used = UsedBlocks.Of(app, inner, Index.Entries, Index);
 
-        Assert.That(used, Does.Contain(Path.Combine(app, "Packs", "Ecs")));
+        Assert.That(used, Does.Contain(Path.Combine(app, "App", "Packs", "Ecs")));
     }
 
     [TestCase(true, 1)]

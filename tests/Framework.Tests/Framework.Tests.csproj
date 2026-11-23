@@ -8,19 +8,19 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)framework/Kernel/Hosts/Web/Umpire.Hosts.Web.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Views/Umpire.Vsa.Views.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Plugins/Toolbox/Toolbox.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Bare/Bare.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Shelf/Shelf.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Twin/Twin.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Signals/Signals.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Echo/Echo.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Answers/Answers.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Plugins/Toolbox/Toolbox.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Bare/Bare.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Shelf/Shelf.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Twin/Twin.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Signals/Signals.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Echo/Echo.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Answers/Answers.csproj" />
     <!-- Three modules that send commands to each other (CommandTests). -->
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Battle/Battle.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cards/Cards.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Resources/Resources.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Gauges/Gauges.csproj" />
-    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/Features/Cached/Cached.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Battle/Battle.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Cards/Cards.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Resources/Resources.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Gauges/Gauges.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Cached/Cached.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>
@@ -31,7 +31,7 @@
     <PortableProject Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
-    <PortableProject Include="$(RepoRoot)packs/Vsa/Architecture/Umpire.Vsa.csproj" />
+    <PortableProject Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Contracts/Commands/Umpire.Vsa.Contracts.Commands.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />

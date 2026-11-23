@@ -4,6 +4,7 @@ using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Kernels.Blocks;
 using Core = Umpire.Kernels.Blocks.Core;
+using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
 using CoreArchitecture = Umpire.Kernels.CoreArchitecture;
 using MessagesComponent = Umpire.Kernels.MessagesComponent;
 using MessagesParts = Umpire.Kernels.MessagesParts;
@@ -68,6 +69,9 @@ public class VsaArchitecture : CoreArchitecture {
         rules.For<Views>().Uses<Presenters>();
         rules.For<Views>().Uses<Hosts>().Under<Kernel>();
         rules.For<Host>().Uses<Pack>();
+        rules.For<App>(Depth.Self).Uses<Host>().And<DefinitionRoot>().And<Composition>().And<Core>().And<UmpireLibraries>()
+            .And<Pack>();
+        rules.For<DefinitionRoot>().Uses<Core>().And<UmpireLibraries>();
         rules.For<Host>().Uses<Module>(Depth.Self);
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 

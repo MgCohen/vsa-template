@@ -25,7 +25,7 @@ public sealed class ReferenceFoldersTests {
         var note = project.Write("Assets/Game/Features/Notes/Domain/Note.cs", "namespace Notes.Domain; public sealed class Note { }");
         var view = project.Write("Assets/Game/Views/Board.cs", "namespace Game.Views; public sealed class Board { public Notes.Domain.Note? Shown; }");
         var package = project.Write("Cache/com.vendor.tool/Tool.cs", "namespace Vendor; public sealed class Tool { }");
-        var tasks = project.Write("Source/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
+        var tasks = project.Write("Source/App/Features/Tasks/TasksModule.cs", "namespace Tasks; " + string.Format(ModuleClass, "TasksModule"));
         project.Compile("Assembly-CSharp", Scripts, module, note, view, package);
         project.Compile("Game.Modules", project.Output, module, note, tasks);
         FolderAlias[] aliases = [new("Assets/Game", ""), new("Assets/Game", "App"), new("Source", "")];

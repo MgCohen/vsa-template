@@ -17,7 +17,7 @@ public sealed class PackGraphTests {
             .Except(Transports)
             .Distinct();
 
-        var pack = Repo.Path("packs", "Vsa", "Architecture", "Umpire.Vsa.csproj");
+        var pack = Repo.Path("packs", "Vsa", "Definition", "Umpire.Vsa.csproj");
 
         Assert.That(ReferenceClosure(pack), Is.SupersetOf(named));
     }

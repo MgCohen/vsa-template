@@ -21,7 +21,7 @@ public sealed class PackVariantTests {
     public void The_new_module_kind_has_its_own_group_folder() {
         var paths = Resolved.Parts.Where(InEcsFeature).Select(p => p.Path);
 
-        Assert.That(paths, Is.SupersetOf(new[] { "EcsFeatures/{ecsfeature}/Components", "EcsFeatures/{ecsfeature}/Systems" }));
+        Assert.That(paths, Is.SupersetOf(new[] { "App/EcsFeatures/{ecsfeature}/Components", "App/EcsFeatures/{ecsfeature}/Systems" }));
     }
 
     [TestCase("Systems", "Components", "a", Permission.Allow)]
