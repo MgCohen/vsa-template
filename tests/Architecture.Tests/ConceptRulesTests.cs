@@ -1,8 +1,9 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
+using Umpire.Architecture.Blocks;
 
-public record Room : Concept {
+public record Room : Block {
     protected override void Define(Part part) {
         part.Add<User>();
     }
@@ -12,20 +13,20 @@ public record Room : Concept {
     }
 }
 
-public record LostRoom : Concept {
+public record LostRoom : Block {
     protected override void Rules(RuleBook rules) {
         rules.For<Package>().Uses<Target>();
     }
 }
 
-public record StrayRoom : Concept {
+public record StrayRoom : Block {
     protected override void Rules(RuleBook rules) {
         rules.For<Target>().Uses<User>();
     }
 }
 
 public sealed class StrayRoomArchitecture : Architecture {
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<Target>();
         block.Add<User>();
         block.AddGroup<StrayRoom>();
@@ -38,7 +39,7 @@ public sealed class RoomArchitecture(bool denyInRooms) : Architecture {
         return resolved.UseRules.LastOrDefault(p => p.From.Path == fromPath && p.To.Path == toPath)?.Permission ?? resolved.Options.DefaultPermission!.Value;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<Target>();
         block.Add<User>();
         block.AddGroup<Room>();
@@ -52,7 +53,7 @@ public sealed class RoomArchitecture(bool denyInRooms) : Architecture {
 }
 
 public sealed class LostRoomArchitecture : Architecture {
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<Target>();
         block.Add<LostRoom>();
     }

@@ -7,16 +7,16 @@ internal sealed class Compiler {
 
     internal Compiler(Architecture architecture) {
         Options = Options.From(architecture.ConfigureDefaults).Over(Options.BuiltIn);
-        Block = new Block();
-        architecture.DefineBlock(Block);
-        Parts = [.. Block.Walk().Skip(1)];
+        Root = new Part(null, "", null);
+        architecture.DefineRoot(Root);
+        Parts = [.. Root.Walk().Skip(1)];
         CheckShared();
         foreach (var part in Parts) {
             partOptions[part] = part.Options.Over(Options);
         }
-        book = new RuleBook(Block);
-        foreach (var concept in Parts.Select(p => p.Concept!).GroupBy(c => c.GetType()).Select(g => g.First())) {
-            concept.AddRules(book.Of(concept.GetType()));
+        book = new RuleBook(Root);
+        foreach (var block in Parts.Select(p => p.Concept).OfType<Blocks.Block>().GroupBy(b => b.GetType()).Select(g => g.First())) {
+            block.AddRules(book.Of(block.GetType()));
         }
         architecture.AddRules(book);
         UseRules = CompileUseRules();
@@ -28,7 +28,7 @@ internal sealed class Compiler {
     }
 
     public Options Options { get; }
-    public Block Block { get; }
+    public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }
     public IReadOnlyDictionary<Part, Options> PartOptions => partOptions;
     public IReadOnlyList<PartRule> UseRules { get; }

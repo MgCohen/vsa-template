@@ -18,7 +18,7 @@ public sealed class BoundaryArchitecture(Boundary options, Boundary? group, Cros
         defaults.Boundary = options;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         var package = group is { } boundary ? block.AddGroup<Package>(boundary) : block.AddGroup<Package>();
         package.Add<Target>().And<User>();
     }
@@ -101,8 +101,8 @@ public sealed class BoundaryTests {
     }
 }
 
-public sealed class InlineRulesArchitecture(Action<Block> define, Action<RuleBook> rules) : Architecture {
-    protected override void Define(Block block) {
+public sealed class InlineRulesArchitecture(Action<Part> define, Action<RuleBook> rules) : Architecture {
+    protected override void Define(Part block) {
         define(block);
     }
 

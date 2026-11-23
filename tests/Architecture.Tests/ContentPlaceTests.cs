@@ -13,7 +13,7 @@ public sealed class ContentPlaceTests : ArchitectureTest<ContentPlaceTests.MarkO
     }
 
     public sealed class MarkOwnerArchitecture : Architecture {
-        protected override void Define(Block block) {
+        protected override void Define(Part block) {
             block.AddGroup<Box>().Add<Item>().And<Tag>().InParentFolder();
         }
 

@@ -11,32 +11,24 @@ public record Handlers : Layer {
     }
 
     public record Requests : Layer {
-        protected override void Define(Part part) {
-            part.OfType(typeof(RequestHandler<,>));
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(RequestHandler<,>)];
     }
 
     public record Events : Layer {
-        protected override void Define(Part part) {
-            part.OfType(typeof(IntegrationEventHandler<>));
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IntegrationEventHandler<>)];
 
         public record Hooks : Layer {
-            protected override void Define(Part part) {
-                part.OfType(typeof(BeforeEventHook<>)).OfType(typeof(AfterEventHook<>)).NameEndsWith("Hook");
-            }
+            public override IReadOnlyList<Type> OfTypes => [typeof(BeforeEventHook<>), typeof(AfterEventHook<>)];
+            public override string NameEndsWith => "Hook";
         }
     }
 
     public record Commands : Layer {
-        protected override void Define(Part part) {
-            part.OfType(typeof(CommandHandler<,>));
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(CommandHandler<,>)];
 
         public record Hooks : Layer {
-            protected override void Define(Part part) {
-                part.OfType(typeof(BeforeCommandHook<>)).OfType(typeof(AfterCommandHook<,>)).NameEndsWith("Hook");
-            }
+            public override IReadOnlyList<Type> OfTypes => [typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>)];
+            public override string NameEndsWith => "Hook";
         }
     }
 }

@@ -36,7 +36,7 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
         defaults.Boundary = architecture;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         var group = closedConcept ? Group<ClosedPackage>(block) : Group<Package>(block);
         group.Add<Target>().And<User>();
     }
@@ -45,12 +45,12 @@ public sealed class OptionsArchitecture(Boundary? architecture, bool closedConce
         rules.For<User>().Uses<Target>();
     }
 
-    PartGroup Group<T>(Block block) where T : Concept, new() =>
+    PartGroup Group<T>(Part block) where T : Concept, new() =>
         part is { } boundary ? block.AddGroup<T>(boundary) : block.AddGroup<T>();
 }
 
 public sealed class EmptyArchitecture : Architecture {
-    protected override void Define(Block block) { }
+    protected override void Define(Part block) { }
 }
 
 public sealed class OptionsTests {

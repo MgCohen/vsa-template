@@ -8,7 +8,7 @@ sealed class LibraryArchitecture : Architecture {
         defaults.DefaultPermission = Permission.Allow;
     }
 
-    protected override void Define(Block block) {
-        block.Add<Root>().InParentFolder().OfType<object>();
+    protected override void Define(Part root) {
+        root.Add<Root>().InParentFolder().OfType<object>();
     }
 }

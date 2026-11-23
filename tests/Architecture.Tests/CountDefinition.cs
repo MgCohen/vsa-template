@@ -15,21 +15,15 @@ public record Box : Concept {
 }
 
 public record Item : Concept {
-    protected override void Define(Part part) {
-        part.OfType<ICounted>();
-    }
+    public override IReadOnlyList<Type> OfTypes => [typeof(ICounted)];
 
     public record Small : Concept {
-        protected override void Define(Part part) {
-            part.OfType<ISmallCounted>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(ISmallCounted)];
     }
 }
 
 public record Tag : Concept {
-    protected override void Define(Part part) {
-        part.OfType<ITagged>();
-    }
+    public override IReadOnlyList<Type> OfTypes => [typeof(ITagged)];
 }
 
 public record NeededByConcept : Concept {
@@ -37,9 +31,7 @@ public record NeededByConcept : Concept {
         defaults.Required = true;
     }
 
-    protected override void Define(Part part) {
-        part.OfType<INeeded>();
-    }
+    public override IReadOnlyList<Type> OfTypes => [typeof(INeeded)];
 }
 
 public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<PartGroup>? parts = null, bool? required = null)
@@ -85,7 +77,7 @@ public sealed class CountArchitecture(Action<RuleBook>? rules = null, Action<Par
         defaults.Required = required;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         var box = block.AddGroup<Box>();
         if (parts is null) {
             box.Add<Item>().And<Item.Small>().And<Tag>().InParentFolder();

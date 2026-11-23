@@ -14,14 +14,14 @@ public sealed class PackArchitecture : Architecture {
         defaults.UseSameConcept = true;
     }
 
-    protected override void Define(Block block) {
-        block.Add<PackClass>().OfType<Pack>(required: true);
-        block.Add<PackParts.Architecture>();
-        packed?.DefineKernelPart(block.Add<PackParts.Kernel>());
+    protected override void Define(Part root) {
+        root.Add<PackClass>().OfType<Pack>(required: true);
+        root.Add<PackParts.Architecture>();
+        packed?.DefineKernelPart(root.Add<PackParts.Kernel>());
         if (packed is null) {
-            block.Add<PackParts.Kernel>();
+            root.Add<PackParts.Kernel>();
         }
-        block.Add<PackParts.Tests>();
+        root.Add<PackParts.Tests>();
     }
 
     protected override void Rules(RuleBook rules) {

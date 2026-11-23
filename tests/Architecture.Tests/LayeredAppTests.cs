@@ -15,7 +15,7 @@ public sealed class LayeredArchitecture : Architecture {
         defaults.DefaultPermission = Permission.Deny;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<Ui>();
         block.Add<Logic>();
         block.Add<Data>();

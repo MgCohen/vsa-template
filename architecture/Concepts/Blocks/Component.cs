@@ -1,3 +1,3 @@
 namespace Umpire.Architecture.Blocks;
 
-public record Component : BlockKind;
+public record Component : Block;

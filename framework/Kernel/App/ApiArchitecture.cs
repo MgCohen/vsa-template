@@ -8,9 +8,9 @@ sealed class ApiArchitecture : Architecture {
         defaults.DefaultPermission = Permission.Allow;
     }
 
-    protected override void Define(Block block) {
-        block.Add<Root>().InParentFolder().OfType<object>();
-        block.Add<ApiParts.Concepts>().And<ApiParts.Markers>().And<ApiParts.Options>().And<ApiParts.Parts>()
+    protected override void Define(Part root) {
+        root.Add<Root>().InParentFolder().OfType<object>();
+        root.Add<ApiParts.Concepts>().And<ApiParts.Markers>().And<ApiParts.Options>().And<ApiParts.Parts>()
             .And<ApiParts.Queries>().And<ApiParts.Rules>().And<ApiParts.Scan>().And<ApiParts.Testing>();
     }
 }

@@ -19,7 +19,7 @@ public record Slice : Concept {
 
 public record Domain : Concept;
 
-public record Commands : Concept {
+public record Commands : Block {
     protected override void Rules(RuleBook rules) {
         rules.For<Commands>().Are<Umpire.Architecture.Traits.Static>();
         rules.Type<CommandAttribute>().OnlyIn<Commands>();
@@ -27,36 +27,26 @@ public record Commands : Concept {
 }
 
 public record Presenters : Concept {
-    protected override void Define(Part part) {
-        part.OfType<IPresenter>();
-    }
+    public override IReadOnlyList<Type> OfTypes => [typeof(IPresenter)];
 }
 
 public record Contracts : Concept {
     public record Requests : Concept {
-        protected override void Define(Part part) {
-            part.OfType<IRequest>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IRequest)];
     }
 
     public record Events : Concept {
-        protected override void Define(Part part) {
-            part.OfType<IEvent>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IEvent)];
     }
 }
 
 public record Handlers : Concept {
     public record Requests : Concept {
-        protected override void Define(Part part) {
-            part.OfType<IRequestHandler>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IRequestHandler)];
     }
 
     public record Events : Concept {
-        protected override void Define(Part part) {
-            part.OfType<IEventHandler>();
-        }
+        public override IReadOnlyList<Type> OfTypes => [typeof(IEventHandler)];
     }
 }
 
@@ -66,7 +56,7 @@ public abstract class FixtureArchitecture : Architecture {
         defaults.Boundary = Boundary.Closed;
     }
 
-    protected override void Define(Block block) {
+    protected override void Define(Part block) {
         block.Add<KitLayer>();
         var feature = block.AddGroup<Feature>();
         feature.Add<Module>().OfType<IModuleRoot>();
