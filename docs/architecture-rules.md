@@ -1,6 +1,6 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`packs/Vsa/Architecture/VsaArchitecture.cs`, see `architecture-engine.md`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`packs/Vsa/Definition/VsaArchitecture.cs`, see `architecture-engine.md`).
 
 ## Levels
 
@@ -72,37 +72,38 @@ A plugin module has the layers of a module and the folder layout of the framewor
 |---|---|
 | A plugin module uses no feature module | `UMP020101` |
 | The `Domain` of a plugin module uses no `Domain` of another plugin module | `UMP020101` |
-| A module root uses the plugin modules | `UMP020101` |
+| A module class uses the plugin modules | `UMP020101` |
 | `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `UMP020101` |
-| The root class of a plugin inherits `Plugin` | `UMP020101` and `UMP020301`, and the host at startup |
-| The root class of a feature module does not inherit `Plugin` (`RootClass Under<Feature> denies Composition`) | `UMP020101`, and the host at startup |
-| A plugin module has exactly one root class | `UMP020301`, and the host at startup |
+| The module class of a plugin inherits `Plugin` (`For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().Exactly(1)`) | `UMP020101` and `UMP020301`, and the host at startup |
+| The module class of a feature module does not inherit `Plugin` (`For<Feature>(Depth.Self).Denies<Composition>()`) | `UMP020101`, and the host at startup |
+| A module has exactly one module class (`For<Module>(Depth.Self).HasTypes<Umpire.Kernels.Module>().Exactly(1)`) | `UMP020301`, and the host at startup |
 | A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
 | A plugin module has no `Slices/` folder | `UMP020202` |
 
 ## The host part
 
-The app part `Host` is the folder `Host/` of the app. The kernel part `Hosts` is the folder `framework/Kernel/Hosts/` of `FrameworkKernel`: `Umpire.Hosts.Web` and `Umpire.Hosts.Console`.
+The app part `Host` is the folder `App/Host/` of the app, for custom host code only. The kernel part `Hosts` is the folder `framework/Kernel/Hosts/` of the root `Core`: `Umpire.Hosts.Web` and `Umpire.Hosts.Console`. The app class and `Program.cs` are at the top of `App/`, so they bind to the `App` root.
 
 | Rule | Check |
 |---|---|
-| `Host` uses `Composition` and the framework kernel (`FrameworkKernel`, with `Hosts`) | `UMP020101` |
-| `Host` uses the root class of a module (`Feature/RootClass`, `Plugin/RootClass`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
+| `Host` uses `Composition`, the core (`Core`, with `Hosts`) and `UmpireLibraries` | `UMP020101` |
+| `Host` uses the module class of a module (`For<Host>().Uses<Module>(Depth.Self)`), for example a module list in `FixedModules`, and no other part of a module | `UMP020101` |
+| The `App` root (`Depth.Self`) uses `Host`, `Definition`, `Composition`, `Core`, `UmpireLibraries` and `Pack` | `UMP020101` |
 | `Views` uses the `Hosts` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 
 The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
-The host finds the module roots from the types, with no build records:
+The host finds the module classes from the types, with no build records:
 
 | Fact | Source |
 |---|---|
-| Module root | A public, top-level class that inherits `Module` or `Plugin` |
-| Module name | The last part of the namespace of the root class |
-| Plugin module | The root class inherits `Plugin` |
+| Module class | A public, top-level class that inherits `Module` or `Plugin` |
+| Module name | The last part of the namespace of the module class |
+| Plugin module | The module class inherits `Plugin` |
 
-One assembly can have many modules. Two root classes in one module namespace stop startup. A nested or internal class that inherits `Module`, for example in a test, does not make a module root.
+One assembly can have many modules. Two module classes in one module namespace stop startup. A nested or internal class that inherits `Module`, for example in a test, does not make a module class.
 
-The host configures the plugin modules first, then the other modules. In each group the order is by name. The host gets the plugin roots through the module roots, so an app with no module does not load its plugin modules.
+The host configures the plugin modules first, then the other modules. In each group the order is by name. The host gets the plugin modules through the module classes, so an app with no module does not load its plugin modules.
 
 ## Analyzers: `RuleAnalyzer` and `UmpireAnalyzerRule`
 
@@ -245,7 +246,8 @@ The VSA definition has these count and match lines. S1 to S3 are in `Slice.Rules
 | S3a | A request handler handles a request of its own slice | `For<Handlers.Requests>().Takes<Contracts.Requests>().InSame<Slice>()` | `UMP020302` |
 | S3b | Each request and each response of a feature has exactly one handler | `For<Contracts.Requests>().Has<Handlers.Requests>(Depth.Self).Exactly(1)` | `UMP020301` |
 | S3c, S3d | The same two lines for the commands | `Handlers.Commands`, `Contracts.Commands` | `UMP020302`, `UMP020301` |
-| M1 | A feature module and a plugin module have exactly one root class | `For<Feature>().Has<RootClass>().Exactly(1)`, the same for `Plugin` | `UMP020301` |
+| M1 | Each module has exactly one module class | `For<Module>(Depth.Self).HasTypes<Umpire.Kernels.Module>().Exactly(1)`, in the record `Module` | `UMP020301` |
+| M2 | A plugin module has exactly one `Plugin` class | `For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().Exactly(1)`, in the record `Plugin` | `UMP020301` |
 
 An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d are slice rules (implicit `Under<Slice>()`), so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 
@@ -290,6 +292,6 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 1. If a built-in .NET rule does the check, set its severity in the root `.editorconfig`. This is the style of this repository only: Umpire.Sdk ships no native style, and a consumer sets its own.
 2. If one file shows the problem, write a rule class on `KernelRule` or `VsaRule`. Set the next free `Number` of its group, and the defaults of its options.
-3. Else change the rules of the VSA definition (`packs/Vsa/Architecture/VsaArchitecture.cs`).
+3. Else change the rules of the VSA definition (`packs/Vsa/Definition/VsaArchitecture.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.

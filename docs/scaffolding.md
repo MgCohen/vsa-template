@@ -8,13 +8,13 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 
 | Command | Writes | Edits |
 |---|---|---|
-| `new app <Name>` | The root project `<Name>.csproj`, `Host` (`Program.cs`, `<Name>App.cs`), `Views`, `Tests/`, `Features/`, `Plugins/`, then the setup files of `init` | None |
+| `new app <Name>` | The root project `<Name>.csproj`, `App/` (`Program.cs`, `<Name>App.cs`, `Features/`, `Plugins/`, `Tests/`), `Views/`, then the setup files of `init` | None |
 | `init [--source <feed>] [--check true]` | Each missing setup file | Each setup file that has no Umpire setup: it adds the missing entry, element or line. See "Setup tasks" |
 | `add module <Name>` | Module root, published domain, status request, presenter, page, unit test | None |
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
-| `add pack <Name>` | Pack class `<Name><THost>` in `Packs/<Name>/<Name>Pack.cs`, and `Architecture/<Name>Architecture.cs` (inherits `VsaArchitecture`). See `pack-variants.md` | None |
+| `add pack <Name>` | Pack class `<Name><THost>` in `App/Packs/<Name>/<Name>Pack.cs`, and `Definition/<Name>Architecture.cs` (inherits `VsaArchitecture`). See `pack-variants.md` | None |
 | `test [-c <configuration>]` | None | None. It runs `dotnet run --project` for each project of the app whose name ends with `.Tests`, so it needs no `test` entry in `global.json` |
 | `doctor` | None | None |
 | `update [--version <version>]` | None | The Umpire versions in the project files and `Directory.*.props` |
@@ -29,8 +29,8 @@ Rules for all commands:
 - Each command writes only new files, except `init` and `update`. `init` adds the missing setup to existing files, and `update` changes only the Umpire versions.
 - Each command writes all files or no files, except `init` and `update`. If one file exists, the command stops and writes nothing. For `new app`, this includes each setup file of `init`, also a file that already has the full setup.
 - `add request` and `add command` stop if the module does not exist.
-- `add module` stops if `Plugins/<Name>/` exists, and `add plugin` stops if `Features/<Name>/` exists: the two would have the same module name.
-- `add pack` stops if `Packs/<Name>/` exists.
+- `add module` stops if `App/Plugins/<Name>/` exists, and `add plugin` stops if `App/Features/<Name>/` exists: the two would have the same module name.
+- `add pack` stops if `App/Packs/<Name>/` exists.
 - `new app` writes a `nuget.config` that gets the Umpire packages from GitHub Packages, with the token in `GITHUB_TOKEN` (see `docs/consumers.md`). Each `--source` replaces that feed, for example a local folder.
 - `new app` writes no `Directory.Build.props`. The Umpire SDK is the main SDK of each project, so it puts all build output in `artifacts~/` in the app folder: the folder of the nearest `.umpireconfig`. No `bin/` or `obj/` folder is next to the code. A folder whose name ends with `~` is not source: the rule engine and `umpire init` do not read it. To use another folder, set `ArtifactsPath` in `Directory.Build.props`.
 - `new app` writes a `.gitignore` for the build folders and the local files (`artifacts~/`, `bin/`, `obj/`, `TestResults/`, `*.user`, `.vs/`).
@@ -85,19 +85,20 @@ tools/cli/Templates/
 ├─ nuget.config.template             setup (each --source replaces the umpire feed and removes the credentials)
 ├─ .gitignore.template               setup
 ├─ appsettings.json, Properties/       new app
-├─ Host/, Views/              new app (Host/SampleAppApp.cs becomes <Name>App.cs)
-├─ Views/Pages/SampleModulePage.razor          add module
-├─ Features/SampleModule/**                         add module
+├─ Views/                                         new app
+├─ Views/Pages/SampleModulePage.razor             add module
+├─ App/Program.cs, App/SampleAppApp.cs            new app (SampleAppApp.cs becomes <Name>App.cs)
+├─ App/Features/SampleModule/**                   add module
 │  ├─ Domain/Shared/SampleModuleKey.cs             add module (the published domain)
 │  ├─ Slices/GetStatus/**                          add module (the status request)
 │  ├─ Slices/SampleAction/**                       add request
 │  └─ Slices/SampleChange/**                       add command
-├─ Features/.gitkeep                                new app (keeps the empty Features/ folder)
-├─ Packs/SamplePack/**                             add pack (SamplePackPack.cs, Architecture/SamplePackArchitecture.cs)
-├─ Plugins/SamplePlugin/**                         add plugin (root, Contracts/Commands/SamplePluginStep.cs)
-├─ Plugins/.gitkeep                                new app (keeps the empty Plugins/ folder)
-├─ Tests/App.Tests.csproj                         new app
-├─ Tests/SampleModuleStatusTests.cs                add module
+├─ App/Features/.gitkeep                          new app (keeps the empty Features/ folder)
+├─ App/Packs/SamplePack/**                        add pack (SamplePackPack.cs, Definition/SamplePackArchitecture.cs)
+├─ App/Plugins/SamplePlugin/**                    add plugin (module class, Contracts/Commands/SamplePluginStep.cs)
+├─ App/Plugins/.gitkeep                           new app (keeps the empty Plugins/ folder)
+├─ App/Tests/App.Tests.csproj                     new app
+├─ App/Tests/SampleModuleStatusTests.cs           add module
 ├─ Directory.Build.props, Umpire.Sdk.Dev.props        source mode only, not copied
 ```
 
@@ -109,7 +110,7 @@ The path of a template file gives its command. The tool uses the first rule that
 | 2 | Contains `SampleChange` | `add command` | `SampleChange`, `SampleModule` |
 | 3 | Contains `SamplePlugin` | `add plugin` | `SamplePlugin` |
 | 4 | Contains `SamplePack` | `add pack` | `SamplePack` |
-| 5 | Under `Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
+| 5 | Under `App/Features/SampleModule/`, or file name contains `SampleModule` | `add module` | `SampleModule` |
 | 6 | One of the four setup templates (`SetupTemplates` in `Templates.cs`) | The setup pipeline (`init`, `new app`) | None |
 | 7 | Other | `new app` | `SampleApp` |
 
@@ -133,9 +134,9 @@ If a template `.csproj` has a source-mode property that the tool cannot change, 
 
 ## Tests of a new app
 
-`Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform. `umpire test` runs it with `dotnet run --project`, so the app needs no `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
+`App/Tests/App.Tests.csproj` is `<Project Sdk="Umpire.Sdk/<tool version>">` with one reference to the root project. Umpire.Sdk gives a project whose name ends with `.Tests` NUnit on Microsoft.Testing.Platform. `umpire test` runs it with `dotnet run --project`, so the app needs no `global.json`. The NUnit versions come from `Directory.Packages.props` of this repository, in the package and in source mode (`Umpire.Sdk.Dev.props`). The templates do not import `Directory.Packages.props`.
 
-An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). The Umpire SDK package holds the engine and runs it after the build of the root project (an executable that is not a test project), so no project has an engine line. The engine reads the rules of `Host/<Name>App.cs`. The test project does not check the architecture.
+An engine run checks the architecture of the host (see [architecture-engine.md](architecture-engine.md)). The Umpire SDK package holds the engine and runs it after the build of the root project (an executable that is not a test project), so no project has an engine line. The engine reads the rules of `App/<Name>App.cs`. The test project does not check the architecture.
 
 ## Setup tasks
 
@@ -143,7 +144,7 @@ An engine run checks the architecture of the host (see [architecture-engine.md](
 
 ```
 umpire init                          umpire new app <Name>
-   │                                     ├─ the app files (root project, App/, Tests/, slnx, AGENTS.md)
+   │                                     ├─ the app files (root project, App/, Views/, slnx, AGENTS.md)
    ▼                                     ▼
 SetupTasks.Plan ──► each task: Done | Change(file, content) | ByHand(message)
    ├─ show each task, with the message of each by-hand task
@@ -211,4 +212,4 @@ The running tool is the old version. So run `umpire doctor` after the update, no
 
 ## Empty Domain
 
-A new module has an empty Domain. When you add the first entity, write an `IRepository<T, TId>` for it in `Infrastructure/`, and register it in the module root.
+A new module has an empty Domain. When you add the first entity, write an `IRepository<T, TId>` for it in `Infrastructure/`, and register it in the module class.

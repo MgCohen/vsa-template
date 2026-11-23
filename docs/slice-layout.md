@@ -1,12 +1,12 @@
 # Module layout
 
-A feature module (`Features/<Feature>/`) keeps each slice in one flat folder, `Slices/<Slice>/`, with any file names. A plugin module (`Plugins/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Plugin module layout](#plugin-module-layout)). The folders select the layers. The app has one root project, and the rule engine checks each use against the definition (see [Projects](#projects)).
+A feature module (`App/Features/<Feature>/`) keeps each slice in one flat folder, `Slices/<Slice>/`, with any file names. A plugin module (`App/Plugins/<Module>/`) has no slices: it has one folder for each layer, as the framework has (see [Plugin module layout](#plugin-module-layout)). The folders select the layers. The app has one root project, and the rule engine checks each use against the definition (see [Projects](#projects)).
 
 ## Layout
 
 ```
-Features/Notebook/
-├─ NotebookModule.cs, NotebookSettings.cs             module root
+App/Features/Notebook/
+├─ NotebookModule.cs, NotebookSettings.cs             module class and its settings
 ├─ Domain/  Infrastructure/  Presenters/
 └─ Slices/
    ├─ CreateNote/       CreateNoteRequest.cs, CreateNoteResponse.cs, NoteCreated.cs, CreateNoteHandler.cs
@@ -15,11 +15,11 @@ Features/Notebook/
    └─ LogNoteCreated/   NoteCreatedHandler.cs
 ```
 
-A module with commands and a published domain (the modules `Battle`, `Cards` and `Resources` in `tests/Fixtures/Modules/Features/`):
+A module with commands and a published domain (the modules `Battle`, `Cards` and `Resources` in `tests/Fixtures/Modules/App/Features/`):
 
 ```
-Features/Cards/
-├─ CardsModule.cs                                     module root
+App/Features/Cards/
+├─ CardsModule.cs                                     module class
 ├─ Domain/Shared/       Cost.cs
 ├─ Presenters/          CostLabel.cs
 └─ Slices/
@@ -27,17 +27,17 @@ Features/Cards/
 ```
 
 - A module has only the layer folders that it needs. Ping has only `Slices/`.
-- All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name (the name of the root project in the block folder) and follows the folders. This is a guideline: no check reads the namespace.
+- All files of one slice have one namespace, for example `Notes.Features.Notebook.Slices.CreateNote`. Each namespace starts with the app name (the name of the root project in the block folder) and follows the folders under `App/`. This is a guideline: no check reads the namespace.
 - An event is in the slice that publishes it. A slice has one kind of handler: a request handler, an event handler or a command handler.
 - `Slices/Shared/` holds contracts that more than one slice uses. It is the part `Slice.Shared`, not a slice: the slices and the presenters of its own feature use it, and the slice counts do not count it.
 
 ## Plugin module layout
 
-A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its root class inherits `Plugin` or `Plugin<TSettings>` (`UMP020101`, `UMP020301`), and a module root inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
+A plugin module is the base of the same layer in each module, as the VSA pack (`packs/Vsa`) is. It has the layout of the framework: one folder for each layer, and no `Slices/`. Its module class inherits `Plugin` or `Plugin<TSettings>` (`UMP020101`, `UMP020301`), and the module class of a feature module inherits `Module` or `Module<TSettings>`. `umpire add plugin <Name>` writes a new one.
 
 ```
-Plugins/Pipeline/
-├─ PipelinePlugin.cs                                  module root: PipelinePlugin : Plugin
+App/Plugins/Pipeline/
+├─ PipelinePlugin.cs                                  module class: PipelinePlugin : Plugin
 ├─ Contracts/
 │  ├─ Requests/         Message.cs                     abstract record Message, MessageId : IResponse
 │  ├─ Events/           MessageHandled.cs
@@ -52,13 +52,15 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 
 ## Packs of an app
 
-An app can have its own packs in `Packs/<Name>/`. Each one is an inner block: its pack class is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `EcsFeatures/<Module>/`. See `pack-variants.md`.
+An app can have its own packs in `App/Packs/<Name>/`. Each one is an inner block: its pack class is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `App/EcsFeatures/<Module>/`. See `pack-variants.md`.
 
 ```
 Shop/
-├─ Host/  Views/  Features/  Plugins/
-├─ EcsFeatures/Combat/      a module of the kind EcsFeature
-└─ Packs/Ecs/               EcsPack.cs, Architecture/, Kernel/
+├─ Views/
+└─ App/
+   ├─ Host/  Features/  Plugins/
+   ├─ EcsFeatures/Combat/   a module of the kind EcsFeature
+   └─ Packs/Ecs/            EcsPack.cs, Definition/, Kernel/
 ```
 
 ## Projects
@@ -67,10 +69,12 @@ An app has one root project in the block folder. It compiles each file in its fo
 
 ```
 tests/Fixtures/Notes/
-├─ Notes.csproj                 root project: App/, Features/, Plugins/
-├─ Host/  Views/
-├─ Features/Notebook/  Features/Ping/
-└─ Tests/Notes.Tests.csproj     nested project: the root project does not compile Tests/
+├─ Notes.csproj                 root project: App/, Views/
+├─ App/
+│  ├─ NotesApp.cs  Program.cs
+│  ├─ Features/Notebook/  Features/Ping/
+│  └─ Tests/Notes.Tests.csproj  nested project: the root project does not compile App/Tests/
+└─ Views/
 ```
 
 | Umpire.Sdk rule | Effect |
@@ -90,7 +94,7 @@ A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Console`,
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Modules/`) has its own project in the module folder. It then references the other modules that it uses.
 
-The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its root class, for example `Notebook`. One assembly can have many modules.
+The host finds each class that inherits `Module` or `Plugin` in the loaded assemblies. The name of a module is the last part of the namespace of its module class, for example `Notebook`. One assembly can have many modules.
 
 `IResponse` is a marker interface. `IRequest`, `RequestHandler`, `IRequestSender.SendAsync` and `VsaUnitTest.Handle` require it on the response, so the compiler rejects a response without it.
 
@@ -99,10 +103,10 @@ The host finds each class that inherits `Module` or `Plugin` in the loaded assem
 `Domain/Shared/` is the published domain of a module. It is a part of its own (`Domain.Shared`), and `Domain` leaves it out. Other modules use these types in their commands, events and handlers.
 
 ```csharp
-// Features/Resources/Domain/Shared/ResourceKey.cs
+// App/Features/Resources/Domain/Shared/ResourceKey.cs
 public sealed record ResourceKey(string Name);
 
-// Features/Cards/Domain/Shared/Cost.cs: no type of another module
+// App/Features/Cards/Domain/Shared/Cost.cs: no type of another module
 public sealed record Cost(string Resource, int Amount);
 ```
 
@@ -114,7 +118,7 @@ public sealed record Cost(string Resource, int Amount);
 
 | Name | What it is | Who uses it | List |
 |---|---|---|---|
-| `Plugins/` (root folder) | Plugin modules: the base of each layer | The same layer of each module | The definition (`VsaArchitecture`) |
+| `App/Plugins/` | Plugin modules: the base of each layer | The same layer of each module | The definition (`VsaArchitecture`) |
 | `Slices/Shared/` | Contracts that more than one slice uses | The slices of one module | None |
 | `Domain/Shared/` | The published domain of one module | Other modules (table above) | None |
 
@@ -137,7 +141,7 @@ Each handler takes the envelope of its message and returns `Result<T>`, and each
 A request and a command are messages (`IMessage`). An event is not a message. Name the types `<Name>Command`, `<Name>Result` and `<Name>Handler`:
 
 ```csharp
-// Features/Resources/Slices/ChangeResource/
+// App/Features/Resources/Slices/ChangeResource/
 public sealed record ChangeResourceCommand(ResourceKey Resource, int Delta) : ICommand<ChangeResourceResult>;
 public sealed record ChangeResourceResult(bool Changed, int Value);
 
@@ -152,7 +156,7 @@ sealed class ChangeResourceHandler(Wallet wallet) : CommandHandler<ChangeResourc
 To send a command, get `ICommandSender` from the services and call `SendAsync`:
 
 ```csharp
-// Features/Cards/Slices/PayCost/PayCostHandler.cs
+// App/Features/Cards/Slices/PayCost/PayCostHandler.cs
 sealed class PayCostHandler(ICommandSender commands, IIntegrationEventPublisher events) : CommandHandler<PayCostCommand, PayCostResult> {
     public override async Task<Result<PayCostResult>> HandleAsync(IEnvelope<PayCostCommand> envelope) {
         var cost = envelope.Message.Cost;
