@@ -41,9 +41,10 @@
     <_UmpireEngineProperties>_UmpireUseBundle=true;UmpireCheck=false;ArtifactsPath=$(ArtifactsPath)/engine-bundle</_UmpireEngineProperties>
   </PropertyGroup>
   <Target Name="_UmpireEngineInPackage" BeforeTargets="_GetPackageFiles">
-    <!-- The output folder of the engine is new, so it needs its own restore. A restore needs its own evaluation. -->
+    <!-- The output folder of the engine is new, so it needs its own restore. A restore needs its own evaluation.
+         The session id is fixed, so MSBuild does one restore for the two SDK packages. -->
     <MSBuild Projects="$(MSBuildThisFileDirectory)../../engine/Engine.csproj" Targets="Restore"
-             Properties="$(_UmpireEngineProperties);MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+             Properties="$(_UmpireEngineProperties);MSBuildRestoreSessionId=umpire-engine" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)../../engine/Engine.csproj" Targets="Build;GetTargetPath"
              Properties="$(_UmpireEngineProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="_UmpireEngineTarget" />
