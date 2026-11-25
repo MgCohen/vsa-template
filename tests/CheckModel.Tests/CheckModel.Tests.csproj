@@ -6,6 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)check/Model/Umpire.CheckModel.csproj" />
     <ProjectReference Include="$(RepoRoot)check/Export/Umpire.CheckModel.Export.csproj" />
+    <ProjectReference Include="$(RepoRoot)check/Analyzer/Umpire.CheckModel.Analyzer.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
   <!-- The definitions of the fixture apps. -->
   <ItemGroup>
