@@ -11,6 +11,7 @@ The user has this list and did not answer it. An opinion is not a decision.
 - **Q3 (2026-11-25).** Not answered. "We still have to talk about the topology and architecture and split of this, because I don't like the idea of check model. ... But it can live wherever it needs to live." New open item: the structure of the check code, before its place.
 - **Q4 (2026-11-25).** "Our own reader, even if inside our DLL it uses Tomlyn or whatever we define. No one needs to know that it's behind our own interface, our own utility. But we can try to go with our own small one. Let's see how that plays out."
 - **Q5 (2026-11-25).** "Remove as much as possible. The only thing that we really keep is the dependency injection, because it's the base of our work." First "fully understand why configuration was there and what we lose by removing it."
+- **Q7 (2026-11-25).** Unity consumers use UPM, so they are not part of this question. For other C# consumers: "Why not just keep using GitHub Packages today? And then migrate to NuGet when it's ready." Decision: GitHub Packages now, nuget.org when the package set is final. A static feed is ranked down: it fixes only the token, and no consumer outside the user needs that now. Come back if an outside user must try Umpire before nuget.org.
 
 | # | Question | Options | Opinion |
 |---|---|---|---|
