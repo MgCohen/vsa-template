@@ -6,7 +6,7 @@ public sealed class AppType {
 
     public AppType(string project, IReadOnlyList<TypeFile> files, Func<IReadOnlyList<AppReference>>? current = null) {
         Project = project;
-        Files = [.. files.OrderBy(f => f.Facts.Location.Line).ThenBy(f => f.File, StringComparer.Ordinal)];
+        Files = [.. files.OrderBy(f => f.IsGenerated).ThenBy(f => f.Facts.Location.Line).ThenBy(f => f.File, StringComparer.Ordinal)];
         entries = [.. Files.Select(f => f.Facts)];
         Name = entries[0].Name;
         Content = Merged(entries);

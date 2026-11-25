@@ -2,37 +2,67 @@ using Tests.Shared;
 
 namespace CheckModel.Tests;
 
-using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Umpire.Architecture;
 using Umpire.CheckModel.Export;
 using Data = Umpire.CheckModel;
 
-static class ModelRun {
-    static readonly ConcurrentDictionary<string, Lazy<Data.StateFolder>> states = new();
+sealed partial class ModelRun : IDisposable {
+    readonly EngineRun engine;
+    readonly List<Data.StateFolder> states = [];
 
-    public static Data.StateFolder StateOf(EngineRun engine) =>
-        states.GetOrAdd(engine.Block, _ => new(() => Make(engine))).Value;
-
-    public static void Clear() {
-        foreach (var state in states.Values.Where(s => s.IsValueCreated)) {
-            TempFolder.Delete(state.Value.Folder);
+    public ModelRun(EngineRun engine, params string[] otherProjects) {
+        this.engine = engine;
+        State = NewState();
+        var own = engine.App.Select(dll => dll.Name).Except(otherProjects).ToList();
+        var others = otherProjects.Length == 0 ? [] : new[] { NewState() };
+        var known = engine.Check.App.Facts.ToLookup(f => f.FullName, f => f.Assembly);
+        var bases = engine.Check.App.Facts.ToDictionary(f => f.FullName, f => f.Bases);
+        var libraries = engine.Others.Where(dll => dll.Types.Count > 0).ToList();
+        var resolved = new ResolvedArchitecture(engine.Definition);
+        State.Save(DefinitionExport.Of(resolved));
+        var input = new BlockInput(engine.Block, own) {
+            Libraries = [.. libraries.Select(dll => dll.Name)],
+            InnerBlocks = engine.Blocks.InnerFolders,
+            OtherStates = others,
+            IgnoredFolders = engine.IgnoredFolders,
+            FolderAliases = [.. engine.Aliases.Select(a => new Data.FolderAlias(a.Folder, a.As))],
+            DefinitionSources = DefinitionSources.Of(
+                resolved, engine.Block, engine.Sources.ToDictionary(s => s.Key, s => s.Value.File)),
+            InputFiles = engine.Config.FilePath is { } config ? [config] : [],
+            Config = engine.Config.Values(),
+        };
+        State.Save(BlockExport.Of(State, input));
+        foreach (var other in others) {
+            other.Save(State.ReadDefinition());
+            other.Save(BlockExport.Of(other, input with { Projects = otherProjects, OtherStates = [] }));
         }
-        states.Clear();
+        foreach (var dll in libraries) {
+            var types = dll.Types.Select(t => new LibraryType(t.FullName, t.Source.File, t.Source.Line, t.Source.Column,
+                [.. (bases.GetValueOrDefault(t.FullName) ?? []).Select(b => new Data.TypeName(b, known[b].FirstOrDefault() ?? ""))]));
+            var library = LibraryExport.Of(dll.Name, Data.FileMark.Of(engine.Block, dll.Path), types);
+            foreach (var state in states) {
+                state.SaveLibrary(library);
+            }
+        }
+        for (var pass = engine.App.Count > 1 ? 0 : 1; pass < 2; pass++) {
+            foreach (var dll in engine.App) {
+                var output = Compile(ProjectOf(engine.Block, dll.Name), dll.Name, otherProjects.Contains(dll.Name) ? others[0] : State);
+                if (pass == 1) {
+                    Read(output);
+                }
+            }
+        }
     }
 
-    static Data.StateFolder Make(EngineRun engine) {
-        var state = Data.StateFolder.At(TempFolder.Create());
-        state.Save(DefinitionExport.Of(new ResolvedArchitecture(engine.Definition)));
-        state.Save(BlockExport.Of(
-            state, engine.Block, [.. engine.App.Select(dll => dll.Name)], engine.Blocks.InnerFolders, [], [], [], engine.Config.Values()));
-        foreach (var dll in engine.Others.Where(dll => dll.Types.Count > 0)) {
-            state.SaveLibrary(LibraryExport.Of(dll.Name, dll.Types.Select(t =>
-                new LibraryType(t.FullName, t.Source.File, t.Source.Line, t.Source.Column))));
+    public Data.StateFolder State { get; }
+
+    public List<Data.Finding> Diagnostics { get; } = [];
+
+    public void Dispose() {
+        foreach (var state in states) {
+            TempFolder.Delete(state.Folder);
         }
-        foreach (var dll in engine.App) {
-            Compile(ProjectOf(engine.Block, dll.Name), dll.Name, state);
-        }
-        return state;
     }
 
     static string ProjectOf(string block, string name) {
@@ -46,7 +76,17 @@ static class ModelRun {
         return Directory.GetFiles(folder, "*.csproj")[0];
     }
 
-    static void Compile(string project, string name, Data.StateFolder state) {
+    [GeneratedRegex(@"^\s*(?<file>[^(\r\n]+)\((?<line>\d+),(?<column>\d+)\): (?<severity>error|warning) (?<code>UMP02\d+): (?<text>.*) \[[^\]]+\]\s*$",
+        RegexOptions.Multiline)]
+    private static partial Regex DiagnosticLine();
+
+    Data.StateFolder NewState() {
+        var state = Data.StateFolder.At(TempFolder.Create());
+        states.Add(state);
+        return state;
+    }
+
+    string Compile(string project, string name, Data.StateFolder state) {
         var output = TempFolder.Create();
         var result = Dotnet.Run(Path.GetDirectoryName(project)!, null,
             "build", project, "-t:Compile", "--no-restore", "-nologo", "-p:BuildProjectReferences=false", "-p:UmpireCheck=false",
@@ -56,5 +96,14 @@ static class ModelRun {
             $"-p:UmpireModelAnalyzers={Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory)}/");
         TempFolder.Delete(output);
         Assert.That(state.SnapshotFile(name), Does.Exist, result.Output);
+        return result.Output;
+    }
+
+    void Read(string output) {
+        Assert.That(output, Does.Not.Contain("AD0001").And.Not.Contain("UMP0308"));
+        Diagnostics.AddRange(DiagnosticLine().Matches(output).Select(m => new Data.Finding(
+            m.Groups["code"].Value,
+            m.Groups["severity"].Value == "error" ? Data.Severity.Error : Data.Severity.Warning,
+            m.Groups["text"].Value, m.Groups["file"].Value, int.Parse(m.Groups["line"].Value), int.Parse(m.Groups["column"].Value))).Distinct());
     }
 }

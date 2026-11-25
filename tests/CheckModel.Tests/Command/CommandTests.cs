@@ -44,7 +44,7 @@ public sealed class CommandTests {
     public void An_old_and_a_missing_snapshot_are_warnings() {
         using var temp = new TempState();
         Save(temp, Samples.Layers, screen with { Hash = "0" });
-        temp.State.Save(BlockSettings.Of("../..", "Sample", "Missing"));
+        temp.State.Save(Samples.Settings("Sample", "Missing"));
 
         var result = Run("--root", temp.Block);
 
@@ -67,7 +67,7 @@ public sealed class CommandTests {
         using var temp = new TempState();
         var state = StateFolder.Of(temp.Block, "Library/Umpire");
         state.Save(Samples.Layers);
-        state.Save(BlockSettings.Of("../..", "Sample"));
+        state.Save(Samples.Settings("Sample"));
         state.Save(Snapshot.Of("Sample", [screen]));
         Assert.That(Run("--root", temp.Block, "--state", state.Folder).ExitCode, Is.Zero);
 

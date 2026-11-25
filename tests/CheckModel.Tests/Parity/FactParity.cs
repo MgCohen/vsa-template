@@ -4,6 +4,9 @@ using Umpire.Architecture;
 using Data = Umpire.CheckModel;
 
 sealed class FactParity(EngineRun engine, Data.AppModel app) {
+    const string Program = "Program";
+    const string Deconstruct = "Deconstruct(";
+
     static readonly string[] onlyInIntermediateLanguage = [
         "Notes.Features.Notebook.Slices.CreateNote.CreateNoteHandler -> Umpire.Messages.Contracts.Unit",
         "Notes.Features.Notebook.Slices.DeleteNote.DeleteNoteHandler -> Umpire.Messages.Contracts.Unit",
@@ -13,9 +16,22 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
         "VsaApp.Host.FixedHost -> Umpire.Kernels.Module",
     ];
 
+    static readonly string[] constantsOfLibraries = [
+        "BuiltApp.Infrastructure.AppLoader -> Umpire.Kernels.Pack",
+        "Rules.Slices.CheckRules.WideExposureRule -> Umpire.Architecture.Permission",
+        "Blocks.Infrastructure.BlockProjects -> Umpire.Config.UmpireConfig",
+    ];
+
+    static readonly Data.ReferenceKind[] onlyInSource =
+        [Data.ReferenceKind.NameOf, Data.ReferenceKind.TypeArgument, Data.ReferenceKind.Inferred];
+
     readonly Bindings bindings = engine.Check.Bindings;
 
-    public IReadOnlyList<string> Differences() => [.. bindings.All.Where(b => !b.External).SelectMany(Differences)];
+    public IReadOnlyList<string> Differences() => [
+        .. bindings.All.Where(b => !b.External).SelectMany(Differences),
+        .. bindings.Unmapped.Where(u => Find(u.Type.FullName) is not { IsUnmapped: true }).Select(u => $"{u.Type.FullName} is mapped"),
+        .. app.Types.Where(IsExtra).Select(t => $"{t.Name} is only in the model"),
+        .. Targets().SelectMany(External)];
 
     static string Traits(TypeFacts type) =>
         $"{type.IsAbstract}{type.IsStatic}{type.IsSealed}{type.IsRecord}{type.IsStruct}{type.IsInterface}{type.IsEnum}{type.IsDelegate}";
@@ -26,9 +42,31 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
             + $"{type.Kind == Data.TypeKind.Interface}{type.Kind == Data.TypeKind.Enum}{type.Kind == Data.TypeKind.Delegate}";
     }
 
+    static string Text(Data.Exposure exposure) =>
+        $"{exposure.Target.FullName} in {exposure.Member.Replace('+', '/')} ({exposure.Access})";
+
+    Data.AppType? Find(string name) => app.Types.FirstOrDefault(t => t.Name.FullName == name);
+
+    bool IsExtra(Data.AppType type) => bindings.Of(type.Name.FullName) is null && type.Name.FullName != Program
+        && bindings.Unmapped.All(u => u.Type.FullName != type.Name.FullName)
+        && !(type.Content.Members.Count == 0 && app.Types.Any(t => t.Name.FullName.StartsWith(type.Name.FullName + "+", StringComparison.Ordinal)));
+
+    IEnumerable<Data.TypeName> Targets() => app.Types.SelectMany(t => t.References.Select(r => r.Fact.Target)).Distinct();
+
+    IEnumerable<string> External(Data.TypeName name) {
+        var expected = bindings.Of(name.FullName);
+        var actual = app.TargetOf(name)?.Placement;
+        if (expected?.Where != actual?.Where && (expected is not null || IsLoaded(name)) && name.FullName != Program
+            && !(expected is null && Find(name.FullName) is { } type && IsExtra(type) is false)) {
+            yield return $"{name} is in {actual?.Where}, not in {expected?.Where}";
+        }
+    }
+
+    bool IsLoaded(Data.TypeName name) => engine.App.Concat(engine.Others).Any(dll => dll.Name == name.Assembly);
+
     IEnumerable<string> Differences(Binding binding) {
         var name = binding.Type.FullName;
-        if (app.Types.FirstOrDefault(t => t.Name.FullName == name) is not { } type || app.PlacementOf(type) is not { } placement) {
+        if (Find(name) is not { } type || app.PlacementOf(type) is not { } placement) {
             yield return $"{name} has no place";
             yield break;
         }
@@ -41,20 +79,48 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
         if (!Bound(binding.Type.BaseArguments).SetEquals(type.Content.BaseArguments.Where(IsBound).Select(a => a.FullName))) {
             yield return $"{name} has other base arguments";
         }
-        var uses = type.References.Select(r => r.Fact.Target).Concat(Data.ReferenceCheck.Implied(type.Content)).Select(u => u.FullName);
-        foreach (var use in Bound(binding.Type.Uses).Except(uses).Where(u => u != name)) {
-            if (!onlyInIntermediateLanguage.Contains($"{name} -> {use}")) {
-                yield return $"{name} has no use of {use}";
-            }
-        }
-        var exposures = Data.Exposure.Of(app, type).Select(e => $"{e.Target.FullName} in {e.Member.Replace('+', '/')} ({e.Access})");
-        foreach (var exposure in binding.Type.Exposures.Where(e => bindings.Of(e.Target) is not null)
-            .Select(e => $"{e.Target} in {e.Member} ({e.Access})").Except(exposures)) {
-            yield return $"{name} has no exposure of {exposure}";
+        foreach (var difference in Uses(binding, type).Concat(Exposures(binding, type))) {
+            yield return $"{name} {difference}";
         }
     }
 
-    HashSet<string> Bound(IEnumerable<string> names) => [.. names.Where(n => bindings.Of(n) is not null)];
+    IEnumerable<string> Uses(Binding binding, Data.AppType type) {
+        var name = binding.Type.FullName;
+        var engineUses = Bound(binding.Type.Uses);
+        var implied = Data.ReferenceCheck.Implied(type.Content).Select(u => u.FullName).ToHashSet();
+        var uses = type.References.ToLookup(r => r.Fact.Target.FullName);
+        foreach (var use in engineUses.Where(u => u != name && !uses.Contains(u) && !implied.Contains(u))) {
+            if (!onlyInIntermediateLanguage.Contains($"{name} -> {use}")) {
+                yield return $"has no use of {use}";
+            }
+        }
+        foreach (var use in uses.Where(u => IsBoundName(u.Key) && !engineUses.Contains(u.Key) && !u.All(IsOnlyInSource)
+            && name != Program && !constantsOfLibraries.Contains($"{name} -> {u.Key}"))) {
+            yield return $"has the use of {use.Key} ({string.Join(", ", use.Select(u => $"{u.Fact.Kind} {u.Fact.TargetMember}").Distinct())})";
+        }
+        foreach (var use in implied.Where(u => u != name && IsBoundName(u) && !engineUses.Contains(u) && !uses.Contains(u))) {
+            yield return $"has the implied use of {use}";
+        }
+    }
 
-    bool IsBound(Data.TypeName name) => bindings.Of(name.FullName) is not null;
+    bool IsOnlyInSource(Data.AppReference use) => onlyInSource.Contains(use.Fact.Kind)
+        || app.Find(use.Fact.Target) is { } target && (target.Content.Kind == Data.TypeKind.Enum || HasOnlyConstants(use, target));
+
+    static bool HasOnlyConstants(Data.AppReference use, Data.AppType target) => use.Fact.TargetMember is { } member
+        ? target.Content.Members.Any(m => m.Name == member && m.IsConst)
+        : use.Fact.Kind == Data.ReferenceKind.Type && target.Content.Members.Any(m => m.IsConst);
+
+    IEnumerable<string> Exposures(Binding binding, Data.AppType type) {
+        var model = Data.Exposure.Of(app, type).Where(e => IsBound(e.Target)).Select(Text).ToHashSet();
+        var expected = binding.Type.Exposures.Where(e => IsBoundName(e.Target))
+            .Select(e => $"{e.Target} in {e.Member} ({e.Access})").ToHashSet();
+        return expected.Except(model).Select(e => $"has no exposure of {e}")
+            .Concat(model.Except(expected).Where(e => !e.Contains(Deconstruct)).Select(e => $"has the exposure of {e}"));
+    }
+
+    HashSet<string> Bound(IEnumerable<string> names) => [.. names.Where(IsBoundName)];
+
+    bool IsBound(Data.TypeName name) => IsBoundName(name.FullName);
+
+    bool IsBoundName(string name) => bindings.Of(name) is not null;
 }

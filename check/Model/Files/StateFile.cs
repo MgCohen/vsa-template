@@ -6,6 +6,8 @@ static class StateFile {
     const int Tries = 100;
     const int WaitMilliseconds = 20;
 
+    public static string Read(string file) => Retry(() => File.ReadAllText(file));
+
     public static bool Save(string file, string text) {
         if (Has(file, text)) {
             return false;
@@ -15,14 +17,22 @@ static class StateFile {
             if (Has(file, text)) {
                 return false;
             }
-            var temporary = $"{file}.{Guid.NewGuid():N}.tmp";
-            File.WriteAllText(temporary, text);
-            Retry(() => Move(temporary, file));
+            Write(file, text);
         }
         return true;
     }
 
-    static bool Has(string file, string text) => File.Exists(file) && WithNoDate(Retry(() => File.ReadAllText(file))) == WithNoDate(text);
+    static void Write(string file, string text) {
+        var temporary = $"{file}.{Guid.NewGuid():N}.tmp";
+        try {
+            File.WriteAllText(temporary, text);
+            Retry(() => Move(temporary, file));
+        } finally {
+            File.Delete(temporary);
+        }
+    }
+
+    static bool Has(string file, string text) => File.Exists(file) && WithNoDate(Read(file)) == WithNoDate(text);
 
     static FileStream Lock(string file) => Retry(() =>
         new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose));
@@ -40,11 +50,14 @@ static class StateFile {
         for (var attempt = 1; ; attempt++) {
             try {
                 return action();
-            } catch (Exception e) when (attempt < Tries && e is IOException or UnauthorizedAccessException) {
+            } catch (Exception e) when (attempt < Tries && CanPass(e)) {
                 Thread.Sleep(WaitMilliseconds);
             }
         }
     }
+
+    static bool CanPass(Exception e) =>
+        e is UnauthorizedAccessException or IOException and not (FileNotFoundException or DirectoryNotFoundException);
 
     static string WithNoDate(string text) {
         var start = text.IndexOf(MadeAt, StringComparison.Ordinal);

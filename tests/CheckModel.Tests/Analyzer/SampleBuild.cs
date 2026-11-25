@@ -18,12 +18,12 @@ sealed class SampleBuild : IDisposable {
 
     public SampleBuild(params string[] projects) {
         State.Save(Samples.Layers);
-        State.Save(BlockSettings.Of("../..", projects.Length > 0 ? projects : ["Sample"]));
+        State.Save(Samples.Settings(projects.Length > 0 ? projects : ["Sample"]));
     }
 
     public string Block => temp.Block;
     public StateFolder State => temp.State;
-    public Dictionary<string, string> Options { get; } = [];
+    public Dictionary<string, string> Options { get; } = new() { ["build_property.UmpireSaveSnapshot"] = "true" };
 
     public string Write(string path, string text) {
         var file = Path.Combine(Block, path);

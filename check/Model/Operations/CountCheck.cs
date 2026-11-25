@@ -7,7 +7,7 @@ static class CountCheck {
         var failures = app.Once(Key, () => Failures(app));
         foreach (var type in types) {
             foreach (var failure in failures[type]) {
-                Rules.Add(app, report, RuleCodes.Count, failure.Text, type);
+                Rules.Add(app, report, RuleCodes.Count, failure.Text, type, app.Trust.IsAllSure);
             }
         }
     }

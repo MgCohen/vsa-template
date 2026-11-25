@@ -5,4 +5,5 @@ public static class DataCodes {
     public const string NoSnapshot = "UMP030802";
     public const string OldSnapshot = "UMP030803";
     public const string NotSaved = "UMP030804";
+    public const string NotComplete = "UMP030805";
 }

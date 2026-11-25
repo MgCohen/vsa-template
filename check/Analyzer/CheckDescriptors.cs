@@ -7,7 +7,7 @@ static class CheckDescriptors {
     const string Category = "Umpire";
 
     static readonly Dictionary<string, DiagnosticDescriptor> ByCode = RuleCodes.All.Select(Rule)
-        .Concat(new[] { DataCodes.NoModel, DataCodes.NoSnapshot, DataCodes.NotSaved }.Select(Data))
+        .Concat(new[] { DataCodes.NoModel, DataCodes.NoSnapshot, DataCodes.OldSnapshot, DataCodes.NotSaved }.Select(Data))
         .ToDictionary(d => d.Id);
 
     public static ImmutableArray<DiagnosticDescriptor> All { get; } = [.. ByCode.Values];

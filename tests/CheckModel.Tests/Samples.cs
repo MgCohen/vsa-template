@@ -13,6 +13,10 @@ static class Samples {
         [new UseRule(false, [Entry(Ui)], Permission.Allow, [Entry(Data)], [new UsePair(0, 1, Access.Public, [], [])])],
         [], [], [], []);
 
+    public static BlockSettings Settings(params string[] projects) => BlockSettings.Of("../..", projects) with {
+        DefinitionSources = [new FileMark("NoSuchSource.cs", "", 0)],
+    };
+
     public static TypeName Concept(string name) => new($"Sample.Definition.{name}", "Sample.Definition");
 
     public static TypeName Name(string name) => new($"Sample.{name}", "Sample");
@@ -30,5 +34,5 @@ static class Samples {
 
     public static ReferenceFact Use(string name, int line) => new(Name(name), ReferenceKind.Create, line, 9, "Run()", ".ctor");
 
-    public static FileFacts File(string path, params TypeFacts[] types) => new(path, "", 0, types);
+    public static FileFacts File(string path, params TypeFacts[] types) => new(path, "", 0, false, types);
 }

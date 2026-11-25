@@ -1,6 +1,6 @@
 namespace Umpire.CheckModel;
 
-public sealed record Snapshot(int Format, string MadeAt, string Project, IReadOnlyList<FileFacts> Files) {
+public sealed record Snapshot(int Format, string MadeAt, string Project, IReadOnlyList<FileFacts> Files, FileMark? Source = null) {
     public const int CurrentFormat = 1;
 
     public static Snapshot Of(string project, IEnumerable<FileFacts> files) => new(

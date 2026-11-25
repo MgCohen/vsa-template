@@ -18,7 +18,7 @@ public static class ContentCheck {
         if (!name.Fits) {
             Rules.Add(app, report, RuleCodes.WrongName,
                 $"{type.Name.Name} is in {placement.Where}, but the name of a {placement.Part.Name} type {name.Text}. "
-                + $"Rename it to {name.Fix}, or move it.", type);
+                + $"Rename it to {name.Fix}, or move it.", type, app.Trust.IsSure(type));
         }
     }
 
@@ -28,7 +28,7 @@ public static class ContentCheck {
             if (!fit.Has(rule.Condition)) {
                 Rules.Add(app, report, RuleCodes.WrongTrait,
                     $"{type.Name.Name} is in {placement.Where}, but {fit.Miss(rule.Condition)}, so it breaks the rule "
-                    + $"\"{rule}\". Change the type, or move it to another part.", type);
+                    + $"\"{rule}\". Change the type, or move it to another part.", type, app.Trust.IsSure(type));
             }
         }
     }

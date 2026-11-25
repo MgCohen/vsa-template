@@ -3,18 +3,28 @@ namespace Umpire.CheckModel.Export;
 using System.Text.RegularExpressions;
 
 public static partial class BlockExport {
-    public static BlockSettings Of(
-        StateFolder state, string block, IReadOnlyList<string> projects, IReadOnlyList<string> innerBlocks,
-        IReadOnlyList<StateFolder> otherStates, IReadOnlyList<string> ignoredFolders, IReadOnlyList<FolderAlias> folderAliases,
-        IEnumerable<KeyValuePair<string, string>> config) => new(
-            BlockSettings.CurrentFormat,
-            Relative(state.Folder, block),
-            projects,
-            [.. innerBlocks.Select(inner => Relative(block, inner))],
-            [.. otherStates.Select(other => Relative(state.Folder, other.Folder))],
-            ignoredFolders,
-            folderAliases,
-            Severities(config));
+    const string ModeKey = "umpire.check.mode";
+
+    public static BlockSettings Of(StateFolder state, BlockInput input) => new(
+        BlockSettings.CurrentFormat,
+        Relative(state.Folder, input.Block),
+        ModeOf(input.Config),
+        input.Projects,
+        input.Libraries,
+        [.. input.InnerBlocks.Select(inner => Relative(input.Block, inner))],
+        [.. input.OtherStates.Select(other => Relative(state.Folder, other.Folder))],
+        input.IgnoredFolders,
+        input.FolderAliases,
+        input.DefinitionSources,
+        [.. input.InputFiles.Select(file => FileMark.Of(input.Block, file))],
+        Severities(input.Config));
+
+    static CheckMode ModeOf(IEnumerable<KeyValuePair<string, string>> config) =>
+        Enum.TryParse<CheckMode>(
+            config.LastOrDefault(pair => string.Equals(pair.Key, ModeKey, StringComparison.OrdinalIgnoreCase)).Value,
+            ignoreCase: true, out var mode)
+            ? mode
+            : CheckMode.Error;
 
     static Dictionary<string, string> Severities(IEnumerable<KeyValuePair<string, string>> config) {
         var severities = new Dictionary<string, string>();

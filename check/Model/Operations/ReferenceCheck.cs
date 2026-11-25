@@ -1,6 +1,8 @@
 namespace Umpire.CheckModel;
 
 public static class ReferenceCheck {
+    const string RootType = "System.Object";
+
     public static void Run(AppModel app, IReadOnlyList<AppType> types, Report report) {
         foreach (var type in types) {
             if (app.PlacementOf(type) is { } placement && Rules.IsChecked(placement)) {
@@ -30,7 +32,8 @@ public static class ReferenceCheck {
             var first = use.First();
             Rules.Add(app, report, RuleCodes.DeniedUse,
                 $"{type.Name.Name} in {from.Where} uses {to.Name.Name} in {to.Placement.Where}: {why}. "
-                + "Remove the use, or change the rule in Rules.", first.File, first.Fact.Line, first.Fact.Column);
+                + "Remove the use, or change the rule in Rules.", first.File, first.Fact.Line, first.Fact.Column,
+                app.Trust.IsSure(type) && app.Trust.IsSure(use.Key));
         }
     }
 
@@ -46,7 +49,8 @@ public static class ReferenceCheck {
             Rules.Add(app, report, RuleCodes.WideExposure,
                 $"{type.Name.Name} in {from.Where} exposes {to.Name.Name} in {to.Placement.Where} "
                 + $"in {exposure.Member} with {exposure.Access} access, but the rule \"{rule}\" allows {limit} at most. "
-                + "Make the member less visible, or change the rule in Rules.", type);
+                + "Make the member less visible, or change the rule in Rules.", type,
+                app.Trust.IsSure(type) && app.Trust.AreSure(TargetsOf(type)));
         }
     }
 
@@ -63,7 +67,7 @@ public static class ReferenceCheck {
                 ? $"{type.Name.Name} in {at.Where} has {shown}, but the rule \"{text}\" keeps it in {names}. "
                     + $"Move the code with {shown} to {names}, or remove the attribute."
                 : $"{type.Name.Name} in {at.Where} uses {shown}, but the rule \"{text}\" keeps it in {names}. "
-                    + $"Move the code that uses {shown} to {names}, or remove the use.", type);
+                    + $"Move the code that uses {shown} to {names}, or remove the use.", type, app.Trust.IsSure(type));
         }
     }
 
@@ -76,11 +80,16 @@ public static class ReferenceCheck {
         .Concat(type.Content.BaseArguments)
         .Concat(type.Content.AllInterfaces.SelectMany(i => i.Types))
         .Concat(type.Content.Base?.Types ?? [])
-        .Concat(type.Content.Members.SelectMany(Exposure.TypesOf))
+        .Concat(type.Content.Members.SelectMany(m => Exposure.TypesOf(m).Concat(m.Implements)))
         .Distinct();
 
-    internal static IEnumerable<TypeName> Implied(TypeContent content) => content.AllInterfaces.SelectMany(i => content.IsRecord ? i.Types : i.Types.Take(1))
+    internal static IEnumerable<TypeName> Implied(TypeContent content) => content.AllInterfaces.SelectMany(i => i.Types.Take(1))
+        .Concat(RootRecord(content))
         .Concat(content.Members.Where(m => m.IsImplicit).SelectMany(Exposure.TypesOf));
+
+    static IEnumerable<TypeName> RootRecord(TypeContent content) => content is { IsRecord: true, Base: not null }
+        ? content.Bases.TakeWhile(b => b.FullName != RootType).Skip(1).Reverse().Take(1)
+        : [];
 
     static bool Uses(AppType type, PlaceRule rule) =>
         type.Content.Attributes.Any(a => a.Bases.Any(b => b.FullName == rule.Type.FullName))

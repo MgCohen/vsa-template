@@ -73,15 +73,43 @@ public sealed class DefinitionExportTests {
     [Test]
     public void The_block_file_has_the_severities_of_the_config() {
         var state = Data.StateFolder.Of(Path.GetTempPath());
-        var config = new Dictionary<string, string> { ["umpire.ump020101.severity"] = "warning", ["umpire.max"] = "3" };
+        var config = new Dictionary<string, string> { ["umpire.ump020101.severity"] = "warning", ["umpire.max"] = "3", ["Umpire.Check.Mode"] = "warn" };
 
-        var settings = BlockExport.Of(state, Path.GetTempPath(), ["App"], [Path.Combine(Path.GetTempPath(), "Inner")], [], [], [], config);
+        var settings = BlockExport.Of(state, new BlockInput(Path.GetTempPath(), ["App"]) {
+            InnerBlocks = [Path.Combine(Path.GetTempPath(), "Inner")],
+            Config = config,
+        });
 
         Assert.Multiple(() => {
             Assert.That(settings.SeverityOf("UMP020101", Data.Severity.Error), Is.EqualTo(Data.Severity.Warning));
+            Assert.That(settings.Mode, Is.EqualTo(Data.CheckMode.Warn));
             Assert.That(settings.Severities, Has.Count.EqualTo(1));
             Assert.That(settings.InnerBlocks, Is.EqualTo(new[] { "Inner" }));
             Assert.That(state.BlockOf(settings), Is.EqualTo(Data.BlockPath.Full(Path.GetTempPath())));
+        });
+    }
+
+    [Test]
+    public void The_definition_sources_have_each_file_of_the_definition_folder_and_are_unknown_after_the_DLL() {
+        using var temp = new TempState();
+        var dll = typeof(EveryFormArchitecture).Assembly.Location;
+        var file = Path.Combine(temp.Block, "EveryForm.cs");
+        File.WriteAllText(file, "class A;");
+        var sources = new Dictionary<string, string> { [typeof(EveryFormArchitecture).FullName!] = file };
+        File.SetLastWriteTimeUtc(file, File.GetLastWriteTimeUtc(dll).AddHours(-1));
+        var other = Path.Combine(temp.Block, "Helper.cs");
+        File.WriteAllText(other, "class B;");
+        sources["Helper"] = other;
+        var resolved = new ResolvedArchitecture(new EveryFormArchitecture());
+
+        var marks = DefinitionSources.Of(resolved, temp.Block, sources);
+        File.SetLastWriteTimeUtc(file, File.GetLastWriteTimeUtc(dll).AddHours(1));
+        var late = DefinitionSources.Of(resolved, temp.Block, sources);
+
+        Assert.Multiple(() => {
+            Assert.That(marks.Select(m => m.Path), Is.SupersetOf(new[] { "EveryForm.cs", "Helper.cs" }));
+            Assert.That(marks.All(m => m.IsCurrent(temp.Block)), Is.True);
+            Assert.That(late.Single(m => m.Path == "EveryForm.cs").IsCurrent(temp.Block), Is.False);
         });
     }
 

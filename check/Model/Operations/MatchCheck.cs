@@ -11,12 +11,13 @@ static class MatchCheck {
     }
 
     static void Check(AppModel app, MatchRule rule, AppType type, Placement subject, Report report) {
+        var isSure = app.Trust.IsSure(type) && app.Trust.AreSure(type.Content.BaseArguments);
         var taken = type.Content.BaseArguments.Select(app.TargetOf).OfType<Target>()
             .Where(t => !t.Placement.IsExternal && rule.TakenParts.Contains(t.Placement.Part.Position)).Distinct().ToList();
         if (taken.Count == 0) {
             Rules.Add(app, report, RuleCodes.Match,
                 $"{type.Name.Name} in {subject.Where} takes no {rule.Taken.Display} type: the rule \"{rule}\" needs one. "
-                + $"Give its base type a {rule.Taken.Display} type argument, or move it.", type);
+                + $"Give its base type a {rule.Taken.Display} type argument, or move it.", type, isSure);
             return;
         }
         if (rule.Group is not { } concept) {
@@ -28,7 +29,7 @@ static class MatchCheck {
             Rules.Add(app, report, RuleCodes.Match,
                 $"{type.Name.Name} in {subject.Where} takes {other.Name.Name} in {other.Placement.Where}: "
                 + $"the rule \"{rule}\" needs both in one {group}. "
-                + $"Move {type.Name.Name} to the {group} of {other.Name.Name}, or take a type of its own {group}.", type);
+                + $"Move {type.Name.Name} to the {group} of {other.Name.Name}, or take a type of its own {group}.", type, isSure);
         }
     }
 

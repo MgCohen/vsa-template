@@ -27,14 +27,6 @@ sealed class ContentReader {
         [.. MemberReader.MembersOf(type).Where(m => IsIn(m, file, isFirst)).Select(Member)],
         type.BaseType is { SpecialType: SpecialType.None } baseType ? Shapes.Of(baseType) : null);
 
-    static IEnumerable<AttributeFact> Facts(IEnumerable<AttributeData> attributes, string? member) =>
-        attributes.Where(a => a.AttributeClass is { TypeKind: not TypeKind.Error }).Select(a => new AttributeFact(
-            Symbols.NameOf(a.AttributeClass!),
-            [.. new[] { a.AttributeClass! }.Concat(Symbols.BasesOf(a.AttributeClass!)).Select(Symbols.NameOf)],
-            [.. a.ConstructorArguments.Select(v => v.ToCSharpString()),
-                .. a.NamedArguments.Select(v => $"{v.Key} = {v.Value.ToCSharpString()}")],
-            member));
-
     FactKind Kind => type.TypeKind switch {
         TypeKind.Struct => FactKind.Struct,
         TypeKind.Interface => FactKind.Interface,
@@ -50,9 +42,9 @@ sealed class ContentReader {
     MemberFact Member(ISymbol member) => MemberReader.Fact(
         member, [.. implements[member].Distinct()], places.PositionOf(member.Locations.Concat(type.Locations).First()).Line);
 
-    IEnumerable<AttributeFact> Attributes(string file, bool isFirst) =>
-        Facts(type.GetAttributes().Where(a => IsIn(a, file, isFirst)), null)
-            .Concat(MemberReader.MembersOf(type).Where(m => IsIn(m, file, isFirst)).SelectMany(m => Facts(m.GetAttributes(), m.Name)));
+    IEnumerable<AttributeFact> Attributes(string file, bool isFirst) => AttributeReader.Of(type)
+        .Where(a => a.Data.AttributeClass is { TypeKind: not TypeKind.Error } && IsIn(a.Data, file, isFirst))
+        .Select(AttributeReader.Fact);
 
     bool IsIn(AttributeData attribute, string file, bool isFirst) =>
         attribute.ApplicationSyntaxReference is { } reference ? places.FileOf(reference.SyntaxTree) == file : isFirst;

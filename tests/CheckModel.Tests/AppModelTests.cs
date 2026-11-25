@@ -14,7 +14,7 @@ public sealed class AppModelTests {
     [Test]
     public void A_missing_snapshot_is_a_problem_and_does_not_stop_the_load() {
         using var temp = new TempState();
-        temp.State.Save(BlockSettings.Of("../..", "Sample", "Missing"));
+        temp.State.Save(Samples.Settings("Sample", "Missing"));
         temp.State.Save(Snapshot.Of("Sample", []));
 
         var app = AppModel.Load(Samples.Layers, temp.State);
@@ -26,7 +26,7 @@ public sealed class AppModelTests {
     [TestCase("{\"format\":1}")]
     public void A_bad_snapshot_is_a_problem_and_does_not_stop_the_load(string text) {
         using var temp = new TempState();
-        temp.State.Save(BlockSettings.Of("../..", "Sample"));
+        temp.State.Save(Samples.Settings("Sample"));
         temp.State.Save(Snapshot.Of("Sample", []));
         File.WriteAllText(temp.State.SnapshotFile("Sample"), text);
 

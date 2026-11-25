@@ -1,11 +1,11 @@
 namespace Umpire.CheckModel;
 
 public static class CheckJob {
-    public static Report Run(StateFolder state) {
+    public static Report Run(StateFolder state, CheckMode? mode = null) {
         var report = new Report();
         report.Describe("state", state.Folder);
         try {
-            Run(AppModel.Load(state), report);
+            Run(AppModel.Load(state, null, mode), report);
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException or InvalidOperationException) {
             report.Fail(e.Message);
         }
@@ -21,5 +21,9 @@ public static class CheckJob {
         ContentCheck.Run(app, app.Types, report);
         ReferenceCheck.Run(app, app.Types, report);
         BlockPlaceCheck.Run(app, report);
+        if (!report.IsComplete) {
+            report.Add(new Finding(DataCodes.NotComplete, Severity.Warning,
+                "The check is not complete: some data is old or missing, so a finding can be wrong or missing. Build all projects, and run the check again."));
+        }
     }
 }

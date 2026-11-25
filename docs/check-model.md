@@ -32,7 +32,7 @@ All files are in one state folder. The default is `artifacts~/umpire-model` in t
 | File | Contains | Written by |
 |---|---|---|
 | `definition.json` | Parts, rules, names, places | `DefinitionExport` |
-| `block.json` | Block folder, projects, inner blocks, severities | `BlockExport` |
+| `block.json` | Block folder, projects, libraries, inner blocks, severities, mode, marks | `BlockExport` |
 | `snapshots/<project>.json` | The type facts of a project | The analyzer |
 | `libraries/<assembly>.json` | The source paths of DLL types | `LibraryExport` |
 
@@ -64,9 +64,31 @@ The facts of a type are complete: no check reads the code again. A partial type 
 | `ContentCheck` | `UMP020204`, `UMP020303` |
 | `ReferenceCheck` | `UMP020101`, `UMP020102`, `UMP020301`, `UMP020302`, `UMP020304` |
 | `BlockPlaceCheck` | `UMP020401`, `UMP020402`, all types only |
-| `DataCheck` | `UMP030802`, `UMP030803`, all types only |
+| `DataCheck` | `UMP030802`, `UMP030803`, all saved data |
 
 An operation gets the app model, the types and the report. A report that did not run to its end has `Succeeded` false and a reason. A report with findings can succeed.
+
+## Trust
+
+A finding is an error only if each fact that decides it is current (`Trust`). If one fact is old or missing, the finding is a warning, in the analyzer and in the command.
+
+| Finding | Facts that decide it |
+|---|---|
+| Each finding | The definition and the block file |
+| Place, name, trait, type place | The type, its bases, the types that share its folder |
+| Use | The same, for the type and the used type |
+| Exposure | Also the types of the bases and of the members |
+| Match | Also the base arguments |
+| Count | All saved data |
+
+| Data | Mark |
+|---|---|
+| Snapshot | The hash and the time of each file |
+| Library | The hash and the time of its DLL. `block.json` lists each necessary library |
+| Definition | The sources of the definition, or its DLL. A source that is newer than its DLL is not current |
+| Block file | The input files, for example `.umpireconfig` |
+
+A `block.json` with no mark of the definition is not current. Thus the compile of a changed definition has no architecture error and does not stop the job that writes the files. A count in the analyzer is a warning if the block has many projects, because a file that is not compiled is in no snapshot.
 
 ## Analyzer
 
@@ -74,24 +96,25 @@ An operation gets the app model, the types and the report. A report that did not
 2. For each type it reads the references and runs the three operations.
 3. At the end it saves the snapshot of its project.
 
-It does not save in an editor (a host with `Microsoft.CodeAnalysis.Workspaces`, or `DesignTimeBuild`) or with a compile error. It checks only the projects in `block.json`, and it does nothing in a block with no `definition.json`.
-
-A finding that uses the snapshot of another project is an error only if the files of the used types did not change. If they changed, it is a warning. A count in a block with many projects is a warning. A project with `TreatWarningsAsErrors` must put these codes in `WarningsNotAsErrors` (see `tests/CheckModel.Tests/Parity/Inject.targets`).
+It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `DesignTimeBuild` or a compile error. `UmpireSaveSnapshot` selects another answer for one run. It checks only the projects in `block.json`, and it does nothing in a block with no `definition.json`.
 
 | Code | Meaning |
 |---|---|
 | `UMP030801` | The model cannot load, or the job failed |
 | `UMP030802` | A snapshot is missing or not valid |
-| `UMP030803` | A snapshot is older than a file |
+| `UMP030803` | A snapshot, a library, the definition or the block file is old |
 | `UMP030804` | The snapshot is not saved |
+| `UMP030805` | The check is not complete |
+
+A project with `TreatWarningsAsErrors` must put these codes and the use and statement codes in `WarningsNotAsErrors` (see `tests/CheckModel.Tests/Parity/Inject.targets`).
 
 ## Command
 
-`umpire-check [--root <block folder>] [--state <state folder>]` checks all types with no compile. Its lines are `file(line,col): error CODE: text`. The exit code is 0 with no error, 1 with an error, and 2 with bad flags.
+`umpire-check [--root <block folder>] [--state <state folder>] [--mode Error|Warn]` checks all types with no compile. Its lines are `file(line,col): error CODE: text`. The exit code is 0 with no error, 1 with an error, and 2 with bad flags. An incomplete check with no error gives 0. `umpire.check.mode` is in `block.json`, and `--mode` or `UmpireCheckMode` wins over it.
 
 ## Differences from the rule engine
 
-`tests/CheckModel.Tests/Parity` compares the two sides on the fixtures and on the blocks of this repository. The findings are the same, with these differences in the facts:
+`tests/CheckModel.Tests/Parity` compares the two sides on the fixtures and on the blocks of this repository. The findings of the command, the diagnostics of the analyzer, the severities and the facts are the same, with these differences in the facts:
 
 | Topic | Rule engine | Check model |
 |---|---|---|
@@ -104,14 +127,24 @@ A finding that uses the snapshot of another project is an error only if the file
 | Class with only nested types | No type | A type |
 | Type only in compiler output | A use | Not a use |
 | Framework DLL in an External | Not read | A use by its name |
+| Deconstruct of a generic type | Not an exposure | An exposure |
+| Count in the analyzer, many projects | Error | Warning |
 | `UMP020205`, `UMP020206` | Setup findings | Not in the model |
 
 "Type only in compiler output" is the array of a `params` call, the type of a default argument, the result type of an `await` and the `Dispose` call of a `using`. `FactParity` lists each case. `UMP020205` and `UMP020206` are about the setup of the DLL folders and of the folder aliases, not about types.
+
+## Limits
+
+- `[field: X]` on an event with no accessors is not a fact: the compiler API does not give the field.
+- The analyzer imports the namespace `Umpire.Vsa.Analyzers`, because the kernel analyzers use it.
+- A file that no compile read is in no snapshot, so the command does not know it.
 
 ## Open questions
 
 - When and by which job does a build write `definition.json`, `block.json` and the library files? `check/Export` has no build step.
 - What writes the library facts of a package (`Umpire.dll`) for a host with no engine, for example Unity?
+- Must an incomplete check have another exit code than 0?
+- Can the build setup put the codes in `WarningsNotAsErrors`, so that `TreatWarningsAsErrors` makes no error of a warning on old data?
 - A project with many target frameworks has one snapshot file, and the last compile wins (#362). One file for each target, or only one target?
 - A snapshot has about 7 KB for each type. Is a name table necessary?
 - A missing snapshot gives a warning only in a project that references the missing project. Must each project of the block give it?

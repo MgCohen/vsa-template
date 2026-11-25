@@ -4,6 +4,7 @@ public sealed class Report {
     readonly List<Finding> findings = [];
     readonly Dictionary<string, string> metadata = new(StringComparer.Ordinal);
 
+    public bool IsComplete { get; private set; } = true;
     public bool Succeeded => Reason is null;
     public string? Reason { get; private set; }
     public IReadOnlyList<Finding> Findings => findings;
@@ -20,6 +21,8 @@ public sealed class Report {
         .Select(f => f.ToString())];
 
     public void Add(Finding finding) => findings.Add(finding);
+
+    public void Doubt() => IsComplete = false;
 
     public void Describe(string name, string value) => metadata[name] = value;
 

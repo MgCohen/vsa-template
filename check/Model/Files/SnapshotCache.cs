@@ -12,7 +12,7 @@ static class SnapshotCache {
         if (Entries.TryGetValue(file, out var entry) && entry.Modified == modified && entry.Length == length) {
             return entry.Snapshot;
         }
-        var snapshot = Snapshot.Read(File.ReadAllText(file));
+        var snapshot = Snapshot.Read(StateFile.Read(file));
         Entries[file] = new Entry(modified, length, snapshot);
         return snapshot;
     }

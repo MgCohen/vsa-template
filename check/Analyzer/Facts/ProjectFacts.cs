@@ -82,7 +82,7 @@ public sealed class ProjectFacts {
     FileFacts FactsOf(SyntaxTree tree, ILookup<string, TypeFacts> byFile) {
         var file = places.FileOf(tree);
         var hash = !File.Exists(file) ? "" : IsOwnFile(tree, file) ? Hash(tree) : FileHash.Of(file);
-        return new FileFacts(BlockPath.Of(block, file), hash, 0, [.. byFile[file]]);
+        return new FileFacts(BlockPath.Of(block, file), hash, 0, places.IsGenerated(tree), [.. byFile[file]]);
     }
 
     IEnumerable<TypeFile> Declarations(INamedTypeSymbol type) {

@@ -16,7 +16,7 @@ public sealed class StateFolderTests {
         var state = StateFolder.Of(temp.Block, "Library/Umpire");
 
         state.Save(Samples.Layers);
-        state.Save(BlockSettings.Of("../.."));
+        state.Save(Samples.Settings());
         state.Save(Snapshot.Of("Sample", []));
         state.SaveLibrary(Snapshot.Of("Other", []));
 
@@ -41,7 +41,7 @@ public sealed class StateFolderTests {
     public void The_state_folder_is_found_from_a_folder_below_the_block() {
         using var temp = new TempState();
         temp.State.Save(Samples.Layers);
-        temp.State.Save(BlockSettings.Of("../.."));
+        temp.State.Save(Samples.Settings());
 
         var found = StateFolder.Above(Path.Combine(temp.Block, "App", "Features"));
 

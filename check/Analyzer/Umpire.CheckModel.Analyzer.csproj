@@ -10,6 +10,7 @@
     <NoWarn>$(NoWarn);RS1035;RS1030;RS2008</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="CheckModel.Tests" />
     <Compile Include="../../tools/sdk/Polyfills~/IsExternalInit.cs" LinkBase="Polyfills" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(UmpireAnalyzerRoslynVersion)" PrivateAssets="all" />
     <ProjectReference Include="../Model/Umpire.CheckModel.csproj" />

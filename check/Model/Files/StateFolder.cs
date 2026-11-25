@@ -35,6 +35,12 @@ public sealed class StateFolder {
 
     public string BlockOf(BlockSettings settings) => BlockPath.In(Folder, settings.Block);
 
+    public Definition ReadDefinition() => Definition.Read(StateFile.Read(DefinitionFile));
+
+    public BlockSettings ReadBlock() => BlockSettings.Read(StateFile.Read(BlockFile));
+
+    public string LibraryFile(string library) => Path.Combine(Libraries, library + Extension);
+
     public string SnapshotFile(string project) => Path.Combine(Snapshots, project + Extension);
 
     public bool Save(Definition definition) => StateFile.Save(DefinitionFile, definition.Write());
@@ -43,7 +49,7 @@ public sealed class StateFolder {
 
     public bool Save(Snapshot snapshot) => StateFile.Save(SnapshotFile(snapshot.Project), snapshot.Write());
 
-    public bool SaveLibrary(Snapshot library) => StateFile.Save(Path.Combine(Libraries, library.Project + Extension), library.Write());
+    public bool SaveLibrary(Snapshot library) => StateFile.Save(LibraryFile(library.Project), library.Write());
 
     static IReadOnlyList<string> FilesIn(string folder) => Directory.Exists(folder)
         ? [.. Directory.GetFiles(folder, "*" + Extension).OrderBy(f => f, StringComparer.OrdinalIgnoreCase)]

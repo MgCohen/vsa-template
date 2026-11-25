@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 sealed class SourcePlaces {
     const string GeneratedFolder = "/generated/";
+    const string ObjectFolder = "/obj/";
     const int GeneratorFolders = 2;
 
     readonly string block;
@@ -19,6 +20,9 @@ sealed class SourcePlaces {
     }
 
     public string FileOf(SyntaxTree tree) => files.GetOrAdd(tree, Find);
+
+    public bool IsGenerated(SyntaxTree tree) =>
+        FileOf(tree).Length == 0 || IsOutput(tree.FilePath) && Checksum(tree) is null;
 
     public Position PositionOf(Location location) {
         var span = location.GetMappedLineSpan();
@@ -42,18 +46,25 @@ sealed class SourcePlaces {
         if (path.Length == 0) {
             return "";
         }
-        if (Path.IsPathRooted(path) && !BlockPath.IsInOutput(BlockPath.Of(block, path))) {
+        if (!IsOutput(path)) {
             return Path.GetFullPath(path);
         }
-        if (Checksum(tree) is { } source) {
-            return source;
+        return Checksum(tree) ?? (projectFolder is not null && HintOf(path) is { Length: > 0 } hint
+            ? Path.GetFullPath(Path.Combine(projectFolder, hint))
+            : "");
+    }
+
+    bool IsOutput(string path) => !Path.IsPathRooted(path) || BlockPath.IsInOutput(BlockPath.Of(block, path));
+
+    string HintOf(string path) {
+        var normal = "/" + (Path.IsPathRooted(path) ? BlockPath.Of(block, path) : path.Replace('\\', '/'));
+        var output = normal.LastIndexOf(ObjectFolder, StringComparison.OrdinalIgnoreCase);
+        var generated = output < 0 ? -1 : normal.IndexOf(GeneratedFolder, output, StringComparison.OrdinalIgnoreCase);
+        if (generated < 0 && (output >= 0 || Path.IsPathRooted(path))) {
+            return "";
         }
-        var normal = "/" + path.Replace('\\', '/');
-        var generated = normal.LastIndexOf(GeneratedFolder, StringComparison.OrdinalIgnoreCase);
-        var hint = normal.Substring(generated < 0 ? 1 : generated + GeneratedFolder.Length).Split('/').Skip(GeneratorFolders).ToList();
-        return projectFolder is null || hint.Count == 0 || generated < 0 && Path.IsPathRooted(path)
-            ? ""
-            : Path.GetFullPath(Path.Combine(projectFolder, string.Join("/", hint)));
+        var hint = normal.Substring(generated < 0 ? 1 : generated + GeneratedFolder.Length).Split('/').Skip(GeneratorFolders);
+        return string.Join("/", hint);
     }
 
     static string? Checksum(SyntaxTree tree) {

@@ -48,7 +48,7 @@ public sealed class OperationTests {
     public void A_severity_of_the_block_replaces_the_severity_of_the_rule() {
         using var temp = new TempState();
         var report = new Report();
-        temp.State.Save(BlockSettings.Of("../..", "Sample") with {
+        temp.State.Save(Samples.Settings("Sample") with {
             Severities = new Dictionary<string, string> { ["UMP020202"] = "warning" },
         });
         temp.State.Save(Snapshot.Of("Sample", [Samples.File("Tools/Clock.cs", Samples.Type("Clock"))]));

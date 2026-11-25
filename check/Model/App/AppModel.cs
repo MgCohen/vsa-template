@@ -29,8 +29,9 @@ public sealed class AppModel {
             }
         }
         helpers = new HelperPlaces(Known);
-        Freshness = new Freshness(snapshots.All);
+        Saved = snapshots.Saved;
         Types = [.. Known.Where(t => t.IsUnmapped || t.Placement is { IsExternal: false })];
+        Trust = new Trust(this, snapshots, helpers);
     }
 
     public Definition Definition { get; }
@@ -42,15 +43,17 @@ public sealed class AppModel {
     public IReadOnlyList<SnapshotProblem> Problems { get; }
     public IReadOnlyList<string> InnerBlocks { get; }
     public IReadOnlyList<AppType> Types { get; }
-    public Freshness Freshness { get; }
+    public Trust Trust { get; }
+    public IReadOnlyList<LoadedSnapshot> Saved { get; }
 
     IReadOnlyList<AppType> Known { get; }
 
-    public static AppModel Load(StateFolder state, CurrentProject? current = null) =>
-        Load(Definition.Read(File.ReadAllText(state.DefinitionFile)), state, current);
+    public static AppModel Load(StateFolder state, CurrentProject? current = null, CheckMode? mode = null) =>
+        Load(state.ReadDefinition(), state, current, mode);
 
-    public static AppModel Load(Definition definition, StateFolder state, CurrentProject? current = null) {
-        var settings = BlockSettings.Read(File.ReadAllText(state.BlockFile));
+    public static AppModel Load(Definition definition, StateFolder state, CurrentProject? current = null, CheckMode? mode = null) {
+        var saved = state.ReadBlock();
+        var settings = saved with { Mode = mode ?? saved.Mode };
         return new AppModel(
             definition, settings, state.BlockOf(settings), new SnapshotSet(state, settings, current?.Snapshot), current);
     }
@@ -77,7 +80,7 @@ public sealed class AppModel {
     static IEnumerable<AppType> TypesOf(LoadedSnapshot loaded, CurrentProject? current) {
         var isCurrent = ReferenceEquals(loaded.Snapshot, current?.Snapshot);
         return loaded.Snapshot.Files
-            .SelectMany(file => file.Types.Select(facts => new TypeFile(loaded.FileOf(file), facts)))
+            .SelectMany(file => file.Types.Select(facts => new TypeFile(loaded.FileOf(file), facts, file.IsGenerated)))
             .GroupBy(file => file.Facts.Name)
             .Select(group => new AppType(
                 loaded.Snapshot.Project, [.. group], isCurrent ? () => current!.References(group.Key) : null));

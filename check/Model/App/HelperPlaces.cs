@@ -17,6 +17,9 @@ sealed class HelperPlaces {
         }
     }
 
+    public IReadOnlyList<AppType>? NeighborsOf(AppType type) =>
+        type.Placement is { } placement && byPath.TryGetValue(placement.Path, out var neighbors) ? neighbors : null;
+
     public Placement? Of(AppType type) {
         if (type.Placement is not { } placement) {
             return null;

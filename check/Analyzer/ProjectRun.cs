@@ -4,10 +4,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 sealed class ProjectRun {
+    const string ModeProperty = "build_property.UmpireCheckMode";
+
     readonly StateFolder state;
     readonly ProjectFacts facts;
     readonly AppModel app;
-    readonly Freshness freshness;
     readonly bool saves;
 
     ProjectRun(StateFolder state, ProjectFacts facts, AppModel app, bool saves) {
@@ -15,45 +16,44 @@ sealed class ProjectRun {
         this.facts = facts;
         this.app = app;
         this.saves = saves;
-        freshness = app.Freshness;
     }
 
     public static ProjectRun? Start(Compilation compilation, AnalyzerOptions options, CancellationToken cancellation) {
         if (BlockSearch.Find(compilation, options, cancellation) is not { } state) {
             return null;
         }
-        var settings = BlockSettings.Read(File.ReadAllText(state.BlockFile));
+        var settings = state.ReadBlock();
         if (!settings.Projects.Contains(compilation.AssemblyName ?? "", StringComparer.OrdinalIgnoreCase)) {
             return null;
         }
         var config = options.AnalyzerConfigOptionsProvider.GlobalOptions;
         config.TryGetValue(BlockSearch.FolderProperty, out var folder);
+        config.TryGetValue(ModeProperty, out var given);
         var facts = new ProjectFacts(compilation, state.BlockOf(settings), string.IsNullOrEmpty(folder) ? null : folder);
-        return new ProjectRun(state, facts, AppModel.Load(state, facts.Current), BuildHost.Saves(config));
+        var app = AppModel.Load(state, facts.Current, Enum.TryParse<CheckMode>(given, ignoreCase: true, out var mode) ? mode : null);
+        return new ProjectRun(state, facts, app, BuildHost.Saves(config));
     }
 
     public void Check(SymbolAnalysisContext context) {
         if (app.Find(Symbols.NameOf((INamedTypeSymbol)context.Symbol)) is not { } type || type.Project != facts.Name) {
             return;
         }
-        var own = new Report();
-        LocationCheck.Run(app, [type], own);
-        ContentCheck.Run(app, [type], own);
-        var uses = new Report();
-        ReferenceCheck.Run(app, [type], uses);
-        var isSure = UsesCurrentData(type);
-        foreach (var finding in own.Findings) {
+        var report = new Report();
+        LocationCheck.Run(app, [type], report);
+        ContentCheck.Run(app, [type], report);
+        ReferenceCheck.Run(app, [type], report);
+        foreach (var finding in report.Findings) {
             context.ReportDiagnostic(Diagnostic(finding));
-        }
-        foreach (var finding in uses.Findings) {
-            context.ReportDiagnostic(Diagnostic(isSure && IsSure(finding) ? finding : Doubtful(finding)));
         }
     }
 
     public void End(CompilationAnalysisContext context) {
         var referenced = context.Compilation.ReferencedAssemblyNames.Select(a => a.Name).ToList();
-        foreach (var problem in app.Problems.Where(p => referenced.Contains(p.Project) || !app.Settings.Projects.Contains(p.Project))) {
+        foreach (var problem in app.Problems.Where(p => p.IsState || p.IsLibrary || referenced.Contains(p.Project))) {
             context.ReportDiagnostic(DataDiagnostic(DataCodes.NoSnapshot, DataCheck.Text(problem)));
+        }
+        if (DataCheck.BlockText(app) is { } text) {
+            context.ReportDiagnostic(DataDiagnostic(DataCodes.OldSnapshot, text));
         }
         if (!saves || context.Compilation.GetDiagnostics(context.CancellationToken).Any(d => d.DefaultSeverity == DiagnosticSeverity.Error)) {
             return;
@@ -68,18 +68,15 @@ sealed class ProjectRun {
     public static Diagnostic DataDiagnostic(string code, string text) =>
         Microsoft.CodeAnalysis.Diagnostic.Create(CheckDescriptors.Of(code), Location.None, text);
 
-    static Finding Doubtful(Finding finding) =>
-        finding.Severity == Severity.Error ? finding with { Severity = Severity.Warning } : finding;
-
     Diagnostic Diagnostic(Finding finding) => Microsoft.CodeAnalysis.Diagnostic.Create(
-        CheckDescriptors.Of(finding.Code), facts.LocationOf(finding), finding.Severity switch {
+        CheckDescriptors.Of(finding.Code), facts.LocationOf(finding), SeverityOf(finding) switch {
             Severity.Error => DiagnosticSeverity.Error,
             Severity.Warning => DiagnosticSeverity.Warning,
             _ => DiagnosticSeverity.Info,
         }, additionalLocations: null, properties: null, finding.Text);
 
-    bool IsSure(Finding finding) => finding.Code != RuleCodes.Count || app.Snapshots.Count == 1 && app.Problems.Count == 0;
-
-    bool UsesCurrentData(AppType type) => ReferenceCheck.TargetsOf(type)
-        .Select(app.Find).OfType<AppType>().Where(other => other.Project != facts.Name).All(freshness.IsCurrent);
+    Severity SeverityOf(Finding finding) =>
+        finding is { Code: RuleCodes.Count, Severity: Severity.Error } && app.Settings.Projects.Count > 1
+            ? Severity.Warning
+            : finding.Severity;
 }
