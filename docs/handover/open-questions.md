@@ -10,6 +10,7 @@ The user has this list and did not answer it. An opinion is not a decision.
 - **Q2 and Q6 (2026-11-25).** "We can keep splitting": `Umpire` (the core), `Umpire.Definition` (the core definition), `Umpire.Vsa` (the host/kernel), `Umpire.Vsa.Definition` (the VSA definition). This also answers Q6: the core and VSA are two DLLs.
 - **Q3 (2026-11-25).** Not answered. "We still have to talk about the topology and architecture and split of this, because I don't like the idea of check model. ... But it can live wherever it needs to live." New open item: the structure of the check code, before its place.
 - **Q4 (2026-11-25).** "Our own reader, even if inside our DLL it uses Tomlyn or whatever we define. No one needs to know that it's behind our own interface, our own utility. But we can try to go with our own small one. Let's see how that plays out."
+- **Q5 (2026-11-25).** "Remove as much as possible. The only thing that we really keep is the dependency injection, because it's the base of our work." First "fully understand why configuration was there and what we lose by removing it."
 
 | # | Question | Options | Opinion |
 |---|---|---|---|
