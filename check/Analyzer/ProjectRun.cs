@@ -30,7 +30,7 @@ sealed class ProjectRun {
         config.TryGetValue(BlockSearch.FolderProperty, out var folder);
         config.TryGetValue(ModeProperty, out var given);
         var facts = new ProjectFacts(compilation, state.BlockOf(settings), string.IsNullOrEmpty(folder) ? null : folder);
-        var app = AppModel.Load(state, facts.Current, Enum.TryParse<CheckMode>(given, ignoreCase: true, out var mode) ? mode : null);
+        var app = AppModel.Load(state, settings, facts.Current, Enum.TryParse<CheckMode>(given, ignoreCase: true, out var mode) ? mode : null);
         return new ProjectRun(state, facts, app, BuildHost.Saves(config));
     }
 
@@ -51,6 +51,12 @@ sealed class ProjectRun {
         var referenced = context.Compilation.ReferencedAssemblyNames.Select(a => a.Name).ToList();
         foreach (var problem in app.Problems.Where(p => p.IsState || p.IsLibrary || referenced.Contains(p.Project))) {
             context.ReportDiagnostic(DataDiagnostic(DataCodes.NoSnapshot, DataCheck.Text(problem)));
+        }
+        foreach (var library in app.Trust.OldLibraries) {
+            context.ReportDiagnostic(DataDiagnostic(DataCodes.OldSnapshot, DataCheck.Text(library)));
+        }
+        foreach (var project in app.Saved.Select(s => s.Snapshot.Project).Where(p => referenced.Contains(p) && !app.Trust.IsSure(p))) {
+            context.ReportDiagnostic(DataDiagnostic(DataCodes.OldSnapshot, DataCheck.OldText(project)));
         }
         if (DataCheck.BlockText(app) is { } text) {
             context.ReportDiagnostic(DataDiagnostic(DataCodes.OldSnapshot, text));
@@ -76,7 +82,7 @@ sealed class ProjectRun {
         }, additionalLocations: null, properties: null, finding.Text);
 
     Severity SeverityOf(Finding finding) =>
-        finding is { Code: RuleCodes.Count, Severity: Severity.Error } && app.Settings.Projects.Count > 1
+        finding is { Code: RuleCodes.Count, Severity: Severity.Error } && (app.Settings.Projects.Count > 1 || app.Settings.OtherStates.Count > 0)
             ? Severity.Warning
             : finding.Severity;
 }

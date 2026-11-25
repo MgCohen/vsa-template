@@ -16,7 +16,7 @@ try {
     report.Fail($"{e.GetType().Name}: {e.Message}");
 }
 if (report.Reason is { } reason) {
-    report.Add(new Finding(DataCodes.NoModel, options.Mode == CheckMode.Warn ? Severity.Warning : Severity.Error, $"The check did not run to its end: {reason}"));
+    report.Add(new Finding(DataCodes.NoModel, options.ReportMode() == CheckMode.Warn ? Severity.Warning : Severity.Error, $"The check did not run to its end: {reason}"));
 }
 foreach (var line in report.Lines) {
     Console.WriteLine(line);

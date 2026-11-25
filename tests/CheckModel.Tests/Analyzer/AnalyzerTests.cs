@@ -113,7 +113,8 @@ public sealed class AnalyzerTests {
 
         var diagnostics = UseOfAnotherProject(build, () => build.Write("Ui/Screen.cs", Screen + "\n"));
 
-        Assert.That(diagnostics.Single().Severity, Is.EqualTo(DiagnosticSeverity.Warning));
+        Assert.That(diagnostics.Select(d => d.Id), Is.EquivalentTo(new[] { RuleCodes.DeniedUse, DataCodes.OldSnapshot }));
+        Assert.That(diagnostics.Select(d => d.Severity), Is.All.EqualTo(DiagnosticSeverity.Warning));
     }
 
     [Test]

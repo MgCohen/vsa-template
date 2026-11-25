@@ -100,16 +100,17 @@ public sealed class DefinitionExportTests {
         var other = Path.Combine(temp.Block, "Helper.cs");
         File.WriteAllText(other, "class B;");
         sources["Helper"] = other;
+        File.SetLastWriteTimeUtc(other, File.GetLastWriteTimeUtc(dll).AddHours(-1));
         var resolved = new ResolvedArchitecture(new EveryFormArchitecture());
 
         var marks = DefinitionSources.Of(resolved, temp.Block, sources);
-        File.SetLastWriteTimeUtc(file, File.GetLastWriteTimeUtc(dll).AddHours(1));
+        File.SetLastWriteTimeUtc(other, File.GetLastWriteTimeUtc(dll).AddHours(1));
         var late = DefinitionSources.Of(resolved, temp.Block, sources);
 
         Assert.Multiple(() => {
             Assert.That(marks.Select(m => m.Path), Is.SupersetOf(new[] { "EveryForm.cs", "Helper.cs" }));
             Assert.That(marks.All(m => m.IsCurrent(temp.Block)), Is.True);
-            Assert.That(late.Single(m => m.Path == "EveryForm.cs").IsCurrent(temp.Block), Is.False);
+            Assert.That(late.Single(m => m.Path == "Helper.cs").IsCurrent(temp.Block), Is.False);
         });
     }
 

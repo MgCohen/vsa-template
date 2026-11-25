@@ -8,8 +8,11 @@ public sealed class AppModel {
     readonly Dictionary<TypeName, AppType> byType = [];
     readonly HelperPlaces helpers;
     readonly Places places;
+    readonly FolderPaths paths;
 
-    AppModel(Definition definition, BlockSettings settings, string block, SnapshotSet snapshots, CurrentProject? current) {
+    AppModel(Definition definition, BlockSettings settings, StateFolder state, CurrentProject? current, bool isDefinitionOfBlock) {
+        var block = state.BlockOf(settings);
+        var snapshots = new SnapshotSet(state, settings, current?.Snapshot);
         Definition = definition;
         Settings = settings;
         Block = block;
@@ -18,7 +21,7 @@ public sealed class AppModel {
         Snapshots = snapshots.Own;
         Problems = snapshots.Problems;
         InnerBlocks = [.. settings.InnerBlocks.Select(folder => BlockPath.In(block, folder))];
-        var paths = new FolderPaths(block, [.. definition.FolderAliases, .. settings.FolderAliases], settings.IgnoredFolders);
+        paths = new FolderPaths(block, [.. definition.FolderAliases, .. settings.FolderAliases], settings.IgnoredFolders);
         places = new Places(Parts, paths, InnerBlocks);
         Known = [.. snapshots.All.SelectMany(snapshot => TypesOf(snapshot, current))];
         foreach (var type in Known) {
@@ -30,8 +33,9 @@ public sealed class AppModel {
         }
         helpers = new HelperPlaces(Known);
         Saved = snapshots.Saved;
+        Loaded = snapshots.All;
         Types = [.. Known.Where(t => t.IsUnmapped || t.Placement is { IsExternal: false })];
-        Trust = new Trust(this, snapshots, helpers);
+        Trust = new Trust(this, snapshots, helpers, isDefinitionOfBlock);
     }
 
     public Definition Definition { get; }
@@ -45,18 +49,21 @@ public sealed class AppModel {
     public IReadOnlyList<AppType> Types { get; }
     public Trust Trust { get; }
     public IReadOnlyList<LoadedSnapshot> Saved { get; }
+    public IReadOnlyList<LoadedSnapshot> Loaded { get; }
 
     IReadOnlyList<AppType> Known { get; }
 
     public static AppModel Load(StateFolder state, CurrentProject? current = null, CheckMode? mode = null) =>
-        Load(state.ReadDefinition(), state, current, mode);
+        Load(state, state.ReadBlock(), current, mode);
 
-    public static AppModel Load(Definition definition, StateFolder state, CurrentProject? current = null, CheckMode? mode = null) {
-        var saved = state.ReadBlock();
-        var settings = saved with { Mode = mode ?? saved.Mode };
+    public static AppModel Load(StateFolder state, BlockSettings settings, CurrentProject? current = null, CheckMode? mode = null) {
+        var text = state.ReadDefinition();
         return new AppModel(
-            definition, settings, state.BlockOf(settings), new SnapshotSet(state, settings, current?.Snapshot), current);
+            Definition.Read(text), settings with { Mode = mode ?? settings.Mode }, state, current, FileHash.OfText(text) == settings.DefinitionHash);
     }
+
+    public static AppModel Load(Definition definition, StateFolder state, CurrentProject? current = null) =>
+        new(definition, state.ReadBlock(), state, current, true);
 
     public IReadOnlyList<AppType> TypesOf(string project) => [.. Types.Where(t => t.Project == project)];
 
@@ -73,6 +80,8 @@ public sealed class AppModel {
     }
 
     public Decision DecisionFor(Placement from, Placement to) => Decisions.Of(from.Part, from.Values, to.Part, to.Values);
+
+    internal bool IsIgnored(string file) => paths.IsIgnored(file);
 
     internal T Once<T>(object key, Func<T> make) where T : class =>
         (T)once.GetOrAdd(key, _ => new Lazy<object>(make)).Value;

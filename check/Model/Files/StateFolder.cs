@@ -35,13 +35,18 @@ public sealed class StateFolder {
 
     public string BlockOf(BlockSettings settings) => BlockPath.In(Folder, settings.Block);
 
-    public Definition ReadDefinition() => Definition.Read(StateFile.Read(DefinitionFile));
+    public string ReadDefinition() => StateFile.Read(DefinitionFile);
 
     public BlockSettings ReadBlock() => BlockSettings.Read(StateFile.Read(BlockFile));
 
     public string LibraryFile(string library) => Path.Combine(Libraries, library + Extension);
 
     public string SnapshotFile(string project) => Path.Combine(Snapshots, project + Extension);
+
+    public void Save(Definition definition, BlockSettings settings) {
+        Save(definition);
+        Save(settings with { DefinitionHash = FileHash.OfText(definition.Write()) });
+    }
 
     public bool Save(Definition definition) => StateFile.Save(DefinitionFile, definition.Write());
 

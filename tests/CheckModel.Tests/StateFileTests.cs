@@ -10,9 +10,8 @@ public sealed class StateFileTests {
         var file = temp.State.SnapshotFile("Sample");
         File.SetAttributes(file, FileAttributes.ReadOnly);
         try {
-            temp.State.Save(Snapshot.Of("Sample", [Samples.File("Ui/Screen.cs")]));
-        } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
-            TestContext.Out.WriteLine(e.Message);
+            Assert.That(() => temp.State.Save(Snapshot.Of("Sample", [Samples.File("Ui/Screen.cs")])),
+                Throws.InstanceOf<UnauthorizedAccessException>().Or.InstanceOf<IOException>());
         } finally {
             File.SetAttributes(file, FileAttributes.Normal);
         }

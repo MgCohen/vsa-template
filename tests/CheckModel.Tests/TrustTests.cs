@@ -20,7 +20,7 @@ public sealed class TrustTests {
     [Test]
     public void A_match_with_a_missing_snapshot_is_a_warning_in_the_analyzer() {
         using var build = new SampleBuild("Ui", "Data");
-        build.State.Save(Matched);
+        build.Save(Matched);
         build.Write("Ui/Request.cs", Request);
         build.Write("Data/Handler.cs", Handler);
 
@@ -33,7 +33,7 @@ public sealed class TrustTests {
     [Test]
     public void A_match_and_a_count_with_a_missing_snapshot_are_warnings_in_the_command() {
         using var build = new SampleBuild("Ui", "Data");
-        build.State.Save(Matched with { Counts = Counted.Counts });
+        build.Save(Matched with { Counts = Counted.Counts });
         build.Write("Ui/Request.cs", Request);
         build.Write("Data/Handler.cs", Handler);
         build.Analyze(build.Compile("Data", [build.Compile("Ui", "Ui/Request.cs")], "Data/Handler.cs"));
@@ -47,6 +47,7 @@ public sealed class TrustTests {
     [Test]
     public void A_use_of_an_old_type_is_a_warning_in_the_command() {
         using var build = Wrong();
+        Assert.That(CheckJob.Run(build.State).HasErrors, Is.True);
         build.Write("Ui/Screen.cs", "namespace Sample;\n\npublic class Screen;\n");
 
         var report = CheckJob.Run(build.State);
@@ -60,7 +61,7 @@ public sealed class TrustTests {
         using var other = new TempState();
         other.State.Save(Samples.Settings("Ui"));
         File.Move(build.State.SnapshotFile("Ui"), Target(other.State.SnapshotFile("Ui")));
-        build.State.Save(Samples.Settings("Data") with { OtherStates = [BlockPath.Of(build.State.Folder, other.State.Folder)] });
+        build.Save(Samples.Layers, Samples.Settings("Data") with { OtherStates = [BlockPath.Of(build.State.Folder, other.State.Folder)] });
 
         var report = CheckJob.Run(build.State);
 
@@ -71,11 +72,12 @@ public sealed class TrustTests {
     [Test]
     public void A_type_with_an_old_base_type_gives_a_warning() {
         using var build = new SampleBuild("Ui", "Data");
-        build.State.Save(Samples.Layers with { Parts = [Samples.Layers.Parts[0], Samples.Layers.Parts[1] with { Types = [Samples.Name("IStore")] }] });
+        build.Save(Samples.Layers with { Parts = [Samples.Layers.Parts[0], Samples.Layers.Parts[1] with { Types = [Samples.Name("IStore")] }] });
         build.Write("Ui/Base.cs", "namespace Sample;\npublic class Base;\n");
         build.Write("Data/Store.cs", "namespace Sample;\npublic class Store : Base;\n");
         var ui = build.Compile("Ui", "Ui/Base.cs");
         build.Analyze(ui);
+        Assert.That(build.Analyze(build.Compile("Data", [ui], "Data/Store.cs")).Single(d => d.Id == RuleCodes.WrongType).Severity, Is.EqualTo(DiagnosticSeverity.Error));
         build.Write("Ui/Base.cs", "namespace Sample;\npublic class Base { }\n");
 
         var diagnostics = build.Analyze(build.Compile("Data", [ui], "Data/Store.cs"));
@@ -87,7 +89,7 @@ public sealed class TrustTests {
     public void A_helper_with_an_old_user_gives_a_warning() {
         using var build = new SampleBuild("First", "Second");
         var parent = Samples.Part(Samples.Data, "Data", Samples.Part(Samples.Ui, "Ui") with { Folder = null, Types = [Samples.Name("IUser")] });
-        build.State.Save(Samples.Layers with { Parts = [parent with { Types = [Samples.Name("INothing")] }], Uses = [] });
+        build.Save(Samples.Layers with { Parts = [parent with { Types = [Samples.Name("INothing")] }], Uses = [] });
         build.Write("Data/Helper.cs", "namespace Sample;\npublic class Helper;\n");
         build.Write("Data/User.cs", "namespace Sample;\npublic interface IUser;\npublic class User : IUser;\n");
         build.Analyze(build.Compile("Second", "Data/User.cs"));
@@ -102,7 +104,7 @@ public sealed class TrustTests {
     public void A_missing_project_under_an_External_gives_a_warning() {
         using var build = new SampleBuild("Sample.Ui", "Data");
         var external = Samples.Part(Samples.Concept("Library"), "Library") with { External = "Sample" };
-        build.State.Save(Samples.Layers with { Parts = [.. Samples.Layers.Parts, external] });
+        build.Save(Samples.Layers with { Parts = [.. Samples.Layers.Parts, external] });
         build.Write("Ui/Screen.cs", "namespace Sample;\npublic class Screen;\n");
         build.Write("Data/Store.cs", "namespace Other;\npublic class Store {\n    public object Make() => new Sample.Screen();\n}\n");
 
@@ -116,12 +118,13 @@ public sealed class TrustTests {
     public void A_missing_or_old_library_gives_a_warning(string state) {
         using var build = new SampleBuild("Data");
         var external = Samples.Part(Samples.Concept("Library"), "Library") with { External = "Kit" };
-        build.State.Save(Samples.Layers with { Parts = [.. Samples.Layers.Parts, external] });
-        build.State.Save(Samples.Settings("Data") with { Libraries = ["Kit"] });
+        build.Save(Samples.Layers with { Parts = [.. Samples.Layers.Parts, external] }, Samples.Settings("Data") with { Libraries = ["Kit"] });
         var dll = build.Write("Kit.dll", "first");
         build.State.SaveLibrary(Snapshot.Of("Kit", []) with { Source = FileMark.Of(build.Block, dll) });
         build.Write("Kit/Screen.cs", "namespace Sample;\npublic class Screen;\n");
         build.Write("Data/Store.cs", "namespace Other;\npublic class Store {\n    public object Make() => new Sample.Screen();\n}\n");
+        var compiled = build.Compile("Data", [build.Compile("Kit", "Kit/Screen.cs")], "Data/Store.cs");
+        Assert.That(build.Analyze(compiled).Where(d => d.Id == RuleCodes.DeniedUse).Select(d => d.Severity), Is.EqualTo(new[] { DiagnosticSeverity.Error }));
         if (state == "missing") {
             File.Delete(build.State.LibraryFiles.Single());
         } else {
@@ -138,7 +141,7 @@ public sealed class TrustTests {
     [TestCase(".umpireconfig")]
     public void An_old_definition_or_block_file_gives_warnings(string changed) {
         using var build = Wrong();
-        build.State.Save(Samples.Settings("Ui", "Data") with {
+        build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with {
             DefinitionSources = [FileMark.Of(build.Block, build.Write("Definition/Layers.cs", "first"))],
             Inputs = [FileMark.Of(build.Block, Path.Combine(build.Block, ".umpireconfig"))],
         });
@@ -155,7 +158,7 @@ public sealed class TrustTests {
     [Test]
     public void A_block_file_with_no_mark_of_the_definition_gives_warnings() {
         using var build = Wrong();
-        build.State.Save(Samples.Settings("Ui", "Data") with { DefinitionSources = [] });
+        build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with { DefinitionSources = [] });
 
         Assert.That(CheckJob.Run(build.State).HasErrors, Is.False);
     }
@@ -163,7 +166,7 @@ public sealed class TrustTests {
     [Test]
     public void The_mode_Warn_gives_warnings_and_the_mode_of_the_caller_wins() {
         using var build = Wrong();
-        build.State.Save(Samples.Settings("Ui", "Data") with { Mode = CheckMode.Warn });
+        build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with { Mode = CheckMode.Warn });
 
         Assert.That(CheckJob.Run(build.State).HasErrors, Is.False);
         Assert.That(CheckJob.Run(build.State, CheckMode.Error).HasErrors, Is.True);

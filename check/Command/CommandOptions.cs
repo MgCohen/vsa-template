@@ -32,6 +32,14 @@ sealed record CommandOptions(string Root, string? State, CheckMode? Mode) {
         return new CommandOptions(root, state, mode);
     }
 
+    public CheckMode ReportMode() {
+        try {
+            return Mode ?? Folder().ReadBlock().Mode;
+        } catch (Exception e) when (e is not OperationCanceledException) {
+            return CheckMode.Error;
+        }
+    }
+
     public StateFolder Folder() {
         if (State is not null) {
             return StateFolder.At(State);

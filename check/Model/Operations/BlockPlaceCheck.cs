@@ -17,7 +17,7 @@ public static class BlockPlaceCheck {
                     $"{part.Name} ({part.Path}) covers the folder {folder}, "
                     + $"but a check entry makes {folder} another block. Mark the folder with AddBlock<T>() "
                     + "or AddBlockGroup<T>() in Define, or remove the check entry of the inner block.",
-                    BlockPath.In(app.Block, folder), 1, 1, isSure: true);
+                    BlockPath.In(app.Block, folder), 1, 1, app.Trust.IsAllSure);
             }
         }
     }
@@ -32,7 +32,7 @@ public static class BlockPlaceCheck {
                 Rules.Add(app, report, RuleCodes.EmptyBlockPlace,
                     $"{place.Name} ({place.Path}) marks the folder {folder} as the place of a block, "
                     + "but no check entry is in it. Add a check entry to the folder, or remove the place from Define.",
-                    BlockPath.In(app.Block, folder), 1, 1, isSure: true);
+                    BlockPath.In(app.Block, folder), 1, 1, app.Trust.IsAllSure);
             }
         }
     }

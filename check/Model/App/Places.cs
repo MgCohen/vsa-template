@@ -64,9 +64,8 @@ sealed class Places {
     static Part? Shared(IReadOnlyList<Part> inFolder, AppType type) {
         var shared = inFolder.Where(p => p.Types.Any(type.Is)).ToList();
         if (shared.Count > 1) {
-            throw new InvalidOperationException(
-                $"{type.Name.FullName} matches {string.Join(" and ", shared.Select(p => p.Name))}, which share one folder. "
-                + "Give each part a different type.");
+            type.PlaceProblem = $"{type.Name.FullName} matches {string.Join(" and ", shared.Select(p => p.Name))}, which share one folder. "
+                + "Give each part a different type.";
         }
         return shared.FirstOrDefault();
     }
@@ -100,10 +99,9 @@ sealed class Places {
         var found = dllPlaces.SelectMany(place => RootsOf(place, segments).Select(rest => new PlacedRoot(place, rest))).ToList();
         var places = found.Select(f => f.Place).Distinct().ToList();
         if (places.Count > 1) {
-            throw new InvalidOperationException(
-                $"{type.Name.FullName} ({type.File}) is in the folders of {string.Join(" and ", places.Select(p => p.Name))}. "
+            type.PlaceProblem = $"{type.Name.FullName} ({type.File}) is in the folders of {string.Join(" and ", places.Select(p => p.Name))}. "
                 + "The check looked in the source paths of a DLL and found two block roots. "
-                + "Give one block record a longer Folder, for example \"Vsa/Kernel\".");
+                + "Give one block record a longer Folder, for example \"Vsa/Kernel\".";
         }
         if (found.Count == 0) {
             return null;

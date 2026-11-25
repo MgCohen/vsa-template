@@ -4,6 +4,7 @@ public sealed record BlockSettings(
     int Format,
     string Block,
     CheckMode Mode,
+    string DefinitionHash,
     IReadOnlyList<string> Projects,
     IReadOnlyList<string> Libraries,
     IReadOnlyList<string> InnerBlocks,
@@ -16,7 +17,7 @@ public sealed record BlockSettings(
     public const int CurrentFormat = 1;
 
     public static BlockSettings Of(string block, params string[] projects) => new(
-        CurrentFormat, block, CheckMode.Error, projects, [], [], [], [], [], [], [], new Dictionary<string, string>());
+        CurrentFormat, block, CheckMode.Error, "", projects, [], [], [], [], [], [], [], new Dictionary<string, string>());
 
     public static BlockSettings Read(string text) {
         var settings = JsonReader.Read<BlockSettings>(text);

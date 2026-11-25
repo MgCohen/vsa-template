@@ -9,6 +9,7 @@ public static partial class BlockExport {
         BlockSettings.CurrentFormat,
         Relative(state.Folder, input.Block),
         ModeOf(input.Config),
+        "",
         input.Projects,
         input.Libraries,
         [.. input.InnerBlocks.Select(inner => Relative(input.Block, inner))],

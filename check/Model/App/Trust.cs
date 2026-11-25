@@ -5,25 +5,22 @@ using System.Collections.Concurrent;
 public sealed class Trust {
     readonly AppModel app;
     readonly HelperPlaces helpers;
-    readonly Freshness freshness;
-    readonly HashSet<string> missing;
-    readonly bool hasUnknownState;
+    readonly ProjectTrust projects;
     readonly bool hasMissingProject;
+    readonly bool isDefinitionOfBlock;
     readonly Lazy<bool> isBlockCurrent;
     readonly Lazy<bool> isAllSure;
     readonly ConcurrentDictionary<AppType, bool> sure = new();
 
-    internal Trust(AppModel app, SnapshotSet snapshots, HelperPlaces helpers) {
+    internal Trust(AppModel app, SnapshotSet snapshots, HelperPlaces helpers, bool isDefinitionOfBlock) {
         this.app = app;
         this.helpers = helpers;
-        freshness = new Freshness(snapshots.Saved);
+        this.isDefinitionOfBlock = isDefinitionOfBlock;
+        projects = new ProjectTrust(snapshots, app.Block);
         OldLibraries = [.. snapshots.Libraries.Where(l => l.Snapshot.Source?.IsCurrent(app.Block) != true)];
-        missing = new HashSet<string>(
-            app.Problems.Select(p => p.Project).Concat(OldLibraries.Select(l => l.Snapshot.Project)), StringComparer.OrdinalIgnoreCase);
-        hasUnknownState = app.Problems.Any(p => p.IsState);
-        hasMissingProject = hasUnknownState || app.Problems.Any(p => !p.IsLibrary);
-        isBlockCurrent = new(() => app.Settings.DefinitionSources.Count > 0 && OldInputs.Count == 0);
-        isAllSure = new(() => app.Problems.Count == 0 && OldLibraries.Count == 0 && freshness.AreAllCurrent);
+        hasMissingProject = app.Problems.Any(p => !p.IsLibrary);
+        isBlockCurrent = new(() => isDefinitionOfBlock && app.Settings.DefinitionSources.Count > 0 && OldInputs.Count == 0);
+        isAllSure = new(() => projects.AreAllSure && !SourceFiles.HasUnknown(app));
     }
 
     public IReadOnlyList<LoadedSnapshot> OldLibraries { get; }
@@ -32,20 +29,23 @@ public sealed class Trust {
     public bool IsBlockCurrent => isBlockCurrent.Value;
     public bool IsAllSure => isAllSure.Value;
 
-    public bool IsSure(AppType type) => sure.GetOrAdd(type, t => HasCurrentBases(t) && HasCurrentNeighbors(t));
+    public string? BlockProblem => IsBlockCurrent ? null
+        : !isDefinitionOfBlock ? "definition.json and block.json are not from one run"
+        : app.Settings.DefinitionSources.Count == 0 ? "block.json has no mark of the definition"
+        : $"these files changed: {string.Join(", ", OldInputs.Select(mark => mark.Path))}";
 
-    public bool IsSure(TypeName name) => app.Find(name) is { } type
-        ? !missing.Contains(name.Assembly) && IsSure(type)
-        : IsKnown(name);
+    public bool IsSure(string project) => projects.IsSure(project);
+
+    public bool IsSure(AppType type) => sure.GetOrAdd(type, t => HasSureBases(t) && HasSureNeighbors(t));
+
+    public bool IsSure(TypeName name) => projects.IsSure(name.Assembly)
+        && (app.Find(name) is { } type ? IsSure(type) : !projects.Owns(name.Assembly));
 
     public bool AreSure(IEnumerable<TypeName> names) => names.Distinct().All(IsSure);
 
-    bool HasCurrentBases(AppType type) => IsCurrent(type) && type.Content.Bases.All(b => app.Find(b) is { } found ? IsCurrent(found) : IsKnown(b));
+    bool HasSureBases(AppType type) => projects.IsSure(type.Project)
+        && type.Content.Bases.All(b => projects.IsSure(b.Assembly) && (app.Find(b) is not null || !projects.Owns(b.Assembly)));
 
-    bool HasCurrentNeighbors(AppType type) => helpers.NeighborsOf(type) is not { } neighbors
-        || !hasMissingProject && neighbors.All(HasCurrentBases);
-
-    bool IsCurrent(AppType type) => !missing.Contains(type.Name.Assembly) && freshness.IsCurrent(type);
-
-    bool IsKnown(TypeName name) => !hasUnknownState && !missing.Contains(name.Assembly);
+    bool HasSureNeighbors(AppType type) => helpers.NeighborsOf(type) is not { } neighbors
+        || !hasMissingProject && neighbors.All(HasSureBases);
 }

@@ -24,6 +24,7 @@ public sealed class AppType {
     public bool IsNested => entries[0].Location.DeclaringType is not null;
 
     public Placement? Placement { get; internal set; }
+    public string? PlaceProblem { get; internal set; }
     public bool IsUnmapped { get; internal set; }
 
     public bool Is(TypeName type) => Content.Bases.Any(b => b.FullName == type.FullName);

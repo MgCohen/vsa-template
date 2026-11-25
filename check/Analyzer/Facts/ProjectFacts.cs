@@ -19,7 +19,9 @@ public sealed class ProjectFacts {
             references[Symbols.NameOf(type)] = new(() => ReferenceReader.Read(type, places, tree => compilation.GetSemanticModel(tree)));
         }
         var byFile = types.ToLookup(t => t.File, t => t.Facts);
-        Declared = Snapshot.Of(Name, [.. Trees().Select(tree => FactsOf(tree, byFile))]);
+        Declared = Snapshot.Of(Name, [.. Trees().Select(tree => FactsOf(tree, byFile))]) with {
+            References = [.. compilation.ReferencedAssemblyNames.Select(a => a.Name).Distinct().OrderBy(n => n, StringComparer.Ordinal)],
+        };
     }
 
     public string Name => compilation.AssemblyName ?? "";

@@ -21,7 +21,8 @@ public sealed class CheckAnalyzer : DiagnosticAnalyzer {
             }
             context.RegisterSymbolAction(run.Check, SymbolKind.NamedType);
             context.RegisterCompilationEndAction(run.End);
-        } catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException or InvalidOperationException) {
+        } catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException or InvalidOperationException
+            or ArgumentException or NotSupportedException) {
             var text = $"The check model cannot load: {e.Message}";
             context.RegisterCompilationEndAction(end => end.ReportDiagnostic(ProjectRun.DataDiagnostic(DataCodes.NoModel, text)));
         }

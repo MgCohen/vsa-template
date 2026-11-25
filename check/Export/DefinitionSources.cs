@@ -11,7 +11,8 @@ public static class DefinitionSources {
             .Select(file => Path.GetDirectoryName(file)!).ToList();
         var files = sources.Values.Select(Path.GetFullPath).Where(file => folders.Any(f => BlockPath.IsUnder(f, file)) && File.Exists(file));
         return [.. types.Select(type => Mark(type, block, sources))
-            .Concat(files.Select(file => FileMark.Of(block, file)))
+            .Concat(files.Select(file => Mark(file, resolved.Architecture.GetType().Assembly.Location, block)))
+            .Concat(folders.Distinct().Select(folder => FileMark.Of(block, folder)))
             .GroupBy(mark => mark.Path)
             .Select(group => group.FirstOrDefault(mark => mark.Hash == FileMark.Unknown) ?? group.First())
             .OrderBy(mark => mark.Path, StringComparer.Ordinal)];
@@ -22,6 +23,10 @@ public static class DefinitionSources {
         if (SourceOf(type, sources) is not { } file) {
             return FileMark.Of(block, dll);
         }
+        return Mark(file, dll, block);
+    }
+
+    static FileMark Mark(string file, string dll, string block) {
         var mark = FileMark.Of(block, file);
         return File.GetLastWriteTimeUtc(file) > File.GetLastWriteTimeUtc(dll) ? mark with { Hash = FileMark.Unknown, Modified = 0 } : mark;
     }

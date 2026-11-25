@@ -35,7 +35,8 @@ public sealed class CommandTests {
     public void A_changed_rule_is_found_with_no_compile() {
         using var temp = new TempState();
         Save(temp, Samples.Layers, screen);
-        temp.State.Save(Samples.Layers with { Parts = [Samples.Part(Samples.Data, "Data"), Samples.Part(Samples.Ui, "Screens")] });
+        temp.State.Save(
+            Samples.Layers with { Parts = [Samples.Part(Samples.Data, "Data"), Samples.Part(Samples.Ui, "Screens")] }, Samples.Settings("Sample"));
 
         Assert.That(Run("--root", temp.Block).Output, Does.Contain("error UMP020202: Screen is in a folder"));
     }
@@ -44,7 +45,7 @@ public sealed class CommandTests {
     public void An_old_and_a_missing_snapshot_are_warnings() {
         using var temp = new TempState();
         Save(temp, Samples.Layers, screen with { Hash = "0" });
-        temp.State.Save(Samples.Settings("Sample", "Missing"));
+        temp.State.Save(Samples.Layers, Samples.Settings("Sample", "Missing"));
 
         var result = Run("--root", temp.Block);
 
@@ -66,8 +67,7 @@ public sealed class CommandTests {
     public void The_config_key_and_the_flag_give_the_state_folder() {
         using var temp = new TempState();
         var state = StateFolder.Of(temp.Block, "Library/Umpire");
-        state.Save(Samples.Layers);
-        state.Save(Samples.Settings("Sample"));
+        state.Save(Samples.Layers, Samples.Settings("Sample"));
         state.Save(Snapshot.Of("Sample", [screen]));
         Assert.That(Run("--root", temp.Block, "--state", state.Folder).ExitCode, Is.Zero);
 
@@ -81,8 +81,8 @@ public sealed class CommandTests {
         Assert.That(Run("--other", "x").ExitCode, Is.EqualTo(2));
 
     static void Save(TempState temp, Definition definition, params FileFacts[] files) {
-        temp.State.Save(definition);
         temp.Load(definition, files);
+        temp.State.Save(definition, Samples.Settings("Sample"));
     }
 
     static DotnetResult Run(params string[] args) =>

@@ -17,13 +17,14 @@ sealed class SampleBuild : IDisposable {
     readonly TempState temp = new();
 
     public SampleBuild(params string[] projects) {
-        State.Save(Samples.Layers);
-        State.Save(Samples.Settings(projects.Length > 0 ? projects : ["Sample"]));
+        Save(Samples.Layers, Samples.Settings(projects.Length > 0 ? projects : ["Sample"]));
     }
 
     public string Block => temp.Block;
     public StateFolder State => temp.State;
     public Dictionary<string, string> Options { get; } = new() { ["build_property.UmpireSaveSnapshot"] = "true" };
+
+    public void Save(Definition definition, BlockSettings? settings = null) => State.Save(definition, settings ?? State.ReadBlock());
 
     public string Write(string path, string text) {
         var file = Path.Combine(Block, path);

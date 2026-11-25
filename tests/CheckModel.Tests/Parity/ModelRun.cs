@@ -20,7 +20,7 @@ sealed partial class ModelRun : IDisposable {
         var bases = engine.Check.App.Facts.ToDictionary(f => f.FullName, f => f.Bases);
         var libraries = engine.Others.Where(dll => dll.Types.Count > 0).ToList();
         var resolved = new ResolvedArchitecture(engine.Definition);
-        State.Save(DefinitionExport.Of(resolved));
+        var definition = DefinitionExport.Of(resolved);
         var input = new BlockInput(engine.Block, own) {
             Libraries = [.. libraries.Select(dll => dll.Name)],
             InnerBlocks = engine.Blocks.InnerFolders,
@@ -29,13 +29,14 @@ sealed partial class ModelRun : IDisposable {
             FolderAliases = [.. engine.Aliases.Select(a => new Data.FolderAlias(a.Folder, a.As))],
             DefinitionSources = DefinitionSources.Of(
                 resolved, engine.Block, engine.Sources.ToDictionary(s => s.Key, s => s.Value.File)),
-            InputFiles = engine.Config.FilePath is { } config ? [config] : [],
+            InputFiles = [
+                .. engine.Config.FilePath is { } config ? new[] { config } : [],
+                .. engine.App.Select(dll => ProjectOf(engine.Block, dll.Name)).Distinct()],
             Config = engine.Config.Values(),
         };
-        State.Save(BlockExport.Of(State, input));
+        State.Save(definition, BlockExport.Of(State, input));
         foreach (var other in others) {
-            other.Save(State.ReadDefinition());
-            other.Save(BlockExport.Of(other, input with { Projects = otherProjects, OtherStates = [] }));
+            other.Save(definition, BlockExport.Of(other, input with { Projects = otherProjects, OtherStates = [] }));
         }
         foreach (var dll in libraries) {
             var types = dll.Types.Select(t => new LibraryType(t.FullName, t.Source.File, t.Source.Line, t.Source.Column,

@@ -75,18 +75,20 @@ A finding is an error only if each fact that decides it is current (`Trust`). If
 | Finding | Facts that decide it |
 |---|---|
 | Each finding | The definition and the block file |
-| Place, name, trait, type place | The type, its bases, the types that share its folder |
+| Place, name, trait, type place | The projects of the type, of its bases, of the types that share its folder |
 | Use | The same, for the type and the used type |
 | Exposure | Also the types of the bases and of the members |
 | Match | Also the base arguments |
-| Count | All saved data |
+| Count, block place | All saved data, and each source file is in a snapshot |
+
+A saved project is current if all its files, and all projects and libraries that it references, are current. A type that the model does not find in a project of the model is not current.
 
 | Data | Mark |
 |---|---|
 | Snapshot | The hash and the time of each file |
 | Library | The hash and the time of its DLL. `block.json` lists each necessary library |
-| Definition | The sources of the definition, or its DLL. A source that is newer than its DLL is not current |
-| Block file | The input files, for example `.umpireconfig` |
+| Definition | The sources and folders of the definition, or its DLL. A source that is newer than its DLL is not current. `block.json` has the hash of `definition.json` |
+| Block file | The input files, for example `.umpireconfig` and the project files |
 
 A `block.json` with no mark of the definition is not current. Thus the compile of a changed definition has no architecture error and does not stop the job that writes the files. A count in the analyzer is a warning if the block has many projects, because a file that is not compiled is in no snapshot.
 
@@ -106,7 +108,7 @@ It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `Desig
 | `UMP030804` | The snapshot is not saved |
 | `UMP030805` | The check is not complete |
 
-A project with `TreatWarningsAsErrors` must put these codes and the use and statement codes in `WarningsNotAsErrors` (see `tests/CheckModel.Tests/Parity/Inject.targets`).
+A project with `TreatWarningsAsErrors` must put these codes and all rule codes in `WarningsNotAsErrors` (see `tests/CheckModel.Tests/Parity/Inject.targets`).
 
 ## Command
 
@@ -129,6 +131,7 @@ A project with `TreatWarningsAsErrors` must put these codes and the use and stat
 | Framework DLL in an External | Not read | A use by its name |
 | Deconstruct of a generic type | Not an exposure | An exposure |
 | Count in the analyzer, many projects | Error | Warning |
+| Type that fits two parts | The job stops | `UMP020201` |
 | `UMP020205`, `UMP020206` | Setup findings | Not in the model |
 
 "Type only in compiler output" is the array of a `params` call, the type of a default argument, the result type of an `await` and the `Dispose` call of a `using`. `FactParity` lists each case. `UMP020205` and `UMP020206` are about the setup of the DLL folders and of the folder aliases, not about types.
@@ -137,7 +140,9 @@ A project with `TreatWarningsAsErrors` must put these codes and the use and stat
 
 - `[field: X]` on an event with no accessors is not a fact: the compiler API does not give the field.
 - The analyzer imports the namespace `Umpire.Vsa.Analyzers`, because the kernel analyzers use it.
-- A file that no compile read is in no snapshot, so the command does not know it.
+- A source file that a project excludes is in no snapshot, so a count is a warning. A folder with its own project and no snapshot is not examined.
+- A definition helper outside the definition folder has no mark. The definition has its own DLL with D1, and then all its sources can have a mark.
+- The caller selects the DLL path of a mark. A path in `bin` is absent after a clean, and then the findings of that build are warnings.
 
 ## Open questions
 
