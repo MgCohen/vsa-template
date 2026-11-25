@@ -16,7 +16,10 @@ public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyL
     }
 
     public BinIndex WithDefinitionFolders(Func<string, string> folderOf) => this with {
-        Dlls = [.. Dlls.Select(dll => dll with { Definitions = [.. dll.Definitions.Select(d => d.In(folderOf))] })],
+        Dlls = [.. Dlls.Select(dll => dll with {
+            Definitions = [.. dll.Definitions.Select(d => d.In(folderOf))],
+            Unloaded = [.. dll.Unloaded.Select(u => u.In(folderOf))],
+        })],
         Entries = [.. Entries.Select(e => e.Form == EntryForm.Definition ? e with { Folder = folderOf(e.Folder) } : e)],
     };
 

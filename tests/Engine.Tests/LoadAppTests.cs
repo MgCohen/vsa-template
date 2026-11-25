@@ -130,6 +130,87 @@ public sealed class LoadAppTests {
     }
 
     [Test]
+    public void An_app_class_that_cannot_load_gives_UMP030510_with_the_type_and_the_assembly() {
+        var result = DefinitionSearch.Find(App, [Unloaded("C:/a/App/MyApp.cs")], [Vsa]);
+
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030510"));
+        Assert.That(result.Error.Message, Does.Contain("A.MyApp: the type X.Base did not load. Its assembly X is not in --bin"));
+    }
+
+    [Test]
+    public void A_definition_that_cannot_load_gives_UMP030510() {
+        var app = new AppClass(new("A.App", "A"), "A.cs", [VsaKernel], [], []);
+        var dll = Unloaded("C:/a/Definition/MyArchitecture.cs") with { AppClasses = [app] };
+
+        Assert.That(DefinitionSearch.Find(App, [dll], [Vsa]).Error!.Code, Is.EqualTo("UMP030510"));
+    }
+
+    [Test]
+    public void A_type_that_cannot_load_does_not_hide_the_app_class() {
+        var app = new AppClass(new("A.App", "A"), "A.cs", [VsaKernel], [], []);
+        var dll = Unloaded("C:/a/App/Other.cs") with { AppClasses = [app] };
+
+        Assert.That(DefinitionSearch.Find(App, [dll], [Vsa]).Value, Is.EqualTo(Vsa.Type));
+    }
+
+    [TestCase("ShellApp.Host.GameLauncher", "Umpire.Kernels", "ShellApp.dll", "Umpire.Kernels.IAppEntry`1")]
+    [TestCase("UmpireEngine.EngineArchitecture", "Umpire.Vsa", "Engine.Definition.dll", "Umpire.Vsa.Definition.VsaArchitecture")]
+    public void The_bin_names_the_type_and_the_assembly_that_did_not_load(
+        string type, string assembly, string dll, string missing) {
+        var bin = TempFolder.Create();
+        try {
+            foreach (var file in Directory.GetFiles(AppContext.BaseDirectory, "Umpire.*.dll")
+                .Where(file => Path.GetFileNameWithoutExtension(file) != assembly)) {
+                File.Copy(file, Path.Combine(bin, Path.GetFileName(file)));
+            }
+            foreach (var file in new[] { dll, Path.ChangeExtension(dll, ".pdb") }) {
+                File.Copy(Path.Combine(AppContext.BaseDirectory, file), Path.Combine(bin, file));
+            }
+
+            using var reader = new BinReader(bin);
+            var unloaded = reader.Index().Dlls.Single(d => d.Name == Path.GetFileNameWithoutExtension(dll)).Unloaded;
+
+            var found = unloaded.Single(u => u.Type.FullName == type);
+            Assert.That(found.MissingType, Is.EqualTo(missing));
+            Assert.That(found.MissingAssembly, Is.EqualTo(assembly));
+        } finally {
+            TempFolder.Delete(bin);
+        }
+    }
+
+    [TestCase("B", true)]
+    [TestCase("A", false)]
+    public void A_pack_that_holds_its_kernel_does_not_need_each_type_to_load(string kernelAssembly, bool isError) {
+        var own = Own(new TypeName("A.MyKernel", kernelAssembly));
+        var pack = App with { Form = EntryForm.Definition, Type = new("A.PackCheck", "A"), Packed = own.Type };
+
+        Assert.That(DefinitionSearch.Find(pack, [Unloaded("C:/a/App/MyApp.cs")], [own]).IsSuccess, Is.EqualTo(!isError));
+    }
+
+    [Test]
+    public void The_message_shows_the_classes_nearest_to_the_block_folder() {
+        var far = Enumerable.Range(0, 9)
+            .Select(i => new UnloadedType(new($"A.View{i}", "A"), $"C:/a/App/Features/Views/View{i}.cs", "X.Base", "X"));
+        var dll = Unloaded("C:/a/App/MyApp.cs");
+
+        var result = DefinitionSearch.Find(App, [dll with { Unloaded = [.. far, .. dll.Unloaded] }], [Vsa]);
+
+        Assert.That(result.Error!.Message, Does.Contain("A.MyApp:"));
+    }
+
+    [Test]
+    public void A_definition_of_an_inner_pack_that_cannot_load_does_not_stop_the_app() {
+        var app = new AppClass(new("A.App", "A"), "A.cs", [VsaKernel], [], []);
+        var dll = Unloaded("C:/a/App/Packs/Ecs/Definition/EcsArchitecture.cs") with { AppClasses = [app] };
+
+        Assert.That(DefinitionSearch.Find(App, [dll], [Vsa]).Value, Is.EqualTo(Vsa.Type));
+    }
+
+    static BinDll Unloaded(string source) => new("A.dll", "A", false, [], [], [], []) {
+        Unloaded = [new UnloadedType(new("A.MyApp", "A"), Path.GetFullPath(source), "X.Base", "X")],
+    };
+
+    [Test]
     public async Task The_dlls_to_check_have_each_shared_dll_that_the_block_references_with_no_external_name() {
         using var reader = new BinReader(AppContext.BaseDirectory);
         var bin = reader.Index();

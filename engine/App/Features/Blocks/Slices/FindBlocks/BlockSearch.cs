@@ -10,6 +10,8 @@ using Umpire.Messages.Contracts;
 static class BlockSearch {
     public const string Example = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa";
 
+    const int ShownTypes = 5;
+
     public static bool IsDeclared(string declared) => !string.IsNullOrWhiteSpace(declared);
 
     public static string? Folder(string project, string declared, IReadOnlyList<BlockEntry> entries) =>
@@ -17,7 +19,7 @@ static class BlockSearch {
 
     public static Result<FindBlocksResult> Find(string project, string? folder, IReadOnlyList<BlockEntry> entries, BinIndex bin) {
         if (folder is null) {
-            return new Error(BlocksCodes.NoBlock, NoBlock(project));
+            return new Error(BlocksCodes.NoBlock, string.Join(" ", Unloaded(project, bin).Prepend(NoBlock(project))));
         }
         var all = entries.Where(e => IsAtOrUnder(e.Folder, folder)).Distinct().ToList();
         var found = all.GroupBy(e => e.Folder, StringComparer.OrdinalIgnoreCase)
@@ -45,6 +47,12 @@ static class BlockSearch {
         + $"or the key {EntryFiles.Key} in a {EntryFiles.Name} file, "
         + "or give the block folder with --block (MSBuild property UmpireBlock).";
 
+    static IEnumerable<string> Unloaded(string project, BinIndex bin) => bin.Dlls.SelectMany(dll => dll.Unloaded)
+        .Where(type => IsAtOrUnder(type.Source, Full(project)))
+        .OrderBy(type => type.Source.Length)
+        .Take(ShownTypes)
+        .Select(type => type.ToString());
+
     static IEnumerable<BlockEntry> CheckEntries(IReadOnlyList<BlockEntry> block, BinIndex bin) {
         var apps = block.Where(e => e.Form == EntryForm.App).ToList();
         var definitions = Leaves([.. block.Where(e => e.Form == EntryForm.Definition)], bin);
@@ -59,7 +67,7 @@ static class BlockSearch {
     }
 
     static bool HasAppClass(string folder, IReadOnlyList<BlockEntry> inner, BinIndex bin) {
-        var projects = inner.Where(e => e.Form != EntryForm.App || !Same(e.Folder, Path.GetDirectoryName(e.Source)!)).ToList();
+        var projects = inner.Where(e => e.Form != EntryForm.App || e.HasProject).ToList();
         return bin.Dlls.SelectMany(dll => dll.AppClasses).Any(app => IsAtOrUnder(app.Source, folder)
             && !projects.Any(e => IsAtOrUnder(app.Source, e.Folder)));
     }

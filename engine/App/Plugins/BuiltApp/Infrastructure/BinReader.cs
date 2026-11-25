@@ -75,6 +75,14 @@ public sealed class BinReader : IDisposable {
             : entry;
 
     public string? Problem(TypeName name) {
+        try {
+            return ProblemOf(name);
+        } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
+            return $"{name.FullName} does not load: {e.Message}";
+        }
+    }
+
+    string? ProblemOf(TypeName name) {
         Assembly assembly;
         try {
             assembly = context.LoadFromAssemblyName(name.Assembly);
@@ -96,7 +104,7 @@ public sealed class BinReader : IDisposable {
 
     public void Dispose() => context.Dispose();
 
-    static List<AppClass> AppClasses(Assembly assembly, Dictionary<string, Source> sources) {
+    List<AppClass> AppClasses(Assembly assembly, Dictionary<string, Source> sources, List<UnloadedType> unloaded) {
         var found = new List<AppClass>();
         foreach (var type in Types(assembly)) {
             if (type.FullName is not { } name || !sources.TryGetValue(name, out var source)) {
@@ -107,19 +115,23 @@ public sealed class BinReader : IDisposable {
                     found.Add(new AppClass(Name(type), Path.GetFullPath(source.File), [.. kernels.Select(Name)],
                         [.. Bases(kernel).Select(Name)], BaseNames(type)));
                 }
-            } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
-                continue;
+            } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
+                unloaded.Add(new MissingTypes(context).Of(type, Path.GetFullPath(source.File), e));
             }
         }
         return found;
     }
 
-    static IEnumerable<ReadDefinition> DefinitionsOf(Assembly assembly, Dictionary<string, Source> sources) {
+    IEnumerable<ReadDefinition> DefinitionsOf(
+        Assembly assembly, Dictionary<string, Source> sources, List<UnloadedType> unloaded) {
         foreach (var type in Types(assembly).Where(IsConcrete)) {
             ReadDefinition? found;
             try {
                 found = DefinitionOf(type, sources);
-            } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
+            } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
+                if (sources.TryGetValue(type.FullName!, out var source) && unloaded.All(u => u.Type != Name(type))) {
+                    unloaded.Add(new MissingTypes(context).Of(type, Path.GetFullPath(source.File), e));
+                }
                 continue;
             }
             if (found is not null) {
@@ -144,8 +156,12 @@ public sealed class BinReader : IDisposable {
         return new ReadDefinition(new DefinitionType(Name(type), blockFolder, kernel, BaseNames(type)), entry);
     }
 
-    static BlockEntry AppEntry(AppClass app) =>
-        new(ProjectFolder(Path.GetDirectoryName(app.Source)!), EntryForm.App, app.Type, app.Source);
+    static BlockEntry AppEntry(AppClass app) {
+        var folder = ProjectFolder(Path.GetDirectoryName(app.Source)!);
+        return new BlockEntry(folder, EntryForm.App, app.Type, app.Source) { HasProject = HasProject(folder) };
+    }
+
+    static bool HasProject(string folder) => Directory.Exists(folder) && Directory.EnumerateFiles(folder, "*.csproj").Any();
 
     static IEnumerable<BlockEntry> TypeEntries(Assembly assembly, Dictionary<string, Source> sources) {
         foreach (var type in Types(assembly).Where(IsConcrete)) {
@@ -164,7 +180,7 @@ public sealed class BinReader : IDisposable {
             return Base(type, BlockBase) is { } block
                 ? new BlockEntry(Path.GetDirectoryName(file)!, EntryForm.Base, Name(block.GetGenericArguments()[0]), file)
                 : null;
-        } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
+        } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
             return null;
         }
     }
@@ -184,12 +200,20 @@ public sealed class BinReader : IDisposable {
 
     static Dictionary<string, string> Metadata(Assembly assembly) {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var attribute in assembly.GetCustomAttributesData().Where(a => a.AttributeType.FullName == MetadataAttribute)) {
+        foreach (var attribute in assembly.GetCustomAttributesData().Where(IsMetadata)) {
             if (attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }]) {
                 values.TryAdd(key, value);
             }
         }
         return values;
+    }
+
+    static bool IsMetadata(CustomAttributeData attribute) {
+        try {
+            return attribute.AttributeType.FullName == MetadataAttribute;
+        } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
+            return false;
+        }
     }
 
     static IEnumerable<Type> Types(Assembly assembly) {
@@ -266,8 +290,9 @@ public sealed class BinReader : IDisposable {
                 var assembly = context.LoadFromAssemblyPath(dll);
                 var types = symbols.TypeSources().ToList();
                 var sources = types.GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
-                var apps = AppClasses(assembly, sources);
-                var definitions = DefinitionsOf(assembly, sources).ToList();
+                var unloaded = new List<UnloadedType>();
+                var apps = AppClasses(assembly, sources, unloaded);
+                var definitions = DefinitionsOf(assembly, sources, unloaded).ToList();
                 var entries = apps.Select(AppEntry).Concat(TypeEntries(assembly, sources))
                     .Concat(definitions.Select(d => d.Entry).OfType<BlockEntry>())
                     .Concat(MetadataEntries(assembly, sources)).Select(OnDisk).Select(Check).ToList();
@@ -276,6 +301,7 @@ public sealed class BinReader : IDisposable {
                     Types = types,
                     AppClasses = apps,
                     Definitions = [.. definitions.Select(d => d.Type)],
+                    Unloaded = unloaded,
                 };
                 return new DllRead(read, entries);
             } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException
@@ -290,7 +316,7 @@ public sealed class BinReader : IDisposable {
             return dll;
         }
         try {
-            var found = DefinitionsOf(context.LoadFromAssemblyPath(dll.Path), []).Select(d => d.Type);
+            var found = DefinitionsOf(context.LoadFromAssemblyPath(dll.Path), [], []).Select(d => d.Type);
             return dll with { Definitions = [.. found] };
         } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException
             or TypeLoadException or InvalidOperationException) {

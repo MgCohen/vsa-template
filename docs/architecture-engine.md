@@ -641,12 +641,13 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030307` | 03 Blocks | Error | A DLL of the host output targets a newer .NET than the runtime of the engine, so the engine cannot load the app. Install that .NET, or run the engine with `dotnet exec --roll-forward LatestMajor`. The run stops |
 | `UMP030401` | 04 Versions | Error | An Umpire version is not the engine version (see "One version") |
 | `UMP030501` | 05 LoadApp | Error | No DLL of the host output has source files under the block folder |
-| `UMP030502` | 05 LoadApp | Error | The app has no app class |
+| `UMP030502` | 05 LoadApp | Error | No type of the app failed to load, and the app has no app class |
 | `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class. An app class nested in an entry with the same kernel does not count |
 | `UMP030506` | 05 LoadApp | Error | An app class implements `IAppEntry<TKernel>` for more than one kernel |
 | `UMP030507` | 05 LoadApp | Error | The app class and the definition name different kernels, or the definition names no kernel |
 | `UMP030508` | 05 LoadApp | Error | The folder `Definition/` or a kernel has more than one definition, and none inherits the others |
 | `UMP030509` | 05 LoadApp | Error | No definition names the kernel of the app |
+| `UMP030510` | 05 LoadApp | Error | No app class or no definition of the app loads, because an assembly is not in the bin or the reference folders. The message names each class, the type that did not load and its assembly (at most five) |
 | `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
 A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
@@ -670,6 +671,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 - For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).
 - A typed base and a definition count only for a type that is not abstract and not open generic. Two types of one form with one architecture in one folder are one entry.
 - In a block with an app class, a definition is the definition of the app, and it is not a second check entry. With no app class, the block is a pack: `PackArchitecture` checks it with the definition. If another check entry of the folder names that definition, the definition itself checks the block.
+- An app class also counts for the block if its source is under the block folder and not in an inner block or in a project folder of its own.
 - In a block with an app class and no definition, another check entry of the folder names the definition of the app.
 - A folder alias of the block root moves a definition too: with `"Assets/Game" = [""]`, the definition in `Assets/Game/Definition/` is the definition of the block.
 - The nearest block wins: a source file belongs to the deepest block folder above it.

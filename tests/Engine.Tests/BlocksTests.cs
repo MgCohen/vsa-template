@@ -121,7 +121,7 @@ public sealed class BlocksTests {
         var source = Path.GetFullPath(entryFolder + (isApp ? "/MyApp.cs" : "/App/MyApp.cs"));
         var app = new AppClass(new TypeName("A.App", "A"), source, [new TypeName("A.Kernel", "A")], [], []);
         var dll = new BinDll("A.dll", "A", false, [], [], [], [app]);
-        var entry = new BlockEntry(Path.GetFullPath(entryFolder), EntryForm.App, app.Type, source);
+        var entry = new BlockEntry(Path.GetFullPath(entryFolder), EntryForm.App, app.Type, source) { HasProject = !isApp };
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Pack("C:/a", "A.MyArchitecture"), entry],
             new BinIndex("", [dll], []));

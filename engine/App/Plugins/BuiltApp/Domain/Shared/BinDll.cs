@@ -5,6 +5,8 @@ public sealed record BinDll(
     IReadOnlyList<TypeSource> Types, IReadOnlyList<AppClass> AppClasses, bool IsProject = false) {
     public IReadOnlyList<DefinitionType> Definitions { get; init; } = [];
 
+    public IReadOnlyList<UnloadedType> Unloaded { get; init; } = [];
+
     public static bool IsSystem(string name) =>
         name is "netstandard" or "mscorlib"
         || name.StartsWith("System", StringComparison.Ordinal)

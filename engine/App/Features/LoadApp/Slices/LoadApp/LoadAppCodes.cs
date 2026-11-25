@@ -11,4 +11,5 @@ public static class LoadAppCodes {
     public static readonly string OtherKernel = StepCode.Of<LoadAppCommand>(7);
     public static readonly string ManyDefinitions = StepCode.Of<LoadAppCommand>(8);
     public static readonly string NoDefinition = StepCode.Of<LoadAppCommand>(9);
+    public static readonly string MissingAssembly = StepCode.Of<LoadAppCommand>(10);
 }

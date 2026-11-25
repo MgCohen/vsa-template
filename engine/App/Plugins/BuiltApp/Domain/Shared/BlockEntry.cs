@@ -4,6 +4,8 @@ public sealed record BlockEntry(
     string Folder, EntryForm Form, TypeName? Type, string Source, string? Problem = null, TypeName? Packed = null) {
     public bool HasApp { get; init; }
 
+    public bool HasProject { get; init; }
+
     public TypeName? Definition => Packed ?? Type;
 
     public string Key => Form == EntryForm.App ? nameof(EntryForm.App) : $"{Form}: {Definition}";
