@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests of the check model (check/): the data, the files, the operations, the analyzer and the command. -->
+  <PropertyGroup>
+    <RootNamespace>CheckModel.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)check/Model/Umpire.CheckModel.csproj" />
+  </ItemGroup>
+</Project>
