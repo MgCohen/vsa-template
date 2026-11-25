@@ -30,6 +30,15 @@ Also in K4: the place of `LoadedTypes` and `ClosedBase`, which `Umpire.Kernels` 
 - Can the SDK copy the `System.*` and `Microsoft.Extensions.*` DLLs of a definition? Today it does not.
 - A file that another process adds between the build start and the compile is new only at the next compile. Is this limit acceptable?
 
+## Warning default (#377): known limits
+
+- The engine gives exit code 1 for findings and for bad arguments. A step that throws is a warning with exit code 0 in the mode `Warn`. The check command has the four codes.
+- A mode value that is not valid gives `Warn` with no finding. Is a finding necessary?
+- The build targets read `umpire.check.mode` with a regular expression, only for `UMP030003` and `UMP030004`. Remove it with the switch to the new check.
+- `UMP030513` does not run if the definition of the block does not load.
+- Engine setup warnings (for example `UMP030304`) stay warnings in this repository.
+- The reviewer did not read the corrections of its findings.
+
 ## Link reversed
 
 - If an inner pack definition does not load and the app names a base kernel with its own definition, there is no finding.

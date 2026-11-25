@@ -23,8 +23,9 @@ Make one base check system. VSA details come later.
 ## State of the code
 
 - Streams A (check model), B (link reversed) and C (VSA rule lines) are in `main` (#375).
+- Exit codes, the warning default and `UMP030513` are in `main` (#377). This repository stays strict (root `Directory.Build.props`, `engine/.umpireconfig`).
 - The check model is in `check/` (`docs/check-model.md`). The build still uses the engine in `engine/`. The switch to the new check is not done.
-- Last published preview: `0.2.0-preview.24`. It does not have #375. The consumers are not updated.
+- Last published preview: `0.2.0-preview.24`. It does not have #375 and #377. The consumers are not updated.
 - #78 is a paused draft. Do not touch it.
 
 ## Decisions
