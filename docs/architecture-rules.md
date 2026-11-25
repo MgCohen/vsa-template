@@ -85,11 +85,11 @@ The deny lines check the part of the used type:
 | `Infrastructure` | `Domain` |
 | `Handlers.Requests`, `Handlers.Events`, `Handlers.Commands` | The contract part of the same kind |
 | `Presenters` | `Contracts.Requests`, `Contracts.Events` (not `Publishing`), `Handlers.Events` |
-| `Views` | `Presenters` and the parts that `Presenters` uses |
+| `Views` | `Presenters`, the parts that `Presenters` uses, and `Contracts.Events.Publishing` |
 | `Composition` | `Presenters`, each handler part and each contract part |
 | The top of the kernel (`VsaKernel`) | Each kernel part |
 
-The rules do not limit the uses of `Core` or of a kernel layer that a pack variant adds.
+The rules do not limit the uses of `Core`, the uses to and from the top of the kernel, or a new top layer of a pack variant. A part below a VSA layer, or a record that derives from a VSA layer, has the rules of that layer.
 
 The check of `packs/Vsa/` uses `PackArchitecture`, which permits each use between kernel parts and does not read these rules. There, the project references enforce the layers.
 
