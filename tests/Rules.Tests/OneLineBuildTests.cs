@@ -140,6 +140,25 @@ public sealed class OneLineBuildTests {
         Assert.That(crashed.Output, Does.Contain("error UMP030004"), crashed.Output);
     }
 
+    [TestCase(1, true)]
+    [TestCase(2, false)]
+    public void An_engine_that_exits_with_a_warning_line_is_a_crash_only_with_another_code_than_1(int code, bool isRun) {
+        const string line = "umpire-engine: warning UMP030401: probe";
+        var host = Path.Combine(workspace.Root, OperatingSystem.IsWindows() ? $"warn{code}.cmd" : $"warn{code}.sh");
+        File.WriteAllText(host, OperatingSystem.IsWindows()
+            ? $"@echo {line}\r\n@exit /b {code}\r\n"
+            : $"#!/bin/sh\necho \"{line}\"\nexit {code}\n");
+        if (!OperatingSystem.IsWindows()) {
+            File.SetUnixFileMode(host, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+
+        var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", $"-p:_UmpireDotnet={host}");
+
+        Assert.That(run.Succeeded, Is.True, run.Output);
+        Assert.That(run.Output, Does.Contain("warning UMP030401"));
+        Assert.That(run.Output.Contains("warning UMP030004", StringComparison.Ordinal), Is.Not.EqualTo(isRun), run.Output);
+    }
+
     [Test]
     public void A_crash_line_with_the_word_error_is_not_a_finding() {
         const string crash = "System.IO.IOException: error reading: the file 'a,b' is locked";

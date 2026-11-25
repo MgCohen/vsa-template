@@ -108,11 +108,18 @@ It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `Desig
 | `UMP030804` | The snapshot is not saved |
 | `UMP030805` | The check is not complete |
 
-A project with `TreatWarningsAsErrors` must put these codes and all rule codes in `WarningsNotAsErrors` (see `tests/CheckModel.Tests/Parity/Inject.targets`).
+The Umpire SDK puts these codes and all rule codes in `WarningsNotAsErrors` (`tools/sdk/Sdk/Umpire.Codes.props`), so `TreatWarningsAsErrors` makes no error of a warning.
 
 ## Command
 
-`umpire-check [--root <block folder>] [--state <state folder>] [--mode Error|Warn]` checks all types with no compile. Its lines are `file(line,col): error CODE: text`. The exit code is 0 with no error, 1 with an error, and 2 with bad flags. An incomplete check with no error gives 0. `umpire.check.mode` is in `block.json`, and `--mode` or `UmpireCheckMode` wins over it.
+`umpire-check [--root <block folder>] [--state <state folder>] [--mode Error|Warn]` checks all types with no compile. Its lines are `file(line,col): error|warning CODE: text`. `umpire.check.mode` is in `block.json`, and `--mode` or `UmpireCheckMode` wins over it. The default mode is `Warn`: each error is a warning.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | The check came to its end with no finding |
+| 1 | The check came to its end with findings: errors or warnings, also old or missing data |
+| 2 | The check broke: it did not come to its end. It writes `UMP030801`, a warning in the mode `Warn` |
+| 3 | Bad flags |
 
 ## Differences from the rule engine
 
@@ -150,8 +157,6 @@ A project with `TreatWarningsAsErrors` must put these codes and all rule codes i
 
 - When and by which job does a build write `definition.json`, `block.json` and the library files? `check/Export` has no build step.
 - What writes the library facts of a package (`Umpire.dll`) for a host with no engine, for example Unity?
-- Must an incomplete check have another exit code than 0?
-- Can the build setup put the codes in `WarningsNotAsErrors`, so that `TreatWarningsAsErrors` makes no error of a warning on old data?
 - A project with many target frameworks has one snapshot file, and the last compile wins (#362). One file for each target, or only one target?
 - A snapshot has about 7 KB for each type. Is a name table necessary?
 - A missing snapshot gives a warning only in a project that references the missing project. Must each project of the block give it?

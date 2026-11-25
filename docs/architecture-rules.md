@@ -169,12 +169,14 @@ public sealed class RecordPayloadRule : VsaRule {
 ```
 
 ```toml
-umpire.UMP010201.severity = "warning"     # error, warning, suggestion, or none (the rule does not run)
+umpire.UMP010201.severity = "error"       # error, warning, suggestion, or none (the rule does not run)
 umpire.check_responses = false            # global option
 umpire.UMP010201.check_responses = true   # rule option
 ```
 
-A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consumer also works: the compiler applies it over the Umpire severity. It cannot start a rule that is off on its class (`IsOnByDefault => false`): only `umpire.<ID>.severity` starts that rule.
+Each analyzer finding is a warning by default. The check mode does not change it. `TreatWarningsAsErrors` does not make it an error (see `Umpire.Codes.props` in `architecture-engine.md`).
+
+A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consumer also works: the compiler applies it over the Umpire severity. With `TreatWarningsAsErrors`, the value `error` has no effect there: use `WarningsAsErrors` or `umpire.<ID>.severity`. It cannot start a rule that is off on its class (`IsOnByDefault => false`): only `umpire.<ID>.severity` starts that rule.
 
 ## Rule files
 
@@ -182,7 +184,7 @@ A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consum
 |---|---|
 | `.editorconfig` (repository root) | The style of this repository: the built-in .NET rules, editor and code style options, severities. A test section turns off CA1707 (underscores in test names). No `UMP` key |
 | `.umpireconfig` (block root) | The rule values and severities of the block (`umpire.<ID>.<key>`). The defaults are on the rule classes |
-| `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings |
+| `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings, and the Umpire codes that are errors (`WarningsAsErrors`) |
 | `framework/Kernel/Analyzers/Umpire.ConfigBundle.targets` | Embeds Umpire.Config and its dependency tree in the kernel analyzer DLL |
 
 `Umpire.Sdk.Core.targets` gives `.umpireconfig` to the compiler as an additional file. `RuleAnalyzer` reads it with Umpire.Config (`ConfigFile`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The definition holds no analyzer value.
@@ -213,7 +215,7 @@ Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErro
 
 Each analyzer rule is one class on a group base: `KernelRule` (group `01`) or `VsaRule` (group `02`). The rule sets only its `Number`, its `Title`, its `Message` and the defaults of its options. The base makes the ID (`UMP01` + group + number) and the descriptor. Roslyn release tracking reads only a constant ID, so `AnalyzerReleases.Unshipped.md` lists only `UMP010001`, `UMP010002` and `UMP010003`; `CodeTests` checks that the rules table of this file lists each rule ID. Tests and other code find a rule by its type, for example `new LineLengthRule().Rule`.
 
-A rule lists its options in `Options`, each with its default on the class. The lookup is: `umpire.<rule ID>.<key>`, then `umpire.<key>`, then the default. At the start of a compilation, `RuleAnalyzer` checks each option. If a value is not valid, or an option has no default and no value, it reports `UMP010001` (error), and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
+A rule lists its options in `Options`, each with its default on the class. The lookup is: `umpire.<rule ID>.<key>`, then `umpire.<key>`, then the default. At the start of a compilation, `RuleAnalyzer` checks each option. If a value is not valid, or an option has no default and no value, it reports `UMP010001`, and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
 
 ## Formatting rules
 

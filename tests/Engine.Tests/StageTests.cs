@@ -1,3 +1,4 @@
+using Report.Domain.Shared;
 using Steps.Domain.Shared;
 using Tests.Shared;
 
@@ -24,6 +25,14 @@ public sealed class StageTests {
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Lines, Has.One.Contains("error UMP030101: The build of"));
         Assert.That(result.Lines, Has.One.Contains("UMP030002: FindBlocks skipped"));
+    }
+
+    [Test]
+    public async Task A_build_that_fails_is_an_error_also_in_Warn_mode() {
+        var result = await RunEngineTests.Run(block: root, project: root, stage: Stage.All, mode: ReportMode.Warn);
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Lines, Has.One.Contains("error UMP030101: The build of"));
     }
 
     [Test]

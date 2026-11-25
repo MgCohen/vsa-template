@@ -188,7 +188,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(UmpireCheckMode)' == '' and '$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
       <_UmpireConfigText>$([System.IO.File]::ReadAllText('$(UmpireConfigFile)'))</_UmpireConfigText>
-      <_UmpireErrorMode>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireConfigText)', '(?im)^ *(umpire[.]check[.]mode|[[]umpire[.]check[]][^[]*?^ *mode|[[]umpire[]][^[]*?^ *check[.]mode) *= *.error'))</_UmpireErrorMode>
+      <_UmpireErrorMode>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireConfigText)', '(?im)^[ \t]*(umpire[.]check[.]mode|[[][ \t]*umpire[.]check[ \t]*[]](?:(?!^[ \t]*[[])[^$])*?^[ \t]*mode|[[][ \t]*umpire[ \t]*[]](?:(?!^[ \t]*[[])[^$])*?^[ \t]*check[.]mode)[ \t]*=[ \t]*.error.'))</_UmpireErrorMode>
       <_UmpireHookMode Condition="'$(_UmpireErrorMode)' == 'True'">Error</_UmpireHookMode>
     </PropertyGroup>
     <PropertyGroup>

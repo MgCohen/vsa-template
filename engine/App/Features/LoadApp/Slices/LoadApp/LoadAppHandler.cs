@@ -43,8 +43,8 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
         .Where(folder => !bin.Dlls.Any(dll => dll.HasSourceUnder(folder)))
         .Select(folder => new Finding(LoadAppCodes.UnloadedDefinition, FindingSeverity.Warning,
             $"The folder {folder} has definition source files, and no DLL of the bin has them, so no check uses them. "
-            + $"Put a project in the folder, for example <Name>.{DefinitionType.FolderName}.csproj, and reference the project around "
-            + "the folder from the root project. If the files are not a definition of this app, add the folder to "
+            + $"If the folder has no project, add one, for example <Name>.{DefinitionType.FolderName}.csproj. If the folder is below "
+            + "a nested project, reference the nested project from the root project. If the files are not a definition of this app, add the folder to "
             + "umpire.check.ignored_folders.", folder))];
 
     bool IsSkipped(string? source, string root) {

@@ -18,7 +18,7 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
-    public void The_repository_style_has_no_Umpire_rule_value() {
+    public void The_repository_style_has_no_Umpire_rule_key() {
         var keys = File.ReadAllLines(Repo.Path(".editorconfig")).Where(line => UmpireKey().IsMatch(line));
 
         Assert.That(keys, Is.Empty);
@@ -70,7 +70,7 @@ public sealed partial class RuleValueOwnerTests {
 
     static string Plain(string name) => name.Replace("_", "", StringComparison.Ordinal).ToUpperInvariant();
 
-    [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP\d+\.severity = (?!error))")]
+    [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP)")]
     private static partial Regex UmpireKey();
 
     [GeneratedRegex(@"UMP01(?!00)\d{4}")]

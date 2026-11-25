@@ -23,6 +23,17 @@ public sealed class SdkCodeTests {
     }
 
     [Test]
+    public void Each_analyzer_code_is_an_error_in_this_repository_or_a_listed_warning() {
+        var props = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Build.props"));
+        var errors = props.Descendants("WarningsAsErrors").Single().Value.Split(';');
+        var warnings = props.Descendants("WarningsNotAsErrors").Single().Value.Split(';');
+        var off = Analyzers.SelectMany(a => a.Rules).Where(rule => !rule.IsOnByDefault).Select(rule => rule.Id);
+        var codes = Analyzers.SelectMany(a => a.SupportedDiagnostics).Select(d => d.Id).Distinct();
+
+        Assert.That(codes.Except(off).Except(errors).Except(warnings), Is.Empty);
+    }
+
+    [Test]
     public void Each_code_of_the_rules_table_of_the_engine_docs_is_in_the_code_list() {
         var docs = File.ReadAllText(Repo.Path("docs", "architecture-engine.md"));
 
