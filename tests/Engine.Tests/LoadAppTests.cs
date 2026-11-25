@@ -149,12 +149,18 @@ public sealed class LoadAppTests {
         Assert.That(Find([basePack, pack], OwnKernel, VsaKernel, inner: [entry]).Value, Is.EqualTo(pack.Type));
     }
 
-    [Test]
-    public void A_folder_alias_gives_the_block_of_a_type_that_did_not_load() {
-        var type = new UnloadedType(new("A.MyArchitecture", "A"), Path.GetFullPath("C:/a/Rules/MyArchitecture.cs"), "X.Base", "X");
+    [TestCase("Rules", "Definition", "C:/a/Rules/MyArchitecture.cs", true)]
+    [TestCase("Rules", "Definition", "C:/a/App/Boot.cs", false)]
+    [TestCase("Game", "", "C:/a/Game/Boot.cs", false)]
+    [TestCase("Game", "", "C:/a/Game/Definition/MyArchitecture.cs", true)]
+    public void A_folder_alias_gives_the_block_of_a_definition_that_did_not_load(string folder, string target, string source, bool isDefinition) {
         var block = Path.GetFullPath("C:/a");
+        var aliases = new FolderAliasConfig([new Umpire.Architecture.FolderAlias(folder, target)], []);
+        var type = new UnloadedType(new("A.MyArchitecture", "A"), Path.GetFullPath(source), "X.Base", "X");
 
-        Assert.That(type.In(_ => block).Folder, Is.EqualTo(block));
+        var found = type.In(f => aliases.DefinitionBlock(block, f), s => aliases.BlockOfAliasedSource(block, s));
+
+        Assert.That(found.Folder == block, Is.EqualTo(isDefinition));
     }
 
     [TestCase(EntryForm.Metadata)]

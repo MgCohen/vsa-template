@@ -138,7 +138,7 @@ public sealed class BlocksTests {
         };
         var dll = new BinDll("A.dll", "A", false, [], [], [], []) { Definitions = [definition] };
 
-        var bin = new BinIndex("", [dll], []).WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder));
+        var bin = new BinIndex("", [dll], []).WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder), source => aliases.BlockOfAliasedSource(block, source));
 
         Assert.That(bin.Definitions.Single().Folder, Is.EqualTo(block));
     }
@@ -185,7 +185,7 @@ public sealed class BlocksTests {
         var dll = new BinDll("A.dll", "A", false, [], [], [], []) { Definitions = [definition] };
 
         var bin = new BinIndex("", [dll], [Pack(game, "A.MyArchitecture")])
-            .WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder));
+            .WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder), source => aliases.BlockOfAliasedSource(block, source));
 
         Assert.That(bin.Definitions.Single().Folder, Is.EqualTo(block));
         Assert.That(bin.Entries.Single().Folder, Is.EqualTo(block));

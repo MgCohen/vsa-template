@@ -82,7 +82,10 @@ public sealed class ReferenceTrustTests {
         build.Options["build_property.ProjectDir"] = build.Block;
         build.Write("Tests/Tests.csproj", "");
         build.Write("Tests/First.cs", "class First;");
+        build.Write("Tests/Shared.cs", "namespace Sample;\npublic class Shared;\n");
         Fill(build);
+        build.Analyze(build.Compile("Ui", "Ui/Base.cs", "Tests/Shared.cs"));
+        build.Analyze(build.Compile("Data", [build.Compile("Ui", "Ui/Base.cs", "Tests/Shared.cs")], "Data/Store.cs"));
 
         build.Write("Tests/Second.cs", "class Second;");
 

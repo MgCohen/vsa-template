@@ -122,6 +122,16 @@ public sealed class DefinitionBuildTests {
         Assert.That(build.Succeeded, Is.True, build.Output);
         Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Tools.Definition.dll")), Is.True);
         Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Shop.Definition.dll")), Is.True);
+
+        File.Move(Path.Combine(workspace.Src, "Definition", "Shop.Definition.csproj"), Path.Combine(workspace.Src, "Definition", "Shop.Rules.csproj"));
+        workspace.Dotnet("build", "Shop.csproj", "-o", folder, "-nodeReuse:false", "-p:UmpireCheck=false", "-m:1").EnsureSuccess();
+
+        Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Shop.Definition.dll")), Is.False);
+        Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Tools.Definition.dll")), Is.True);
+
+        workspace.Dotnet("build", "Shop.csproj", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
+
+        Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Shop.Rules.dll")), Is.True);
     }
 
     [Test]

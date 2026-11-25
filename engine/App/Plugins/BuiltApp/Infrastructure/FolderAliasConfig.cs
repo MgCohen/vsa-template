@@ -45,6 +45,13 @@ public sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IRead
             : folder;
     }
 
+    public string? BlockOfAliasedSource(string blockFolder, string source) {
+        var relative = Normal(Path.GetRelativePath(blockFolder, source));
+        return Aliases.Any(a => DefinitionType.IsFolderName(a.As) && relative.StartsWith(a.Folder + "/", StringComparison.OrdinalIgnoreCase))
+            ? blockFolder
+            : null;
+    }
+
     public IReadOnlyList<string> DefinitionFolders(string blockFolder) => [
         Path.Combine(blockFolder, DefinitionType.FolderName),
         .. Aliases.Where(a => a.As.Length == 0).Select(a => Path.Combine(blockFolder, a.Folder, DefinitionType.FolderName)),

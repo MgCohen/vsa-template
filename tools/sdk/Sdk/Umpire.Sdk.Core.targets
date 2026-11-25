@@ -51,15 +51,15 @@
     <PropertyGroup>
       <_UmpireDefinitionsDir>$([MSBuild]::NormalizeDirectory('$(TargetDir)', 'umpire-definitions'))</_UmpireDefinitionsDir>
       <_UmpireDefinitionSources>@(_UmpireDefinition->'%(RootDir)%(Directory)*.dll;%(RootDir)%(Directory)*.pdb')</_UmpireDefinitionSources>
-      <_UmpireDefinitionList>$(IntermediateOutputPath)umpire-definitions.list</_UmpireDefinitionList>
+      <_UmpireDefinitionList>$(IntermediateOutputPath)umpire-definitions.$([MSBuild]::StableStringHash('$(_UmpireDefinitionsDir)').ToString('x8')).list</_UmpireDefinitionList>
       <_UmpireReferencedDefinitions>@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)umpire-definitions/*')</_UmpireReferencedDefinitions>
     </PropertyGroup>
-    <!-- Many projects can have one output folder (-o), so a project deletes only the files that it copied before. -->
+    <!-- Many projects can have one output folder (-o), so a project deletes only the files that it copied to this folder before. -->
     <ReadLinesFromFile File="$(_UmpireDefinitionList)" Condition="Exists('$(_UmpireDefinitionList)')">
       <Output TaskParameter="Lines" ItemName="_UmpireDefinitionBefore" />
     </ReadLinesFromFile>
     <ItemGroup>
-      <_UmpireDefinitionCandidate Include="$(_UmpireDefinitionSources);$(_UmpireReferencedDefinitions)" />
+      <_UmpireDefinitionCandidate Include="$(_UmpireDefinitionSources);$(_UmpireReferencedDefinitions)" Exclude="$(_UmpireDefinitionsDir)*" />
       <_UmpireDefinitionName Include="@(_UmpireDefinitionCandidate->'%(Filename)%(Extension)')" Source="%(FullPath)"
                              Condition="!$([System.String]::Copy('%(Filename)').StartsWith('System.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.Extensions.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.AspNetCore.'))" />
       <_UmpireDefinitionName Remove="@(ReferenceCopyLocalPaths->'%(Filename)%(Extension)');$(TargetFileName);$(TargetName).pdb" />

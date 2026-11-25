@@ -25,7 +25,8 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
         if (folder is not null) {
             var aliases = FolderAliasConfig.Of(UmpireConfig.Find(folder), folder);
-            bin = bin.WithDefinitionFolders(definition => aliases.DefinitionBlock(folder, definition));
+            bin = bin.WithDefinitionFolders(definition => aliases.DefinitionBlock(folder, definition),
+                source => aliases.BlockOfAliasedSource(folder, source));
         }
         IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
         IReadOnlyList<BlockEntry> entries = [.. bin.Entries, .. files.Select(reader.Check)];
