@@ -1,6 +1,7 @@
 <Project>
   <!-- The one list of the Umpire codes. A finding is a warning by default, so TreatWarningsAsErrors and -warnaserror do not make
-       it an error. A code in WarningsAsErrors of the project stays an error. A pack with its own codes adds them to UmpireCodes.
+       it an error. A code in WarningsAsErrors of the project stays an error. The compiler gets the list only with
+       TreatWarningsAsErrors, because its WarningsNotAsErrors wins over an .editorconfig severity. A pack with its own codes adds them to UmpireCodes.
        Tests compare this list with the codes of the analyzers, the rule engine and the check model. -->
   <PropertyGroup>
     <UmpireCodes>$(UmpireCodes);
@@ -23,7 +24,7 @@
     <_UmpireWarningCodes>$(UmpireCodes)</_UmpireWarningCodes>
     <_UmpireErrorCodes>$([System.Text.RegularExpressions.Regex]::Replace('$(WarningsAsErrors);$(MSBuildWarningsAsErrors)', '[^A-Za-z0-9]+', '|').Trim('|'))</_UmpireErrorCodes>
     <_UmpireWarningCodes Condition="'$(_UmpireErrorCodes)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(UmpireCodes)', '(?i)(^|;)($(_UmpireErrorCodes))(?=;|$)', ''))</_UmpireWarningCodes>
-    <WarningsNotAsErrors>$(WarningsNotAsErrors);$(_UmpireWarningCodes)</WarningsNotAsErrors>
+    <WarningsNotAsErrors Condition="'$(TreatWarningsAsErrors)' == 'true'">$(WarningsNotAsErrors);$(_UmpireWarningCodes)</WarningsNotAsErrors>
     <MSBuildWarningsNotAsErrors>$(MSBuildWarningsNotAsErrors);$(_UmpireWarningCodes)</MSBuildWarningsNotAsErrors>
   </PropertyGroup>
 </Project>

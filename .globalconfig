@@ -1,5 +1,0 @@
-is_global = true
-# An Umpire analyzer that cannot run is an error in this repository. These codes have no file, so .editorconfig cannot set them.
-dotnet_diagnostic.UMP010001.severity = error
-dotnet_diagnostic.UMP010002.severity = error
-dotnet_diagnostic.UMP010003.severity = error

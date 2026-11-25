@@ -105,7 +105,7 @@ public sealed class CodeTests {
 
     [Test]
     public void The_code_list_of_the_SDK_has_each_engine_code_and_no_other() {
-        var steps = EngineTypes.Where(t => t.Name.EndsWith("Codes", StringComparison.Ordinal))
+        var steps = Engine.GetTypes().Where(t => t.Name.EndsWith("Codes", StringComparison.Ordinal))
             .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static))
             .Where(f => f.FieldType == typeof(string))
             .Select(f => (string)f.GetValue(null)!);

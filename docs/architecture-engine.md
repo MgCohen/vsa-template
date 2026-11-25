@@ -557,7 +557,7 @@ C:/app/App/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: Read
 An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net8.0/` (property `UmpireEngineFile`). The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It needs only `Microsoft.NETCore.App`: `AppLoader` loads the ASP.NET Core types of a web app from the shared folder of the runtime. It loads the definition of the app, so the SDK hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
 
 ```text
-umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Warn]
+umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Error]
 ├─ Build stage
 │  └─ 1 Build      dotnet build <root> -p:UmpireCheck=false → each build line becomes a finding
 ├─ Check stage
@@ -579,9 +579,14 @@ Each step declares its stages with `IStepStage` (`public static Stage Stages => 
 |---|---|---|
 | Mode (`Error` or `Warn`) | `--mode`, from `-p:UmpireCheckMode` in the hook | One run |
 | Mode | `umpire.check.mode` in `.umpireconfig` | Each run |
+| Mode `Warn` | The default | Each run with no other source |
 | Check on or off | `-p:UmpireCheck=false` | One build |
 
-The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, the hook gives `UMP030003`. If the engine stops with an exit code that is not 0 and no finding line, the hook gives `UMP030004`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
+In the mode `Warn`, each error is a warning, also the codes of the group `00` and of the groups `02` to `05`. The findings of the Build step (compiler errors and `UMP030101`) stay errors. A mode value that is not valid and a `.umpireconfig` that is not valid TOML give the default mode. An error line fails the build, and a warning line does not.
+
+`tools/sdk/Sdk/Umpire.Codes.props` is the one list of the Umpire codes. The SDK adds it to `WarningsNotAsErrors` and `MSBuildWarningsNotAsErrors`, so `TreatWarningsAsErrors` and `-warnaserror` do not make a warning an error. A code in `WarningsAsErrors` of the project stays an error. This repository uses the mode `Error` (`UmpireCheckMode` in the root `Directory.Build.props`).
+
+The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
 
 The Changes step makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
@@ -630,13 +635,15 @@ The app class names its kernel and its host, and the definition names its kernel
 
 Each engine code is `UMP03`, the group and the case. Group `00` is the engine run. Each step has the next group, in the order of `RunEngineHandler`. A step command gives its group with `IStepGroup` (`public static int Group => 2;`) and its stages with `IStepStage`, and `StepCode.Of<TStep>(n)` makes its codes. Each step module holds its codes in one class, for example `LoadAppCodes`.
 
+The table gives the severity in the mode `Error`.
+
 | ID | Group | Severity | Problem |
 |---|---|---|---|
 | `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
 | `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
 | `UMP030003` | 00 Run | Error | The hook does not find the engine file. Restore the project again. In source mode, build `engine/Engine.csproj` |
 | `UMP030202` | 02 Changes | Info | The block did not change since its last clean check, so its check did not run |
-| `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and reports no finding, for example after a crash. The build fails |
+| `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and does not report its findings, for example after a crash |
 | `UMP030101` | 01 Build | Error | The build of the root project fails. The Check stage does not run |
 | `UMP030201` | 02 Changes | Info | No input changed since the last clean check, so the check did not run |
 | `UMP030301` | 03 Blocks | Error | A block has more than one check entry |
@@ -657,6 +664,7 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030509` | 05 LoadApp | Error | No definition names the kernel of the app |
 | `UMP030511` | 05 LoadApp | Error | A definition of the app block is not the used definition and not a base of it |
 | `UMP030512` | 05 LoadApp | Error | `Definition/` of the app has source files, and no definition loads from it |
+| `UMP030513` | 05 LoadApp | Warning | A folder `Definition/` below the block folder has source files, and no DLL of the bin has them, for example below a project that the root project does not reference. The definition folder of the block, a folder `Tests/`, the folder of a `*.Tests.csproj`, the ignored folders and a folder with its own `.umpireconfig` and project do not count. The check runs if the definition of the block loads, and not for a used block. `umpire.check.project_checks = false` stops it |
 | `UMP030510` | 05 LoadApp | Error | No app class or no definition of the app loads, because an assembly is not in the bin or the reference folders. The message names each class, the type that did not load and its assembly (at most five) |
 | `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 

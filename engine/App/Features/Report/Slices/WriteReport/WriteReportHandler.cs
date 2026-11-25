@@ -8,11 +8,13 @@ using Umpire.Vsa.Handlers.Commands;
 
 sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResult> {
     const string Origin = "umpire-engine";
+    const string Umpire = "UMP";
+    static readonly string BuildFailed = StepCode.Prefix + "01";
 
     public override Task<Result<ReportResult>> HandleAsync(IEnvelope<WriteReportCommand> envelope) {
         var command = envelope.Message;
         var warnOnly = command.Mode == ReportMode.Warn;
-        var findings = command.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error
+        var findings = command.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error && !IsOfBuild(f)
             ? f with { Severity = FindingSeverity.Warning }
             : f)
             .OrderBy(f => f.File is not null)
@@ -31,6 +33,9 @@ sealed class WriteReportHandler : CommandHandler<WriteReportCommand, ReportResul
         Console.Error.WriteLine($"{Origin}: {errors} errors, {warnings} warnings, {ElapsedMilliseconds()} ms.");
         return Task.FromResult<Result<ReportResult>>(new ReportResult(errors > 0 ? 1 : 0, lines));
     }
+
+    static bool IsOfBuild(Finding finding) =>
+        !finding.Code.StartsWith(Umpire, StringComparison.Ordinal) || finding.Code.StartsWith(BuildFailed, StringComparison.Ordinal);
 
     static long ElapsedMilliseconds() {
         using var process = Process.GetCurrentProcess();

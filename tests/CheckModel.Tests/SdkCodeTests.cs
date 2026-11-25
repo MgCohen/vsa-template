@@ -9,12 +9,12 @@ using Umpire.CheckModel.Analyzer;
 
 public sealed class SdkCodeTests {
     static IEnumerable<string> DataCodeValues => typeof(DataCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
-        .Select(field => (string)field.GetValue(null)!);
+        .Select(code => (string)code.GetValue(null)!);
 
     [Test]
     public void The_code_list_of_the_SDK_has_each_code_of_the_check_model() {
         Assert.That(RuleCodes.All.Concat(DataCodeValues).Except(SdkCodes.All), Is.Empty);
-        Assert.That(SdkCodes.All.Where(code => code.StartsWith("UMP0308", StringComparison.Ordinal)), Is.EquivalentTo(DataCodeValues));
+        Assert.That(SdkCodes.All.Where(code => code.StartsWith(DataCodes.NoModel[..^2], StringComparison.Ordinal)), Is.EquivalentTo(DataCodeValues));
     }
 
     [Test]

@@ -263,6 +263,7 @@ public sealed class DefinitionBuildTests {
         Passes(Build("-p:TreatWarningsAsErrors=true"), "warning UMP020301");
         Passes(Build("-p:MSBuildTreatWarningsAsErrors=true"), "warning UMP020301");
         Passes(Build("-warnaserror"), "warning UMP020301");
+        Fails(Build("-p:MSBuildWarningsAsErrors=UMP020301"), "error UMP020301");
         Fails(Build("-p:UmpireCheckMode=Error"), "error UMP020301");
         Fails(Build("-p:UmpireCheckMode=Error", "-p:TreatWarningsAsErrors=true"), "error UMP020301");
 
@@ -295,7 +296,7 @@ public sealed class DefinitionBuildTests {
 
         Write(".editorconfig", "root = true\n[*.cs]\ndotnet_diagnostic.UMP010201.severity = error\n");
 
-        Fails(Build("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true"), "error UMP010201");
+        Fails(Build("-p:UmpireCheck=false", "--no-incremental"), "error UMP010201");
 
         File.Delete(Path.Combine(workspace.Src, ".editorconfig"));
         Write(".umpireconfig", "umpire.UMP010201.severity = \"error\"\n");
@@ -313,7 +314,8 @@ public sealed class DefinitionBuildTests {
         Passes(Build("-p:UmpireCheckMode=Loud"), "warning UMP030004");
         Fails(Build(missing, "-p:UmpireCheckMode=Error"), "error UMP030003");
 
-        foreach (var config in new[] { "umpire.check.mode = \"Error\"", "[umpire.check]\nmode = 'error'", "[umpire]\ncheck.mode = \"Error\"" }) {
+        foreach (var config in new[] { "umpire.check.mode = \"Error\"", "[umpire.check]\nmode = 'error'", "[umpire]\ncheck.mode = \"Error\"",
+            "[ umpire.check ]\nignored_folders = [\"Draft\"]\n\tmode = \"Error\"" }) {
             Write(".umpireconfig", config + "\n");
             Fails(Build(broken), "error UMP030004");
         }

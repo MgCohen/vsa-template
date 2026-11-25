@@ -34,7 +34,9 @@ public static class InputHash {
     }
 
     public static IEnumerable<string> ConfigFacts(string block, IReadOnlyList<string>? ignoredFolders = null) =>
-        [.. Facts(BlockFiles(block, block, ignoredFolders ?? [])), .. Facts(FilesAbove(block))];
+        [
+            .. Facts(BlockFiles(block, block, ignoredFolders ?? [])), .. Facts(FilesAbove(block)),
+            .. DefinitionFolder.WithSource(block, ignoredFolders ?? [])];
 
     public static string Engine() => typeof(InputHash).Assembly.ManifestModule.ModuleVersionId.ToString();
 

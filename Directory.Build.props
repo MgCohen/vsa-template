@@ -41,6 +41,12 @@
     <UmpireCheckMode Condition="'$(UmpireCheckMode)' == ''">Error</UmpireCheckMode>
   </PropertyGroup>
 
+  <!-- The Umpire analyzer findings are warnings by default. These codes are errors in this repository. An .editorconfig severity
+       cannot do this, because WarningsNotAsErrors of the Umpire SDK (Umpire.Codes.props) wins over it. -->
+  <PropertyGroup>
+    <WarningsAsErrors>$(WarningsAsErrors);UMP010001;UMP010002;UMP010003;UMP010107;UMP010201</WarningsAsErrors>
+  </PropertyGroup>
+
   <!-- All Umpire packages ship together with one version. -->
   <PropertyGroup>
     <Version>0.2.0</Version>

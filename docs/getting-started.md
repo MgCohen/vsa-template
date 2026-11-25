@@ -173,12 +173,14 @@ sealed class CreateInvoiceHandler : RequestHandler<CreateInvoiceRequest, CreateI
 }
 ```
 
-Build again. The compile passes, but the build fails with one error of the rule engine:
+Build again. The build passes, with one warning of the rule engine:
 
 ```text
-C:\src\Hello\App\Features\Billing\Slices\CreateInvoice\CreateInvoiceHandler.cs(8,1): error UMP020101: CreateInvoiceHandler in Handlers.Requests (App/Features/Billing/Slices/CreateInvoice) uses GetStatusResponse in Contracts.Requests (App/Features/Billing/Slices/GetStatus): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules. [C:\src\Hello\Hello.csproj]
-  umpire-engine: 1 errors, 0 warnings, 3583 ms.
+C:\src\Hello\App\Features\Billing\Slices\CreateInvoice\CreateInvoiceHandler.cs(8,1): warning UMP020101: CreateInvoiceHandler in Handlers.Requests (App/Features/Billing/Slices/CreateInvoice) uses GetStatusResponse in Contracts.Requests (App/Features/Billing/Slices/GetStatus): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules. [C:\src\Hello\Hello.csproj]
+  umpire-engine: 0 errors, 1 warnings, 3583 ms.
 ```
+
+To make a finding fail the build, write `umpire.check.mode = "Error"` in `.umpireconfig`.
 
 ### Read the finding
 
@@ -208,7 +210,7 @@ Select one fix:
 To remove the use:
 
 1. In `CreateInvoiceHandler.cs`, delete the line `var status = ...` and the `using` of `GetStatus`.
-2. Build again. The engine gives `0 errors`.
+2. Build again. The engine gives `0 errors, 0 warnings`.
 
 To share the type, move `GetStatusResponse.cs` to `App/Features/Billing/Slices/Shared/`. The engine then binds it to the part `Slice.Shared`, and each slice of `Billing` can use it. To change a rule, see [architecture-rules.md](architecture-rules.md).
 

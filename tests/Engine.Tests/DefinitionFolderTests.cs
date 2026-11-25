@@ -4,7 +4,6 @@ namespace Engine.Tests;
 
 using BuiltApp.Infrastructure;
 
-
 public sealed class DefinitionFolderTests {
     string block = null!;
 
@@ -26,12 +25,29 @@ public sealed class DefinitionFolderTests {
     [TestCase("App/Packs/X/Definition/X.Definition.csproj")]
     [TestCase("App/Packs/X/Definition/Tests/XTests.cs")]
     [TestCase("App/Tests/Definition/Stub.cs")]
+    [TestCase("node_modules/a/Definition/Copy.cs")]
     [TestCase("artifacts~/Definition/Copy.cs")]
     [TestCase("Draft/Definition/Draft.cs")]
     public void Another_folder_is_not_found(string file) {
         Write(file);
 
         Assert.That(DefinitionFolder.Below(block, ["Draft"]), Is.Empty);
+    }
+
+    [Test]
+    public void A_test_project_has_no_definition() {
+        Write("Shop.Tests/Shop.Tests.csproj");
+        Write("Shop.Tests/Definition/ShopTests.cs");
+
+        Assert.That(DefinitionFolder.Below(block, []), Is.Empty);
+    }
+
+    [Test]
+    public void A_folder_alias_of_the_definition_folder_is_not_below_the_block() {
+        Write("Assets/Shop/Definition/ShopArchitecture.cs");
+        File.WriteAllText(Path.Combine(block, ".umpireconfig"), "[umpire.check.folder_aliases]\n\"Assets/Shop\" = [\"\"]\n");
+
+        Assert.That(DefinitionFolder.Below(block, []), Is.Empty);
     }
 
     [Test]
