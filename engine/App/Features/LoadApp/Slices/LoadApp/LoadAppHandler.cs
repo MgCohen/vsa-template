@@ -1,3 +1,4 @@
+using Blocks.Domain.Shared;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using LoadApp.Domain.Shared;
@@ -23,7 +24,7 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
             return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin.Bin} has source files under the block folder {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
         }
-        var found = Definition(blocks.Current, app, bin.Definitions, loader);
+        var found = Definition(blocks, app, [.. bin.Definitions.Where(d => !IsSkipped(d, root))], loader, DefinitionFolder.Of(root).HasSource);
         if (found.Error is { } error) {
             return error;
         }
@@ -33,9 +34,21 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
+    bool IsSkipped(DefinitionType definition, string root) {
+        if (definition.Source is not { } source) {
+            return false;
+        }
+        var relative = Path.GetRelativePath(root, source);
+        return ReadOptions.IsIgnored(relative, options.IgnoredFolders)
+            || (!relative.StartsWith("..", StringComparison.Ordinal)
+                && relative.Split(Path.DirectorySeparatorChar).Contains(DefinitionFolder.Tests, StringComparer.OrdinalIgnoreCase));
+    }
+
     internal static Result<Architecture> Definition(
-        BlockEntry entry, IReadOnlyList<BinDll> app, IReadOnlyList<DefinitionType> definitions, AppLoader loader) {
-        var found = DefinitionSearch.Find(entry, app, definitions);
+        BlockTree blocks, IReadOnlyList<BinDll> app, IReadOnlyList<DefinitionType> definitions, AppLoader loader,
+        bool hasDefinitionSource = false) {
+        var entry = blocks.Current;
+        var found = DefinitionSearch.Find(entry, app, definitions, blocks.Inner, hasDefinitionSource);
         if (found.Error is { } error) {
             return error;
         }

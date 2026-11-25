@@ -19,7 +19,7 @@ public sealed class LoadAppTests {
         var packs = Repo.Path("packs", "Vsa");
         var entry = reader.Index().Entries.First(e => Same(e.Folder, packs) && e.Packed is not null);
 
-        var definition = LoadAppHandler.Definition(entry, [], [], new AppLoader(AppContext.BaseDirectory));
+        var definition = LoadAppHandler.Definition(new BlockTree(entry, []), [], [], new AppLoader(AppContext.BaseDirectory));
 
         Assert.That(new ResolvedArchitecture(definition.Value).Parts.Select(p => p.Path),
             Does.Contain("Kernel/Domain").And.Contain("Kernel/Handlers/Commands"));
@@ -30,7 +30,7 @@ public sealed class LoadAppTests {
         var vsa = TypeName.Parse(VsaArchitecture);
         var entry = new BlockEntry(Path.GetFullPath("C:/a"), EntryForm.Definition, vsa, "C:/a/Definition/Pack.cs", Packed: vsa);
 
-        var definition = LoadAppHandler.Definition(entry, [], [], new AppLoader(AppContext.BaseDirectory));
+        var definition = LoadAppHandler.Definition(new BlockTree(entry, []), [], [], new AppLoader(AppContext.BaseDirectory));
 
         Assert.That(definition.Error!.Code, Is.EqualTo("UMP030505"));
     }
@@ -111,6 +111,69 @@ public sealed class LoadAppTests {
         Assert.That(Find([]).Error!.Code, Is.EqualTo("UMP030509"));
     }
 
+    [Test]
+    public void A_definition_of_the_block_outside_the_Definition_folder_gives_UMP030511() {
+        var stray = Stray("A.ShopArchitecture", "C:/a/App/Host/ShopArchitecture.cs", VsaKernel);
+
+        var error = Find([Vsa, stray]).Error!;
+
+        Assert.That(error.Code, Is.EqualTo("UMP030511"));
+        Assert.That(error.Message, Does.Contain("A.ShopArchitecture"));
+    }
+
+    [Test]
+    public void A_base_of_the_used_definition_is_not_ignored() {
+        var stray = Stray("A.Base", "C:/a/App/Base.cs", VsaKernel);
+        var own = Own() with { Bases = ["A.Base", Vsa.Type.FullName], Source = Path.GetFullPath("C:/a/Definition/MyArchitecture.cs") };
+
+        Assert.That(Find([Vsa, stray, own]).Value, Is.EqualTo(own.Type));
+    }
+
+    [TestCase(true, "UMP030511")]
+    [TestCase(false, null)]
+    public void The_definition_of_an_inner_pack_is_ignored_only_if_it_names_a_kernel_of_the_app(bool appKernel, string? code) {
+        var folder = Path.GetFullPath("C:/a/App/Packs/X");
+        var pack = Stray("X.XArchitecture", "C:/a/App/Packs/X/Definition/XArchitecture.cs", appKernel ? VsaKernel : OwnKernel);
+        var entry = new BlockEntry(folder, EntryForm.Definition, new("A.PackCheck", "A"), folder, Packed: pack.Type);
+
+        Assert.That(Find([Vsa, pack], inner: [entry]).Error?.Code, Is.EqualTo(code));
+    }
+
+    [TestCase(EntryForm.Metadata)]
+    [TestCase(EntryForm.App)]
+    [TestCase(EntryForm.Definition)]
+    public void The_definition_of_an_inner_block_with_its_own_entry_is_not_ignored(EntryForm form) {
+        var inner = Stray("T.ToolArchitecture", "C:/a/Tools/Definition/ToolArchitecture.cs", VsaKernel);
+        var folder = Path.GetFullPath("C:/a/Tools");
+        var entry = new BlockEntry(folder, form, inner.Type, folder, Packed: form == EntryForm.Definition ? inner.Type : null) {
+            HasProject = true,
+        };
+
+        Assert.That(Find([Vsa, inner], inner: [entry]).Value, Is.EqualTo(Vsa.Type));
+    }
+
+    [Test]
+    public void Source_files_in_the_Definition_folder_with_no_loaded_definition_give_UMP030512() {
+        Assert.That(Find([Vsa], source: true).Error!.Code, Is.EqualTo("UMP030512"));
+        Assert.That(Find([Vsa, Own()], source: true).Value, Is.EqualTo(Own().Type));
+    }
+
+    [Test]
+    public void A_definition_that_did_not_load_stops_the_search_at_a_base_kernel() {
+        var app = new AppClass(new("A.App", "A"), "A.cs", [OwnKernel], [VsaKernel], []);
+        var dll = Unloaded("C:/a/App/Packs/Ecs/Definition/EcsArchitecture.cs") with { AppClasses = [app] };
+
+        var error = DefinitionSearch.Find(App, [dll], [Vsa]).Error!;
+
+        Assert.That(error.Code, Is.EqualTo("UMP030510"));
+        Assert.That(error.Message, Does.Contain("assembly X").And.Not.Contain("project of the app"));
+    }
+
+    static DefinitionType Stray(string name, string source, TypeName kernel) =>
+        new(new(name, "A"), DefinitionType.BlockFolder(Path.GetFullPath(source)), kernel, [Vsa.Type.FullName]) {
+            Source = Path.GetFullPath(source),
+        };
+
     static TypeName VsaKernel => new("Umpire.Vsa.Composition.VsaKernel", "Umpire.Vsa.Composition");
 
     static TypeName OwnKernel => new("A.MyKernel", "A");
@@ -123,10 +186,11 @@ public sealed class LoadAppTests {
         new(new("A.MyArchitecture", "A"), Path.GetFullPath("C:/a"), kernel ?? VsaKernel, [Vsa.Type.FullName]);
 
     static Result<TypeName> Find(
-        IReadOnlyList<DefinitionType> definitions, TypeName? kernel = null, TypeName? kernelBase = null, BlockEntry? entry = null) {
+        IReadOnlyList<DefinitionType> definitions, TypeName? kernel = null, TypeName? kernelBase = null, BlockEntry? entry = null,
+        IReadOnlyList<BlockEntry>? inner = null, bool source = false) {
         var app = new AppClass(new("A.App", "A"), "A.cs", [kernel ?? VsaKernel], kernelBase is null ? [] : [kernelBase], []);
         var dll = new BinDll("A.dll", "A", false, [], [], [], [app]);
-        return DefinitionSearch.Find(entry ?? App, [dll], definitions);
+        return DefinitionSearch.Find(entry ?? App, [dll], definitions, inner, source);
     }
 
     [Test]
@@ -143,6 +207,21 @@ public sealed class LoadAppTests {
         var dll = Unloaded("C:/a/Definition/MyArchitecture.cs") with { AppClasses = [app] };
 
         Assert.That(DefinitionSearch.Find(App, [dll], [Vsa]).Error!.Code, Is.EqualTo("UMP030510"));
+    }
+
+    [Test]
+    public void A_definition_that_cannot_load_is_not_hidden_by_its_base() {
+        var app = new AppClass(new("A.App", "A"), "A.cs", [VsaKernel], [], []);
+        var dll = Unloaded("C:/a/Definition/MyArchitecture.cs") with { AppClasses = [app] };
+
+        Assert.That(DefinitionSearch.Find(App, [dll], [Vsa, Own()]).Error!.Code, Is.EqualTo("UMP030510"));
+    }
+
+    [Test]
+    public void A_definition_of_the_block_in_a_dll_that_is_not_an_app_dll_is_not_ignored() {
+        var stray = Stray("T.TestArchitecture", "C:/a/App/TestArchitecture.cs", VsaKernel) with { Type = new("T.TestArchitecture", "T") };
+
+        Assert.That(Find([Vsa, stray]).Value, Is.EqualTo(Vsa.Type));
     }
 
     [Test]

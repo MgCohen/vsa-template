@@ -130,6 +130,20 @@ public sealed class BlocksTests {
     }
 
     [Test]
+    public void A_folder_alias_of_the_Definition_folder_gives_its_definitions_to_the_block() {
+        var block = Path.GetFullPath("C:/a");
+        var aliases = new FolderAliasConfig([new Umpire.Architecture.FolderAlias("Assets/Rules", "Definition")], []);
+        var definition = new DefinitionType(new TypeName("A.MyArchitecture", "A"), null, null, []) {
+            Source = Path.Combine(block, "Assets", "Rules", "MyArchitecture.cs"),
+        };
+        var dll = new BinDll("A.dll", "A", false, [], [], [], []) { Definitions = [definition] };
+
+        var bin = new BinIndex("", [dll], []).WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder));
+
+        Assert.That(bin.Definitions.Single().Folder, Is.EqualTo(block));
+    }
+
+    [Test]
     public void A_check_entry_of_an_app_block_with_no_definition_names_its_architecture() {
         var result = BlockSearch.Find(
             "C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), Entry("C:/a", EntryForm.File)], NoBin);

@@ -128,20 +128,39 @@ public sealed class UmpireToolTests {
 
     [Test]
     [CancelAfter(600_000)]
-    public void AnAppWithAPackVariantBuilds() {
+    public void AnAppWithAPackVariantBuilds() => BuildWithAPackVariant(NewApp("Shop"));
+
+    [Test]
+    [CancelAfter(600_000)]
+    public void ANet8AppWithAPackVariantBuilds() {
         var app = NewApp("Shop");
+        File.WriteAllText(Path.Combine(app, "Shop.csproj"), $"""
+            <Project Sdk="Umpire.Sdk/{LocalFeed.Version}">
+              <PropertyGroup>
+                <TargetFramework>net8.0</TargetFramework>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+            </Project>
+            """);
+        Directory.Delete(Path.Combine(app, "Views"), recursive: true);
+        Directory.Delete(Path.Combine(app, "App", "Tests"), recursive: true);
+
+        BuildWithAPackVariant(app, "Umpire.Kernels", "AppHost");
+    }
+
+    void BuildWithAPackVariant(string app, string hostNamespace = "Umpire.Hosts.Web", string host = "WebHost") {
         Tool(app, "add", "pack", "Ecs").EnsureSuccess();
-        File.WriteAllText(Path.Combine(app, "App", "ShopApp.cs"), """
+        File.WriteAllText(Path.Combine(app, "App", "ShopApp.cs"), $"""
             namespace Shop.Host;
 
             using Shop.Packs.Ecs.Kernel;
-            using Umpire.Hosts.Web;
             using Umpire.Kernels;
+            {(hostNamespace == "Umpire.Kernels" ? "" : $"using {hostNamespace};")}
 
-            public class ShopApp : App<EcsKernel, WebHost>;
+            public class ShopApp : App<EcsKernel, {host}>;
             """);
 
-        Dotnet.Run(app, env, "build", "Shop.slnx", "-nodeReuse:false").EnsureSuccess();
+        Dotnet.Run(app, env, "build", "Shop.csproj", "-nodeReuse:false").EnsureSuccess();
     }
 
     [Test]

@@ -151,9 +151,9 @@ public sealed class BinReader : IDisposable {
         var entry = kernelBase is null || folder is null
             ? null
             : new BlockEntry(
-                folder, EntryForm.Definition, Name(kernelBase) with { FullName = PackArchitecture }, file!, Packed: Name(type));
+                folder, EntryForm.Definition, Name(kernelBase) with { FullName = PackArchitecture }, file!, Packed: Name(type)) { HasProject = HasProject(folder) };
         var blockFolder = folder is null ? null : DiskPath.Of(folder);
-        return new ReadDefinition(new DefinitionType(Name(type), blockFolder, kernel, BaseNames(type)), entry);
+        return new ReadDefinition(new DefinitionType(Name(type), blockFolder, kernel, BaseNames(type)) { Source = file }, entry);
     }
 
     static BlockEntry AppEntry(AppClass app) {

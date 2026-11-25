@@ -74,6 +74,8 @@ public sealed class CodeTests {
     [TestCase(nameof(LoadAppCodes.ManyDefinitions), "UMP030508")]
     [TestCase(nameof(LoadAppCodes.NoDefinition), "UMP030509")]
     [TestCase(nameof(LoadAppCodes.MissingAssembly), "UMP030510")]
+    [TestCase(nameof(LoadAppCodes.IgnoredDefinition), "UMP030511")]
+    [TestCase(nameof(LoadAppCodes.EmptyDefinitionFolder), "UMP030512")]
     public void A_LoadApp_code_is_in_group_05(string name, string code) {
         Assert.That(typeof(LoadAppCodes).GetField(name)!.GetValue(null), Is.EqualTo(code));
     }
@@ -107,7 +109,8 @@ public sealed class CodeTests {
             BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses,
             LoadAppCodes.NoPackedConstructor, LoadAppCodes.ManyKernels,
-            LoadAppCodes.OtherKernel, LoadAppCodes.ManyDefinitions, LoadAppCodes.NoDefinition, LoadAppCodes.MissingAssembly,
+            LoadAppCodes.OtherKernel, LoadAppCodes.ManyDefinitions, LoadAppCodes.NoDefinition, LoadAppCodes.MissingAssembly, LoadAppCodes.IgnoredDefinition, LoadAppCodes.EmptyDefinitionFolder,
+            BlocksCodes.NoDefinitionProject,
         ];
 
         Assert.That(codes, Is.Unique.And.All.StartsWith(StepCode.Prefix));

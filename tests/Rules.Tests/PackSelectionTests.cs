@@ -57,6 +57,15 @@ public sealed class PackSelectionTests {
         """);
 
     [Test]
+    public Task A_project_with_only_a_kernel_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
+        public sealed class EcsKernel : Umpire.Vsa.Composition.VsaKernel;
+        """, Found());
+
+    [Test]
+    public Task A_project_with_only_a_kernel_of_another_pack_runs_no_rule_of_this_pack() =>
+        Analyzer.Verify(QuietRequest + OtherKernel);
+
+    [Test]
     public Task Assembly_metadata_that_names_the_pack_architecture_runs_its_rules() => Analyzer.Verify("""
         [assembly: System.Reflection.AssemblyMetadata("Umpire.Architecture", "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa")]
         """ + Request, Found());
@@ -107,9 +116,10 @@ public sealed class PackSelectionTests {
         """, Found());
 
     [Test]
-    public Task An_abstract_class_that_implements_the_entry_interface_is_no_entry() => Analyzer.Verify(Request + OtherKernel + """
-        public abstract class Launcher : Umpire.Kernels.IAppEntry<OtherKernel>;
-        """, Found());
+    public Task An_abstract_class_that_implements_the_entry_interface_is_no_entry() =>
+        Analyzer.Verify(QuietRequest + OtherKernel + """
+        public abstract class Launcher : Umpire.Kernels.IAppEntry<Umpire.Vsa.Composition.VsaKernel>;
+        """);
 
     [Test]
     public Task A_class_that_implements_the_entry_interface_for_two_packs_gives_an_entry_for_each() =>

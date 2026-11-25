@@ -4,11 +4,17 @@ public sealed record DefinitionType(TypeName Type, string? Folder, TypeName? Ker
     public const string FolderName = "Definition";
 
     public DefinitionType In(Func<string, string> folderOf) =>
-        Folder is { } folder ? this with { Folder = folderOf(folder) } : this;
+        Folder is { } folder ? this with { Folder = folderOf(folder) }
+            : Path.GetDirectoryName(Source) is { } own && folderOf(own) is var block && block != own ? this with { Folder = block }
+            : this;
+
+    public string? Source { get; init; }
+
+    public static bool IsFolderName(string name) => string.Equals(name, FolderName, StringComparison.OrdinalIgnoreCase);
 
     public static string? BlockFolder(string source) {
         for (var folder = Path.GetDirectoryName(source); folder is not null; folder = Path.GetDirectoryName(folder)) {
-            if (Path.GetFileName(folder) == FolderName) {
+            if (IsFolderName(Path.GetFileName(folder))) {
                 return Path.GetDirectoryName(folder);
             }
         }

@@ -9,7 +9,7 @@ A pack variant is a pack that inherits the architecture of another pack and adds
 | Some rules about the code of one app | A definition project in the app, for example `engine/Definition/` |
 | A new module kind, its bases and its rules | A pack variant in `App/Packs/<Name>/` |
 | A part in each module of a base kind | A pack variant that overrides a define method |
-| A different architecture, not VSA | A new definition that inherits `Architecture` (`tests/Fixtures/Architecture/LayeredApp`) |
+| A different architecture, not VSA | A new definition that inherits `Architecture<TKernel>`, with its own kernel (a block with no app: `Architecture`, `tests/Fixtures/Architecture/LayeredApp`) |
 
 ## The pack and its two checks
 
@@ -192,9 +192,9 @@ protected override void Rules(RuleBook rules) {
 
 | File | Content |
 |---|---|
-| `Kernel/<Name>.Kernel.csproj` | `<Project Sdk="Umpire.Sdk/<version>" />` |
+| `Kernel/<Name>.Kernel.csproj` | `netstandard2.1`, so a root with each target can reference it |
 | `Kernel/<Name>Kernel.cs` | `public class <Name>Kernel : VsaKernel;` |
-| `Definition/<Name>.Definition.csproj` | A reference to `../Kernel/<Name>.Kernel.csproj` |
+| `Definition/<Name>.Definition.csproj` | `netstandard2.1`, and a reference to `../Kernel/<Name>.Kernel.csproj` |
 | `Definition/<Name>Architecture.cs` | `public class <Name>Architecture : VsaArchitecture<<Name>Kernel>;` |
 
 Then do these steps:

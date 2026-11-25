@@ -47,7 +47,7 @@ public sealed class RunEngineTests {
         var entry = new BlockEntry(folder, EntryForm.App, null, folder);
 
         var result = LoadApp.Slices.LoadApp.LoadAppHandler.Definition(
-            entry, bin.AppDlls(folder, []), bin.Definitions, new AppLoader(AppContext.BaseDirectory));
+            new Blocks.Domain.Shared.BlockTree(entry, []), bin.AppDlls(folder, []), bin.Definitions, new AppLoader(AppContext.BaseDirectory));
 
         Assert.That(result.Value.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
     }
