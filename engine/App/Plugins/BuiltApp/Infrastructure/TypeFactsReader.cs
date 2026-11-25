@@ -49,7 +49,8 @@ static class TypeFactsReader {
 
     static IEnumerable<string> MutableMembers(IType type, ConstantFields constants) => type is ArchUnitNET.Domain.Enum ? [] : type.Members
         .Where(m => m switch {
-            FieldMember field => field.Writability == Writability.Writable && !constants.Contains(type.FullName, field.Name),
+            FieldMember field => field.Writability == Writability.Writable && !LoadedTypes.IsCompilerGenerated(field.Name)
+                && !constants.Contains(type.FullName, field.Name),
             PropertyMember property => property.Writability == Writability.Writable,
             _ => false,
         })

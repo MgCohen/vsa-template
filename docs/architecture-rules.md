@@ -63,9 +63,16 @@ A presenter also does not use `Pipelines`: no rule lets `Presenters` use `Messag
 
 `UMP010201` also runs, because the record line does not read these cases:
 
-- A request or a response of a plugin module.
+- A request or a response of a plugin module, or of a module kind of a pack variant that does not derive from `Feature`.
 - A request or a response in `Slices/Shared/`.
 - A nested request or a nested response.
+
+The option `check_responses` is only for `UMP010201`. The record line always checks a response of a feature, and it does not permit an interface that derives from `IRequest` or `IResponse`.
+
+The deny lines check the part of the used type:
+
+- A request type or an own interface that derives from `IRequestSender` or `IIntegrationEventPublisher`, in `Slices/Shared/`, is in the part `Slice.Shared`. The deny lines do not read it.
+- The last rule wins. An app line such as `For<Presenters>().Uses<Contracts.Events>()` also allows `Contracts.Events.Publishing`. Add `.Under<Feature>()`, or write the deny line again after it.
 
 ## Disabled rules
 

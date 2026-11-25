@@ -20,7 +20,7 @@ static class TypeFactsOf {
         IsAbstract = type.IsAbstract && !type.IsSealed,
         IsStatic = type is { IsClass: true, IsAbstract: true, IsSealed: true },
         IsSealed = type is { IsClass: true, IsSealed: true, IsAbstract: false } && !IsDelegate(type),
-        IsRecord = type.GetMethod(type.IsClass ? "<Clone>$" : "PrintMembers", Declared) is not null,
+        IsRecord = IsRecord(type),
         IsStruct = type is { IsValueType: true, IsEnum: false },
         IsInterface = type.IsInterface,
         IsEnum = type.IsEnum,
@@ -36,6 +36,10 @@ static class TypeFactsOf {
         .Where(f => !f.IsInitOnly && !f.IsLiteral && !LoadedTypes.IsCompilerGenerated(f.Name))
         .Select(f => f.Name)
         .Concat(type.GetProperties(Declared).Where(IsSettable).Select(p => p.Name));
+
+    static bool IsRecord(Type type) => type.IsClass
+        ? type.GetMethod("<Clone>$", Declared) is not null
+        : type.IsValueType && type.GetMethod("PrintMembers", Declared, null, [typeof(System.Text.StringBuilder)], null) is not null;
 
     static bool IsSettable(PropertyInfo property) =>
         property.SetMethod is { } set && set.ReturnParameter.GetRequiredCustomModifiers().All(m => m.Name != "IsExternalInit");

@@ -67,20 +67,20 @@ public sealed class DataOnlySharedTypeRuleTests {
 
 public sealed class UmpireOptionsTests {
     static UmpireOptions Of(params (string Key, string Value)[] values) =>
-        new("UMP010206", ConfigValues.Parse(string.Concat(values.Select(v => $"{v.Key} = \"{v.Value}\"\n"))),
-            [UmpireOption.List("allowed_bases", [])]);
+        new("UMP019999", ConfigValues.Parse(string.Concat(values.Select(v => $"{v.Key} = \"{v.Value}\"\n"))),
+            [UmpireOption.List("names", [])]);
 
     [Test]
     public void List_has_comma_and_semicolon_separators() =>
-        Assert.That(Of(("umpire.UMP010206.allowed_bases", " A`1, B ;C;; ")).List("allowed_bases"), Is.EqualTo(new[] { "A`1", "B", "C" }));
+        Assert.That(Of(("umpire.UMP019999.names", " A`1, B ;C;; ")).List("names"), Is.EqualTo(new[] { "A`1", "B", "C" }));
 
     [Test]
     public void Rule_key_wins_over_the_global_key() =>
-        Assert.That(Of(("umpire.allowed_bases", "A"), ("umpire.UMP010206.allowed_bases", "B")).List("allowed_bases"), Is.EqualTo(new[] { "B" }));
+        Assert.That(Of(("umpire.names", "A"), ("umpire.UMP019999.names", "B")).List("names"), Is.EqualTo(new[] { "B" }));
 
     [Test]
     public void Missing_key_gives_the_default_of_the_rule() =>
-        Assert.That(Of().List("allowed_bases"), Is.Empty);
+        Assert.That(Of().List("names"), Is.Empty);
 
     [Test]
     public void Unknown_key_gives_null() =>

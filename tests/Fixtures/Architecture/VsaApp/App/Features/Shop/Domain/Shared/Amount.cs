@@ -7,6 +7,8 @@ public sealed record Amount(int Value) {
 
     public IReadOnlyList<int> Parts => [.. Steps.Select(step => Value * step)];
 
+    public IReadOnlyList<int> Doubled => [.. Steps.Select(step => step * 2)];
+
     public readonly record struct Rate(int Percent);
 
     public enum Kind { Net, Gross }
