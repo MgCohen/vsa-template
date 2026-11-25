@@ -2,16 +2,15 @@ using Umpire.CheckModel;
 using Umpire.CheckModel.Command;
 
 const string Usage = "Usage: umpire-check [--root <block folder>] [--state <state folder>] [--mode Error|Warn]";
-const int BadUsage = 2;
 
 if (CommandOptions.Of(args) is not { } options) {
     Console.Error.WriteLine(Usage);
-    return BadUsage;
+    return (int)ExitCode.BadUsage;
 }
 Report report;
 try {
     report = CheckJob.Run(options.Folder(), options.Mode);
-} catch (Exception e) when (e is not OperationCanceledException) {
+} catch (Exception e) {
     report = new Report();
     report.Fail($"{e.GetType().Name}: {e.Message}");
 }
@@ -22,4 +21,4 @@ foreach (var line in report.Lines) {
     Console.WriteLine(line);
 }
 Console.Error.WriteLine(string.Join(", ", report.Metadata.Select(pair => $"{pair.Key}: {pair.Value}")));
-return report.HasErrors ? 1 : 0;
+return (int)(!report.Succeeded ? ExitCode.Broken : report.HasFindings ? ExitCode.Findings : ExitCode.Good);

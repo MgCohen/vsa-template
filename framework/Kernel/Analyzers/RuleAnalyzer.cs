@@ -16,7 +16,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         "Rule {0} needs the option umpire.{0}.{1}, {2}. The value is '{3}'. Set it in the .umpireconfig file of the block. "
             + "{0} does not run until the option is valid.",
         "Umpire",
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         customTags: WellKnownDiagnosticTags.CompilationEnd);
 
@@ -25,7 +25,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         "The .umpireconfig file is not valid TOML",
         "The .umpireconfig file is not valid TOML: {0} Correct the file. The Umpire rules do not run until the file is valid.",
         "Umpire",
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         customTags: WellKnownDiagnosticTags.CompilationEnd);
 
@@ -35,7 +35,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
         "The Umpire analyzers cannot load a library: {0} The analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. Use a "
             + "compiler on .NET 8 or later. The Umpire rules do not run until the library loads.",
         "Umpire",
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         customTags: WellKnownDiagnosticTags.CompilationEnd);
 

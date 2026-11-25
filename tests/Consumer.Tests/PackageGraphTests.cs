@@ -56,7 +56,7 @@ public sealed class PackageGraphTests {
 
     [Test]
     public void An_app_with_no_pack_line_gets_the_VSA_pack_and_both_rule_sets() {
-        Assert.That(Lines("error UMP010201", "PeekRequest.cs"), Is.Not.Empty, build.Output);
+        Assert.That(Lines("warning UMP010201", "PeekRequest.cs"), Is.Not.Empty, build.Output);
         Assert.That(Lines("UMP010101", "LongLine.cs"), Is.Not.Empty, build.Output);
         Assert.That(Lines("UMP010001"), Is.Empty, build.Output);
         Assert.That(Lines("CS8032"), Is.Empty, build.Output);

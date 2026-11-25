@@ -17,7 +17,7 @@ public sealed record BlockSettings(
     public const int CurrentFormat = 2;
 
     public static BlockSettings Of(string block, params string[] projects) => new(
-        CurrentFormat, block, CheckMode.Error, "", projects, [], [], [], [], [], [], [], new Dictionary<string, string>());
+        CurrentFormat, block, CheckModes.Default, "", projects, [], [], [], [], [], [], [], new Dictionary<string, string>());
 
     public static BlockSettings Read(string text) {
         var settings = JsonReader.Read<BlockSettings>(text);

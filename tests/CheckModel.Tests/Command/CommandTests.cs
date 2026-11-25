@@ -42,26 +42,50 @@ public sealed class CommandTests {
     }
 
     [Test]
-    public void An_old_and_a_missing_snapshot_are_warnings() {
+    public void An_old_and_a_missing_snapshot_are_warnings_and_give_the_exit_code_1() {
         using var temp = new TempState();
         Save(temp, Samples.Layers, screen with { Hash = "0" });
         temp.State.Save(Samples.Layers, Samples.Settings("Sample", "Missing"));
 
         var result = Run("--root", temp.Block);
 
-        Assert.That(result.ExitCode, Is.Zero);
+        Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Output, Does.Contain("warning UMP030803").And.Contain("warning UMP030802"));
     }
 
     [Test]
-    public void A_job_that_does_not_run_to_its_end_is_an_error_with_its_reason() {
+    public void A_job_that_does_not_run_to_its_end_gives_its_reason_and_the_exit_code_2() {
         using var temp = new TempState();
 
         var result = Run("--root", temp.Block);
 
-        Assert.That(result.ExitCode, Is.EqualTo(1));
-        Assert.That(result.Output, Does.Contain("umpire-check: error UMP030801: The check did not run to its end: "));
+        Assert.That(result.ExitCode, Is.EqualTo(2));
+        Assert.That(result.Output, Does.Contain("umpire-check: warning UMP030801: The check did not run to its end: "));
     }
+
+    [Test]
+    public void A_job_that_does_not_run_to_its_end_is_an_error_in_Error_mode() {
+        using var temp = new TempState();
+        File.WriteAllText(Path.Combine(temp.Block, ".umpireconfig"), "umpire.check.mode = \"Error\"");
+
+        Assert.That(Run("--root", temp.Block).Output, Does.Contain("umpire-check: error UMP030801: "));
+        Assert.That(Run("--root", temp.Block, "--mode", "Warn").Output, Does.Contain("umpire-check: warning UMP030801: "));
+    }
+
+    [Test]
+    public void A_finding_in_Warn_mode_is_a_warning_and_gives_the_exit_code_1() {
+        using var temp = new TempState();
+        Save(temp, Samples.Layers, screen, store);
+
+        var result = Run("--root", temp.Block, "--mode", "Warn");
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Output, Does.Contain("warning UMP020101").And.Not.Contain("error UMP"));
+    }
+
+    [Test]
+    public void The_default_mode_is_Warn() =>
+        Assert.That(BlockSettings.Of("../..").Mode, Is.EqualTo(CheckMode.Warn));
 
     [Test]
     public void The_config_key_and_the_flag_give_the_state_folder() {
@@ -76,9 +100,17 @@ public sealed class CommandTests {
         Assert.That(Run("--root", temp.Block).ExitCode, Is.Zero);
     }
 
-    [Test]
-    public void A_bad_flag_gives_the_usage() =>
-        Assert.That(Run("--other", "x").ExitCode, Is.EqualTo(2));
+    [TestCase("--other", "x")]
+    [TestCase("--root")]
+    [TestCase("--mode", "Loud")]
+    [TestCase("--mode", "7")]
+    [TestCase("--root", "")]
+    public void A_bad_flag_gives_the_usage_and_the_exit_code_3(params string[] args) {
+        var result = Run(args);
+
+        Assert.That(result.ExitCode, Is.EqualTo(3));
+        Assert.That(result.Output, Does.Contain("Usage: "));
+    }
 
     static void Save(TempState temp, Definition definition, params FileFacts[] files) {
         temp.Load(definition, files);

@@ -131,13 +131,32 @@ public sealed class OneLineBuildTests {
         Assert.That(Lines(first, "umpire-engine: "), Is.Not.Empty, first.Output);
 
     [Test]
-    public void An_engine_that_crashes_fails_the_build() {
+    public void An_engine_that_crashes_fails_the_build_in_Error_mode() {
         var notAnEngine = Path.Combine(workspace.Src, ".umpireconfig");
         var crashed = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false",
-            $"-p:UmpireEngineFile={notAnEngine}");
+            $"-p:UmpireEngineFile={notAnEngine}", "-p:UmpireCheckMode=Error");
 
         Assert.That(crashed.Succeeded, Is.False, crashed.Output);
         Assert.That(crashed.Output, Does.Contain("error UMP030004"), crashed.Output);
+    }
+
+    [TestCase(1, true)]
+    [TestCase(2, false)]
+    public void An_engine_that_exits_with_a_warning_line_is_a_crash_only_with_another_code_than_1(int code, bool isRun) {
+        const string line = "umpire-engine: warning UMP030401: probe";
+        var host = Path.Combine(workspace.Root, OperatingSystem.IsWindows() ? $"warn{code}.cmd" : $"warn{code}.sh");
+        File.WriteAllText(host, OperatingSystem.IsWindows()
+            ? $"@echo {line}\r\n@exit /b {code}\r\n"
+            : $"#!/bin/sh\necho \"{line}\"\nexit {code}\n");
+        if (!OperatingSystem.IsWindows()) {
+            File.SetUnixFileMode(host, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+
+        var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", $"-p:_UmpireDotnet={host}");
+
+        Assert.That(run.Succeeded, Is.True, run.Output);
+        Assert.That(run.Output, Does.Contain("warning UMP030401"));
+        Assert.That(run.Output.Contains("warning UMP030004", StringComparison.Ordinal), Is.Not.EqualTo(isRun), run.Output);
     }
 
     [Test]
@@ -152,7 +171,7 @@ public sealed class OneLineBuildTests {
         }
 
         var crashed = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false",
-            $"-p:_UmpireDotnet={host}");
+            $"-p:_UmpireDotnet={host}", "-p:UmpireCheckMode=Error");
 
         Assert.That(crashed.Succeeded, Is.False, crashed.Output);
         Assert.That(crashed.Output, Does.Contain("error UMP030004"), crashed.Output);
@@ -176,15 +195,14 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void A_file_pattern_section_stops_the_build_with_the_TOML_error() {
+    public void A_file_pattern_section_gives_the_TOML_error() {
         var file = Path.Combine(workspace.Src, ".umpireconfig");
         var text = File.ReadAllText(file);
         File.WriteAllText(file, text + "\n[*.cs]\numpire.UMP010102.max = 1\n");
         try {
             var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false");
 
-            Assert.That(run.Succeeded, Is.False, run.Output);
-            Assert.That(run.Output, Does.Contain("error UMP010002"), run.Output);
+            Assert.That(run.Output, Does.Contain("warning UMP010002"), run.Output);
         } finally {
             File.WriteAllText(file, text);
         }

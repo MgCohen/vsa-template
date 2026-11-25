@@ -42,8 +42,9 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
-    public void The_general_build_files_name_no_analyzer_rule() {
+    public void Only_the_code_list_of_the_general_build_files_names_an_analyzer_rule() {
         var lines = SdkFiles()
+            .Where(file => Path.GetFileName(file) != Path.GetFileName(SdkCodes.File))
             .SelectMany(file => File.ReadAllLines(file)
                 .Where(line => AnalyzerRuleCode().IsMatch(line))
                 .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));

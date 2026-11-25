@@ -13,6 +13,7 @@ using Versions.Slices.CheckVersions;
 namespace Engine.Tests;
 
 public sealed class CodeTests {
+    const string CheckModelGroup = "0308";
     static readonly Assembly Engine = typeof(CheckRulesCommand).Assembly;
 
     static IEnumerable<Type> EngineTypes => Engine.GetTypes().Where(t => !t.IsAbstract && !t.IsInterface);
@@ -76,6 +77,7 @@ public sealed class CodeTests {
     [TestCase(nameof(LoadAppCodes.MissingAssembly), "UMP030510")]
     [TestCase(nameof(LoadAppCodes.IgnoredDefinition), "UMP030511")]
     [TestCase(nameof(LoadAppCodes.EmptyDefinitionFolder), "UMP030512")]
+    [TestCase(nameof(LoadAppCodes.UnloadedDefinition), "UMP030513")]
     public void A_LoadApp_code_is_in_group_05(string name, string code) {
         Assert.That(typeof(LoadAppCodes).GetField(name)!.GetValue(null), Is.EqualTo(code));
     }
@@ -102,6 +104,19 @@ public sealed class CodeTests {
     }
 
     [Test]
+    public void The_code_list_of_the_SDK_has_each_engine_code_and_no_other() {
+        var steps = Engine.GetTypes().Where(t => t.Name.EndsWith("Codes", StringComparison.Ordinal))
+            .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static))
+            .Where(f => f.FieldType == typeof(string))
+            .Select(f => (string)f.GetValue(null)!);
+        var rules = ArchitectureRule.All.Select(rule => rule.Code);
+
+        var listed = SdkCodes.All.Where(code => code[3..5] is "02" or "03" && code[3..7] != CheckModelGroup);
+
+        Assert.That(listed, Is.EquivalentTo(steps.Concat(rules).Append(VersionCheck.Code)));
+    }
+
+    [Test]
     public void Each_engine_code_is_different() {
         string[] codes = [
             VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine, RunCodes.EngineCrash, BuildCodes.Failed, ChangesCodes.Same,
@@ -109,7 +124,7 @@ public sealed class CodeTests {
             BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses,
             LoadAppCodes.NoPackedConstructor, LoadAppCodes.ManyKernels,
-            LoadAppCodes.OtherKernel, LoadAppCodes.ManyDefinitions, LoadAppCodes.NoDefinition, LoadAppCodes.MissingAssembly, LoadAppCodes.IgnoredDefinition, LoadAppCodes.EmptyDefinitionFolder,
+            LoadAppCodes.OtherKernel, LoadAppCodes.ManyDefinitions, LoadAppCodes.NoDefinition, LoadAppCodes.MissingAssembly, LoadAppCodes.IgnoredDefinition, LoadAppCodes.EmptyDefinitionFolder, LoadAppCodes.UnloadedDefinition,
             BlocksCodes.NoDefinitionProject,
         ];
 

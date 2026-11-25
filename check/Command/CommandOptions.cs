@@ -8,6 +8,32 @@ sealed record CommandOptions(string Root, string? State, CheckMode? Mode) {
     const string ModeFlag = "--mode";
 
     public static CommandOptions? Of(string[] args) {
+        try {
+            return Read(args);
+        } catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) {
+            return null;
+        }
+    }
+
+    public CheckMode ReportMode() {
+        try {
+            return Mode ?? Folder().ReadBlock().Mode;
+        } catch (Exception e) when (e is not OperationCanceledException) {
+            return ConfiguredMode();
+        }
+    }
+
+    public StateFolder Folder() {
+        if (State is not null) {
+            return StateFolder.At(State);
+        }
+        var config = UmpireConfig.Find(Root);
+        return config.Value(StateFolder.Key) is { Length: > 0 } configured
+            ? StateFolder.Of(Path.GetDirectoryName(config.FilePath!)!, configured)
+            : StateFolder.Of(Root);
+    }
+
+    static CommandOptions? Read(string[] args) {
         var root = Directory.GetCurrentDirectory();
         string? state = null;
         CheckMode? mode = null;
@@ -22,7 +48,7 @@ sealed record CommandOptions(string Root, string? State, CheckMode? Mode) {
                 case StateFlag:
                     state = Path.GetFullPath(args[i + 1]);
                     break;
-                case ModeFlag when Enum.TryParse<CheckMode>(args[i + 1], ignoreCase: true, out var given):
+                case ModeFlag when CheckModes.Parse(args[i + 1]) is { } given:
                     mode = given;
                     break;
                 default:
@@ -32,21 +58,11 @@ sealed record CommandOptions(string Root, string? State, CheckMode? Mode) {
         return new CommandOptions(root, state, mode);
     }
 
-    public CheckMode ReportMode() {
+    CheckMode ConfiguredMode() {
         try {
-            return Mode ?? Folder().ReadBlock().Mode;
+            return CheckModes.Of(UmpireConfig.Find(Root).Value(CheckModes.Key));
         } catch (Exception e) when (e is not OperationCanceledException) {
-            return CheckMode.Error;
+            return CheckModes.Default;
         }
-    }
-
-    public StateFolder Folder() {
-        if (State is not null) {
-            return StateFolder.At(State);
-        }
-        var config = UmpireConfig.Find(Root);
-        return config.Value(StateFolder.Key) is { Length: > 0 } configured
-            ? StateFolder.Of(Path.GetDirectoryName(config.FilePath!)!, configured)
-            : StateFolder.Of(Root);
     }
 }

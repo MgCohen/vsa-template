@@ -34,9 +34,9 @@ sealed partial class ModelRun : IDisposable {
                 .. engine.App.Select(dll => ProjectOf(engine.Block, dll.Name)).Distinct()],
             Config = engine.Config.Values(),
         };
-        State.Save(definition, BlockExport.Of(State, input));
+        State.Save(definition, BlockExport.Of(State, input) with { Mode = Data.CheckMode.Error });
         foreach (var other in others) {
-            other.Save(definition, BlockExport.Of(other, input with { Projects = otherProjects, OtherStates = [] }));
+            other.Save(definition, BlockExport.Of(other, input with { Projects = otherProjects, OtherStates = [] }) with { Mode = Data.CheckMode.Error });
         }
         foreach (var dll in libraries) {
             var types = dll.Types.Select(t => new LibraryType(t.FullName, t.Source.File, t.Source.Line, t.Source.Column,

@@ -163,7 +163,7 @@ public sealed class ArchiveTests {
         var root = Net8DotnetRoot();
         var app = AppOnTheRuntime(withStray: false);
         var output = Engine(root, "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
-            "--stage", "Check", "--projectchecks", "false");
+            "--stage", "Check", "--projectchecks", "false", "--mode", "Error");
 
         Assert.That(output, Does.Contain("umpire-engine: 0 errors,").And.Not.Contain("UMP030001"), output);
     }
@@ -173,7 +173,7 @@ public sealed class ArchiveTests {
         var root = Net8DotnetRoot();
         var app = AppOnTheRuntime(withStray: true);
         var output = Engine(root, "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
-            "--stage", "Check", "--projectchecks", "false");
+            "--stage", "Check", "--projectchecks", "false", "--mode", "Error");
 
         Assert.That(output, Does.Contain("error UMP020202").And.Contain("Stray"), output);
     }

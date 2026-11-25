@@ -2,6 +2,7 @@ using Blocks.Domain.Shared;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using LoadApp.Domain.Shared;
+using Steps.Domain.Shared;
 using Steps.Infrastructure;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
@@ -33,8 +34,18 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
         var definition = found.Value;
         var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         var dlls = app.Concat(bin.ExternalDlls(externals)).Concat(bin.ReferencedDlls(app, skip)).Distinct().ToList();
-        return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
+        return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls)) {
+            Findings = command.IsUsed || !options.ProjectChecks ? [] : Unloaded(root, bin),
+        };
     }
+
+    List<Finding> Unloaded(string root, BinIndex bin) => [.. DefinitionFolder.Below(root, options.IgnoredFolders)
+        .Where(folder => !bin.Dlls.Any(dll => dll.HasSourceUnder(folder)))
+        .Select(folder => new Finding(LoadAppCodes.UnloadedDefinition, FindingSeverity.Warning,
+            $"The folder {folder} has definition source files, and no DLL of the bin has them, so no check uses them. "
+            + $"If the folder has no project, add one, for example <Name>.{DefinitionType.FolderName}.csproj. If the folder is below "
+            + "a nested project, reference the nested project from the root project. If the files are not a definition of this app, add the folder to "
+            + "umpire.check.ignored_folders.", folder))];
 
     bool IsSkipped(string? source, string root) {
         if (source is null) {

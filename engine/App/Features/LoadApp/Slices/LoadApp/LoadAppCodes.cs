@@ -14,4 +14,5 @@ public static class LoadAppCodes {
     public static readonly string MissingAssembly = StepCode.Of<LoadAppCommand>(10);
     public static readonly string IgnoredDefinition = StepCode.Of<LoadAppCommand>(11);
     public static readonly string EmptyDefinitionFolder = StepCode.Of<LoadAppCommand>(12);
+    public static readonly string UnloadedDefinition = StepCode.Of<LoadAppCommand>(13);
 }

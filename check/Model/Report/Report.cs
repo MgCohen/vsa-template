@@ -10,6 +10,7 @@ public sealed class Report {
     public IReadOnlyList<Finding> Findings => findings;
     public IReadOnlyDictionary<string, string> Metadata => metadata;
     public bool HasErrors => findings.Any(f => f.Severity == Severity.Error);
+    public bool HasFindings => findings.Any(f => f.Severity != Severity.Info);
 
     public IReadOnlyList<string> Lines => [.. findings.Distinct()
         .OrderBy(f => f.File is not null)
