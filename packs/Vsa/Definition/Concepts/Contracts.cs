@@ -16,6 +16,8 @@ public record Contracts : Layer {
 
     public record Events : Layer {
         public override IReadOnlyList<Type> OfTypes => [typeof(IntegrationEvent)];
+
+        public record Publishing : Layer;
     }
 
     public record Commands : Layer {

@@ -80,7 +80,7 @@ public sealed class PackArchitectureTests {
                 .Select(to => $"{from.Path} -> {to.Path}"))
             .ToList();
 
-        Assert.That(layers, Has.Count.EqualTo(13));
+        Assert.That(layers, Has.Count.EqualTo(14));
         Assert.That(denied, Is.Empty);
     }
 

@@ -4,7 +4,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Contracts/Requests/Umpire.Vsa.Contracts.Requests.csproj" />
-    <!-- A presenter gets the events of the modules (IPresenterHandler). It does not publish them (UMP010204). -->
+    <!-- A presenter gets the events of the modules (IPresenterHandler). It does not publish them (UMP020101). -->
     <ProjectReference Include="../Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />
     <!-- IPresenterHandler extends IIntegrationEventHandler, the handler shape of the module slices. -->
     <ProjectReference Include="../Handlers/Events/Umpire.Vsa.Handlers.Events.csproj" />

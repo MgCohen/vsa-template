@@ -10,6 +10,7 @@ public sealed partial class CodeTests {
     static readonly string[] SkippedFolders = ["artifacts~", "bin", "obj", ".git", ".claude", "proposals"];
     static readonly string[] BaseIds =
         [RuleAnalyzer.OptionDescriptor.Id, RuleAnalyzer.ConfigDescriptor.Id, RuleAnalyzer.LoadDescriptor.Id];
+    static readonly string[] RetiredIds = ["UMP010202", "UMP010203", "UMP010204", "UMP010205", "UMP010207"];
 
     [Test]
     public void Each_rule_of_the_Kernel_analyzers_has_an_ID_of_block_01_group_00_or_01() {
@@ -40,6 +41,13 @@ public sealed partial class CodeTests {
             .Where(id => !BaseIds.Contains(id)).ToList();
 
         Assert.That(ids, Is.Unique);
+    }
+
+    [Test]
+    public void No_rule_has_a_retired_ID() {
+        var ids = new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id);
+
+        Assert.That(ids.Intersect(RetiredIds), Is.Empty);
     }
 
     [Test]

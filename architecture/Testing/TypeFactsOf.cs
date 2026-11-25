@@ -20,16 +20,29 @@ static class TypeFactsOf {
         IsAbstract = type.IsAbstract && !type.IsSealed,
         IsStatic = type is { IsClass: true, IsAbstract: true, IsSealed: true },
         IsSealed = type is { IsClass: true, IsSealed: true, IsAbstract: false } && !IsDelegate(type),
-        IsRecord = type.IsClass && type.GetMethod("<Clone>$", Declared) is not null,
+        IsRecord = IsRecord(type),
         IsStruct = type is { IsValueType: true, IsEnum: false },
         IsInterface = type.IsInterface,
         IsEnum = type.IsEnum,
         IsDelegate = IsDelegate(type),
         Attributes = [.. Attributes(type)],
+        MutableMembers = [.. MutableMembers(type)],
         References = [.. Referenced(type).Where(t => t != type).Select(NameOf).Distinct()],
     };
 
     public static TypeFacts Plain(string name, Source source) => new(name, name, "", source, [name], [], [], []);
+
+    static IEnumerable<string> MutableMembers(Type type) => type.IsEnum ? [] : type.GetFields(Declared)
+        .Where(f => !f.IsInitOnly && !f.IsLiteral && !LoadedTypes.IsCompilerGenerated(f.Name))
+        .Select(f => f.Name)
+        .Concat(type.GetProperties(Declared).Where(IsSettable).Select(p => p.Name));
+
+    static bool IsRecord(Type type) => type.IsClass
+        ? type.GetMethod("<Clone>$", Declared) is not null
+        : type.IsValueType && type.GetMethod("PrintMembers", Declared, null, [typeof(System.Text.StringBuilder)], null) is not null;
+
+    static bool IsSettable(PropertyInfo property) =>
+        property.SetMethod is { } set && set.ReturnParameter.GetRequiredCustomModifiers().All(m => m.Name != "IsExternalInit");
 
     static IEnumerable<string> Attributes(Type type) => type.GetCustomAttributesData()
         .Concat(type.GetMembers(Declared).SelectMany(m => m.GetCustomAttributesData()))

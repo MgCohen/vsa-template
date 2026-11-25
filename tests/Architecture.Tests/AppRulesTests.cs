@@ -23,9 +23,7 @@ public sealed class AppRulesTests {
     public void The_app_rules_come_after_the_VSA_rules() {
         var last = new ResolvedArchitecture(new RulesArchitecture()).UseRules[^1];
 
-        Assert.That(last.From.Name, Is.EqualTo("Presenters"));
-        Assert.That(last.To.Name, Is.EqualTo("Contracts.Events"));
-        Assert.That(last.Permission, Is.EqualTo(Permission.Deny));
+        Assert.That(last.Text, Is.EqualTo("Presenters denies Contracts.Events"));
     }
 
     static Permission PresentersUseEvents(Architecture definition) {

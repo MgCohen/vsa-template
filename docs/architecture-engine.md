@@ -412,7 +412,7 @@ protected override void Rules(RuleBook rules) {
 
 ### Traits
 
-A trait is one fact about a type. Each trait is a record in `Umpire.Architecture.Traits` that inherits `Trait`: `Static`, `Abstract`, `Sealed`, `Record`, `Struct`, `Interface`, `Enum` and `Delegate`. `Trait` has one static member for each trait, for example `Trait.Sealed`.
+A trait is one fact about a type. Each trait is a record in `Umpire.Architecture.Traits` that inherits `Trait`: `Static`, `Abstract`, `Sealed`, `Record`, `Struct`, `Interface`, `Enum`, `Delegate` and `Immutable`. `Trait` has one static member for each trait, for example `Trait.Sealed`.
 
 ```csharp
 rules.For<X>().Are<Static>();                                     // one trait
@@ -422,6 +422,8 @@ rules.For<X>().Are((Trait.Sealed & Trait.Record) | Trait.Enum);   // the operato
 
 - `Are` checks each type of the part, one type at a time. It does not count. A count is `Has<T>().AtMost(n)`.
 - `Abstract` is an abstract class, not an interface or a static class. `Sealed` is a sealed class, not a static class.
+- `Record` is a record class or a record struct.
+- `Immutable` is a type with no member that can change. Such a member is a field that is not `readonly` or `const`, a property with a `set` accessor (`init` is permitted), or a field event. A field that the compiler makes, for example for a primary constructor parameter, is not a member that can change. An enum is immutable. The check does not read the type of a member, so a `List<T>` property with no `set` accessor passes.
 - A trait reads only the facts in `TypeFacts`, so the framework gives the traits. A consumer combines them.
 - With no `Are`, each type is allowed.
 
@@ -442,7 +444,7 @@ rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure 
 
 ### Shared rules of the content checks
 
-- A nested type has the source file of its outer type, so the name and trait checks and the counts do not read it. The place check reads it.
+- A nested type has the source file of its outer type, so the name and trait checks and the counts do not read it. The place check reads it. A trait rule with only the `Immutable` trait also reads it.
 - A static class is not a subject of a match (`Takes<T>()`).
 - The name and trait checks do not read a helper that follows its user. The place check reads it.
 - No content check reads a type of an external DLL or a type in a block place.

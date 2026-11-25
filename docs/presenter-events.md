@@ -86,7 +86,7 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 - Each scope gets its own envelope. `Envelope.Services` is the provider of the presenter scope, and `Envelope.Cancellation` is the token of the publish.
 - A view renders on its own thread: `PresenterWatcher` calls `InvokeAsync(StateHasChanged)`.
 - The presenter pipeline runs after the event pipeline. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
-- A presenter does not publish events, and does not use `IIntegrationEventPublisher` or `Pipelines` (`UMP010204`). To change state, it sends a request with `IRequestSender`, and the request handler publishes the event.
+- A presenter does not publish events, and does not use `IIntegrationEventPublisher` or `Pipelines` (`UMP020101`). To change state, it sends a request with `IRequestSender`, and the request handler publishes the event.
 - A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP020101`).
 
 ## Example
