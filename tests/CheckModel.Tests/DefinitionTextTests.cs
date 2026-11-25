@@ -21,7 +21,7 @@ public sealed class DefinitionTextTests {
     public void A_rule_gives_its_text() =>
         Assert.That(Samples.Layers.Uses[0].ToString(), Is.EqualTo("Ui uses Data"));
 
-    [TestCase("\"format\":1", "\"format\":9")]
+    [TestCase("\"format\":2", "\"format\":9")]
     [TestCase("\"children\"", "\"pieces\"")]
     [TestCase("\"parts\"", "\"pieces\"")]
     [TestCase("\"Deny\"", "\"Never\"")]
@@ -33,15 +33,15 @@ public sealed class DefinitionTextTests {
 
     [Test]
     public void A_field_that_is_missing_fails() =>
-        Assert.That(() => Definition.Read("{\"format\":1}"), Throws.TypeOf<FormatException>().With.Message.Contains("name"));
+        Assert.That(() => Definition.Read("{\"format\":2}"), Throws.TypeOf<FormatException>().With.Message.Contains("name"));
 
     [TestCase("")]
     [TestCase("{")]
-    [TestCase("{\"format\":1,}")]
-    [TestCase("{\"format\":1} x")]
+    [TestCase("{\"format\":2,}")]
+    [TestCase("{\"format\":2} x")]
     [TestCase("{\"format\":\"1\"}")]
     [TestCase("{\"format\":{}}")]
-    [TestCase("{\"format\":1,\"name\":{\"a\":1}}")]
+    [TestCase("{\"format\":2,\"name\":{\"a\":1}}")]
     public void A_text_that_is_not_the_JSON_of_a_definition_fails(string text) =>
         Assert.That(() => Definition.Read(text), Throws.TypeOf<FormatException>());
 

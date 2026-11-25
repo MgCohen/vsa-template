@@ -13,8 +13,8 @@ public static class TargetRuntime {
         NewerThan(bin, Environment.Version);
 
     public static NewerDll? NewerThan(string bin, Version engine) {
-        var dlls = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.dll") : [];
-        return dlls.Order(StringComparer.OrdinalIgnoreCase)
+        var folders = new[] { bin, BinReader.DefinitionsFolder(bin) }.Where(Directory.Exists);
+        return folders.SelectMany(folder => Directory.GetFiles(folder, "*.dll")).Order(StringComparer.OrdinalIgnoreCase)
             .Select(dll => Of(dll) is { } runtime ? new NewerDll(dll, runtime) : null)
             .FirstOrDefault(newer => newer is not null && newer.Runtime.Major > engine.Major);
     }

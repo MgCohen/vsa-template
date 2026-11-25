@@ -53,7 +53,7 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         var projects = BlockProjects.In(folder, found.Blocks.InnerFolders);
         var checks = ProjectCheck.Findings(folder, projects, BlockProjects.HasConfigFile(folder));
         Finding[] definition = IsApp(found.Blocks.Current)
-            && DefinitionFolder.Of(folder) is { HasSource: true, HasProject: false }
+            && DefinitionFolder.Of(folder, options.IgnoredFolders) is { HasSource: true, HasProject: false }
             ? [ProjectCheck.NoDefinitionProject(folder)]
             : [];
         return found with { Findings = [.. found.Findings, .. checks, .. definition] };

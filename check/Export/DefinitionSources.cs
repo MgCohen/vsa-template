@@ -5,13 +5,15 @@ using Api = Umpire.Architecture;
 public static class DefinitionSources {
     public static IReadOnlyList<FileMark> Of(
         Api.ResolvedArchitecture resolved, string block, IReadOnlyDictionary<string, string> sources) {
-        var types = Chain(resolved.Architecture.GetType())
+        var packed = resolved.Architecture.Packed?.GetType();
+        var definitions = Chain(resolved.Architecture.GetType()).Concat(packed is null ? [] : Chain(packed)).ToList();
+        var types = definitions
             .Concat(resolved.Parts.SelectMany(p => Chain(p.Concept!.GetType()))).Distinct().ToList();
-        var folders = Chain(resolved.Architecture.GetType()).Select(t => SourceOf(t, sources)).OfType<string>()
+        var folders = definitions.Select(t => SourceOf(t, sources)).OfType<string>()
             .Select(file => Path.GetDirectoryName(file)!).ToList();
         var files = sources.Values.Select(Path.GetFullPath).Where(file => folders.Any(f => BlockPath.IsUnder(f, file)) && File.Exists(file));
         return [.. types.Select(type => Mark(type, block, sources))
-            .Concat(files.Select(file => Mark(file, resolved.Architecture.GetType().Assembly.Location, block)))
+            .Concat(files.Select(file => Mark(file, (packed ?? resolved.Architecture.GetType()).Assembly.Location, block)))
             .Concat(folders.Distinct().Select(folder => FileMark.Of(block, folder)))
             .GroupBy(mark => mark.Path)
             .Select(group => group.FirstOrDefault(mark => mark.Hash == FileMark.Unknown) ?? group.First())

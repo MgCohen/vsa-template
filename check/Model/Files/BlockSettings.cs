@@ -14,7 +14,7 @@ public sealed record BlockSettings(
     IReadOnlyList<FileMark> DefinitionSources,
     IReadOnlyList<FileMark> Inputs,
     IReadOnlyDictionary<string, string> Severities) {
-    public const int CurrentFormat = 1;
+    public const int CurrentFormat = 2;
 
     public static BlockSettings Of(string block, params string[] projects) => new(
         CurrentFormat, block, CheckMode.Error, "", projects, [], [], [], [], [], [], [], new Dictionary<string, string>());

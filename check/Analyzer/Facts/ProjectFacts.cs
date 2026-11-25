@@ -29,7 +29,15 @@ public sealed class ProjectFacts {
         };
     }
 
-    public IReadOnlyList<string> NotCompiled() {
+    public IReadOnlyList<string>? NotCompiled() {
+        try {
+            return FindNotCompiled();
+        } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
+            return null;
+        }
+    }
+
+    IReadOnlyList<string> FindNotCompiled() {
         var compiled = new HashSet<string>(Declared.Files.Select(f => f.Path), StringComparer.OrdinalIgnoreCase);
         return folder is null ? [] : [.. SourceFiles.In(folder).Select(f => BlockPath.Of(block, f))
             .Where(f => !compiled.Contains(f)).OrderBy(f => f, StringComparer.Ordinal)];
@@ -92,11 +100,14 @@ public sealed class ProjectFacts {
     bool HasFriends => compilation.Assembly.GetAttributes()
         .Any(a => a.AttributeClass?.Name == "InternalsVisibleToAttribute");
 
+    bool HasNoFilePart(INamedTypeSymbol type) =>
+        type.Locations.Any(l => l.SourceTree is null || places.FileOf(l.SourceTree).Length == 0);
+
     IEnumerable<UnplacedType> Unplaced(List<TypeFile> types) {
         var placed = new HashSet<TypeName>(types.Select(t => t.Facts.Name));
-        return Symbols.TypesOf(compilation.Assembly.GlobalNamespace).Where(t => !placed.Contains(Symbols.NameOf(t))).Select(t => {
+        return Symbols.TypesOf(compilation.Assembly.GlobalNamespace).Where(HasNoFilePart).Select(t => {
             var name = Symbols.NameOf(t);
-            var facts = new TypeFacts(name, new TypeLocation("", 0, 0), new ContentReader(t, places).Read("", true), []);
+            var facts = new TypeFacts(name, new TypeLocation("", 0, 0), new ContentReader(t, places).Read("", !placed.Contains(name)), []);
             return new UnplacedType(name.FullName, Surface.Of(facts, HasFriends));
         });
     }

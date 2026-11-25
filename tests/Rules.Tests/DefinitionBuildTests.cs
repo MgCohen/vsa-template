@@ -101,6 +101,50 @@ public sealed class DefinitionBuildTests {
     }
 
     [Test]
+    public void A_build_with_one_output_folder_keeps_the_definition_of_each_project() {
+        var folder = Path.Combine(workspace.Root, "out");
+        WriteTools();
+        Write("Plain/Plain.csproj", OneLine);
+        Write("Shop.csproj", """
+            <Project Sdk="Umpire.Sdk">
+              <PropertyGroup>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+              <ItemGroup>
+                <ProjectReference Include="Tools/Tools.csproj" />
+                <ProjectReference Include="Plain/Plain.csproj" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var build = workspace.Dotnet("build", "Shop.csproj", "-o", folder, "-nodeReuse:false", "-p:UmpireCheck=false", "-m:1");
+
+        Assert.That(build.Succeeded, Is.True, build.Output);
+        Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Tools.Definition.dll")), Is.True);
+        Assert.That(File.Exists(Path.Combine(folder, "umpire-definitions", "Shop.Definition.dll")), Is.True);
+    }
+
+    [Test]
+    public void The_definition_below_a_nested_test_project_is_a_definition_of_the_outer_project() {
+        Write("App/Packs/X/X.Tests.csproj", OneLine);
+        Write("App/Packs/X/Definition/X.Definition.csproj", OneLine);
+        Write("App/Packs/X/Definition/XArchitecture.cs", Passing.Replace("Shop", "X"));
+
+        workspace.Dotnet("build", "Shop.csproj", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
+
+        Assert.That(Definitions("X.Definition.dll"), Is.Not.Empty);
+    }
+
+    [Test]
+    public void An_ignored_definition_folder_gives_no_UMP030512() {
+        DeleteDefinition();
+        Write("Definition/Draft.cs", "class Draft;");
+        Write(".umpireconfig", "umpire.check.ignored_folders = \"Definition\"\n");
+
+        Assert.That(Build().Output, Does.Not.Contain("UMP030512").And.Not.Contain("UMP030308"));
+    }
+
+    [Test]
     public void A_definition_derives_from_a_definition_that_the_app_does_not_reference() {
         Write("company/Company.csproj", OneLine);
         Write("company/CompanyArchitecture.cs", Failing.Replace("Shop.Definition", "Company")

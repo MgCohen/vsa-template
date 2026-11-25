@@ -32,11 +32,12 @@
   </ItemGroup>
 
   <!-- A definition is a nested project in a folder Definition/, in its own check-time DLL. The project builds it first and does
-       not reference it. The definitions below a nested project belong to that project. The target, the runtime and the
+       not reference it. The definitions below a nested project that is not a test project belong to that project. The target, the runtime and the
        output folder of this project are not the ones of the definition. The kernel of a pack variant
        (App/Packs/<Name>/Kernel/) is a normal reference. -->
   <ItemGroup Condition="'$(UmpireTestProject)' != 'true'">
-    <_UmpireDefinitionProject Include="**/Definition/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource);@(_UmpireNestedProject->'%(RelativeDir)**/Definition/*.csproj')" />
+    <_UmpireNestedOwner Include="@(_UmpireNestedProject)" Exclude="**/*.Tests.csproj" />
+    <_UmpireDefinitionProject Include="**/Definition/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource);@(_UmpireNestedOwner->'%(RelativeDir)**/Definition/*.csproj')" />
     <ProjectReference Include="@(_UmpireDefinitionProject)" ReferenceOutputAssembly="false" Private="false"
                       OutputItemType="_UmpireDefinition" SkipGetTargetFrameworkProperties="true"
                       GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
@@ -50,8 +51,13 @@
     <PropertyGroup>
       <_UmpireDefinitionsDir>$([MSBuild]::NormalizeDirectory('$(TargetDir)', 'umpire-definitions'))</_UmpireDefinitionsDir>
       <_UmpireDefinitionSources>@(_UmpireDefinition->'%(RootDir)%(Directory)*.dll;%(RootDir)%(Directory)*.pdb')</_UmpireDefinitionSources>
+      <_UmpireDefinitionList>$(IntermediateOutputPath)umpire-definitions.list</_UmpireDefinitionList>
       <_UmpireReferencedDefinitions>@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)umpire-definitions/*')</_UmpireReferencedDefinitions>
     </PropertyGroup>
+    <!-- Many projects can have one output folder (-o), so a project deletes only the files that it copied before. -->
+    <ReadLinesFromFile File="$(_UmpireDefinitionList)" Condition="Exists('$(_UmpireDefinitionList)')">
+      <Output TaskParameter="Lines" ItemName="_UmpireDefinitionBefore" />
+    </ReadLinesFromFile>
     <ItemGroup>
       <_UmpireDefinitionCandidate Include="$(_UmpireDefinitionSources);$(_UmpireReferencedDefinitions)" />
       <_UmpireDefinitionName Include="@(_UmpireDefinitionCandidate->'%(Filename)%(Extension)')" Source="%(FullPath)"
@@ -59,12 +65,16 @@
       <_UmpireDefinitionName Remove="@(ReferenceCopyLocalPaths->'%(Filename)%(Extension)');$(TargetFileName);$(TargetName).pdb" />
       <_UmpireDefinitionFile Include="@(_UmpireDefinitionName->'%(Source)'->Distinct())" />
       <_UmpireDefinitionCopy Include="@(_UmpireDefinitionFile->'$(_UmpireDefinitionsDir)%(Filename)%(Extension)')" />
-      <_UmpireStaleDefinition Include="$(_UmpireDefinitionsDir)*" Exclude="@(_UmpireDefinitionCopy)" />
+      <_UmpireStaleDefinition Include="@(_UmpireDefinitionBefore)" Exclude="@(_UmpireDefinitionCopy)" />
     </ItemGroup>
     <Delete Files="@(_UmpireStaleDefinition)" />
     <Copy SourceFiles="@(_UmpireDefinitionFile)" DestinationFolder="$(_UmpireDefinitionsDir)" SkipUnchangedFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
     </Copy>
+    <WriteLinesToFile File="$(_UmpireDefinitionList)" Lines="@(_UmpireDefinitionCopy)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_UmpireDefinitionList)" />
+    </ItemGroup>
   </Target>
 
   <!-- The general parts that each app needs, with no layer, and the default pack.

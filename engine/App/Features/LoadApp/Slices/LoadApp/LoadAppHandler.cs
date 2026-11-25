@@ -24,7 +24,9 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
             return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin.Bin} has source files under the block folder {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
         }
-        var found = Definition(blocks, app, [.. bin.Definitions.Where(d => !IsSkipped(d, root))], loader, DefinitionFolder.Of(root).HasSource);
+        var searched = app.Select(dll => dll with { Unloaded = [.. dll.Unloaded.Where(u => !IsSkipped(u.Source, root))] }).ToList();
+        var found = Definition(blocks, searched, [.. bin.Definitions.Where(d => !IsSkipped(d.Source, root))], loader,
+            DefinitionFolder.Of(root, options.IgnoredFolders).HasSource);
         if (found.Error is { } error) {
             return error;
         }
@@ -34,8 +36,8 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
-    bool IsSkipped(DefinitionType definition, string root) {
-        if (definition.Source is not { } source) {
+    bool IsSkipped(string? source, string root) {
+        if (source is null) {
             return false;
         }
         var relative = Path.GetRelativePath(root, source);

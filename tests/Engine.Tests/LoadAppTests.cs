@@ -139,6 +139,24 @@ public sealed class LoadAppTests {
         Assert.That(Find([Vsa, pack], inner: [entry]).Error?.Code, Is.EqualTo(code));
     }
 
+    [Test]
+    public void The_definition_of_a_base_pack_is_not_ignored() {
+        var folder = Path.GetFullPath("C:/a/App/Packs/X");
+        var basePack = Stray("X.XArchitecture", "C:/a/App/Packs/X/Definition/XArchitecture.cs", VsaKernel);
+        var entry = new BlockEntry(folder, EntryForm.Definition, new("A.PackCheck", "A"), folder, Packed: basePack.Type);
+        var pack = new DefinitionType(new("Y.YArchitecture", "Y"), Path.GetFullPath("C:/y"), OwnKernel, []);
+
+        Assert.That(Find([basePack, pack], OwnKernel, VsaKernel, inner: [entry]).Value, Is.EqualTo(pack.Type));
+    }
+
+    [Test]
+    public void A_folder_alias_gives_the_block_of_a_type_that_did_not_load() {
+        var type = new UnloadedType(new("A.MyArchitecture", "A"), Path.GetFullPath("C:/a/Rules/MyArchitecture.cs"), "X.Base", "X");
+        var block = Path.GetFullPath("C:/a");
+
+        Assert.That(type.In(_ => block).Folder, Is.EqualTo(block));
+    }
+
     [TestCase(EntryForm.Metadata)]
     [TestCase(EntryForm.App)]
     [TestCase(EntryForm.Definition)]

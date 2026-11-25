@@ -115,6 +115,17 @@ public sealed class DefinitionExportTests {
         });
     }
 
+    [Test]
+    public void The_definition_sources_of_a_pack_have_the_packed_definition() {
+        using var temp = new TempState();
+        var file = Path.Combine(temp.Block, "EveryForm.cs");
+        File.WriteAllText(file, "class A;");
+        var sources = new Dictionary<string, string> { [typeof(EveryFormArchitecture).FullName!] = file };
+        var resolved = new ResolvedArchitecture(new Umpire.Kernels.PackArchitecture(new EveryFormArchitecture()));
+
+        Assert.That(DefinitionSources.Of(resolved, temp.Block, sources).Select(m => m.Path), Has.Member("EveryForm.cs"));
+    }
+
     static string Text(Decision decision) =>
         $"{decision.Permission} by {decision.Rule?.Text} at {decision.Rule?.Access}";
 

@@ -23,7 +23,7 @@ public sealed class AppModelTests {
     }
 
     [TestCase("{")]
-    [TestCase("{\"format\":1}")]
+    [TestCase("{\"format\":2}")]
     public void A_bad_snapshot_is_a_problem_and_does_not_stop_the_load(string text) {
         using var temp = new TempState();
         temp.State.Save(Samples.Settings("Sample"));

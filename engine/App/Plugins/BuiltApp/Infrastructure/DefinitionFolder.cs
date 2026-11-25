@@ -1,14 +1,16 @@
 namespace BuiltApp.Infrastructure;
 
+using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.Config;
 
 public sealed record DefinitionFolder(bool HasSource, bool HasProject) {
     public const string Tests = "Tests";
 
-    public static DefinitionFolder Of(string block) {
+    public static DefinitionFolder Of(string block, IReadOnlyList<string>? ignoredFolders = null) {
         var files = FolderAliasConfig.Of(UmpireConfig.Find(block), block).DefinitionFolders(block)
-            .SelectMany(OnDisk).SelectMany(Files).Select(Path.GetExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .SelectMany(OnDisk).SelectMany(Files)
+            .Where(file => !ReadOptions.IsIgnored(Path.GetRelativePath(block, file), ignoredFolders ?? [])).Select(Path.GetExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return new DefinitionFolder(files.Contains(".cs"), files.Contains(".csproj"));
     }
 

@@ -101,7 +101,8 @@ sealed partial class ModelRun : IDisposable {
     }
 
     void Read(string output) {
-        Assert.That(output, Does.Not.Contain("AD0001").And.Not.Contain("UMP0308"));
+        string[] codes = ["AD0001", Data.DataCodes.NoModel, Data.DataCodes.NoSnapshot, Data.DataCodes.OldSnapshot, Data.DataCodes.NotSaved];
+        Assert.That(codes.Where(code => output.Contains(code)), Is.Empty, output);
         Diagnostics.AddRange(DiagnosticLine().Matches(output).Select(m => new Data.Finding(
             m.Groups["code"].Value,
             m.Groups["severity"].Value == "error" ? Data.Severity.Error : Data.Severity.Warning,

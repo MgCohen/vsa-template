@@ -64,7 +64,7 @@ static class DefinitionSearch {
 
     static bool IsOfInner(DefinitionType definition, AppClass app, IReadOnlyList<BlockEntry> inner) => inner.Any(e => e.Form switch {
         EntryForm.App => e.HasProject && IsUnder(definition.Source, e.Folder),
-        EntryForm.Definition => e.Definition == definition.Type && (e.HasProject || !app.KernelChain.Contains(definition.Kernel!)),
+        EntryForm.Definition => e.Definition == definition.Type && (e.HasProject || definition.Kernel != app.Kernels[0]),
         _ => e.Definition == definition.Type || IsUnder(definition.Source, e.Folder),
     });
 

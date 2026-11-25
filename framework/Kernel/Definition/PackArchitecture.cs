@@ -7,6 +7,8 @@ using KernelBlock = Umpire.Architecture.Blocks.Kernel;
 public sealed class PackArchitecture : Architecture {
     readonly Architecture? packed;
 
+    internal override Architecture? Packed => packed;
+
     public PackArchitecture() { }
 
     public PackArchitecture(Architecture packed) => this.packed = packed;

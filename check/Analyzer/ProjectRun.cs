@@ -10,7 +10,7 @@ sealed class ProjectRun {
     readonly ProjectFacts facts;
     readonly AppModel app;
     readonly bool saves;
-    readonly IReadOnlyList<string> notCompiled;
+    readonly IReadOnlyList<string>? notCompiled;
 
     ProjectRun(StateFolder state, ProjectFacts facts, AppModel app, bool saves) {
         this.state = state;
@@ -64,6 +64,11 @@ sealed class ProjectRun {
             context.ReportDiagnostic(DataDiagnostic(DataCodes.OldSnapshot, text));
         }
         if (!saves || context.Compilation.GetDiagnostics(context.CancellationToken).Any(d => d.DefaultSeverity == DiagnosticSeverity.Error)) {
+            return;
+        }
+        if (notCompiled is null) {
+            context.ReportDiagnostic(DataDiagnostic(
+                DataCodes.NotSaved, $"The snapshot of {facts.Name} is not saved: a folder of the project cannot be read."));
             return;
         }
         try {

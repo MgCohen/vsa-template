@@ -4,7 +4,9 @@ public sealed record UnloadedType(TypeName Type, string Source, string? MissingT
     public string? Folder { get; init; } = DefinitionType.BlockFolder(Source);
 
     public UnloadedType In(Func<string, string> folderOf) =>
-        Folder is { } folder ? this with { Folder = folderOf(folder) } : this;
+        Folder is { } folder ? this with { Folder = folderOf(folder) }
+            : Path.GetDirectoryName(Source) is { } own && folderOf(own) is var block && block != own ? this with { Folder = block }
+            : this;
 
     public override string ToString() => MissingType is { } missing
         ? $"{Type.FullName}: the type {missing} did not load. "

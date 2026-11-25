@@ -140,6 +140,7 @@ A project with `TreatWarningsAsErrors` must put these codes and all rule codes i
 
 - `[field: X]` on an event with no accessors is not a fact: the compiler API does not give the field.
 - The analyzer imports the namespace `Umpire.Vsa.Analyzers`, because the kernel analyzers use it.
+- A file that another process adds between the start of a build and the start of the compile is not a new file until the next compile.
 - A snapshot lists the source files of its project folder that the compile does not read. A new excluded file lowers findings until that project compiles. A folder with its own project and no snapshot is not examined.
 - A definition helper outside the definition folder has no mark.
 - A reference that is not in the model, for example a package with no library file, has no mark.

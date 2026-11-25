@@ -37,6 +37,58 @@ public sealed class ReferenceTrustTests {
         Assert.That(WrongType(build), Is.EqualTo(Severity.Error));
     }
 
+    [TestCase("[System.Obsolete] private int Hidden() => 2;")]
+    [TestCase("private int Field;")]
+    public void A_private_member_with_an_attribute_does_not_change_the_surface(string member) {
+        using var build = new SampleBuild("Data");
+        var first = SurfaceOf(build, "public partial class Base { public int P { get; private set; } }");
+
+        Assert.That(SurfaceOf(build, $"public partial class Base {{ public int P {{ get; }} {member} }}"), Is.EqualTo(first));
+        Assert.That(SurfaceOf(build, "public partial class Base { public int P { get; set; } }"), Is.Not.EqualTo(first));
+    }
+
+    [Test]
+    public void A_public_member_in_a_part_with_no_file_changes_the_surface() {
+        using var build = new SampleBuild("Data");
+        var first = Surfaces(build, "public partial class Other { public int P => 1; }", "partial ");
+
+        Assert.That(Surfaces(build, "public partial class Other { public string P => null!; }", "partial "), Is.Not.EqualTo(first));
+    }
+
+    [Test]
+    public void A_new_file_of_a_nested_project_is_not_hidden_by_a_compile_of_the_root() {
+        using var build = new SampleBuild("Root", "Data");
+        build.Save(Definition, Samples.Settings("Root", "Data"));
+        build.Options["build_property.ProjectDir"] = build.Block;
+        build.Write("Ui/Base.cs", "namespace Sample;\npublic class Base;\n");
+        build.Write("Data/Data.csproj", "");
+        build.Write("Data/Store.cs", Store);
+        var root = build.Compile("Root", "Ui/Base.cs");
+        build.Analyze(root);
+        build.Options["build_property.ProjectDir"] = Path.Combine(build.Block, "Data");
+        build.Analyze(build.Compile("Data", [root], "Data/Store.cs"));
+        Assert.That(WrongType(build), Is.EqualTo(Severity.Error));
+
+        build.Write("Data/Store.Part.cs", "namespace Sample;\npublic partial class Store;\n");
+        build.Options["build_property.ProjectDir"] = build.Block;
+        build.Analyze(root);
+
+        Assert.That(WrongType(build), Is.EqualTo(Severity.Warning));
+    }
+
+    [Test]
+    public void A_new_file_of_a_nested_project_with_no_snapshot_does_not_lower_a_finding() {
+        using var build = new SampleBuild("Ui", "Data");
+        build.Options["build_property.ProjectDir"] = build.Block;
+        build.Write("Tests/Tests.csproj", "");
+        build.Write("Tests/First.cs", "class First;");
+        Fill(build);
+
+        build.Write("Tests/Second.cs", "class Second;");
+
+        Assert.That(WrongType(build), Is.EqualTo(Severity.Error));
+    }
+
     [Test]
     public void A_file_with_an_old_time_that_moves_into_the_project_lowers_the_finding() {
         using var build = new SampleBuild("Ui", "Data");
@@ -130,9 +182,14 @@ public sealed class ReferenceTrustTests {
             [new UsePair(1, 0, Access.Public, [], [])])],
     };
 
-    static string Surfaces(SampleBuild build, string generated) {
+    static string SurfaceOf(SampleBuild build, string type) {
+        build.Write("Data/Base.cs", $"namespace Sample;\n{type}\n");
+        return Surface.Of(new Umpire.CheckModel.Analyzer.ProjectFacts(build.Compile("Data", "Data/Base.cs"), build.Block).Declared);
+    }
+
+    static string Surfaces(SampleBuild build, string generated, string modifier = "") {
         build.Write("obj/Base.cs", $"namespace Sample;\n{generated}\n");
-        build.Write("Data/Other.cs", "namespace Sample;\npublic class Other;\n");
+        build.Write("Data/Other.cs", $"namespace Sample;\npublic {modifier}class Other;\n");
         return Surface.Of(new Umpire.CheckModel.Analyzer.ProjectFacts(build.Compile("Data", "Data/Other.cs", "obj/Base.cs"), build.Block).Declared);
     }
 

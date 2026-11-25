@@ -10,7 +10,7 @@ public sealed record Definition(
     IReadOnlyList<MatchRule> Matches,
     IReadOnlyList<TraitRule> Traits,
     IReadOnlyList<PlaceRule> Places) {
-    public const int CurrentFormat = 1;
+    public const int CurrentFormat = 2;
 
     public string Write() => JsonWriter.Write(this);
 
