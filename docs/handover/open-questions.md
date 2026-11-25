@@ -4,6 +4,10 @@
 
 The user has this list and did not answer it. An opinion is not a decision.
 
+### Answers
+
+- **Q1 (2026-11-25).** "No definition code on umpire DLL. The definition code will most likely need the umpire DLL, so the helpers can stay there, or we can move them into a utility." Rule of the user: instead of one using the other, move shared things to a utility.
+
 | # | Question | Options | Opinion |
 |---|---|---|---|
 | 1 | What does the runtime ship? | `Umpire.dll` with no definition code, or with it | No definition code (D1 says it) |
