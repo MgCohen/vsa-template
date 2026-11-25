@@ -10,12 +10,14 @@ sealed class ProjectRun {
     readonly ProjectFacts facts;
     readonly AppModel app;
     readonly bool saves;
+    readonly IReadOnlyList<string> notCompiled;
 
     ProjectRun(StateFolder state, ProjectFacts facts, AppModel app, bool saves) {
         this.state = state;
         this.facts = facts;
         this.app = app;
         this.saves = saves;
+        notCompiled = saves ? facts.NotCompiled() : [];
     }
 
     public static ProjectRun? Start(Compilation compilation, AnalyzerOptions options, CancellationToken cancellation) {
@@ -65,7 +67,7 @@ sealed class ProjectRun {
             return;
         }
         try {
-            state.Save(app.WithSurfaces(facts.Full()));
+            state.Save(app.WithSurfaces(facts.Full(notCompiled)));
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
             context.ReportDiagnostic(DataDiagnostic(DataCodes.NotSaved, $"The snapshot of {facts.Name} is not saved: {e.Message}"));
         }

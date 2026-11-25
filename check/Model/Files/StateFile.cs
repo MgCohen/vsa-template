@@ -12,7 +12,6 @@ static class StateFile {
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         using (Lock(file + LockExtension)) {
             if (Has(file, text)) {
-                File.SetLastWriteTimeUtc(file, DateTime.UtcNow);
                 return false;
             }
             Write(file, text);

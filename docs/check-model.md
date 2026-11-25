@@ -81,7 +81,7 @@ A finding is an error only if each fact that decides it is current (`Trust`). If
 | Match | Also the base arguments |
 | Count, block place | All saved data and all config files |
 
-A saved project is current if all its files and all projects and libraries that it references are current, no source file is newer than the snapshots, and it compiled against the same surface of each referenced project. The surface is the declarations, with no lines and no method bodies. A type that the model does not find in a project of the model is not current.
+A saved project is current if all its files and all projects and libraries that it references are current, each source file is in a snapshot, and it compiled against the same surface of each referenced project. The surface is the declarations that a dependent project can see, with no lines and no method bodies. A type that the model does not find in a project of the model is not current.
 
 | Data | Mark |
 |---|---|
@@ -140,7 +140,7 @@ A project with `TreatWarningsAsErrors` must put these codes and all rule codes i
 
 - `[field: X]` on an event with no accessors is not a fact: the compiler API does not give the field.
 - The analyzer imports the namespace `Umpire.Vsa.Analyzers`, because the kernel analyzers use it.
-- A source file that a project excludes lowers findings until each project of the block compiles after the last change of that file. A folder with its own project and no snapshot is not examined.
+- A snapshot lists the source files of its project folder that the compile does not read. A new excluded file lowers findings until that project compiles. A folder with its own project and no snapshot is not examined.
 - A definition helper outside the definition folder has no mark. The definition has its own DLL with D1, and then all its sources can have a mark.
 - A reference that is not in the model, for example a package with no library file, has no mark.
 - The caller selects the DLL path of a mark. A path in `bin` is absent after a clean, and then the findings of that build are warnings.

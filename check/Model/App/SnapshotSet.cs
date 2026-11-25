@@ -47,7 +47,7 @@ sealed class SnapshotSet {
 
     void Load(string project, string file, string root, List<LoadedSnapshot> list) {
         try {
-            list.Add(new LoadedSnapshot(root, SnapshotCache.Read(file), File.GetLastWriteTimeUtc(file)));
+            list.Add(new LoadedSnapshot(root, SnapshotCache.Read(file)));
         } catch (Exception e) when (e is FormatException or IOException or UnauthorizedAccessException) {
             problems.Add(new SnapshotProblem(project, file, e.Message, IsLibrary: ReferenceEquals(list, libraries)));
         }

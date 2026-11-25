@@ -7,12 +7,14 @@ public sealed class ProjectFacts {
     readonly Compilation compilation;
     readonly string block;
     readonly SourcePlaces places;
+    readonly string? folder;
     readonly Dictionary<TypeName, Lazy<IReadOnlyList<AppReference>>> references = [];
 
     public ProjectFacts(Compilation compilation, string block, string? projectFolder = null) {
         this.compilation = compilation;
         this.block = block;
-        places = new SourcePlaces(block, projectFolder ?? FolderOf(compilation, block));
+        folder = projectFolder ?? FolderOf(compilation, block);
+        places = new SourcePlaces(block, folder);
         var types = new List<TypeFile>();
         foreach (var type in Symbols.TypesOf(compilation.Assembly.GlobalNamespace)) {
             types.AddRange(Declarations(type));
@@ -22,8 +24,15 @@ public sealed class ProjectFacts {
         Declared = Snapshot.Of(Name, [.. Trees().Select(tree => FactsOf(tree, byFile))]) with {
             References = [.. compilation.ReferencedAssemblyNames.Select(a => a.Name).Distinct().OrderBy(n => n, StringComparer.Ordinal)
                 .Select(name => new ProjectReference(name, ""))],
-            Unplaced = [.. references.Keys.Except(types.Select(t => t.Facts.Name)).Select(n => n.FullName).OrderBy(n => n, StringComparer.Ordinal)],
+            Unplaced = [.. Unplaced(types).OrderBy(u => u.Name, StringComparer.Ordinal)],
+            HasFriends = HasFriends,
         };
+    }
+
+    public IReadOnlyList<string> NotCompiled() {
+        var compiled = new HashSet<string>(Declared.Files.Select(f => f.Path), StringComparer.OrdinalIgnoreCase);
+        return folder is null ? [] : [.. SourceFiles.In(folder).Select(f => BlockPath.Of(block, f))
+            .Where(f => !compiled.Contains(f)).OrderBy(f => f, StringComparer.Ordinal)];
     }
 
     public string Name => compilation.AssemblyName ?? "";
@@ -34,7 +43,8 @@ public sealed class ProjectFacts {
 
     public IReadOnlyList<AppReference> References(TypeName type) => references.TryGetValue(type, out var found) ? found.Value : [];
 
-    public Snapshot Full() => Declared with {
+    public Snapshot Full(IReadOnlyList<string>? notCompiled = null) => Declared with {
+        NotCompiled = notCompiled ?? [],
         Files = [.. Declared.Files.Select(file => Dated(file, BlockPath.In(block, file.Path)) with {
             Types = [.. file.Types.Select(type => type with {
                 References = [.. References(type.Name).Where(r => BlockPath.Of(block, r.File) == file.Path).Select(r => r.Fact)],
@@ -77,6 +87,18 @@ public sealed class ProjectFacts {
         }
         var modified = File.GetLastWriteTimeUtc(path).Ticks;
         return file with { Modified = FileHash.Of(path) == file.Hash ? modified : 0 };
+    }
+
+    bool HasFriends => compilation.Assembly.GetAttributes()
+        .Any(a => a.AttributeClass?.Name == "InternalsVisibleToAttribute");
+
+    IEnumerable<UnplacedType> Unplaced(List<TypeFile> types) {
+        var placed = new HashSet<TypeName>(types.Select(t => t.Facts.Name));
+        return Symbols.TypesOf(compilation.Assembly.GlobalNamespace).Where(t => !placed.Contains(Symbols.NameOf(t))).Select(t => {
+            var name = Symbols.NameOf(t);
+            var facts = new TypeFacts(name, new TypeLocation("", 0, 0), new ContentReader(t, places).Read("", true), []);
+            return new UnplacedType(name.FullName, Surface.Of(facts, HasFriends));
+        });
     }
 
     IEnumerable<SyntaxTree> Trees() => compilation.SyntaxTrees

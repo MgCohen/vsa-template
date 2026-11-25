@@ -14,7 +14,7 @@ sealed class ProjectTrust {
         this.snapshots = snapshots;
         missing = Names(snapshots.Problems.Select(p => p.Project));
         known = Names(snapshots.All.Select(s => s.Snapshot.Project));
-        unplaced = [.. snapshots.Saved.SelectMany(s => s.Snapshot.Unplaced.Select(n => new TypeName(n, s.Snapshot.Project)))];
+        unplaced = [.. snapshots.Saved.SelectMany(s => s.Snapshot.Unplaced.Select(n => new TypeName(n.Name, s.Snapshot.Project)))];
         hasUnknownState = snapshots.Problems.Any(p => p.IsState);
         old = new(FindOld);
     }

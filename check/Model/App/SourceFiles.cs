@@ -9,25 +9,24 @@ public static class SourceFiles {
     public static IEnumerable<string> ConfigFiles(string block) => Folders(block, _ => true)
         .Select(folder => Path.Combine(folder, ConfigFile)).Where(File.Exists);
 
+    public static IEnumerable<string> In(string folder) => Directory.Exists(folder)
+        ? Folders(folder, _ => true).SelectMany(sub => Patterns.SelectMany(p => Directory.GetFiles(sub, p)))
+        : [];
+
     public static bool HasNew(AppModel app) {
         var known = new HashSet<string>(
             app.Loaded.SelectMany(s => s.Snapshot.Files.Select(s.FileOf))
+                .Concat(app.Saved.SelectMany(s => s.Snapshot.NotCompiled.Select(f => BlockPath.In(s.Root, f))))
                 .Concat(app.Settings.DefinitionSources.Select(m => BlockPath.In(app.Block, m.Path))), StringComparer.OrdinalIgnoreCase);
         var configs = new HashSet<string>(app.Settings.Inputs.Select(m => BlockPath.In(app.Block, m.Path)), StringComparer.OrdinalIgnoreCase);
         try {
-            var oldest = app.Saved.Where(s => s.SavedAt is not null).Select(s => s.SavedAt!.Value).DefaultIfEmpty(DateTime.MinValue).Min();
-            return Folders(app.Block, folder => !app.IsIgnored(Path.Combine(folder, ProjectFile)) && !IsOfOtherProject(folder, known))
+            return app.Saved.Count > 0 && Folders(app.Block, folder => !app.IsIgnored(Path.Combine(folder, ProjectFile)) && !IsOfOtherProject(folder, known))
                     .SelectMany(folder => Patterns.SelectMany(p => Directory.GetFiles(folder, p)))
-                    .Any(file => !known.Contains(BlockPath.Full(file)) && ChangedAt(file) > oldest)
+                    .Any(file => !known.Contains(BlockPath.Full(file)))
                 || ConfigFiles(app.Block).Any(file => !configs.Contains(BlockPath.Full(file)));
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
             return true;
         }
-    }
-
-    static DateTime ChangedAt(string file) {
-        var info = new FileInfo(file);
-        return info.CreationTimeUtc > info.LastWriteTimeUtc ? info.CreationTimeUtc : info.LastWriteTimeUtc;
     }
 
     static IEnumerable<string> Folders(string folder, Func<string, bool> isIn) => new[] { folder }.Concat(Directory.GetDirectories(folder)
