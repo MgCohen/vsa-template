@@ -1,6 +1,6 @@
 namespace TwoApps.Host;
 
-using Umpire.Vsa;
 using Umpire.Kernels;
+using Umpire.Vsa.Composition;
 
-public class SecondApp : App<Vsa<AppHost>>;
+public class SecondApp : App<VsaKernel, AppHost>;

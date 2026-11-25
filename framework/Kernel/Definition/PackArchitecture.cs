@@ -1,7 +1,6 @@
 namespace Umpire.Kernels;
 
 using Umpire.Architecture;
-using AppRoot = Umpire.Architecture.Blocks.App;
 using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
 using KernelBlock = Umpire.Architecture.Blocks.Kernel;
 
@@ -28,8 +27,7 @@ public sealed class PackArchitecture : Architecture {
     }
 
     protected override void Rules(RuleBook rules) {
-        rules.For<AppRoot>(Depth.Self).HasTypes<Pack>().AtLeast(1);
-        rules.For<AppRoot>(Depth.Self).Uses<DefinitionRoot>().And<KernelBlock>();
+        rules.For<DefinitionRoot>().HasTypes<Architecture>().AtLeast(1);
         rules.For<DefinitionRoot>().Uses<KernelBlock>();
         rules.For<PackParts.Tests>().Uses<DefinitionRoot>().And<KernelBlock>();
         if (packed is not null) {

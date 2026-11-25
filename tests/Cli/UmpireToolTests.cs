@@ -95,12 +95,13 @@ public sealed class UmpireToolTests {
     [CancelAfter(600_000)]
     public void ADefinitionInTheAppNamesEachLayerWithNoFullName() {
         var app = NewApp("Shop");
-        File.WriteAllText(Path.Combine(Directory.CreateDirectory(Path.Combine(app, "Definition")).FullName, "ShopArchitecture.cs"), """
+        var definition = Directory.CreateDirectory(Path.Combine(app, "Definition")).FullName;
+        File.WriteAllText(Path.Combine(definition, "Shop.Definition.csproj"), $"<Project Sdk=\"Umpire.Sdk/{LocalFeed.Version}\" />\n");
+        File.WriteAllText(Path.Combine(definition, "ShopArchitecture.cs"), """
             namespace Shop.Host;
 
             using Umpire.Architecture;
             using Umpire.Architecture.Blocks;
-            using Umpire.Vsa;
             using Umpire.Vsa.Definition;
 
             public sealed class ShopArchitecture : VsaArchitecture {
@@ -120,6 +121,46 @@ public sealed class UmpireToolTests {
             """);
 
         Dotnet.Run(app, env, "build", "Shop.slnx", "-nodeReuse:false").EnsureSuccess();
+        var bin = Path.Combine(app, "artifacts~", "bin", "Shop", "debug");
+        Assert.That(File.Exists(Path.Combine(bin, "umpire-definitions", "Shop.Definition.dll")), Is.True);
+        Assert.That(File.Exists(Path.Combine(bin, "Shop.Definition.dll")), Is.False);
+    }
+
+    [Test]
+    [CancelAfter(600_000)]
+    public void AnAppWithAPackVariantBuilds() => BuildWithAPackVariant(NewApp("Shop"));
+
+    [Test]
+    [CancelAfter(600_000)]
+    public void ANet8AppWithAPackVariantBuilds() {
+        var app = NewApp("Shop");
+        File.WriteAllText(Path.Combine(app, "Shop.csproj"), $"""
+            <Project Sdk="Umpire.Sdk/{LocalFeed.Version}">
+              <PropertyGroup>
+                <TargetFramework>net8.0</TargetFramework>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+            </Project>
+            """);
+        Directory.Delete(Path.Combine(app, "Views"), recursive: true);
+        Directory.Delete(Path.Combine(app, "App", "Tests"), recursive: true);
+
+        BuildWithAPackVariant(app, "Umpire.Kernels", "AppHost");
+    }
+
+    void BuildWithAPackVariant(string app, string hostNamespace = "Umpire.Hosts.Web", string host = "WebHost") {
+        Tool(app, "add", "pack", "Ecs").EnsureSuccess();
+        File.WriteAllText(Path.Combine(app, "App", "ShopApp.cs"), $"""
+            namespace Shop.Host;
+
+            using Shop.Packs.Ecs.Kernel;
+            using Umpire.Kernels;
+            {(hostNamespace == "Umpire.Kernels" ? "" : $"using {hostNamespace};")}
+
+            public class ShopApp : App<EcsKernel, {host}>;
+            """);
+
+        Dotnet.Run(app, env, "build", "Shop.csproj", "-nodeReuse:false").EnsureSuccess();
     }
 
     [Test]

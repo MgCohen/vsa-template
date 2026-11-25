@@ -5,6 +5,8 @@ using Umpire.Architecture;
 public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyList<BlockEntry> Entries) {
     public IReadOnlyList<string> IgnoredFolders { get; init; } = [];
 
+    public IReadOnlyList<DefinitionType> Definitions => [.. Dlls.SelectMany(d => d.Definitions)];
+
     public static IReadOnlyDictionary<string, Source> Sources(IEnumerable<BinDll> dlls) {
         var sources = new Dictionary<string, Source>();
         foreach (var type in dlls.SelectMany(d => d.Types)) {
@@ -12,6 +14,14 @@ public sealed record BinIndex(string Bin, IReadOnlyList<BinDll> Dlls, IReadOnlyL
         }
         return sources;
     }
+
+    public BinIndex WithDefinitionFolders(Func<string, string> folderOf) => this with {
+        Dlls = [.. Dlls.Select(dll => dll with {
+            Definitions = [.. dll.Definitions.Select(d => d.In(folderOf))],
+            Unloaded = [.. dll.Unloaded.Select(u => u.In(folderOf))],
+        })],
+        Entries = [.. Entries.Select(e => e.Form == EntryForm.Definition ? e with { Folder = folderOf(e.Folder) } : e)],
+    };
 
     public IReadOnlyList<BinDll> AppDlls(string blockFolder, IReadOnlyList<string> skip) =>
         [.. Dlls.Where(d => !Skipped(d.Name, skip) && d.HasSourceUnder(blockFolder, IgnoredFolders))];

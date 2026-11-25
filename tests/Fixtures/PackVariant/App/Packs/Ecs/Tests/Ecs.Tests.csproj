@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../../PackVariant.csproj" />
+    <ProjectReference Include="../Definition/Ecs.Definition.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" />
   </ItemGroup>
 </Project>

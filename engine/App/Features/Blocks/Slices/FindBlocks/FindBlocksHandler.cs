@@ -4,7 +4,9 @@ using Blocks.Domain.Shared;
 using Blocks.Infrastructure;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
+using Steps.Domain.Shared;
 using Steps.Infrastructure;
+using Umpire.Config;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
@@ -21,6 +23,10 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         var bin = reader.Index();
         var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
         var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
+        if (folder is not null) {
+            var aliases = FolderAliasConfig.Of(UmpireConfig.Find(folder), folder);
+            bin = bin.WithDefinitionFolders(definition => aliases.DefinitionBlock(folder, definition));
+        }
         IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
         IReadOnlyList<BlockEntry> entries = [.. bin.Entries, .. files.Select(reader.Check)];
         var found = BlockSearch.Find(project, folder, entries, bin);
@@ -37,6 +43,8 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         + $"so the engine cannot load the app. Install .NET {newer.Runtime.Major}, "
         + "or run the engine with 'dotnet exec --roll-forward LatestMajor'.";
 
+    static bool IsApp(BlockEntry entry) => entry.Form == EntryForm.App || entry.HasApp;
+
     FindBlocksResult WithProjects(FindBlocksResult found) {
         if (!options.ProjectChecks) {
             return found;
@@ -44,6 +52,10 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         var folder = found.Blocks.Current.Folder;
         var projects = BlockProjects.In(folder, found.Blocks.InnerFolders);
         var checks = ProjectCheck.Findings(folder, projects, BlockProjects.HasConfigFile(folder));
-        return found with { Findings = [.. found.Findings, .. checks] };
+        Finding[] definition = IsApp(found.Blocks.Current)
+            && DefinitionFolder.Of(folder) is { HasSource: true, HasProject: false }
+            ? [ProjectCheck.NoDefinitionProject(folder)]
+            : [];
+        return found with { Findings = [.. found.Findings, .. checks, .. definition] };
     }
 }

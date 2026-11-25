@@ -1,10 +1,10 @@
 namespace ShellApp.Host;
 
-using Umpire.Vsa;
 using Umpire.Kernels;
+using Umpire.Vsa.Composition;
 
-public sealed class GameLauncher(string name) : Launcher<Vsa<AppHost>> {
+public sealed class GameLauncher(string name) : Launcher<VsaKernel> {
     public string Name => name;
 
-    sealed class InnerApp : App<Vsa<AppHost>>;
+    sealed class InnerApp : App<VsaKernel, AppHost>;
 }

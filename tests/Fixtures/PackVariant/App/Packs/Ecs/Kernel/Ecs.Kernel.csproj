@@ -1,0 +1,5 @@
+<Project>
+  <!-- The runtime code of the pack: its kernel and its bases. The root project references it. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>

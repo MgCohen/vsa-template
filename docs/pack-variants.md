@@ -6,41 +6,53 @@ A pack variant is a pack that inherits the architecture of another pack and adds
 
 | Need | Form |
 |---|---|
-| Some rules about the code of one app | An architecture class in the app, for example `engine/Definition/EngineArchitecture.cs` |
+| Some rules about the code of one app | A definition project in the app, for example `engine/Definition/` |
 | A new module kind, its bases and its rules | A pack variant in `App/Packs/<Name>/` |
 | A part in each module of a base kind | A pack variant that overrides a define method |
-| A different architecture, not VSA | A new definition that inherits `Architecture` (`tests/Fixtures/Architecture/LayeredApp`) |
+| A different architecture, not VSA | A new definition that inherits `Architecture<TKernel>`, with its own kernel (a block with no app: `Architecture`, `tests/Fixtures/Architecture/LayeredApp`) |
 
 ## The pack and its two checks
 
 ```
-PackVariant/                             app block: check entry PackVariantApp, definition EcsArchitecture
+PackVariant/                             app block: app class PackVariantApp, definition EcsArchitecture
 └─ App/                                  the App root
-   ├─ PackVariantApp.cs                  public class PackVariantApp : App<Ecs<AppHost>>;
+   ├─ PackVariantApp.cs                  public class PackVariantApp : App<EcsKernel, AppHost>;
    ├─ Features/Inventory/                a feature module
    ├─ EcsFeatures/Combat/                an EcsFeature module
    │  └─ CombatModule.cs, Components/, Systems/
-   └─ Packs/Ecs/                         pack block: check entry Ecs<THost>, definition PackArchitecture
-      ├─ EcsPack.cs                      the pack class
-      ├─ Definition/                     EcsArchitecture and its concept records
-      ├─ Kernel/                         EcsSystem: the base of each system
+   └─ Packs/Ecs/                         pack block: check entry EcsArchitecture, definition PackArchitecture
+      ├─ Definition/                     Ecs.Definition.csproj: EcsArchitecture and its concept records
+      ├─ Kernel/                         Ecs.Kernel.csproj: EcsKernel, and EcsSystem, the base of each system
       └─ Tests/                          Ecs.Tests: the tests of EcsArchitecture
 ```
 
-A pack variant is not a package, so the app keeps the default pack `Umpire.Vsa`. The pack class derives from `Vsa<...>`, so the app class selects VSA, and the VSA analyzers run. The pack class is the check entry of the pack block (`Pack : Block<PackArchitecture>`):
+A pack variant is not a package, so the app keeps the default pack `Umpire.Vsa`. A variant has two projects. Its kernel is runtime code, and its architecture names that kernel:
 
 ```csharp
-public class Ecs<THost> : Vsa<EcsArchitecture, THost> where THost : AppHost, new();
+// Kernel/EcsKernel.cs: the app names it
+public class EcsKernel : VsaKernel;
+
+// Definition/EcsArchitecture.cs: check-time only
+public sealed class EcsArchitecture : VsaArchitecture<EcsKernel> { ... }
 ```
+
+```mermaid
+flowchart LR
+    App["PackVariant.csproj"] -->|references| Kernel["Ecs.Kernel"]
+    Definition["Ecs.Definition"] -->|references| Kernel
+    App -.->|builds first| Definition
+```
+
+`EcsKernel` derives from `VsaKernel`, so the app class selects VSA, and the VSA analyzers run. The Umpire SDK adds both links of the root project: the reference to each `App/Packs/<Name>/Kernel/*.csproj`, and the build of each `Definition/*.csproj`. The kernel of the variant is a project, because the definition names it and the definition builds before the app.
 
 | Check | Block folder | Definition | Checks |
 |---|---|---|---|
-| App | `PackVariant/` | `EcsArchitecture`, from the app class | `App/`, `App/Features/`, `App/EcsFeatures/`. `App/Packs/Ecs/` is one part |
-| Pack | `PackVariant/App/Packs/Ecs/` | `PackArchitecture`, from `Ecs<THost>` | The pack class, `Definition/`, `Kernel/`, `Tests/` |
+| App | `PackVariant/` | `EcsArchitecture`, from the kernel `EcsKernel` | `App/`, `App/Features/`, `App/EcsFeatures/`. `App/Packs/Ecs/` is one part |
+| Pack | `PackVariant/App/Packs/Ecs/` | `PackArchitecture`, with `EcsArchitecture` | `Definition/`, `Kernel/`, `Tests/` |
 
-`VsaArchitecture` marks `App/Packs/` with `AddBlockGroup<Pack>("Packs")`. So the app check binds each type of `App/Packs/<Name>/` to the part `Pack`, and the pack check checks its uses. The app class, the app host (`App/Host/`) and each feature and plugin module may use `Pack`. The app views (`Views/`) may not use `Pack`: a view uses only presenters. A pack place uses nothing in the app. The root project compiles `App/Packs/`, so the pack types are in the app DLL.
+`VsaArchitecture` marks `App/Packs/` with `AddBlockGroup<Pack>("Packs")`. So the app check binds each type of `App/Packs/<Name>/` to the part `Pack`, and the pack check checks its uses. The app class, the app host (`App/Host/`) and each feature and plugin module may use `Pack`. The app views (`Views/`) may not use `Pack`: a view uses only presenters. A pack place uses nothing in the app.
 
-The build of the app checks only the app block ([MgCohen/vsa-template#150](https://github.com/MgCohen/vsa-template/issues/150)). Run the pack check by hand:
+The build of the app also checks the pack block. Run only the pack check by hand:
 
 ```bash
 dotnet umpire-engine.dll --project App/Packs/Ecs --bin <host output>
@@ -51,7 +63,7 @@ dotnet umpire-engine.dll --project App/Packs/Ecs --bin <host output>
 A variant overrides `Define` and `Rules`, and writes only its additions. It does not call the base: the engine calls each level of the chain, from the base down (`UMP010107`).
 
 ```csharp
-public sealed class EcsArchitecture : VsaArchitecture {
+public sealed class EcsArchitecture : VsaArchitecture<EcsKernel> {
     protected override void Define(Part root, Part kernel) {
         var ecs = root.AddGroup<EcsFeature>();
         ecs.Add<Components>();
@@ -138,6 +150,7 @@ In the fixture, step 1 is enough. `EcsArchitecture` is in `PackVariant.Packs.Ecs
 ```csharp
 namespace PackVariant.Packs.Ecs.Definition;
 
+using PackVariant.Packs.Ecs.Kernel;
 using PackVariant.Packs.Ecs.Kernel.Domain;
 using Umpire.Architecture;
 using Umpire.Kernels.Blocks;
@@ -148,7 +161,6 @@ using Umpire.Vsa.Definition;
 |---|---|
 | `Kernel` is the record `Umpire.Architecture.Blocks.Kernel` and a folder of the pack | 1 |
 | `App` is the record and the namespace `<App>.App` | 1 |
-| `Pack` is the record `Umpire.Kernels.Blocks.Pack` and the class `Umpire.Kernels.Pack` | 3: `using Pack = Umpire.Kernels.Blocks.Pack;` |
 | `Module` is the record `Umpire.Kernels.Blocks.Module` and the class `Umpire.Kernels.Module` | 3: `using Module = Umpire.Kernels.Blocks.Module;` |
 | `Plugin` is the record and the class `Umpire.Vsa.Composition.Plugin` | 3: `using Plugin = Umpire.Vsa.Definition.Plugin;` |
 | A variant in `Umpire.Vsa.Definition.*` | 2 |
@@ -176,16 +188,18 @@ protected override void Rules(RuleBook rules) {
 
 ## `umpire add pack`
 
-`umpire add pack <Name>` writes two files:
+`umpire add pack <Name>` writes four files in `App/Packs/<Name>/`:
 
 | File | Content |
 |---|---|
-| `App/Packs/<Name>/<Name>Pack.cs` | `public class <Name><THost> : Vsa<<Name>Architecture, THost> where THost : AppHost, new();` |
-| `App/Packs/<Name>/Definition/<Name>Architecture.cs` | `public class <Name>Architecture : VsaArchitecture;` |
+| `Kernel/<Name>.Kernel.csproj` | `netstandard2.1`, so a root with each target can reference it |
+| `Kernel/<Name>Kernel.cs` | `public class <Name>Kernel : VsaKernel;` |
+| `Definition/<Name>.Definition.csproj` | `netstandard2.1`, and a reference to `../Kernel/<Name>.Kernel.csproj` |
+| `Definition/<Name>Architecture.cs` | `public class <Name>Architecture : VsaArchitecture<<Name>Kernel>;` |
 
 Then do these steps:
 
-1. Change the app class to `App<<Name><WebHost>>`.
+1. Change the app class to `App<<Name>Kernel, WebHost>`.
 2. Add the concept records to `Definition/`.
 3. Add the parts and the rules to `<Name>Architecture`.
 4. Put the bases of the new module kind in `Kernel/`.

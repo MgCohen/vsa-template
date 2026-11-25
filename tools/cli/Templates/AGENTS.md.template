@@ -7,12 +7,12 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | Path             | Purpose                                                              |
 |------------------|----------------------------------------------------------------------|
 | `SampleApp.csproj` | The one root project. It compiles `App/` and `Views/` |
-| `App/`       | The runtime code. `App/Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : App<Vsa<WebHost>>` starts the app, finds the modules and the views, and gives the definition |
+| `App/`       | The runtime code. `App/Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : App<VsaKernel, WebHost>` names the kernel and the host. It starts the app, and it finds the modules and the views |
 | `Views/`     | The Blazor views. Each module has its page in `Views/Pages/`     |
 | `App/Features/<Name>/`| One feature module: its module class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `App/Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |
 | `App/Tests/`     | A nested project: one unit test file for each module                |
-| `Definition/`    | Optional: the architecture class of the app (`Definition/<Name>Architecture.cs`), its records and its externals |
+| `Definition/`    | Optional: a nested project (`Definition/<Name>.Definition.csproj`) with the architecture class of the app, its records and its externals. The app does not reference it |
 
 The app has one root project. A module, a slice or a plugin needs no project: add only its files. A nested project (for example `App/Tests/`) is optional, and the root project does not compile its folder. The folders select the layers, and the rule engine checks each use against the VSA definition after the build.
 
@@ -39,7 +39,7 @@ dotnet tool exec Umpire.Cli@<version> -y -- doctor                          # th
 dotnet tool exec Umpire.Cli@<version> -y -- test                            # the tests of each *.Tests project
 ```
 
-The rule engine checks each type against the VSA definition. The Umpire SDK package holds the engine, and it runs the check after each build of the root project. `-p:UmpireCheck=false` stops the check for one build. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and use it in `App/SampleAppApp.cs` as `App<Vsa<TArchitecture, WebHost>>`.
+The rule engine checks each type against the VSA definition. The Umpire SDK package holds the engine, and it runs the check after each build of the root project. `-p:UmpireCheck=false` stops the check for one build. The test project does not check the architecture. The check gives `UMP020101` (a use that the definition denies), `UMP020201` (a type that is not the type of its part) and `UMP020202` (a type in a folder that the definition does not have). To change the rules, derive a definition from `VsaArchitecture`, override `Rules(RuleBook)`, and put it in a `Definition/` project. The first line of that project is the Umpire SDK line of a project with no web host, for example `<Project Sdk="Umpire.Sdk/<version>" />`. The check finds the definition in `Definition/`, and the app does not name it.
 
 `.umpireconfig` is TOML. The top-level keys are the rule values, for example `umpire.UMP010101.max = 140`. A table with the name of a module holds its settings, for example `[Notebook]`. A string needs quotes.
 

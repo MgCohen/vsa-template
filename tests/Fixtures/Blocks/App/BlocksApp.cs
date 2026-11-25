@@ -1,6 +1,6 @@
 namespace Blocks.Host;
 
-using Umpire.Vsa;
 using Umpire.Kernels;
+using Umpire.Vsa.Composition;
 
-public class BlocksApp : App<Vsa<BlocksArchitecture, AppHost>>;
+public class BlocksApp : App<VsaKernel, AppHost>;

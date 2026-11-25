@@ -1,9 +1,10 @@
-namespace Rules.Slices.CheckRules;
+namespace BuiltApp.Infrastructure;
 
+using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.Config;
 
-sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IReadOnlyList<string> BadKeys) {
+public sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IReadOnlyList<string> BadKeys) {
     public const string Key = "umpire.check.folder_aliases";
     const string CurrentFolder = "./";
     const string BlockRoot = ".";
@@ -34,6 +35,23 @@ sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IReadOnlyLis
         path = path.Trim('/');
         return path == BlockRoot ? "" : path;
     }
+
+    public string DefinitionBlock(string blockFolder, string folder) {
+        var relative = Normal(Path.GetRelativePath(blockFolder, folder));
+        var definition = relative.Length == 0 ? DefinitionType.FolderName : $"{relative}/{DefinitionType.FolderName}";
+        return Aliases.Any(a => IsAlias(a, relative, "") || IsAlias(a, definition, DefinitionType.FolderName)
+            || (DefinitionType.IsFolderName(a.As) && (relative + "/").StartsWith(a.Folder + "/", StringComparison.OrdinalIgnoreCase)))
+            ? blockFolder
+            : folder;
+    }
+
+    public IReadOnlyList<string> DefinitionFolders(string blockFolder) => [
+        Path.Combine(blockFolder, DefinitionType.FolderName),
+        .. Aliases.Where(a => a.As.Length == 0).Select(a => Path.Combine(blockFolder, a.Folder, DefinitionType.FolderName)),
+        .. Aliases.Where(a => DefinitionType.IsFolderName(a.As)).Select(a => Path.Combine(blockFolder, a.Folder))];
+
+    static bool IsAlias(FolderAlias alias, string folder, string target) =>
+        string.Equals(alias.Folder, folder, StringComparison.OrdinalIgnoreCase) && string.Equals(alias.As, target, StringComparison.OrdinalIgnoreCase);
 
     static bool IsBlockFolder(string configFolder, string blockFolder) =>
         string.Equals(

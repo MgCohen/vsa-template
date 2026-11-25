@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using BuiltApp.Domain.Shared;
+using BuiltApp.Infrastructure;
 using Umpire.Architecture;
 
 public static class InputHash {
@@ -17,6 +18,7 @@ public static class InputHash {
         IReadOnlyList<string>? references = null, IReadOnlyList<string>? ignoredFolders = null) {
         var lines = new List<string> { run, Engine() };
         lines.AddRange(Facts(Patterns(bin, BinPatterns)));
+        lines.AddRange(Facts(Patterns(BinReader.DefinitionsFolder(bin), BinPatterns)));
         lines.AddRange(Facts((references ?? []).SelectMany(folder => Patterns(folder, ["*.dll", "*.pdb"]))));
         lines.AddRange(ConfigFacts(block, ignoredFolders));
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", lines)));

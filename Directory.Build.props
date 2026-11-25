@@ -1,13 +1,13 @@
 <Project>
   <!-- The layers that Unity can use also target netstandard2.1 (see docs/unity.md). -->
   <PropertyGroup>
-    <UmpirePortableLayer Condition="'$(MSBuildProjectName)' == 'Umpire.Vsa.Domain' or '$(MSBuildProjectName)' == 'Umpire.Messages.Handlers' or '$(MSBuildProjectName)' == 'Umpire.Messages.Contracts' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Infrastructure' or '$(MSBuildProjectName)' == 'Umpire.Kernels' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Composition' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Presenters' or '$(MSBuildProjectName)' == 'Umpire.Architecture' or '$(MSBuildProjectName)' == 'Umpire.Vsa' or '$(MSBuildProjectName)' == 'Umpire.Config' or '$(MSBuildProjectName)' == 'Umpire'">true</UmpirePortableLayer>
+    <UmpirePortableLayer Condition="'$(MSBuildProjectName)' == 'Umpire.Vsa.Domain' or '$(MSBuildProjectName)' == 'Umpire.Messages.Handlers' or '$(MSBuildProjectName)' == 'Umpire.Messages.Contracts' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Commands' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Events' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Infrastructure' or '$(MSBuildProjectName)' == 'Umpire.Kernels' or '$(MSBuildProjectName)' == 'Umpire.Kernels.Definition' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Composition' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Contracts.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Handlers.Requests' or '$(MSBuildProjectName)' == 'Umpire.Vsa.Presenters' or '$(MSBuildProjectName)' == 'Umpire.Architecture' or '$(MSBuildProjectName)' == 'Umpire.Vsa' or '$(MSBuildProjectName)' == 'Umpire.Config' or '$(MSBuildProjectName)' == 'Umpire'">true</UmpirePortableLayer>
   </PropertyGroup>
 
   <!-- The runtime projects ship in the bundle packages of tools/bundle/ (Umpire, Umpire.Web, Umpire.Console, Umpire.Testing),
        so they are not packages. -->
   <PropertyGroup>
-    <UmpireBundled Condition="$([System.String]::Copy(';Umpire.Markers;Umpire.Architecture;Umpire.Config;Umpire.Kernels;Umpire.Messages.Contracts;Umpire.Messages.Handlers;Umpire.Vsa;Umpire.Vsa.Composition;Umpire.Vsa.Domain;Umpire.Vsa.Infrastructure;Umpire.Vsa.Presenters;Umpire.Vsa.Contracts.Requests;Umpire.Vsa.Contracts.Events;Umpire.Vsa.Contracts.Commands;Umpire.Vsa.Handlers.Requests;Umpire.Vsa.Handlers.Events;Umpire.Vsa.Handlers.Commands;Umpire.Vsa.Views;Umpire.Hosts.Web;Umpire.Hosts.Console;Umpire.Vsa.Testing.Unit;').Contains(';$(MSBuildProjectName);'))">true</UmpireBundled>
+    <UmpireBundled Condition="$([System.String]::Copy(';Umpire.Markers;Umpire.Architecture;Umpire.Config;Umpire.Kernels;Umpire.Kernels.Definition;Umpire.Messages.Contracts;Umpire.Messages.Handlers;Umpire.Vsa;Umpire.Vsa.Composition;Umpire.Vsa.Domain;Umpire.Vsa.Infrastructure;Umpire.Vsa.Presenters;Umpire.Vsa.Contracts.Requests;Umpire.Vsa.Contracts.Events;Umpire.Vsa.Contracts.Commands;Umpire.Vsa.Handlers.Requests;Umpire.Vsa.Handlers.Events;Umpire.Vsa.Handlers.Commands;Umpire.Vsa.Views;Umpire.Hosts.Web;Umpire.Hosts.Console;Umpire.Vsa.Testing.Unit;').Contains(';$(MSBuildProjectName);'))">true</UmpireBundled>
     <IsPackable Condition="'$(UmpireBundled)' == 'true'">false</IsPackable>
   </PropertyGroup>
 
@@ -23,7 +23,7 @@
        Unity, for .NET apps and for the engine. The engine loads the definition of an app, and a record of a net8.0 build and
        of a netstandard2.1 build have different methods, so one build keeps one shape (see docs/unity.md). -->
   <PropertyGroup>
-    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
+    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Engine.Definition' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
   </PropertyGroup>
 
   <PropertyGroup>

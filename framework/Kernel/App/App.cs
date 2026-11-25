@@ -26,7 +26,7 @@ public abstract class App : IApp {
     ManualResetEventSlim stopRequest = new();
     ManualResetEventSlim stopped = new(initialState: true);
 
-    public abstract Pack Pack { get; }
+    public abstract Kernel Kernel { get; }
 
     public AppState State {
         get {
@@ -43,6 +43,8 @@ public abstract class App : IApp {
             }
         }
     }
+
+    public abstract AppHost CreateHost();
 
     public void Start(string[] args) => Start(args, ownedByRun: false);
 
@@ -97,7 +99,7 @@ public abstract class App : IApp {
 
     void Start(string[] args, bool ownedByRun) {
         var (current, done) = Begin(ownedByRun);
-        var started = Pack.CreateHost();
+        var started = CreateHost();
         try {
             Launch(started, args, current);
         } catch {

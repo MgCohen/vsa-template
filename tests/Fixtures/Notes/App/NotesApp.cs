@@ -2,6 +2,6 @@ namespace Notes.Host;
 
 using Umpire.Hosts.Web;
 using Umpire.Kernels;
-using Umpire.Vsa;
+using Umpire.Vsa.Composition;
 
-public class NotesApp : App<Vsa<WebHost>>;
+public class NotesApp : App<VsaKernel, WebHost>;

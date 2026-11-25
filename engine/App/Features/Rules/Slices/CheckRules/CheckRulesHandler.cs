@@ -1,5 +1,6 @@
 namespace Rules.Slices.CheckRules;
 
+using BuiltApp.Infrastructure;
 using LoadApp.Domain.Shared;
 using Rules.Domain;
 using Steps.Domain.Shared;
