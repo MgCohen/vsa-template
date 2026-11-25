@@ -11,6 +11,7 @@ public sealed class ResolvedArchitecture {
     public ResolvedArchitecture(Architecture architecture) {
         var compiled = new Compiler(architecture);
         Architecture = architecture;
+        Compiled = compiled;
         Config = compiled.Config;
         Options = compiled.Options;
         Root = compiled.Root;
@@ -30,6 +31,7 @@ public sealed class ResolvedArchitecture {
     public Part Root { get; }
     public IReadOnlyList<Part> Parts { get; }
     public IReadOnlyList<PartRule> UseRules { get; }
+    internal Compiler Compiled { get; }
 
     public PartOptions OptionsOf(Part part) => partOptions.TryGetValue(part, out var options) ? options : Options;
 

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The last job of the check model: it checks all types of a block from the saved data, with no compile. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>umpire-check</AssemblyName>
+    <RollForward>Major</RollForward>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Model/Umpire.CheckModel.csproj" />
+    <ProjectReference Include="../../framework/Components/Config/Umpire.Config.csproj" />
+  </ItemGroup>
+</Project>
