@@ -42,6 +42,7 @@ internal sealed class Compiler {
         CheckNames();
     }
 
+    public RuleBook Book => book;
     public ArchitectureConfig Config { get; }
     public PartOptions Options { get; }
     public Part Root { get; }
@@ -217,12 +218,12 @@ internal sealed class Compiler {
         if (count.Types) {
             var self = count.Subjects.All(entry => entry.Depth == Depth.Self);
             return new CountStatement(text, subjects, false,
-                b => (counted == typeof(object) || b.Type.Is(counted)) && (!self || subjects.Contains(b.Part)),
+                self ? subjects : null, counted == typeof(object) ? null : counted,
                 counted == typeof(object) ? "types" : $"types of {counted.Name}", count.Min, count.Max, count.OneKind, PerPart: true, SkipTaken: counted == typeof(object));
         }
         RefuseNoFamily(counted, text);
         return new CountStatement(text, subjects, false,
-            b => count.Depth == Depth.Self ? b.Part.Is(counted) : b.Part.InFamily(counted),
+            [.. Parts.Where(p => count.Depth == Depth.Self ? p.Is(counted) : p.InFamily(counted))], null,
             $"{Concept.Display(counted)} types", count.Min, count.Max, count.OneKind);
     }
 
@@ -266,7 +267,7 @@ internal sealed class Compiler {
                 var counted = $"{part.Name} types with base {name}";
                 var text = $"{part.Name} requires {name} in each {group?.Name ?? "app"}";
                 yield return new CountStatement(text, group is null ? [] : [group], group is null,
-                    b => b.Part == part && b.Type.Is(type), counted, 1, null, false);
+                    [part], type, counted, 1, null, false);
             }
         }
     }

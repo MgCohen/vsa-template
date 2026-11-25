@@ -5,5 +5,16 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)check/Model/Umpire.CheckModel.csproj" />
+    <ProjectReference Include="$(RepoRoot)check/Export/Umpire.CheckModel.Export.csproj" />
+  </ItemGroup>
+  <!-- The definitions of the fixture apps. -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)tests/Architecture.Tests/FixtureArchitecture.cs" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Spike/Charlie/Spike.Charlie.csproj" />
   </ItemGroup>
 </Project>

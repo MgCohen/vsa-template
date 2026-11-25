@@ -4,10 +4,14 @@ internal sealed record CountStatement(
     string Rule,
     IReadOnlyList<Part> Subjects,
     bool WholeApp,
-    Func<Binding, bool> Counts,
+    IReadOnlyList<Part>? CountedParts,
+    Type? CountedType,
     string Counted,
     int? Min,
     int? Max,
     bool OneKind,
     bool PerPart = false,
-    bool SkipTaken = false);
+    bool SkipTaken = false) {
+    public bool Counts(Binding binding) =>
+        CountedParts?.Contains(binding.Part) != false && (CountedType is null || binding.Type.Is(CountedType));
+}
