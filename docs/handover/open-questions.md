@@ -67,3 +67,4 @@ The proposals and the questions of https://claude.ai/artifact/GQkEAJ48rdzvsDjPtX
 ### Answers
 
 - **P1 (2026-11-25).** Accepted. "I want it to be unified. We only have one thing, the engine, period. If we have our own analyzers, they're inside the engine. There might be different entry points, but they all go through the same system."
+- **P1, analyzers (2026-11-25).** Option A: all our analyzers are in the engine, also the generic rules. "Everything goes through the same place. They might have some extra utility. But every code that we have that checks, no matter what, goes through the same system. They get the config from the same place. We only have one point of maintenance." This changes K3: generic rules are engine operations that need no app model, not analyzers outside the engine.
