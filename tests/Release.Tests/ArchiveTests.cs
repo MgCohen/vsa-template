@@ -214,9 +214,16 @@ public sealed class ArchiveTests {
         File.WriteAllText(Path.Combine(app, "App", "Host", "DiceShell.cs"), """
             namespace DiceGame.App.Host;
 
-            using Umpire.Architecture;
             using Umpire.Kernels;
-            using Umpire.Vsa;
+            using Umpire.Vsa.Composition;
+
+            public sealed class DiceShell : IAppEntry<VsaKernel> { }
+            """);
+        Directory.CreateDirectory(Path.Combine(app, "Definition"));
+        File.WriteAllText(Path.Combine(app, "Definition", "DiceArchitecture.cs"), """
+            namespace DiceGame.Definition;
+
+            using Umpire.Architecture;
             using Umpire.Vsa.Definition;
 
             public sealed class DiceArchitecture : VsaArchitecture {
@@ -226,8 +233,6 @@ public sealed class ArchiveTests {
             public sealed record HostViews : External {
                 public override string Assembly => "Host.Views";
             }
-
-            public sealed class DiceShell : IAppEntry<Vsa<DiceArchitecture, AppHost>> { }
             """);
         if (withStray) {
             Directory.CreateDirectory(Path.Combine(app, "Misc"));

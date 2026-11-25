@@ -31,6 +31,52 @@
     <EmbeddedResource Remove="@(_UmpireNestedFile)" />
   </ItemGroup>
 
+  <!-- A definition is a nested project in a folder Definition/, in its own check-time DLL. The project builds it first and does
+       not reference it. The definitions below a nested project that is not a test project belong to that project. The target, the runtime and the
+       output folder of this project are not the ones of the definition. The kernel of a pack variant
+       (App/Packs/<Name>/Kernel/) is a normal reference. -->
+  <ItemGroup Condition="'$(UmpireTestProject)' != 'true'">
+    <_UmpireNestedOwner Include="@(_UmpireNestedProject)" Exclude="**/*.Tests.csproj" />
+    <_UmpireDefinitionProject Include="**/Definition/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource);@(_UmpireNestedOwner->'%(RelativeDir)**/Definition/*.csproj')" />
+    <ProjectReference Include="@(_UmpireDefinitionProject)" ReferenceOutputAssembly="false" Private="false"
+                      OutputItemType="_UmpireDefinition" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
+    <ProjectReference Include="App/Packs/*/Kernel/*.csproj" GlobalPropertiesToRemove="OutputPath;OutDir;_CommandLineDefinedOutputPath" />
+  </ItemGroup>
+  <!-- The architecture check reads the definitions from the folder umpire-definitions of the output, and a publish does not
+       copy that folder. It gets each definition DLL, each DLL that only a definition uses, and the definitions of the
+       referenced projects. The runtime gives the System, Microsoft.Extensions
+       and Microsoft.AspNetCore DLLs. -->
+  <Target Name="_UmpireCopyDefinitions" AfterTargets="CopyFilesToOutputDirectory" Condition="'$(UmpireTestProject)' != 'true'">
+    <PropertyGroup>
+      <_UmpireDefinitionsDir>$([MSBuild]::NormalizeDirectory('$(TargetDir)', 'umpire-definitions'))</_UmpireDefinitionsDir>
+      <_UmpireDefinitionSources>@(_UmpireDefinition->'%(RootDir)%(Directory)*.dll;%(RootDir)%(Directory)*.pdb')</_UmpireDefinitionSources>
+      <_UmpireDefinitionList>$(IntermediateOutputPath)umpire-definitions.$([MSBuild]::StableStringHash('$(_UmpireDefinitionsDir)').ToString('x8')).list</_UmpireDefinitionList>
+      <_UmpireReferencedDefinitions>@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)umpire-definitions/*')</_UmpireReferencedDefinitions>
+    </PropertyGroup>
+    <!-- Many projects can have one output folder (-o), so a project deletes only the files that it copied to this folder before. -->
+    <ReadLinesFromFile File="$(_UmpireDefinitionList)" Condition="Exists('$(_UmpireDefinitionList)')">
+      <Output TaskParameter="Lines" ItemName="_UmpireDefinitionBefore" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_UmpireDefinitionCandidate Include="$(_UmpireDefinitionSources);$(_UmpireReferencedDefinitions)" Exclude="$(_UmpireDefinitionsDir)*" />
+      <_UmpireDefinitionName Include="@(_UmpireDefinitionCandidate->'%(Filename)%(Extension)')" Source="%(FullPath)"
+                             Condition="!$([System.String]::Copy('%(Filename)').StartsWith('System.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.Extensions.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.AspNetCore.'))" />
+      <_UmpireDefinitionName Remove="@(ReferenceCopyLocalPaths->'%(Filename)%(Extension)');$(TargetFileName);$(TargetName).pdb" />
+      <_UmpireDefinitionFile Include="@(_UmpireDefinitionName->'%(Source)'->Distinct())" />
+      <_UmpireDefinitionCopy Include="@(_UmpireDefinitionFile->'$(_UmpireDefinitionsDir)%(Filename)%(Extension)')" />
+      <_UmpireStaleDefinition Include="@(_UmpireDefinitionBefore)" Exclude="@(_UmpireDefinitionCopy)" />
+    </ItemGroup>
+    <Delete Files="@(_UmpireStaleDefinition)" />
+    <Copy SourceFiles="@(_UmpireDefinitionFile)" DestinationFolder="$(_UmpireDefinitionsDir)" SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+    <WriteLinesToFile File="$(_UmpireDefinitionList)" Lines="@(_UmpireDefinitionCopy)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_UmpireDefinitionList)" />
+    </ItemGroup>
+  </Target>
+
   <!-- The general parts that each app needs, with no layer, and the default pack.
        Path is the project folder under the repository root in source mode. Package is the bundle package that ships the project
        in package mode (tools/bundle/): many projects share one package. An Analyzer item is a Roslyn analyzer, not a library. -->
@@ -41,11 +87,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
     <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
-  <!-- The code of the app selects its pack (App<Vsa<...>>). A package only makes a pack available. The SDK adds the default pack,
+  <!-- The kernel of the app selects its pack (App<VsaKernel, ...>). A package only makes a pack available. The SDK adds the default pack,
        VSA, and its test bases for a test project. UmpireDefaultPack=false leaves them out: then the app references the package
        of its pack and of its test bases itself. A pack package brings its analyzers. Source mode adds them here, because a
        project reference does not bring analyzers. -->
@@ -113,7 +160,7 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(_UmpireIsEngine)' != 'true'">
     <ProjectReference Include="$(_UmpireEngineProject)" ReferenceOutputAssembly="false" Private="false"
-                      SkipGetTargetFrameworkProperties="true" />
+                      SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
   </ItemGroup>
 
   <!-- The architecture check after each build of the root project. MSBuild only calls the engine with the Check stage: the
@@ -127,7 +174,7 @@
     <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
   </PropertyGroup>
   <Target Name="UmpireCheck" AfterTargets="Build"
-          Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true'">
+          Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'">
     <PropertyGroup>
       <UmpireEngineFile Condition="'$(_UmpireIsEngine)' == 'true'">$(TargetPath)</UmpireEngineFile>
       <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
@@ -195,6 +242,7 @@
   <!-- netstandard2.1 does not have the type that the compiler needs for init and records. The folder name ends with ~, so the
        engine does not count the file as a source of the block. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Remove="$(UmpireFrameworkSourceDir)tools/sdk/Polyfills~/*.cs" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
     <Compile Include="$(MSBuildThisFileDirectory)../Polyfills~/*.cs" Visible="false" />
   </ItemGroup>
 

@@ -8,9 +8,10 @@ public static class PackSelection {
     public const string ArchitectureKey = "umpire.architecture";
     const string MetadataKey = "Umpire.Architecture";
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
-    const string AppType = "Umpire.Kernels.App`1";
+    const string AppType = "Umpire.Kernels.App`2";
     const string BlockType = "Umpire.Architecture.Block`1";
-    const string PackType = "Umpire.Kernels.Pack`3";
+    const string ArchitectureType = "Umpire.Kernels.Architecture`1";
+    const string KernelType = "Umpire.Kernels.Kernel";
     const string AppEntryType = "Umpire.Kernels.IAppEntry`1";
 
     public static bool Selects(Compilation compilation, string? architecture, string packNamespace) {
@@ -24,14 +25,18 @@ public static class PackSelection {
     }
 
     static IEnumerable<IReadOnlyList<string>> CodeEntries(Compilation compilation) {
-        var bases = new[] { AppType, PackType, BlockType }.Select(compilation.GetTypeByMetadataName).ToArray();
+        var bases = new[] { AppType, ArchitectureType, BlockType }.Select(compilation.GetTypeByMetadataName).ToArray();
         var entryInterface = compilation.GetTypeByMetadataName(AppEntryType);
+        var kernel = compilation.GetTypeByMetadataName(KernelType);
         foreach (var type in SourceTypes(compilation.Assembly.GlobalNamespace)) {
             IEnumerable<INamedTypeSymbol> entries = EntryBase(type, bases) is { } entryBase
                 ? [entryBase]
                 : EntryInterfaces(type, entryInterface);
             foreach (var entry in entries.Where(e => e.TypeArguments[0].TypeKind != TypeKind.TypeParameter)) {
                 yield return Assemblies(entry.TypeArguments[0]);
+            }
+            if (EntryBase(type, [kernel]) is not null) {
+                yield return Assemblies(type);
             }
         }
         foreach (var attribute in compilation.Assembly.GetAttributes()) {
@@ -86,8 +91,12 @@ public static class PackSelection {
 
     static bool HasReferencedType(Compilation compilation, INamespaceSymbol space, string[] parts, int index) =>
         index == parts.Length
-            ? space.GetTypeMembers().Any(type => !SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, compilation.Assembly))
+            ? HasReferencedType(compilation, space)
             : space.GetNamespaceMembers().Any(child => child.Name == parts[index] && HasReferencedType(compilation, child, parts, index + 1));
+
+    static bool HasReferencedType(Compilation compilation, INamespaceSymbol space) =>
+        space.GetTypeMembers().Any(type => !SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, compilation.Assembly))
+        || space.GetNamespaceMembers().Any(child => HasReferencedType(compilation, child));
 
     static IEnumerable<INamedTypeSymbol> SourceTypes(INamespaceSymbol space) =>
         space.GetTypeMembers().SelectMany(WithNested).Where(type => type.TypeKind == TypeKind.Class)

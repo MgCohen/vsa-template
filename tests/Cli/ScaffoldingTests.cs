@@ -80,8 +80,10 @@ public sealed class ScaffoldingTests {
             ("App/Features/SampleModule/Slices/SampleChange/SampleChangeCommand.cs", Command),
             ("App/Features/SampleModule/Slices/SampleChange/SampleChangeHandler.cs", Command),
             ("App/Features/SampleModule/Slices/SampleChange/SampleChangeResult.cs", Command),
+            ("App/Packs/SamplePack/Definition/SamplePack.Definition.csproj", Pack),
             ("App/Packs/SamplePack/Definition/SamplePackArchitecture.cs", Pack),
-            ("App/Packs/SamplePack/SamplePackPack.cs", Pack),
+            ("App/Packs/SamplePack/Kernel/SamplePack.Kernel.csproj", Pack),
+            ("App/Packs/SamplePack/Kernel/SamplePackKernel.cs", Pack),
             ("App/Plugins/.gitkeep", App),
             ("App/Plugins/SamplePlugin/Contracts/Commands/SamplePluginStep.cs", Plugin),
             ("App/Plugins/SamplePlugin/SamplePluginPlugin.cs", Plugin),
@@ -128,7 +130,7 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
         Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
-        Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<Vsa<WebHost>>;"));
+        Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<VsaKernel, WebHost>;"));
         Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("namespace Hello.Host;"));
         Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("using Hello.Host;"));
     }

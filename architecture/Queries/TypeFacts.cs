@@ -20,6 +20,7 @@ public sealed record TypeFacts(
     public bool IsDelegate { get; init; }
     public IReadOnlyList<string> Attributes { get; init; } = [];
     public IReadOnlyList<string> References { get; init; } = [];
+    public IReadOnlyList<string> MutableMembers { get; init; } = [];
     public bool IsNested { get; init; }
 
     public bool Is(Type target) => Bases.Contains(target.FullName!);

@@ -142,6 +142,25 @@ public sealed class ContentTests {
     }
 
     [Test]
+    public void The_immutable_trait_names_each_member_that_can_change() {
+        var definition = new CountArchitecture(rules => rules.For<Item>().Are<Immutable>());
+
+        var results = definition.Traits(Item("Fixed"), Item("Open") with { MutableMembers = ["Name", "Count"] });
+
+        Assert.That(results.Single().Message, Does.StartWith(
+            "Open is in Item (Boxes/a), but it is not immutable (Name, Count can change), so it breaks the rule \"Item types are immutable\"."));
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void The_immutable_trait_reads_a_nested_type_unless_another_trait_does_not(bool alone) {
+        var definition = new CountArchitecture(rules => rules.For<Item>().Are(alone ? Trait.Immutable : Trait.Immutable & Trait.Sealed));
+        var nested = Item("Inner") with { IsNested = true, MutableMembers = ["Name"] };
+
+        Assert.That(definition.Traits(nested), Has.Count.EqualTo(alone ? 1 : 0));
+    }
+
+    [Test]
     public void Two_instances_of_a_trait_are_equal() {
         Assert.That(Trait.Sealed, Is.EqualTo(new Sealed()));
     }

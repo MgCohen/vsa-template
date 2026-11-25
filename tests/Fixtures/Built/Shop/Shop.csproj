@@ -1,0 +1,5 @@
+<Project Sdk="Umpire.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+</Project>

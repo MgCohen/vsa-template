@@ -1,3 +1,4 @@
+using BuiltApp.Infrastructure;
 using Changes.Infrastructure;
 using Tests.Shared;
 
@@ -38,6 +39,20 @@ public sealed class ChangesTests {
         Assert.That(result.Lines, Is.EqualTo(new[] {
             "umpire-engine: UMP030201: No input changed since the last clean check, so the check did not run.",
         }));
+    }
+
+    [Test]
+    public void A_dll_in_the_definitions_folder_changes_the_input_hash() {
+        var bin = TempFolder.Create();
+        try {
+            var before = InputHash.Of(Notes, bin, "run");
+            var definitions = Directory.CreateDirectory(BinReader.DefinitionsFolder(bin)).FullName;
+            File.WriteAllText(Path.Combine(definitions, "A.Definition.dll"), "");
+
+            Assert.That(InputHash.Of(Notes, bin, "run"), Is.Not.EqualTo(before));
+        } finally {
+            TempFolder.Delete(bin);
+        }
     }
 
     [Test]

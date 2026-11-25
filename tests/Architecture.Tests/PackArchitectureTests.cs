@@ -11,27 +11,20 @@ public sealed class PackArchitectureTests {
     [TestCase("Kernel/Hosting/SampleHost.cs")]
     [TestCase("Tests/Unit/SampleTests.cs")]
     public void The_three_pack_folders_are_parts(string file) {
-        var bindings = Place(Pack(), Fact(file, "Other"));
+        var bindings = Place(Definition(), Fact(file, "Other"));
 
         Assert.That(bindings.Unmapped, Is.Empty);
     }
 
     [Test]
     public void A_file_outside_the_three_folders_is_unmapped() {
-        var bindings = Place(Pack(), Fact("Other/Stray.cs", "Stray"));
+        var bindings = Place(Definition(), Fact("Other/Stray.cs", "Stray"));
 
         Assert.That(bindings.Unmapped.Select(u => u.Type.Name), Is.EqualTo(new[] { "Stray" }));
     }
 
     [Test]
-    public void The_pack_class_is_in_the_pack_folder() {
-        var bindings = Place(Pack());
-
-        Assert.That(bindings.All.Single().Part.Concept, Is.TypeOf<Umpire.Architecture.Blocks.App>());
-    }
-
-    [Test]
-    public void A_pack_with_no_pack_class_fails_the_count() {
+    public void A_pack_with_no_architecture_fails_the_count() {
         var resolved = new ResolvedArchitecture(new PackArchitecture());
 
         var counts = resolved.Counts(resolved.Place([Fact("Kernel/SampleHost.cs", "SampleHost")], PackFolder));
@@ -45,13 +38,14 @@ public sealed class PackArchitectureTests {
 
         var counts = resolved.Counts(resolved.Place([Fact("Kernel/Domain/Entity.cs", "Entity")], PackFolder));
 
-        Assert.That(counts.Select(c => c.Message), Has.Some.Contains("types of Pack"));
+        Assert.That(counts.Select(c => c.Message), Has.Some.Contains("types of Architecture"));
     }
 
     [Test]
-    public void The_pack_base_is_the_check_entry_of_the_pack_architecture() {
-        Assert.That(typeof(Pack).BaseType, Is.EqualTo(typeof(Block<PackArchitecture>)));
-        Assert.That(typeof(Pack<,,>).IsAbstract, Is.True);
+    public void A_pack_with_its_architecture_passes_the_count() {
+        var resolved = new ResolvedArchitecture(new PackArchitecture());
+
+        Assert.That(resolved.Counts(resolved.Place([Definition()], PackFolder)), Is.Empty);
     }
 
     [Test]
@@ -80,7 +74,7 @@ public sealed class PackArchitectureTests {
                 .Select(to => $"{from.Path} -> {to.Path}"))
             .ToList();
 
-        Assert.That(layers, Has.Count.EqualTo(13));
+        Assert.That(layers, Has.Count.EqualTo(14));
         Assert.That(denied, Is.Empty);
     }
 
@@ -88,8 +82,9 @@ public sealed class PackArchitectureTests {
 
     static Bindings Place(params TypeFacts[] types) => new ResolvedArchitecture(new PackArchitecture()).Place(types, PackFolder);
 
-    static TypeFacts Pack() =>
-        new("Sample.SamplePack", "SamplePack", "Sample", new Source($"{PackFolder}/SamplePack.cs", 1), [typeof(Pack).FullName!], [], [], []);
+    static TypeFacts Definition() =>
+        new("Sample.Definition.SampleArchitecture", "SampleArchitecture", "Sample.Definition",
+            new Source($"{PackFolder}/Definition/SampleArchitecture.cs", 1), [typeof(Architecture).FullName!], [], [], []);
 
     static TypeFacts Fact(string file, string name) =>
         new($"Sample.{name}", name, "Sample", new Source($"{PackFolder}/{file}", 1), [], [], [], []);

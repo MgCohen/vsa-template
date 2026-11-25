@@ -52,7 +52,7 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 
 ## Packs of an app
 
-An app can have its own packs in `App/Packs/<Name>/`. Each one is an inner block: its pack class is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `App/EcsFeatures/<Module>/`. See `pack-variants.md`.
+An app can have its own packs in `App/Packs/<Name>/`. Each one is an inner block: the architecture in its `Definition/` folder is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `App/EcsFeatures/<Module>/`. See `pack-variants.md`.
 
 ```
 Shop/
@@ -60,7 +60,7 @@ Shop/
 └─ App/
    ├─ Host/  Features/  Plugins/
    ├─ EcsFeatures/Combat/   a module of the kind EcsFeature
-   └─ Packs/Ecs/            EcsPack.cs, Definition/, Kernel/
+   └─ Packs/Ecs/            Definition/, Kernel/
 ```
 
 ## Projects
@@ -112,7 +112,7 @@ public sealed record Cost(string Resource, int Amount);
 
 - Put keys, ids and data records here. Put the rules in `Domain/`, for example `Resources/Domain/Wallet.cs`.
 - A `Domain.Shared` type uses only its own module. The published domain of one module does not depend on another module.
-- A type holds only immutable data. The rules `UMP010205`, `UMP010206` and `UMP010207` are disabled until the review in #143 (see "Disabled rules" in `architecture-rules.md`).
+- A type holds only immutable data. The rule engine checks that it is immutable (`UMP020303`). The rule `UMP010206` (data only) is disabled until #142 defines "data" (see "Disabled rules" in `architecture-rules.md`).
 
 ## Plugins and the two meanings of Shared
 

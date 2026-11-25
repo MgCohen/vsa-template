@@ -8,6 +8,11 @@
     <UsingUmpireSdk>true</UsingUmpireSdk>
   </PropertyGroup>
 
+  <!-- A definition project copies the DLLs of its packages to its output, so the root project can give them to the check. -->
+  <PropertyGroup Condition="'$([System.IO.Path]::GetFileName($(MSBuildProjectDirectory)))' == 'definition'">
+    <CopyLocalLockFileAssemblies Condition="'$(CopyLocalLockFileAssemblies)' == ''">true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
   <!-- A project whose name ends with ".Tests" is a test project: NUnit on Microsoft.Testing.Platform (Umpire.Sdk.Core.targets).
        The platform SDK reads OutputType before the project body, so UmpireTestProject=false goes in a Directory.Build.props file. -->
   <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">

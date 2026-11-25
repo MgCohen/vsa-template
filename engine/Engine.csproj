@@ -31,6 +31,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Architecture.Tests" />
     <InternalsVisibleTo Include="Engine.Tests" />
+    <InternalsVisibleTo Include="CheckModel.Tests" />
   </ItemGroup>
   <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

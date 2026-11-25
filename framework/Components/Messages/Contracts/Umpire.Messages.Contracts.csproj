@@ -4,7 +4,7 @@
   </ItemGroup>
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
   <ItemGroup>
-    <AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Kernels.MessagesArchitecture, Umpire.Kernels" />
+    <AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Kernels.MessagesArchitecture, Umpire.Kernels.Definition" />
     <AssemblyMetadata Include="Umpire.Root" Value=".." />
   </ItemGroup>
 </Project>

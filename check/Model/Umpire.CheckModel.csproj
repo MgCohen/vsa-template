@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The check model: the definition, the snapshots, the app model, the report and the operations, as plain data.
+       The analyzer loads it in the compiler, so it targets netstandard2.0, and it references no Roslyn and no package. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../tools/sdk/Polyfills~/IsExternalInit.cs" LinkBase="Polyfills" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CheckModel.Tests" />
+  </ItemGroup>
+</Project>

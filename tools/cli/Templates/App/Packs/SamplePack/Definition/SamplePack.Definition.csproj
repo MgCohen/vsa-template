@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Kernel/SamplePack.Kernel.csproj" />
+  </ItemGroup>
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>

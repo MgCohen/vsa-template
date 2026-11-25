@@ -12,7 +12,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 |---|---|---|
 | Umpire | The product: framework, rule engine, tool and SDK | `Umpire.Kernels`, `umpire` tool |
 | Framework | The Umpire code in `framework/`: the core and the components. Not a .NET assembly, and not an external part | `framework/Kernel/`, `framework/Components/` |
-| Pack | One architecture with its definition, bases and rules | `packs/Vsa/`, `Vsa<THost>` |
+| Pack | One architecture with its definition, bases and rules | `packs/Vsa/`, `VsaArchitecture`, `VsaKernel` |
 | Pack variant | A pack whose architecture inherits the architecture of another pack and adds parts and rules | `App/Packs/Ecs/`, `EcsArchitecture : VsaArchitecture` |
 | VSA | The Vertical Slice Architecture pack | `Umpire.Vsa.*`, `VsaArchitecture` |
 | Architecture | A definition: concepts, parts and rules | `VsaArchitecture : Architecture` |
@@ -21,7 +21,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Term | Meaning | Code names |
 |---|---|---|
-| App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TPack>`, `IApp`, `NotesApp`, `EngineApp`; the root record `App` |
+| App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TKernel, THost>`, `IApp`, `NotesApp`, `EngineApp`; the root record `App` |
 | Host | The platform of an app. The host class builds the services and disposes them. It does not run or wait | `AppHost`, `WebHost`, `ConsoleHost`; the layer record `Host` |
 | Kernel | The install point of an architecture. `Core` installs the core services, then the kernel of the pack installs the layers | `Kernel`, `Core`, `VsaKernel` |
 | Operation | A request that a host exposes, with its group, name and effect | `Operation`, `Effect` |
@@ -36,7 +36,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 | App | The root of the app code. It runs, and its app class is the check entry | `App/`, the root record `App`, `NotesApp`, `EngineApp` |
 | Definition | The root of the architecture class of a block, with its records and externals | `Definition/`, the root record `Definition` |
 | Pack | A block with one architecture and its kernel | `packs/Vsa/`, the record `Pack` |
-| Core | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, the root record `Core`, `CoreArchitecture` |
+| Core | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, the root record `Core`, `Architecture<TKernel>` |
 | Kernel root | The layer bases of a pack: the `kernel` part of `Define` | `packs/Vsa/Kernel/`, the record `Kernel` |
 | Component | Code that travels together, with no entry point. A kernel can install it by name | `framework/Components/Messages/` (`MessagesComponent`), `engine/Versions/` |
 | Module | A component that the host installs. It ships with the app | A feature module, a plugin module |
@@ -52,7 +52,7 @@ Each block kind has a record on the base `Block`. `Umpire.Architecture.Blocks` h
 | Root | The top part of a definition. Its children are the roots of `config.Roots` and the kernel root. `Define(Part root, Part kernel)` gets the `App` root and the kernel root | `ResolvedArchitecture.Root`, the name `(root)`, `Roots.Add<T>()` |
 | Independent block | A block with its own definition and check entry, for example an app or a pack | |
 | Owned block | A block that gets its shape from the definition around it, for example a feature module | |
-| Install point | The class or method that tells the host what to install from a block | `Pack.CreateHost()` |
+| Install point | The class or method that tells the host what to install from a block | `App.CreateHost()` |
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
 | Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, the key `umpire.architecture` in a `.umpireconfig` file |
 | Block place | A folder that an outer definition marks as the place of another block. The place gets the body of the record | `AddBlock<T>()`, `AddBlockGroup<T>()` |

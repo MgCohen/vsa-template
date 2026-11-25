@@ -2,25 +2,14 @@ namespace Engine.Tests;
 
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
-using Umpire.Vsa.Definition;
-using VsaKernel = Umpire.Vsa.Composition.VsaKernel;
 
-sealed class EngineTestApp : App {
-    public EngineTestApp(params Module[] modules) =>
-        Pack = new EnginePack(new AppHost { ModuleProvider = new FixedModules(modules) });
+sealed class EngineTestApp(params Module[] modules) : App {
+    public override Kernel Kernel { get; } = new VsaKernel();
 
-    public override Pack Pack { get; }
+    public override AppHost CreateHost() => new() { ModuleProvider = new FixedModules(modules) };
 
     public EngineBuild Build() {
-        var host = Pack.CreateHost();
+        var host = CreateHost();
         return new EngineBuild(host, host.Build([], this));
-    }
-
-    sealed class EnginePack(AppHost host) : Pack {
-        public override Umpire.Architecture.Architecture Architecture { get; } = new VsaArchitecture();
-
-        public override Kernel Kernel { get; } = new VsaKernel();
-
-        public override AppHost CreateHost() => host;
     }
 }

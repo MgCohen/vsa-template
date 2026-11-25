@@ -14,7 +14,7 @@ static class DomainShared {
         return IsAssembly(compilation.AssemblyName);
     }
 
-    public static bool IsAssembly(string? name) => name?.EndsWith(Suffix, System.StringComparison.Ordinal) == true;
+    static bool IsAssembly(string? name) => name?.EndsWith(Suffix, System.StringComparison.Ordinal) == true;
 
     public static string Name(ISymbol member) => member switch {
         IMethodSymbol { MethodKind: MethodKind.Constructor or MethodKind.StaticConstructor } m => m.ContainingType.Name,

@@ -3,6 +3,8 @@ namespace Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 
 public abstract class Architecture {
+    internal virtual Architecture? Packed => null;
+
     internal void ConfigureAll(ArchitectureConfig config) =>
         Levels.Call<Architecture, ArchitectureConfig>(this, nameof(Configure), config);
 

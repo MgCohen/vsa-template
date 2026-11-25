@@ -41,10 +41,10 @@ sealed record AddKind(
         "pack",
         TemplateGroup.Pack,
         Templates.Pack,
-        "Adds a pack variant: a pack class and an architecture that inherits VsaArchitecture.",
+        "Adds a pack variant: a kernel that inherits VsaKernel, and an architecture for that kernel.",
         Folder: "App/Packs",
         BaseNames: ["Vsa"],
-        NextStep: name => $"Change the app class to App<{name}<WebHost>>, then add parts and rules to "
+        NextStep: name => $"Change the app class to App<{name}Kernel, WebHost>, then add parts and rules to "
             + $"{name}Architecture. See docs/pack-variants.md.");
 
     public static readonly AddKind Request = new(

@@ -17,6 +17,12 @@ static class ProjectCheck {
         return findings;
     }
 
+    public static Finding NoDefinitionProject(string folder) =>
+        new(BlocksCodes.NoDefinitionProject, FindingSeverity.Warning,
+            $"The Definition folder of the block {folder} has source files and no project, so the definition is not in "
+            + "its own check-time DLL. Add a project to the folder, for example <Name>.Definition.csproj.",
+            folder);
+
     static Finding NoUmpireSdk(BlockProject project) =>
         new(BlocksCodes.NoUmpireSdk, FindingSeverity.Warning,
             $"The project {project.File} has no Umpire main SDK. Make its first line "

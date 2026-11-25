@@ -22,6 +22,15 @@ public sealed class TargetRuntimeTests {
         Assert.That(TargetRuntime.NewerThan(AppContext.BaseDirectory, new Version(10, 0, 0)), Is.Null);
 
     [Test]
+    public void A_newer_dll_in_the_definitions_folder_is_found() {
+        var bin = Directory.CreateTempSubdirectory("umpire-runtime").FullName;
+        File.Copy(Notes, Path.Combine(Directory.CreateDirectory(BinReader.DefinitionsFolder(bin)).FullName, "Notes.dll"));
+
+        Assert.That(TargetRuntime.NewerThan(bin, new Version(8, 0, 21))?.Runtime.Major, Is.EqualTo(10));
+        Directory.Delete(bin, recursive: true);
+    }
+
+    [Test]
     public void A_file_that_is_not_a_dll_has_no_target_runtime() {
         var file = Path.Combine(AppContext.BaseDirectory, "Engine.Tests.runtimeconfig.json");
 

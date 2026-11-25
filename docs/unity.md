@@ -30,7 +30,7 @@ The reasons for the limits:
 | Unity replaces | Extension point | Doc |
 |---|---|---|
 | The type source of the modules | `AppHost.ModuleProvider` (`IModuleProvider`, `FixedModules`, `ModuleScan.In`), `new AppTypes(provider)` | `docs/composition.md` |
-| The host | `UnityHost : AppHost` with `Configure`: `App<Vsa<UnityHost>>` | `docs/composition.md` |
+| The host | `UnityHost : AppHost` with `Configure`: `App<VsaKernel, UnityHost>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
 | The configuration | The base host reads only `--Key=Value` and `--Key value` of `args` into `IConfiguration`, and it ignores other arguments (for example `-batchmode` or the player path). `UnityHost.Configuration(args)` can add other sources | `docs/composition.md` |
 | The container | `host.Compose(services, configuration, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
@@ -73,13 +73,13 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Contracts, commands and events | `Umpire.Vsa.Contracts.Commands`, `Umpire.Vsa.Contracts.Events` | Yes |
 | Handlers, commands and events | `Umpire.Vsa.Handlers.Commands`, `Umpire.Vsa.Handlers.Events` | Yes |
 | Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |
-| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
+| Kernel (`App`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
 | The `.umpireconfig` reader | `Umpire.Config` (Tomlyn, its `netstandard2.0` asset) | Yes. Tomlyn needs `System.Buffers`, `System.Collections.Immutable` and `System.Text.Json` 10 |
 | Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
 | Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are not on `netstandard2.1` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
-| Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | Yes. `Pack` needs them, and `Vsa<THost>` is here |
+| Architecture definition | `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` | `Umpire.Architecture`: yes, for the type scan. The others: no, no runtime type names them. The package `Umpire` has all in one DLL |
 | All the parts above, in one DLL | `Umpire` (`tools/bundle/`) | Yes. Unity vendors this DLL, not the projects above |
 | Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 

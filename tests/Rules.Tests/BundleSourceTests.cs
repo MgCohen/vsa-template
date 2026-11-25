@@ -11,6 +11,7 @@ public sealed class BundleSourceTests {
         "framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj",
         "framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj",
         "framework/Kernel/Umpire.Kernels.csproj",
+        "framework/Kernel/Definition/Umpire.Kernels.Definition.csproj",
         "packs/Vsa/Definition/Umpire.Vsa.csproj",
         "packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj",
         "packs/Vsa/Kernel/Domain/Umpire.Vsa.Domain.csproj",

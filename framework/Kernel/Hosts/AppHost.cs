@@ -38,7 +38,7 @@ public class AppHost : IDisposable {
     }
 
     protected void Compose(IServiceCollection services, IConfiguration configuration, App app) =>
-        Compose(services, configuration, app.Pack.Kernel, TypesOf(app));
+        Compose(services, configuration, app.Kernel, TypesOf(app));
 
     protected virtual IConfiguration Configuration(string[] args) =>
         new ConfigurationBuilder().AddCommandLine(HostArguments.Options(args)).Build();

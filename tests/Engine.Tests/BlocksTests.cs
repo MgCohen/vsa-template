@@ -10,7 +10,7 @@ using UmpireEngine;
 namespace Engine.Tests;
 
 public sealed class BlocksTests {
-    const string PackArchitecture = "Umpire.Kernels.PackArchitecture, Umpire.Kernels";
+    const string PackArchitecture = "Umpire.Kernels.PackArchitecture, Umpire.Kernels.Definition";
     const string VsaArchitecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa";
     static readonly BinIndex NoBin = new("", [], []);
     static readonly string Fixture = Repo.Path("tests", "Fixtures", "Blocks");
@@ -29,16 +29,16 @@ public sealed class BlocksTests {
     static IReadOnlyList<BlockEntry> Entries => Index.Entries;
 
     [Test]
-    public void An_app_class_is_the_check_entry_of_the_folder_of_its_project() {
-        Assert.That(EntriesIn(Fixture), Is.EqualTo(new[] { EntryForm.App }));
+    public void An_app_class_and_a_definition_are_entries_of_the_block_folder() {
+        Assert.That(EntriesIn(Fixture), Is.EquivalentTo(new[] { EntryForm.App, EntryForm.Definition }));
     }
 
     [TestCase("Alpha")]
     [TestCase("Beta")]
-    public void A_concrete_pack_class_is_the_check_entry_of_its_own_folder(string pack) {
+    public void The_definition_of_a_pack_is_the_check_entry_of_the_pack_folder(string pack) {
         var entry = Entries.Single(e => Same(e.Folder, Path.Combine(Fixture, "App", "Packs", pack)));
 
-        Assert.That(entry.Form, Is.EqualTo(EntryForm.Base));
+        Assert.That(entry.Form, Is.EqualTo(EntryForm.Definition));
         Assert.That(entry.Type, Is.EqualTo(TypeName.Parse(PackArchitecture)));
     }
 
@@ -47,7 +47,7 @@ public sealed class BlocksTests {
         var app = Repo.Path("tests", "Fixtures", "PackVariant");
 
         Assert.That(EntriesIn(app), Is.EqualTo(new[] { EntryForm.App }));
-        Assert.That(EntriesIn(Path.Combine(app, "App", "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Base }));
+        Assert.That(EntriesIn(Path.Combine(app, "App", "Packs", "Ecs")), Is.EqualTo(new[] { EntryForm.Definition }));
     }
 
     [TestCase("packs/Vsa", "Umpire.Vsa.Definition.VsaArchitecture")]
@@ -59,16 +59,136 @@ public sealed class BlocksTests {
         Assert.That(packed, Is.EqualTo(new[] { architecture }));
     }
 
-    [TestCase(false)]
-    [TestCase(true)]
-    public void The_entry_that_names_the_pack_architecture_is_the_current_block(bool packedFirst) {
-        var plain = Entry("C:/a", EntryForm.Base);
-        var packed = plain with { Packed = TypeName.Parse(VsaArchitecture) };
-        BlockEntry[] entries = packedFirst ? [packed, plain] : [plain, packed];
+    [Test]
+    public void A_definition_in_an_app_block_is_no_second_check_entry() {
+        var result = BlockSearch.Find(
+            "C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), Pack("C:/a", "A.MyArchitecture")], NoBin);
+
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.App));
+        Assert.That(result.Value.Findings, Is.Empty);
+    }
+
+    [Test]
+    public void A_definition_with_no_app_class_is_a_pack() {
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Pack("C:/a", "A.MyArchitecture")], NoBin);
+
+        Assert.That(result.Value.Blocks.Current.Packed, Is.EqualTo(new TypeName("A.MyArchitecture", "A")));
+    }
+
+    [Test]
+    public void A_check_entry_that_names_the_definition_is_the_check_entry() {
+        var definition = Entry("C:/a", EntryForm.Metadata);
+
+        var result = BlockSearch.Find(
+            "C:/a", Path.GetFullPath("C:/a"), [Pack("C:/a", definition.Type!.FullName, "Umpire.Vsa"), definition], NoBin);
+
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.Metadata));
+    }
+
+    [Test]
+    public void A_definition_and_a_check_entry_of_another_architecture_give_UMP030301() {
+        var result = BlockSearch.Find(
+            "C:/a", Path.GetFullPath("C:/a"), [Pack("C:/a", "A.MyArchitecture"), Entry("C:/a", EntryForm.Metadata)], NoBin);
+
+        Assert.That(result.Error!.Code, Is.EqualTo("UMP030301"));
+    }
+
+    [TestCase(EntryForm.Metadata, 0)]
+    [TestCase(EntryForm.File, 1)]
+    public void The_definition_of_an_app_block_wins_over_a_check_entry(EntryForm form, int warnings) {
+        BlockEntry[] entries = [Entry("C:/a", EntryForm.App), Pack("C:/a", "A.MyArchitecture"), Entry("C:/a", form)];
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), entries, NoBin);
 
-        Assert.That(result.Value.Blocks.Current.Packed, Is.EqualTo(TypeName.Parse(VsaArchitecture)));
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.App));
+        Assert.That(result.Value.Findings.Count(f => f.Code == "UMP030304"), Is.EqualTo(warnings));
+    }
+
+    [Test]
+    public void A_definition_with_no_kernel_of_an_app_block_wins_over_a_check_entry() {
+        var definition = new DefinitionType(new TypeName("A.MyArchitecture", "A"), Path.GetFullPath("C:/a"), null, []);
+        var dll = new BinDll("A.dll", "A", false, [], [], [], []) { Definitions = [definition] };
+
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"),
+            [Entry("C:/a", EntryForm.App), Entry("C:/a", EntryForm.Metadata)], new BinIndex("", [dll], []));
+
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.App));
+    }
+
+    [TestCase("C:/a/App/Host", true)]
+    [TestCase("C:/a/Samples", false)]
+    public void A_block_whose_app_class_has_another_entry_folder_is_an_app(string entryFolder, bool isApp) {
+        var source = Path.GetFullPath(entryFolder + (isApp ? "/MyApp.cs" : "/App/MyApp.cs"));
+        var app = new AppClass(new TypeName("A.App", "A"), source, [new TypeName("A.Kernel", "A")], [], []);
+        var dll = new BinDll("A.dll", "A", false, [], [], [], [app]);
+        var entry = new BlockEntry(Path.GetFullPath(entryFolder), EntryForm.App, app.Type, source) { HasProject = !isApp };
+
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Pack("C:/a", "A.MyArchitecture"), entry],
+            new BinIndex("", [dll], []));
+
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(isApp ? EntryForm.App : EntryForm.Definition));
+    }
+
+    [Test]
+    public void A_folder_alias_of_the_Definition_folder_gives_its_definitions_to_the_block() {
+        var block = Path.GetFullPath("C:/a");
+        var aliases = new FolderAliasConfig([new Umpire.Architecture.FolderAlias("Assets/Rules", "Definition")], []);
+        var definition = new DefinitionType(new TypeName("A.MyArchitecture", "A"), null, null, []) {
+            Source = Path.Combine(block, "Assets", "Rules", "MyArchitecture.cs"),
+        };
+        var dll = new BinDll("A.dll", "A", false, [], [], [], []) { Definitions = [definition] };
+
+        var bin = new BinIndex("", [dll], []).WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder), source => aliases.BlockOfAliasedSource(block, source));
+
+        Assert.That(bin.Definitions.Single().Folder, Is.EqualTo(block));
+    }
+
+    [Test]
+    public void A_check_entry_of_an_app_block_with_no_definition_names_its_architecture() {
+        var result = BlockSearch.Find(
+            "C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), Entry("C:/a", EntryForm.File)], NoBin);
+
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.File));
+        Assert.That(result.Value.Blocks.Current.HasApp, Is.True);
+    }
+
+    [Test]
+    public void The_engine_reads_the_definitions_in_the_definitions_folder_of_the_bin() {
+        var bin = TempFolder.Create();
+        try {
+            var definitions = Directory.CreateDirectory(BinReader.DefinitionsFolder(bin)).FullName;
+            foreach (var file in Directory.GetFiles(AppContext.BaseDirectory, "Umpire.*.dll")) {
+                File.Copy(file, Path.Combine(bin, Path.GetFileName(file)));
+            }
+            foreach (var name in new[] { "Engine.Definition.dll", "Engine.Definition.pdb" }) {
+                File.Copy(Path.Combine(AppContext.BaseDirectory, name), Path.Combine(definitions, name));
+            }
+
+            using var reader = new BinReader(bin);
+            var found = reader.Index().Definitions.Single(d => d.Type.Assembly == "Engine.Definition");
+            var created = new AppLoader(bin).CreateArchitecture(found.Type);
+
+            Assert.That(found.Folder, Is.EqualTo(Repo.Path("engine")));
+            Assert.That(found.Kernel?.FullName, Is.EqualTo("Umpire.Vsa.Composition.VsaKernel"));
+            Assert.That(created.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
+        } finally {
+            TempFolder.Delete(bin);
+        }
+    }
+
+    [Test]
+    public void A_definition_whose_folder_is_an_alias_of_the_block_is_in_the_block() {
+        var block = Path.GetFullPath("C:/a");
+        var aliases = new FolderAliasConfig([new Umpire.Architecture.FolderAlias("Assets/Game", "")], []);
+        var game = Path.Combine(block, "Assets", "Game");
+        var definition = new DefinitionType(new TypeName("A.MyArchitecture", "A"), game, null, []);
+        var dll = new BinDll("A.dll", "A", false, [], [], [], []) { Definitions = [definition] };
+
+        var bin = new BinIndex("", [dll], [Pack(game, "A.MyArchitecture")])
+            .WithDefinitionFolders(folder => aliases.DefinitionBlock(block, folder), source => aliases.BlockOfAliasedSource(block, source));
+
+        Assert.That(bin.Definitions.Single().Folder, Is.EqualTo(block));
+        Assert.That(bin.Entries.Single().Folder, Is.EqualTo(block));
     }
 
     [Test]
@@ -81,19 +201,19 @@ public sealed class BlocksTests {
     }
 
     [Test]
-    public void An_abstract_pack_base_is_no_check_entry() {
-        Assert.That(EntriesIn(Repo.Path("framework", "Kernel", "App")), Is.Empty);
+    public void An_abstract_architecture_base_is_no_check_entry() {
+        Assert.That(EntriesIn(Repo.Path("framework", "Kernel", "Definition")), Is.Empty);
     }
 
     [Test]
-    public void Two_pack_classes_with_one_architecture_in_one_folder_are_one_check_entry() {
+    public void The_VSA_pack_has_one_check_entry() {
         var vsa = Entries.Where(e => Same(e.Folder, Repo.Path("packs", "Vsa"))).ToList();
 
-        Assert.That(vsa.Select(e => e.Key).Distinct(), Is.EqualTo(new[] { $"Base: {PackArchitecture}" }));
+        Assert.That(vsa.Select(e => e.Key).Distinct(), Is.EqualTo(new[] { $"Definition: {VsaArchitecture}" }));
     }
 
     [TestCase("Lib.Missing, Umpire.Vsa", "Umpire.Vsa has no type Lib.Missing")]
-    [TestCase("Umpire.Kernels.Pack, Umpire.Kernels", "does not inherit Umpire.Architecture.Architecture")]
+    [TestCase("Umpire.Kernels.Kernel, Umpire.Kernels", "does not inherit Umpire.Architecture.Architecture")]
     [TestCase("Some.Architecture, Some.Missing", "the build output has no assembly Some.Missing")]
     public void A_bad_architecture_name_gives_its_reason(string name, string reason) {
         using var reader = new BinReader(AppContext.BaseDirectory);
@@ -119,43 +239,44 @@ public sealed class BlocksTests {
 
         Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp).FullName!, "umpire-engine")));
         Assert.That(app.Bases, Does.Contain("Umpire.Kernels.App"));
-        Assert.That(app.Architecture, Is.EqualTo(new TypeName(typeof(EngineArchitecture).FullName!, "umpire-engine")));
+        Assert.That(app.Kernels.Select(k => k.FullName), Is.EqualTo(new[] { "Umpire.Vsa.Composition.VsaKernel" }));
+        Assert.That(app.KernelBases.Select(k => k.FullName), Does.Contain("Umpire.Kernels.Kernel"));
     }
 
     [Test]
     public void The_leaves_of_the_app_classes_drop_each_base_app_class() {
-        TypeName[] pack = [new("A.Pack", "A")];
-        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", pack, null, ["Umpire.Kernels.App"]);
-        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", pack, null, ["A.First", "Umpire.Kernels.App"]);
+        TypeName[] kernel = [new("A.Kernel", "A")];
+        var first = new AppClass(new TypeName("A.First", "A"), "A.cs", kernel, [], ["Umpire.Kernels.App"]);
+        var second = new AppClass(new TypeName("A.Second", "A"), "B.cs", kernel, [], ["A.First", "Umpire.Kernels.App"]);
 
         Assert.That(AppClass.Leaves([first, second]), Is.EqualTo(new[] { second }));
     }
 
     [Test]
-    public void The_leaves_drop_an_app_class_nested_in_an_entry_with_the_same_pack() {
-        TypeName[] pack = [new("A.Pack", "A")];
-        var shell = new AppClass(new TypeName("A.GameShell", "A"), "A.cs", pack, null, []);
-        var inner = new AppClass(new TypeName("A.GameShell+Inner", "A"), "A.cs", pack, null, ["Umpire.Kernels.App"]);
+    public void The_leaves_drop_an_app_class_nested_in_an_entry_with_the_same_kernel() {
+        TypeName[] kernel = [new("A.Kernel", "A")];
+        var shell = new AppClass(new TypeName("A.GameShell", "A"), "A.cs", kernel, [], []);
+        var inner = new AppClass(new TypeName("A.GameShell+Inner", "A"), "A.cs", kernel, [], ["Umpire.Kernels.App"]);
 
         Assert.That(AppClass.Leaves([shell, inner]), Is.EqualTo(new[] { shell }));
     }
 
     [Test]
-    public void The_leaves_keep_a_nested_app_class_with_another_pack() {
-        var shell = new AppClass(new TypeName("A.GameShell", "A"), "A.cs", [new("A.Pack", "A")], null, []);
-        var inner = new AppClass(new TypeName("A.GameShell+Inner", "A"), "A.cs", [new("A.Other", "A")], null, ["Umpire.Kernels.App"]);
+    public void The_leaves_keep_a_nested_app_class_with_another_kernel() {
+        var shell = new AppClass(new TypeName("A.GameShell", "A"), "A.cs", [new("A.Kernel", "A")], [], []);
+        var inner = new AppClass(new TypeName("A.GameShell+Inner", "A"), "A.cs", [new("A.Other", "A")], [], ["Umpire.Kernels.App"]);
 
         Assert.That(AppClass.Leaves([shell, inner]), Has.Count.EqualTo(2));
     }
 
     [Test]
-    public void The_launcher_of_the_shell_fixture_is_the_one_leaf_with_the_architecture_of_its_pack() {
+    public void The_launcher_of_the_shell_fixture_is_the_one_leaf_with_its_kernel() {
         var shell = Index.Dlls.Single(d => d.Name == "ShellApp");
 
         var leaf = AppClass.Leaves(shell.AppClasses).Single();
 
         Assert.That(leaf.Type.FullName, Is.EqualTo("ShellApp.Host.GameLauncher"));
-        Assert.That(leaf.Architecture?.FullName, Is.EqualTo("Umpire.Vsa.Definition.VsaArchitecture"));
+        Assert.That(leaf.Kernels.Single().FullName, Is.EqualTo("Umpire.Vsa.Composition.VsaKernel"));
     }
 
     [Test]
@@ -172,7 +293,7 @@ public sealed class BlocksTests {
 
         var names = (IReadOnlyList<string> skip) => Index.ReferencedDlls(app, skip).Select(d => d.Name).ToList();
 
-        Assert.That(app.Select(d => d.Name), Is.EqualTo(new[] { "Blocks" }));
+        Assert.That(app.Select(d => d.Name), Does.Contain("Blocks").And.Not.Contain("Lib"));
         Assert.That(names([]), Does.Contain("Lib"));
         Assert.That(names(["Lib"]), Does.Not.Contain("Lib"));
     }
@@ -196,7 +317,7 @@ public sealed class BlocksTests {
 
     [Test]
     public void Two_entries_in_the_block_give_UMP030301_and_stop_the_run() {
-        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), Entry("C:/a", EntryForm.Metadata)], NoBin);
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.Base), Entry("C:/a", EntryForm.Metadata)], NoBin);
 
         Assert.That(result.Error!.Code, Is.EqualTo("UMP030301"));
         Assert.That(result.Error.Message, Does.Contain("more than one check entry"));
@@ -215,8 +336,8 @@ public sealed class BlocksTests {
 
     [Test]
     public void Two_entry_forms_in_one_file_give_UMP030301() {
-        var app = Entry("C:/a", EntryForm.App);
-        var typed = app with { Form = EntryForm.Base, Type = TypeName.Parse(VsaArchitecture) };
+        var app = Entry("C:/a", EntryForm.Metadata);
+        var typed = app with { Form = EntryForm.Base };
 
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [app, typed], NoBin);
 
@@ -227,9 +348,9 @@ public sealed class BlocksTests {
     public void An_entry_in_code_wins_over_the_key_in_the_file_with_UMP030304() {
         var file = Entry("C:/a", EntryForm.File);
 
-        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), file], NoBin);
+        var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.Base), file], NoBin);
 
-        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.App));
+        Assert.That(result.Value.Blocks.Current.Form, Is.EqualTo(EntryForm.Base));
         Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030304"));
         Assert.That(result.Value.Findings.Single().Severity, Is.EqualTo(FindingSeverity.Warning));
         Assert.That(result.Value.Findings.Single().File, Is.EqualTo(file.Source));
@@ -438,6 +559,10 @@ public sealed class BlocksTests {
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         File.WriteAllText(file, content);
     }
+
+    static BlockEntry Pack(string folder, string architecture, string assembly = "A") =>
+        new(Path.GetFullPath(folder), EntryForm.Definition, TypeName.Parse(PackArchitecture),
+            Path.Combine(Path.GetFullPath(folder), "Definition", "MyArchitecture.cs"), Packed: new TypeName(architecture, assembly));
 
     static BlockEntry Entry(string folder, EntryForm form) =>
         new(Path.GetFullPath(folder), form, form == EntryForm.App ? null : TypeName.Parse(VsaArchitecture),

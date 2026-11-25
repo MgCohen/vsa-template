@@ -1,0 +1,8 @@
+<Project>
+  <!-- The definition of the pack. It names the kernel of the pack. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <ItemGroup>
+    <ProjectReference Include="../Kernel/Ecs.Kernel.csproj" />
+  </ItemGroup>
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>

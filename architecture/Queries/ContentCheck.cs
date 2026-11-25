@@ -8,7 +8,7 @@ internal static class ContentCheck {
             + $"Rename it to {b.Part.NamePattern!.Fix(b)}, or move it."))];
 
     public static IReadOnlyList<ContentResult> Traits(IReadOnlyList<TraitStatement> statements, Bindings bindings) => [.. statements
-        .SelectMany(statement => Checked(bindings).Where(b => !b.Type.IsNested)
+        .SelectMany(statement => Checked(bindings).Where(b => !b.Type.IsNested || statement.Condition.ReadsNestedTypes)
             .Where(b => statement.Subjects.Contains(b.Part) && !statement.Condition.Fits(b.Type))
             .Select(b => new ContentResult(statement.Rule, b,
                 $"{b.Type.Name} is in {b.Where}, but {statement.Condition.Miss(b.Type)}, so it breaks the rule "

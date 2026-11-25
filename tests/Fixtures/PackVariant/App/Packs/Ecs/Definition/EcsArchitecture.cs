@@ -1,11 +1,12 @@
 namespace PackVariant.Packs.Ecs.Definition;
 
+using PackVariant.Packs.Ecs.Kernel;
 using PackVariant.Packs.Ecs.Kernel.Domain;
 using Umpire.Architecture;
 using Umpire.Kernels.Blocks;
 using Umpire.Vsa.Definition;
 
-public sealed class EcsArchitecture : VsaArchitecture {
+public sealed class EcsArchitecture : VsaArchitecture<EcsKernel> {
     protected override void Define(Part root, Part kernel) {
         var ecs = root.AddGroup<EcsFeature>();
         ecs.Add<Components>();
