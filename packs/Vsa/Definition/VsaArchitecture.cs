@@ -2,6 +2,7 @@ namespace Umpire.Vsa.Definition;
 
 using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
+using Umpire.Architecture.Traits;
 using Umpire.Kernels.Blocks;
 using Core = Umpire.Kernels.Blocks.Core;
 using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
@@ -19,7 +20,10 @@ public class VsaArchitecture : CoreArchitecture {
 
     protected override void Define(Part root, Part kernel) {
         kernel.Add<Domain>().And<Infrastructure>().And<Presenters>();
-        kernel.Add<Contracts>().Add<Contracts.Requests>().And<Contracts.Events>().And<Contracts.Commands>();
+        var contracts = kernel.Add<Contracts>();
+        contracts.Add<Contracts.Requests>();
+        contracts.Add<Contracts.Events>().Add<Contracts.Events.Publishing>();
+        contracts.Add<Contracts.Commands>();
         kernel.Add<Handlers>().Add<Handlers.Requests>().And<Handlers.Events>().And<Handlers.Commands>();
         kernel.Add<Views>().And<Composition>();
         root.AddBlock<MessagesComponent>();
@@ -76,6 +80,10 @@ public class VsaArchitecture : CoreArchitecture {
         rules.For<Host>().Uses<Module>(Depth.Self);
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
+        rules.For<Handlers.Events>().Denies<Contracts.Requests>();
+        rules.For<Presenters>().Denies<Contracts.Events.Publishing>().Under<Kernel>();
+        rules.For<Contracts.Requests>().Under<Feature>().Are(Trait.Record | Trait.Abstract);
+        rules.For<Domain.Shared>().Are<Immutable>();
     }
 
     protected static From ForContractParts(RuleBook rules) =>

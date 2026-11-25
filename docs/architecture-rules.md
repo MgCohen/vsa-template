@@ -18,12 +18,7 @@ The editor and the build run the first group in each consumer project. The build
 | ID | Level | Rule |
 |---|---|---|
 | `UMP010201` | Analyzers | Requests and responses are records. A record that is not sealed passes, so a request can derive from another request. An abstract request base is not checked. Option: `check_responses`. A team that wants sealed payloads states it in its definition with the `Sealed` and `Record` traits. |
-| `UMP010202` | Analyzers | Event handlers do not use a request type or `IRequestSender`. |
-| `UMP010203` | Analyzers | A contracts project holds only requests, responses, commands, events and the types that they use. Disabled (#143). |
-| `UMP010204` | Analyzers | Presenters do not use `IIntegrationEventPublisher`. A presenter shows events (`IPresenterHandler`); it does not publish them. |
-| `UMP010205` | Analyzers | A `Domain.Shared` type is immutable: no `set` accessor (`init` is permitted), and each field is `readonly` or `const`. Disabled (#143). |
-| `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#143). |
-| `UMP010207` | Analyzers | Each base of a `Domain.Shared` type is in a `.Domain.Shared` assembly or in the option `allowed_bases` (empty by default: an interface such as `IComparable<T>` needs a method that `UMP010206` does not permit). Disabled (#143). |
+| `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#142, #143). |
 | `UMP010001` | Analyzers | Each option of each running rule has a valid value: from the config, or the default of its rule. |
 | `UMP010002` | Analyzers | The `.umpireconfig` file of the block is valid TOML. Else the Umpire rules do not run. |
 | `UMP010003` | Analyzers | The config reader that the kernel analyzer DLL embeds loads in a private load context. Else the Umpire rules do not run. |
@@ -51,16 +46,34 @@ The editor and the build run the first group in each consumer project. The build
 
 Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`, `UMP010002`, `UMP010003`), `01` Umpire.Kernels.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding and names, `03` counts, matches, kinds and attribute places, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
+Retired analyzer IDs: `UMP010202`, `UMP010203`, `UMP010204`, `UMP010205` and `UMP010207`. Do not use a retired ID again (`CodeTests`).
+
+### Rule lines of the VSA definition
+
+`VsaArchitecture.Rules` has these lines. Each code is in the table above. `VsaAppTests` has a type that obeys and a type that breaks each line.
+
+| Rule | Line | Code |
+|---|---|---|
+| A request and a response of a feature is a record (a class or a struct) or an abstract class | `For<Contracts.Requests>().Under<Feature>().Are(Trait.Record \| Trait.Abstract)` | `UMP020303` |
+| An event handler uses no request, no response and no `IRequestSender` | `For<Handlers.Events>().Denies<Contracts.Requests>()` | `UMP020101` |
+| A presenter does not publish events. `Contracts.Events.Publishing` is the kernel folder of `IIntegrationEventPublisher` | `For<Presenters>().Denies<Contracts.Events.Publishing>().Under<Kernel>()` | `UMP020101` |
+| A `Domain.Shared` type is immutable | `For<Domain.Shared>().Are<Immutable>()` | `UMP020303` |
+
+A presenter also does not use `Pipelines`: no rule lets `Presenters` use `MessagesParts.Handlers`. The base types of `Domain.Shared` types and the types of a contract folder are uses and bindings, so `UMP020101` and `UMP020202` check them.
+
+`UMP010201` also runs, because the record line does not read these cases:
+
+- A request or a response of a plugin module.
+- A request or a response in `Slices/Shared/`.
+- A nested request or a nested response.
+
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.UMP010205.severity = "warning"`.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.UMP010206.severity = "warning"`.
 
 | Code | Class | Why disabled | Issue |
 |---|---|---|---|
-| `UMP010203` | `ContractTypeRule` | It reads `UmpireRootFolder` and an assembly suffix, so it never runs in a one-project app. The binding and use rules of the engine can cover it | #143 |
-| `UMP010205` | `ImmutableSharedTypeRule` | The code shape (what a type can contain) is not decided | #142, #143 |
-| `UMP010206` | `DataOnlySharedTypeRule` | The code shape is not decided | #142, #143 |
-| `UMP010207` | `SharedTypeBaseRule` | The code shape is not decided | #142, #143 |
+| `UMP010206` | `DataOnlySharedTypeRule` | "Data" has no definition: are a static helper method and a computed property data? | #142, #143 |
 
 `DisabledRuleTests` makes sure that the rules with `IsOnByDefault => false` are the codes of this table. To disable a rule, set `IsOnByDefault => false` on its class and add a row here and in #143.
 

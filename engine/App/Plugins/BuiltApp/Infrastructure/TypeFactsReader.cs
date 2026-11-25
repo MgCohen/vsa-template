@@ -5,18 +5,22 @@ using ArchUnitNET.Domain.Dependencies;
 using Umpire.Architecture;
 
 static class TypeFactsReader {
+    const string PrintMembers = "PrintMembers(System.Text.StringBuilder)";
+
     public static IReadOnlyList<TypeFacts> Read(
-        IReadOnlyList<IType> types, IReadOnlyDictionary<string, Source> sources, ResolvedArchitecture architecture) {
+        IReadOnlyList<IType> types, IReadOnlyDictionary<string, Source> sources, ResolvedArchitecture architecture,
+        ConstantFields constants) {
         var loaded = types.ToHashSet();
         bool IsExternalPartType(IType type) =>
             loaded.Contains(type) && !LoadedTypes.IsCompilerGenerated(type.Name)
             && architecture.ExternalPart(AssemblyName(type), sources.ContainsKey(type.FullName) ? "" : type.FullName) is not null;
-        return [.. types.Select(type => Facts(type, sources.GetValueOrDefault(type.FullName), loaded, IsExternalPartType))];
+        return [.. types.Select(type => Facts(type, sources.GetValueOrDefault(type.FullName), loaded, IsExternalPartType, constants))];
     }
 
     internal static string AssemblyName(IType type) => type.Assembly.Name.Split(',')[0];
 
-    static TypeFacts Facts(IType type, Source? source, HashSet<IType> loaded, Func<IType, bool> isExternalPartType) => new(
+    static TypeFacts Facts(IType type, Source? source, HashSet<IType> loaded, Func<IType, bool> isExternalPartType,
+        ConstantFields constants) => new(
         type.FullName,
         type.Name,
         AssemblyName(type),
@@ -32,15 +36,24 @@ static class TypeFactsReader {
         IsAbstract = type is Interface || type is Class { IsAbstract: true, IsSealed: not true },
         IsStatic = type is Class { IsAbstract: true, IsSealed: true },
         IsSealed = type is Class { IsSealed: true, IsAbstract: not true } && !IsDelegate(type),
-        IsRecord = type is Class { IsRecord: true },
+        IsRecord = type is Class { IsRecord: true } || (type is Struct && type.Members.Any(m => m.Name == PrintMembers)),
         IsStruct = type is Struct,
         IsInterface = type is Interface,
         IsEnum = type is ArchUnitNET.Domain.Enum,
         IsDelegate = IsDelegate(type),
         Attributes = [.. type.Attributes.Concat(type.Members.SelectMany(m => m.Attributes)).SelectMany(AttributeNames).Distinct()],
+        MutableMembers = [.. MutableMembers(type, constants).Distinct()],
         References = [.. Referenced(type).Where(t => t != type).Select(t => t.FullName).Distinct()],
         IsNested = type.IsNested,
     };
+
+    static IEnumerable<string> MutableMembers(IType type, ConstantFields constants) => type is ArchUnitNET.Domain.Enum ? [] : type.Members
+        .Where(m => m switch {
+            FieldMember field => field.Writability == Writability.Writable && !constants.Contains(type.FullName, field.Name),
+            PropertyMember property => property.Writability == Writability.Writable,
+            _ => false,
+        })
+        .Select(m => m.Name);
 
     static IEnumerable<string> AttributeNames(ArchUnitNET.Domain.Attribute attribute) =>
         new[] { attribute.FullName }.Concat(attribute.InheritedClasses.Select(c => c.FullName));

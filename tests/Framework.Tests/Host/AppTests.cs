@@ -126,7 +126,7 @@ public sealed class AppTests {
         var vsa = Rules(new VsaArchitecture());
 
         Assert.That(app.Take(vsa.Count), Is.EqualTo(vsa));
-        Assert.That(app[^1], Is.EqualTo(new Rule("Presenters", "Contracts.Events", Permission.Deny)));
+        Assert.That(app.Skip(vsa.Count), Does.Contain(new Rule("Presenters", "Contracts.Events", Permission.Deny)));
     }
 
     [TestCase("ArchUnitNET")]

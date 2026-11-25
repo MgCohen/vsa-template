@@ -47,3 +47,13 @@ public sealed record Delegate : Trait {
 
     internal override bool Fits(TypeFacts type) => type.IsDelegate;
 }
+
+public sealed record Immutable : Trait {
+    internal override string Text => "immutable";
+
+    internal override bool ReadsNestedTypes => true;
+
+    internal override bool Fits(TypeFacts type) => type.MutableMembers.Count == 0;
+
+    internal override string Miss(TypeFacts type) => $"it is not immutable ({string.Join(", ", type.MutableMembers)} can change)";
+}

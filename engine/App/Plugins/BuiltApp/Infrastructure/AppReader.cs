@@ -10,7 +10,7 @@ public static class AppReader {
         IReadOnlyList<string> dlls, IReadOnlyDictionary<string, Source> sources, string blockFolder,
         ResolvedArchitecture architecture, IReadOnlyList<string>? ignoredFolders = null) {
         var types = Distinct(Load(dlls), dlls);
-        var facts = TypeFactsReader.Read(types, sources, architecture)
+        var facts = TypeFactsReader.Read(types, sources, architecture, ConstantFields.Of(dlls))
             .Where(fact => !IsIgnored(fact, blockFolder, ignoredFolders ?? []))
             .ToList();
         return new LoadedApp(blockFolder, dlls, types, facts);

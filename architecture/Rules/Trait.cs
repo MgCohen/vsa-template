@@ -9,8 +9,11 @@ public abstract record Trait {
     public static Trait Interface => new Traits.Interface();
     public static Trait Enum => new Traits.Enum();
     public static Trait Delegate => new Traits.Delegate();
+    public static Trait Immutable => new Traits.Immutable();
 
     internal abstract string Text { get; }
+
+    internal virtual bool ReadsNestedTypes => false;
 
     internal abstract bool Fits(TypeFacts type);
 
@@ -30,11 +33,15 @@ public abstract record Trait {
 internal sealed record AnyOf(Trait Left, Trait Right) : Trait {
     internal override string Text => $"{Left.Inside<AnyOf>()} or {Right.Inside<AnyOf>()}";
 
+    internal override bool ReadsNestedTypes => Left.ReadsNestedTypes && Right.ReadsNestedTypes;
+
     internal override bool Fits(TypeFacts type) => Left.Fits(type) || Right.Fits(type);
 }
 
 internal sealed record AllOf(Trait Left, Trait Right) : Trait {
     internal override string Text => $"{Left.Inside<AllOf>()} and {Right.Inside<AllOf>()}";
+
+    internal override bool ReadsNestedTypes => Left.ReadsNestedTypes && Right.ReadsNestedTypes;
 
     internal override bool Fits(TypeFacts type) => Left.Fits(type) && Right.Fits(type);
 
@@ -43,6 +50,8 @@ internal sealed record AllOf(Trait Left, Trait Right) : Trait {
 
 internal sealed record Not(Trait Trait) : Trait {
     internal override string Text => $"not {Trait.Inside<Not>()}";
+
+    internal override bool ReadsNestedTypes => Trait.ReadsNestedTypes;
 
     internal override bool Fits(TypeFacts type) => !Trait.Fits(type);
 
