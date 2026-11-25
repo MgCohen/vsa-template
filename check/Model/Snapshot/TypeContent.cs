@@ -17,4 +17,5 @@ public sealed record TypeContent(
     IReadOnlyList<TypeName> BaseArguments,
     IReadOnlyList<AttributeFact> Attributes,
     IReadOnlyList<MemberFact> Members,
+    IReadOnlyList<string> MutableMembers,
     TypeShape? Base = null);

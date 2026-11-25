@@ -13,7 +13,7 @@ public sealed class ParityTests {
 
     [TestCase("GoodApp", 0)]
     [TestCase("BadApp", 19)]
-    [TestCase("VsaApp", 20)]
+    [TestCase("VsaApp", 32)]
     public void An_architecture_case_gives_the_findings_of_the_engine(string app, int findings) =>
         Same(EngineRun.Of(DefinitionOf(app), Bin("Architecture", app), Fixture("Architecture", app)), findings);
 

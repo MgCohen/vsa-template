@@ -125,6 +125,24 @@ public sealed class FactTests {
     public void A_base_argument_of_an_array_is_its_element_type() =>
         Assert.That(Facts("Taker").Content.BaseArguments.Select(a => a.Name), Is.EqualTo(new[] { "Pen" }));
 
+    [TestCase("class S { const int A = 1; static readonly int B = 1; readonly int c; int D { get; init; } int E => 1; }", "")]
+    [TestCase("class S { int a; static int b; int C { get; set; } int D { get; private set; } int this[int i] { set { } } }", "a,b,C,D,Item")]
+    [TestCase("class S { event System.Action E; event System.Action F { add { } remove { } } }", "E")]
+    [TestCase("record S(int P);", "")]
+    [TestCase("record struct S(int P);", "P")]
+    [TestCase("readonly record struct S(int P);", "")]
+    [TestCase("interface S { int P { get; set; } }", "P")]
+    [TestCase("enum S { A }", "")]
+    [TestCase("class S(int p) { int P => p; }", "")]
+    [TestCase("class S { int P { get; } = 1; }", "")]
+    public void The_facts_have_the_mutable_members(string type, string members) {
+        using var build = new SampleBuild();
+        build.Write("Ui/S.cs", $"namespace Sample;\npublic {type}\n");
+        var snapshot = new ProjectFacts(build.Compile("Sample", "Ui/S.cs"), build.Block).Full();
+
+        Assert.That(string.Join(",", snapshot.Files.Single().Types.Single().Content.MutableMembers), Is.EqualTo(members));
+    }
+
     [Test]
     public void A_qualifier_of_a_nested_type_is_not_a_use() =>
         Assert.That(Facts("Uses").References.Select(r => r.Target.Name), Has.No.Member("Base"));

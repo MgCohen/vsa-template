@@ -19,6 +19,8 @@
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
+    <ProjectReference Include="$(RepoRoot)engine/Definition/Engine.Definition.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/App/Packs/Ecs/Definition/Ecs.Definition.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Spike/Charlie/Spike.Charlie.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Notes/Notes.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Blocks/Blocks.csproj" />

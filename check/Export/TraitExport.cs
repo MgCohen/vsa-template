@@ -12,6 +12,7 @@ public static class TraitExport {
         Api.Traits.Interface => Plain(TraitKind.Interface),
         Api.Traits.Enum => Plain(TraitKind.Enum),
         Api.Traits.Delegate => Plain(TraitKind.Delegate),
+        Api.Traits.Immutable => Plain(TraitKind.Immutable),
         Api.AnyOf any => new Trait(TraitKind.AnyOf, [Of(any.Left), Of(any.Right)]),
         Api.AllOf all => new Trait(TraitKind.AllOf, [Of(all.Left), Of(all.Right)]),
         Api.Not not => new Trait(TraitKind.Not, [Of(not.Trait)]),

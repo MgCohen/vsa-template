@@ -49,7 +49,7 @@ A writer does not write a file again if only its date is different. A writer lea
 | Snapshot | Format, date, project |
 | File | Path, hash, modified time |
 | Type location | Namespace, line, column, outer type |
-| Type content | Kind, access, modifiers, bases, attributes, members with full signatures |
+| Type content | Kind, access, modifiers, bases, attributes, members with full signatures, mutable members |
 | Type references | Each used type with its kind, member, line and column |
 
 The facts of a type are complete: no check reads the code again. A partial type has facts in each of its files. The snapshot does not have the part of a type or a rule, so a changed rule needs no compile.
@@ -141,7 +141,7 @@ A project with `TreatWarningsAsErrors` must put these codes and all rule codes i
 - `[field: X]` on an event with no accessors is not a fact: the compiler API does not give the field.
 - The analyzer imports the namespace `Umpire.Vsa.Analyzers`, because the kernel analyzers use it.
 - A snapshot lists the source files of its project folder that the compile does not read. A new excluded file lowers findings until that project compiles. A folder with its own project and no snapshot is not examined.
-- A definition helper outside the definition folder has no mark. The definition has its own DLL with D1, and then all its sources can have a mark.
+- A definition helper outside the definition folder has no mark.
 - A reference that is not in the model, for example a package with no library file, has no mark.
 - The caller selects the DLL path of a mark. A path in `bin` is absent after a clean, and then the findings of that build are warnings.
 

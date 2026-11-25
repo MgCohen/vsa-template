@@ -25,6 +25,7 @@ sealed class ContentReader {
         [.. BaseArguments().Select(Symbols.NameOf).Distinct()],
         [.. Attributes(file, isFirst)],
         [.. MemberReader.MembersOf(type).Where(m => IsIn(m, file, isFirst)).Select(Member)],
+        [.. MutableMembers.Of(type)],
         type.BaseType is { SpecialType: SpecialType.None } baseType ? Shapes.Of(baseType) : null);
 
     FactKind Kind => type.TypeKind switch {

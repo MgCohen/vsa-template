@@ -29,7 +29,7 @@ static class Samples {
     public static TypeFacts Type(string name, params ReferenceFact[] references) => new(
         Name(name), new TypeLocation("Sample", 3, 14),
         new TypeContent(
-            TypeKind.Class, MemberAccess.Public, false, false, true, false, false, false, false, [], [], [], [Name(name)], [], [], []),
+            TypeKind.Class, MemberAccess.Public, false, false, true, false, false, false, false, [], [], [], [Name(name)], [], [], [], []),
         references);
 
     public static ReferenceFact Use(string name, int line) => new(Name(name), ReferenceKind.Create, line, 9, "Run()", ".ctor");

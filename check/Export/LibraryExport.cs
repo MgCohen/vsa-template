@@ -11,7 +11,7 @@ public static class LibraryExport {
         new TypeLocation(name.Namespace, type.Line, type.Column, DeclaringType(name)),
         new TypeContent(
             TypeKind.Class, MemberAccess.Public, false, false, false, false, false, false, false, [], [], [],
-            [.. type.Bases.Prepend(name).Distinct()], [], [], []),
+            [.. type.Bases.Prepend(name).Distinct()], [], [], [], []),
         []);
 
     static string? DeclaringType(TypeName name) {

@@ -27,6 +27,7 @@ public static class Surface {
         type.Location with { Line = 0, Column = 0 },
         type.Content with {
             IsPartial = false,
+            MutableMembers = [],
             Members = [.. type.Content.Members.Where(m => IsSeen(m.Access, hasFriends))
                 .Select(m => m with { Line = 0, IsAsync = false })],
         },

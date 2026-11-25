@@ -8,6 +8,8 @@ public sealed record Trait(TraitKind Kind, IReadOnlyList<Trait> Of) {
         _ => Kind.ToString().ToLowerInvariant(),
     };
 
+    public bool ReadsNestedTypes => Kind == TraitKind.Immutable || Of.Count > 0 && Of.All(t => t.ReadsNestedTypes);
+
     public override string ToString() => Text;
 
     string Inside(TraitKind join) => Kind is TraitKind.AnyOf or TraitKind.AllOf && Kind != join ? $"({Text})" : Text;

@@ -10,7 +10,7 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
     static readonly string[] onlyInIntermediateLanguage = [
         "Notes.Features.Notebook.Slices.CreateNote.CreateNoteHandler -> Umpire.Messages.Contracts.Unit",
         "Notes.Features.Notebook.Slices.DeleteNote.DeleteNoteHandler -> Umpire.Messages.Contracts.Unit",
-        "ShellApp.Host.Launcher`1+LauncherApp -> Umpire.Kernels.Pack",
+        "ShellApp.Host.Launcher`1+LauncherApp -> Umpire.Kernels.Kernel",
         "Umpire.Architecture.PlaceLimit -> Umpire.Architecture.Access",
         "Umpire.Architecture.PlaceLimit -> Umpire.Architecture.Boundary",
         "VsaApp.Host.FixedHost -> Umpire.Kernels.Module",
@@ -38,7 +38,7 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
 
     static string Traits(Data.TypeContent type) {
         var isClass = type.Kind == Data.TypeKind.Class;
-        return $"{type.IsAbstract}{type.IsStatic}{type.IsSealed && isClass}{type.IsRecord && isClass}{type.Kind == Data.TypeKind.Struct}"
+        return $"{type.IsAbstract}{type.IsStatic}{type.IsSealed && isClass}{type.IsRecord}{type.Kind == Data.TypeKind.Struct}"
             + $"{type.Kind == Data.TypeKind.Interface}{type.Kind == Data.TypeKind.Enum}{type.Kind == Data.TypeKind.Delegate}";
     }
 
@@ -75,6 +75,9 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
         }
         if (Traits(type.Content) != Traits(binding.Type) || type.IsNested != binding.Type.IsNested) {
             yield return $"{name} has other traits";
+        }
+        if (!binding.Type.MutableMembers.ToHashSet().SetEquals(type.Content.MutableMembers)) {
+            yield return $"{name} can change {string.Join(", ", type.Content.MutableMembers)}, not {string.Join(", ", binding.Type.MutableMembers)}";
         }
         if (!Bound(binding.Type.BaseArguments).SetEquals(type.Content.BaseArguments.Where(IsBound).Select(a => a.FullName))) {
             yield return $"{name} has other base arguments";

@@ -52,7 +52,8 @@ sealed class EngineRun {
         var folder = BlockSearch.Folder(project, "", [.. index.Entries, .. above]);
         IReadOnlyList<BlockEntry> entries = [.. index.Entries, .. above.Concat(EntryFiles.Below(folder!)).Select(reader.Check)];
         var tree = BlockSearch.Find(project, folder, entries, index).Value.Blocks;
-        return Of(bin, tree, (app, loader) => LoadAppHandler.Definition(tree.Current, app, loader).Value, [], []);
+        var hasSource = DefinitionFolder.Of(tree.Current.Folder).HasSource;
+        return Of(bin, tree, (app, loader) => LoadAppHandler.Definition(tree, app, index.Definitions, loader, hasSource).Value, [], []);
     }
 
     static EngineRun Of(

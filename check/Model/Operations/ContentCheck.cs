@@ -3,10 +3,13 @@ namespace Umpire.CheckModel;
 public static class ContentCheck {
     public static void Run(AppModel app, IReadOnlyList<AppType> types, Report report) {
         foreach (var type in types) {
-            if (app.PlacementOf(type) is { } placement && Rules.IsCheckedAlone(type, placement)) {
-                Name(app, type, placement, report);
-                Traits(app, type, placement, report);
+            if (app.PlacementOf(type) is not { FollowsUser: false } placement || !Rules.IsChecked(placement)) {
+                continue;
             }
+            if (!type.IsNested) {
+                Name(app, type, placement, report);
+            }
+            Traits(app, type, placement, report);
         }
     }
 
@@ -23,7 +26,8 @@ public static class ContentCheck {
     }
 
     static void Traits(AppModel app, AppType type, Placement placement, Report report) {
-        foreach (var rule in app.Definition.Traits.Where(r => r.Parts.Contains(placement.Part.Position))) {
+        foreach (var rule in app.Definition.Traits.Where(r => r.Parts.Contains(placement.Part.Position)
+            && (!type.IsNested || r.Condition.ReadsNestedTypes))) {
             var fit = new TraitFit(type.Content);
             if (!fit.Has(rule.Condition)) {
                 Rules.Add(app, report, RuleCodes.WrongTrait,

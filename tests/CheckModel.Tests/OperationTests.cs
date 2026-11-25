@@ -75,6 +75,25 @@ public sealed class OperationTests {
     }
 
     [Test]
+    public void The_immutable_trait_reads_a_nested_type_and_names_the_members() {
+        using var temp = new TempState();
+        var report = new Report();
+        var definition = Samples.Layers with {
+            Traits = [new TraitRule([Samples.Entry(Samples.Ui)], [0], new Trait(TraitKind.Immutable, []))],
+        };
+        var plain = Samples.Type("Screen+Part");
+        var nested = plain with {
+            Location = plain.Location with { DeclaringType = "Sample.Screen" },
+            Content = plain.Content with { MutableMembers = ["first", "Second"] },
+        };
+        var app = temp.Load(definition, Samples.File("Ui/Screen.cs", Samples.Type("Screen"), nested));
+
+        ContentCheck.Run(app, app.Types, report);
+
+        Assert.That(report.Findings.Single().Text, Does.Contain("Part is in Ui (Ui), but it is not immutable (first, Second can change)"));
+    }
+
+    [Test]
     public void A_report_with_findings_succeeded_and_a_failed_report_has_a_reason() {
         var found = new Report();
         found.Add(new Finding("UMP020101", Severity.Error, "text"));

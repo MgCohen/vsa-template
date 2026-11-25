@@ -17,7 +17,4 @@ static class Rules {
     }
 
     public static bool IsChecked(Placement placement) => !placement.IsExternal && !placement.Part.IsBlockPlace;
-
-    public static bool IsCheckedAlone(AppType type, Placement placement) =>
-        IsChecked(placement) && !placement.FollowsUser && !type.IsNested;
 }
