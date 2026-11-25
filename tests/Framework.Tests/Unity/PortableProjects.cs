@@ -6,6 +6,7 @@ public static class PortableProjects {
         "Umpire.Architecture",
         "Umpire.Config",
         "Umpire.Kernels",
+        "Umpire.Kernels.Definition",
         "Umpire.Messages.Contracts",
         "Umpire.Messages.Handlers",
         "Umpire.Vsa",

@@ -26,7 +26,7 @@ Block                    core meaning                                   example
 |---|---|
 | `Umpire.Architecture.Blocks` | `Block`, `App`, `Definition`, `Kernel`, `Component` |
 | `Umpire.Kernels.Blocks` (`framework/Kernel/Definition/`) | `Core`, `Module`, `Pack` |
-| `Umpire.Kernels` | `MessagesComponent` |
+| `Umpire.Kernels` (`framework/Kernel/Definition/`) | `MessagesComponent` |
 | `Umpire.Vsa.Definition` | `Feature`, `Plugin`, `Slice` |
 
 `App` and `Definition` are roots: the base `Architecture.Configure` adds them with `config.Roots.Add<T>()`. The kernel root is a part of the concept `Kernel` with the folder `Kernel`. `Define(Part root, Part kernel)` writes its body into `kernel`.
@@ -74,7 +74,7 @@ The check entry has five forms. The kinds above give the default form. Each form
 - A check entry names a type that loads and that is an `Architecture`. **Checked** (`UMP030302`).
 - An entry in code wins over the key `umpire.architecture` in the same folder. **Checked** (`UMP030304`, a warning).
 - A typed base counts only for a type that is not abstract. **Checked** (`FindBlocks`).
-- The framework definitions (`KernelArchitecture`, `MessagesArchitecture`, `ApiArchitecture`, `ComponentArchitecture`, in `framework/Kernel/App/`) have the folders of the block as parts, no rules and `DefaultPermission = Allow`. `KernelArchitecture` and `MessagesArchitecture` place the records `Core` and `MessagesComponent` with `InParentFolder()`, so each body is written one time. The same pipeline checks them as each other definition. A run of an app finds them as used blocks.
+- The framework definitions (`KernelArchitecture`, `MessagesArchitecture`, `ApiArchitecture`, `ComponentArchitecture`, in `framework/Kernel/Definition/`) have the folders of the block as parts, no rules and `DefaultPermission = Allow`. `KernelArchitecture` and `MessagesArchitecture` place the records `Core` and `MessagesComponent` with `InParentFolder()`, so each body is written one time. The same pipeline checks them as each other definition. A run of an app finds them as used blocks.
 
 A component installs with a public extension that the kernel calls by name. `VsaKernel.Configure` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
 

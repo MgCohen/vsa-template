@@ -435,7 +435,8 @@ If the app has one `ViewsRoot`, `WebHost` adds `AddRazorComponents().AddInteract
 
 ```
 framework/Kernel/                      Umpire.Kernels
-  App/                                 App, App<TKernel, THost>, IAppEntry<TKernel>, IApp, AppStop, and Architecture<TKernel>
+  App/                                 App, App<TKernel, THost>, IAppEntry<TKernel>, IApp, AppStop
+  Definition/                          Umpire.Kernels.Definition: Architecture<TKernel>, PackArchitecture, the records Core, Module, Pack
   Kernels/                             Kernel, the core step (AutoRegistration), OpenDescriptors
   Operations/                          Operation, OperationInvoke, OperationResult
   Hosts/                               AppHost
@@ -470,6 +471,8 @@ flowchart BT
     Composition["Umpire.Vsa.Composition"] --> Kernel
     Composition --> Layers["Umpire.Vsa layers"]
     VsaDefinition["Umpire.Vsa"] --> Composition
+    VsaDefinition --> KernelDefinition["Umpire.Kernels.Definition"]
+    KernelDefinition --> Kernel
 ```
 
 - The kernel knows no layer. `VsaKernel.Configure` calls each layer registration by a direct call, in a fixed order.
@@ -550,7 +553,7 @@ Modes = { easy = 1, hard = 5 }
 
 ## Portable target
 
-`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.1` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.1` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
 A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add a log provider of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
 

@@ -74,6 +74,23 @@ public sealed class BlockStampTests {
     }
 
     [Test]
+    public void The_dlls_of_an_app_block_have_the_kernel_definition_and_its_references() {
+        var block = Path.GetFullPath("C:/a");
+        var own = new BinDll("C:/a/A.dll", "A", false, [], [Path.Combine(block, "A.cs")], [], [], true);
+        var definition = new BinDll("C:/bin/D.dll", "D", false, ["Base"], [], [], []) {
+            Definitions = [new DefinitionType(new("D.Def", "D"), null, new("K.Kernel", "K"), [])],
+        };
+        var bases = new BinDll("C:/bin/Base.dll", "Base", false, [], [], [], []);
+        var bin = new BinIndex("C:/bin", [own, definition, bases], []);
+
+        var app = BlockDlls.Of(new BlockEntry(block, EntryForm.App, null, block), bin);
+        var library = BlockDlls.Of(new BlockEntry(block, EntryForm.Metadata, null, block), bin);
+
+        Assert.That(app, Is.EquivalentTo(new[] { own.Path, definition.Path, bases.Path }));
+        Assert.That(library, Is.EqualTo(new[] { own.Path }));
+    }
+
+    [Test]
     public void A_stamp_that_cannot_be_read_is_no_stamp() {
         var root = TempFolder.Create();
         try {

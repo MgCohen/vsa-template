@@ -34,7 +34,7 @@ The projects of the groups are for development: their references enforce the lay
 
 | Package | DLL | Source projects |
 |---|---|---|
-| `Umpire` | `Umpire.dll` (`netstandard2.1`) | Markers, Architecture, Config, Kernels, Messages, Umpire.Vsa and each VSA layer base |
+| `Umpire` | `Umpire.dll` (`netstandard2.1`) | Markers, Architecture, Config, Kernels, Kernels.Definition, Messages, Umpire.Vsa and each VSA layer base |
 | `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views |
 | `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console |
 | `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit |
@@ -77,7 +77,7 @@ ArchitectureTest<T> (a test of a definition)
 
 `architecture/Queries/` takes plain facts (`TypeFacts`: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
 
-The kernel references the definition API (`Umpire.Architecture`), because a `Pack` gives the `Architecture` of the app. The definition API is portable and has no ArchUnitNET.
+The kernel references the definition API (`Umpire.Architecture`), for the type scan only (`LoadedTypes`, `ClosedBase`). The definition API is portable and has no ArchUnitNET.
 
 ## Two kinds of type
 

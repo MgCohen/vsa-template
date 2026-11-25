@@ -28,6 +28,7 @@
   <ItemGroup>
     <PortableProject Include="$(RepoRoot)architecture/Umpire.Architecture.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Kernel/Umpire.Kernels.csproj" />
+    <PortableProject Include="$(RepoRoot)framework/Kernel/Definition/Umpire.Kernels.Definition.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />

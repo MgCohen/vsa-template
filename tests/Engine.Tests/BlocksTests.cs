@@ -10,7 +10,7 @@ using UmpireEngine;
 namespace Engine.Tests;
 
 public sealed class BlocksTests {
-    const string PackArchitecture = "Umpire.Kernels.PackArchitecture, Umpire.Kernels";
+    const string PackArchitecture = "Umpire.Kernels.PackArchitecture, Umpire.Kernels.Definition";
     const string VsaArchitecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa";
     static readonly BinIndex NoBin = new("", [], []);
     static readonly string Fixture = Repo.Path("tests", "Fixtures", "Blocks");
@@ -188,7 +188,7 @@ public sealed class BlocksTests {
 
     [Test]
     public void An_abstract_architecture_base_is_no_check_entry() {
-        Assert.That(EntriesIn(Repo.Path("framework", "Kernel", "App")), Is.Empty);
+        Assert.That(EntriesIn(Repo.Path("framework", "Kernel", "Definition")), Is.Empty);
     }
 
     [Test]

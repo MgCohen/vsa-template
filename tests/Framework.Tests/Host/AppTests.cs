@@ -1,6 +1,8 @@
 namespace Framework.Tests.Host;
 
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Architecture;
 using Umpire.Hosts.Web;
@@ -130,6 +132,30 @@ public sealed class AppTests {
     [TestCase("Microsoft.Extensions.Hosting")]
     public void The_runtime_of_an_app_does_not_reference_the_test_tools_or_the_generic_host(string tool) {
         Assert.That(RuntimeReferences(typeof(VsaArchitecture).Assembly), Has.None.StartsWith(tool));
+    }
+
+    [TestCase(typeof(App))]
+    [TestCase(typeof(VsaKernel))]
+    [TestCase(typeof(WebHost))]
+    public void The_runtime_does_not_reference_a_definition(Type runtime) {
+        var references = RuntimeReferences(runtime.Assembly);
+
+        Assert.That(references, Does.Not.Contain("Umpire.Kernels.Definition"));
+        Assert.That(references, Does.Not.Contain("Umpire.Vsa"));
+    }
+
+    [Test]
+    public void The_kernel_uses_only_the_type_scan_of_the_definition_api() {
+        using var image = new PEReader(File.OpenRead(typeof(App).Assembly.Location));
+        var metadata = image.GetMetadataReader();
+
+        var used = metadata.TypeReferences.Select(metadata.GetTypeReference)
+            .Where(type => type.ResolutionScope.Kind == HandleKind.AssemblyReference
+                && metadata.GetString(metadata.GetAssemblyReference((AssemblyReferenceHandle)type.ResolutionScope).Name)
+                    == "Umpire.Architecture")
+            .Select(type => metadata.GetString(type.Name));
+
+        Assert.That(used, Is.SubsetOf(new[] { nameof(LoadedTypes), nameof(ClosedBase) }));
     }
 
     static async Task<int> RunUntilStop(LifecycleApp app) {

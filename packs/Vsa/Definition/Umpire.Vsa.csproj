@@ -4,6 +4,7 @@
        It has no test framework, no ArchUnitNET and no Mono.Cecil. -->
   <ItemGroup>
     <ProjectReference Include="../../../architecture/Umpire.Architecture.csproj" />
+    <ProjectReference Include="../../../framework/Kernel/Definition/Umpire.Kernels.Definition.csproj" />
     <ProjectReference Include="../Kernel/Composition/Umpire.Vsa.Composition.csproj" />
     <ProjectReference Include="../Kernel/Domain/Umpire.Vsa.Domain.csproj" />
     <ProjectReference Include="../Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />

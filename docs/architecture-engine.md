@@ -106,7 +106,7 @@ The roots of each level:
 | Level | Roots |
 |---|---|
 | `Architecture` | `App` (folder `""`), `Definition` (folder `Definition`) |
-| `Architecture<TKernel>` (`framework/Kernel/App/`) | `Core` (folder `framework/Kernel`, record in `Umpire.Kernels.Blocks`) |
+| `Architecture<TKernel>` (`framework/Kernel/Definition/`) | `Core` (folder `framework/Kernel`, record in `Umpire.Kernels.Blocks`) |
 | `VsaArchitecture<TKernel>` | `App` with the folder `App`, and `Views` |
 
 A second `Roots.Add<T>()` of one record keeps one root. `Roots.Add<T>(folder)` on a later level sets its folder. `Define(Part root, Part kernel)` gets two parts. `root` is the `App` root. `kernel` is the kernel root: a part of the concept `Kernel` with the folder `Kernel`. If `Define` adds no part to `kernel`, the kernel root is not in the definition.
@@ -691,7 +691,7 @@ After it finds the block, the step `FindBlocks` reads the `.csproj` files of the
 | Each project has an Umpire main SDK | `UMP030305` | The `Sdk` attribute of `<Project>` names `Umpire.Sdk` or `Umpire.Sdk.Web`, with or without a version, or the project imports `Umpire.Sdk.Dev.props` (the source form of this repository) |
 | A block with more than one project has a `.umpireconfig` file | `UMP030306` | The file is in the block folder |
 
-`PackArchitecture` (Umpire.Kernels) is the shape of a pack: the folders `Definition/` (at least one `Architecture` class), `Kernel/` and `Tests/`. A file in another folder is unmapped (`UMP020202`). `Definition/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack. In the check of a pack, `Kernel/` has the kernel body of that architecture, and it has at most one `Kernel` class.
+`PackArchitecture` (Umpire.Kernels.Definition) is the shape of a pack: the folders `Definition/` (at least one `Architecture` class), `Kernel/` and `Tests/`. A file in another folder is unmapped (`UMP020202`). `Definition/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack. In the check of a pack, `Kernel/` has the kernel body of that architecture, and it has at most one `Kernel` class.
 
 `VsaArchitecture` marks `Packs/` of the `App` root with `AddBlockGroup<Pack>("Packs")`, so each `App/Packs/<Name>/` of a VSA app is the place of a pack block. The app host and each module may use `Pack`. A pack variant in that folder inherits `VsaArchitecture` and adds parts and rules: see `pack-variants.md`.
 

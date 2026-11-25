@@ -54,7 +54,7 @@ static class Analyzer {
             typeof(Umpire.Vsa.Handlers.Events.IntegrationEventHandler<>), typeof(Umpire.Vsa.Contracts.Requests.IRequestSender), typeof(Umpire.Vsa.Presenters.Presenter), typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin),
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection), typeof(Umpire.Vsa.Handlers.Commands.CommandHandler<,>),
             typeof(Umpire.Messages.Handlers.IHandler), typeof(Umpire.Vsa.Contracts.Commands.ICommand),
-            typeof(Umpire.Vsa.Definition.VsaArchitecture), typeof(Umpire.Architecture.Architecture)];
+            typeof(Umpire.Vsa.Definition.VsaArchitecture), typeof(Umpire.Kernels.PackArchitecture), typeof(Umpire.Architecture.Architecture)];
         foreach (var type in layers) {
             test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }

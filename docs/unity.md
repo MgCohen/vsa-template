@@ -73,13 +73,13 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Contracts, commands and events | `Umpire.Vsa.Contracts.Commands`, `Umpire.Vsa.Contracts.Events` | Yes |
 | Handlers, commands and events | `Umpire.Vsa.Handlers.Commands`, `Umpire.Vsa.Handlers.Events` | Yes |
 | Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |
-| Kernel (`App`, `Pack`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
+| Kernel (`App`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
 | The `.umpireconfig` reader | `Umpire.Config` (Tomlyn, its `netstandard2.0` asset) | Yes. Tomlyn needs `System.Buffers`, `System.Collections.Immutable` and `System.Text.Json` 10 |
 | Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
 | Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are not on `netstandard2.1` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
-| Architecture definition | `Umpire.Architecture`, `Umpire.Vsa` | `Umpire.Architecture`: yes, for `LoadedTypes`. `Umpire.Vsa`: no, no runtime type names it. The package `Umpire` has both in one DLL |
+| Architecture definition | `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` | `Umpire.Architecture`: yes, for the type scan. The others: no, no runtime type names them. The package `Umpire` has all in one DLL |
 | All the parts above, in one DLL | `Umpire` (`tools/bundle/`) | Yes. Unity vendors this DLL, not the projects above |
 | Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
