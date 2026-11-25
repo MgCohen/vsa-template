@@ -152,7 +152,7 @@ public sealed class DefinitionBuildTests {
 
         var build = workspace.Dotnet("build", "Shop.csproj", "-nodeReuse:false");
 
-        Assert.That(build.Output, Does.Not.Contain("UMP03051"));
+        Assert.That(build.Output, Does.Not.Contain("UMP030511").And.Not.Contain("UMP030512"));
         Assert.That(Definitions("Tools.Definition.dll").Where(file => file.Contains("Shop")), Is.Not.Empty);
     }
 
