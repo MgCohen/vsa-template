@@ -72,11 +72,12 @@ public sealed class DefinitionExportTests {
 
     [Test]
     public void The_block_file_has_the_severities_of_the_config() {
-        var state = Data.StateFolder.Of(Path.GetTempPath());
+        using var temp = new TempState();
+        var state = temp.State;
         var config = new Dictionary<string, string> { ["umpire.ump020101.severity"] = "warning", ["umpire.max"] = "3", ["Umpire.Check.Mode"] = "warn" };
 
-        var settings = BlockExport.Of(state, new BlockInput(Path.GetTempPath(), ["App"]) {
-            InnerBlocks = [Path.Combine(Path.GetTempPath(), "Inner")],
+        var settings = BlockExport.Of(state, new BlockInput(temp.Block, ["App"]) {
+            InnerBlocks = [Path.Combine(temp.Block, "Inner")],
             Config = config,
         });
 
@@ -85,7 +86,7 @@ public sealed class DefinitionExportTests {
             Assert.That(settings.Mode, Is.EqualTo(Data.CheckMode.Warn));
             Assert.That(settings.Severities, Has.Count.EqualTo(1));
             Assert.That(settings.InnerBlocks, Is.EqualTo(new[] { "Inner" }));
-            Assert.That(state.BlockOf(settings), Is.EqualTo(Data.BlockPath.Full(Path.GetTempPath())));
+            Assert.That(state.BlockOf(settings), Is.EqualTo(Data.BlockPath.Full(temp.Block)));
         });
     }
 

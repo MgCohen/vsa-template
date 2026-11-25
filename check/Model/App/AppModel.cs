@@ -81,6 +81,14 @@ public sealed class AppModel {
 
     public Decision DecisionFor(Placement from, Placement to) => Decisions.Of(from.Part, from.Values, to.Part, to.Values);
 
+    public Snapshot WithSurfaces(Snapshot snapshot) {
+        var saved = Saved.ToDictionary(s => s.Snapshot.Project, s => s.Snapshot, StringComparer.OrdinalIgnoreCase);
+        return snapshot with {
+            References = [.. snapshot.References.Select(r =>
+                saved.TryGetValue(r.Name, out var project) ? r with { Surface = CheckModel.Surface.Of(project) } : r)],
+        };
+    }
+
     internal bool IsIgnored(string file) => paths.IsIgnored(file);
 
     internal T Once<T>(object key, Func<T> make) where T : class =>

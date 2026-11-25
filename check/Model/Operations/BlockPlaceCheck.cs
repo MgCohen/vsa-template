@@ -17,7 +17,8 @@ public static class BlockPlaceCheck {
                     $"{part.Name} ({part.Path}) covers the folder {folder}, "
                     + $"but a check entry makes {folder} another block. Mark the folder with AddBlock<T>() "
                     + "or AddBlockGroup<T>() in Define, or remove the check entry of the inner block.",
-                    BlockPath.In(app.Block, folder), 1, 1, app.Trust.IsAllSure);
+                    BlockPath.In(app.Block, folder), 1, 1,
+                    app.Trust.IsAllSure && Directory.Exists(BlockPath.In(app.Block, folder)));
             }
         }
     }

@@ -65,7 +65,7 @@ sealed class ProjectRun {
             return;
         }
         try {
-            state.Save(facts.Full());
+            state.Save(app.WithSurfaces(facts.Full()));
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
             context.ReportDiagnostic(DataDiagnostic(DataCodes.NotSaved, $"The snapshot of {facts.Name} is not saved: {e.Message}"));
         }

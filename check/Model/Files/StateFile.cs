@@ -9,12 +9,10 @@ static class StateFile {
     public static string Read(string file) => Retry(() => File.ReadAllText(file));
 
     public static bool Save(string file, string text) {
-        if (Has(file, text)) {
-            return false;
-        }
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         using (Lock(file + LockExtension)) {
             if (Has(file, text)) {
+                File.SetLastWriteTimeUtc(file, DateTime.UtcNow);
                 return false;
             }
             Write(file, text);

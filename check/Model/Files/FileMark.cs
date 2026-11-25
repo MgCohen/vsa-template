@@ -20,8 +20,12 @@ public sealed record FileMark(string Path, string Hash, long Modified) {
 
     public bool IsCurrent(string block) {
         var file = BlockPath.In(block, Path);
-        if (Directory.Exists(file)) {
-            return FolderHash(file) == Hash;
+        try {
+            if (Directory.Exists(file)) {
+                return FolderHash(file) == Hash;
+            }
+        } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
+            return false;
         }
         return IsAbsent ? !File.Exists(file) : Freshness.IsCurrent(file, Hash, Modified);
     }

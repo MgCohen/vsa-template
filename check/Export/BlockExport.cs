@@ -17,7 +17,7 @@ public static partial class BlockExport {
         input.IgnoredFolders,
         input.FolderAliases,
         input.DefinitionSources,
-        [.. input.InputFiles.Select(file => FileMark.Of(input.Block, file))],
+        [.. input.InputFiles.Concat(SourceFiles.ConfigFiles(input.Block)).Distinct(StringComparer.OrdinalIgnoreCase).Select(file => FileMark.Of(input.Block, file))],
         Severities(input.Config));
 
     static CheckMode ModeOf(IEnumerable<KeyValuePair<string, string>> config) =>

@@ -1,31 +1,50 @@
 namespace Umpire.CheckModel;
 
 sealed class ProjectTrust {
-    readonly Dictionary<string, Lazy<bool>> sure = new(StringComparer.OrdinalIgnoreCase);
+    readonly AppModel app;
+    readonly SnapshotSet snapshots;
     readonly HashSet<string> missing;
+    readonly HashSet<string> known;
+    readonly HashSet<TypeName> unplaced;
     readonly bool hasUnknownState;
+    readonly Lazy<HashSet<string>> old;
 
-    public ProjectTrust(SnapshotSet snapshots, string block) {
-        missing = new HashSet<string>(snapshots.Problems.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
+    public ProjectTrust(AppModel app, SnapshotSet snapshots) {
+        this.app = app;
+        this.snapshots = snapshots;
+        missing = Names(snapshots.Problems.Select(p => p.Project));
+        known = Names(snapshots.All.Select(s => s.Snapshot.Project));
+        unplaced = [.. snapshots.Saved.SelectMany(s => s.Snapshot.Unplaced.Select(n => new TypeName(n, s.Snapshot.Project)))];
         hasUnknownState = snapshots.Problems.Any(p => p.IsState);
-        foreach (var project in snapshots.Saved) {
-            sure[project.Snapshot.Project] = new(() =>
-                !Freshness.OldFiles(project).Any() && project.Snapshot.References.All(IsSure));
-        }
-        foreach (var library in snapshots.Libraries) {
-            sure[library.Snapshot.Project] = new(() => library.Snapshot.Source?.IsCurrent(block) == true);
-        }
-        Current = snapshots.Current?.Project;
-        Projects = [.. snapshots.Saved.Select(s => s.Snapshot.Project)];
+        old = new(FindOld);
     }
 
-    public string? Current { get; }
-    public IReadOnlyList<string> Projects { get; }
-    public bool HasMissing => missing.Count > 0;
-    public bool AreAllSure => !HasMissing && sure.Values.All(s => s.Value);
+    public bool AreAllSure => missing.Count == 0 && old.Value.Count == 0 && !SourceFiles.HasNew(app);
 
     public bool IsSure(string assembly) => !missing.Contains(assembly)
-        && (sure.TryGetValue(assembly, out var known) ? known.Value : !hasUnknownState || assembly == Current);
+        && (known.Contains(assembly) ? assembly == snapshots.Current?.Project || !old.Value.Contains(assembly) : !hasUnknownState);
 
-    public bool Owns(string assembly) => Projects.Contains(assembly, StringComparer.OrdinalIgnoreCase);
+    public bool IsFound(TypeName name) => app.Find(name) is not null || unplaced.Contains(name)
+        || snapshots.Saved.All(s => s.Snapshot.Project != name.Assembly);
+
+    static HashSet<string> Names(IEnumerable<string> names) => new(names, StringComparer.OrdinalIgnoreCase);
+
+    HashSet<string> FindOld() {
+        var found = Names(snapshots.Libraries.Where(l => l.Snapshot.Source?.IsCurrent(app.Block) != true).Select(l => l.Snapshot.Project));
+        var saved = snapshots.Saved;
+        var surfaces = snapshots.Own.Concat(saved).Distinct().ToDictionary(
+            s => s.Snapshot.Project, s => new Lazy<string>(() => Surface.Of(s.Snapshot)), StringComparer.OrdinalIgnoreCase);
+        var hasNew = saved.Count > 0 && SourceFiles.HasNew(app);
+        foreach (var project in saved) {
+            if (hasNew || Freshness.OldFiles(project).Any() || project.Snapshot.References.Any(r =>
+                missing.Contains(r.Name) || surfaces.TryGetValue(r.Name, out var surface) && surface.Value != r.Surface)) {
+                found.Add(project.Snapshot.Project);
+            }
+        }
+        bool Uses(LoadedSnapshot project) => project.Snapshot.References.Any(r => found.Contains(r.Name));
+        while (saved.FirstOrDefault(p => !found.Contains(p.Snapshot.Project) && Uses(p)) is { } next) {
+            found.Add(next.Snapshot.Project);
+        }
+        return found;
+    }
 }

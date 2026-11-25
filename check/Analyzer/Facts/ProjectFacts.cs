@@ -20,7 +20,9 @@ public sealed class ProjectFacts {
         }
         var byFile = types.ToLookup(t => t.File, t => t.Facts);
         Declared = Snapshot.Of(Name, [.. Trees().Select(tree => FactsOf(tree, byFile))]) with {
-            References = [.. compilation.ReferencedAssemblyNames.Select(a => a.Name).Distinct().OrderBy(n => n, StringComparer.Ordinal)],
+            References = [.. compilation.ReferencedAssemblyNames.Select(a => a.Name).Distinct().OrderBy(n => n, StringComparer.Ordinal)
+                .Select(name => new ProjectReference(name, ""))],
+            Unplaced = [.. references.Keys.Except(types.Select(t => t.Facts.Name)).Select(n => n.FullName).OrderBy(n => n, StringComparer.Ordinal)],
         };
     }
 

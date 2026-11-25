@@ -16,11 +16,11 @@ public sealed class Trust {
         this.app = app;
         this.helpers = helpers;
         this.isDefinitionOfBlock = isDefinitionOfBlock;
-        projects = new ProjectTrust(snapshots, app.Block);
+        projects = new ProjectTrust(app, snapshots);
         OldLibraries = [.. snapshots.Libraries.Where(l => l.Snapshot.Source?.IsCurrent(app.Block) != true)];
         hasMissingProject = app.Problems.Any(p => !p.IsLibrary);
         isBlockCurrent = new(() => isDefinitionOfBlock && app.Settings.DefinitionSources.Count > 0 && OldInputs.Count == 0);
-        isAllSure = new(() => projects.AreAllSure && !SourceFiles.HasUnknown(app));
+        isAllSure = new(() => projects.AreAllSure);
     }
 
     public IReadOnlyList<LoadedSnapshot> OldLibraries { get; }
@@ -39,12 +39,13 @@ public sealed class Trust {
     public bool IsSure(AppType type) => sure.GetOrAdd(type, t => HasSureBases(t) && HasSureNeighbors(t));
 
     public bool IsSure(TypeName name) => projects.IsSure(name.Assembly)
-        && (app.Find(name) is { } type ? IsSure(type) : !projects.Owns(name.Assembly));
+        && projects.IsFound(name)
+        && (app.Find(name) is not { } type || IsSure(type));
 
     public bool AreSure(IEnumerable<TypeName> names) => names.Distinct().All(IsSure);
 
     bool HasSureBases(AppType type) => projects.IsSure(type.Project)
-        && type.Content.Bases.All(b => projects.IsSure(b.Assembly) && (app.Find(b) is not null || !projects.Owns(b.Assembly)));
+        && type.Content.Bases.All(b => projects.IsSure(b.Assembly) && projects.IsFound(b));
 
     bool HasSureNeighbors(AppType type) => helpers.NeighborsOf(type) is not { } neighbors
         || !hasMissingProject && neighbors.All(HasSureBases);

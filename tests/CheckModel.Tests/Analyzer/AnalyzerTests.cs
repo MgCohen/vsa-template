@@ -132,6 +132,7 @@ public sealed class AnalyzerTests {
         build.Write("Ui/Screen.cs", Screen);
         build.Write("Data/Store.cs", Store);
         var ui = build.Compile("Ui", "Ui/Screen.cs");
+        build.Analyze(ui);
         build.Analyze(build.Compile("Data", [ui], "Data/Store.cs"));
         File.Delete(Path.Combine(build.Block, "Ui", "Screen.cs"));
         build.Write("Data/Screen.cs", Screen);
@@ -141,7 +142,8 @@ public sealed class AnalyzerTests {
         build.Write("Ui/Screen.cs", Screen);
         build.Analyze(build.Compile("Ui", "Ui/Screen.cs"));
 
-        Assert.That(CheckJob.Run(build.State).Findings.Single().Code, Is.EqualTo("UMP020101"));
+        var finding = CheckJob.Run(build.State).Findings.Single();
+        Assert.That((finding.Code, finding.Severity), Is.EqualTo((RuleCodes.DeniedUse, Severity.Error)));
     }
 
     static IReadOnlyList<Diagnostic> UseOfAnotherProject(SampleBuild build, Action? change = null) {
