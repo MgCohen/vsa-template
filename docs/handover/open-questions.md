@@ -59,3 +59,11 @@ Also in K4: the place of `LoadedTypes` and `ClosedBase`, which `Umpire.Kernels` 
 - Remove `rules.For<App>(...).And<DefinitionRoot>()` and the `Host` line. Opinion: yes.
 - Permit `For<Definition>().Uses<Pack>()` for an app definition on its own pack variant. Opinion: yes.
 - The kernel rules: the strictness of `Views` and `Composition`, and the uses of `Core` and `Messages` (#364).
+
+## Check system topology (page "Check System Topology")
+
+The proposals and the questions of https://claude.ai/artifact/GQkEAJ48rdzvsDjPtXfBgf. Each answer is in the words of the user.
+
+### Answers
+
+- **P1 (2026-11-25).** Accepted. "I want it to be unified. We only have one thing, the engine, period. If we have our own analyzers, they're inside the engine. There might be different entry points, but they all go through the same system."
