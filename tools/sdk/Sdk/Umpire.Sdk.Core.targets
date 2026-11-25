@@ -1,5 +1,7 @@
 <Project>
   <!-- The Umpire part of Umpire.Sdk and Umpire.Sdk.Web, after the targets of the platform SDK. -->
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Codes.props" />
+
   <!-- An app has one root project in the app root. It compiles each file in its folder tree. A nested project is optional,
        for example a test project or a separate assembly. The parent project does not compile the files of a nested project,
        so no file compiles two times. The build output of each project (bin/, obj/) and the folders in UmpireExcludedFolders
@@ -165,8 +167,9 @@
 
   <!-- The architecture check after each build of the root project. MSBuild only calls the engine with the Check stage: the
        engine reads .umpireconfig (for example umpire.check.mode) and decides what to check. Its Changes step skips the check
-       when no input changed. -p:UmpireCheck=false stops the call for one build. -p:UmpireCheckMode=Warn gives the mode for
-       one build, and it wins over .umpireconfig. UmpireBlock gives the block folder (this repository has one global.json for
+       when no input changed. -p:UmpireCheck=false stops the call for one build. A finding is a warning (mode Warn). The key
+       umpire.check.mode = "Error" makes it an error. -p:UmpireCheckMode gives the mode for one build, and it wins over the key.
+       The hook reads the key itself only for its own codes, UMP030003 and UMP030004. UmpireBlock gives the block folder (this repository has one global.json for
        many apps). -->
   <PropertyGroup>
     <UmpireEngineRollForward Condition="'$(UmpireEngineRollForward)' == ''">LatestMajor</UmpireEngineRollForward>
@@ -180,26 +183,42 @@
       <_UmpireModeArgument Condition="'$(UmpireCheckMode)' != ''"> --mode $(UmpireCheckMode)</_UmpireModeArgument>
       <_UmpireBlockArgument Condition="'$(UmpireBlock)' != ''"> --block &quot;$(UmpireBlock.TrimEnd('\').TrimEnd('/'))&quot;</_UmpireBlockArgument>
     </PropertyGroup>
-    <Error Condition="!Exists('$(UmpireEngineFile)') and '$(UmpireFrameworkSourceDir)' == ''" Code="UMP030003"
-           Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Restore the project again, so the Umpire SDK package is complete." />
-    <Error Condition="!Exists('$(UmpireEngineFile)') and '$(UmpireFrameworkSourceDir)' != ''" Code="UMP030003"
-           Text="The rule engine $(UmpireEngineFile) does not exist, so the architecture check cannot run. Build engine/Engine.csproj with the same configuration, or give UmpireEngineFile." />
-    <!-- A finding line fails the build (Exec reads each canonical error line). An exit code that is not 0 with no finding
-         line (": error <CODE>: ", for example ": error UMP020101: ") is an engine crash, for example an exception or a
-         missing runtime: it fails the build too, with UMP030004. The engine targets net8.0 and loads the definition of the
+    <PropertyGroup Condition="'$(UmpireCheckMode)' != ''">
+      <_UmpireHookMode>$(UmpireCheckMode)</_UmpireHookMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UmpireCheckMode)' == '' and '$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
+      <_UmpireConfigText>$([System.IO.File]::ReadAllText('$(UmpireConfigFile)'))</_UmpireConfigText>
+      <_UmpireErrorMode>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireConfigText)', '(?im)^ *(umpire[.]check[.]mode|[[]umpire[.]check[]][^[]*?^ *mode|[[]umpire[]][^[]*?^ *check[.]mode) *= *.error'))</_UmpireErrorMode>
+      <_UmpireHookMode Condition="'$(_UmpireErrorMode)' == 'True'">Error</_UmpireHookMode>
+    </PropertyGroup>
+    <PropertyGroup>
+      <_UmpireEngineFound Condition="Exists('$(UmpireEngineFile)')">true</_UmpireEngineFound>
+      <_UmpireNoEngine>The rule engine $(UmpireEngineFile) does not exist, so the architecture check did not run.</_UmpireNoEngine>
+      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' == ''">$(_UmpireNoEngine) Restore the project again, so the Umpire SDK package is complete.</_UmpireNoEngine>
+      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' != ''">$(_UmpireNoEngine) Build engine/Engine.csproj with the same configuration, or give UmpireEngineFile.</_UmpireNoEngine>
+    </PropertyGroup>
+    <Error Condition="'$(_UmpireEngineFound)' != 'true' and '$(_UmpireHookMode)' == 'Error'" Code="UMP030003" Text="$(_UmpireNoEngine)" />
+    <Warning Condition="'$(_UmpireEngineFound)' != 'true'" Code="UMP030003" Text="$(_UmpireNoEngine)" />
+    <!-- Exec reads each canonical error line and warning line, so an error line fails the build and a warning line does not.
+         The exit code 1 with a finding line (": error <CODE>: " or ": warning <CODE>: ") is a run with findings. Each other
+         exit code that is not 0 is an engine crash, for example an exception or a missing runtime: UMP030004, an error in
+         the mode Error, else a warning. The engine targets net8.0 and loads the definition of the
          app, so it runs on the newest installed runtime (LatestMajor): RollForward Major alone selects .NET 8 when it is
          installed, and a net10.0 app does not load there. -->
-    <Exec IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high" ConsoleToMSBuild="true"
+    <Exec Condition="'$(_UmpireEngineFound)' == 'true'" IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high" ConsoleToMSBuild="true"
           Command="&quot;$(_UmpireDotnet)&quot; exec --roll-forward $(UmpireEngineRollForward) &quot;$(UmpireEngineFile)&quot; --stage Check --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
       <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
       <Output TaskParameter="ConsoleOutput" ItemName="_UmpireCheckLine" />
     </Exec>
     <PropertyGroup>
       <_UmpireCheckOutput>@(_UmpireCheckLine)</_UmpireCheckOutput>
-      <_UmpireCheckFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireCheckOutput)', ': error [A-Z]+[0-9]+: '))</_UmpireCheckFound>
+      <_UmpireCheckFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_UmpireCheckOutput)', ': (error|warning) [A-Z]+[0-9]+: '))</_UmpireCheckFound>
     </PropertyGroup>
-    <Error Condition="'$(_UmpireCheckExit)' != '0' and '$(_UmpireCheckFound)' != 'True'" Code="UMP030004"
-           Text="The rule engine stopped with exit code $(_UmpireCheckExit) and reported no finding, so the architecture check did not run. Read the engine output above." />
+    <PropertyGroup Condition="'$(_UmpireEngineFound)' == 'true' and '$(_UmpireCheckExit)' != '0' and ('$(_UmpireCheckExit)' != '1' or '$(_UmpireCheckFound)' != 'True')">
+      <_UmpireCrash>The rule engine stopped with exit code $(_UmpireCheckExit), so the architecture check did not run to its end. Read the engine output above.</_UmpireCrash>
+    </PropertyGroup>
+    <Error Condition="'$(_UmpireCrash)' != '' and '$(_UmpireHookMode)' == 'Error'" Code="UMP030004" Text="$(_UmpireCrash)" />
+    <Warning Condition="'$(_UmpireCrash)' != '' and '$(_UmpireHookMode)' != 'Error'" Code="UMP030004" Text="$(_UmpireCrash)" />
   </Target>
 
   <!-- A test project (UmpireTestProject, Umpire.Sdk.Core.props) gets NUnit and the test bases of the pack.

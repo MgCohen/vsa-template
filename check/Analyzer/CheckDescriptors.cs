@@ -15,7 +15,7 @@ static class CheckDescriptors {
     public static DiagnosticDescriptor Of(string code) => ByCode[code];
 
     static DiagnosticDescriptor Rule(string code) =>
-        new(code, "An architecture rule of the definition", "{0}", Category, DiagnosticSeverity.Error, isEnabledByDefault: true);
+        new(code, "An architecture rule of the definition", "{0}", Category, DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
     static DiagnosticDescriptor Data(string code) => new(
         code, "The data of the check model", "{0}", Category, DiagnosticSeverity.Warning, isEnabledByDefault: true,

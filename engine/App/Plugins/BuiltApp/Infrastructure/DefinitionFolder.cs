@@ -14,6 +14,24 @@ public sealed record DefinitionFolder(bool HasSource, bool HasProject) {
         return new DefinitionFolder(files.Contains(".cs"), files.Contains(".csproj"));
     }
 
+    public static IReadOnlyList<string> Below(string block, IReadOnlyList<string> ignoredFolders) {
+        var own = FolderAliasConfig.Of(UmpireConfig.Find(block), block).DefinitionFolders(block);
+        return [.. Nested(block)
+            .Where(folder => !own.Contains(folder, StringComparer.OrdinalIgnoreCase)
+                && Files(folder).Any(file => IsSource(file)
+                    && !ReadOptions.IsIgnored(Path.GetRelativePath(block, file), ignoredFolders)))
+            .Order(StringComparer.OrdinalIgnoreCase)];
+    }
+
+    static IEnumerable<string> Nested(string folder) => Directory.GetDirectories(folder)
+        .Where(sub => !BuildOutput.IsIgnored(Path.GetFileName(sub)) && !IsName(sub, Tests) && !IsOtherRoot(sub))
+        .SelectMany(sub => DefinitionType.IsFolderName(Path.GetFileName(sub)) ? [sub] : Nested(sub));
+
+    static bool IsOtherRoot(string folder) =>
+        File.Exists(Path.Combine(folder, UmpireConfig.FileName)) && Directory.GetFiles(folder, "*.csproj").Length > 0;
+
+    static bool IsSource(string file) => string.Equals(Path.GetExtension(file), ".cs", StringComparison.OrdinalIgnoreCase);
+
     static IEnumerable<string> OnDisk(string folder) {
         var parent = Path.GetDirectoryName(folder)!;
         return Directory.Exists(parent)

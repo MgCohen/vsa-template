@@ -1,2 +1,4 @@
 # The Umpire file of this block (TOML): the root of its build output, the rule values of the analyzers and the module
 # settings. A rule value is a top-level key, for example umpire.UMP010101.max = 140. A module has a table of its name.
+# The findings of this repository are errors. The default of an app is Warn.
+umpire.check.mode = "Error"

@@ -3,8 +3,6 @@ namespace Umpire.CheckModel.Export;
 using System.Text.RegularExpressions;
 
 public static partial class BlockExport {
-    const string ModeKey = "umpire.check.mode";
-
     public static BlockSettings Of(StateFolder state, BlockInput input) => new(
         BlockSettings.CurrentFormat,
         Relative(state.Folder, input.Block),
@@ -21,11 +19,7 @@ public static partial class BlockExport {
         Severities(input.Config));
 
     static CheckMode ModeOf(IEnumerable<KeyValuePair<string, string>> config) =>
-        Enum.TryParse<CheckMode>(
-            config.LastOrDefault(pair => string.Equals(pair.Key, ModeKey, StringComparison.OrdinalIgnoreCase)).Value,
-            ignoreCase: true, out var mode)
-            ? mode
-            : CheckMode.Error;
+        CheckModes.Of(config.LastOrDefault(pair => string.Equals(pair.Key, CheckModes.Key, StringComparison.OrdinalIgnoreCase)).Value);
 
     static Dictionary<string, string> Severities(IEnumerable<KeyValuePair<string, string>> config) {
         var severities = new Dictionary<string, string>();

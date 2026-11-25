@@ -35,6 +35,12 @@
   <!-- The general build settings of each Umpire project: the same file as in Umpire.Sdk. -->
   <Import Project="$(MSBuildThisFileDirectory)tools/sdk/Sdk/Umpire.Common.props" />
 
+  <!-- The findings of the architecture check are errors in this repository: the engine, the templates and the framework blocks.
+       The default of an app is Warn. A new app does not get this file. -->
+  <PropertyGroup>
+    <UmpireCheckMode Condition="'$(UmpireCheckMode)' == ''">Error</UmpireCheckMode>
+  </PropertyGroup>
+
   <!-- All Umpire packages ship together with one version. -->
   <PropertyGroup>
     <Version>0.2.0</Version>

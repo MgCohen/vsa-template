@@ -18,7 +18,7 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
-    public void The_repository_style_has_no_Umpire_rule_key() {
+    public void The_repository_style_has_no_Umpire_rule_value() {
         var keys = File.ReadAllLines(Repo.Path(".editorconfig")).Where(line => UmpireKey().IsMatch(line));
 
         Assert.That(keys, Is.Empty);
@@ -42,8 +42,9 @@ public sealed partial class RuleValueOwnerTests {
     }
 
     [Test]
-    public void The_general_build_files_name_no_analyzer_rule() {
+    public void Only_the_code_list_of_the_general_build_files_names_an_analyzer_rule() {
         var lines = SdkFiles()
+            .Where(file => Path.GetFileName(file) != Path.GetFileName(SdkCodes.File))
             .SelectMany(file => File.ReadAllLines(file)
                 .Where(line => AnalyzerRuleCode().IsMatch(line))
                 .Select(line => $"{Path.GetFileName(file)}: {line.Trim()}"));
@@ -69,7 +70,7 @@ public sealed partial class RuleValueOwnerTests {
 
     static string Plain(string name) => name.Replace("_", "", StringComparison.Ordinal).ToUpperInvariant();
 
-    [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP)")]
+    [GeneratedRegex(@"^\s*(umpire\.|dotnet_diagnostic\.UMP\d+\.severity = (?!error))")]
     private static partial Regex UmpireKey();
 
     [GeneratedRegex(@"UMP01(?!00)\d{4}")]

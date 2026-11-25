@@ -7,7 +7,9 @@ public static class CheckMode {
     public const string Key = "umpire.check.mode";
 
     public static ReportMode Of(ReportMode? given, string folder) =>
-        given ?? (Enum.TryParse<ReportMode>(Configured(folder), ignoreCase: true, out var mode) ? mode : ReportMode.Error);
+        given ?? (Enum.TryParse<ReportMode>(Configured(folder), ignoreCase: true, out var mode) && Enum.IsDefined(mode)
+            ? mode
+            : ReportMode.Warn);
 
     static string? Configured(string folder) {
         try {

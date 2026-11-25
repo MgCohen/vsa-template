@@ -27,12 +27,12 @@ public sealed class BuildCheckTests {
             """);
         var finding = $"{probe}(4,90): error UMP020101: Probe in Host";
 
-        var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
+        var build = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Error");
         Assert.That(build.Succeeded, Is.False, build.Output);
         Assert.That(build.Output, Does.Contain(finding));
         Assert.That(build.Output, Does.Not.Contain("UMP030004"), "A finding is not an engine crash.");
 
-        var warned = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Warn")
+        var warned = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false")
             .EnsureSuccess();
         Assert.That(warned.Output, Does.Contain($"{probe}(4,90): warning UMP020101: Probe in Host"));
 
@@ -46,7 +46,7 @@ public sealed class BuildCheckTests {
             }
             """);
 
-        var layer = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false");
+        var layer = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Error");
         Assert.That(layer.Succeeded, Is.False, layer.Output);
         Assert.That(layer.Output, Does.Contain($"{domainProbe}(").And.Contain("error UMP020101: SenderProbe in Domain"),
             "A use of a layer in Umpire.dll is a finding.");

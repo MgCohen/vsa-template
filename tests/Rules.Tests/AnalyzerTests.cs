@@ -185,9 +185,9 @@ public sealed class RecordPayloadRuleTests {
     public Task Umpire_severity_sets_the_severity_of_the_finding() => Analyzer.Verify($$"""
         public sealed record GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items> { {{Route}} }
         public sealed class {|#0:Items|} : Umpire.Vsa.Contracts.Requests.IResponse { }
-        """, "umpire.UMP010201.severity = warning",
+        """, "umpire.UMP010201.severity = error",
         Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "Items", "the response of GetItems")
-            .WithSeverity(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning));
+            .WithSeverity(Microsoft.CodeAnalysis.DiagnosticSeverity.Error));
 }
 
 public sealed class VsaAnalyzerTests {

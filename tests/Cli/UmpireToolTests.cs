@@ -198,7 +198,7 @@ public sealed class UmpireToolTests {
                 public static Hello.Features.Billing.Slices.CreateInvoice.CreateInvoiceRequest? Request { get; set; }
             }
             """);
-        var denied = Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false");
+        var denied = Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Error");
         Assert.That(denied.Succeeded, Is.False, denied.Output);
         Assert.That(denied.Output, Does.Contain($"{probe}(4,95): error UMP020101: Probe in Host"));
 

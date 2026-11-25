@@ -18,7 +18,7 @@ static class TestConfig {
         var on = Analyzer.AllRules.Where(rule => !rule.IsOnByDefault)
             .Select(rule => $"{UmpirePrefix}{rule.Id}.{RuleSeverity.Key}")
             .Where(key => !keys.Contains(key))
-            .Select(key => $"{key} = \"error\"");
+            .Select(key => $"{key} = \"warning\"");
         return string.Concat(lines.Concat(on).Select(line => line + "\n"));
     }
 

@@ -3,7 +3,6 @@ namespace Engine.Slices.RunEngine;
 using Blocks.Domain.Shared;
 using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
-using BuiltApp.Domain.Shared;
 using Changes.Slices.FindChanges;
 using Changes.Slices.WriteBlockStamp;
 using Changes.Slices.WriteStamp;
@@ -91,17 +90,18 @@ sealed class RunEngineHandler(ICommandSender commands, StepLog log, RunOptions o
             return tree.Used;
         }
         var before = log.Findings.Count;
-        await Check(run, tree, blocks.Value.Bin, ct);
+        await Check(run, find, blocks.Value, ct);
         if (stamp.IsSuccess && log.Findings.Skip(before).All(f => f.Severity == FindingSeverity.Info)) {
             await commands.SendAsync(new WriteBlockStampCommand(stamp.Value.File, stamp.Value.Hash), ct);
         }
         return tree.Used;
     }
 
-    async Task Check(RunEngineRequest run, BlockTree tree, BinIndex bin, CancellationToken ct) {
+    async Task Check(RunEngineRequest run, FindBlocksCommand find, FindBlocksResult found, CancellationToken ct) {
+        var tree = found.Blocks;
         var versions = await commands.SendAsync(new CheckVersionsCommand(tree.Current.Folder, run.Bin), ct);
         var app = versions.IsSuccess
-            ? await commands.SendAsync(new LoadAppCommand(tree, bin, run.Skip), ct)
+            ? await commands.SendAsync(new LoadAppCommand(tree, found.Bin, run.Skip, find.IsUsed), ct)
             : log.Skip<LoadAppCommand, AppInput>();
         if (app.IsSuccess) {
             await commands.SendAsync(new CheckRulesCommand(app.Value), ct);

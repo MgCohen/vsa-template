@@ -98,6 +98,25 @@ public sealed class RunEngineTests {
         }
     }
 
+    [TestCase("", null, "warning")]
+    [TestCase("umpire.check.mode = \"Error\"", null, "error")]
+    [TestCase("umpire.check.mode = \"Error\"", ReportMode.Warn, "warning")]
+    [TestCase("", ReportMode.Error, "error")]
+    public async Task The_default_mode_is_Warn_and_the_key_or_the_flag_selects_Error(string config, ReportMode? mode, string severity) {
+        var root = TempFolder.Create();
+        try {
+            File.WriteAllText(Path.Combine(root, ".umpireconfig"), config);
+            File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Umpire.Sdk/0.0.1" />""");
+
+            var result = await Run(block: root, mode: mode);
+
+            Assert.That(result.ExitCode, Is.EqualTo(severity == "error" ? 1 : 0));
+            Assert.That(result.Lines, Has.One.Contains($"{severity} UMP030401"));
+        } finally {
+            TempFolder.Delete(root);
+        }
+    }
+
     [Test]
     public async Task With_no_block_the_engine_uses_the_nearest_check_entry_above_the_project() {
         var root = TempFolder.Create();
@@ -291,7 +310,8 @@ public sealed class RunEngineTests {
 
     internal static async Task<RunEngineResponse> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
-        Stage stage = Stage.Check, bool keepStamp = false, bool? projectChecks = null) {
+        Stage stage = Stage.Check, bool keepStamp = false, bool? projectChecks = null,
+        ReportMode? mode = ReportMode.Error) {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
             new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
@@ -302,7 +322,7 @@ public sealed class RunEngineTests {
             StampFile.Delete(output);
         }
         var request = new RunEngineRequest(
-            project ?? declared, output, declared, FailFast: failFast, Stage: stage, ProjectChecks: projectChecks);
+            project ?? declared, output, declared, mode, FailFast: failFast, Stage: stage, ProjectChecks: projectChecks);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }

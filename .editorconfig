@@ -6,6 +6,9 @@
 root = true
 
 [*.cs]
+# The Umpire rules are warnings by default. These rules are errors in this repository. The codes with no file are in .globalconfig.
+dotnet_diagnostic.UMP010107.severity = error
+dotnet_diagnostic.UMP010201.severity = error
 # Off by decision. CA1716: the code is C# only, so a VB keyword such as "to" or "Get" is a correct name.
 # CA1863: CompositeFormat does not exist in netstandard2.1, so the Unity projects cannot use it.
 dotnet_diagnostic.CA1716.severity = none

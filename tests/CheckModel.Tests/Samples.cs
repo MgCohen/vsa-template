@@ -14,6 +14,7 @@ static class Samples {
         [], [], [], []);
 
     public static BlockSettings Settings(params string[] projects) => BlockSettings.Of("../..", projects) with {
+        Mode = CheckMode.Error,
         DefinitionSources = [new FileMark("NoSuchSource.cs", "", 0)],
     };
 

@@ -32,7 +32,7 @@ sealed class ProjectRun {
         config.TryGetValue(BlockSearch.FolderProperty, out var folder);
         config.TryGetValue(ModeProperty, out var given);
         var facts = new ProjectFacts(compilation, state.BlockOf(settings), string.IsNullOrEmpty(folder) ? null : folder);
-        var app = AppModel.Load(state, settings, facts.Current, Enum.TryParse<CheckMode>(given, ignoreCase: true, out var mode) ? mode : null);
+        var app = AppModel.Load(state, settings, facts.Current, CheckModes.Parse(given));
         return new ProjectRun(state, facts, app, BuildHost.Saves(config));
     }
 
