@@ -3366,19 +3366,19 @@ Kernel/Domain -> Core/KernelParts.Services [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Domain -> Views [any] Deny
 Kernel/Domain -> Kernel [any] Allow Public
-Kernel/Domain -> Kernel/Infrastructure [any] Allow Public
-Kernel/Domain -> Kernel/Presenters [any] Allow Public
-Kernel/Domain -> Kernel/Contracts [any] Allow Public
-Kernel/Domain -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Domain -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Domain -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Domain -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Domain -> Kernel/Handlers [any] Allow Public
-Kernel/Domain -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Domain -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Domain -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Domain -> Kernel/Views [any] Allow Public
-Kernel/Domain -> Kernel/Composition [any] Allow Public
+Kernel/Domain -> Kernel/Infrastructure [any] Deny
+Kernel/Domain -> Kernel/Presenters [any] Deny
+Kernel/Domain -> Kernel/Contracts [any] Deny
+Kernel/Domain -> Kernel/Contracts/Contracts.Requests [any] Deny
+Kernel/Domain -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Domain -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Domain -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Domain -> Kernel/Handlers [any] Deny
+Kernel/Domain -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Domain -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Domain -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Domain -> Kernel/Views [any] Deny
+Kernel/Domain -> Kernel/Composition [any] Deny
 Kernel/Domain -> UmpireLibraries [any] Deny
 Kernel/Infrastructure -> App [any] Deny
 Kernel/Infrastructure -> App/MessagesComponent [any] Deny
@@ -3431,18 +3431,18 @@ Kernel/Infrastructure -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Infrastructure -> Views [any] Deny
 Kernel/Infrastructure -> Kernel [any] Allow Public
 Kernel/Infrastructure -> Kernel/Domain [any] Allow Public
-Kernel/Infrastructure -> Kernel/Presenters [any] Allow Public
-Kernel/Infrastructure -> Kernel/Contracts [any] Allow Public
-Kernel/Infrastructure -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Infrastructure -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Infrastructure -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Infrastructure -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Infrastructure -> Kernel/Handlers [any] Allow Public
-Kernel/Infrastructure -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Infrastructure -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Infrastructure -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Infrastructure -> Kernel/Views [any] Allow Public
-Kernel/Infrastructure -> Kernel/Composition [any] Allow Public
+Kernel/Infrastructure -> Kernel/Presenters [any] Deny
+Kernel/Infrastructure -> Kernel/Contracts [any] Deny
+Kernel/Infrastructure -> Kernel/Contracts/Contracts.Requests [any] Deny
+Kernel/Infrastructure -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Infrastructure -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Infrastructure -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Infrastructure -> Kernel/Handlers [any] Deny
+Kernel/Infrastructure -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Infrastructure -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Infrastructure -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Infrastructure -> Kernel/Views [any] Deny
+Kernel/Infrastructure -> Kernel/Composition [any] Deny
 Kernel/Infrastructure -> UmpireLibraries [any] Deny
 Kernel/Presenters -> App [any] Deny
 Kernel/Presenters -> App/MessagesComponent [any] Deny
@@ -3494,19 +3494,19 @@ Kernel/Presenters -> Core/KernelParts.Services [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Presenters -> Views [any] Deny
 Kernel/Presenters -> Kernel [any] Allow Public
-Kernel/Presenters -> Kernel/Domain [any] Allow Public
-Kernel/Presenters -> Kernel/Infrastructure [any] Allow Public
-Kernel/Presenters -> Kernel/Contracts [any] Allow Public
+Kernel/Presenters -> Kernel/Domain [any] Deny
+Kernel/Presenters -> Kernel/Infrastructure [any] Deny
+Kernel/Presenters -> Kernel/Contracts [any] Deny
 Kernel/Presenters -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Presenters -> Kernel/Contracts/Contracts.Events [any] Allow Internal
+Kernel/Presenters -> Kernel/Contracts/Contracts.Events [any] Allow Public
 Kernel/Presenters -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
-Kernel/Presenters -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Presenters -> Kernel/Handlers [any] Allow Public
-Kernel/Presenters -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Kernel/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Presenters -> Kernel/Handlers [any] Deny
+Kernel/Presenters -> Kernel/Handlers/Handlers.Requests [any] Deny
 Kernel/Presenters -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Presenters -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Presenters -> Kernel/Views [any] Allow Public
-Kernel/Presenters -> Kernel/Composition [any] Allow Public
+Kernel/Presenters -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Presenters -> Kernel/Views [any] Deny
+Kernel/Presenters -> Kernel/Composition [any] Deny
 Kernel/Presenters -> UmpireLibraries [any] Deny
 Kernel/Contracts -> App [any] Deny
 Kernel/Contracts -> App/MessagesComponent [any] Deny
@@ -3558,19 +3558,19 @@ Kernel/Contracts -> Core/KernelParts.Services [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts -> Views [any] Deny
 Kernel/Contracts -> Kernel [any] Allow Public
-Kernel/Contracts -> Kernel/Domain [any] Allow Public
-Kernel/Contracts -> Kernel/Infrastructure [any] Allow Public
-Kernel/Contracts -> Kernel/Presenters [any] Allow Public
-Kernel/Contracts -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Contracts -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Contracts -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Contracts -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Contracts -> Kernel/Handlers [any] Allow Public
-Kernel/Contracts -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Contracts -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Contracts -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Contracts -> Kernel/Views [any] Allow Public
-Kernel/Contracts -> Kernel/Composition [any] Allow Public
+Kernel/Contracts -> Kernel/Domain [any] Deny
+Kernel/Contracts -> Kernel/Infrastructure [any] Deny
+Kernel/Contracts -> Kernel/Presenters [any] Deny
+Kernel/Contracts -> Kernel/Contracts/Contracts.Requests [any] Deny
+Kernel/Contracts -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Contracts -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Contracts -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Contracts -> Kernel/Handlers [any] Deny
+Kernel/Contracts -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Contracts -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Contracts -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Contracts -> Kernel/Views [any] Deny
+Kernel/Contracts -> Kernel/Composition [any] Deny
 Kernel/Contracts -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Requests -> App [any] Deny
 Kernel/Contracts/Contracts.Requests -> App/MessagesComponent [any] Deny
@@ -3622,19 +3622,19 @@ Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Services [any] Allow Pub
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Views [any] Deny
 Kernel/Contracts/Contracts.Requests -> Kernel [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Domain [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Infrastructure [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Presenters [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Handlers [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Views [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> Kernel/Composition [any] Allow Public
+Kernel/Contracts/Contracts.Requests -> Kernel/Domain [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Infrastructure [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Presenters [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Contracts [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Handlers [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Views [any] Deny
+Kernel/Contracts/Contracts.Requests -> Kernel/Composition [any] Deny
 Kernel/Contracts/Contracts.Requests -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Events -> App [any] Deny
 Kernel/Contracts/Contracts.Events -> App/MessagesComponent [any] Deny
@@ -3686,19 +3686,19 @@ Kernel/Contracts/Contracts.Events -> Core/KernelParts.Services [any] Allow Publi
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Views [any] Deny
 Kernel/Contracts/Contracts.Events -> Kernel [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Domain [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Infrastructure [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Presenters [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Kernel/Contracts/Contracts.Events -> Kernel/Domain [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Infrastructure [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Presenters [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Contracts [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Requests [any] Deny
 Kernel/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Handlers [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Views [any] Allow Public
-Kernel/Contracts/Contracts.Events -> Kernel/Composition [any] Allow Public
+Kernel/Contracts/Contracts.Events -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Handlers [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Views [any] Deny
+Kernel/Contracts/Contracts.Events -> Kernel/Composition [any] Deny
 Kernel/Contracts/Contracts.Events -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/MessagesComponent [any] Deny
@@ -3750,19 +3750,19 @@ Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelPart
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Views [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Domain [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Infrastructure [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Presenters [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Domain [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Infrastructure [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Presenters [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts/Contracts.Requests [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Views [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Composition [any] Allow Public
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Views [any] Deny
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel/Composition [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Commands -> App [any] Deny
 Kernel/Contracts/Contracts.Commands -> App/MessagesComponent [any] Deny
@@ -3814,19 +3814,19 @@ Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Services [any] Allow Pub
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Views [any] Deny
 Kernel/Contracts/Contracts.Commands -> Kernel [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Domain [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Infrastructure [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Presenters [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Handlers [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Views [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> Kernel/Composition [any] Allow Public
+Kernel/Contracts/Contracts.Commands -> Kernel/Domain [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Infrastructure [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Presenters [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Contracts [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Requests [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Handlers [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Views [any] Deny
+Kernel/Contracts/Contracts.Commands -> Kernel/Composition [any] Deny
 Kernel/Contracts/Contracts.Commands -> UmpireLibraries [any] Deny
 Kernel/Handlers -> App [any] Deny
 Kernel/Handlers -> App/MessagesComponent [any] Deny
@@ -3878,19 +3878,19 @@ Kernel/Handlers -> Core/KernelParts.Services [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers -> Views [any] Deny
 Kernel/Handlers -> Kernel [any] Allow Public
-Kernel/Handlers -> Kernel/Domain [any] Allow Public
-Kernel/Handlers -> Kernel/Infrastructure [any] Allow Public
-Kernel/Handlers -> Kernel/Presenters [any] Allow Public
-Kernel/Handlers -> Kernel/Contracts [any] Allow Public
-Kernel/Handlers -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Handlers -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Handlers -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Handlers -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Handlers -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Handlers -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Handlers -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Handlers -> Kernel/Views [any] Allow Public
-Kernel/Handlers -> Kernel/Composition [any] Allow Public
+Kernel/Handlers -> Kernel/Domain [any] Deny
+Kernel/Handlers -> Kernel/Infrastructure [any] Deny
+Kernel/Handlers -> Kernel/Presenters [any] Deny
+Kernel/Handlers -> Kernel/Contracts [any] Deny
+Kernel/Handlers -> Kernel/Contracts/Contracts.Requests [any] Deny
+Kernel/Handlers -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Handlers -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Handlers -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Handlers -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Handlers -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Handlers -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Handlers -> Kernel/Views [any] Deny
+Kernel/Handlers -> Kernel/Composition [any] Deny
 Kernel/Handlers -> UmpireLibraries [any] Deny
 Kernel/Handlers/Handlers.Requests -> App [any] Deny
 Kernel/Handlers/Handlers.Requests -> App/MessagesComponent [any] Deny
@@ -3942,19 +3942,19 @@ Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Services [any] Allow Publi
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Views [any] Deny
 Kernel/Handlers/Handlers.Requests -> Kernel [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Domain [any] Allow Internal
-Kernel/Handlers/Handlers.Requests -> Kernel/Infrastructure [any] Allow Internal
-Kernel/Handlers/Handlers.Requests -> Kernel/Presenters [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Contracts [any] Allow Public
+Kernel/Handlers/Handlers.Requests -> Kernel/Domain [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Infrastructure [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Presenters [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Contracts [any] Deny
 Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Handlers [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Views [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> Kernel/Composition [any] Allow Public
+Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Handlers [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Views [any] Deny
+Kernel/Handlers/Handlers.Requests -> Kernel/Composition [any] Deny
 Kernel/Handlers/Handlers.Requests -> UmpireLibraries [any] Deny
 Kernel/Handlers/Handlers.Events -> App [any] Deny
 Kernel/Handlers/Handlers.Events -> App/MessagesComponent [any] Deny
@@ -4006,19 +4006,19 @@ Kernel/Handlers/Handlers.Events -> Core/KernelParts.Services [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Views [any] Deny
 Kernel/Handlers/Handlers.Events -> Kernel [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Domain [any] Allow Internal
-Kernel/Handlers/Handlers.Events -> Kernel/Infrastructure [any] Allow Internal
-Kernel/Handlers/Handlers.Events -> Kernel/Presenters [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Contracts [any] Allow Public
+Kernel/Handlers/Handlers.Events -> Kernel/Domain [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Infrastructure [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Presenters [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Contracts [any] Deny
 Kernel/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Requests [any] Deny
 Kernel/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Events [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Handlers [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Views [any] Allow Public
-Kernel/Handlers/Handlers.Events -> Kernel/Composition [any] Allow Public
+Kernel/Handlers/Handlers.Events -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Handlers [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Views [any] Deny
+Kernel/Handlers/Handlers.Events -> Kernel/Composition [any] Deny
 Kernel/Handlers/Handlers.Events -> UmpireLibraries [any] Deny
 Kernel/Handlers/Handlers.Commands -> App [any] Deny
 Kernel/Handlers/Handlers.Commands -> App/MessagesComponent [any] Deny
@@ -4070,19 +4070,19 @@ Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Services [any] Allow Publi
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Views [any] Deny
 Kernel/Handlers/Handlers.Commands -> Kernel [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Domain [any] Allow Internal
-Kernel/Handlers/Handlers.Commands -> Kernel/Infrastructure [any] Allow Internal
-Kernel/Handlers/Handlers.Commands -> Kernel/Presenters [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Contracts [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Requests [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Events [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
+Kernel/Handlers/Handlers.Commands -> Kernel/Domain [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Infrastructure [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Presenters [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Contracts [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Requests [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Events [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
 Kernel/Handlers/Handlers.Commands -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Handlers [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Requests [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Views [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> Kernel/Composition [any] Allow Public
+Kernel/Handlers/Handlers.Commands -> Kernel/Handlers [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Requests [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Handlers/Handlers.Events [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Views [any] Deny
+Kernel/Handlers/Handlers.Commands -> Kernel/Composition [any] Deny
 Kernel/Handlers/Handlers.Commands -> UmpireLibraries [any] Deny
 Kernel/Views -> App [any] Deny
 Kernel/Views -> App/MessagesComponent [any] Deny
@@ -4134,19 +4134,19 @@ Kernel/Views -> Core/KernelParts.Services [any] Allow Public
 Kernel/Views -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Views -> Views [any] Allow Public
 Kernel/Views -> Kernel [any] Allow Public
-Kernel/Views -> Kernel/Domain [any] Allow Public
-Kernel/Views -> Kernel/Infrastructure [any] Allow Public
+Kernel/Views -> Kernel/Domain [any] Deny
+Kernel/Views -> Kernel/Infrastructure [any] Deny
 Kernel/Views -> Kernel/Presenters [any] Allow Public
-Kernel/Views -> Kernel/Contracts [any] Allow Public
+Kernel/Views -> Kernel/Contracts [any] Deny
 Kernel/Views -> Kernel/Contracts/Contracts.Requests [any] Allow Public
 Kernel/Views -> Kernel/Contracts/Contracts.Events [any] Allow Public
 Kernel/Views -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
-Kernel/Views -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Views -> Kernel/Handlers [any] Allow Public
-Kernel/Views -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Kernel/Views -> Kernel/Contracts/Contracts.Commands [any] Deny
+Kernel/Views -> Kernel/Handlers [any] Deny
+Kernel/Views -> Kernel/Handlers/Handlers.Requests [any] Deny
 Kernel/Views -> Kernel/Handlers/Handlers.Events [any] Allow Public
-Kernel/Views -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Views -> Kernel/Composition [any] Allow Public
+Kernel/Views -> Kernel/Handlers/Handlers.Commands [any] Deny
+Kernel/Views -> Kernel/Composition [any] Deny
 Kernel/Views -> UmpireLibraries [any] Deny
 Kernel/Composition -> App [any] Deny
 Kernel/Composition -> App/MessagesComponent [any] Deny
@@ -4198,17 +4198,17 @@ Kernel/Composition -> Core/KernelParts.Services [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Composition -> Views [any] Deny
 Kernel/Composition -> Kernel [any] Allow Public
-Kernel/Composition -> Kernel/Domain [any] Allow Public
-Kernel/Composition -> Kernel/Infrastructure [any] Allow Public
+Kernel/Composition -> Kernel/Domain [any] Deny
+Kernel/Composition -> Kernel/Infrastructure [any] Deny
 Kernel/Composition -> Kernel/Presenters [any] Allow Public
-Kernel/Composition -> Kernel/Contracts [any] Allow Public
+Kernel/Composition -> Kernel/Contracts [any] Deny
 Kernel/Composition -> Kernel/Contracts/Contracts.Requests [any] Allow Public
 Kernel/Composition -> Kernel/Contracts/Contracts.Events [any] Allow Public
 Kernel/Composition -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
 Kernel/Composition -> Kernel/Contracts/Contracts.Commands [any] Allow Public
-Kernel/Composition -> Kernel/Handlers [any] Allow Public
+Kernel/Composition -> Kernel/Handlers [any] Deny
 Kernel/Composition -> Kernel/Handlers/Handlers.Requests [any] Allow Public
 Kernel/Composition -> Kernel/Handlers/Handlers.Events [any] Allow Public
 Kernel/Composition -> Kernel/Handlers/Handlers.Commands [any] Allow Public
-Kernel/Composition -> Kernel/Views [any] Allow Public
+Kernel/Composition -> Kernel/Views [any] Deny
 Kernel/Composition -> UmpireLibraries [any] Deny

@@ -74,6 +74,25 @@ The deny lines check the part of the used type:
 - A request type or an own interface that derives from `IRequestSender` or `IIntegrationEventPublisher`, in `Slices/Shared/`, is in the part `Slice.Shared`. The deny lines do not read it.
 - The last rule wins. An app line such as `For<Presenters>().Uses<Contracts.Events>()` also allows `Contracts.Events.Publishing`. Add `.Under<Feature>()`, or write the deny line again after it.
 
+### Rules between the kernel layers
+
+`VsaArchitecture.KernelRules` gives the uses between the VSA kernel layers. They are the project references of the kernel, with the references that these bring. A kernel part uses its own part and:
+
+| Kernel part | Kernel parts that it uses |
+|---|---|
+| `Domain`, `Contracts.Requests`, `Contracts.Commands` | None |
+| `Contracts.Events` | `Contracts.Events.Publishing` |
+| `Infrastructure` | `Domain` |
+| `Handlers.Requests`, `Handlers.Events`, `Handlers.Commands` | The contract part of the same kind |
+| `Presenters` | `Contracts.Requests`, `Contracts.Events` (not `Publishing`), `Handlers.Events` |
+| `Views` | `Presenters` and the parts that `Presenters` uses |
+| `Composition` | `Presenters`, each handler part and each contract part |
+| The top of the kernel (`VsaKernel`) | Each kernel part |
+
+The rules do not limit the uses of `Core` or of a kernel layer that a pack variant adds.
+
+The check of `packs/Vsa/` uses `PackArchitecture`, which permits each use between kernel parts and does not read these rules. There, the project references enforce the layers.
+
 ## Disabled rules
 
 If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.UMP010206.severity = "warning"`.

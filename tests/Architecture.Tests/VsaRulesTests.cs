@@ -40,6 +40,28 @@ public sealed class VsaRulesTests {
         Assert.That(owners, Is.EqualTo(new[] { "Contracts.Requests" }));
     }
 
+    [TestCase("Infrastructure", "Domain", Permission.Allow)]
+    [TestCase("Handlers.Commands", "Contracts.Commands", Permission.Allow)]
+    [TestCase("Handlers.Events", "Contracts.Events.Publishing", Permission.Allow)]
+    [TestCase("Contracts.Events.Publishing", "Contracts.Events", Permission.Allow)]
+    [TestCase("Presenters", "Contracts.Requests", Permission.Allow)]
+    [TestCase("Presenters", "Handlers.Events", Permission.Allow)]
+    [TestCase("Views", "Presenters", Permission.Allow)]
+    [TestCase("Composition", "Handlers.Commands", Permission.Allow)]
+    [TestCase("Kernel", "Handlers.Commands", Permission.Allow)]
+    [TestCase("Domain", "Infrastructure", Permission.Deny)]
+    [TestCase("Infrastructure", "Contracts.Requests", Permission.Deny)]
+    [TestCase("Contracts.Requests", "Contracts.Commands", Permission.Deny)]
+    [TestCase("Handlers.Commands", "Contracts.Events", Permission.Deny)]
+    [TestCase("Handlers.Requests", "Domain", Permission.Deny)]
+    [TestCase("Presenters", "Handlers.Commands", Permission.Deny)]
+    [TestCase("Presenters", "Contracts.Events.Publishing", Permission.Deny)]
+    [TestCase("Views", "Handlers.Commands", Permission.Deny)]
+    [TestCase("Composition", "Domain", Permission.Deny)]
+    public void A_kernel_layer_uses_only_the_layers_of_its_project_references(string from, string to, Permission expected) {
+        Assert.That(MayUse(Place("Kernel", from), Place("Kernel", to)).Permission, Is.EqualTo(expected));
+    }
+
     [TestCase("Kernel", "Composition", Permission.Allow)]
     [TestCase("Core", "Hosts", Permission.Allow)]
     [TestCase("Kernel", "Domain", Permission.Deny)]
