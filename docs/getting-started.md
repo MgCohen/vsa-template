@@ -61,9 +61,9 @@ namespace Shop.Host;
 
 using Umpire.Hosts.Console;
 using Umpire.Kernels;
-using Umpire.Vsa;
+using Umpire.Vsa.Composition;
 
-public class ShopApp : App<Vsa<ConsoleHost>>;
+public class ShopApp : App<VsaKernel, ConsoleHost>;
 ```
 
 ```csharp

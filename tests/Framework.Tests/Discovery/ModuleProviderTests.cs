@@ -83,7 +83,5 @@ public sealed class ModuleProviderTests {
         public IReadOnlyList<Module> Modules(ModuleScan scan) => scan.In([assembly]);
     }
 
-    sealed class ProbeApp : App {
-        public override Pack Pack { get; } = new TestPack(() => new AppHost());
-    }
+    sealed class ProbeApp() : VsaTestApp(() => new AppHost());
 }

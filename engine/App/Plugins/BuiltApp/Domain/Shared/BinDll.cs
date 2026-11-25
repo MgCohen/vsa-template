@@ -3,6 +3,8 @@ namespace BuiltApp.Domain.Shared;
 public sealed record BinDll(
     string Path, string Name, bool IsShared, IReadOnlyList<string> References, IReadOnlyList<string> Documents,
     IReadOnlyList<TypeSource> Types, IReadOnlyList<AppClass> AppClasses, bool IsProject = false) {
+    public IReadOnlyList<DefinitionType> Definitions { get; init; } = [];
+
     public static bool IsSystem(string name) =>
         name is "netstandard" or "mscorlib"
         || name.StartsWith("System", StringComparison.Ordinal)

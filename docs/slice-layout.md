@@ -52,7 +52,7 @@ The other layers (`Domain/`, `Domain/Shared/`, `Infrastructure/`, `Presenters/`)
 
 ## Packs of an app
 
-An app can have its own packs in `App/Packs/<Name>/`. Each one is an inner block: its pack class is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `App/EcsFeatures/<Module>/`. See `pack-variants.md`.
+An app can have its own packs in `App/Packs/<Name>/`. Each one is an inner block: the architecture in its `Definition/` folder is its check entry, and `PackArchitecture` checks its shape. The app sees each pack as the one part `Pack`. A pack variant there adds module kinds with their own group folders, for example `App/EcsFeatures/<Module>/`. See `pack-variants.md`.
 
 ```
 Shop/
@@ -60,7 +60,7 @@ Shop/
 └─ App/
    ├─ Host/  Features/  Plugins/
    ├─ EcsFeatures/Combat/   a module of the kind EcsFeature
-   └─ Packs/Ecs/            EcsPack.cs, Definition/, Kernel/
+   └─ Packs/Ecs/            Definition/, Kernel/
 ```
 
 ## Projects

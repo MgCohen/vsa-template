@@ -11,11 +11,10 @@ public sealed class PackSelectionTests {
         public sealed class GetItems : Umpire.Vsa.Contracts.Requests.IRequest<Items>;
         public sealed record Items(int Count) : Umpire.Vsa.Contracts.Requests.IResponse;
         """;
-    const string OtherPack = """
-        public sealed class OtherPack : Umpire.Kernels.Pack {
-            public override Umpire.Architecture.Architecture Architecture => null!;
-            public override Umpire.Kernels.Kernel Kernel => null!;
-            public override Umpire.Kernels.AppHost CreateHost() => null!;
+    const string OtherKernel = """
+        public sealed class OtherKernel : Umpire.Kernels.Kernel {
+            protected override void Configure(
+                Microsoft.Extensions.DependencyInjection.IServiceCollection services, Umpire.Kernels.AppTypes types) { }
         }
         """;
     const string OtherArchitecture = "umpire.architecture = Other.OtherArchitecture, Other\n";
@@ -26,24 +25,36 @@ public sealed class PackSelectionTests {
 
     [Test]
     public Task An_app_class_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
-        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Composition.VsaKernel, Umpire.Kernels.AppHost>;
         """, Found());
 
     [Test]
-    public Task A_pack_variant_runs_the_rules_of_its_base_pack() => Analyzer.Verify(Request + """
-        public sealed class EcsPack : Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>;
-        public sealed class ShopApp : Umpire.Kernels.App<EcsPack>;
+    public Task A_derived_kernel_runs_the_rules_of_its_base_pack() => Analyzer.Verify(Request + """
+        public sealed class EcsKernel : Umpire.Vsa.Composition.VsaKernel;
+        public sealed class ShopApp : Umpire.Kernels.App<EcsKernel, Umpire.Kernels.AppHost>;
         """, Found());
 
     [Test]
-    public Task An_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherPack + """
-        public sealed class ShopApp : Umpire.Kernels.App<OtherPack>;
+    public Task An_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherKernel + """
+        public sealed class ShopApp : Umpire.Kernels.App<OtherKernel, Umpire.Kernels.AppHost>;
         """);
 
     [Test]
     public Task A_block_of_a_pack_architecture_runs_its_rules() => Analyzer.Verify(Request + """
         public sealed class ToolsBlock : Umpire.Architecture.Block<Umpire.Vsa.Definition.VsaArchitecture>;
         """, Found());
+
+    [Test]
+    public Task A_definition_of_a_kernel_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
+        public sealed class ShopArchitecture : Umpire.Vsa.Definition.VsaArchitecture;
+        """, Found());
+
+    [Test]
+    public Task A_definition_of_another_kernel_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherKernel + """
+        public sealed class ShopArchitecture : Umpire.Kernels.Architecture<OtherKernel> {
+            protected override void Define(Umpire.Architecture.Part root, Umpire.Architecture.Part kernel) { }
+        }
+        """);
 
     [Test]
     public Task Assembly_metadata_that_names_the_pack_architecture_runs_its_rules() => Analyzer.Verify("""
@@ -61,50 +72,49 @@ public sealed class PackSelectionTests {
 
     [Test]
     public Task An_entry_in_code_wins_over_the_umpireconfig_key() => Analyzer.Verify(Request + """
-        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Composition.VsaKernel, Umpire.Kernels.AppHost>;
         """, OtherArchitecture, Found());
 
     [Test]
-    public Task A_nested_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherPack + """
+    public Task A_nested_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherKernel + """
         public static class Hosts {
-            public sealed class ShopApp : Umpire.Kernels.App<OtherPack>;
+            public sealed class ShopApp : Umpire.Kernels.App<OtherKernel, Umpire.Kernels.AppHost>;
         }
         """);
 
     [Test]
     public Task An_open_generic_app_base_is_no_entry() => Analyzer.Verify(Request + """
-        public abstract class GameApp<TPack> : Umpire.Kernels.App<TPack> where TPack : Umpire.Kernels.Pack, new();
+        public abstract class GameApp<TKernel> : Umpire.Kernels.App<TKernel, Umpire.Kernels.AppHost> where TKernel : Umpire.Kernels.Kernel, new();
         """, Found());
 
     [Test]
     public Task An_app_class_on_an_open_generic_base_selects_the_pack_of_its_argument() =>
-        Analyzer.Verify(QuietRequest + OtherPack + """
-        public abstract class GameApp<TPack> : Umpire.Kernels.App<TPack> where TPack : Umpire.Kernels.Pack, new();
-        public sealed class ShopApp : GameApp<OtherPack>;
+        Analyzer.Verify(QuietRequest + OtherKernel + """
+        public abstract class GameApp<TKernel> : Umpire.Kernels.App<TKernel, Umpire.Kernels.AppHost> where TKernel : Umpire.Kernels.Kernel, new();
+        public sealed class ShopApp : GameApp<OtherKernel>;
         """);
 
     [Test]
     public Task A_launcher_that_implements_the_entry_interface_of_another_pack_runs_no_rule_of_this_pack() =>
-        Analyzer.Verify(QuietRequest + OtherPack + """
-        public abstract class Launcher<TPack> : Umpire.Kernels.IAppEntry<TPack> where TPack : Umpire.Kernels.Pack, new();
-        public sealed class GameLauncher : Launcher<OtherPack>;
+        Analyzer.Verify(QuietRequest + OtherKernel + """
+        public abstract class Launcher<TKernel> : Umpire.Kernels.IAppEntry<TKernel> where TKernel : Umpire.Kernels.Kernel, new();
+        public sealed class GameLauncher : Launcher<OtherKernel>;
         """);
 
     [Test]
     public Task A_launcher_that_implements_the_entry_interface_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
-        public sealed class GameLauncher : Umpire.Kernels.IAppEntry<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        public sealed class GameLauncher : Umpire.Kernels.IAppEntry<Umpire.Vsa.Composition.VsaKernel>;
         """, Found());
 
     [Test]
-    public Task An_abstract_class_that_implements_the_entry_interface_is_no_entry() =>
-        Analyzer.Verify(QuietRequest + OtherPack + """
-        public abstract class Launcher : Umpire.Kernels.IAppEntry<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
-        """);
+    public Task An_abstract_class_that_implements_the_entry_interface_is_no_entry() => Analyzer.Verify(Request + OtherKernel + """
+        public abstract class Launcher : Umpire.Kernels.IAppEntry<OtherKernel>;
+        """, Found());
 
     [Test]
     public Task A_class_that_implements_the_entry_interface_for_two_packs_gives_an_entry_for_each() =>
-        Analyzer.Verify(Request + OtherPack + """
-        public sealed class GameLauncher : Umpire.Kernels.IAppEntry<OtherPack>, Umpire.Kernels.IAppEntry<Umpire.Vsa.Vsa<Umpire.Kernels.AppHost>>;
+        Analyzer.Verify(Request + OtherKernel + """
+        public sealed class GameLauncher : Umpire.Kernels.IAppEntry<OtherKernel>, Umpire.Kernels.IAppEntry<Umpire.Vsa.Composition.VsaKernel>;
         """, Found());
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Found() =>

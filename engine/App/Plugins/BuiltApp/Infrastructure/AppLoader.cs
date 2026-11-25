@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.Loader;
 using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
-using Umpire.Kernels;
 
 public sealed class AppLoader : AssemblyLoadContext {
     public static readonly IReadOnlySet<string> Shared = SharedClosure(typeof(Architecture).Assembly);
@@ -12,7 +11,7 @@ public sealed class AppLoader : AssemblyLoadContext {
     readonly AssemblyDependencyResolver? resolver;
 
     public AppLoader(string bin, IReadOnlyList<string>? references = null) : base("umpire-app", isCollectible: false) {
-        folders = [bin, .. references ?? [], .. SharedFrameworks.Web() is { } web ? [web] : Array.Empty<string>()];
+        folders = [bin, BinReader.DefinitionsFolder(bin), .. references ?? [], .. SharedFrameworks.Web() is { } web ? [web] : Array.Empty<string>()];
         var main = Directory.GetFiles(bin, "*.deps.json")
             .Select(deps => Path.Combine(bin, Path.GetFileName(deps)[..^".deps.json".Length] + ".dll"))
             .FirstOrDefault(File.Exists);
@@ -29,15 +28,6 @@ public sealed class AppLoader : AssemblyLoadContext {
         var withPacked = PackedConstructor(type)
             ?? throw new InvalidOperationException($"{type.FullName} has no public constructor with one {nameof(Architecture)} parameter.");
         return (Architecture)withPacked.Invoke([CreateArchitecture(packed)]);
-    }
-
-    public Architecture ArchitectureOfApp(AppClass appClass, string dll) {
-        if (appClass.Architecture is { } architecture) {
-            return CreateArchitecture(architecture);
-        }
-        var entry = LoadFromAssemblyPath(dll).GetType(appClass.Type.FullName, throwOnError: true)!;
-        var pack = Activator.CreateInstance(AppClass.PacksOf(entry)[0])!;
-        return (Architecture)pack.GetType().GetProperty(nameof(Pack.Architecture))!.GetValue(pack)!;
     }
 
     protected override Assembly? Load(AssemblyName assemblyName) {

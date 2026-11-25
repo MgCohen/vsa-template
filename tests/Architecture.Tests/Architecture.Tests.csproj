@@ -15,5 +15,6 @@
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/App/Packs/Ecs/Definition/Ecs.Definition.csproj" />
   </ItemGroup>
 </Project>

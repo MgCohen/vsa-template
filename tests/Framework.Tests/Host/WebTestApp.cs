@@ -2,17 +2,15 @@ namespace Framework.Tests.Host;
 
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernels;
+using Umpire.Vsa.Composition;
 
 sealed class WebTestApp : App {
     readonly List<Action<IServiceCollection>> configure = [];
     readonly Module[] modules;
 
-    public WebTestApp(params Module[] modules) {
-        this.modules = modules;
-        Pack = new TestPack(CreateHost);
-    }
+    public WebTestApp(params Module[] modules) => this.modules = modules;
 
-    public override Pack Pack { get; }
+    public override Kernel Kernel { get; } = new VsaKernel();
 
     public WebTestApp With(Action<IServiceCollection> services) {
         configure.Add(services);
@@ -20,7 +18,7 @@ sealed class WebTestApp : App {
     }
 
     public WebRun Build(params string[] args) {
-        var host = Pack.CreateHost();
+        var host = CreateHost();
         var services = host.Build(args, this);
         host.Start(services, services.GetRequiredService<AppStop>());
         return new WebRun(host, services);
@@ -35,7 +33,7 @@ sealed class WebTestApp : App {
         return registrations!;
     }
 
-    WebTestHost CreateHost() {
+    public override AppHost CreateHost() {
         var host = new WebTestHost { ModuleProvider = new FixedModules(modules) };
         host.Actions.AddRange(configure);
         return host;

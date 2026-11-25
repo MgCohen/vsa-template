@@ -4,7 +4,7 @@ using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
 public abstract class VsaArchitectureTest<TArchitecture> : ArchitectureTest<TArchitecture>
-    where TArchitecture : VsaArchitecture, new() {
+    where TArchitecture : Architecture, new() {
     protected static string Feature(string feature) => $"App/Features/{feature}";
 
     protected static string Slice(string feature, string slice) => $"App/Features/{feature}/Slices/{slice}";

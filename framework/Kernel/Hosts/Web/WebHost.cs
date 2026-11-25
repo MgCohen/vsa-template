@@ -16,7 +16,7 @@ public class WebHost : AppHost {
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddSingleton<IHostLifetime, AppLifetime>();
         var types = TypesOf(app);
-        Compose(builder.Services, builder.Configuration, app.Pack.Kernel, types);
+        Compose(builder.Services, builder.Configuration, app.Kernel, types);
         var root = Views.RootOf(types);
         if (root is not null) {
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();

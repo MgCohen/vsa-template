@@ -21,7 +21,7 @@ flowchart LR
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
 | Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `App/Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the Umpire SDK packages hold the engine in `tools/net8.0/` |
 
-The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` (`Pack.Architecture`), and Umpire.Sdk gives each project the package `Umpire` (one `Umpire.dll` with `Umpire.Architecture` and `Umpire.Vsa`). So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` (`LoadedTypes`), and Umpire.Sdk gives each project the package `Umpire` (one `Umpire.dll` with `Umpire.Architecture` and `Umpire.Vsa`). So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -49,7 +49,7 @@ public record Requests : Layer {
     public override IReadOnlyList<Type> OfTypes => [typeof(IRequest), typeof(IResponse)];
 }
 
-public class VsaArchitecture : CoreArchitecture {
+public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> where TKernel : VsaKernel {
     protected override void Configure(ArchitectureConfig config) {
         config.Defaults.Boundary = Boundary.Closed;
         config.Roots.Add<App>("App");
@@ -106,8 +106,8 @@ The roots of each level:
 | Level | Roots |
 |---|---|
 | `Architecture` | `App` (folder `""`), `Definition` (folder `Definition`) |
-| `CoreArchitecture` (`framework/Kernel/App/`) | `Core` (folder `framework/Kernel`, record in `Umpire.Kernels.Blocks`) |
-| `VsaArchitecture` | `App` with the folder `App`, and `Views` |
+| `Architecture<TKernel>` (`framework/Kernel/App/`) | `Core` (folder `framework/Kernel`, record in `Umpire.Kernels.Blocks`) |
+| `VsaArchitecture<TKernel>` | `App` with the folder `App`, and `Views` |
 
 A second `Roots.Add<T>()` of one record keeps one root. `Roots.Add<T>(folder)` on a later level sets its folder. `Define(Part root, Part kernel)` gets two parts. `root` is the `App` root. `kernel` is the kernel root: a part of the concept `Kernel` with the folder `Kernel`. If `Define` adds no part to `kernel`, the kernel root is not in the definition.
 
@@ -156,14 +156,14 @@ public sealed class UnityTestArchitecture : VsaArchitecture {
 }
 ```
 
-The kernel is three blocks: the root `Core`, `MessagesComponent` and the kernel root. `CoreArchitecture` adds `Core`, and `VsaArchitecture` places `MessagesComponent` and writes the layers into `kernel`. Two checks use the kernel:
+The kernel is three blocks: the root `Core`, `MessagesComponent` and the kernel root. `Architecture<TKernel>` adds `Core`, and `VsaArchitecture` places `MessagesComponent` and writes the layers into `kernel`. Two checks use the kernel:
 
 | Check | Kernel form | Binding | Rules |
 |---|---|---|---|
 | An app | A DLL: the project DLLs, or `Umpire.dll` in a package | By the PDB path of each type | The rules of the app toward the kernel |
 | The pack | Source: the folder `Kernel/` of the pack | By folder | The rules of the architecture under `Kernel` |
 
-For the pack check, the engine reads the architecture from the base chain of the pack class (`Pack<VsaArchitecture, …>`, `BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. `PackArchitecture` gets the kernel body of the packed architecture into its own `kernel` part. The type requirements of the layer concepts (`OfTypes`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. `rules.For<Kernel>().Uses<Kernel>()` allows each use between two kernel layers: the check covers the shape of the kernel.
+For the pack check, the engine reads the definition in `Definition/` of the pack (`BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. `PackArchitecture` gets the kernel body of the packed architecture into its own `kernel` part. The type requirements of the layer concepts (`OfTypes`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. `rules.For<Kernel>().Uses<Kernel>()` allows each use between two kernel layers: the check covers the shape of the kernel.
 
 ### Extend a base architecture
 
@@ -273,7 +273,7 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions` or ArchUnitNET. It binds the types of a DLL by its name, not by its folder. A type also matches by its namespace. The longest matching name wins. A rule that names an `External` gives it its part: `rules.For<Infrastructure>().Uses<ArchUnitLibraries>()`. The types of an external DLL are rule targets only: a rule can allow or deny them, and an `External` is never the subject of a rule.
 
-The Umpire DLLs are DLLs with structure. A type in a kernel body (the root `Core`, `MessagesComponent` and the kernel root `Kernel`) binds to that body by its PDB path (see "Binding"). Each other Umpire type, for example a marker, `UmpireConfig`, `Vsa<THost>` or `VsaArchitecture`, binds to the External `UmpireLibraries` (`Assembly => "Umpire"`, in `VsaArchitecture`). The module classes, `Host`, the `App` root and the `Definition` root can use `UmpireLibraries`, so the app class can name the pack. Other parts cannot.
+The Umpire DLLs are DLLs with structure. A type in a kernel body (the root `Core`, `MessagesComponent` and the kernel root `Kernel`) binds to that body by its PDB path (see "Binding"). Each other Umpire type, for example a marker, `UmpireConfig` or `VsaArchitecture`, binds to the External `UmpireLibraries` (`Assembly => "Umpire"`, in `VsaArchitecture`). The module classes, `Host`, the `App` root and the `Definition` root can use `UmpireLibraries`, so the app class can name the pack. Other parts cannot.
 
 The engine binds a DLL type by its PDB path only if an `External` names its assembly. Thus a placed block in a DLL whose name does not start with `Umpire` needs a rule that names an `External` for its assembly. Without it, the types of that DLL have no part, and their uses are allowed. This gate stops a false part for a library with the same folder names, for example `../Shared/Messages/Contracts/`.
 
@@ -598,8 +598,26 @@ The hook gives `--project`. It gives `--block` only if the MSBuild property `Ump
 | App DLLs | Each DLL of the host output with PDB source files under the block folder |
 | External DLLs | Each DLL of the host output whose name an `External` part names |
 | Referenced DLLs | Each DLL that an app DLL references, also a shared framework DLL (#293) |
-| Definition | The architecture of the check entry of the block. For an app class: the one most derived closed class that implements `IAppEntry<TPack>` (`App<TPack>` does). The engine reads type argument 0 of `Pack<TArchitecture, TKernel, THost>` from the metadata and makes only that architecture. It does not make the app class, so a launcher (for example a Unity shell with a private `App<TPack>`) is an app class too. If the pack has no such argument, the engine makes the pack and reads `Pack.Architecture`. See "Engine codes" |
+| Definition | See "Find the definition" |
 | DLLs of a host build (for example Unity) | See "Check settings" and "Folder aliases" |
+
+### Find the definition
+
+The app class names its kernel and its host, and the definition names its kernel. No runtime type names a definition. The engine makes only the definition. It reads the app class, the kernel and the definitions from the metadata, and it makes no app type.
+
+| Step | Definition of an app block | Example |
+|---|---|---|
+| 1 | The most derived architecture with its source in `<block>/Definition/` | `EngineArchitecture` |
+| 2 | The architecture that a check entry of the block folder names | `umpire.architecture = "..."` |
+| 3 | The definition of the kernel: the base-most `Architecture<TKernel>` class for the kernel of the app | `VsaArchitecture` for `VsaKernel` |
+
+- The app class is the one most derived closed class that implements `IAppEntry<TKernel>` (`App<TKernel, THost>` does). A launcher, for example a Unity shell with a private app class, is an app class too.
+- If no definition names the kernel of the app, the engine searches the base classes of that kernel, the nearest first.
+- The definition of steps 1 and 2 must name the kernel of the app, or the kernel that step 3 finds. Else the engine gives `UMP030507`.
+- A definition is in its own check-time DLL. The Umpire SDK builds each nested project `Definition/*.csproj` before the project around it, with no reference to its assembly. It copies the DLL and the PDB to the folder `umpire-definitions/` of the output. The engine reads that folder as a part of the bin, and `dotnet publish` does not copy it.
+- A definition uses the Umpire DLLs and the DLLs of the output of the app. Another reference of the definition project is not in the output.
+- The SDK finds the definition projects below the folder of the project. For a pack kernel outside that folder, put a reference to its definition project in the project file: `<ProjectReference Include="..." ReferenceOutputAssembly="false" Private="false" OutputItemType="_UmpireDefinition" />`. Without it, the app gets the definition of a base kernel.
+- If another check entry is in the folder of an app with a definition, the definition wins.
 
 ### Engine codes
 
@@ -624,8 +642,11 @@ Each engine code is `UMP03`, the group and the case. Group `00` is the engine ru
 | `UMP030401` | 04 Versions | Error | An Umpire version is not the engine version (see "One version") |
 | `UMP030501` | 05 LoadApp | Error | No DLL of the host output has source files under the block folder |
 | `UMP030502` | 05 LoadApp | Error | The app has no app class |
-| `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class. An app class nested in an entry with the same pack does not count |
-| `UMP030506` | 05 LoadApp | Error | An app class implements `IAppEntry<TPack>` for more than one pack |
+| `UMP030503` | 05 LoadApp | Error | The app has more than one most derived app class. An app class nested in an entry with the same kernel does not count |
+| `UMP030506` | 05 LoadApp | Error | An app class implements `IAppEntry<TKernel>` for more than one kernel |
+| `UMP030507` | 05 LoadApp | Error | The app class and the definition name different kernels, or the definition names no kernel |
+| `UMP030508` | 05 LoadApp | Error | The folder `Definition/` or a kernel has more than one definition, and none inherits the others |
+| `UMP030509` | 05 LoadApp | Error | No definition names the kernel of the app |
 | `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
 A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
@@ -636,8 +657,9 @@ A block is a folder tree of code with one check entry. The check entry names the
 
 | Form | Example | Block folder |
 |---|---|---|
-| App class | `NotesApp : App<Vsa<WebHost>>` | The project folder of its assembly |
-| Typed base | `public abstract class Pack : Block<PackArchitecture>` | The folder of the source file of each concrete subclass |
+| App class | `NotesApp : App<VsaKernel, WebHost>` | The project folder of its assembly |
+| Definition of a kernel | `VsaArchitecture` in `packs/Vsa/Definition/` | The folder around `Definition/` |
+| Typed base | `public class ToolsBlock : Block<ToolsArchitecture>` | The folder of the source file of each concrete subclass |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
 | `.umpireconfig` | `umpire.architecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa"` | The folder of the file |
 
@@ -646,13 +668,16 @@ A block is a folder tree of code with one check entry. The check entry names the
 - The entries in code come first. If one folder has an entry in code and the key `umpire.architecture`, the entry in code wins, and the engine gives the warning `UMP030304`.
 - The project folder of an assembly is the deepest common folder of its source files (not the generated files), or the first folder above it with a `.csproj` file.
 - For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).
-- A typed base counts only for a type that is not abstract. Thus `Pack` (abstract, in `framework/Kernel/`) gives no entry, and `Vsa<THost>` gives one. Two types of one form with one architecture in one folder are one entry.
+- A typed base and a definition count only for a type that is not abstract and not open generic. Two types of one form with one architecture in one folder are one entry.
+- In a block with an app class, a definition is the definition of the app, and it is not a second check entry. With no app class, the block is a pack: `PackArchitecture` checks it with the definition. If another check entry of the folder names that definition, the definition itself checks the block.
+- In a block with an app class and no definition, another check entry of the folder names the definition of the app.
+- A folder alias of the block root moves a definition too: with `"Assets/Game" = [""]`, the definition in `Assets/Game/Definition/` is the definition of the block.
 - The nearest block wins: a source file belongs to the deepest block folder above it.
 - The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The place gets the body of its record, and an overlay (`For<T>().Add<TPart>()` or `For<T>().ExtendedBy<TBlock>()`) can add parts to it. The outer definition adds no other part to a place. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
 - An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place folder with no check entry gives `UMP020402`. A place of a block with a body and no folder is the DLL form: its types bind by their PDB path (see "Binding"). A place with no body and no folder gives `UMP020402`.
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
 - After the check of the block, the run checks each used block with its own definition, the same bin and the same steps (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
-- Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the bin) still skips the full run when no input of the run changed (`UMP030201`).
+- Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type, of for an app block each DLL with a definition of a kernel, and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the bin) still skips the full run when no input of the run changed (`UMP030201`).
 - Known gap of a used block: the bin has only the DLLs of the block that the host references, so the check sees only that part (for example, the engine bin has no `Umpire.Vsa.Analyzers`). Each set of DLLs gets its own stamp.
 
 ### Projects of a block
@@ -664,7 +689,7 @@ After it finds the block, the step `FindBlocks` reads the `.csproj` files of the
 | Each project has an Umpire main SDK | `UMP030305` | The `Sdk` attribute of `<Project>` names `Umpire.Sdk` or `Umpire.Sdk.Web`, with or without a version, or the project imports `Umpire.Sdk.Dev.props` (the source form of this repository) |
 | A block with more than one project has a `.umpireconfig` file | `UMP030306` | The file is in the block folder |
 
-`PackArchitecture` (Umpire.Kernels) is the shape of a pack: the pack class at the top of the pack folder (`<Name>Pack.cs`, at least one `Umpire.Kernels.Pack` class), and the folders `Definition/`, `Kernel/` and `Tests/`. Each other file is unmapped (`UMP020202`). The pack class uses `Definition/` and `Kernel/`, `Definition/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack. In the check of a pack class with an architecture, `Kernel/` has the kernel body of that architecture, and it has at most one `Kernel` class.
+`PackArchitecture` (Umpire.Kernels) is the shape of a pack: the folders `Definition/` (at least one `Architecture` class), `Kernel/` and `Tests/`. A file in another folder is unmapped (`UMP020202`). `Definition/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack. In the check of a pack, `Kernel/` has the kernel body of that architecture, and it has at most one `Kernel` class.
 
 `VsaArchitecture` marks `Packs/` of the `App` root with `AddBlockGroup<Pack>("Packs")`, so each `App/Packs/<Name>/` of a VSA app is the place of a pack block. The app host and each module may use `Pack`. A pack variant in that folder inherits `VsaArchitecture` and adds parts and rules: see `pack-variants.md`.
 
@@ -687,7 +712,7 @@ A file that does not exist gives no slot. `global.json` and a tool manifest give
 
 `umpire update` changes only the version text. A project file keeps its BOM and its line endings.
 
-The app class (`MyApp : App<Vsa<TArchitecture, THost>>`, see `composition.md`) gives the definition for the runtime and for the checks. To change the VSA rules, derive a definition from `VsaArchitecture` and override `Rules`. Do not call `base.Rules`: the engine calls the `Rules` of each class in the chain, from the base down, so a later rule wins (`UMP010107`).
+To change the VSA rules, add the project `Definition/<Name>.Definition.csproj` (`<Project Sdk="Umpire.Sdk/<version>" />`), derive a definition from `VsaArchitecture` there and override `Rules`. The app class does not name it. Do not call `base.Rules`: the engine calls the `Rules` of each class in the chain, from the base down, so a later rule wins (`UMP010107`).
 
 ```csharp
 public sealed class MyArchitecture : VsaArchitecture {
@@ -695,8 +720,6 @@ public sealed class MyArchitecture : VsaArchitecture {
         rules.For<Presenters>().Denies<Contracts.Events>();
     }
 }
-
-public class MyApp : App<Vsa<MyArchitecture, WebHost>>;
 ```
 
 The Report step sorts the findings: the findings with no file first, then by path, line, code and message (ordinal). Each run gives the same order.

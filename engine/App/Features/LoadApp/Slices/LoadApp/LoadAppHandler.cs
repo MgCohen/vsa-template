@@ -23,7 +23,7 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
             return new Error(LoadAppCodes.NoAppAssembly, $"No assembly in {bin.Bin} has source files under the block folder {root}. "
                 + "Build the host project of the app, and give its output folder to --bin.");
         }
-        var found = Definition(blocks.Current, app, loader);
+        var found = Definition(blocks.Current, app, bin.Definitions, loader);
         if (found.Error is { } error) {
             return error;
         }
@@ -33,41 +33,20 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
     }
 
-    internal static Result<Architecture> Definition(BlockEntry entry, IReadOnlyList<BinDll> app, AppLoader loader) {
-        if (entry.Form != EntryForm.App) {
-            return entry.Packed is { } packed && !loader.TakesPacked(entry.Type!)
-                ? new Error(LoadAppCodes.NoPackedConstructor,
-                    $"The block architecture {entry.Type!.FullName} has no public constructor with one Architecture parameter, "
-                    + $"so the engine cannot check the kernel of the pack with {packed.FullName}. "
-                    + "Use the same Umpire version for the pack and the engine (see UMP030401).")
-                : loader.CreateArchitecture(entry.Type!, entry.Packed);
-        }
-        var classes = AppClass.Leaves([.. app.SelectMany(d => d.AppClasses)]);
-        if (AppClassError(classes) is { } error) {
+    internal static Result<Architecture> Definition(
+        BlockEntry entry, IReadOnlyList<BinDll> app, IReadOnlyList<DefinitionType> definitions, AppLoader loader) {
+        var found = DefinitionSearch.Find(entry, app, definitions);
+        if (found.Error is { } error) {
             return error;
         }
-        var appClass = classes[0];
-        return loader.ArchitectureOfApp(appClass, app.First(d => d.AppClasses.Contains(appClass)).Path);
+        var packed = found.Value == entry.Type ? entry.Packed : null;
+        return packed is not null && !loader.TakesPacked(found.Value)
+            ? new Error(LoadAppCodes.NoPackedConstructor,
+                $"The block architecture {found.Value.FullName} has no public constructor with one Architecture parameter, "
+                + $"so the engine cannot check the kernel of the pack with {packed.FullName}. "
+                + "Use the same Umpire version for the pack and the engine (see UMP030401).")
+            : loader.CreateArchitecture(found.Value, packed);
     }
-
-    static Error? AppClassError(IReadOnlyList<AppClass> classes) =>
-        classes.Where(c => c.HasManyPacks).ToList() is [_, ..] many
-            ? new Error(LoadAppCodes.ManyPacks, $"The app class {Names(many)} implements IAppEntry<TPack> for more than one pack: "
-                + $"{string.Join(", ", many.SelectMany(c => c.Packs).Select(p => p.FullName))}. Implement it for one pack only.")
-            : CountError(classes);
-
-    static Error? CountError(IReadOnlyList<AppClass> classes) =>
-        classes.Count switch {
-            0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
-                + "Add one class that inherits App<TPack>, for example App<Vsa<WebHost>>, "
-                + "or a class that implements IAppEntry<TPack>."),
-            > 1 => new Error(LoadAppCodes.ManyAppClasses,
-                $"The app has more than one app class: {Names(classes)}. Keep one, or make one inherit the other."),
-            _ => null,
-        };
-
-    static string Names(IEnumerable<AppClass> classes) =>
-        string.Join(", ", classes.Select(c => c.Type.FullName).Order(StringComparer.Ordinal));
 
     static string[] Names(string list) => list.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }

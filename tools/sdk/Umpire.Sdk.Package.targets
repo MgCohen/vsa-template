@@ -52,7 +52,7 @@
       <_UmpireEngineDir>@(_UmpireEngineTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineDir>
     </PropertyGroup>
     <ItemGroup>
-      <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check" />
+      <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check;$(_UmpireEngineDir)umpire-definitions/**" />
       <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net8.0/%(RecursiveDir)" Visible="false" />
     </ItemGroup>
   </Target>

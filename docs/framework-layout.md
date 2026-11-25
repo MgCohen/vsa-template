@@ -55,7 +55,7 @@ This table is a guideline. **Not enforced in 0.1.0.**
 | A rule question on plain data | `architecture/Queries/` |
 | A type that each app needs to start | `framework/Kernel/` |
 | A free block for two or more packs | `framework/Components/<Name>/` |
-| A new architecture | `packs/<Name>/`: `<Name>Pack.cs`, `Definition/`, `Kernel/`, `Tests/` |
+| A new architecture | `packs/<Name>/`: `Definition/`, `Kernel/`, `Tests/` |
 | A pack variant of an app | `App/Packs/<Name>/` of the app (`pack-variants.md`) |
 | A new fact of a built app | `engine/App/Plugins/BuiltApp/` |
 | A step of the engine run | `engine/App/Features/<Step>/`: one feature module, one command |
@@ -83,8 +83,8 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 
 | | Definition (data for the engine) | Runtime (logic) |
 |---|---|---|
-| Generic | `Architecture`, `CoreArchitecture`, `Concept`, `External`, `Host`, `Hosts`, the block kind records (`Umpire.Architecture.Blocks`: `Block`, `App`, `Definition`, `Kernel`, `Component`; `Umpire.Kernels.Blocks`: `Core`, `record Module : Component`, `Pack`), `MessagesComponent` | `App`, `Pack`, `AppHost`, `Kernel`, `Core`, `class Module`, `AppTypes` |
-| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module`, `UmpireLibraries` | `Vsa<THost>`, `VsaKernel`, `class Plugin : Module` |
+| Generic | `Architecture`, `Architecture<TKernel>`, `Concept`, `External`, `Host`, `Hosts`, the block kind records (`Umpire.Architecture.Blocks`: `Block`, `App`, `Definition`, `Kernel`, `Component`; `Umpire.Kernels.Blocks`: `Core`, `record Module : Component`, `Pack`), `MessagesComponent` | `App`, `AppHost`, `Kernel`, `Core`, `class Module`, `AppTypes` |
+| VSA | `VsaArchitecture`, `record Layer : Concept`, the VSA layers, the module kinds `record Feature : Module` and `record Plugin : Module`, `UmpireLibraries` | `VsaKernel`, `class Plugin : Module` |
 
 - The definition names a runtime class only by its `Type`, for example `rules.For<Module>(Depth.Self).HasTypes<Umpire.Kernels.Module>().Exactly(1)`. Where two types have the same name, write the full name of the runtime class, or use an alias, for example `using VsaKernel = Umpire.Vsa.Composition.VsaKernel;`.
 - A class at the top of a block folder binds to the block part, for example the module class of a feature module binds to `Feature`.
@@ -95,9 +95,9 @@ The kernel references the definition API (`Umpire.Architecture`), because a `Pac
 ```
 App.Run(args)                             Umpire.Kernels
 ├─ Start(args)
-│  ├─ Pack.CreateHost()                   a new AppHost for each start
+│  ├─ App.CreateHost()                    a new AppHost for each start
 │  ├─ AppHost.Build(args, app)            open: plain, console or web
-│  │  └─ Compose(services, configuration, Pack.Kernel, types)    fixed
+│  │  └─ Compose(services, configuration, app.Kernel, types)     fixed
 │  │     ├─ Core.Install                  the core services
 │  │     ├─ Kernel.Install                Kernel.Configure (VsaKernel: the VSA layers)
 │  │     ├─ Module.Install                each module, in Order, then by name

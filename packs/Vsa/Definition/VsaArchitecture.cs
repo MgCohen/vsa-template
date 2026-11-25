@@ -5,11 +5,11 @@ using Umpire.Architecture.Blocks;
 using Umpire.Kernels.Blocks;
 using Core = Umpire.Kernels.Blocks.Core;
 using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
-using CoreArchitecture = Umpire.Kernels.CoreArchitecture;
 using MessagesComponent = Umpire.Kernels.MessagesComponent;
 using MessagesParts = Umpire.Kernels.MessagesParts;
+using VsaKernel = Umpire.Vsa.Composition.VsaKernel;
 
-public class VsaArchitecture : CoreArchitecture {
+public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> where TKernel : VsaKernel {
     protected override void Configure(ArchitectureConfig config) {
         config.Defaults.UseSameConcept = true;
         config.Defaults.Boundary = Boundary.Closed;

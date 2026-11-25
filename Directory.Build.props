@@ -23,7 +23,7 @@
        Unity, for .NET apps and for the engine. The engine loads the definition of an app, and a record of a net8.0 build and
        of a netstandard2.1 build have different methods, so one build keeps one shape (see docs/unity.md). -->
   <PropertyGroup>
-    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
+    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Engine.Definition' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
   </PropertyGroup>
 
   <PropertyGroup>

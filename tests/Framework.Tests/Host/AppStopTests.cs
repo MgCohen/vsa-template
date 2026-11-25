@@ -224,9 +224,8 @@ public sealed class AppStopTests {
         return app.State == AppState.Stopped;
     }
 
-    sealed class StopApp(Func<AppHost>? host = null) : App {
-        public override Pack Pack { get; } = new TestPack(host ?? (() => new AppHost { ModuleProvider = new FixedModules() }));
-
+    sealed class StopApp(Func<AppHost>? host = null)
+        : VsaTestApp(host ?? (() => new AppHost { ModuleProvider = new FixedModules() })) {
         public int? RequestOnStart { get; init; }
 
         public bool ThrowOnStop { get; init; }

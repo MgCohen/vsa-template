@@ -31,6 +31,32 @@
     <EmbeddedResource Remove="@(_UmpireNestedFile)" />
   </ItemGroup>
 
+  <!-- A definition is a nested project in a folder Definition/, in its own check-time DLL. The project builds it first and does
+       not reference it. The architecture check reads it from the folder umpire-definitions of the output, and a publish
+       does not copy that folder. The kernel of a pack variant (App/Packs/<Name>/Kernel/) is a normal reference.
+       A definition project can add its own references, for example to the kernel of its pack. -->
+  <ItemGroup Condition="'$(UmpireTestProject)' != 'true'">
+    <_UmpireDefinitionProject Include="**/Definition/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource)" />
+    <ProjectReference Include="@(_UmpireDefinitionProject)" ReferenceOutputAssembly="false" Private="false"
+                      OutputItemType="_UmpireDefinition" />
+    <ProjectReference Include="App/Packs/*/Kernel/*.csproj" />
+  </ItemGroup>
+  <Target Name="_UmpireCopyDefinitions" AfterTargets="CopyFilesToOutputDirectory">
+    <PropertyGroup>
+      <_UmpireDefinitionsDir>$([MSBuild]::NormalizeDirectory('$(TargetDir)', 'umpire-definitions'))</_UmpireDefinitionsDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireDefinitionFile Include="@(_UmpireDefinition->'%(FullPath)');@(_UmpireDefinition->'%(RootDir)%(Directory)%(Filename).pdb')" />
+      <_UmpireDefinitionCopy Include="@(_UmpireDefinitionFile->'$(_UmpireDefinitionsDir)%(Filename)%(Extension)')" />
+      <_UmpireStaleDefinition Include="$(_UmpireDefinitionsDir)*" Exclude="@(_UmpireDefinitionCopy)" />
+    </ItemGroup>
+    <Delete Files="@(_UmpireStaleDefinition)" />
+    <Copy SourceFiles="@(_UmpireDefinitionFile)" DestinationFolder="$(_UmpireDefinitionsDir)" SkipUnchangedFiles="true"
+          Condition="Exists('%(FullPath)')">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
+    </Copy>
+  </Target>
+
   <!-- The general parts that each app needs, with no layer, and the default pack.
        Path is the project folder under the repository root in source mode. Package is the bundle package that ships the project
        in package mode (tools/bundle/): many projects share one package. An Analyzer item is a Roslyn analyzer, not a library. -->
@@ -45,7 +71,7 @@
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
     <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
-  <!-- The code of the app selects its pack (App<Vsa<...>>). A package only makes a pack available. The SDK adds the default pack,
+  <!-- The kernel of the app selects its pack (App<VsaKernel, ...>). A package only makes a pack available. The SDK adds the default pack,
        VSA, and its test bases for a test project. UmpireDefaultPack=false leaves them out: then the app references the package
        of its pack and of its test bases itself. A pack package brings its analyzers. Source mode adds them here, because a
        project reference does not bring analyzers. -->

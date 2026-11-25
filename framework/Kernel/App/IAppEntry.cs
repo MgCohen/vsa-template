@@ -1,3 +1,3 @@
 namespace Umpire.Kernels;
 
-public interface IAppEntry<TPack> where TPack : Pack, new();
+public interface IAppEntry<TKernel> where TKernel : Kernel, new();

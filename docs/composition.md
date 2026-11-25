@@ -7,9 +7,9 @@ An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class
 ```
 App.Run(args)
 ├─ Start(args)
-│  ├─ host = Pack.CreateHost()
+│  ├─ host = CreateHost()
 │  ├─ Services = host.Build(args, this)
-│  │  └─ host.Compose(services, configuration, Pack.Kernel, types)
+│  │  └─ host.Compose(services, configuration, Kernel, types)
 │  ├─ host.Start(Services, AppStop)          the host work: operation, web, signals
 │  ├─ State = Running
 │  └─ OnStart()
@@ -27,29 +27,29 @@ The calls go one way. The app calls `Build`, `Start` and `Dispose` on the host. 
 // App/Program.cs
 return new ShopApp().Run(args);
 
-// App/ShopApp.cs: the web host and the VSA rules
-public class ShopApp : App<Vsa<WebHost>>;
+// App/ShopApp.cs: the VSA kernel and the web host
+public class ShopApp : App<VsaKernel, WebHost>;
 
-// The console host and an architecture of the app
-public class ToolApp : App<Vsa<ToolArchitecture, ConsoleHost>>;
+// The console host
+public class ToolApp : App<VsaKernel, ConsoleHost>;
 
 // Custom root services: one host class
 public sealed class ShopHost : WebHost {
     protected override void Configure(IServiceCollection services, AppTypes types) =>
         services.AddSingleton<ShopClock>();
 }
-public class ShopApp : App<Vsa<ShopHost>>;
+public class ShopApp : App<VsaKernel, ShopHost>;
 ```
 
-The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<THost>`) and the namespace of the host (`Umpire.Hosts.Web` or `Umpire.Hosts.Console`). The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
+The app class file imports `Umpire.Kernels` (`App<TKernel, THost>`), `Umpire.Vsa.Composition` (`VsaKernel`) and the namespace of the host (`Umpire.Hosts.Web` or `Umpire.Hosts.Console`). The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
 
 ## The kernel types
 
 | Type | Package | Job |
 |---|---|---|
 | `IApp` | Umpire.Kernels | `State`, `Services`, `Start`, `Stop`, `Run`. A shell makes the app class through it |
-| `App`, `App<TPack>` | Umpire.Kernels | The lifecycle of the app. `App<TPack>` makes its pack with `new TPack()` |
-| `Pack`, `Pack<TArchitecture, TKernel, THost>` | Umpire.Kernels | Gives `Architecture`, `Kernel` and `CreateHost()` |
+| `App`, `App<TKernel, THost>` | Umpire.Kernels | The lifecycle of the app, its `Kernel` and `CreateHost()`. `App<TKernel, THost>` makes one kernel, and a new host for each `Start` |
+| `IAppEntry<TKernel>` | Umpire.Kernels | The entry of an app: the engine and the analyzers read its kernel from it |
 | `Kernel` | Umpire.Kernels | The install point of an architecture: the public `Install` calls the protected `Configure` |
 | `Core` | Umpire.Kernels | The kernel of the core services: `IConfiguration`, logging, `AppTypes`, `AppStop`, `[AutoRegister]` |
 | `AppHost` | Umpire.Kernels | The platform: `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
@@ -59,18 +59,18 @@ The app class file imports `Umpire.Kernels` (`App<TPack>`), `Umpire.Vsa` (`Vsa<T
 | `Module`, `Module<TSettings>` | Umpire.Kernels | The module class at the top of a module folder: the public `Install` and the protected `Configure`. `Order` 1 |
 | `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
 
-The VSA pack adds `Vsa<THost>` (the VSA rules) and `Vsa<TArchitecture, THost>` (the rules of the app) in Umpire.Vsa. It adds `VsaKernel` (`packs/Vsa/Kernel/VsaKernel.cs`), `Plugin` and `Plugin<TSettings>` (the module class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
+The VSA pack adds `VsaKernel` (`packs/Vsa/Kernel/VsaKernel.cs`), `Plugin` and `Plugin<TSettings>` (the module class of a plugin module, `Order` 0) in Umpire.Vsa.Composition. Each type argument is a class with `new()`, so IL2CPP keeps one shared generic code.
 
 ## The app class
 
-`umpire new app <Name>` writes `App/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads `Pack.Architecture` from it (see `architecture-engine.md`). The app class has the lifecycle only. It has no install point.
+`umpire new app <Name>` writes `App/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its kernel from the metadata (see "Find the definition" in `architecture-engine.md`). It names no definition. The app class has the lifecycle only. It has no install point.
 
 | Member | Default | Override to |
 |---|---|---|
 | `OnStart()` | Nothing | Run code after the build. `Services` is set |
 | `OnStop()` | Nothing | Run code before the host disposes the services |
 
-To add app rules, derive an architecture from `VsaArchitecture`, override `Rules`, and use `Vsa<TArchitecture, THost>` (see `architecture-engine.md`).
+To add app rules, derive an architecture from `VsaArchitecture`, override `Rules`, and put it in a `Definition/` project (see `architecture-engine.md`).
 
 | Lifecycle member | Use |
 |---|---|
@@ -435,7 +435,7 @@ If the app has one `ViewsRoot`, `WebHost` adds `AddRazorComponents().AddInteract
 
 ```
 framework/Kernel/                      Umpire.Kernels
-  App/                                 App, App<TPack>, IApp, Pack, Pack<TArchitecture, TKernel, THost>, AppStop
+  App/                                 App, App<TKernel, THost>, IAppEntry<TKernel>, IApp, AppStop, and Architecture<TKernel>
   Kernels/                             Kernel, the core step (AutoRegistration), OpenDescriptors
   Operations/                          Operation, OperationInvoke, OperationResult
   Hosts/                               AppHost
@@ -445,12 +445,11 @@ framework/Kernel/                      Umpire.Kernels
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
   Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes, OpenGenerics
   Factories/                           IFactory<T>, AddFactory
-architecture/                          Umpire.Architecture: Architecture (the kernel references it for Pack)
+architecture/                          Umpire.Architecture: Architecture, LoadedTypes
 framework/Components/Messages/
   Contracts/                           IMessage, Envelope, Result, Error, Effect
   Handlers/                            PipelineBuilder, Pipeline, Pipelines, InlineRunner, Validator, Before, After, AddPipeline
 packs/Vsa/
-  VsaPack.cs                           Umpire.Vsa: Vsa<THost>, Vsa<TArchitecture, THost>
   Definition/                          Umpire.Vsa.Definition: VsaArchitecture, the VSA layers, Feature and Plugin
   Kernel/
     VsaKernel.cs                       Umpire.Vsa.Composition: VsaKernel
@@ -476,7 +475,7 @@ flowchart BT
 - The kernel knows no layer. `VsaKernel.Configure` calls each layer registration by a direct call, in a fixed order.
 - No host knows VSA. The hosts read only `Operation`.
 - `Umpire.Kernels` does not reference `Microsoft.Extensions.Hosting`. Only `Umpire.Hosts.Web` uses a .NET Generic Host, inside `WebApplication`.
-- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition counts the `Plugin` classes with `HasTypes`, and `Vsa<THost>` names `VsaKernel`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
+- `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition counts the `Plugin` classes with `HasTypes`, and `VsaArchitecture` names `VsaKernel`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
 
 ## The container
 

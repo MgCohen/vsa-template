@@ -1,0 +1,5 @@
+<Project>
+  <!-- The definition of the engine. The engine project builds it first and does not reference it. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+</Project>

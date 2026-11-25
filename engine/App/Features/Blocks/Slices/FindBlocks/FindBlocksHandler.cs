@@ -5,6 +5,7 @@ using Blocks.Infrastructure;
 using BuiltApp.Domain.Shared;
 using BuiltApp.Infrastructure;
 using Steps.Infrastructure;
+using Umpire.Config;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
@@ -21,6 +22,10 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         var bin = reader.Index();
         var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
         var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
+        if (folder is not null) {
+            var aliases = FolderAliasConfig.Of(UmpireConfig.Find(folder), folder);
+            bin = bin.WithDefinitionFolders(definition => aliases.DefinitionBlock(folder, definition));
+        }
         IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
         IReadOnlyList<BlockEntry> entries = [.. bin.Entries, .. files.Select(reader.Check)];
         var found = BlockSearch.Find(project, folder, entries, bin);

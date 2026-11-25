@@ -14,7 +14,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | `add request <Name> -m <Module>` | Request, response, handler | None |
 | `add command <Name> -m <Module>` | Command, result, handler | None |
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
-| `add pack <Name>` | Pack class `<Name><THost>` in `App/Packs/<Name>/<Name>Pack.cs`, and `Definition/<Name>Architecture.cs` (inherits `VsaArchitecture`). See `pack-variants.md` | None |
+| `add pack <Name>` | In `App/Packs/<Name>/`: the kernel project `Kernel/` (`<Name>Kernel`) and the definition project `Definition/` (`<Name>Architecture`). See `pack-variants.md` | None |
 | `test [-c <configuration>]` | None | None. It runs `dotnet run --project` for each project of the app whose name ends with `.Tests`, so it needs no `test` entry in `global.json` |
 | `doctor` | None | None |
 | `update [--version <version>]` | None | The Umpire versions in the project files and `Directory.*.props` |
@@ -94,7 +94,7 @@ tools/cli/Templates/
 │  ├─ Slices/SampleAction/**                       add request
 │  └─ Slices/SampleChange/**                       add command
 ├─ App/Features/.gitkeep                          new app (keeps the empty Features/ folder)
-├─ App/Packs/SamplePack/**                        add pack (SamplePackPack.cs, Definition/SamplePackArchitecture.cs)
+├─ App/Packs/SamplePack/**                        add pack (the Kernel and Definition projects)
 ├─ App/Plugins/SamplePlugin/**                    add plugin (module class, Contracts/Commands/SamplePluginStep.cs)
 ├─ App/Plugins/.gitkeep                           new app (keeps the empty Plugins/ folder)
 ├─ App/Tests/App.Tests.csproj                     new app

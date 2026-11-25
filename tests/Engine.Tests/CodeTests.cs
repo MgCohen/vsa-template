@@ -69,7 +69,10 @@ public sealed class CodeTests {
     [TestCase(nameof(LoadAppCodes.NoAppClass), "UMP030502")]
     [TestCase(nameof(LoadAppCodes.ManyAppClasses), "UMP030503")]
     [TestCase(nameof(LoadAppCodes.NoPackedConstructor), "UMP030505")]
-    [TestCase(nameof(LoadAppCodes.ManyPacks), "UMP030506")]
+    [TestCase(nameof(LoadAppCodes.ManyKernels), "UMP030506")]
+    [TestCase(nameof(LoadAppCodes.OtherKernel), "UMP030507")]
+    [TestCase(nameof(LoadAppCodes.ManyDefinitions), "UMP030508")]
+    [TestCase(nameof(LoadAppCodes.NoDefinition), "UMP030509")]
     public void A_LoadApp_code_is_in_group_05(string name, string code) {
         Assert.That(typeof(LoadAppCodes).GetField(name)!.GetValue(null), Is.EqualTo(code));
     }
@@ -102,7 +105,8 @@ public sealed class CodeTests {
             BlocksCodes.TwoEntries, BlocksCodes.BadArchitecture, BlocksCodes.NoBlock,
             BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses,
-            LoadAppCodes.NoPackedConstructor, LoadAppCodes.ManyPacks,
+            LoadAppCodes.NoPackedConstructor, LoadAppCodes.ManyKernels,
+            LoadAppCodes.OtherKernel, LoadAppCodes.ManyDefinitions, LoadAppCodes.NoDefinition,
         ];
 
         Assert.That(codes, Is.Unique.And.All.StartsWith(StepCode.Prefix));

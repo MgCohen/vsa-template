@@ -40,39 +40,30 @@ public sealed class RunEngineTests {
     }
 
     [Test]
-    public void The_engine_reads_the_architecture_from_the_pack_of_the_app_class() {
+    public void The_engine_finds_the_definition_of_the_app_in_its_Definition_folder() {
         using var reader = new BinReader(AppContext.BaseDirectory);
-        var app = reader.Index().Dlls.Single(d => d.Name == "umpire-engine").AppClasses.Single();
+        var bin = reader.Index();
+        var folder = Repo.Path("engine");
+        var entry = new BlockEntry(folder, EntryForm.App, null, folder);
 
-        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
+        var result = LoadApp.Slices.LoadApp.LoadAppHandler.Definition(
+            entry, bin.AppDlls(folder, []), bin.Definitions, new AppLoader(AppContext.BaseDirectory));
 
-        Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
+        Assert.That(result.Value.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
     }
 
     [Test]
-    public void The_engine_makes_the_pack_when_the_pack_gives_no_architecture_type_argument() {
-        var pack = typeof(EngineApp).BaseType!.GetGenericArguments()[0];
-        var app = new AppClass(Name(typeof(EngineApp)), "", [Name(pack)], null, []);
-
-        var architecture = new AppLoader(AppContext.BaseDirectory).ArchitectureOfApp(app, typeof(EngineApp).Assembly.Location);
-
-        Assert.That(architecture.GetType().FullName, Is.EqualTo(typeof(EngineArchitecture).FullName));
-    }
-
-    [Test]
-    public void An_app_class_that_implements_the_entry_for_two_packs_gives_UMP030506() {
-        var app = new AppClass(new TypeName("A.Shell", "A"), "A.cs", [new("A.First", "A"), new("A.Second", "A")], null, []);
+    public void An_app_class_that_implements_the_entry_for_two_kernels_gives_UMP030506() {
+        var app = new AppClass(new TypeName("A.Shell", "A"), "A.cs", [new("A.First", "A"), new("A.Second", "A")], [], []);
         var dll = new BinDll("A.dll", "A", false, [], [], [], [app]);
         var entry = new BlockEntry("C:/a", EntryForm.App, null, "C:/a");
 
-        var result = LoadApp.Slices.LoadApp.LoadAppHandler.Definition(entry, [dll], new AppLoader(AppContext.BaseDirectory));
+        var result = LoadApp.Slices.LoadApp.DefinitionSearch.Find(entry, [dll], []);
 
         Assert.That(result.Error!.Code, Is.EqualTo("UMP030506"));
         Assert.That(result.Error.Message, Is.EqualTo(
-            "The app class A.Shell implements IAppEntry<TPack> for more than one pack: A.First, A.Second. Implement it for one pack only."));
+            "The app class A.Shell implements IAppEntry<TKernel> for more than one kernel: A.First, A.Second. Implement it for one kernel only."));
     }
-
-    static TypeName Name(Type type) => new(type.FullName!, type.Assembly.GetName().Name!);
 
     [Test]
     public void A_dll_with_no_app_class_has_no_app_class_in_the_index() {
@@ -219,7 +210,7 @@ public sealed class RunEngineTests {
 
         string[] loadAppCodes = [
             LoadApp.Slices.LoadApp.LoadAppCodes.NoAppAssembly, LoadApp.Slices.LoadApp.LoadAppCodes.NoAppClass,
-            LoadApp.Slices.LoadApp.LoadAppCodes.ManyAppClasses, LoadApp.Slices.LoadApp.LoadAppCodes.ManyPacks,
+            LoadApp.Slices.LoadApp.LoadAppCodes.ManyAppClasses, LoadApp.Slices.LoadApp.LoadAppCodes.ManyKernels,
         ];
         Assert.That(result.Lines.Where(line => loadAppCodes.Any(line.Contains)), Is.Empty, string.Join(Environment.NewLine, result.Lines));
         Assert.That(result.Lines, Has.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));

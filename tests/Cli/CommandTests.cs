@@ -92,10 +92,10 @@ public sealed class CommandTests {
                 .And.Message.Contain("CS0234"));
 
     [Test]
-    public void AddPackWritesThePackClassAndItsArchitecture() {
+    public void AddPackWritesTheKernelAndItsArchitecture() {
         var files = FilesAfter(["add", "pack", "Ecs"], app: "Shop");
 
-        Assert.That(files, Is.EquivalentTo(new[] { "App/Packs/Ecs/EcsPack.cs", "App/Packs/Ecs/Definition/EcsArchitecture.cs" }));
+        Assert.That(files, Is.EquivalentTo(new[] { "App/Packs/Ecs/Definition/EcsArchitecture.cs", "App/Packs/Ecs/Kernel/EcsKernel.cs" }));
     }
 
     [Test]

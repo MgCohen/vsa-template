@@ -1,6 +1,7 @@
 namespace EngineCore.Tests;
 
 using BuiltApp.Domain.Shared;
+using BuiltApp.Infrastructure;
 using Rules.Slices.CheckRules;
 using Steps.Domain.Shared;
 using Steps.Infrastructure;

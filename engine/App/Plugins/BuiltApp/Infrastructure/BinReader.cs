@@ -8,6 +8,10 @@ public sealed class BinReader : IDisposable {
     public const string ArchitectureKey = "Umpire.Architecture";
     public const string RootKey = "Umpire.Root";
     const string BlockBase = "Umpire.Architecture.Block`1";
+    public const string DefinitionsName = "umpire-definitions";
+    const string PackArchitecture = "Umpire.Kernels.PackArchitecture";
+    const string KernelArchitectureBase = "Umpire.Kernels.Architecture`1";
+    const string UmpirePrefix = "Umpire";
     const string ArchitectureBase = "Umpire.Architecture.Architecture";
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
 
@@ -27,10 +31,12 @@ public sealed class BinReader : IDisposable {
     }
 
     public static IEnumerable<string> ReferencesFirst(string bin, IReadOnlyList<string> references) {
-        var own = Dlls([bin]).ToList();
+        var own = Dlls([bin, DefinitionsFolder(bin)]).ToList();
         var names = own.Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return Dlls(references).Where(dll => !names.Contains(Path.GetFileName(dll))).Concat(own);
     }
+
+    public static string DefinitionsFolder(string bin) => Path.Combine(bin, DefinitionsName);
 
     static IEnumerable<string> Dlls(IEnumerable<string> folders) =>
         folders.Where(Directory.Exists)
@@ -64,7 +70,9 @@ public sealed class BinReader : IDisposable {
     }
 
     public BlockEntry Check(BlockEntry entry) =>
-        entry is { Problem: null, Form: not EntryForm.App, Type: { } type } && Problem(type) is { } problem ? entry.Names(type.ToString(), problem) : entry;
+        entry is { Problem: null, Form: not EntryForm.App, Definition: { } type } && Problem(type) is { } problem
+            ? entry.Names(type.ToString(), problem)
+            : entry;
 
     public string? Problem(TypeName name) {
         Assembly assembly;
@@ -95,10 +103,9 @@ public sealed class BinReader : IDisposable {
                 continue;
             }
             try {
-                if (AppClass.PacksOf(type) is [var pack, ..] and var packs) {
-                    var architecture = AppClass.ArchitectureOf(pack) is { } architectureType ? Name(architectureType) : null;
-                    found.Add(new AppClass(Name(type), Path.GetFullPath(source.File), [.. packs.Select(Name)], architecture,
-                        AppClass.BasesOf(type)));
+                if (AppClass.KernelsOf(type) is [var kernel, ..] and var kernels) {
+                    found.Add(new AppClass(Name(type), Path.GetFullPath(source.File), [.. kernels.Select(Name)],
+                        [.. Bases(kernel).Select(Name)], BaseNames(type)));
                 }
             } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
                 continue;
@@ -107,11 +114,41 @@ public sealed class BinReader : IDisposable {
         return found;
     }
 
+    static IEnumerable<ReadDefinition> DefinitionsOf(Assembly assembly, Dictionary<string, Source> sources) {
+        foreach (var type in Types(assembly).Where(IsConcrete)) {
+            ReadDefinition? found;
+            try {
+                found = DefinitionOf(type, sources);
+            } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
+                continue;
+            }
+            if (found is not null) {
+                yield return found;
+            }
+        }
+    }
+
+    static ReadDefinition? DefinitionOf(Type type, Dictionary<string, Source> sources) {
+        if (Base(type, ArchitectureBase) is null) {
+            return null;
+        }
+        var file = sources.TryGetValue(type.FullName!, out var source) ? Path.GetFullPath(source.File) : null;
+        var folder = file is null ? null : DefinitionType.BlockFolder(file);
+        var kernelBase = Base(type, KernelArchitectureBase);
+        var kernel = kernelBase is null ? null : Name(kernelBase.GetGenericArguments()[0]);
+        var entry = kernelBase is null || folder is null
+            ? null
+            : new BlockEntry(
+                folder, EntryForm.Definition, Name(kernelBase) with { FullName = PackArchitecture }, file!, Packed: Name(type));
+        var blockFolder = folder is null ? null : DiskPath.Of(folder);
+        return new ReadDefinition(new DefinitionType(Name(type), blockFolder, kernel, BaseNames(type)), entry);
+    }
+
     static BlockEntry AppEntry(AppClass app) =>
         new(ProjectFolder(Path.GetDirectoryName(app.Source)!), EntryForm.App, app.Type, app.Source);
 
     static IEnumerable<BlockEntry> TypeEntries(Assembly assembly, Dictionary<string, Source> sources) {
-        foreach (var type in Types(assembly).Where(t => t is { IsAbstract: false, IsInterface: false })) {
+        foreach (var type in Types(assembly).Where(IsConcrete)) {
             if (type.FullName is not { } name || !sources.TryGetValue(name, out var source)) {
                 continue;
             }
@@ -125,8 +162,7 @@ public sealed class BinReader : IDisposable {
         var file = Path.GetFullPath(source.File);
         try {
             return Base(type, BlockBase) is { } block
-                ? new BlockEntry(Path.GetDirectoryName(file)!, EntryForm.Base, Name(block.GetGenericArguments()[0]), file,
-                    Packed: Packed(type, block))
+                ? new BlockEntry(Path.GetDirectoryName(file)!, EntryForm.Base, Name(block.GetGenericArguments()[0]), file)
                 : null;
         } catch (Exception e) when (e is FileNotFoundException or TypeLoadException) {
             return null;
@@ -164,17 +200,16 @@ public sealed class BinReader : IDisposable {
         }
     }
 
-    static TypeName? Packed(Type type, Type block) {
-        for (var b = type.BaseType; b is not null && b != block; b = b.BaseType) {
-            var packed = b.IsGenericType
-                ? b.GetGenericArguments().FirstOrDefault(a => !a.IsGenericParameter && Base(a, ArchitectureBase) is not null)
-                : null;
-            if (packed is not null) {
-                return Name(packed);
-            }
+    static bool IsConcrete(Type type) => type is { IsAbstract: false, IsInterface: false, ContainsGenericParameters: false };
+
+    static IEnumerable<Type> Bases(Type type) {
+        for (var b = type.BaseType; b is not null; b = b.BaseType) {
+            yield return b;
         }
-        return null;
     }
+
+    static IReadOnlyList<string> BaseNames(Type type) =>
+        [.. Bases(type).Select(b => (b.IsGenericType ? b.GetGenericTypeDefinition() : b).FullName!)];
 
     static Type? Base(Type type, string name) {
         for (var b = type.BaseType; b is not null; b = b.BaseType) {
@@ -225,22 +260,45 @@ public sealed class BinReader : IDisposable {
             var name = Path.GetFileNameWithoutExtension(dll);
             var plain = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], [], projects.Contains(name));
             if (!symbols.HasSymbols) {
-                return new DllRead(plain, []);
+                return new DllRead(WithDefinitions(plain), []);
             }
             try {
                 var assembly = context.LoadFromAssemblyPath(dll);
                 var types = symbols.TypeSources().ToList();
                 var sources = types.GroupBy(t => t.FullName).ToDictionary(g => g.Key, g => g.First().Source);
                 var apps = AppClasses(assembly, sources);
+                var definitions = DefinitionsOf(assembly, sources).ToList();
                 var entries = apps.Select(AppEntry).Concat(TypeEntries(assembly, sources))
+                    .Concat(definitions.Select(d => d.Entry).OfType<BlockEntry>())
                     .Concat(MetadataEntries(assembly, sources)).Select(OnDisk).Select(Check).ToList();
-                return new DllRead(plain with { Documents = symbols.Documents(), Types = types, AppClasses = apps }, entries);
+                var read = plain with {
+                    Documents = symbols.Documents(),
+                    Types = types,
+                    AppClasses = apps,
+                    Definitions = [.. definitions.Select(d => d.Type)],
+                };
+                return new DllRead(read, entries);
             } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException
                 or TypeLoadException or InvalidOperationException) {
                 return new DllRead(plain, []);
             }
         }
     }
+
+    BinDll WithDefinitions(BinDll dll) {
+        if (!dll.References.Any(r => r.StartsWith(UmpirePrefix, StringComparison.Ordinal))) {
+            return dll;
+        }
+        try {
+            var found = DefinitionsOf(context.LoadFromAssemblyPath(dll.Path), []).Select(d => d.Type);
+            return dll with { Definitions = [.. found] };
+        } catch (Exception e) when (e is BadImageFormatException or FileLoadException or IOException
+            or TypeLoadException or InvalidOperationException) {
+            return dll;
+        }
+    }
+
+    sealed record ReadDefinition(DefinitionType Type, BlockEntry? Entry);
 
     sealed record DllRead(BinDll Dll, IReadOnlyList<BlockEntry> Entries);
 }
