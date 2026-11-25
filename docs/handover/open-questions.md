@@ -8,6 +8,7 @@ The user has this list and did not answer it. An opinion is not a decision.
 
 - **Q1 (2026-11-25).** "No definition code on umpire DLL. The definition code will most likely need the umpire DLL, so the helpers can stay there, or we can move them into a utility." Rule of the user: instead of one using the other, move shared things to a utility.
 - **Q2 and Q6 (2026-11-25).** "We can keep splitting": `Umpire` (the core), `Umpire.Definition` (the core definition), `Umpire.Vsa` (the host/kernel), `Umpire.Vsa.Definition` (the VSA definition). This also answers Q6: the core and VSA are two DLLs.
+- **Q3 (2026-11-25).** Not answered. "We still have to talk about the topology and architecture and split of this, because I don't like the idea of check model. ... But it can live wherever it needs to live." New open item: the structure of the check code, before its place.
 
 | # | Question | Options | Opinion |
 |---|---|---|---|
