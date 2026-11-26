@@ -135,6 +135,7 @@ A host is the platform. It builds the services and starts the host work. It does
 | Host | Package | Use |
 |---|---|---|
 | `AppHost` | Umpire.Kernels | A `ServiceProvider` with the command-line configuration. Exposes no operation |
+| `LocalHost` | Umpire.Kernels | Local method calls: `app.Send(request)`. Does no host work |
 | `ConsoleHost` | Umpire.Hosts.Console | Command-line configuration. Runs one request, then `AppStop.Request(exitCode)` |
 | `WebHost` | Umpire.Hosts.Web | ASP.NET Core: one HTTP route for each operation, and the views |
 | `UnityHost` | `vsa-unity` | A Unity app. Its `Configure` adds the Unity log provider and the main thread `Dispatch` |
@@ -155,6 +156,34 @@ A host is the platform. It builds the services and starts the host work. It does
 - `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.
 - `AppHost` does no OS work, so a Unity app does not listen for Ctrl+C.
 - Each host has a public constructor with no parameters.
+
+## LocalHost: local method calls
+
+`LocalHost` is the transport of local method calls. The caller starts the app, then sends requests. `Start` returns when the app is ready to send.
+
+```csharp
+public class ToolApp<THost> : App<VsaKernel, THost> where THost : AppHost, new();
+
+var app = new ToolApp<LocalHost>();
+app.Start([]);
+Result<PingResponse> typed = app.Send(new PingRequest("Ann"));
+OperationResult untyped = app.Send((object)new PingRequest("Ann"));
+app.Stop();
+```
+
+| Member | Project | Gives |
+|---|---|---|
+| `Send(object)`, `SendAsync(object, ct)` | Umpire.Kernels (`LocalHostApps`) | `OperationResult`: `Value` (the response), `Error`, `ExitCode` |
+| `Send(IRequest<T>)`, `SendAsync(IRequest<T>, ct)` | Umpire.Vsa.Composition (`LocalRequests`) | `Result<T>` |
+
+- Each `Send` is an extension method on `App<TKernel, THost>` with `THost : LocalHost`. An app with another host has no `Send`: the compiler refuses the call.
+- The host stays private in `App`. The extensions use the `internal` member `App.RunningHost`, which gives the host only while `State` is `Running`.
+- `LocalHost.Start` keeps the `Operation` list of the services. `Send` finds the operation whose `Input` is the type of the message, and invokes it in a new service scope. The core reads only `Operation`, so it knows no VSA type.
+- A message with no operation gives `InvalidOperationException`: "<host> has no operation for <type>. A host exposes only requests". A command has no operation, because a host does not expose commands.
+- A `Send` before `Start` or after `Stop` gives `InvalidOperationException`: "<app> does not run. Call Start before Send."
+- The typed `Send` is more specific than `Send(object)`, so the compiler selects it for a request when the file imports `Umpire.Vsa.Composition`. To read the value of `OperationResult`, cast `Value` to the response type when `Error` is `null`.
+- The synchronous `Send` waits for the task. The default runner (`InlineRunner`) completes the task on the thread of the caller. If a handler waits for the `SynchronizationContext` of the caller, use `SendAsync`.
+- An app class can keep its host open (`ToolApp<THost>`), and each entry gives the host: `new ToolApp<LocalHost>()` or `new ToolApp<ConsoleHost>()`. The rule engine reads the kernel of such an app class: it refuses only an open kernel argument (`AppClass.KernelsOf`).
 
 ## What Compose does
 
@@ -184,18 +213,20 @@ The order is inside `Compose`, so a host cannot change it. A module replaces a d
 
 A module defines its requests, commands, events, handlers and presenters one time. The same code works on every host. The host selects only the transports:
 
-| Kind | Part | `AppHost` | `ConsoleHost` | `WebHost` |
-|---|---|---|---|---|
-| Definition | Messages, in-process senders | Yes | Yes | Yes |
-| Definition | Presenters, `PresenterScope`, `LiveScopes` | Yes | Yes | Yes |
-| Transport | Command line: one request | No | Yes | No |
-| Transport | HTTP API: one route for each request | No | No | Yes |
-| Transport | Views (`ViewsRoot`): Razor components | No | No | Yes |
+| Kind | Part | `AppHost` | `LocalHost` | `ConsoleHost` | `WebHost` |
+|---|---|---|---|---|---|
+| Definition | Messages, in-process senders | Yes | Yes | Yes | Yes |
+| Definition | Presenters, `PresenterScope`, `LiveScopes` | Yes | Yes | Yes | Yes |
+| Transport | Method call: `app.Send(request)` | No | Yes | No | No |
+| Transport | Command line: one request | No | No | Yes | No |
+| Transport | HTTP API: one route for each request | No | No | No | Yes |
+| Transport | Views (`ViewsRoot`): Razor components | No | No | No | Yes |
 
 ```
 Presenter → IRequestSender.SendAsync(request) → RequestHandler<,>             every host
 API client → HTTP /api/{group}/{name} → Operation → RequestHandler<,>          web host
 Command line → {group} {name} --arg value → Operation → RequestHandler<,>      console host
+Caller → app.Send(request) → Operation → RequestHandler<,>                     local host
 ```
 
 A request is the message that comes from outside the app. A command is the message between features, so a host does not expose commands. The VSA kernel makes one `Operation` for each request handler. `Invoke` sends the request with `IRequestSender`. The hosts read only the `Operation` list, so they know no VSA type.

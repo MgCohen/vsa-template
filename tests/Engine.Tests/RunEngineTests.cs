@@ -236,6 +236,19 @@ public sealed class RunEngineTests {
         Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
     }
 
+    [Test]
+    public async Task An_app_class_with_an_open_host_loads_its_architecture() {
+        var result = await Run(block: Repo.Path("tests", "Fixtures", "OpenHost"));
+
+        string[] loadAppCodes = [
+            LoadApp.Slices.LoadApp.LoadAppCodes.NoAppAssembly, LoadApp.Slices.LoadApp.LoadAppCodes.NoAppClass,
+            LoadApp.Slices.LoadApp.LoadAppCodes.ManyAppClasses, LoadApp.Slices.LoadApp.LoadAppCodes.ManyKernels,
+        ];
+        Assert.That(result.Lines.Where(line => loadAppCodes.Any(line.Contains)), Is.Empty, string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.Lines, Has.None.EqualTo(RulesSkipped), string.Join(Environment.NewLine, result.Lines));
+        Assert.That(result.ExitCode, Is.Zero, string.Join(Environment.NewLine, result.Lines));
+    }
+
     [TestCase(null, 2)]
     [TestCase(false, 0)]
     public async Task The_project_checks_flag_stops_the_project_warnings(bool? projectChecks, int warnings) {

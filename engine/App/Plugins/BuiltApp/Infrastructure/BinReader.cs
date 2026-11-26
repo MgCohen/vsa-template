@@ -113,7 +113,7 @@ public sealed class BinReader : IDisposable {
             try {
                 if (AppClass.KernelsOf(type) is [var kernel, ..] and var kernels) {
                     found.Add(new AppClass(Name(type), Path.GetFullPath(source.File), [.. kernels.Select(Name)],
-                        [.. Bases(kernel).Select(Name)], BaseNames(type)));
+                        [.. Bases(kernel).Select(Name)], BaseNames(type)) { IsOpen = type.ContainsGenericParameters });
                 }
             } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
                 unloaded.Add(new MissingTypes(context).Of(type, Path.GetFullPath(source.File), e));
