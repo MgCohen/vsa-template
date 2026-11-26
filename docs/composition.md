@@ -394,7 +394,8 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `OpenGenerics`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class: the scan, the descriptor close and the dispatch |
 | `OpenDescriptors` (Kernel) | `GetConstructors`, `GetParameters` | The constructor walk and the declared message close of `CloseOpenDescriptors` |
 | `MarkedTypes` (Kernel) | `GetCustomAttributesData` | Reads `[AutoRegister]` and `[AutoClose]` by name |
-| `MessageRoute` (Messages.Handlers) | `MakeGenericMethod` | Makes the envelope and the typed handler call of the runtime message type |
+| `MessageRoute` (Messages.Handlers) | `MakeGenericMethod`, `Activator.CreateInstance` | Makes the envelope of the runtime message type, and creates the closed handler call of each handler |
+| `HandlerCalls` (Messages.Handlers) | `MakeGenericType` | Closes each handler call of the pipeline from the handler type and the message type |
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
 | `Views` (Hosts.Web) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |

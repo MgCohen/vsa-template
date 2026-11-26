@@ -209,7 +209,7 @@ The runner of the pipeline of the message decides when a send runs. A `SendAsync
 
 ## Define a pipeline
 
-A pipeline names types only: the message base, the handlers, the hook bases, the validator bases, the runner and the steps.
+A pipeline names types: the message base, the handlers, the handler calls, the hook bases, the validator bases, the runner and the steps. The one exception is the `AfterHandled` action, which is a delegate.
 
 ```csharp
 public sealed class ArenaModule : Module {
@@ -217,6 +217,7 @@ public sealed class ArenaModule : Module {
         services.AddSingleton<ArenaLog>();
         services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))
+            .CallsCommandHandlers()
             .HooksOf(typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>))
             .BeforeStep<TagStep>()
             .AfterStep<AuditStep>());
