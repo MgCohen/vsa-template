@@ -1,9 +1,13 @@
 namespace Umpire.Messages.Handlers;
 
 using Umpire.Kernels;
+using Umpire.Messages.Contracts;
 using Umpire.Utility;
 
 static class MessageTypes {
+    internal static bool IsHandler(Type type) =>
+        type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandler<>));
+
     internal static IReadOnlyList<Type> OfHandler(Type handler) {
         Type[] messages = [.. handler.GetInterfaces()
             .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandler<>))
@@ -11,7 +15,8 @@ static class MessageTypes {
         return messages.Length > 0
             ? messages
             : throw new InvalidOperationException(
-                $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, directly or through a handler base.");
+                $"{handler.FullName} is not a handler. "
+                + "A handler implements IHandler<TMessage>, directly or through a handler base.");
     }
 
     internal static Type OfStep(Type step, Type typedStepBase) => ArgumentOf(step, typedStepBase) ?? typeof(object);

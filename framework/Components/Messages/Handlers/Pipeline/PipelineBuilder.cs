@@ -7,6 +7,8 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
     readonly List<Type> validatorBases = [];
     readonly List<PipelineStep> beforeSteps = [];
     readonly List<PipelineStep> afterSteps = [];
+    readonly List<Type> calls = [];
+    readonly List<AfterHandledCall> afterHandled = [];
     Type runner = typeof(InlineRunner);
 
     public PipelineBuilder<TMessage> Handlers<THandlerBase>() where THandlerBase : class =>
@@ -55,6 +57,32 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         return this;
     }
 
+    public PipelineBuilder<TMessage> Calls(params Type[] calls) {
+        foreach (var call in calls ?? throw new ArgumentNullException(nameof(calls))) {
+            if (!HandlerCalls.IsCall(call)) {
+                throw new ArgumentException(
+                    $"{call?.FullName ?? "null"} is not a handler call. "
+                    + "A handler call is a concrete open generic type with a public constructor with no parameters. "
+                    + "Its base is HandlerCall<THandler, TMessage>, and each of its type parameters is in that base.",
+                    nameof(calls));
+            }
+            if (!this.calls.Contains(call)) {
+                this.calls.Add(call);
+            }
+        }
+        return this;
+    }
+
+    public PipelineBuilder<TMessage> AfterHandled<THandler>(Action<THandler> call) where THandler : class {
+        if (call is null) {
+            throw new ArgumentNullException(nameof(call));
+        }
+        if (!afterHandled.Exists(added => added.Repeats(typeof(THandler), call))) {
+            afterHandled.Add(new AfterHandledCall(typeof(THandler), call, handler => call((THandler)handler)));
+        }
+        return this;
+    }
+
     public PipelineBuilder<TMessage> Runner<TRunner>() where TRunner : IRunner {
         runner = typeof(TRunner);
         return this;
@@ -78,7 +106,7 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
     internal PipelineDefinition Definition() =>
         new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases],
             validatorBases.Count > 0 ? [.. validatorBases] : [typeof(Validator<>)], runner,
-            [.. beforeSteps], [.. afterSteps]);
+            [.. beforeSteps], [.. afterSteps], [.. calls], [.. afterHandled]);
 
     static bool IsValidatorBase(Type? type) =>
         type is { IsGenericTypeDefinition: true }

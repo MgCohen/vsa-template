@@ -9,6 +9,7 @@ public static class EventHandlerServiceCollectionExtensions {
         services.AddScoped<IIntegrationEventPublisher, InProcessEventPublisher>();
         services.AddPipeline(new PipelineBuilder<IntegrationEvent>()
             .HandlersOf(typeof(IntegrationEventHandler<>))
+            .CallsEventHandlers()
             .HooksOf(typeof(BeforeEventHook<>), typeof(AfterEventHook<>)));
         return services;
     }

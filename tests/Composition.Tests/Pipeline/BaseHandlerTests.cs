@@ -59,7 +59,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task The_message_closes_an_open_handler_with_its_result_type() {
-        var pipeline = new PipelineBuilder<JsCall>().Handlers(typeof(JsHandler<>)).Build(services);
+        var pipeline = new PipelineBuilder<JsCall>().CallsTestHandlers().Handlers(typeof(JsHandler<>)).Build(services);
 
         var wait = await pipeline.SendAsync<Waited>(new Wait("panel"));
         var frames = await pipeline.SendAsync<int>(new Frames(3));
@@ -71,7 +71,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_the_handlers_of_its_type_and_of_each_base_one_time() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsTestHandlers()
             .Handlers(typeof(ItemChangedHandler), typeof(CardChangedHandler), typeof(BothHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -83,7 +83,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_calls_a_handler_of_many_bases_one_time_for_its_nearest_base() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsTestHandlers()
             .Handlers(typeof(ItemChangedHandler), typeof(CardChangedHandler), typeof(BothHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -95,7 +95,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_one_closure_of_an_open_handler_when_a_closed_one_also_matches() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsTestHandlers()
             .Handlers(typeof(Audit<ItemChanged>), typeof(Audit<>))
             .Build(services);
         Log.Lines.Clear();
@@ -111,7 +111,7 @@ public sealed class BaseHandlerTests {
             .AddSingleton<Calls>()
             .AddSingleton(new AppTypes(new FixedModules(new CheckModule())))
             .BuildServiceProvider();
-        var pipeline = new PipelineBuilder<Check>()
+        var pipeline = new PipelineBuilder<Check>().CallsTestHandlers()
             .Handlers(typeof(CheckHandler))
             .HooksOf(typeof(AfterCommandHook<,>))
             .Build(typed);
@@ -124,7 +124,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_the_handler_of_a_derived_type_before_the_handler_of_its_base() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsTestHandlers()
             .Handlers(typeof(BaseChangedHandler), typeof(ZoneMovedHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -136,7 +136,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_the_handler_of_an_interface_that_it_implements() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsTestHandlers()
             .Handlers(typeof(ItemChangedHandler), typeof(StampHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -148,7 +148,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task The_message_closes_an_open_handler_of_a_nested_pattern() {
-        var pipeline = new PipelineBuilder<Call>().Handlers(typeof(ListCallHandler<>)).Build(services);
+        var pipeline = new PipelineBuilder<Call>().CallsTestHandlers().Handlers(typeof(ListCallHandler<>)).Build(services);
 
         var result = await pipeline.SendAsync<string>(new Call<List<int>>());
 
@@ -157,7 +157,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public void A_command_with_two_shapes_of_an_open_pattern_stops_the_send_and_names_both() {
-        var pipeline = new PipelineBuilder<Call>().Handlers(typeof(WrapHandler<>)).Build(services);
+        var pipeline = new PipelineBuilder<Call>().CallsTestHandlers().Handlers(typeof(WrapHandler<>)).Build(services);
 
         var error = Assert.ThrowsAsync<InvalidOperationException>(
             () => pipeline.SendAsync<string>(new DoubleWrap()));
@@ -168,7 +168,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_with_two_shapes_of_an_open_pattern_runs_each_closure() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>().Handlers(typeof(WrapAudit<>)).Build(services);
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsTestHandlers().Handlers(typeof(WrapAudit<>)).Build(services);
         Log.Lines.Clear();
 
         await pipeline.SendAsync<Unit>(new DoubleWrapped());
@@ -179,13 +179,13 @@ public sealed class BaseHandlerTests {
     [Test]
     public void An_open_handler_with_a_parameter_outside_its_message_stops_the_build() {
         var error = Assert.Throws<InvalidOperationException>(
-            () => new PipelineBuilder<Call>().Handlers(typeof(ExtraHandler<,>)).Build(services));
+            () => new PipelineBuilder<Call>().CallsTestHandlers().Handlers(typeof(ExtraHandler<,>)).Build(services));
 
         Assert.That(error!.Message, Does.Contain("ExtraHandler<T, TExtra>").And.Contain("type parameters"));
     }
 
     Pipeline Commands(params Type[] handlers) =>
-        new PipelineBuilder<Shape>().Handlers(handlers).Build(services);
+        new PipelineBuilder<Shape>().CallsTestHandlers().Handlers(handlers).Build(services);
 
     public sealed class Calls {
         public List<string> Lines { get; } = [];
@@ -220,7 +220,7 @@ public sealed class BaseHandlerTests {
             Task.FromResult<Result<string>>($"round:{envelope.Message.GetType().Name}");
     }
 
-    public sealed class PaintedHandler : IHandler<IPainted> {
+    public sealed class PaintedHandler : ITestHandler<IPainted> {
         public Task<IMessageResult> RunAsync(IEnvelope<IPainted> envelope) =>
             Task.FromResult<IMessageResult>((Result<string>)"painted");
     }
@@ -306,7 +306,7 @@ public sealed class BaseHandlerTests {
 
     public sealed record StampedItem : ItemChanged, IStamped;
 
-    public sealed class StampHandler(Calls calls) : IHandler<IStamped> {
+    public sealed class StampHandler(Calls calls) : ITestHandler<IStamped> {
         public Task<IMessageResult> RunAsync(IEnvelope<IStamped> envelope) {
             calls.Lines.Add("stamp");
             return Task.FromResult<IMessageResult>((Result<Unit>)Unit.Value);
@@ -322,7 +322,7 @@ public sealed class BaseHandlerTests {
             Task.FromResult<Result<string>>($"list:{typeof(T).Name}");
     }
 
-    public sealed class ExtraHandler<T, TExtra> : IHandler<Call<T>> {
+    public sealed class ExtraHandler<T, TExtra> : ITestHandler<Call<T>> {
         public Task<IMessageResult> RunAsync(IEnvelope<Call<T>> envelope) =>
             Task.FromResult<IMessageResult>((Result<string>)typeof(TExtra).Name);
     }
@@ -340,7 +340,7 @@ public sealed class BaseHandlerTests {
 
     public sealed record DoubleWrapped : IntegrationEvent, IWrapped<int>, IWrapped<string>;
 
-    public sealed class WrapAudit<T>(Calls calls) : IHandler<IWrapped<T>> {
+    public sealed class WrapAudit<T>(Calls calls) : ITestHandler<IWrapped<T>> {
         public Task<IMessageResult> RunAsync(IEnvelope<IWrapped<T>> envelope) {
             calls.Lines.Add($"wrap:{typeof(T).Name}");
             return Task.FromResult<IMessageResult>((Result<Unit>)Unit.Value);

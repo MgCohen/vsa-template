@@ -11,7 +11,8 @@ public static class PresenterServiceCollectionExtensions {
         services.AddSingleton<LiveScopes>();
         services.AddScoped<PresenterScope>();
         services.AddPipeline(new PipelineBuilder<IntegrationEvent>()
-            .HandlersOf(typeof(IPresenterHandler<>))
+            .HandlersOf(typeof(Presenter))
+            .CallsPresenters()
             .ValidatorsOf(typeof(PresenterValidator<>))
             .Runner<LiveScopesRunner>());
         return services;

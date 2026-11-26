@@ -47,7 +47,7 @@ public sealed class PresenterEventTests {
 
         Assert.That(registrations.Where(s => s.ImplementationType == typeof(BellPresenter)).Select(s => s.ServiceType),
             Is.EqualTo(new[] { typeof(BellPresenter) }));
-        Assert.That(registrations.Any(s => s.ServiceType == typeof(IPresenterHandler<Rang>)), Is.False);
+        Assert.That(registrations.Any(s => s.ServiceType == typeof(IIntegrationEventHandler<Rang>)), Is.False);
         Assert.That(registrations.Count(s => s.ServiceType == typeof(IntegrationEventHandler<Rang>)), Is.EqualTo(1));
     }
 
