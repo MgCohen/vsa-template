@@ -1,24 +1,19 @@
 namespace Umpire.Config;
 
 using System.Globalization;
-using Tomlyn;
-using Tomlyn.Model;
-using Tomlyn.Serialization;
 
 public sealed class UmpireConfig {
     public const string FileName = ".umpireconfig";
     const char Separator = '.';
 
-    static readonly TomlSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
+    readonly ConfigTable root;
 
-    readonly TomlTable root;
-
-    UmpireConfig(TomlTable root, string? filePath) {
+    UmpireConfig(ConfigTable root, string? filePath) {
         this.root = root;
         FilePath = filePath;
     }
 
-    public static UmpireConfig Empty { get; } = new(new TomlTable(), null);
+    public static UmpireConfig Empty { get; } = new(new ConfigTable(), null);
 
     public string? FilePath { get; }
 
@@ -42,14 +37,13 @@ public sealed class UmpireConfig {
         return Empty;
     }
 
-    public T? Get<T>(string table, TomlSerializerContext? context = null) where T : class {
-        if (Node(table) is not TomlTable found) {
+    public T? Get<T>(string table) where T : class {
+        if (Node(table) is not ConfigTable found) {
             return null;
         }
-        var text = TomlSerializer.Serialize(found, Options);
         try {
-            return context is null ? TomlSerializer.Deserialize<T>(text, Options) : TomlSerializer.Deserialize<T>(text, context);
-        } catch (TomlException e) {
+            return (T)ConfigBinder.Bind(found, typeof(T), table);
+        } catch (FormatException e) {
             throw new InvalidOperationException(
                 $"The table [{table}] of {FilePath ?? "the TOML text"} does not fit {typeof(T).Name}: {e.Message}", e);
         }
@@ -60,26 +54,20 @@ public sealed class UmpireConfig {
     public IEnumerable<KeyValuePair<string, string>> Values() => Leaves(root, "");
 
     public IEnumerable<KeyValuePair<string, string>> Values(string table) =>
-        Node(table) is TomlTable found ? Leaves(found, table + Separator) : [];
+        Node(table) is ConfigTable found ? Leaves(found, table + Separator) : [];
 
     public IEnumerable<KeyValuePair<string, IReadOnlyList<string>?>> Lists(string table) =>
-        Node(table) is TomlTable found
-            ? found.Select(pair => new KeyValuePair<string, IReadOnlyList<string>?>(
-                pair.Key, pair.Value is TomlArray array ? array.Select(Text).OfType<string>().ToList() : null))
+        Node(table) is ConfigTable found
+            ? found.Entries.Select(pair => new KeyValuePair<string, IReadOnlyList<string>?>(
+                pair.Key, pair.Value is List<object> items ? items.Select(Text).OfType<string>().ToList() : null))
             : [];
 
-    static UmpireConfig Parse(string toml, string? file) {
-        var options = new TomlSerializerOptions { SourceName = file ?? "" };
-        return new(TomlSerializer.Deserialize<TomlTable>(toml, options) ?? new TomlTable(), file);
-    }
+    static UmpireConfig Parse(string toml, string? file) => new(TomlReader.Read(toml, file ?? ""), file);
 
-    static object? Child(TomlTable table, string key) =>
-        table.FirstOrDefault(pair => string.Equals(pair.Key, key, StringComparison.OrdinalIgnoreCase)).Value;
-
-    static IEnumerable<KeyValuePair<string, string>> Leaves(TomlTable table, string prefix) {
-        foreach (var pair in table) {
+    static IEnumerable<KeyValuePair<string, string>> Leaves(ConfigTable table, string prefix) {
+        foreach (var pair in table.Entries) {
             var key = prefix + pair.Key;
-            if (pair.Value is TomlTable inner) {
+            if (pair.Value is ConfigTable inner) {
                 foreach (var leaf in Leaves(inner, key + Separator)) {
                     yield return leaf;
                 }
@@ -90,17 +78,16 @@ public sealed class UmpireConfig {
     }
 
     static string? Text(object? value) => value switch {
-        null or TomlTable or TomlArray or TomlTableArray => null,
         string text => text,
         bool flag => flag ? "true" : "false",
-        IFormattable number => number.ToString(null, CultureInfo.InvariantCulture),
-        _ => value.ToString(),
+        long number => number.ToString(CultureInfo.InvariantCulture),
+        _ => null,
     };
 
     object? Node(string path) {
         object? current = root;
         foreach (var key in path.Split(Separator)) {
-            current = current is TomlTable table ? Child(table, key) : null;
+            current = current is ConfigTable table ? table.Find(key) : null;
         }
         return current;
     }

@@ -531,7 +531,7 @@ module.Install(services, settings)                 public, from AppHost.Compose
 → Configure(services, settings)
 ```
 
-The host gives the providers in `AppHost.Settings(types)`. The default is `[new UmpireConfigSettings(UmpireConfig.In(AppContext.BaseDirectory))]`: the table with the module name in the `.umpireconfig` file of the output folder, for example `[Notebook]`. `In` reads only that folder, not the folders above it. The name of a module is the last part of its namespace. The SDK copies `.umpireconfig` to the output folder. With no file or no base folder, `In` gives `UmpireConfig.Empty`, and the next provider answers. The table name and the property names match with no case. A value of the wrong type stops the start with the table name, the file and the Tomlyn message. A host adds a provider in front: `[new MyProvider(), .. base.Settings(types)]`. `ModuleSettings.Get<TSettings>(module)` reads the settings with no registration.
+The host gives the providers in `AppHost.Settings(types)`. The default is `[new UmpireConfigSettings(UmpireConfig.In(AppContext.BaseDirectory))]`: the table with the module name in the `.umpireconfig` file of the output folder, for example `[Notebook]`. `In` reads only that folder, not the folders above it. The name of a module is the last part of its namespace. The SDK copies `.umpireconfig` to the output folder. With no file or no base folder, `In` gives `UmpireConfig.Empty`, and the next provider answers. The table name and the property names match with no case. A value of the wrong type stops the start with the table name, the file, the key and the expected type. A host adds a provider in front: `[new MyProvider(), .. base.Settings(types)]`. `ModuleSettings.Get<TSettings>(module)` reads the settings with no registration.
 
 ```toml
 [Notebook]
@@ -540,7 +540,7 @@ Limits.MaxLines = 80
 Modes = { easy = 1, hard = 5 }
 ```
 
-`UmpireConfigSettings` reads with Tomlyn reflection. For no reflection, give a Tomlyn context (the context sets its own options, so its property names match with case): `new UmpireConfigSettings(config, MyToml.Default)` with `[TomlSerializable(typeof(NotebookSettings))] partial class MyToml : TomlSerializerContext`. A direct call of `Configure(services)` on a settings module does nothing. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
+`UmpireConfigSettings` binds the table with reflection: each public property with a public setter gets the key with its name. The property types are `string`, `bool`, the number types, an enum (a string value), a nullable of these, a struct, a class with a public constructor that has no parameters, an array or a list, and a dictionary with string keys. The reader reads no float, so a `double` property gets an integer value only. A key with no property is skipped. For no reflection, add your own `ISettingsProvider` in front of the default. A direct call of `Configure(services)` on a settings module does nothing. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
 
 ## What each host gives
 

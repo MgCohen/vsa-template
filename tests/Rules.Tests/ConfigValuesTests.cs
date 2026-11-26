@@ -16,17 +16,15 @@ public sealed class ConfigValuesTests {
         Assert.That(ConfigValues.Parse("[umpire]\nmax = 1\n").Value("umpire"), Is.Null);
 
     [Test]
-    public void Not_valid_toml_throws_the_tomlyn_exception() {
+    public void Not_valid_toml_throws_the_config_format_exception() {
         var error = Assert.Catch(() => ConfigValues.Parse("a = 1\n[*.cs]\nb = 2\n"));
-        Assert.That(error!.GetType().FullName, Is.EqualTo("Tomlyn.TomlException"));
+        Assert.That(error!.GetType().FullName, Is.EqualTo("Umpire.Config.ConfigFormatException"));
     }
 
-    [TestCase("Umpire.Config.dll")]
-    [TestCase("Tomlyn.dll")]
-    [TestCase("System.Collections.Immutable.dll")]
-    [TestCase("System.Text.Json.dll")]
-    public void The_kernel_analyzer_embeds_the_config_reader(string file) =>
-        Assert.That(typeof(ConfigValues).Assembly.GetManifestResourceNames(), Has.Member($"UmpireConfigTree/{file}"));
+    [Test]
+    public void The_kernel_analyzer_embeds_only_the_config_reader() =>
+        Assert.That(typeof(ConfigValues).Assembly.GetManifestResourceNames().Where(name => name.StartsWith("UmpireConfigTree/", StringComparison.Ordinal)),
+            Is.EqualTo(new[] { "UmpireConfigTree/Umpire.Config.dll" }));
 
     [Test]
     public void The_config_reader_loads_in_a_private_load_context() {

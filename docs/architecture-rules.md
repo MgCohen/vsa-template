@@ -185,31 +185,32 @@ A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consum
 | `.editorconfig` (repository root) | The style of this repository: the built-in .NET rules, editor and code style options, severities. A test section turns off CA1707 (underscores in test names). No `UMP` key |
 | `.umpireconfig` (block root) | The rule values and severities of the block (`umpire.<ID>.<key>`). The defaults are on the rule classes |
 | `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings, and the Umpire codes that are errors (`WarningsAsErrors`) |
-| `framework/Kernel/Analyzers/Umpire.ConfigBundle.targets` | Embeds Umpire.Config and its dependency tree in the kernel analyzer DLL |
+| `framework/Kernel/Analyzers/Umpire.ConfigBundle.targets` | Embeds Umpire.Config in the kernel analyzer DLL |
 
 `Umpire.Sdk.Core.targets` gives `.umpireconfig` to the compiler as an additional file. `RuleAnalyzer` reads it with Umpire.Config (`ConfigFile`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The definition holds no analyzer value.
 
 ### The config reader in the compiler
 
-The compiler owns some assemblies, for example Roslyn and `System.Collections.Immutable` (SCI). An analyzer always gets the copy of the compiler. The oldest supported compiler is the one of Unity 6: Roslyn 4.10 with SCI 8.0. Tomlyn 2.x needs SCI 9.0 and `System.Text.Json` 10, so Umpire.Config cannot load next to the analyzers.
+The compiler owns some assemblies, for example Roslyn and `System.Collections.Immutable` (SCI). An analyzer always gets the copy of the compiler. The oldest supported compiler is the one of Unity 6: Roslyn 4.10 with SCI 8.0. Umpire.Config has its own TOML reader and no package dependency (#247), so it needs no assembly of the compiler.
 
 ```
 compiler (Roslyn 4.10, SCI 8.0)
- └─ Umpire.Kernels.Analyzers.dll       built on SCI 8.0, no Tomlyn reference
-     └─ ConfigReader: private load context, from embedded resources
-         └─ Umpire.Config, Tomlyn 2.x, SCI 9.0, System.Text.Json 10, ...
+ └─ Umpire.Kernels.Analyzers.dll       built on SCI 8.0, no Umpire.Config reference
+     └─ ConfigReader: private load context, from an embedded resource
+         └─ Umpire.Config (netstandard2.0, no dependency)
              returns KeyValuePair<string, string> only
 ```
 
-- The kernel analyzer DLL embeds Umpire.Config and its full `netstandard2.0` dependency tree (`Umpire.ConfigBundle.targets`). The packages hold only the analyzer DLLs.
-- `ConfigReader` loads the tree into a private `AssemblyLoadContext`. For each dependency, the default context of the compiler answers first, and the embedded copy loads only when the compiler does not have that version. So on Unity (.NET 8), Tomlyn gets the embedded SCI 9.0, and on a .NET 9 or later compiler it gets the SCI of the compiler. Only corelib types cross the boundary, so the analyzer API always uses the SCI of the compiler.
-- Each embedded DLL loads one time, under a lock, so parallel compilations do not load it two times.
+- The kernel analyzer DLL embeds only the `netstandard2.0` Umpire.Config (`Umpire.ConfigBundle.targets`). The packages hold only the analyzer DLLs.
+- `ConfigReader` loads Umpire.Config into a private `AssemblyLoadContext`, so it never meets another copy of Umpire.Config in the compiler process. Only corelib types cross the boundary.
+- The embedded DLL loads one time, under a lock, so parallel compilations do not load it two times.
+- A TOML error is a `ConfigFormatException` (Umpire.Config) with the line and the column. `RuleAnalyzer` finds it by its type name, because the type is in the private context.
 - `ConfigValues` holds the flat keys, with no case. The analyzers read only `ConfigValues`.
 - If the analyzer context can unload (an IDE, the compiler server), the private context unloads with it.
 - A compiler on .NET Framework has no `AssemblyLoadContext`. There, the build gives `UMP010003` (issue #240).
 - `AnalyzerRoslynTests` checks that each analyzer DLL references only the assemblies of the Unity compiler, at the Unity version or lower.
 - `AnalyzerLoadTests` compiles a file with a real .NET 8 compiler (Roslyn 4.10, SCI 8.0), for example the one of a Unity 6 install, with the analyzer DLLs and a `.umpireconfig`. If the computer has no .NET 8 compiler, the test is ignored. `UMPIRE_NET8_DOTNET_ROOT` selects a dotnet folder.
-- The analyzer packages hold `THIRD-PARTY-NOTICES.txt` for the embedded DLLs.
+- The analyzer packages hold `THIRD-PARTY-NOTICES.txt`. It says that the analyzer embeds no third-party library.
 
 Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 

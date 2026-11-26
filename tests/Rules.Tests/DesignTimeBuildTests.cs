@@ -32,9 +32,7 @@ public sealed class DesignTimeBuildTests {
         Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.Member(file), build.Output);
 
     [TestCase("Umpire.Config.dll")]
-    [TestCase("Tomlyn.dll")]
     [TestCase("System.Collections.Immutable.dll")]
-    [TestCase("System.Text.Json.dll")]
     public void The_editor_gets_no_config_reader_file_as_an_analyzer(string file) =>
         Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.No.Member(file), build.Output);
 

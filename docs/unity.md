@@ -37,7 +37,7 @@ The reasons for the limits:
 | The presenter scopes | The shell or the page resolves `PresenterScope` in its scope | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
-| The module settings | `UnityHost.Settings(types)`: a provider, or a Tomlyn context for no reflection | `docs/composition.md` |
+| The module settings | `UnityHost.Settings(types)`: a provider in front of the default, for example one with no reflection | `docs/composition.md` |
 | The source folders | `UmpireExcludedFolders`, `umpire.check.folder_aliases`, `config.FolderAliases`. `Assets/<App>/` binds as the block root | `docs/architecture-engine.md` |
 
 ## Vendored DLLs
@@ -50,7 +50,7 @@ Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
 
 ## Build output
 
@@ -74,7 +74,7 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Handlers, commands and events | `Umpire.Vsa.Handlers.Commands`, `Umpire.Vsa.Handlers.Events` | Yes |
 | Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |
 | Kernel (`App`, `AppHost`, `Module`) | `Umpire.Kernels` | Yes |
-| The `.umpireconfig` reader | `Umpire.Config` (Tomlyn, its `netstandard2.0` asset) | Yes. Tomlyn needs `System.Buffers`, `System.Collections.Immutable` and `System.Text.Json` 10 |
+| The `.umpireconfig` reader | `Umpire.Config` (its own TOML reader, no package dependency) | Yes. `Get<T>` binds the settings with reflection on the public properties |
 | Composition | `Umpire.Vsa.Composition` | Yes, without presenters. `VsaKernel` and `Plugin` are here |
 | Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are not on `netstandard2.1` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
