@@ -39,10 +39,11 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Fix the test failures of `main` first (bug issue) | Clean base |
 | Take over draft PR #382: no default interface methods, one handler call for each kind | DIM decision |
 | Move the portable layer to `netstandard2.0`. Fix each blocker from the spike | P2, entry design |
-| Fix `AppClass.KernelsOf`: refuse only an open kernel, so an app class with an open host is found | Spike, assumption 4 |
+| If an app class still has a generic parameter after the app and host split, fix `AppClass.KernelsOf`: refuse only an open kernel | Spike, assumption 4 |
 | The analyzer entry gets a fixed module list and its own `.umpireconfig` path | Spike finding |
-| `LocalHost : AppHost` and the `Send` extension, only for an app with `LocalHost`. The host stays internal | Entry design |
-| `LocalHost` uses the `Operation` path (object, reflection) | LocalHost channel |
+| Split the app, the composition and the host: `App` is the lifecycle with one start method and gets the host as a value, `Composition` only installs (core, kernel, modules, the self-install of the host), `AppHost` is only the transport | App and host split |
+| One operation flow for all transports. Each transport only converts its input (arguments, a request, a payload) and its output. `IRequest` is a basic type | App and host split |
+| `LocalHost` and `Send`, through the same operation flow | Entry design, App and host split |
 | A utility folder and namespace in `Umpire`: `LoadedTypes`, `ClosedBase`, the file writer, the version check | Q1, P8 |
 | Our own TOML reader behind our own interface | K4 Q4 |
 | Make `App.Services` internal or protected, after a check of its users | Entry design |
