@@ -3,7 +3,6 @@ namespace Umpire.Vsa.Testing.Unit;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
-using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
@@ -13,6 +12,7 @@ using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Requests;
 using Umpire.Vsa.Infrastructure;
+using Umpire.Utility;
 
 public abstract class VsaUnitTest {
     ServiceCollection? services;

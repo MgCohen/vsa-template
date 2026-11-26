@@ -17,5 +17,7 @@ public static class KernelParts {
 
     public sealed record Services : Concept;
 
+    public sealed record Utility : Concept;
+
     public sealed record Analyzers : Concept;
 }

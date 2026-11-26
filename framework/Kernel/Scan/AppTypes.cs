@@ -3,7 +3,7 @@ namespace Umpire.Kernels;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public sealed class AppTypes {
     readonly AppAssemblies scan = new();

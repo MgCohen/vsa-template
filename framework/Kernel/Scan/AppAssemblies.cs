@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using Umpire.Architecture;
+using Umpire.Utility;
 
 sealed class AppAssemblies {
     const string TestFramework = "nunit.framework";

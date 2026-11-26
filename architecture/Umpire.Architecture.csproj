@@ -6,9 +6,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Markers/Umpire.Markers.csproj" />
+    <ProjectReference Include="../framework/Kernel/Umpire.Kernels.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="Umpire.Kernels" />
     <InternalsVisibleTo Include="Umpire.Kernels.Definition" />
     <InternalsVisibleTo Include="Umpire.CheckModel.Export" />
     <InternalsVisibleTo Include="CheckModel.Tests" />

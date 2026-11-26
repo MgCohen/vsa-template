@@ -3,6 +3,7 @@ namespace BuiltApp.Infrastructure;
 using ArchUnitNET.Domain;
 using ArchUnitNET.Domain.Dependencies;
 using Umpire.Architecture;
+using Umpire.Utility;
 
 static class TypeFactsReader {
     const string PrintMembers = "PrintMembers(System.Text.StringBuilder)";
