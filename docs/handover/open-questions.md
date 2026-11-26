@@ -89,3 +89,4 @@ The proposals and the questions of https://claude.ai/artifact/GQkEAJ48rdzvsDjPtX
 - **Q4 of the page (2026-11-26).** Closed by P6 and P8: the runtime and the engine use the same config reader in `Umpire`.
 - **Q2 of the page (2026-11-26).** Option A, to watch: `umpire check` starts the `Umpire.Engine` version that the app restored. "Let's keep an eye on this."
 - **Q6 of the page (2026-11-26).** Option A: `UMP010201` stays as debt until #143. Its code moves into the code check operation of the engine, with no change in what it checks. `UMP010206` goes (brief D, item 5).
+- **Q8 of the page (2026-11-26).** Option A: no PDB read at check time. The Umpire build runs the compile job on the framework source and saves `libraries/Umpire.json`, and the package ships it. Binding by namespace (#351) can come later as the general placement option.
