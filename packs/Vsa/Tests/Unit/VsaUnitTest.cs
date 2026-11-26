@@ -55,13 +55,19 @@ public abstract class VsaUnitTest {
     protected Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
         where TResponse : IResponse {
         ArgumentNullException.ThrowIfNull(request);
-        var pipeline = new PipelineBuilder<IMessage>().Handlers(HandlerOf(typeof(RequestHandler<,>), request.GetType())).Build(Provider);
+        var pipeline = new PipelineBuilder<IMessage>()
+            .Handlers(HandlerOf(typeof(RequestHandler<,>), request.GetType()))
+            .CallsRequestHandlers()
+            .Build(Provider);
         return pipeline.SendAsync<TResponse>(request, ct);
     }
 
     protected Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
         ArgumentNullException.ThrowIfNull(command);
-        var pipeline = new PipelineBuilder<IMessage>().Handlers(HandlerOf(typeof(CommandHandler<,>), command.GetType())).Build(Provider);
+        var pipeline = new PipelineBuilder<IMessage>()
+            .Handlers(HandlerOf(typeof(CommandHandler<,>), command.GetType()))
+            .CallsCommandHandlers()
+            .Build(Provider);
         return pipeline.SendAsync<TResult>(command, ct);
     }
 

@@ -8,7 +8,7 @@ public sealed class RunnerTests {
     [Test]
     public void A_runner_that_the_pipeline_cannot_create_gives_its_name_and_the_fix() {
         using var provider = new ServiceCollection().BuildServiceProvider();
-        var builder = new PipelineBuilder<Lonely>().Runner<NeedyRunner>();
+        var builder = new PipelineBuilder<Lonely>().CallsTestHandlers().Runner<NeedyRunner>();
 
         var error = Assert.Throws<InvalidOperationException>(() => builder.Build(provider));
 

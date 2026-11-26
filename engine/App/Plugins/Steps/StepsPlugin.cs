@@ -14,6 +14,7 @@ public sealed class StepsPlugin : Plugin {
         services.AddScoped<RunOptions>();
         services.AddPipeline(new PipelineBuilder<IEngineStep>()
             .HandlersOf(typeof(CommandHandler<,>))
+            .CallsCommandHandlers()
             .Runner<StepRunner>()
             .AfterStep<RecordStep>());
     }

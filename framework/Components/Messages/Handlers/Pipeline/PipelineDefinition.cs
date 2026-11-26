@@ -1,6 +1,7 @@
 namespace Umpire.Messages.Handlers;
 
 using Umpire.Kernels;
+using Umpire.Messages.Contracts;
 
 sealed record PipelineDefinition(
     Type Message,
@@ -10,7 +11,9 @@ sealed record PipelineDefinition(
     IReadOnlyList<Type> ValidatorBases,
     Type Runner,
     IReadOnlyList<PipelineStep> BeforeSteps,
-    IReadOnlyList<PipelineStep> AfterSteps) : IDispatchClose {
+    IReadOnlyList<PipelineStep> AfterSteps,
+    IReadOnlyList<Type> Calls,
+    IReadOnlyList<AfterHandledCall> AfterHandled) : IDispatchClose {
     public IReadOnlyList<Type> ClosedServices => [typeof(IHandler<>), .. ValidatorBases, .. HookBases];
 
     internal IEnumerable<Type> SelectedBases => HandlerBases.Concat(Handlers);

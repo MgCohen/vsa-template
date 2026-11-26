@@ -140,11 +140,39 @@ sealed class RangHandler(RingLog log) : IntegrationEventHandler<Rang> {
 }
 ```
 
-The pipeline calls `IHandler<TMessage>.RunAsync(IEnvelope<TMessage>)`. Each handler base gives that body one time, as `CommandHandler<,>`, `RequestHandler<,>` and `IIntegrationEventHandler<>` do. Each closed `IHandler<T>` has its own `RunAsync`, so one class can handle many message types, for example a presenter:
+### How the pipeline calls a handler
+
+`IHandler<TMessage>` (Umpire.Messages.Contracts) is a marker with no members. The pipeline finds the handlers by it. The pipeline calls each handler with a handler call. No handler type has a method for the pipeline, and no handler interface has a default method.
+
+| Handler kind | Call | Short form |
+|---|---|---|
+| `CommandHandler<,>` | `CommandHandlerCall<,>` | `.CallsCommandHandlers()` |
+| `RequestHandler<,>` | `RequestHandlerCall<,>` | `.CallsRequestHandlers()` |
+| `IIntegrationEventHandler<>` | `EventHandlerCall<>` | `.CallsEventHandlers()` |
+| A presenter | `EventHandlerCall<>`, then `Changed` | `.CallsPresenters()` |
+
+```csharp
+public sealed class CommandHandlerCall<TCommand, TResult> : HandlerCall<CommandHandler<TCommand, TResult>, TCommand>
+    where TCommand : class, ICommand<TResult> {
+    public override async Task<IMessageResult> CallAsync(
+        CommandHandler<TCommand, TResult> handler, IEnvelope<TCommand> envelope) =>
+        await handler.HandleAsync(envelope);
+}
+```
+
+- A handler call is a concrete open generic type with a public constructor with no parameters. Its base is `HandlerCall<THandler, TMessage>`, and each of its type parameters is in that base.
+- For each handler of a route, the pipeline closes each call from the handler type and the message type, one time (`OpenGenerics.Solve`). `CommandHandlerCall<,>` gets `TResult` from the `CommandHandler<,>` base of the handler. The first call that closes wins.
+- A call that does not close for a handler is not used, for example `EventHandlerCall<>` for a command handler.
+- The default pipeline of each kind adds its call. A module pipeline names its call, as it names its hook bases and its validator bases: `.CallsCommandHandlers()`, or `.Calls(typeof(MyCall<>))` for its own kind of handler.
+- If no call fits a handler, the call of that handler fails in the run, with an error that names the handler. In an event run, the next handlers run.
+- `.AfterHandled<THandler>(action)` runs the action on each handler instance of type `THandler` after its call returns a result, also an error result. A throw skips the action. The same action two times runs one time. The presenter pipeline raises `Changed` with it.
+- `.HandlersOf(base)` takes each type of the base that is a handler. Thus `.HandlersOf(typeof(Presenter))` takes the presenters of events, and not a presenter that only sends requests.
+
+The call casts the handler to the closed handler type of its message type. Thus one class can handle many message types, for example a presenter:
 
 ```csharp
 public sealed class CardPresenter(IRequestSender r) : Presenter(r),
-    IPresenterHandler<CardAdded>, IPresenterHandler<CardRemoved> { ... }   // one HandleAsync for each event
+    IIntegrationEventHandler<CardAdded>, IIntegrationEventHandler<CardRemoved> { ... }   // one HandleAsync for each event
 ```
 
 ### Which handler runs
@@ -181,7 +209,7 @@ The runner of the pipeline of the message decides when a send runs. A `SendAsync
 
 ## Define a pipeline
 
-A pipeline names types only: the message base, the handlers, the hook bases, the validator bases, the runner and the steps.
+A pipeline names types: the message base, the handlers, the handler calls, the hook bases, the validator bases, the runner and the steps. The one exception is the `AfterHandled` action, which is a delegate.
 
 ```csharp
 public sealed class ArenaModule : Module {
@@ -189,6 +217,7 @@ public sealed class ArenaModule : Module {
         services.AddSingleton<ArenaLog>();
         services.AddPipeline(new PipelineBuilder<ArenaMove>()
             .HandlersOf(typeof(CommandHandler<,>))
+            .CallsCommandHandlers()
             .HooksOf(typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>))
             .BeforeStep<TagStep>()
             .AfterStep<AuditStep>());
@@ -202,6 +231,8 @@ public sealed class ArenaModule : Module {
 | `.Handlers<TBase>()`, `.HandlersOf(typeof(TBase<,>))` | Each handler of the modules that derives from the base |
 | `.Handlers(typeof(A), typeof(B))` | Only these handlers |
 | `.HooksOf(typeof(A<>), typeof(B<,>))` | Each hook of the modules that derives from these bases. A step base is not a hook base. With no `HooksOf`, no hook runs |
+| `.Calls(typeof(A<>))` | The handler calls of this pipeline. Each kind has a short form, for example `.CallsCommandHandlers()` |
+| `.AfterHandled<THandler>(action)` | An action on each `THandler` instance after its call returns a result. Add each action one time |
 | `.Runner<TRunner>()` | The runner. Default: `InlineRunner` |
 | `.ValidatorsOf(typeof(A<>))` | The validator bases of this pipeline. Default: `Validator<>` |
 | `.BeforeStep<T>(priority)`, `.AfterStep<T>(priority)` | A step of this pipeline. `T` derives from `BeforeStep` or `AfterStep`. Default priority 0. Add each step one time |
@@ -220,10 +251,10 @@ Each kind adds its default pipeline with `AddPipeline`, as a module does:
 
 | Default pipeline | Handlers | Hook bases |
 |---|---|---|
-| Commands | `CommandHandler<,>` | `BeforeCommandHook<>`, `AfterCommandHook<,>` |
-| Events | `IntegrationEventHandler<>` | `BeforeEventHook<>`, `AfterEventHook<>` |
-| Presenters | `IPresenterHandler<>`, runner `LiveScopesRunner`, validators `PresenterValidator<>` | None |
-| Requests | `RequestHandler<,>` | None |
+| Commands | `CommandHandler<,>`, `.CallsCommandHandlers()` | `BeforeCommandHook<>`, `AfterCommandHook<,>` |
+| Events | `IntegrationEventHandler<>`, `.CallsEventHandlers()` | `BeforeEventHook<>`, `AfterEventHook<>` |
+| Presenters | `Presenter`, `.CallsPresenters()`, runner `LiveScopesRunner`, validators `PresenterValidator<>` | None |
+| Requests | `RequestHandler<,>`, `.CallsRequestHandlers()` | None |
 
 A message base has one pipeline for each handler base: a second `AddPipeline` with the same message base and a related handler base fails. Two handler bases are related if one derives from the other. A listed handler counts as a handler base. The command and the request defaults both have the base `IMessage`, with different handler bases.
 
@@ -237,7 +268,7 @@ A command or a request goes to one pipeline. An event (`IBroadcastMessage`) goes
 IIntegrationEventPublisher.PublishAsync(event)
  └─ Pipelines.PublishAsync
      1. events      IntegrationEventHandler<>   in the scope of the publish     → its result is the result of the publish
-     2. presenters  IPresenterHandler<>         in each live presenter scope    → only if 1 is Accepted
+     2. presenters  Presenter                   in each live presenter scope    → only if 1 is Accepted
      3. a module broadcast pipeline, for example an audit                       → only if 1 is Accepted
 ```
 
@@ -252,9 +283,9 @@ IIntegrationEventPublisher.PublishAsync(event)
 
 | Project | Types |
 |---|---|
-| Umpire.Messages.Contracts | `IMessage`, `IBroadcastMessage`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
-| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `IHandler<T>`, `IRunner`, `InlineRunner`, `Validator<T>`, `IValidation`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
-| Umpire.Vsa.Handlers.Commands, .Events, .Requests | The handler bases, the hook bases, the senders, and the default pipeline of each kind |
+| Umpire.Messages.Contracts | `IMessage`, `IBroadcastMessage`, `IHandler<T>`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
+| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `HandlerCall<THandler, TMessage>`, `IRunner`, `InlineRunner`, `Validator<T>`, `IValidation`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
+| Umpire.Vsa.Handlers.Commands, .Events, .Requests | The handler bases, the handler calls and their short forms, the hook bases, the senders, and the default pipeline of each kind |
 
 The folders of Umpire.Messages.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`.
 
