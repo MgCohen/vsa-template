@@ -25,7 +25,7 @@
     <ProjectReference Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
   </ItemGroup>
-  <!-- The Unity tests read the netstandard2.1 DLLs of the portable projects and the analyzer DLLs, so these builds come first. -->
+  <!-- The Unity tests read the netstandard2.0 DLLs of the portable projects and the analyzer DLLs, so these builds come first. -->
   <ItemGroup>
     <PortableProject Include="$(RepoRoot)architecture/Umpire.Architecture.csproj" />
     <PortableProject Include="$(RepoRoot)framework/Kernel/Umpire.Kernels.csproj" />

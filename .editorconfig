@@ -7,7 +7,7 @@ root = true
 
 [*.cs]
 # Off by decision. CA1716: the code is C# only, so a VB keyword such as "to" or "Get" is a correct name.
-# CA1863: CompositeFormat does not exist in netstandard2.1, so the Unity projects cannot use it.
+# CA1863: CompositeFormat does not exist in netstandard2.0, so the Unity projects cannot use it.
 dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CA1863.severity = none
 

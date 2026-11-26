@@ -94,7 +94,7 @@ public sealed class PackageGraphTests {
     static IReadOnlyList<string> Namespaces(string package) {
         using var nupkg = ZipFile.OpenRead(Path.Combine(LocalFeed.Path, $"{package}.{LocalFeed.Version}.nupkg"));
         using var stream = new MemoryStream();
-        using (var dll = nupkg.GetEntry($"lib/netstandard2.1/{package}.dll")!.Open()) {
+        using (var dll = nupkg.GetEntry($"lib/netstandard2.0/{package}.dll")!.Open()) {
             dll.CopyTo(stream);
         }
         stream.Position = 0;
