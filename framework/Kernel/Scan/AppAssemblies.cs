@@ -22,7 +22,8 @@ sealed class AppAssemblies {
         var found = new List<Assembly>();
         var seen = new HashSet<Assembly>();
         var bases = new Queue<Assembly>([typeof(Module).Assembly]);
-        while (bases.TryDequeue(out var moduleBase)) {
+        while (bases.Count > 0) {
+            var moduleBase = bases.Dequeue();
             if (!seen.Add(moduleBase)) {
                 continue;
             }
