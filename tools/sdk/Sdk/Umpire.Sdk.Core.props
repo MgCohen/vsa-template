@@ -8,8 +8,12 @@
     <UsingUmpireSdk>true</UsingUmpireSdk>
   </PropertyGroup>
 
-  <!-- A definition project copies the DLLs of its packages to its output, so the root project can give them to the check. -->
+  <!-- A project in a folder Definition/ is a definition project (UmpireDefinitionProject): it gets the definition packages
+       (Umpire.Sdk.Core.targets). It copies the DLLs of its packages to its output, so the root project can give them to the check. -->
   <PropertyGroup Condition="'$([System.IO.Path]::GetFileName($(MSBuildProjectDirectory)))' == 'definition'">
+    <UmpireDefinitionProject Condition="'$(UmpireDefinitionProject)' == ''">true</UmpireDefinitionProject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UmpireDefinitionProject)' == 'true'">
     <CopyLocalLockFileAssemblies Condition="'$(CopyLocalLockFileAssemblies)' == ''">true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 

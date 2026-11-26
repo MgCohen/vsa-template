@@ -11,6 +11,7 @@ using System.Text.Json.Nodes;
 using System.Xml.Linq;
 
 const string RuntimeFolder = "runtime/netstandard2.1";
+const string DefinitionFolder = "definition/netstandard2.1";
 const string AnalyzerFolder = "analyzers/dotnet/cs";
 const string EngineFolder = "engine/net8.0";
 const string EngineBuild = "netstandard2.1";
@@ -36,9 +37,11 @@ try {
         Path.Combine(tree, AnalyzerFolder));
     var engine = Archive.FromPackage(options, "Umpire.Sdk", EnginePackageFolder, Path.Combine(tree, EngineFolder));
     var publish = Path.Combine(work, "publish");
-    var runtime = Archive.Runtime(options, repo, publish, engine.Values, Path.Combine(tree, RuntimeFolder));
+    var runtime = Archive.Runtime(options, repo, publish, engine.Values, Path.Combine(tree, RuntimeFolder),
+        Path.Combine(tree, DefinitionFolder));
     List<Archive.FileEntry> files = [
         .. Archive.Entries(tree, RuntimeFolder, runtime),
+        .. Archive.Entries(tree, DefinitionFolder, runtime),
         .. Archive.Entries(tree, AnalyzerFolder, analyzers),
         .. Archive.Entries(tree, EngineFolder, engine),
     ];
@@ -69,15 +72,18 @@ static string Here([CallerFilePath] string path = "") {
 
 static class Archive {
     const string ArchiveProject = "UmpireArchive";
+    static readonly string[] DefinitionPackages = ["Umpire.Definition", "Umpire.Vsa.Definition"];
 
     public static IReadOnlyDictionary<string, PackageName> Runtime(
-        Options options, string repo, string publish, IEnumerable<PackageName> engine, string target) {
+        Options options, string repo, string publish, IEnumerable<PackageName> engine, string target, string definitionTarget) {
         var project = Path.Combine(publish, "project");
         Directory.CreateDirectory(project);
         File.Copy(Path.Combine(repo, "global.json"), Path.Combine(project, "global.json"));
         var downloads = engine.Where(package => !package.Project && package.Id != "Umpire.Sdk")
             .Select(package => $"""    <PackageDownload Include="{package.Id}" Version="[{package.Version}]" />""")
             .Distinct();
+        var definitions = DefinitionPackages
+            .Select(package => $"""    <PackageReference Include="{package}" Version="[{options.Version}]" />""");
         File.WriteAllText(Path.Combine(project, $"{ArchiveProject}.csproj"), $"""
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
@@ -87,6 +93,7 @@ static class Archive {
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="Umpire" Version="[{options.Version}]" />
+            {string.Join("\n", definitions)}
             {string.Join("\n", downloads)}
               </ItemGroup>
             </Project>
@@ -94,11 +101,15 @@ static class Archive {
         var output = Path.Combine(publish, "out");
         Run(project, "dotnet", "publish", "-c", "Release", "-o", output, "-nodeReuse:false");
         Directory.CreateDirectory(target);
+        Directory.CreateDirectory(definitionTarget);
+        var names = DepsPackages(Path.Combine(output, $"{ArchiveProject}.deps.json"));
         var dlls = Directory.GetFiles(output, "*.dll").Where(dll => Path.GetFileName(dll) != $"{ArchiveProject}.dll");
         foreach (var dll in dlls) {
-            File.Copy(dll, Path.Combine(target, Path.GetFileName(dll)));
+            var name = Path.GetFileName(dll);
+            var isDefinition = names.TryGetValue(name, out var package) && DefinitionPackages.Contains(package.Id);
+            File.Copy(dll, Path.Combine(isDefinition ? definitionTarget : target, name));
         }
-        return DepsPackages(Path.Combine(output, $"{ArchiveProject}.deps.json"));
+        return names;
     }
 
     public static IReadOnlyDictionary<string, PackageName> FromPackage(

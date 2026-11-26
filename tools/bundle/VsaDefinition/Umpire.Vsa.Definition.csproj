@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Umpire.Vsa.Definition.dll: the definition of the VSA pack (VsaArchitecture, the layers, the module kinds). It is
+       check-time code: Umpire.Sdk adds it to a definition project, and the runtime package Umpire does not hold it. -->
+  <PropertyGroup>
+    <Description>The Umpire VSA definition: the VSA layers and rules.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UmpireRoot)packs/Vsa/Definition/**/*.cs" Exclude="$(_UmpireNotBundled)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Definition/Umpire.Definition.csproj" />
+  </ItemGroup>
+</Project>
