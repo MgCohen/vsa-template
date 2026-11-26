@@ -45,7 +45,7 @@ sealed class PartOf {
             return;
         }
         var file = Path.GetFullPath(source.File);
-        var relative = Path.GetRelativePath(blockFolder, file).Replace('\\', '/');
+        var relative = RelativePath.Of(blockFolder, file).Replace('\\', '/');
         if (Outside(relative)) {
             if (external is not null) {
                 bound.Add(InPlacedBlock(file, type, source with { File = file }) ?? ExternalBinding(type, external));
@@ -104,21 +104,26 @@ sealed class PartOf {
         var root = place.Concept!.Folder.Split('/');
         var bodyFolders = place.Children
             .Where(c => c.HasFolder && c.Path.Length > place.Path.Length)
-            .Select(c => c.Path[(place.Path.Length + 1)..].Split('/')[0])
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .Select(c => c.Path.Substring(place.Path.Length + 1).Split('/')[0]);
+        var bodyFolderNames = new HashSet<string>(bodyFolders, StringComparer.OrdinalIgnoreCase);
         for (var start = 0; start + root.Length < segments.Length - 1; start++) {
             var next = segments[start + root.Length];
             if (root.Select((s, i) => string.Equals(s, segments[start + i], StringComparison.OrdinalIgnoreCase)).All(x => x)
-                && bodyFolders.Contains(next)) {
-                yield return string.Join("/", segments[(start + root.Length)..]);
+                && bodyFolderNames.Contains(next)) {
+                yield return string.Join("/", segments.Skip(start + root.Length));
             }
         }
     }
 
     sealed record PlacedRoot(Part Place, string Rest);
 
+    static string[] FoldersOf(string path) {
+        var segments = path.Split('/');
+        return segments.Take(segments.Length - 1).ToArray();
+    }
+
     bool IsInBlock(TypeFacts type) =>
-        type.Source is { } source && !Path.GetRelativePath(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
+        type.Source is { } source && !RelativePath.Of(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
 
     Part? TopFile(IReadOnlyList<string> paths, TypeFacts type) {
         if (!paths.Any(path => !path.Contains('/'))) {
@@ -132,7 +137,7 @@ sealed class PartOf {
     bool InInnerBlock(string file) => innerBlocks.Any(folder => file.StartsWith(folder, StringComparison.OrdinalIgnoreCase));
 
     FolderMatch? BlockPlace(IReadOnlyList<string> paths) => paths
-        .Select(path => path.Split('/')[..^1])
+        .Select(FoldersOf)
         .SelectMany(folders => blockPlaces
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
             .Where(m => m.Matches))
@@ -154,16 +159,16 @@ sealed class PartOf {
     static bool IsRoot(FolderAlias alias) => alias.Folder.TrimEnd('/').Length == 0;
 
     static string Rest(FolderAlias alias, string relative) =>
-        IsRoot(alias) ? relative : relative[(alias.Folder.TrimEnd('/').Length + 1)..];
+        IsRoot(alias) ? relative : relative.Substring(alias.Folder.TrimEnd('/').Length + 1);
 
     FolderMatch? Folder(IReadOnlyList<string> paths, Part? within = null) => paths
-        .Select(path => path.Split('/')[..^1])
+        .Select(FoldersOf)
         .SelectMany(folders => folderParts
             .Where(p => within is null || p.SelfAndAncestors().Contains(within))
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
             .Where(m => m.Matches))
         .OrderByDescending(m => m.Pattern.Length)
-        .ThenBy(m => m.Pattern.Count(segment => segment.StartsWith('{')))
+        .ThenBy(m => m.Pattern.Count(segment => segment.StartsWith("{", StringComparison.Ordinal)))
         .FirstOrDefault();
 
     static Binding BindTo(FolderMatch match, TypeFacts type, Source source) {
@@ -224,6 +229,6 @@ sealed class PartOf {
         public bool IsUndeclaredGroupFolder => Part.IsGroup && Folders.Length > Pattern.Length;
 
         static bool Fits(string pattern, string folder) =>
-            pattern.StartsWith('{') || string.Equals(pattern, folder, StringComparison.OrdinalIgnoreCase);
+            pattern.StartsWith("{", StringComparison.Ordinal) || string.Equals(pattern, folder, StringComparison.OrdinalIgnoreCase);
     }
 }
