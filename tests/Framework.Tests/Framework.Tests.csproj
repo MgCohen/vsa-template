@@ -23,6 +23,7 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Modules/App/Features/Cached/Cached.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)framework/Components/Config/Umpire.Config.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
   </ItemGroup>
   <!-- The Unity tests read the netstandard2.0 DLLs of the portable projects and the analyzer DLLs, so these builds come first. -->
   <ItemGroup>
@@ -44,6 +45,8 @@
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Presenters/Umpire.Vsa.Presenters.csproj" />
     <PortableProject Include="$(RepoRoot)tools/bundle/Umpire/Umpire.csproj" />
+    <PortableProject Include="$(RepoRoot)tools/bundle/Definition/Umpire.Definition.csproj" />
+    <PortableProject Include="$(RepoRoot)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
     <ProjectReference Include="@(PortableProject)" Exclude="@(ProjectReference)" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)architecture/Markers/Umpire.Markers.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" ReferenceOutputAssembly="false" />

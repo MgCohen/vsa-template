@@ -74,7 +74,7 @@ jobs:
           --skip-duplicate
 
       # The release archive for hosts that cannot restore NuGet packages (tools/archive/archive.cs): the netstandard2.0
-      # runtime, the analyzers and the engine, from the packages of this run. A version with a suffix is a prerelease.
+      # runtime, the definition DLLs, the analyzers and the engine, from the packages of this run. A version with a suffix is a prerelease.
       # A new release gets the archive in its create call, so a listener of "release published" sees the archive.
       - name: Make the release archive
         run: dotnet run tools/archive/archive.cs -- --feed feed --version "$VERSION" --out release --commit "$GITHUB_SHA"

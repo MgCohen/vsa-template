@@ -32,14 +32,18 @@ flowchart BT
 
 The projects of the groups are for development: their references enforce the layers. They are not packages. The bundle projects in `tools/bundle/` compile the same source files into the shipped DLLs:
 
-| Package | DLL | Source projects |
-|---|---|---|
-| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Architecture, Config, Kernels, Kernels.Definition, Messages, Umpire.Vsa and each VSA layer base |
-| `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views |
-| `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console |
-| `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit |
+| Package | DLL | Source projects | Depends on |
+|---|---|---|---|
+| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Config, Kernels, Messages and each VSA layer base (the VSA kernel) | `Umpire.Vsa.Analyzers` |
+| `Umpire.Definition` | `Umpire.Definition.dll` (`netstandard2.0`) | Architecture (with no markers), Kernels.Definition | `Umpire` |
+| `Umpire.Vsa.Definition` | `Umpire.Vsa.Definition.dll` (`netstandard2.0`) | Umpire.Vsa (`packs/Vsa/Definition/`) | `Umpire.Definition` |
+| `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views | `Umpire` |
+| `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console | `Umpire` |
+| `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit | `Umpire`, `Umpire.Definition`, `Umpire.Vsa.Definition` |
 
-`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `_UmpireUseBundle=true` (private) makes Umpire.Sdk reference the bundle projects in source mode. Only the SDK pack sets it: a repository app built with it gives `UMP030001` for each framework block, because the check entries of those blocks are in the runtime DLLs. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.dll` as the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
+The runtime package `Umpire` holds no definition code. The definition code is check-time code, so it is in the two definition packages. A later change moves the VSA kernel from `Umpire` to its own package `Umpire.Vsa`.
+
+`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `_UmpireUseBundle=true` (private) makes Umpire.Sdk reference the bundle projects in source mode. Only the SDK pack sets it: a repository app built with it gives `UMP030001` for each framework block, because the check entries of those blocks are in the runtime DLLs. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.Definition.dll` as the definition of the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
 
 ## Kinds of block
 

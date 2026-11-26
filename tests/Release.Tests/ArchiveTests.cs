@@ -34,6 +34,8 @@ public sealed class ArchiveTests {
     [TestCase("manifest.json")]
     [TestCase(Notices)]
     [TestCase("runtime/netstandard2.0/Umpire.dll")]
+    [TestCase("definition/netstandard2.0/Umpire.Definition.dll")]
+    [TestCase("definition/netstandard2.0/Umpire.Vsa.Definition.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll")]
     [TestCase("engine/net8.0/umpire-engine.dll")]
@@ -42,9 +44,17 @@ public sealed class ArchiveTests {
         Assert.That(File.Exists(Path.Combine(tree, path)), Is.True, path);
 
     [Test]
-    public void The_archive_has_only_the_manifest_the_notices_and_the_three_parts() {
+    public void The_archive_has_only_the_manifest_the_notices_and_the_four_parts() {
         var top = Directory.EnumerateFileSystemEntries(tree).Select(Path.GetFileName);
-        Assert.That(top, Is.EquivalentTo(new[] { "manifest.json", Notices, "runtime", "analyzers", "engine" }));
+        Assert.That(top, Is.EquivalentTo(new[] { "manifest.json", Notices, "runtime", "definition", "analyzers", "engine" }));
+    }
+
+    [Test]
+    public void The_runtime_has_no_definition_code_and_the_definition_part_has_only_the_definition_packages() {
+        Assert.That(Runtime().Select(FileName), Has.None.Contains("Definition"));
+        var definition = Files().Where(file => PathOf(file).StartsWith("definition/", StringComparison.Ordinal));
+        Assert.That(definition.Select(file => Text(file, "package")),
+            Is.EquivalentTo(new[] { "Umpire.Definition", "Umpire.Vsa.Definition" }));
     }
 
     [Test]
@@ -120,7 +130,7 @@ public sealed class ArchiveTests {
         Assert.That(Text(manifest["engine"]!, "umpireBuild"), Is.EqualTo("netstandard2.0"));
 
     [Test]
-    public void The_manifest_lists_each_file_of_the_three_parts() {
+    public void The_manifest_lists_each_file_of_the_four_parts() {
         var listed = Files().Select(PathOf);
         var inTree = Directory.GetFiles(tree, "*", SearchOption.AllDirectories)
             .Select(file => Path.GetRelativePath(tree, file).Replace(Path.DirectorySeparatorChar, '/'))
@@ -197,6 +207,8 @@ public sealed class ArchiveTests {
     string AppOnTheRuntime(bool withStray) {
         var app = Path.Combine(folder, withStray ? "stray-app" : "concept-app");
         var umpire = Path.Combine(tree, "runtime", "netstandard2.0", "Umpire.dll");
+        var definition = Path.Combine(tree, "definition", "netstandard2.0", "Umpire.Definition.dll");
+        var vsaDefinition = Path.Combine(tree, "definition", "netstandard2.0", "Umpire.Vsa.Definition.dll");
         Directory.CreateDirectory(Path.Combine(app, "App", "Host"));
         File.WriteAllText(Path.Combine(app, "DiceGame.csproj"), $"""
             <Project Sdk="Microsoft.NET.Sdk">
@@ -208,6 +220,8 @@ public sealed class ArchiveTests {
               </PropertyGroup>
               <ItemGroup>
                 <Reference Include="Umpire" HintPath="{umpire}" />
+                <Reference Include="Umpire.Definition" HintPath="{definition}" />
+                <Reference Include="Umpire.Vsa.Definition" HintPath="{vsaDefinition}" />
               </ItemGroup>
             </Project>
             """);

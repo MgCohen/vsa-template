@@ -6,13 +6,10 @@ namespace Rules.Tests;
 public sealed class BundleSourceTests {
     static readonly string[] RuntimeProjects = [
         "architecture/Markers/Umpire.Markers.csproj",
-        "architecture/Umpire.Architecture.csproj",
         "framework/Components/Config/Umpire.Config.csproj",
         "framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj",
         "framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj",
         "framework/Kernel/Umpire.Kernels.csproj",
-        "framework/Kernel/Definition/Umpire.Kernels.Definition.csproj",
-        "packs/Vsa/Definition/Umpire.Vsa.csproj",
         "packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj",
         "packs/Vsa/Kernel/Domain/Umpire.Vsa.Domain.csproj",
         "packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj",
@@ -25,6 +22,11 @@ public sealed class BundleSourceTests {
         "packs/Vsa/Kernel/Handlers/Commands/Umpire.Vsa.Handlers.Commands.csproj",
     ];
 
+    static readonly string[] DefinitionProjects = [
+        "architecture/Umpire.Architecture.csproj",
+        "framework/Kernel/Definition/Umpire.Kernels.Definition.csproj",
+    ];
+
     static readonly string[] WebProjects = [
         "framework/Kernel/Hosts/Web/Umpire.Hosts.Web.csproj",
         "packs/Vsa/Kernel/Views/Umpire.Vsa.Views.csproj",
@@ -32,6 +34,10 @@ public sealed class BundleSourceTests {
 
     static IEnumerable<TestCaseData> Bundles() {
         yield return new TestCaseData("tools/bundle/Umpire/Umpire.csproj", RuntimeProjects).SetArgDisplayNames("Umpire");
+        yield return new TestCaseData("tools/bundle/Definition/Umpire.Definition.csproj", DefinitionProjects)
+            .SetArgDisplayNames("Umpire.Definition");
+        yield return new TestCaseData("tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj",
+            new[] { "packs/Vsa/Definition/Umpire.Vsa.csproj" }).SetArgDisplayNames("Umpire.Vsa.Definition");
         yield return new TestCaseData("tools/bundle/Web/Umpire.Web.csproj", WebProjects).SetArgDisplayNames("Umpire.Web");
         yield return new TestCaseData("tools/bundle/Console/Umpire.Console.csproj",
             new[] { "framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" }).SetArgDisplayNames("Umpire.Console");

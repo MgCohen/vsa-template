@@ -265,9 +265,34 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
+    public void The_root_project_gets_no_definition_package() {
+        var references = Evaluate("OneLine.csproj", "-getItem:PackageReference");
+        Assert.That(references.Output, Does.Not.Contain("\"Umpire.Definition\"").And.Not.Contain("\"Umpire.Vsa.Definition\""),
+            references.Output);
+    }
+
+    [Test]
+    public void The_root_project_gives_the_definition_of_the_pack_only_to_the_check() {
+        var bin = Path.Combine(workspace.Src, "artifacts~", "bin", "OneLine", "debug");
+        Assert.Multiple(() => {
+            foreach (var dll in new[] { "Umpire.Definition.dll", "Umpire.Vsa.Definition.dll" }) {
+                Assert.That(File.Exists(Path.Combine(bin, "umpire-definitions", dll)), Is.True, dll);
+                Assert.That(File.Exists(Path.Combine(bin, dll)), Is.False, dll);
+            }
+        });
+    }
+
+    [Test]
+    public void The_test_project_gets_the_definition_packages_with_the_test_bases() {
+        var assets = File.ReadAllText(Path.Combine(workspace.Src, "artifacts~", "obj", "OneLine.Tests", "project.assets.json"));
+        Assert.That(assets, Does.Contain("\"Umpire.Definition/").And.Contain("\"Umpire.Vsa.Definition/"));
+    }
+
+    [Test]
     public void The_test_bases_of_the_default_pack_can_be_left_out() {
         var references = Evaluate("App/Tests/OneLine.Tests.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
         Assert.That(references.Output, Does.Not.Contain("\"Umpire.Testing\""), references.Output);
+        Assert.That(references.Output, Does.Contain("\"Umpire.Definition\""), references.Output);
     }
 
     DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "--project", workspace.Src,

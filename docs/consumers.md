@@ -45,6 +45,7 @@ umpire-<version>.zip
 ├── manifest.json            version, commit, Roslyn version, engine runtime, one entry for each file
 ├── THIRD-PARTY-NOTICES.txt  the license of each third-party package, and the notices of the analyzer package
 ├── runtime/netstandard2.0/  Umpire.dll and its full third-party closure
+├── definition/netstandard2.0/  Umpire.Definition.dll, Umpire.Vsa.Definition.dll (check-time code, not for the runtime)
 ├── analyzers/dotnet/cs/     Umpire.Kernels.Analyzers.dll, Umpire.Vsa.Analyzers.dll
 └── engine/net8.0/           umpire-engine.dll, its runtimeconfig, its deps.json and its DLLs
 ```
@@ -64,6 +65,7 @@ umpire-<version>.zip
 | `files[].sha256` | The SHA-256 hash of the file |
 
 - The folder names and the file names stay the same in each release.
+- The runtime holds no definition code. A definition of the host compiles against `runtime/netstandard2.0` and `definition/netstandard2.0`.
 - The runtime holds all its DLLs, also the DLLs that a host ships itself. The host skips its own DLLs: the archive has no host list.
 - The archive has no host files, for example no Unity `.meta` files.
 - The runtime files come only from `netstandard2.x` assets, and the `Microsoft.Extensions` files are 8.0 (`tests/Release.Tests`).
@@ -111,7 +113,16 @@ The Umpire SDK package holds the rule engine, so an app has no engine package. A
 
 ## Packages of an app
 
-`<Project Sdk="Umpire.Sdk" />` gives the package `Umpire`, with its own version: one `Umpire.dll` with the kernel, the definition API and the default pack VSA with each layer base. `<Project Sdk="Umpire.Sdk.Web" />` also gives `Umpire.Web` (the web host and the views), and a test project gets `Umpire.Testing`. A console app adds `Umpire.Console`. The code selects the pack: the app class names its kernel (`App<VsaKernel, ...>`). A package only makes a pack available. Another pack is a normal `PackageReference`, and `-p:UmpireDefaultPack=false` (or the property in the project) leaves out the VSA test bases and views. `Umpire` depends on `Umpire.Vsa.Analyzers`, so the analyzers and their rule values flow to each project that gets `Umpire`, also through another project. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to a type in the namespace of the pack. `Umpire.dll` always holds the namespace `Umpire.Vsa`, so a project with `UmpireDefaultPack=false`, another pack and no code entry still gets the VSA analyzers. Give such a project a code entry or the `umpire.architecture` key. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
+`<Project Sdk="Umpire.Sdk" />` gives the package `Umpire`, with its own version: one `Umpire.dll` with the kernel and the VSA kernel with each layer base. `Umpire.dll` holds no definition code. `<Project Sdk="Umpire.Sdk.Web" />` also gives `Umpire.Web` (the web host and the views), and a test project gets `Umpire.Testing`.
+
+| Package | Holds | Who gets it |
+|---|---|---|
+| `Umpire` | The runtime: the markers, the config reader, the kernel, the messages, the VSA kernel | Each project |
+| `Umpire.Definition` | The definition API (`Umpire.Architecture`) and the definitions of the framework blocks (`Umpire.Kernels.Definition`) | A definition project (a project in a folder `Definition/`), and a test project through `Umpire.Testing` |
+| `Umpire.Vsa.Definition` | The VSA definition (`VsaArchitecture`, the layers, `Feature`, `Plugin`) | A definition project with the default pack, and a test project through `Umpire.Testing` |
+| `Umpire.Testing` | The test bases `VsaUnitTest` and `VsaArchitectureTest` | A test project (`*.Tests`) |
+
+An app project does not compile against the definition packages. The architecture check still needs the definition of the pack, so the root project copies `Umpire.Definition.dll` and `Umpire.Vsa.Definition.dll` from the engine folder of the SDK package (`tools/net8.0/`, the same build) to its folder `umpire-definitions/`. A publish does not copy that folder. A project with definition code outside a folder `Definition/` adds the package itself, for example `<PackageReference Include="Umpire.Vsa.Definition" Version="<version of Umpire.Sdk>" PrivateAssets="all" />`, so the package does not flow to the root project. Or it sets the property `UmpireDefinitionProject` to `true`. A console app adds `Umpire.Console`. The code selects the pack: the app class names its kernel (`App<VsaKernel, ...>`). A package only makes a pack available. Another pack is a normal `PackageReference`, and `-p:UmpireDefaultPack=false` (or the property in the project) leaves out the VSA test bases and views. `Umpire` depends on `Umpire.Vsa.Analyzers`, so the analyzers and their rule values flow to each project that gets `Umpire`, also through another project. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to a type in the namespace of the pack. `Umpire.dll` always holds the namespace `Umpire.Vsa`, so a project with `UmpireDefaultPack=false`, another pack and no code entry still gets the VSA analyzers. Give such a project a code entry or the `umpire.architecture` key. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
 
 There are two Umpire SDKs, one for each platform SDK of .NET:
 

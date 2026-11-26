@@ -14,7 +14,7 @@
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
   </ItemGroup>
   <!-- The engine of the SDK package builds on the bundles (_UmpireUseBundle, Umpire.Sdk.Package.targets): it loads the
-       definition of an app, so its Architecture type must come from the same Umpire.dll as the app. -->
+       definition of an app, so its Architecture type must come from the same Umpire.Definition.dll as the app. -->
   <ItemGroup Condition="'$(_UmpireUseBundle)' != 'true'">
     <ProjectReference Include="$(UmpireFrameworkSourceDir)architecture/Umpire.Architecture.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Definition/Umpire.Vsa.csproj" />
@@ -23,6 +23,8 @@
   </ItemGroup>
   <ItemGroup Condition="'$(_UmpireUseBundle)' == 'true'">
     <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Console/Umpire.Console.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Definition/Umpire.Definition.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Reflection.MetadataLoadContext" />
