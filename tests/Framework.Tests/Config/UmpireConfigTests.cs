@@ -2,7 +2,6 @@ using Tests.Shared;
 
 namespace Framework.Tests.Config;
 
-using Tomlyn;
 using Umpire.Config;
 
 public sealed class UmpireConfigTests {
@@ -76,7 +75,7 @@ public sealed class UmpireConfigTests {
             var error = Assert.Throws<InvalidOperationException>(() => UmpireConfig.In(root).Get<NotebookSettings>("Notebook"));
 
             Assert.That(error!.Message, Does.StartWith($"The table [Notebook] of {Path.GetFullPath(file)} does not fit NotebookSettings: "));
-            Assert.That(error.InnerException, Is.TypeOf<TomlException>());
+            Assert.That(error.InnerException, Is.InstanceOf<FormatException>());
         } finally {
             TempFolder.Delete(root);
         }
@@ -108,13 +107,6 @@ public sealed class UmpireConfigTests {
             Is.EqualTo(new[] { "umpire.architecture", "umpire.UMP010101.max" }));
 
     [Test]
-    public void Get_uses_a_serializer_context() {
-        var settings = Config.Get<NotebookSettings>("Notebook", NotebookContext.Default);
-
-        Assert.That(settings!.MaxNotes, Is.EqualTo(50));
-    }
-
-    [Test]
     public void Value_walks_a_dotted_path_with_no_case() {
         Assert.That(Config.Value("UMPIRE.ump010101.MAX"), Is.EqualTo("60"));
         Assert.That(Config.Value("umpire.architecture"), Is.EqualTo("Notes.Host.NotesArchitecture"));
@@ -136,7 +128,7 @@ public sealed class UmpireConfigTests {
 
     [Test]
     public void A_file_pattern_section_is_not_valid_TOML() {
-        var error = Assert.Throws<TomlException>(() => UmpireConfig.Parse("a = 1\n[*.cs]\nb = 2\n"));
+        var error = Assert.Throws<ConfigFormatException>(() => UmpireConfig.Parse("a = 1\n[*.cs]\nb = 2\n"));
 
         Assert.That(error!.Line, Is.EqualTo(2));
     }
@@ -164,7 +156,7 @@ public sealed class UmpireConfigTests {
             var file = Path.Combine(root, UmpireConfig.FileName);
             File.WriteAllText(file, "umpire.max = 3\n[*.cs]\n");
 
-            var error = Assert.Throws<TomlException>(() => UmpireConfig.Find(root));
+            var error = Assert.Throws<ConfigFormatException>(() => UmpireConfig.Find(root));
 
             Assert.That(error!.Message, Does.StartWith(Path.GetFullPath(file) + "(2,"));
         } finally {

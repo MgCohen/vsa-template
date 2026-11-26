@@ -50,8 +50,8 @@ public sealed class ArchiveTests {
     [Test]
     public void The_runtime_has_the_third_party_closure() {
         var runtime = Runtime().Select(FileName);
-        Assert.That(runtime, Does.Contain("Tomlyn.dll").And.Contain("Microsoft.Extensions.DependencyInjection.dll")
-            .And.Contain("System.Text.Json.dll"));
+        Assert.That(runtime, Does.Contain("Microsoft.Extensions.DependencyInjection.dll")
+            .And.Not.Contain("Tomlyn.dll").And.Not.Contain("System.IO.Pipelines.dll"));
     }
 
     [Test]
@@ -88,7 +88,7 @@ public sealed class ArchiveTests {
     [Test]
     public void The_notices_give_the_license_of_each_third_party_package() {
         var notices = File.ReadAllText(Path.Combine(tree, Notices));
-        Assert.That(notices, Does.Contain("Tomlyn 2.10.2: BSD-2-Clause").And.Contain("TngTech.ArchUnitNET")
+        Assert.That(notices, Does.Not.Contain("Tomlyn").And.Contain("TngTech.ArchUnitNET")
             .And.Contain("Umpire.Kernels.Analyzers.dll embeds"));
     }
 
