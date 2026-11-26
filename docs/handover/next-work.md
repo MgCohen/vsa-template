@@ -36,16 +36,17 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Fix the test failures of `main` first (bug issue) | Clean base |
+| Done: the test failures of `main` (#383, PR #384) | Clean base |
 | Take over draft PR #382: no default interface methods, one handler call for each kind | DIM decision |
-| Move the portable layer to `netstandard2.0`. Fix each blocker from the spike | P2, entry design |
+| Done: the API sites that `netstandard2.0` does not have (PR #386) | P2 |
+| Move the portable layer to `netstandard2.0`, after #382. Also change the conditions on `'netstandard2.1'` (polyfills, packages, `Umpire.Sdk.Core.targets`) | P2, entry design |
 | If an app class still has a generic parameter after the app and host split, fix `AppClass.KernelsOf`: refuse only an open kernel | Spike, assumption 4 |
 | The analyzer entry gets a fixed module list and its own `.umpireconfig` path | Spike finding |
 | Split the app, the composition and the host: `App` is the lifecycle with one start method and gets the host as a value, `Composition` only installs (core, kernel, modules, the self-install of the host), `AppHost` is only the transport | App and host split |
 | One operation flow for all transports. Each transport only converts its input (arguments, a request, a payload) and its output. `IRequest` is a basic type | App and host split |
 | `LocalHost` and `Send`, through the same operation flow | Entry design, App and host split |
-| A utility folder and namespace in `Umpire`: `LoadedTypes`, `ClosedBase`, the file writer, the version check | Q1, P8 |
-| Our own TOML reader behind our own interface | K4 Q4 |
+| Done: `LoadedTypes` and `ClosedBase` in `framework/Kernel/Utility/`, namespace `Umpire.Utility` (PR #387). Still to move: the file writer and the version check, with phase 2 | Q1, P8 |
+| Done: our own TOML reader, no Tomlyn (PR #388) | K4 Q4 |
 | Make `App.Services` internal or protected, after a check of its users | Entry design |
 
 ## Phase 2: packages
@@ -69,7 +70,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Plugins: Jobs (from `Steps`) and Facts (from `BuiltApp`, `IFactSource<T>`) | P5 |
 | Move `check/` and `architecture/Queries/` into the engine | P1, P10 |
 | Move the kernel analyzers and `UMP010201` into the code check operation | P1, Q6 |
-| Remove `UMP010206`. Its ID is not used again | Brief D item 5 |
+| Done: `UMP010206` removed and its ID retired (PR #385) | Brief D item 5 |
 | `nameof`, a constant and an enum value are a use | K3, brief D item 4 |
 
 ## Phase 4: switch
@@ -99,6 +100,8 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 - #380: a handler returns `Task<T>`.
 - A check at start that each handler has a call, and a call that names its own handler base (#382 review).
 - The Visual Studio test of the spike (needs the computer of the user).
+- A full cleanup and review of the tests, at the end of this phase. It includes: the intermittent `CS8032` of `Rules.Tests` with the shared compiler server (seen three times), and the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
+- vsa-unity, at the next consumer update: `Get<T>` of `UmpireConfig` binds module settings with reflection (#388). Under IL2CPP stripping, a removed setter is skipped with no error. A Unity host keeps the setters (`link.xml`, `[Preserve]`) or adds its own `ISettingsProvider`.
 
 ## Limits
 
