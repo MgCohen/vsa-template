@@ -280,6 +280,32 @@ public sealed class BlocksTests {
     }
 
     [Test]
+    public void An_app_class_with_an_open_host_is_the_one_leaf_with_its_kernel() {
+        var open = Index.Dlls.Single(d => d.Name == "OpenHost");
+
+        var leaf = AppClass.Leaves(open.AppClasses).Single();
+
+        Assert.That(leaf.Type.FullName, Is.EqualTo("OpenHost.OpenHostApp`1"));
+        Assert.That(leaf.Kernels.Single().FullName, Is.EqualTo("Umpire.Vsa.Composition.VsaKernel"));
+    }
+
+    [Test]
+    public void A_closed_app_class_hides_an_open_app_class_that_is_not_its_base() {
+        var kernel = new[] { new TypeName("A.Kernel", "A") };
+        var closed = new AppClass(new TypeName("A.MyApp", "A"), "A.cs", kernel, [], ["Umpire.Kernels.App"]);
+        var open = new AppClass(new TypeName("A.Harness`1", "A"), "B.cs", kernel, [], ["Umpire.Kernels.App"]) { IsOpen = true };
+
+        Assert.That(AppClass.Leaves([closed, open]), Is.EqualTo(new[] { closed }));
+    }
+
+    [Test]
+    public void An_open_app_class_is_a_leaf_when_no_closed_app_class_exists() {
+        var open = new AppClass(new TypeName("A.Harness`1", "A"), "B.cs", [new("A.Kernel", "A")], [], []) { IsOpen = true };
+
+        Assert.That(AppClass.Leaves([open]), Is.EqualTo(new[] { open }));
+    }
+
+    [Test]
     public void The_source_folder_of_a_library_skips_the_generated_files_but_not_a_parent_folder_named_bin() {
         var sources = new[] { "C:/x/bin/Lib/A.cs", "C:/x/bin/Lib/Sub/B.cs", "C:/x/bin/artifacts~/obj/Lib/G.cs" }
             .Select(file => new Umpire.Architecture.Source(file, 1));
