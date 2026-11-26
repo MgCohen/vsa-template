@@ -23,6 +23,7 @@ static class ConfigBinder {
             string text when target.IsEnum => Enumeration(text, target, path),
             bool flag when target == typeof(bool) => flag,
             long number when IsNumber(target) => Number(number, target, path),
+            ConfigFloat number when IsFloat(target) => Float(number, target, path),
             _ => throw Mismatch(value, target, path),
         };
     }
@@ -82,6 +83,20 @@ static class ConfigBinder {
         }
     }
 
+    static object Float(ConfigFloat number, Type type, string path) {
+        if (type == typeof(double)) {
+            return number.Value;
+        }
+        if (type == typeof(float) && (!float.IsInfinity((float)number.Value) || !number.IsFinite)) {
+            return (float)number.Value;
+        }
+        if (type == typeof(decimal) && number.IsFinite
+            && decimal.TryParse(number.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) {
+            return value;
+        }
+        throw new FormatException($"{path} needs {type.Name}, and the value {number.Text} is out of its range.");
+    }
+
     static PropertyInfo? Property(Type type, string key) =>
         type.GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(property =>
             property.GetIndexParameters().Length == 0 && property.SetMethod is { IsPublic: true }
@@ -105,6 +120,8 @@ static class ConfigBinder {
     static bool IsNumber(Type type) =>
         !type.IsEnum && Type.GetTypeCode(type) is >= TypeCode.SByte and <= TypeCode.Decimal;
 
+    static bool IsFloat(Type type) => type == typeof(double) || type == typeof(float) || type == typeof(decimal);
+
     static FormatException Mismatch(object value, Type type, string path) =>
         new($"{path} needs {Name(type)}, and the value is {Describe(value)}.");
 
@@ -118,6 +135,7 @@ static class ConfigBinder {
         string text => $"the string \"{text}\"",
         bool flag => $"the boolean {(flag ? "true" : "false")}",
         long number => $"the integer {number.ToString(CultureInfo.InvariantCulture)}",
+        ConfigFloat number => $"the float {number.Text}",
         ConfigTable => "a table",
         _ => "an array",
     };

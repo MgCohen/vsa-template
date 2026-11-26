@@ -57,6 +57,21 @@ public sealed class TomlReaderTests {
     public void An_integer_gives_its_decimal_text(string text, string value) =>
         Assert.That(UmpireConfig.Parse(text).Value("a"), Is.EqualTo(value));
 
+    [TestCase("a = 0.5", "0.5")]
+    [TestCase("a = -3.25", "-3.25")]
+    [TestCase("a = +1.5", "1.5")]
+    [TestCase("a = 1e3", "1000")]
+    [TestCase("a = 2.5E-2", "0.025")]
+    [TestCase("a = 1_000.000_5", "1000.0005")]
+    [TestCase("a = 0.0", "0")]
+    [TestCase("a = inf", "inf")]
+    [TestCase("a = +inf", "inf")]
+    [TestCase("a = -inf", "-inf")]
+    [TestCase("a = nan", "nan")]
+    [TestCase("a = -nan", "nan")]
+    public void A_float_gives_its_text(string text, string value) =>
+        Assert.That(UmpireConfig.Parse(text).Value("a"), Is.EqualTo(value));
+
     [TestCase("a = true", "true")]
     [TestCase("a = false", "false")]
     public void A_boolean_gives_its_text(string text, string value) =>
@@ -126,8 +141,13 @@ public sealed class TomlReaderTests {
     [TestCase("a = [[1]]", 1, 6, "An array in an array is not supported")]
     [TestCase("a = [1 2]", 1, 8, "Put a comma (,) between the items of an array")]
     [TestCase("a = [1,\n2", 2, 2, "The array has no closing bracket")]
-    [TestCase("a = 1.5", 1, 5, "The float 1.5 is not supported")]
-    [TestCase("a = inf", 1, 5, "The float inf is not supported")]
+    [TestCase("a = 1.", 1, 5, "The float 1. is not valid")]
+    [TestCase("a = 1.e3", 1, 5, "The float 1.e3 is not valid")]
+    [TestCase("a = 01.5", 1, 5, "The float 01.5 is not valid")]
+    [TestCase("a = 1e", 1, 5, "The float 1e is not valid")]
+    [TestCase("a = 1e400", 1, 5, "The float 1e400 is out of range")]
+    [TestCase("a = .5", 1, 5, "The value .5 is not valid")]
+    [TestCase("a = Inf", 1, 5, "The value Inf is not valid")]
     [TestCase("a = 0x1F", 1, 5, "The integer 0x1F is not supported")]
     [TestCase("a = 007", 1, 5, "The value 007 is not valid")]
     [TestCase("a = 1__0", 1, 5, "The value 1__0 is not valid")]
@@ -148,7 +168,10 @@ public sealed class TomlReaderTests {
             [Game]
             Count = 3
             Big = 9000000000
-            Ratio = 2
+            Ratio = 0.5
+            Scale = -1.5e2
+            Price = 19.99
+            Whole = 2
             On = true
             Level = "hard"
             Maybe = 4
@@ -160,7 +183,8 @@ public sealed class TomlReaderTests {
 
         var values = new object?[] { settings.Count, settings.Big, settings.Ratio, settings.On, settings.Level, settings.Maybe };
         Assert.That(values,
-            Is.EqualTo(new object?[] { 3, 9000000000L, 2.0, true, GameLevel.Hard, 4 }));
+            Is.EqualTo(new object?[] { 3, 9000000000L, 0.5, true, GameLevel.Hard, 4 }));
+        Assert.That(new object[] { settings.Scale, settings.Price, settings.Whole }, Is.EqualTo(new object[] { -150f, 19.99m, 2.0 }));
         Assert.That(settings.Names, Is.EqualTo(new[] { "a", "b" }));
         Assert.That(settings.Ids, Is.EqualTo(new[] { 1, 2 }));
         Assert.That(settings.Scores, Is.EqualTo(new Dictionary<string, int> { ["x"] = 1 }));
@@ -172,12 +196,38 @@ public sealed class TomlReaderTests {
             Is.EqualTo(new GameRange { Min = 2, Max = 7 }));
 
     [Test]
+    public void Get_binds_nan_and_inf_to_a_double() {
+        var settings = UmpireConfig.Parse("[Game]\nRatio = nan\nWhole = -inf").Get<GameSettings>("Game")!;
+
+        Assert.That(new[] { double.IsNaN(settings.Ratio), double.IsNegativeInfinity(settings.Whole) }, Is.All.True);
+    }
+
+    [TestCase("[t]\nMax = 1\nmax = 2", 3, 1, "The key max differs from the key Max only in case")]
+    [TestCase("[Notebook]\n[notebook]", 2, 1, "The key notebook differs from the key Notebook only in case")]
+    [TestCase("umpire.x = 1\nUmpire.y = 2", 2, 1, "The key Umpire differs from the key umpire only in case")]
+    [TestCase("[a.b]\n[A]", 2, 1, "The key A differs from the key a only in case")]
+    [TestCase("t = { k = 1, K = 2 }", 1, 14, "The key K differs from the key k only in case")]
+    public void Two_keys_that_differ_only_in_case_give_an_error(string text, int line, int column, string reason) =>
+        AssertError(text, line, column, reason);
+
+    [Test]
+    public void Value_and_Get_read_a_key_with_no_case() {
+        var config = UmpireConfig.Parse("[game]\ncount = 4");
+
+        Assert.That(new[] { config.Value("GAME.COUNT"), config.Get<GameSettings>("Game")!.Count.ToString() },
+            Is.EqualTo(new[] { "4", "4" }));
+    }
+
+    [Test]
     public void Get_skips_a_key_with_no_property() =>
         Assert.That(UmpireConfig.Parse("[Game]\nUnknown = 1\nCount = 2").Get<GameSettings>("Game")!.Count,
             Is.EqualTo(2));
 
     [TestCase("Count = \"3\"", "Game.Count needs Int32, and the value is the string \"3\".")]
     [TestCase("Count = 9000000000", "Game.Count needs Int32, and the value 9000000000 is out of its range.")]
+    [TestCase("Count = 0.5", "Game.Count needs Int32, and the value is the float 0.5.")]
+    [TestCase("Scale = 1e300", "Game.Scale needs Single, and the value 1e300 is out of its range.")]
+    [TestCase("Price = inf", "Game.Price needs Decimal, and the value inf is out of its range.")]
     [TestCase("On = 1", "Game.On needs Boolean, and the value is the integer 1.")]
     [TestCase("Level = \"medium\"", "Game.Level needs one of Easy, Hard, and the value is \"medium\".")]
     [TestCase("Names = \"a\"", "Game.Names needs a list of String, and the value is the string \"a\".")]
@@ -215,6 +265,12 @@ public sealed class GameSettings {
     public long Big { get; set; }
 
     public double Ratio { get; set; }
+
+    public float Scale { get; set; }
+
+    public decimal Price { get; set; }
+
+    public double Whole { get; set; }
 
     public bool On { get; set; }
 

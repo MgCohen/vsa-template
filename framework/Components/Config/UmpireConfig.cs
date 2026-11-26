@@ -81,6 +81,7 @@ public sealed class UmpireConfig {
         string text => text,
         bool flag => flag ? "true" : "false",
         long number => number.ToString(CultureInfo.InvariantCulture),
+        ConfigFloat number => ConfigFloat.Format(number.Value),
         _ => null,
     };
 

@@ -42,7 +42,7 @@ static class TomlReader {
             target = Dotted(cursor, target, keys[i], line, column, name);
         }
         var last = keys[keys.Count - 1];
-        if (target.Get(last) is not null) {
+        if (Existing(cursor, target, last, line, column) is not null) {
             throw cursor.Error(line, column, $"The key {name} is defined two times. Write each key one time.");
         }
         target.Add(last, value);
@@ -63,7 +63,7 @@ static class TomlReader {
             table = Inner(cursor, table, keys[i], line, column, name);
         }
         var last = keys[keys.Count - 1];
-        if (table.Get(last) is { } existing) {
+        if (Existing(cursor, table, last, line, column) is { } existing) {
             if (existing is not ConfigTable found) {
                 throw cursor.Error(line, column, $"The key {name} has a value, so it cannot also be a table.");
             }
@@ -80,7 +80,7 @@ static class TomlReader {
     }
 
     static ConfigTable Inner(TomlCursor cursor, ConfigTable table, string key, int line, int column, string name) {
-        switch (table.Get(key)) {
+        switch (Existing(cursor, table, key, line, column)) {
             case ConfigTable { IsInline: false } found:
                 return found;
             case ConfigTable:
@@ -98,7 +98,7 @@ static class TomlReader {
     }
 
     static ConfigTable Dotted(TomlCursor cursor, ConfigTable table, string key, int line, int column, string name) {
-        switch (table.Get(key)) {
+        switch (Existing(cursor, table, key, line, column)) {
             case ConfigTable { FromHeader: false } found:
                 return found;
             case null:
@@ -109,6 +109,15 @@ static class TomlReader {
                 throw cursor.Error(line, column,
                     $"The key {name} cannot add a value to {key}: {key} is already defined.");
         }
+    }
+
+    static object? Existing(TomlCursor cursor, ConfigTable table, string key, int line, int column) {
+        if (table.Spelling(key) is { } spelling && !string.Equals(spelling, key, StringComparison.Ordinal)) {
+            throw cursor.Error(line, column,
+                $"The key {key} differs from the key {spelling} only in case. "
+                    + "Umpire reads keys with no case, so use one spelling.");
+        }
+        return table.Find(key);
     }
 
     static List<string> Keys(TomlCursor cursor) {

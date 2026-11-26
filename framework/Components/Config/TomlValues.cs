@@ -11,6 +11,8 @@ static class TomlValues {
     const int FirstSurrogate = 0xD800;
     const int LastSurrogate = 0xDFFF;
 
+    static readonly char[] exponentMarks = ['e', 'E'];
+
     public static object Read(TomlCursor cursor) {
         switch (cursor.Current) {
             case '"':
@@ -159,6 +161,7 @@ static class TomlValues {
                     : $"Put a comma (,) between the keys of an inline table. The text has {cursor.Describe()}.");
             }
             cursor.Move();
+            cursor.SkipSpaces();
         }
     }
 
@@ -173,42 +176,79 @@ static class TomlValues {
         var text = word.ToString();
         if (text.Length == 0) {
             throw cursor.Error(cursor.AtLineEnd || cursor.Current == '#'
-                ? "A value is missing. Write a string, an integer, a boolean or an array."
+                ? "A value is missing. Write a string, a number, a boolean or an array."
                 : $"A value cannot start with {cursor.Describe()}.");
         }
         return text switch {
             True => true,
             False => false,
-            _ => Integer(cursor, text, line, column),
+            _ when IsInteger(text) => Integer(cursor, text, line, column),
+            _ when IsFloat(text) => Float(cursor, text, line, column),
+            _ => throw cursor.Error(line, column, Unsupported(text)),
         };
     }
 
     static long Integer(TomlCursor cursor, string text, int line, int column) {
-        if (!IsInteger(text)) {
-            throw cursor.Error(line, column, Unsupported(text));
-        }
-        if (!long.TryParse(text.Replace(DigitSeparator.ToString(), ""), NumberStyles.AllowLeadingSign,
+        if (!long.TryParse(WithoutSeparators(text), NumberStyles.AllowLeadingSign,
                 CultureInfo.InvariantCulture, out var value)) {
             throw cursor.Error(line, column, $"The integer {text} is out of range.");
         }
         return value;
     }
 
-    static bool IsInteger(string text) {
-        var start = text[0] is '+' or '-' ? 1 : 0;
-        var digits = text.Substring(start);
-        if (digits.Length == 0 || (digits.Length > 1 && digits[0] == '0')) {
+    static ConfigFloat Float(TomlCursor cursor, string text, int line, int column) {
+        var plain = WithoutSeparators(text);
+        var unsigned = plain.TrimStart('+', '-');
+        var negative = plain[0] == '-';
+        if (unsigned is "inf" or "nan") {
+            var special = unsigned == "nan" ? double.NaN : negative ? double.NegativeInfinity : double.PositiveInfinity;
+            return new ConfigFloat(special, plain);
+        }
+        var isValid = double.TryParse(plain, NumberStyles.Float, CultureInfo.InvariantCulture, out var value);
+        if (!isValid || double.IsInfinity(value)) {
+            throw cursor.Error(line, column, $"The float {text} is out of range.");
+        }
+        return new ConfigFloat(value, plain);
+    }
+
+    static string WithoutSeparators(string text) => text.Replace(DigitSeparator.ToString(), "");
+
+    static bool IsFloat(string text) {
+        var unsigned = text[0] is '+' or '-' ? text.Substring(1) : text;
+        if (unsigned is "inf" or "nan") {
+            return true;
+        }
+        var exponent = unsigned.IndexOfAny(exponentMarks);
+        var mantissa = exponent < 0 ? unsigned : unsigned.Substring(0, exponent);
+        var point = mantissa.IndexOf('.');
+        var whole = point < 0 ? mantissa : mantissa.Substring(0, point);
+        var hasFraction = point >= 0 && IsDigits(mantissa.Substring(point + 1));
+        var hasExponent = exponent >= 0 && IsExponent(unsigned.Substring(exponent + 1));
+        var hasMark = point >= 0 || exponent >= 0;
+        return hasMark && IsInteger(whole) && (point < 0 || hasFraction) && (exponent < 0 || hasExponent);
+    }
+
+    static bool IsExponent(string text) =>
+        text.Length > 0 && IsDigits(text[0] is '+' or '-' ? text.Substring(1) : text);
+
+    static bool IsDigits(string text) {
+        if (text.Length == 0) {
             return false;
         }
-        for (var i = 0; i < digits.Length; i++) {
-            var isDigit = digits[i] >= '0' && digits[i] <= '9';
-            var isSeparator = digits[i] == DigitSeparator && i > 0 && i < digits.Length - 1
-                && digits[i + 1] != DigitSeparator;
+        for (var i = 0; i < text.Length; i++) {
+            var isDigit = text[i] >= '0' && text[i] <= '9';
+            var isSeparator = text[i] == DigitSeparator && i > 0 && i < text.Length - 1
+                && text[i + 1] != DigitSeparator;
             if (!isDigit && !isSeparator) {
                 return false;
             }
         }
         return true;
+    }
+
+    static bool IsInteger(string text) {
+        var digits = text.Length > 0 && text[0] is '+' or '-' ? text.Substring(1) : text;
+        return IsDigits(digits) && (digits.Length == 1 || digits[0] != '0');
     }
 
     static string Unsupported(string text) {
@@ -222,8 +262,8 @@ static class TomlValues {
         }
         var unsigned = lower.TrimStart('+', '-');
         var isNumber = unsigned.Length > 0 && char.IsDigit(unsigned[0]);
-        if (unsigned is "inf" or "nan" || (isNumber && (unsigned.IndexOf('.') >= 0 || unsigned.IndexOf('e') >= 0))) {
-            return $"The float {text} is not supported. Write an integer, or a string in quotes.";
+        if (isNumber && (unsigned.IndexOf('.') >= 0 || unsigned.IndexOf('e') >= 0)) {
+            return $"The float {text} is not valid. Write digits on the two sides of '.', for example 0.5 or 1e3.";
         }
         return $"The value {text} is not valid. A string needs quotes, for example \"{text}\".";
     }

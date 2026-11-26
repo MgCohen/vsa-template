@@ -541,7 +541,7 @@ Limits.MaxLines = 80
 Modes = { easy = 1, hard = 5 }
 ```
 
-`UmpireConfigSettings` binds the table with reflection: each public property with a public setter gets the key with its name. The property types are `string`, `bool`, the number types, an enum (a string value), a nullable of these, a struct, a class with a public constructor that has no parameters, an array or a list, and a dictionary with string keys. The reader reads no float, so a `double` property gets an integer value only. A key with no property is skipped. For no reflection, add your own `ISettingsProvider` in front of the default. A direct call of `Configure(services)` on a settings module does nothing. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
+`UmpireConfigSettings` binds the table with reflection: each public property with a public setter gets the key with its name. The property types are `string`, `bool`, the number types, an enum (a string value), a nullable of these, a struct, a class with a public constructor that has no parameters, an array or a list, and a dictionary with string keys. A `float`, `double` or `decimal` property takes a float or an integer, and an integer property takes only an integer. A key with no property is skipped. For no reflection, add your own `ISettingsProvider` in front of the default. A direct call of `Configure(services)` on a settings module does nothing. Settings have no `IOptions<TSettings>` and no reload, so each container gets the same behavior.
 
 ## What each host gives
 
