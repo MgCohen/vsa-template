@@ -23,7 +23,7 @@ The user has this list and did not answer it. An opinion is not a decision.
 | 6 | Core and VSA in two DLLs (#331) | One or two | One, until a second pack ships |
 | 7 | Public feed (#221), Unity package (#294) | Now or later | Later |
 
-Also in K4: the place of `LoadedTypes` and `ClosedBase`, which `Umpire.Kernels` uses from `Umpire.Architecture`.
+Also in K4: the place of `LoadedTypes` and `ClosedBase`. Closed by P8: they are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`), and `Umpire.Architecture` uses them from the kernel.
 
 ## K3 remainder
 

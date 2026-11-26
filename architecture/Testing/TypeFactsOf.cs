@@ -2,6 +2,7 @@ namespace Umpire.Architecture;
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Umpire.Utility;
 
 static class TypeFactsOf {
     const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic

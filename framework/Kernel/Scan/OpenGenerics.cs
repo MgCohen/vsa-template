@@ -1,6 +1,6 @@
 namespace Umpire.Kernels;
 
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public static class OpenGenerics {
     public static Type? Unify(Type openImplementation, Type service) =>

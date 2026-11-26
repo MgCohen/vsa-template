@@ -1,5 +1,7 @@
 namespace Umpire.Architecture;
 
+using Umpire.Utility;
+
 sealed class PartOf {
     readonly ResolvedArchitecture resolved;
     readonly IReadOnlyList<Part> folderParts;
