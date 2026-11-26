@@ -44,8 +44,8 @@ Each release tag `v<version>` has a GitHub release with one archive, `umpire-<ve
 umpire-<version>.zip
 ├── manifest.json            version, commit, Roslyn version, engine runtime, one entry for each file
 ├── THIRD-PARTY-NOTICES.txt  the license of each third-party package, and the notices of the analyzer package
-├── runtime/netstandard2.1/  Umpire.dll and its full third-party closure
-├── definition/netstandard2.1/  Umpire.Definition.dll, Umpire.Vsa.Definition.dll (check-time code, not for the runtime)
+├── runtime/netstandard2.0/  Umpire.dll and its full third-party closure
+├── definition/netstandard2.0/  Umpire.Definition.dll, Umpire.Vsa.Definition.dll (check-time code, not for the runtime)
 ├── analyzers/dotnet/cs/     Umpire.Kernels.Analyzers.dll, Umpire.Vsa.Analyzers.dll
 └── engine/net8.0/           umpire-engine.dll, its runtimeconfig, its deps.json and its DLLs
 ```
@@ -56,7 +56,7 @@ umpire-<version>.zip
 | `commit` | The commit of the release (`--commit`, else the local `HEAD`) |
 | `analyzers.roslyn` | The highest Roslyn version that the analyzers reference, for example `4.10` |
 | `engine.targetFramework`, `engine.rollForward` | `net8.0`, `Major` |
-| `engine.umpireBuild` | `netstandard2.1`: the build of `Umpire.dll` that the engine uses. Code that compiles against `runtime/netstandard2.1` has the same shape |
+| `engine.umpireBuild` | `netstandard2.0`: the build of `Umpire.dll` that the engine uses. Code that compiles against `runtime/netstandard2.0` has the same shape |
 | `engine.frameworks` | Each shared framework that the engine needs, with its `name` and `version` |
 | `files[].path` | The path in the archive |
 | `files[].assemblyVersion` | The assembly version of a DLL. `null` for a file that is not a DLL |
@@ -65,7 +65,7 @@ umpire-<version>.zip
 | `files[].sha256` | The SHA-256 hash of the file |
 
 - The folder names and the file names stay the same in each release.
-- The runtime holds no definition code. A definition of the host compiles against `runtime/netstandard2.1` and `definition/netstandard2.1`.
+- The runtime holds no definition code. A definition of the host compiles against `runtime/netstandard2.0` and `definition/netstandard2.0`.
 - The runtime holds all its DLLs, also the DLLs that a host ships itself. The host skips its own DLLs: the archive has no host list.
 - The archive has no host files, for example no Unity `.meta` files.
 - The runtime files come only from `netstandard2.x` assets, and the `Microsoft.Extensions` files are 8.0 (`tests/Release.Tests`).

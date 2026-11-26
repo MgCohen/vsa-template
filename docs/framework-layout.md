@@ -34,9 +34,9 @@ The projects of the groups are for development: their references enforce the lay
 
 | Package | DLL | Source projects | Depends on |
 |---|---|---|---|
-| `Umpire` | `Umpire.dll` (`netstandard2.1`) | Markers, Config, Kernels, Messages and each VSA layer base (the VSA kernel) | `Umpire.Vsa.Analyzers` |
-| `Umpire.Definition` | `Umpire.Definition.dll` (`netstandard2.1`) | Architecture (with no markers), Kernels.Definition | `Umpire` |
-| `Umpire.Vsa.Definition` | `Umpire.Vsa.Definition.dll` (`netstandard2.1`) | Umpire.Vsa (`packs/Vsa/Definition/`) | `Umpire.Definition` |
+| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Config, Kernels, Messages and each VSA layer base (the VSA kernel) | `Umpire.Vsa.Analyzers` |
+| `Umpire.Definition` | `Umpire.Definition.dll` (`netstandard2.0`) | Architecture (with no markers), Kernels.Definition | `Umpire` |
+| `Umpire.Vsa.Definition` | `Umpire.Vsa.Definition.dll` (`netstandard2.0`) | Umpire.Vsa (`packs/Vsa/Definition/`) | `Umpire.Definition` |
 | `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views | `Umpire` |
 | `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console | `Umpire` |
 | `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit | `Umpire`, `Umpire.Definition`, `Umpire.Vsa.Definition` |

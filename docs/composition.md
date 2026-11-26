@@ -245,7 +245,7 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 | `Name` | The type name with no `Request` suffix, kebab case | Route segment | Second word, optional |
 | `Effect` | `Write` | `Read` GET, `Write` POST, `Delete` DELETE | Not used |
 
-A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestOperations` reads them by reflection, so the same request works on each target. `Umpire.dll` has one build, `netstandard2.1`, so `IRequest` has no `static virtual` members.
+A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestOperations` reads them by reflection, so the same request works on each target. `Umpire.dll` has one build, `netstandard2.0`, so `IRequest` has no `static virtual` members.
 
 - `Effect` is in `Umpire.Messages.Contracts` (#199).
 - `RequestOperations` reads the metadata with no generic call, and it makes the generic call only when a host invokes the operation. A host with no transport (for example Unity) never invokes one, so IL2CPP needs no generic instance at compose.
@@ -586,7 +586,7 @@ Modes = { easy = 1, hard = 5 }
 
 ## Portable target
 
-`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.1` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.1` hosts (for example Unity) and their tests are in `docs/unity.md`.
+`Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.0` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.0` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
 A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add a log provider of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
 
