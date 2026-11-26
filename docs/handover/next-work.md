@@ -18,12 +18,19 @@ Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides e
 
 ## Phase 0: spike
 
-Assumptions:
-1. The runtime builds on `netstandard2.0`.
-2. DependencyInjection loads inside the compiler.
-3. `Send` through `LocalHost` works synchronously in a compiler callback.
-4. The rule engine accepts an app class with an open host (`EngineApp<THost>`).
-5. The same works in Visual Studio. This test needs the computer of the user.
+The code is on the branch `claude/spike-localhost` (no PR).
+
+| # | Assumption | Result |
+|---|---|---|
+| 1 | The runtime builds on `netstandard2.0` | Pass with fixes. Blocker: the default interface methods of `IIntegrationEventHandler` and `IPresenterHandler`. Small fixes: `Index`/`Range`, `ToHashSet`, `Path.GetRelativePath` and similar APIs |
+| 2 | DependencyInjection loads inside the compiler | Pass. Each dependency DLL must be an analyzer item |
+| 3 | `Send` through `LocalHost` works synchronously in a compiler callback | Pass. First composition 112 to 135 ms, one time for each compiler process. A later `Send` takes about 0.01 ms |
+| 4 | The rule engine accepts an app class with an open host | Pass with a fix: `AppClass.KernelsOf` must refuse only an open kernel |
+| 5 | The same works in Visual Studio | Skipped for now: the computer of the user is not available. The steps are in the spike report |
+
+Also for phase 1: in the compiler, the module scan and the `.umpireconfig` search use the compiler folder. The analyzer entry needs a fixed module list and its own config path.
+
+Follow-up: a spike of the default interface methods removal (each pipeline calls its handler), as a draft PR.
 
 ## Phase 1: runtime base
 
