@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Umpire.dll: the definition API, the markers, the config reader, the kernel, the messages and the VSA pack with its layer bases.
-       An app gets the Umpire runtime from this one package. -->
+  <!-- Umpire.dll: the markers, the config reader, the kernel, the messages and the VSA kernel with its layer bases.
+       An app gets the Umpire runtime from this one package. It holds no definition code: the packages Umpire.Definition
+       and Umpire.Vsa.Definition hold it. -->
   <PropertyGroup>
-    <Description>The Umpire runtime: the architecture definition API, the kernel, the messages and the VSA pack.</Description>
+    <Description>The Umpire runtime: the kernel, the messages and the VSA kernel with its layer bases.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(UmpireRoot)architecture/**/*.cs" Exclude="$(_UmpireNotBundled)" />
+    <Compile Include="$(UmpireRoot)architecture/Markers/**/*.cs" Exclude="$(_UmpireNotBundled)" />
     <Compile Include="$(UmpireRoot)framework/Components/Config/**/*.cs" Exclude="$(_UmpireNotBundled)" />
     <Compile Include="$(UmpireRoot)framework/Components/Messages/**/*.cs" Exclude="$(_UmpireNotBundled)" />
     <Compile Include="$(UmpireRoot)framework/Kernel/**/*.cs"
-             Exclude="$(_UmpireNotBundled);$(UmpireRoot)framework/Kernel/Analyzers/**;$(UmpireRoot)framework/Kernel/Hosts/Web/**;$(UmpireRoot)framework/Kernel/Hosts/Console/**" />
+             Exclude="$(_UmpireNotBundled);$(UmpireRoot)framework/Kernel/Analyzers/**;$(UmpireRoot)framework/Kernel/Definition/**;$(UmpireRoot)framework/Kernel/Hosts/Web/**;$(UmpireRoot)framework/Kernel/Hosts/Console/**" />
     <Compile Include="$(UmpireRoot)packs/Vsa/Kernel/**/*.cs" Exclude="$(_UmpireNotBundled);$(UmpireRoot)packs/Vsa/Kernel/Views/**" />
-    <Compile Include="$(UmpireRoot)packs/Vsa/Definition/**/*.cs" Exclude="$(_UmpireNotBundled)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" />

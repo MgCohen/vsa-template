@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Umpire.Definition.dll: the architecture definition API (Umpire.Architecture, with no markers) and the definitions of the
+       framework blocks (Umpire.Kernels.Definition). It is check-time code: Umpire.Sdk adds it to a definition project, and the
+       runtime package Umpire does not hold it. -->
+  <PropertyGroup>
+    <Description>The Umpire architecture definition API and the definitions of the framework blocks.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UmpireRoot)architecture/**/*.cs" Exclude="$(_UmpireNotBundled);$(UmpireRoot)architecture/Markers/**" />
+    <Compile Include="$(UmpireRoot)framework/Kernel/Definition/**/*.cs" Exclude="$(_UmpireNotBundled)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Umpire/Umpire.csproj" />
+  </ItemGroup>
+</Project>

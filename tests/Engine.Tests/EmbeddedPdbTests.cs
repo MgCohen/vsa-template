@@ -6,9 +6,8 @@ using Umpire.Vsa.Definition;
 namespace Engine.Tests;
 
 public sealed class EmbeddedPdbTests {
-    static readonly string Bundle = Directory
-        .GetFiles(Repo.Path("artifacts~", "bin", "Umpire"), "Umpire.dll", SearchOption.AllDirectories)
-        .OrderByDescending(File.GetLastWriteTimeUtc).First();
+    static readonly string Bundle = Shipped("Umpire");
+    static readonly string DefinitionBundle = Shipped("Umpire.Definition");
 
     [Test]
     public void The_shipped_assembly_gives_the_source_path_of_each_type_under_the_mapped_root() {
@@ -19,10 +18,17 @@ public sealed class EmbeddedPdbTests {
     }
 
     [Test]
-    public void A_record_with_no_body_in_the_shipped_assembly_has_its_source_path() {
-        var sources = BinReader.Sources([Bundle]);
+    public void A_record_with_no_body_in_the_shipped_definition_assembly_has_its_source_path() {
+        var sources = BinReader.Sources([DefinitionBundle]);
 
         Assert.That(sources["Umpire.Architecture.Blocks.Definition"].File, Does.StartWith("/_/architecture/Concepts/Blocks/"));
+    }
+
+    [Test]
+    public void The_shipped_runtime_assembly_holds_no_definition_type() {
+        var sources = BinReader.Sources([Bundle]);
+
+        Assert.That(sources.Values.Select(source => source.File), Has.None.Matches<string>(IsDefinitionSource));
     }
 
     [Test]
@@ -34,4 +40,13 @@ public sealed class EmbeddedPdbTests {
 
         Assert.That(bound?.Part.SelfAndAncestors().Select(p => p.Name), Is.EqualTo(new[] { "Contracts.Requests", "Contracts", "Kernel", "(root)" }));
     }
+
+    static bool IsDefinitionSource(string file) =>
+        (file.StartsWith("/_/architecture/", StringComparison.Ordinal) && !file.StartsWith("/_/architecture/Markers/", StringComparison.Ordinal))
+        || file.StartsWith("/_/framework/Kernel/Definition/", StringComparison.Ordinal)
+        || file.StartsWith("/_/packs/Vsa/Definition/", StringComparison.Ordinal);
+
+    static string Shipped(string assembly) => Directory
+        .GetFiles(Repo.Path("artifacts~", "bin", assembly), $"{assembly}.dll", SearchOption.AllDirectories)
+        .OrderByDescending(File.GetLastWriteTimeUtc).First();
 }

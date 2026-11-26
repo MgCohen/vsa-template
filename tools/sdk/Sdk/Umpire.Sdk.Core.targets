@@ -55,6 +55,8 @@
       <_UmpireDefinitionSources>@(_UmpireDefinition->'%(RootDir)%(Directory)*.dll;%(RootDir)%(Directory)*.pdb')</_UmpireDefinitionSources>
       <_UmpireDefinitionList>$(IntermediateOutputPath)umpire-definitions.$([MSBuild]::StableStringHash('$(_UmpireDefinitionsDir)').ToString('x8')).list</_UmpireDefinitionList>
       <_UmpireReferencedDefinitions>@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)umpire-definitions/*')</_UmpireReferencedDefinitions>
+      <_UmpirePackDefinitionSources Condition="'$(UmpireFrameworkSourceDir)' != ''">@(_UmpirePackDefinitionOutput->'%(RootDir)%(Directory)*.dll;%(RootDir)%(Directory)*.pdb')</_UmpirePackDefinitionSources>
+      <_UmpirePackDefinitionSources Condition="'$(UmpireFrameworkSourceDir)' == '' and '@(_UmpirePackDefinition)' != ''">$(_UmpireSdkEngineDir)Umpire.Definition.dll;@(_UmpirePackDefinition->'$(_UmpireSdkEngineDir)%(Package).dll')</_UmpirePackDefinitionSources>
     </PropertyGroup>
     <!-- Many projects can have one output folder (-o), so a project deletes only the files that it copied to this folder before. -->
     <ReadLinesFromFile File="$(_UmpireDefinitionList)" Condition="Exists('$(_UmpireDefinitionList)')">
@@ -64,6 +66,11 @@
       <_UmpireDefinitionCandidate Include="$(_UmpireDefinitionSources);$(_UmpireReferencedDefinitions)" Exclude="$(_UmpireDefinitionsDir)*" />
       <_UmpireDefinitionName Include="@(_UmpireDefinitionCandidate->'%(Filename)%(Extension)')" Source="%(FullPath)"
                              Condition="!$([System.String]::Copy('%(Filename)').StartsWith('System.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.Extensions.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.AspNetCore.'))" />
+      <_UmpirePackDefinitionCandidate Include="$(_UmpirePackDefinitionSources)" />
+      <_UmpirePackDefinitionName Include="@(_UmpirePackDefinitionCandidate->'%(Filename)%(Extension)')" Source="%(FullPath)"
+                                 Condition="!$([System.String]::Copy('%(Filename)').StartsWith('System.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.Extensions.')) and !$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.AspNetCore.'))" />
+      <_UmpirePackDefinitionName Remove="@(_UmpireDefinitionName)" />
+      <_UmpireDefinitionName Include="@(_UmpirePackDefinitionName)" />
       <_UmpireDefinitionName Remove="@(ReferenceCopyLocalPaths->'%(Filename)%(Extension)');$(TargetFileName);$(TargetName).pdb" />
       <_UmpireDefinitionFile Include="@(_UmpireDefinitionName->'%(Source)'->Distinct())" />
       <_UmpireDefinitionCopy Include="@(_UmpireDefinitionFile->'$(_UmpireDefinitionsDir)%(Filename)%(Extension)')" />
@@ -89,8 +96,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" Package="Umpire" Bundle="tools/bundle/Umpire" />
-    <_UmpireFramework Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire.Definition" Bundle="tools/bundle/Definition"
+                      Condition="'$(UmpireDefinitionProject)' == 'true'" />
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
     <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
@@ -104,7 +112,12 @@
     <UmpireWeb Condition="'$(UmpireWeb)' == ''">$(UsingMicrosoftNETSdkWeb)</UmpireWeb>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireDefaultPack)' == 'true'">
-    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Vsa.Composition" Path="packs/Vsa/Kernel/Composition" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Vsa.Infrastructure" Path="packs/Vsa/Kernel/Infrastructure" Package="Umpire" Bundle="tools/bundle/Umpire" />
+    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition"
+                      Condition="'$(UmpireDefinitionProject)' == 'true'" />
+    <_UmpirePackDefinition Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition"
+                           Condition="'$(UmpireDefinitionProject)' != 'true' and '$(UmpireTestProject)' != 'true'" />
     <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
     <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" Package="Umpire.Testing" Bundle="tools/bundle/Testing" />
     <_UmpireFramework Include="Umpire.Vsa.Views" Path="packs/Vsa/Kernel/Views" Package="Umpire.Web" Bundle="tools/bundle/Web" Condition="'$(UmpireWeb)' == 'true'" />
@@ -128,6 +141,23 @@
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- The definition of the pack is check-time code: a project that is not a definition project and not a test project does
+       not compile against it. The architecture check of the app still needs it, so _UmpireCopyDefinitions copies it to the
+       folder umpire-definitions. Source mode builds the definition project of the pack first, with no reference to its
+       assembly. Package mode takes the DLLs from the engine folder of this SDK package (tools/net8.0/), the same build as the
+       definition packages (Package). A project with its own reference to that project keeps it. -->
+  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
+    <_UmpirePackDefinitionProject Include="@(_UmpirePackDefinition->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" Condition="'$(_UmpireUseBundle)' != 'true'" />
+    <_UmpirePackDefinitionProject Include="@(_UmpirePackDefinition->'$(UmpireFrameworkSourceDir)%(Bundle)/%(Package).csproj')" Condition="'$(_UmpireUseBundle)' == 'true'" />
+    <_UmpirePackDefinitionProject Remove="@(ProjectReference)" />
+    <ProjectReference Include="@(_UmpirePackDefinitionProject)" ReferenceOutputAssembly="false" Private="false"
+                      OutputItemType="_UmpirePackDefinitionOutput" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
+    <_UmpireSdkEngineDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools', 'net8.0'))</_UmpireSdkEngineDir>
+  </PropertyGroup>
 
   <!-- Package mode (consumers): package references with the version of this SDK.
        With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
