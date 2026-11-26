@@ -44,6 +44,14 @@ public abstract class App : IApp {
         }
     }
 
+    internal AppHost? RunningHost {
+        get {
+            lock (gate) {
+                return state == AppState.Running ? host : null;
+            }
+        }
+    }
+
     public abstract AppHost CreateHost();
 
     public void Start(string[] args) => Start(args, ownedByRun: false);
