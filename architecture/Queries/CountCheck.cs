@@ -37,7 +37,7 @@ internal static class CountCheck {
 
     static List<Binding> Counted(CountStatement statement, IEnumerable<Binding> bindings) {
         var all = bindings.ToList();
-        var taken = statement.SkipTaken ? all.SelectMany(b => b.Type.BaseArguments).ToHashSet() : [];
+        var taken = statement.SkipTaken ? new HashSet<string>(all.SelectMany(b => b.Type.BaseArguments)) : [];
         return [.. all.Where(b => !b.FollowsUser && !b.Type.IsAbstract && !b.Type.IsNested
             && !taken.Contains(b.Type.FullName) && statement.Counts(b))];
     }

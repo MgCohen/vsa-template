@@ -87,6 +87,6 @@ public sealed class ResolvedArchitecture {
     static string NamespaceOf(string typeFullName) {
         var outer = typeFullName.Split('+')[0];
         var dot = outer.LastIndexOf('.');
-        return dot < 0 ? "" : outer[..dot];
+        return dot < 0 ? "" : outer.Substring(0, dot);
     }
 }
