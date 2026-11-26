@@ -45,6 +45,7 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
             .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal)
             .And<Slice.Shared>(Access.Internal);
         rules.For<Presenters>().Uses<Contracts.Requests>().Under<Kernel>();
+        rules.For<Presenters>().Uses<Handlers.Events>().Under<Kernel>();
         ForContractParts(rules).And<Slice.Shared>()
             .Uses<Contracts>().And<MessagesParts.Contracts>().And<Domain.Shared>().And<Slice.Shared>();
         UsesContractParts(rules.For<Slice.Shared>()).Under<Kernel>();

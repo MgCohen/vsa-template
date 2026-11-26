@@ -22,7 +22,8 @@ public sealed class BroadcastTests {
     [Test]
     public async Task Each_broadcast_pipeline_runs_in_registration_order() {
         using var services = Services(
-            [typeof(CountingPing)], new PipelineBuilder<IntegrationEvent>().Handlers(typeof(AuditPing)));
+            [typeof(CountingPing)], new PipelineBuilder<IntegrationEvent>().CallsTestHandlers()
+                .Handlers(typeof(AuditPing)));
 
         var result = await Publish(services, new Pinged());
 
@@ -48,7 +49,7 @@ public sealed class BroadcastTests {
         services.AddSingleton(new AppTypes(new FixedModules()));
         services.AddSingleton<PingLog>();
         services.AddEventHandlers();
-        services.AddPipeline(new PipelineBuilder<Pinged>().Handlers(handlers));
+        services.AddPipeline(new PipelineBuilder<Pinged>().CallsTestHandlers().Handlers(handlers));
         if (second is not null) {
             services.AddPipeline(second);
         }

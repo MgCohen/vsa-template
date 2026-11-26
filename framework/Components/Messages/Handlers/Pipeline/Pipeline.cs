@@ -89,10 +89,10 @@ public sealed class Pipeline {
                 $"HandlersOf({handlerBase.Name}) needs the module types, and these services have none. "
                 + "Build the pipeline from the services of an Umpire app, "
                 + "or list the handlers with Handlers(typeof(...)).")
-            : types.Implementations(handlerBase).Select(h => h.Implementation);
+            : types.Implementations(handlerBase).Select(h => h.Implementation).Where(MessageTypes.IsHandler);
 
     IEnumerable<Type> OpenHandlersOf(Type handlerBase) =>
-        types?.OpenImplementations(handlerBase).Select(h => h.Implementation) ?? [];
+        types?.OpenImplementations(handlerBase).Select(h => h.Implementation).Where(MessageTypes.IsHandler) ?? [];
 
     Dictionary<Type, List<Type>> HandlerIndex() {
         var index = new Dictionary<Type, List<Type>>();
@@ -183,7 +183,7 @@ public sealed class Pipeline {
     MessageRoute Route(Type message) {
         var hooks = Definition.HookBases.SelectMany(b => FoundFor(b, message)).ToList();
         var beforeSteps = Steps(Definition.BeforeSteps, typeof(BeforeStep<>), message);
-        return new MessageRoute(message, HandlersFor(message), many) {
+        return new MessageRoute(message, HandlersFor(message), many, Definition.Calls, Definition.AfterHandled) {
             BeforeValidationSteps = LowestFirst(beforeSteps.Where(step => step.Priority < ValidationPriority)),
             Validators = ByName(Definition.ValidatorBases.SelectMany(b => FoundFor(b, message)), message),
             BeforeSteps = LowestFirst(beforeSteps.Where(step => step.Priority >= ValidationPriority)),

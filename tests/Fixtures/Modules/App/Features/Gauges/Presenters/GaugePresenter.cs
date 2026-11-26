@@ -4,9 +4,11 @@ using Gauges.Domain.Shared;
 using Gauges.Slices.ReadGauge;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
+using Umpire.Vsa.Handlers.Events;
 using Umpire.Vsa.Presenters;
 
-public sealed class GaugePresenter<T>(IRequestSender requests) : Presenter(requests), IPresenterHandler<GaugeRead>
+public sealed class GaugePresenter<T>(IRequestSender requests)
+    : Presenter(requests), IIntegrationEventHandler<GaugeRead>
     where T : struct, IGauge {
     public int Last { get; private set; }
 

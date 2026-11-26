@@ -93,7 +93,7 @@ public sealed class PipelineTests {
 
     [Test]
     public async Task A_fault_that_the_runner_catches_gives_a_failed_result() {
-        var pipeline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>)).Runner<CatchRunner>()
+        var pipeline = new PipelineBuilder<ArenaMove>().CallsTestHandlers().HandlersOf(typeof(CommandHandler<,>)).Runner<CatchRunner>()
             .Build(scope.ServiceProvider);
 
         var result = await pipeline.SendAsync<int>(new FailCommand());
@@ -105,7 +105,7 @@ public sealed class PipelineTests {
 
     [Test]
     public void A_synchronous_run_completes_at_once() {
-        var inline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>)).Build(scope.ServiceProvider);
+        var inline = new PipelineBuilder<ArenaMove>().CallsTestHandlers().HandlersOf(typeof(CommandHandler<,>)).Build(scope.ServiceProvider);
 
         var sent = inline.SendAsync<int>(new StrikeCommand(3));
 
@@ -116,7 +116,7 @@ public sealed class PipelineTests {
     [Test]
     public async Task A_custom_pipeline_with_no_handler_for_the_message_falls_back() {
         using var app = new TestApp(new ArenaModule())
-            .With(services => services.AddPipeline(new PipelineBuilder<StrikeCommand>()))
+            .With(services => services.AddPipeline(new PipelineBuilder<StrikeCommand>().CallsTestHandlers()))
             .Build();
         await using var appScope = app.Services.CreateAsyncScope();
 
@@ -129,7 +129,7 @@ public sealed class PipelineTests {
 
     [Test]
     public async Task A_pipeline_with_no_hook_base_runs_no_hook() {
-        var pipeline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>))
+        var pipeline = new PipelineBuilder<ArenaMove>().CallsTestHandlers().HandlersOf(typeof(CommandHandler<,>))
             .Build(scope.ServiceProvider);
 
         var result = await pipeline.SendAsync<int>(new StrikeCommand(5));
@@ -141,7 +141,7 @@ public sealed class PipelineTests {
     [Test]
     public void A_hook_base_is_a_type_that_implements_a_call_interface() {
         var error = Assert.Throws<ArgumentException>(
-            () => new PipelineBuilder<ArenaMove>().HooksOf(typeof(CommandHandler<,>)));
+            () => new PipelineBuilder<ArenaMove>().CallsTestHandlers().HooksOf(typeof(CommandHandler<,>)));
 
         Assert.That(error!.Message, Does.StartWith("Umpire.Vsa.Handlers.Commands.CommandHandler`2 is not a hook base."));
     }
@@ -151,14 +151,14 @@ public sealed class PipelineTests {
     [TestCase(typeof(BeforeStep))]
     [TestCase(typeof(TagStep))]
     public void A_step_base_is_not_a_hook_base(Type stepBase) {
-        var error = Assert.Throws<ArgumentException>(() => new PipelineBuilder<ArenaMove>().HooksOf(stepBase));
+        var error = Assert.Throws<ArgumentException>(() => new PipelineBuilder<ArenaMove>().CallsTestHandlers().HooksOf(stepBase));
 
         Assert.That(error!.Message, Does.Contain("is not a hook base"));
     }
 
     [Test]
     public void A_step_is_added_one_time() {
-        var builder = new PipelineBuilder<ArenaMove>().BeforeStep<TagStep>().AfterStep<AuditStep>();
+        var builder = new PipelineBuilder<ArenaMove>().CallsTestHandlers().BeforeStep<TagStep>().AfterStep<AuditStep>();
 
         var before = Assert.Throws<InvalidOperationException>(() => builder.BeforeStep<TagStep>());
         var after = Assert.Throws<InvalidOperationException>(() => builder.AfterStep<AuditStep>());
@@ -223,7 +223,7 @@ public sealed class PipelineTests {
     public void A_module_pipeline_with_the_base_and_handler_base_of_a_default_fails() {
         var error = Assert.Throws<InvalidOperationException>(() => new TestApp(new ArenaModule())
             .With(services => services.AddPipeline(
-                new PipelineBuilder<IMessage>().HandlersOf(typeof(CommandHandler<,>))))
+                new PipelineBuilder<IMessage>().CallsTestHandlers().HandlersOf(typeof(CommandHandler<,>))))
             .Build());
 
         Assert.That(error!.Message, Does.Contain("The default pipeline of each kind already has its message base"));
@@ -233,15 +233,15 @@ public sealed class PipelineTests {
     public void A_listed_handler_counts_as_its_handler_base_in_the_duplicate_check() {
         var feintHandler = typeof(FeintCommand).Assembly
             .GetType("Arena.Slices.Finisher.FeintHandler", throwOnError: true)!;
-        var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>().Handlers(feintHandler));
+        var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>().CallsTestHandlers().Handlers(feintHandler));
 
         Assert.Throws<InvalidOperationException>(
-            () => services.AddPipeline(new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>))));
+            () => services.AddPipeline(new PipelineBuilder<ArenaMove>().CallsTestHandlers().HandlersOf(typeof(CommandHandler<,>))));
     }
 
     [Test]
     public void A_pipeline_rejects_a_message_that_is_not_of_its_base() {
-        var pipeline = new PipelineBuilder<ArenaMove>().HandlersOf(typeof(CommandHandler<,>))
+        var pipeline = new PipelineBuilder<ArenaMove>().CallsTestHandlers().HandlersOf(typeof(CommandHandler<,>))
             .Build(scope.ServiceProvider);
 
         var error = Assert.ThrowsAsync<ArgumentException>(() => pipeline.SendAsync<int>(new AnswerRequest(null)));
@@ -251,9 +251,9 @@ public sealed class PipelineTests {
 
     [Test]
     public void A_message_base_has_one_pipeline() {
-        var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>());
+        var services = new ServiceCollection().AddPipeline(new PipelineBuilder<ArenaMove>().CallsTestHandlers());
 
-        var error = Assert.Throws<InvalidOperationException>(() => services.AddPipeline(new PipelineBuilder<ArenaMove>()));
+        var error = Assert.Throws<InvalidOperationException>(() => services.AddPipeline(new PipelineBuilder<ArenaMove>().CallsTestHandlers()));
 
         Assert.That(error!.Message,
             Does.StartWith("Two pipelines are registered for Arena.Slices.Duel.ArenaMove with the same handler base."));
@@ -261,7 +261,7 @@ public sealed class PipelineTests {
 
     static TestBuild FinisherApp() => new TestApp(new ArenaModule())
         .With(services => services.AddPipeline(
-            new PipelineBuilder<FinisherMove>().HandlersOf(typeof(FinisherHandler<>))))
+            new PipelineBuilder<FinisherMove>().CallsTestHandlers().HandlersOf(typeof(FinisherHandler<>))))
         .Build();
 
     sealed class CatchRunner : IRunner {

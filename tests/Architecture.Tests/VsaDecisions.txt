@@ -714,7 +714,7 @@ App/Plugin/Presenters -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publ
 App/Plugin/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
 App/Plugin/Presenters -> Kernel/Handlers [any] Deny
 App/Plugin/Presenters -> Kernel/Handlers/Handlers.Requests [any] Deny
-App/Plugin/Presenters -> Kernel/Handlers/Handlers.Events [any] Deny
+App/Plugin/Presenters -> Kernel/Handlers/Handlers.Events [any] Allow Public
 App/Plugin/Presenters -> Kernel/Handlers/Handlers.Commands [any] Deny
 App/Plugin/Presenters -> Kernel/Views [any] Deny
 App/Plugin/Presenters -> Kernel/Composition [any] Deny
@@ -1746,7 +1746,7 @@ App/Feature/Presenters -> Kernel/Contracts/Contracts.Events/Contracts.Events.Pub
 App/Feature/Presenters -> Kernel/Contracts/Contracts.Commands [any] Deny
 App/Feature/Presenters -> Kernel/Handlers [any] Deny
 App/Feature/Presenters -> Kernel/Handlers/Handlers.Requests [any] Deny
-App/Feature/Presenters -> Kernel/Handlers/Handlers.Events [any] Deny
+App/Feature/Presenters -> Kernel/Handlers/Handlers.Events [any] Allow Public
 App/Feature/Presenters -> Kernel/Handlers/Handlers.Commands [any] Deny
 App/Feature/Presenters -> Kernel/Views [any] Deny
 App/Feature/Presenters -> Kernel/Composition [any] Deny

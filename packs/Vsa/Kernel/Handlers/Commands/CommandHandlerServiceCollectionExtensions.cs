@@ -12,6 +12,7 @@ public static class CommandHandlerServiceCollectionExtensions {
         services.AddScoped<ICommandSender, InProcessCommandSender>();
         services.AddPipeline(new PipelineBuilder<IMessage>()
             .HandlersOf(typeof(CommandHandler<,>))
+            .CallsCommandHandlers()
             .HooksOf(typeof(BeforeCommandHook<>), typeof(AfterCommandHook<,>)));
         return services;
     }
