@@ -4,16 +4,22 @@ using System.Reflection;
 using Umpire.Messages.Contracts;
 
 sealed class MessageRoute {
-    readonly Dictionary<Type, Func<IHandler, Envelope, Task<IMessageResult>>> calls;
+    readonly Dictionary<RouteHandler, IHandlerCall?> calls;
+    readonly IReadOnlyList<AfterHandledCall> afterHandled;
 
-    internal MessageRoute(Type message, IReadOnlyList<RouteHandler> handlers, bool many) {
+    internal MessageRoute(
+        Type message,
+        IReadOnlyList<RouteHandler> handlers,
+        bool many,
+        IReadOnlyList<Type> callTypes,
+        IReadOnlyList<AfterHandledCall> afterHandled) {
         Message = message;
         Handlers = handlers;
         Many = many;
         Create = Typed<Func<object, Envelope?, IServiceProvider, CancellationToken, Envelope>>(
             nameof(CreateEnvelope), message);
-        calls = handlers.Select(h => h.Message).Distinct().ToDictionary(
-            key => key, key => Typed<Func<IHandler, Envelope, Task<IMessageResult>>>(nameof(CallHandler), key));
+        calls = handlers.Distinct().ToDictionary(handler => handler, handler => CallFor(handler, callTypes));
+        this.afterHandled = afterHandled;
     }
 
     internal Type Message { get; }
@@ -28,8 +34,33 @@ sealed class MessageRoute {
     internal IReadOnlyList<Type> AfterSteps { get; init; } = [];
     internal IReadOnlyList<string> CloseFailures { get; init; } = [];
 
-    internal Task<IMessageResult> CallAsync(RouteHandler handler, IHandler instance, Envelope envelope) =>
-        calls[handler.Message](instance, envelope);
+    internal async Task<IMessageResult> CallAsync(RouteHandler handler, object instance, Envelope envelope) {
+        var call = calls[handler] ?? throw NoCall(handler);
+        var result = await call.CallAsync(instance, envelope);
+        foreach (var after in afterHandled.Where(after => after.Handler.IsInstanceOfType(instance))) {
+            after.Call(instance);
+        }
+        return result;
+    }
+
+    static IHandlerCall? CallFor(RouteHandler handler, IReadOnlyList<Type> callTypes) =>
+        callTypes
+            .Select(open => Closed(open, handler.Message))
+            .OfType<IHandlerCall>()
+            .FirstOrDefault(call => call.Handler.IsAssignableFrom(handler.Handler));
+
+    static InvalidOperationException NoCall(RouteHandler handler) =>
+        new($"The pipeline has no call for {handler.Handler.FullName}, the handler of {handler.Message.Name}. "
+            + "Add the call of its handler kind to the pipeline with Calls(typeof(...)), "
+            + $"or implement IRunnableHandler<{handler.Message.Name}>.");
+
+    static IHandlerCall? Closed(Type open, Type message) {
+        try {
+            return (IHandlerCall?)Activator.CreateInstance(open.MakeGenericType(message), nonPublic: true);
+        } catch (ArgumentException) {
+            return null;
+        }
+    }
 
     static TDelegate Typed<TDelegate>(string method, Type message) where TDelegate : Delegate =>
         (TDelegate)typeof(MessageRoute)
@@ -40,7 +71,4 @@ sealed class MessageRoute {
     static Envelope CreateEnvelope<TMessage>(
         object message, Envelope? parent, IServiceProvider services, CancellationToken ct) where TMessage : class =>
         new Envelope<TMessage>((TMessage)message, parent, services, ct);
-
-    static Task<IMessageResult> CallHandler<TMessage>(IHandler handler, Envelope envelope) where TMessage : class =>
-        ((IHandler<TMessage>)handler).RunAsync((IEnvelope<TMessage>)envelope);
 }

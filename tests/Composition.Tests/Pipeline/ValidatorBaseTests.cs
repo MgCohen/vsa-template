@@ -62,7 +62,7 @@ public sealed class ValidatorBaseTests {
 
     public sealed record Note(string Text) : ITitled;
 
-    public sealed class NoteHandler : IHandler<Note> {
+    public sealed class NoteHandler : IRunnableHandler<Note> {
         public Task<IMessageResult> RunAsync(IEnvelope<Note> envelope) =>
             Task.FromResult<IMessageResult>((Result<string>)envelope.Message.Text);
     }

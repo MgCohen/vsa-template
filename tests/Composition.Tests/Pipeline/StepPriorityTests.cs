@@ -187,7 +187,7 @@ public sealed class StepPriorityTests {
         }
     }
 
-    public sealed class MoveHandler(StepLog log, SlowGate slow) : IHandler<Move> {
+    public sealed class MoveHandler(StepLog log, SlowGate slow) : IRunnableHandler<Move> {
         public const int Throws = 13;
         public const int Waits = 7;
 

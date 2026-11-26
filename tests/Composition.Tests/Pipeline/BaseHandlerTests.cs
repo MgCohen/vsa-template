@@ -71,7 +71,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_the_handlers_of_its_type_and_of_each_base_one_time() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsEventHandlers()
             .Handlers(typeof(ItemChangedHandler), typeof(CardChangedHandler), typeof(BothHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -83,7 +83,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_calls_a_handler_of_many_bases_one_time_for_its_nearest_base() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsEventHandlers()
             .Handlers(typeof(ItemChangedHandler), typeof(CardChangedHandler), typeof(BothHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -95,7 +95,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_one_closure_of_an_open_handler_when_a_closed_one_also_matches() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsEventHandlers()
             .Handlers(typeof(Audit<ItemChanged>), typeof(Audit<>))
             .Build(services);
         Log.Lines.Clear();
@@ -124,7 +124,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_the_handler_of_a_derived_type_before_the_handler_of_its_base() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsEventHandlers()
             .Handlers(typeof(BaseChangedHandler), typeof(ZoneMovedHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -136,7 +136,7 @@ public sealed class BaseHandlerTests {
 
     [Test]
     public async Task An_event_runs_the_handler_of_an_interface_that_it_implements() {
-        var pipeline = new PipelineBuilder<IntegrationEvent>()
+        var pipeline = new PipelineBuilder<IntegrationEvent>().CallsEventHandlers()
             .Handlers(typeof(ItemChangedHandler), typeof(StampHandler))
             .Build(services);
         Log.Lines.Clear();
@@ -220,7 +220,7 @@ public sealed class BaseHandlerTests {
             Task.FromResult<Result<string>>($"round:{envelope.Message.GetType().Name}");
     }
 
-    public sealed class PaintedHandler : IHandler<IPainted> {
+    public sealed class PaintedHandler : IRunnableHandler<IPainted> {
         public Task<IMessageResult> RunAsync(IEnvelope<IPainted> envelope) =>
             Task.FromResult<IMessageResult>((Result<string>)"painted");
     }
@@ -306,7 +306,7 @@ public sealed class BaseHandlerTests {
 
     public sealed record StampedItem : ItemChanged, IStamped;
 
-    public sealed class StampHandler(Calls calls) : IHandler<IStamped> {
+    public sealed class StampHandler(Calls calls) : IRunnableHandler<IStamped> {
         public Task<IMessageResult> RunAsync(IEnvelope<IStamped> envelope) {
             calls.Lines.Add("stamp");
             return Task.FromResult<IMessageResult>((Result<Unit>)Unit.Value);
@@ -322,7 +322,7 @@ public sealed class BaseHandlerTests {
             Task.FromResult<Result<string>>($"list:{typeof(T).Name}");
     }
 
-    public sealed class ExtraHandler<T, TExtra> : IHandler<Call<T>> {
+    public sealed class ExtraHandler<T, TExtra> : IRunnableHandler<Call<T>> {
         public Task<IMessageResult> RunAsync(IEnvelope<Call<T>> envelope) =>
             Task.FromResult<IMessageResult>((Result<string>)typeof(TExtra).Name);
     }
@@ -340,7 +340,7 @@ public sealed class BaseHandlerTests {
 
     public sealed record DoubleWrapped : IntegrationEvent, IWrapped<int>, IWrapped<string>;
 
-    public sealed class WrapAudit<T>(Calls calls) : IHandler<IWrapped<T>> {
+    public sealed class WrapAudit<T>(Calls calls) : IRunnableHandler<IWrapped<T>> {
         public Task<IMessageResult> RunAsync(IEnvelope<IWrapped<T>> envelope) {
             calls.Lines.Add($"wrap:{typeof(T).Name}");
             return Task.FromResult<IMessageResult>((Result<Unit>)Unit.Value);

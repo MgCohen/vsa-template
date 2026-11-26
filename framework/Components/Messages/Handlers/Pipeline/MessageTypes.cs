@@ -11,7 +11,8 @@ static class MessageTypes {
         return messages.Length > 0
             ? messages
             : throw new InvalidOperationException(
-                $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage>, directly or through a handler base.");
+                $"{handler.FullName} is not a handler. A handler implements IHandler<TMessage> "
+                + "through a handler base, or implements IRunnableHandler<TMessage>.");
     }
 
     internal static Type OfStep(Type step, Type typedStepBase) => ArgumentOf(step, typedStepBase) ?? typeof(object);

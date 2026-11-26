@@ -183,7 +183,7 @@ public sealed class Pipeline {
     MessageRoute Route(Type message) {
         var hooks = Definition.HookBases.SelectMany(b => FoundFor(b, message)).ToList();
         var beforeSteps = Steps(Definition.BeforeSteps, typeof(BeforeStep<>), message);
-        return new MessageRoute(message, HandlersFor(message), many) {
+        return new MessageRoute(message, HandlersFor(message), many, Definition.Calls, Definition.AfterHandled) {
             BeforeValidationSteps = LowestFirst(beforeSteps.Where(step => step.Priority < ValidationPriority)),
             Validators = ByName(Definition.ValidatorBases.SelectMany(b => FoundFor(b, message)), message),
             BeforeSteps = LowestFirst(beforeSteps.Where(step => step.Priority >= ValidationPriority)),

@@ -32,7 +32,7 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 | Part | Project | Job |
 |---|---|---|
 | `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(IEnvelope<TEvent>)`. It has no `[AutoRegister]` |
-| `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. Its `RunAsync` raises `Changed` after a `HandleAsync` that completes, also with an error result |
+| `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. It has no members of its own. The presenter pipeline (`.CallsPresenters()`) calls `HandleAsync`, then raises `Changed` after a `HandleAsync` that completes, also with an error result |
 | `Presenter` | `Umpire.Vsa.Presenters` | The base of each presenter. It has `[AutoRegister]`, so the core step registers each presenter as scoped |
 | `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. It has the queue of the deliveries to the scope |
 | `LiveScopes` | `Umpire.Vsa.Presenters` | The live presenter scopes, for the whole app |

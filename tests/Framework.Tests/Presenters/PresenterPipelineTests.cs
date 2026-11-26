@@ -311,7 +311,8 @@ public sealed class PresenterPipelineTests {
         foreach (var presenter in presenters) {
             services.AddScoped(presenter);
         }
-        services.AddPipeline(new PipelineBuilder<IntegrationEvent>().Handlers(presenters).Runner<LiveScopesRunner>());
+        services.AddPipeline(new PipelineBuilder<IntegrationEvent>()
+            .Handlers(presenters).CallsPresenters().Runner<LiveScopesRunner>());
         more(services);
         return services.BuildServiceProvider();
     }
