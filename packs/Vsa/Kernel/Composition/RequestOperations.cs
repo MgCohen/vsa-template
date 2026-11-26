@@ -33,7 +33,9 @@ public static class RequestOperations {
     }
 
     public static string NameOf(Type request) =>
-        Kebab(request.Name.EndsWith("Request", StringComparison.Ordinal) ? request.Name.Substring(0, request.Name.Length - "Request".Length) : request.Name);
+        Kebab(request.Name.EndsWith("Request", StringComparison.Ordinal)
+            ? request.Name.Substring(0, request.Name.Length - "Request".Length)
+            : request.Name);
 
     public static string GroupOf(Type request, AppTypes types) {
         var space = request.Namespace ?? "";

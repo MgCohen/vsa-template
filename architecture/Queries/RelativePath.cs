@@ -5,10 +5,14 @@ using System.Runtime.InteropServices;
 static class RelativePath {
     static readonly char[] Separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    static StringComparison Comparison { get; } =
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
+    static readonly OSPlatform[] CaseInsensitivePlatforms = [
+        OSPlatform.Windows, OSPlatform.OSX, OSPlatform.Create("IOS"), OSPlatform.Create("TVOS"),
+        OSPlatform.Create("WATCHOS"), OSPlatform.Create("MACCATALYST"),
+    ];
+
+    static StringComparison Comparison { get; } = CaseInsensitivePlatforms.Any(RuntimeInformation.IsOSPlatform)
+        ? StringComparison.OrdinalIgnoreCase
+        : StringComparison.Ordinal;
 
     internal static string Of(string relativeTo, string path) {
         var from = Path.GetFullPath(relativeTo);

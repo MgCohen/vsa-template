@@ -115,12 +115,12 @@ sealed class PartOf {
         }
     }
 
-    sealed record PlacedRoot(Part Place, string Rest);
-
     static string[] FoldersOf(string path) {
         var segments = path.Split('/');
         return segments.Take(segments.Length - 1).ToArray();
     }
+
+    sealed record PlacedRoot(Part Place, string Rest);
 
     bool IsInBlock(TypeFacts type) =>
         type.Source is { } source && !RelativePath.Of(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
