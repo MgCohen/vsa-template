@@ -192,9 +192,9 @@ protected override void Rules(RuleBook rules) {
 
 | File | Content |
 |---|---|
-| `Kernel/<Name>.Kernel.csproj` | `netstandard2.1`, so a root with each target can reference it |
+| `Kernel/<Name>.Kernel.csproj` | `netstandard2.0`, so a root with each target can reference it |
 | `Kernel/<Name>Kernel.cs` | `public class <Name>Kernel : VsaKernel;` |
-| `Definition/<Name>.Definition.csproj` | `netstandard2.1`, and a reference to `../Kernel/<Name>.Kernel.csproj` |
+| `Definition/<Name>.Definition.csproj` | `netstandard2.0`, and a reference to `../Kernel/<Name>.Kernel.csproj` |
 | `Definition/<Name>Architecture.cs` | `public class <Name>Architecture : VsaArchitecture<<Name>Kernel>;` |
 
 Then do these steps:

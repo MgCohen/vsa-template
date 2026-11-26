@@ -289,6 +289,6 @@ IIntegrationEventPublisher.PublishAsync(event)
 
 The folders of Umpire.Messages.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`.
 
-`AddPipeline` registers the pipeline and `Pipelines`, the one service that selects a pipeline for each send. Each pipeline reads `AppTypes` from the services: it finds its handlers, the validators of its validator bases and the hooks of its hook bases. A pipeline built from services with no `AppTypes` takes only listed handlers, and `HandlersOf` fails. All these projects also target `netstandard2.1`, for Unity.
+`AddPipeline` registers the pipeline and `Pipelines`, the one service that selects a pipeline for each send. Each pipeline reads `AppTypes` from the services: it finds its handlers, the validators of its validator bases and the hooks of its hook bases. A pipeline built from services with no `AppTypes` takes only listed handlers, and `HandlersOf` fails. All these projects target `netstandard2.0`, for Unity and for the compiler.
 
 Later, on the same envelope: typed metadata (`Envelope<TMessage, TMeta>`), limits on depth and loops, queries over the call chain, subscriptions at run time, and runs that suspend and resume.
