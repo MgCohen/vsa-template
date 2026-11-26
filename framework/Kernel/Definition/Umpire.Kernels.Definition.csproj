@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The definitions of the framework blocks, the block records of the kernel and Architecture<TKernel>. It is check-time code:
-       no runtime project references it. The package Umpire (tools/bundle/) ships it with the runtime in one DLL. -->
+       no runtime project references it. The package Umpire.Definition (tools/bundle/Definition/) ships it with Umpire.Architecture. -->
   <ItemGroup>
     <ProjectReference Include="../Umpire.Kernels.csproj" />
     <ProjectReference Include="../../../architecture/Umpire.Architecture.csproj" />

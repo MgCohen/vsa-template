@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Umpire.Testing.dll: the unit test base and the base of the tests of a VSA definition. Umpire.Sdk adds it to a test project. -->
+  <!-- Umpire.Testing.dll: the unit test base and the base of the tests of a VSA definition. Umpire.Sdk adds it to a test project.
+       The definition test base needs the definition packages, so the package depends on them. -->
   <PropertyGroup>
     <Description>The Umpire test bases: VsaUnitTest and VsaArchitectureTest.</Description>
   </PropertyGroup>
@@ -9,6 +10,8 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../Umpire/Umpire.csproj" />
+    <ProjectReference Include="../Definition/Umpire.Definition.csproj" />
+    <ProjectReference Include="../VsaDefinition/Umpire.Vsa.Definition.csproj" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="NUnit" />
   </ItemGroup>

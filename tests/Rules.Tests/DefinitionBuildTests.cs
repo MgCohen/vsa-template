@@ -5,6 +5,23 @@ namespace Rules.Tests;
 [NonParallelizable]
 public sealed class DefinitionBuildTests {
     const string OneLine = "<Project Sdk=\"Umpire.Sdk\" />";
+    const string WithDefinitionPackage = """
+        <Project Sdk="Umpire.Sdk">
+          <ItemGroup>
+            <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
+          </ItemGroup>
+        </Project>
+        """;
+    const string RootWithDefinitionPackage = """
+        <Project Sdk="Umpire.Sdk">
+          <PropertyGroup>
+            <OutputType>Exe</OutputType>
+          </PropertyGroup>
+          <ItemGroup>
+            <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
+          </ItemGroup>
+        </Project>
+        """;
     const string Failing = """
         namespace Shop.Definition;
 
@@ -156,7 +173,7 @@ public sealed class DefinitionBuildTests {
 
     [Test]
     public void A_definition_derives_from_a_definition_that_the_app_does_not_reference() {
-        Write("company/Company.csproj", OneLine);
+        Write("company/Company.csproj", WithDefinitionPackage);
         Write("company/CompanyArchitecture.cs", Failing.Replace("Shop.Definition", "Company")
             .Replace("sealed class ShopArchitecture", "class CompanyArchitecture"));
         Write("Definition/Shop.Definition.csproj", """
@@ -215,6 +232,7 @@ public sealed class DefinitionBuildTests {
     [TestCase("Definition/ShopArchitecture.cs", "warning UMP030308")]
     public void A_definition_with_no_definition_project_gives_a_finding(string file, string finding) {
         DeleteDefinition();
+        Write("Shop.csproj", RootWithDefinitionPackage);
         Write(file, Failing);
 
         Assert.That(Build().Output, Does.Contain(finding));
