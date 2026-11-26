@@ -172,7 +172,7 @@ sealed class OpenDescriptors {
         var closedDefinitions = services
             .Where(d => !d.IsKeyedService && d.ServiceType.IsConstructedGenericType)
             .Select(d => d.ServiceType.GetGenericTypeDefinition())
-            .ToHashSet();
+            .Distinct().ToList();
         var unclosed = types.OpenRegistered().FirstOrDefault(definition =>
             !closedDefinitions.Contains(definition) && !DispatchShapesOf(definition, dispatch).Any());
         if (unclosed is not null) {

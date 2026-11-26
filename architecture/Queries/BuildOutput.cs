@@ -9,5 +9,5 @@ public static class BuildOutput {
     public static bool IsIgnored(string folderName) =>
         IsFolder(folderName) || folderName.StartsWith('.') || folderName.EndsWith('~');
 
-    public static bool Contains(string path) => path.Split(Separators)[..^1].Any(IsFolder);
+    public static bool Contains(string path) => path.Split(Separators).DropLast().Any(IsFolder);
 }

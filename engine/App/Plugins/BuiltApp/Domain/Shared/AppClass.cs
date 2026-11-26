@@ -11,12 +11,13 @@ public sealed record AppClass(
     public IReadOnlyList<TypeName> KernelChain => [Kernels[0], .. KernelBases];
 
     public static IReadOnlyList<Type> KernelsOf(Type type) {
-        if (type is not { IsAbstract: false, IsInterface: false, ContainsGenericParameters: false }) {
+        if (type is not { IsAbstract: false, IsInterface: false }) {
             return [];
         }
         return [.. type.GetInterfaces()
             .Where(i => i.IsGenericType && i.GetGenericTypeDefinition().FullName == EntryInterface)
             .Select(i => i.GetGenericArguments()[0])
+            .Where(kernel => !kernel.ContainsGenericParameters)
             .OrderBy(kernel => kernel.FullName, StringComparer.Ordinal)];
     }
 

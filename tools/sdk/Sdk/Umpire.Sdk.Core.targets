@@ -260,7 +260,7 @@
 
   <!-- netstandard2.1 does not have the type that the compiler needs for init and records. The folder name ends with ~, so the
        engine does not count the file as a source of the block. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <Compile Remove="$(UmpireFrameworkSourceDir)tools/sdk/Polyfills~/*.cs" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
     <Compile Include="$(MSBuildThisFileDirectory)../Polyfills~/*.cs" Visible="false" />
   </ItemGroup>

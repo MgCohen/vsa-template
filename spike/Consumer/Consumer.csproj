@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <SpikeAnalyzerMode Condition="'$(SpikeAnalyzerMode)' == ''">Single</SpikeAnalyzerMode>
+    <SpikeAnalyzerFolder>$(MSBuildThisFileDirectory)../artifacts~/bin/SpikeAnalyzer/debug/</SpikeAnalyzerFolder>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(SpikeAnalyzerMode)' == 'Single'">
+    <Analyzer Include="$(SpikeAnalyzerFolder)SpikeAnalyzer.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SpikeAnalyzerMode)' == 'All'">
+    <Analyzer Include="$(SpikeAnalyzerFolder)*.dll" Exclude="$(SpikeAnalyzerFolder)Microsoft.CodeAnalysis*.dll;$(SpikeAnalyzerFolder)System.Collections.Immutable.dll;$(SpikeAnalyzerFolder)System.Reflection.Metadata.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SpikeAnalyzerMode)' == 'Minimal'">
+    <Analyzer Include="$(SpikeAnalyzerFolder)*.dll" Exclude="$(SpikeAnalyzerFolder)Microsoft.CodeAnalysis*.dll;$(SpikeAnalyzerFolder)System.*.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(SpikeAnalyzerMode)' == 'Project'">
+    <ProjectReference Include="../SpikeAnalyzer/SpikeAnalyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

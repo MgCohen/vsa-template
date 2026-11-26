@@ -45,7 +45,7 @@ sealed class PartOf {
             return;
         }
         var file = Path.GetFullPath(source.File);
-        var relative = Path.GetRelativePath(blockFolder, file).Replace('\\', '/');
+        var relative = Umpire.Polyfills.PathOf.Relative(blockFolder, file).Replace('\\', '/');
         if (Outside(relative)) {
             if (external is not null) {
                 bound.Add(InPlacedBlock(file, type, source with { File = file }) ?? ExternalBinding(type, external));
@@ -110,7 +110,7 @@ sealed class PartOf {
             var next = segments[start + root.Length];
             if (root.Select((s, i) => string.Equals(s, segments[start + i], StringComparison.OrdinalIgnoreCase)).All(x => x)
                 && bodyFolders.Contains(next)) {
-                yield return string.Join("/", segments[(start + root.Length)..]);
+                yield return string.Join("/", segments.From(start + root.Length));
             }
         }
     }
@@ -118,7 +118,7 @@ sealed class PartOf {
     sealed record PlacedRoot(Part Place, string Rest);
 
     bool IsInBlock(TypeFacts type) =>
-        type.Source is { } source && !Path.GetRelativePath(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
+        type.Source is { } source && !Umpire.Polyfills.PathOf.Relative(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
 
     Part? TopFile(IReadOnlyList<string> paths, TypeFacts type) {
         if (!paths.Any(path => !path.Contains('/'))) {
@@ -132,7 +132,7 @@ sealed class PartOf {
     bool InInnerBlock(string file) => innerBlocks.Any(folder => file.StartsWith(folder, StringComparison.OrdinalIgnoreCase));
 
     FolderMatch? BlockPlace(IReadOnlyList<string> paths) => paths
-        .Select(path => path.Split('/')[..^1])
+        .Select(path => path.Split('/').DropLast())
         .SelectMany(folders => blockPlaces
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))
             .Where(m => m.Matches))
@@ -157,7 +157,7 @@ sealed class PartOf {
         IsRoot(alias) ? relative : relative[(alias.Folder.TrimEnd('/').Length + 1)..];
 
     FolderMatch? Folder(IReadOnlyList<string> paths, Part? within = null) => paths
-        .Select(path => path.Split('/')[..^1])
+        .Select(path => path.Split('/').DropLast())
         .SelectMany(folders => folderParts
             .Where(p => within is null || p.SelfAndAncestors().Contains(within))
             .Select(p => new FolderMatch(p, p.Path.Split('/'), folders))

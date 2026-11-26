@@ -68,7 +68,7 @@ static class BlockPlaces {
     }
 
     static IEnumerable<string> Relative(string blockFolder, IReadOnlyList<string> innerBlocks) =>
-        innerBlocks.Select(folder => Path.GetRelativePath(blockFolder, folder).Replace('\\', '/').TrimEnd('/'))
+        innerBlocks.Select(folder => Umpire.Polyfills.PathOf.Relative(blockFolder, folder).Replace('\\', '/').TrimEnd('/'))
             .Where(folder => folder != "." && !folder.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(folder));
 
     static string Join(string folder, string segment) => folder.Length == 0 ? segment : $"{folder}/{segment}";

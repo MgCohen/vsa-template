@@ -1,0 +1,10 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)../../Directory.Build.props" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <UmpireFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</UmpireFrameworkSourceDir>
+    <UmpireCheck>false</UmpireCheck>
+    <UmpireBlock>$(MSBuildThisFileDirectory)</UmpireBlock>
+    <ArtifactsPath>$(UmpireBlock)artifacts~</ArtifactsPath>
+  </PropertyGroup>
+</Project>
