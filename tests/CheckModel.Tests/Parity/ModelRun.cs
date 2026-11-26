@@ -3,6 +3,7 @@ using Tests.Shared;
 namespace CheckModel.Tests;
 
 using System.Text.RegularExpressions;
+using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.CheckModel.Export;
 using Data = Umpire.CheckModel;
@@ -47,7 +48,7 @@ sealed partial class ModelRun : IDisposable {
             }
         }
         for (var pass = engine.App.Count > 1 ? 0 : 1; pass < 2; pass++) {
-            foreach (var dll in engine.App) {
+            foreach (var dll in InBuildOrder(engine.App)) {
                 var output = Compile(ProjectOf(engine.Block, dll.Name), dll.Name, otherProjects.Contains(dll.Name) ? others[0] : State);
                 if (pass == 1) {
                     Read(output);
@@ -64,6 +65,18 @@ sealed partial class ModelRun : IDisposable {
         foreach (var state in states) {
             TempFolder.Delete(state.Folder);
         }
+    }
+
+    static List<BinDll> InBuildOrder(IReadOnlyList<BinDll> dlls) {
+        var left = dlls.OrderBy(dll => dll.Name, StringComparer.Ordinal).ToList();
+        var ordered = new List<BinDll>();
+        while (left.Count > 0) {
+            var next = left.FirstOrDefault(dll => !dll.References.Any(name => left.Any(other => other.Name == name)))
+                ?? left[0];
+            ordered.Add(next);
+            left.Remove(next);
+        }
+        return ordered;
     }
 
     static string ProjectOf(string block, string name) {

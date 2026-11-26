@@ -97,7 +97,7 @@ public sealed class BlockStampTests {
             var file = BlockStamp.Write(BlockStamp.In(root, "view"), "hash");
             using var locked = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
-            Assert.That(BlockStamp.Read(file), OperatingSystem.IsWindows() ? Is.Null : Is.EqualTo("hash"));
+            Assert.That(BlockStamp.Read(file), Is.Null);
         } finally {
             TempFolder.Delete(root);
         }
