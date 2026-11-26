@@ -8,7 +8,7 @@ public sealed class DefinitionBuildTests {
     const string WithDefinitionPackage = """
         <Project Sdk="Umpire.Sdk">
           <ItemGroup>
-            <PackageReference Include="Umpire.Vsa.Definition" />
+            <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
           </ItemGroup>
         </Project>
         """;
@@ -18,7 +18,7 @@ public sealed class DefinitionBuildTests {
             <OutputType>Exe</OutputType>
           </PropertyGroup>
           <ItemGroup>
-            <PackageReference Include="Umpire.Vsa.Definition" />
+            <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
           </ItemGroup>
         </Project>
         """;

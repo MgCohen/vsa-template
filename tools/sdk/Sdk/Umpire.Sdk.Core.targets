@@ -88,7 +88,9 @@
 
   <!-- The general parts that each app needs, with no layer, and the default pack.
        Path is the project folder under the repository root in source mode. Package is the bundle package that ships the project
-       in package mode (tools/bundle/): many projects share one package. An Analyzer item is a Roslyn analyzer, not a library. -->
+       in package mode (tools/bundle/): many projects share one package. An Analyzer item is a Roslyn analyzer, not a library.
+       Only a definition project (UmpireDefinitionProject) gets the definition packages, as private assets, so they do not
+       flow to the runtime. A test project gets the definition API also with no default pack. -->
   <ItemDefinitionGroup>
     <_UmpireFramework>
       <Analyzer>false</Analyzer>
@@ -98,7 +100,8 @@
     <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire.Definition" Bundle="tools/bundle/Definition"
-                      Condition="'$(UmpireDefinitionProject)' == 'true'" />
+                      PrivateAssets="all" Condition="'$(UmpireDefinitionProject)' == 'true'" />
+    <_UmpireTestBase Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire.Definition" Bundle="tools/bundle/Definition" />
     <!-- Pinned choice (W24): in package mode, the analyzer package of the pack holds the kernel analyzer (Umpire.KernelBundle.targets). -->
     <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
   </ItemGroup>
@@ -114,10 +117,8 @@
   <ItemGroup Condition="'$(UmpireDefaultPack)' == 'true'">
     <_UmpireFramework Include="Umpire.Vsa.Composition" Path="packs/Vsa/Kernel/Composition" Package="Umpire" Bundle="tools/bundle/Umpire" />
     <_UmpireFramework Include="Umpire.Vsa.Infrastructure" Path="packs/Vsa/Kernel/Infrastructure" Package="Umpire" Bundle="tools/bundle/Umpire" />
-    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition"
-                      Condition="'$(UmpireDefinitionProject)' == 'true'" />
-    <_UmpirePackDefinition Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition"
-                           Condition="'$(UmpireDefinitionProject)' != 'true' and '$(UmpireTestProject)' != 'true'" />
+    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition" PrivateAssets="all" Condition="'$(UmpireDefinitionProject)' == 'true'" />
+    <_UmpirePackDefinition Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition" Condition="'$(UmpireDefinitionProject)' != 'true' and '$(UmpireTestProject)' != 'true'" />
     <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
     <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" Package="Umpire.Testing" Bundle="tools/bundle/Testing" />
     <_UmpireFramework Include="Umpire.Vsa.Views" Path="packs/Vsa/Kernel/Views" Package="Umpire.Web" Bundle="tools/bundle/Web" Condition="'$(UmpireWeb)' == 'true'" />

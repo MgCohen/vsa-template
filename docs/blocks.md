@@ -66,7 +66,7 @@ The check entry has five forms. The kinds above give the default form. Each form
 |---|---|
 | App class | `NotesApp : App<VsaKernel, WebHost>` |
 | Definition of a kernel | `VsaArchitecture` in `packs/Vsa/Definition/` |
-| Typed base | `public class ToolsBlock : Block<ToolsArchitecture>` |
+| Typed base | `public class ToolsBlock : Block<ToolsArchitecture>`. The project needs the definition package (see "Packages of an app" in `consumers.md`) |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="<type>, <assembly>" />` |
 | `.umpireconfig` | `umpire.architecture = "<type>, <assembly>"` |
 

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The VSA architecture definition: the VSA layers and rules. VsaArchitecture names its kernel, VsaKernel, and no kernel
-       project references this project. It references each layer base of the VSA kernel. The package Umpire (tools/bundle/) ships it with the layer bases in one DLL.
+       project references this project. It references each layer base of the VSA kernel. The package Umpire.Vsa.Definition (tools/bundle/VsaDefinition/) ships it.
        It has no test framework, no ArchUnitNET and no Mono.Cecil. -->
   <ItemGroup>
     <ProjectReference Include="../../../architecture/Umpire.Architecture.csproj" />

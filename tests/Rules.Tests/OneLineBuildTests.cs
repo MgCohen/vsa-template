@@ -292,6 +292,7 @@ public sealed class OneLineBuildTests {
     public void The_test_bases_of_the_default_pack_can_be_left_out() {
         var references = Evaluate("App/Tests/OneLine.Tests.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
         Assert.That(references.Output, Does.Not.Contain("\"Umpire.Testing\""), references.Output);
+        Assert.That(references.Output, Does.Contain("\"Umpire.Definition\""), references.Output);
     }
 
     DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "--project", workspace.Src,
