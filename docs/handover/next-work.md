@@ -37,7 +37,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Work | Decision |
 |---|---|
 | Done: the test failures of `main` (#383, PR #384) | Clean base |
-| Take over draft PR #382: no default interface methods, one handler call for each kind | DIM decision |
+| Done: no default interface methods, one handler call for each kind (PR #382) | DIM decision |
 | Done: the API sites that `netstandard2.0` does not have (PR #386) | P2 |
 | Move the portable layer to `netstandard2.0`, after #382. Also change the conditions on `'netstandard2.1'` (polyfills, packages, `Umpire.Sdk.Core.targets`) | P2, entry design |
 | If an app class still has a generic parameter after the app and host split, fix `AppClass.KernelsOf`: refuse only an open kernel | Spike, assumption 4 |
@@ -109,6 +109,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 - A check at start that each handler has a call, and a call that names its own handler base (#382 review).
 - The Visual Studio test of the spike (needs the computer of the user).
 - A full cleanup and review of the tests, at the end of this phase. It includes: the intermittent `CS8032` of `Rules.Tests` with the shared compiler server (seen three times), and the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
+- vsa-unity, before a Unity release: the pipeline closes each handler call at run time with `MakeGenericType` and `Activator.CreateInstance` (#382). A call with a struct type argument, for example `CommandHandlerCall<X, int>`, can fail on an IL2CPP player if no code for that type exists at build time. Test a player with an `ICommand<int>` command.
 - vsa-unity, at the next consumer update: `Get<T>` of `UmpireConfig` binds module settings with reflection (#388). Under IL2CPP stripping, a removed setter is skipped with no error. A Unity host keeps the setters (`link.xml`, `[Preserve]`) or adds its own `ISettingsProvider`.
 
 ## Limits
