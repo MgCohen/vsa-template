@@ -94,7 +94,7 @@ The check of `packs/Vsa/` uses `PackArchitecture`, which permits each use betwee
 
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.<code>.severity = "warning"`.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each disabled rule stay. If the user decides to remove a disabled rule, its ID becomes a retired ID. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.<code>.severity = "warning"`.
 
 No rule is disabled now, so the table has no row.
 
