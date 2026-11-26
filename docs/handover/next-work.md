@@ -99,6 +99,12 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 - Unify with the sibling design talk ("Design: host-agnostic app and entry points", draft spike #381, page https://claude.ai/artifact/F6jvJV9kdCe34Y2Jto2obD). Its "App and host split" (the app names only its kernel, the entry gives the host as a value, one fixed composition, an untyped `LocalHost.Invoke` in the core) differs from the "Entry design" of this plan (`EngineApp<THost>`). This plan continues with its own entry design until the unification pass.
 - #387: two rule lines follow the move of the type helpers: the part `KernelParts.Utility` in `Core`, and `For<Infrastructure>().Uses<KernelParts.Utility>()` in the engine definition.
 - #388: a reader error now comes for two keys that differ only in case, and for TOML forms that the reader does not support.
+- #391, the definition packages:
+  - In package mode, the check gets the pack definition from the engine folder of the SDK package (`tools/net8.0/`), not from a NuGet restore. This keeps the definition DLLs out of the `deps.json` of the app. The other choice is a `PackageReference` with no assets.
+  - Definition code in an app project (not a definition project) now fails to compile with CS0246. Before, the engine gave a guided finding (`UMP030511` or `UMP030308`). Is a guided finding necessary again?
+  - `Testing/` (`ArchitectureTest`) stays in `Umpire.Definition`. The markers stay in `Umpire`.
+  - The archive has a separate part, `definition/netstandard2.1/`.
+  - The example check entry of the engine (`BlockSearch.cs`) and `docs/architecture-engine.md` name the assembly `Umpire.Vsa`, which is correct only in source mode. This is older than #391.
 
 ## Later
 
