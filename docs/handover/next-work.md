@@ -30,13 +30,17 @@ The code is on the branch `claude/spike-localhost` (no PR).
 
 Also for phase 1: in the compiler, the module scan and the `.umpireconfig` search use the compiler folder. The analyzer entry needs a fixed module list and its own config path.
 
-Follow-up: a spike of the default interface methods removal (each pipeline calls its handler), as a draft PR.
+Follow-up: the default interface methods are removed in draft PR #382 (accepted design). Phase 1 takes it over.
 
 ## Phase 1: runtime base
 
 | Work | Decision |
 |---|---|
+| Fix the test failures of `main` first (bug issue) | Clean base |
+| Take over draft PR #382: no default interface methods, one handler call for each kind | DIM decision |
 | Move the portable layer to `netstandard2.0`. Fix each blocker from the spike | P2, entry design |
+| Fix `AppClass.KernelsOf`: refuse only an open kernel, so an app class with an open host is found | Spike, assumption 4 |
+| The analyzer entry gets a fixed module list and its own `.umpireconfig` path | Spike finding |
 | `LocalHost : AppHost` and the `Send` extension, only for an app with `LocalHost`. The host stays internal | Entry design |
 | `LocalHost` uses the `Operation` path (object, reflection) | LocalHost channel |
 | A utility folder and namespace in `Umpire`: `LoadedTypes`, `ClosedBase`, the file writer, the version check | Q1, P8 |
@@ -92,6 +96,8 @@ Follow-up: a spike of the default interface methods removal (each pipeline calls
 - The typed channel of `LocalHost`.
 - Own checks of an app (option C, maybe B).
 - #380: a handler returns `Task<T>`.
+- A check at start that each handler has a call, and a call that names its own handler base (#382 review).
+- The Visual Studio test of the spike (needs the computer of the user).
 
 ## Limits
 
