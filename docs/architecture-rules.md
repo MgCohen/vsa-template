@@ -18,7 +18,6 @@ The editor and the build run the first group in each consumer project. The build
 | ID | Level | Rule |
 |---|---|---|
 | `UMP010201` | Analyzers | Requests and responses are records. A record that is not sealed passes, so a request can derive from another request. An abstract request base is not checked. Option: `check_responses`. A team that wants sealed payloads states it in its definition with the `Sealed` and `Record` traits. |
-| `UMP010206` | Analyzers | A `Domain.Shared` type holds only data: no method, operator, conversion or constructor body, and no property body that calls a method. Disabled (#142, #143). |
 | `UMP010001` | Analyzers | Each option of each running rule has a valid value: from the config, or the default of its rule. |
 | `UMP010002` | Analyzers | The `.umpireconfig` file of the block is valid TOML. Else the Umpire rules do not run. |
 | `UMP010003` | Analyzers | The config reader that the kernel analyzer DLL embeds loads in a private load context. Else the Umpire rules do not run. |
@@ -46,7 +45,7 @@ The editor and the build run the first group in each consumer project. The build
 
 Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`, `UMP010002`, `UMP010003`), `01` Umpire.Kernels.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding and names, `03` counts, matches, kinds and attribute places, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
-Retired analyzer IDs: `UMP010202`, `UMP010203`, `UMP010204`, `UMP010205` and `UMP010207`. Do not use a retired ID again (`CodeTests`).
+Retired analyzer IDs: `UMP010202`, `UMP010203`, `UMP010204`, `UMP010205`, `UMP010206` and `UMP010207`. Do not use a retired ID again (`CodeTests`).
 
 ### Rule lines of the VSA definition
 
@@ -95,11 +94,12 @@ The check of `packs/Vsa/` uses `PackArchitecture`, which permits each use betwee
 
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.UMP010206.severity = "warning"`.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each rule stay. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.<code>.severity = "warning"`.
+
+No rule is disabled now, so the table has no row.
 
 | Code | Class | Why disabled | Issue |
 |---|---|---|---|
-| `UMP010206` | `DataOnlySharedTypeRule` | "Data" has no definition: are a static helper method and a computed property data? | #142, #143 |
 
 `DisabledRuleTests` makes sure that the rules with `IsOnByDefault => false` are the codes of this table. To disable a rule, set `IsOnByDefault => false` on its class and add a row here and in #143.
 
