@@ -59,11 +59,11 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
 
     public PipelineBuilder<TMessage> Calls(params Type[] calls) {
         foreach (var call in calls ?? throw new ArgumentNullException(nameof(calls))) {
-            if (!IsCall(call)) {
+            if (!HandlerCalls.IsCall(call)) {
                 throw new ArgumentException(
                     $"{call?.FullName ?? "null"} is not a handler call. "
-                    + "A handler call is a concrete open generic type with one type parameter, the message, "
-                    + "a public constructor with no parameters, and the base HandlerCall<THandler, TMessage>.",
+                    + "A handler call is a concrete open generic type with a public constructor with no parameters. "
+                    + "Its base is HandlerCall<THandler, TMessage>, and each of its type parameters is in that base.",
                     nameof(calls));
             }
             if (!this.calls.Contains(call)) {
@@ -77,7 +77,9 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
         if (call is null) {
             throw new ArgumentNullException(nameof(call));
         }
-        afterHandled.Add(new AfterHandledCall(typeof(THandler), handler => call((THandler)handler)));
+        if (!afterHandled.Exists(added => added.Repeats(typeof(THandler), call))) {
+            afterHandled.Add(new AfterHandledCall(typeof(THandler), call, handler => call((THandler)handler)));
+        }
         return this;
     }
 
@@ -104,18 +106,12 @@ public sealed class PipelineBuilder<TMessage> where TMessage : class {
     internal PipelineDefinition Definition() =>
         new(typeof(TMessage), [.. handlerBases], [.. handlers], [.. hookBases],
             validatorBases.Count > 0 ? [.. validatorBases] : [typeof(Validator<>)], runner,
-            [.. beforeSteps], [.. afterSteps], [.. calls, typeof(RunCall<>)], [.. afterHandled]);
+            [.. beforeSteps], [.. afterSteps], [.. calls], [.. afterHandled]);
 
     static bool IsValidatorBase(Type? type) =>
         type is { IsGenericTypeDefinition: true }
         && type.GetGenericArguments().Length == 1
         && typeof(IValidation).IsAssignableFrom(type);
-
-    static bool IsCall(Type? type) =>
-        type is { IsGenericTypeDefinition: true, IsAbstract: false }
-        && type.GetGenericArguments().Length == 1
-        && type.GetConstructor(Type.EmptyTypes) is not null
-        && typeof(IHandlerCall).IsAssignableFrom(type);
 
     static bool IsHookBase(Type? type) =>
         type is not null

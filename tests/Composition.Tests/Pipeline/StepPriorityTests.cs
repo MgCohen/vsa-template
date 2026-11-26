@@ -10,7 +10,7 @@ public sealed class StepPriorityTests {
 
     [Test]
     public async Task A_step_with_a_priority_below_validation_runs_before_the_validators() {
-        using var run = Services(new PipelineBuilder<Move>()
+        using var run = Services(new PipelineBuilder<Move>().CallsTestHandlers()
             .Handlers(typeof(MoveHandler))
             .BeforeStep<TagStep>()
             .BeforeStep<EnterLock>(LockPriority)
@@ -25,7 +25,7 @@ public sealed class StepPriorityTests {
 
     [Test]
     public async Task Steps_with_one_priority_run_in_the_order_of_the_builder() {
-        using var run = Services(new PipelineBuilder<Move>()
+        using var run = Services(new PipelineBuilder<Move>().CallsTestHandlers()
             .Handlers(typeof(MoveHandler))
             .BeforeStep<EnterLock>(LockPriority)
             .BeforeStep<FirstStep>(LockPriority)
@@ -60,7 +60,7 @@ public sealed class StepPriorityTests {
 
     [Test]
     public void The_release_step_runs_after_an_earlier_after_step_throws() {
-        using var run = Services(new PipelineBuilder<Move>()
+        using var run = Services(new PipelineBuilder<Move>().CallsTestHandlers()
             .Handlers(typeof(MoveHandler))
             .BeforeStep<EnterLock>(LockPriority)
             .AfterStep<ExitLock>(LockPriority)
@@ -75,7 +75,7 @@ public sealed class StepPriorityTests {
 
     [Test]
     public void The_release_step_does_not_release_a_lock_that_the_run_did_not_take() {
-        using var run = Services(new PipelineBuilder<Move>()
+        using var run = Services(new PipelineBuilder<Move>().CallsTestHandlers()
             .Handlers(typeof(MoveHandler))
             .BeforeStep<BrokenBeforeStep>(LockPriority - 1)
             .BeforeStep<EnterLock>(LockPriority)
@@ -109,7 +109,7 @@ public sealed class StepPriorityTests {
     [Test]
     public async Task A_registered_factory_gives_the_step_instance() {
         using var run = Services(
-            new PipelineBuilder<Move>().Handlers(typeof(MoveHandler)).BeforeStep<NamedStep>(LockPriority),
+            new PipelineBuilder<Move>().CallsTestHandlers().Handlers(typeof(MoveHandler)).BeforeStep<NamedStep>(LockPriority),
             more => more.AddScoped(provider => new NamedStep(provider.GetRequiredService<StepLog>(), "factory")));
 
         await Send(run, new Move(2));
@@ -117,7 +117,7 @@ public sealed class StepPriorityTests {
         Assert.That(Log(run), Is.EqualTo(new[] { "factory", "validate", "handle" }));
     }
 
-    static StepRun LockedServices() => Services(new PipelineBuilder<Move>()
+    static StepRun LockedServices() => Services(new PipelineBuilder<Move>().CallsTestHandlers()
         .Handlers(typeof(MoveHandler))
         .BeforeStep<EnterLock>(LockPriority)
         .AfterStep<ExitLock>(LockPriority));
@@ -187,7 +187,7 @@ public sealed class StepPriorityTests {
         }
     }
 
-    public sealed class MoveHandler(StepLog log, SlowGate slow) : IRunnableHandler<Move> {
+    public sealed class MoveHandler(StepLog log, SlowGate slow) : ITestHandler<Move> {
         public const int Throws = 13;
         public const int Waits = 7;
 

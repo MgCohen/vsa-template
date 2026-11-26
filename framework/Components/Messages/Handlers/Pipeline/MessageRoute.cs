@@ -45,22 +45,14 @@ sealed class MessageRoute {
 
     static IHandlerCall? CallFor(RouteHandler handler, IReadOnlyList<Type> callTypes) =>
         callTypes
-            .Select(open => Closed(open, handler.Message))
-            .OfType<IHandlerCall>()
-            .FirstOrDefault(call => call.Handler.IsAssignableFrom(handler.Handler));
+            .SelectMany(open => HandlerCalls.Close(open, handler.Handler, handler.Message))
+            .Select(closed => (IHandlerCall?)Activator.CreateInstance(closed))
+            .FirstOrDefault();
 
     static InvalidOperationException NoCall(RouteHandler handler) =>
         new($"The pipeline has no call for {handler.Handler.FullName}, the handler of {handler.Message.Name}. "
-            + "Add the call of its handler kind to the pipeline with Calls(typeof(...)), "
-            + $"or implement IRunnableHandler<{handler.Message.Name}>.");
-
-    static IHandlerCall? Closed(Type open, Type message) {
-        try {
-            return (IHandlerCall?)Activator.CreateInstance(open.MakeGenericType(message), nonPublic: true);
-        } catch (ArgumentException) {
-            return null;
-        }
-    }
+            + "Add the call of its handler kind to the pipeline, for example CallsCommandHandlers(), "
+            + "or Calls(typeof(...)) with a HandlerCall<THandler, TMessage> that fits the handler.");
 
     static TDelegate Typed<TDelegate>(string method, Type message) where TDelegate : Delegate =>
         (TDelegate)typeof(MessageRoute)

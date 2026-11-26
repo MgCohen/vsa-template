@@ -333,7 +333,7 @@ public sealed class PresenterPipelineTests {
     sealed record Knock(int Scope) : IntegrationEvent;
 
     sealed record Slow : IntegrationEvent;
-    sealed class CountPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class CountPresenter() : Presenter(null!), IIntegrationEventHandler<Counted> {
         public int Total { get; private set; }
         public IServiceProvider? Services { get; private set; }
 
@@ -344,7 +344,7 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class TwoEventsPresenter() : Presenter(null!), IPresenterHandler<Counted>, IPresenterHandler<Other> {
+    sealed class TwoEventsPresenter() : Presenter(null!), IIntegrationEventHandler<Counted>, IIntegrationEventHandler<Other> {
         public int Total { get; private set; }
         public int Others { get; private set; }
 
@@ -359,7 +359,7 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class SlowPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class SlowPresenter() : Presenter(null!), IIntegrationEventHandler<Counted> {
         readonly SemaphoreSlim gate = new(0);
         int running;
 
@@ -379,24 +379,24 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class BrokenPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class BrokenPresenter() : Presenter(null!), IIntegrationEventHandler<Counted> {
         public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) => throw new InvalidOperationException("broken");
     }
 
-    sealed class ErrorPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class ErrorPresenter() : Presenter(null!), IIntegrationEventHandler<Counted> {
         public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) =>
             Task.FromResult<Result<Unit>>(new Error("broken", "The presenter failed."));
     }
 
     sealed class PresenterWhoseRequestPublishes(IIntegrationEventPublisher events)
-        : Presenter(null!), IPresenterHandler<Counted> {
+        : Presenter(null!), IIntegrationEventHandler<Counted> {
         public async Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             await events.PublishAsync(new Other(), CancellationToken.None);
             return Unit.Value;
         }
     }
 
-    sealed class OtherPresenter() : Presenter(null!), IPresenterHandler<Other> {
+    sealed class OtherPresenter() : Presenter(null!), IIntegrationEventHandler<Other> {
         public int Seen { get; private set; }
 
         public Task<Result<Unit>> HandleAsync(IEnvelope<Other> envelope) {
@@ -421,7 +421,7 @@ public sealed class PresenterPipelineTests {
     }
 
     sealed class KnockPresenter(Meeting meeting, IIntegrationEventPublisher events)
-        : Presenter(null!), IPresenterHandler<Knock> {
+        : Presenter(null!), IIntegrationEventHandler<Knock> {
         public int Id { get; set; }
 
         public async Task<Result<Unit>> HandleAsync(IEnvelope<Knock> envelope) {
@@ -444,7 +444,7 @@ public sealed class PresenterPipelineTests {
         public void Leave() => Interlocked.Decrement(ref running);
     }
 
-    sealed class SpawnPresenter(IIntegrationEventPublisher events) : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class SpawnPresenter(IIntegrationEventPublisher events) : Presenter(null!), IIntegrationEventHandler<Counted> {
         public TaskCompletionSource Go { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task? Spawned { get; private set; }
 
@@ -457,7 +457,7 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class SlowOtherPresenter(Turns turns) : Presenter(null!), IPresenterHandler<Slow> {
+    sealed class SlowOtherPresenter(Turns turns) : Presenter(null!), IIntegrationEventHandler<Slow> {
         readonly SemaphoreSlim gate = new(0);
 
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -473,7 +473,7 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class TurnPresenter(Turns turns) : Presenter(null!), IPresenterHandler<Other> {
+    sealed class TurnPresenter(Turns turns) : Presenter(null!), IIntegrationEventHandler<Other> {
         public int Seen { get; private set; }
 
         public Task<Result<Unit>> HandleAsync(IEnvelope<Other> envelope) {
@@ -484,7 +484,7 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class EndingPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class EndingPresenter() : Presenter(null!), IIntegrationEventHandler<Counted> {
         readonly SemaphoreSlim gate = new(0);
 
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -499,7 +499,7 @@ public sealed class PresenterPipelineTests {
         }
     }
 
-    sealed class CancelledPresenter() : Presenter(null!), IPresenterHandler<Counted> {
+    sealed class CancelledPresenter() : Presenter(null!), IIntegrationEventHandler<Counted> {
         public Task<Result<Unit>> HandleAsync(IEnvelope<Counted> envelope) {
             envelope.Cancellation.ThrowIfCancellationRequested();
             return Done;

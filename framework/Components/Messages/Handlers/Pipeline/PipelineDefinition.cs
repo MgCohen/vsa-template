@@ -1,6 +1,7 @@
 namespace Umpire.Messages.Handlers;
 
 using Umpire.Kernels;
+using Umpire.Messages.Contracts;
 
 sealed record PipelineDefinition(
     Type Message,

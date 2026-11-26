@@ -94,7 +94,7 @@ public sealed class PresenterValidatorTests {
         }
     }
 
-    public sealed class TallyPresenter() : Presenter(null!), IPresenterHandler<Tallied> {
+    public sealed class TallyPresenter() : Presenter(null!), IIntegrationEventHandler<Tallied> {
         public int Total { get; private set; }
 
         public Task<Result<Unit>> HandleAsync(IEnvelope<Tallied> envelope) {

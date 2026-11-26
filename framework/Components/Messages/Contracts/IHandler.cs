@@ -1,4 +1,4 @@
-namespace Umpire.Messages.Handlers;
+namespace Umpire.Messages.Contracts;
 
 public interface IHandler;
 

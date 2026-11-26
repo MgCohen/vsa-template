@@ -58,8 +58,9 @@ Retired analyzer IDs: `UMP010202`, `UMP010203`, `UMP010204`, `UMP010205` and `UM
 | An event handler uses no request, no response and no `IRequestSender` | `For<Handlers.Events>().Denies<Contracts.Requests>()` | `UMP020101` |
 | A presenter does not publish events. `Contracts.Events.Publishing` is the kernel folder of `IIntegrationEventPublisher` | `For<Presenters>().Denies<Contracts.Events.Publishing>().Under<Kernel>()` | `UMP020101` |
 | A `Domain.Shared` type is immutable | `For<Domain.Shared>().Are<Immutable>()` | `UMP020303` |
+| A presenter implements `IIntegrationEventHandler<TEvent>` of the kernel | `For<Presenters>().Uses<Handlers.Events>().Under<Kernel>()` | `UMP020101` |
 
-A presenter also does not use `Pipelines`: no rule lets `Presenters` use `MessagesParts.Handlers`. The base types of `Domain.Shared` types and the types of a contract folder are uses and bindings, so `UMP020101` and `UMP020202` check them.
+A presenter also does not use `Pipelines`: no rule lets `Presenters` use `MessagesParts.Handlers`. The marker `IHandler<T>` is in `MessagesParts.Contracts`, so a presenter can implement an event handler interface. The base types of `Domain.Shared` types and the types of a contract folder are uses and bindings, so `UMP020101` and `UMP020202` check them.
 
 `UMP010201` also runs, because the record line does not read these cases:
 

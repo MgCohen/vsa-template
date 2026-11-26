@@ -7,7 +7,7 @@ Changes go in two directions:
 | Direction | Path |
 |---|---|
 | Top down | A view calls a presenter method. The presenter sends a request with `IRequestSender` (`Run`), and changes its state from the result. `Run` puts the message of the `Error` of the result on the `OpState` |
-| Bottom up | A handler publishes an event. The presenter gets it (`IPresenterHandler<TEvent>`), changes its state, and raises `Changed` |
+| Bottom up | A handler publishes an event. The presenter gets it (`IIntegrationEventHandler<TEvent>`), changes its state, and raises `Changed` |
 
 The bottom-up path works at the presenter level. It does not need a view: a view only listens to `Changed` and renders.
 
@@ -18,7 +18,7 @@ The delivery to the presenters is a pipeline on the bus, the same as each other 
 ```text
 module handler ──PublishAsync──▶ Pipelines.PublishAsync
                                   1. the event pipeline: each IntegrationEventHandler<TEvent>, in the scope of the publish
-                                  2. if 1 is Accepted: the presenter pipeline, HandlersOf(IPresenterHandler<>)
+                                  2. if 1 is Accepted: the presenter pipeline, HandlersOf(Presenter)
                                        LiveScopesRunner: for each live presenter scope
                                          add the delivery to the queue of the scope, with an envelope of that scope
                                          if the scope is idle: this flow runs the queue until it is empty
@@ -31,8 +31,8 @@ PresenterWatcher ──Changed──▶ InvokeAsync(StateHasChanged)
 
 | Part | Project | Job |
 |---|---|---|
-| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(IEnvelope<TEvent>)`. It has no `[AutoRegister]` |
-| `IPresenterHandler<TEvent>` | `Umpire.Vsa.Presenters` | A presenter implements it one time for each event that it shows. It has no members of its own. The presenter pipeline (`.CallsPresenters()`) calls `HandleAsync`, then raises `Changed` after a `HandleAsync` that completes, also with an error result |
+| `IIntegrationEventHandler<TEvent>` | `Umpire.Vsa.Handlers.Events` | The one handler shape for an event: `HandleAsync(IEnvelope<TEvent>)`. A presenter implements it one time for each event that it shows. It has no `[AutoRegister]` |
+| `CallsPresenters()` | `Umpire.Vsa.Presenters` | The call of the presenter pipeline: `EventHandlerCall<>`, then `Changed` after each `HandleAsync` that completes, also with an error result |
 | `Presenter` | `Umpire.Vsa.Presenters` | The base of each presenter. It has `[AutoRegister]`, so the core step registers each presenter as scoped |
 | `PresenterScope` | `Umpire.Vsa.Presenters` | Scoped service. Its first resolve in a scope makes that scope live. The end of the scope removes it. It has the queue of the deliveries to the scope |
 | `LiveScopes` | `Umpire.Vsa.Presenters` | The live presenter scopes, for the whole app |
@@ -78,8 +78,8 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 - If a handler throws or returns an error, the next handler runs. The log gets each exception with its stack trace (`Envelope.HandlerExceptions`). If no handler throws, it gets the first error of the delivery.
 - `Changed` is raised after each handler that completes, also with an error result. It is not raised after a handler that throws or after a cancellation, so a view does not render a state that a throw left half changed. A `Changed` listener that throws is an error of its handler.
 - A delivery that starts later keeps the token of its publish. If that token is cancelled, an `OperationCanceledException` stops the delivery to that scope, and it is not an error.
-- `IIntegrationEventHandler<TEvent>` has no `[AutoRegister]`. The event pipeline takes the classes of `IntegrationEventHandler<TEvent>`, and the presenter pipeline takes the classes of `IPresenterHandler<TEvent>`. Thus a presenter is never a module handler.
-- One presenter can show many events: it implements `IPresenterHandler<T>` one time for each event.
+- `IIntegrationEventHandler<TEvent>` has no `[AutoRegister]`. The event pipeline takes the classes of `IntegrationEventHandler<TEvent>`, and the presenter pipeline takes the classes of `Presenter` that are event handlers. A class has one base class, so a presenter is never a module handler.
+- One presenter can show many events: it implements `IIntegrationEventHandler<T>` one time for each event.
 - An open presenter, for example `GaugePresenter<T> where T : struct, IGauge`, is closed for each `[AutoClose]` type that meets its constraints, the same as an open handler (`docs/composition.md`). If its event type does not use each type parameter (here `GaugeRead`), the presenter needs one `[AutoClose]` type that fits, else the start stops with a message (MgCohen/vsa-template#214). A presenter of an event that uses each type parameter is an open handler (`docs/composition.md`).
 - `Presenter` is a service, with one forward for each presenter. Thus `GetServices<Presenter>()` in a scope makes each presenter of that scope.
 - The presenter pipeline runs only the validators of `PresenterValidator<TEvent>`, one time for each live scope. A `Validator<TEvent>` runs one time, in the event pipeline. A presenter validator that rejects keeps the event from the presenters of that scope, and the publish stays accepted.
@@ -88,11 +88,12 @@ A scope gets events only when it is live. These parts resolve `PresenterScope`:
 - The presenter pipeline runs after the event pipeline. Publish an event after the change is saved, so that a view does not show a change that a rollback removes.
 - A presenter does not publish events, and does not use `IIntegrationEventPublisher` or `Pipelines` (`UMP020101`). To change state, it sends a request with `IRequestSender`, and the request handler publishes the event.
 - A presenter shows the events of its own module only. The definition lets `Presenters` use the `Contracts.Events` of its own module only (`UMP020101`).
+- The definition lets `Presenters` use `Handlers.Events` of the kernel, for `IIntegrationEventHandler<TEvent>` (`rules.For<Presenters>().Uses<Handlers.Events>().Under<Kernel>()`).
 
 ## Example
 
 ```csharp
-public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IPresenterHandler<Rang> {
+public sealed class BellPresenter(IRequestSender requests) : Presenter(requests), IIntegrationEventHandler<Rang> {
     public string? Last { get; private set; }
 
     public Task<Result<Unit>> HandleAsync(IEnvelope<Rang> envelope) {

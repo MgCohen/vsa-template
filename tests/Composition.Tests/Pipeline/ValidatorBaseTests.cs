@@ -9,15 +9,15 @@ using Umpire.Messages.Handlers;
 public sealed class ValidatorBaseTests {
     [Test]
     public async Task A_pipeline_with_no_validator_base_runs_the_validators_of_Validator() {
-        var result = await Send(new PipelineBuilder<Note>(), new Note("plain"));
+        var result = await Send(new PipelineBuilder<Note>().CallsTestHandlers(), new Note("plain"));
 
         Assert.That(result.Error?.Code, Is.EqualTo("note.plain"));
     }
 
     [Test]
     public async Task A_pipeline_with_a_validator_base_runs_only_the_validators_of_that_base() {
-        var plain = await Send(new PipelineBuilder<Note>().ValidatorsOf(typeof(NoteCheck<>)), new Note("plain"));
-        var checkedNote = await Send(new PipelineBuilder<Note>().ValidatorsOf(typeof(NoteCheck<>)), new Note("check"));
+        var plain = await Send(new PipelineBuilder<Note>().CallsTestHandlers().ValidatorsOf(typeof(NoteCheck<>)), new Note("plain"));
+        var checkedNote = await Send(new PipelineBuilder<Note>().CallsTestHandlers().ValidatorsOf(typeof(NoteCheck<>)), new Note("check"));
 
         Assert.That(plain.IsSuccess, Is.True);
         Assert.That(checkedNote.Error?.Code, Is.EqualTo("note.check"));
@@ -25,14 +25,14 @@ public sealed class ValidatorBaseTests {
 
     [Test]
     public async Task A_validator_of_an_interface_of_the_message_runs_for_the_message() {
-        var result = await Send(new PipelineBuilder<Note>().ValidatorsOf(typeof(NoteCheck<>)), new Note("titled"));
+        var result = await Send(new PipelineBuilder<Note>().CallsTestHandlers().ValidatorsOf(typeof(NoteCheck<>)), new Note("titled"));
 
         Assert.That(result.Error?.Code, Is.EqualTo("note.titled"));
     }
 
     [Test]
     public async Task A_pipeline_runs_the_validators_of_each_of_its_bases() {
-        var builder = new PipelineBuilder<Note>().ValidatorsOf(typeof(NoteCheck<>), typeof(Validator<>));
+        var builder = new PipelineBuilder<Note>().CallsTestHandlers().ValidatorsOf(typeof(NoteCheck<>), typeof(Validator<>));
 
         var plain = await Send(builder, new Note("plain"));
 
@@ -44,7 +44,7 @@ public sealed class ValidatorBaseTests {
     [TestCase(typeof(string))]
     [TestCase(typeof(TwoMessageCheck<,>))]
     public void ValidatorsOf_rejects_a_type_that_is_not_a_validator_base(Type notABase) {
-        var error = Assert.Throws<ArgumentException>(() => new PipelineBuilder<Note>().ValidatorsOf(notABase));
+        var error = Assert.Throws<ArgumentException>(() => new PipelineBuilder<Note>().CallsTestHandlers().ValidatorsOf(notABase));
 
         Assert.That(error!.Message, Does.StartWith($"{notABase.FullName} is not a validator base."));
     }
@@ -62,7 +62,7 @@ public sealed class ValidatorBaseTests {
 
     public sealed record Note(string Text) : ITitled;
 
-    public sealed class NoteHandler : IRunnableHandler<Note> {
+    public sealed class NoteHandler : ITestHandler<Note> {
         public Task<IMessageResult> RunAsync(IEnvelope<Note> envelope) =>
             Task.FromResult<IMessageResult>((Result<string>)envelope.Message.Text);
     }
