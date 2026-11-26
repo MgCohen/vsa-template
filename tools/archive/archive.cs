@@ -10,10 +10,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 
-const string RuntimeFolder = "runtime/netstandard2.1";
+const string RuntimeFolder = "runtime/netstandard2.0";
 const string AnalyzerFolder = "analyzers/dotnet/cs";
 const string EngineFolder = "engine/net8.0";
-const string EngineBuild = "netstandard2.1";
+const string EngineBuild = "netstandard2.0";
 const string EnginePackageFolder = "tools/net8.0/";
 const string Notices = "THIRD-PARTY-NOTICES.txt";
 const string Usage = "Usage: dotnet run tools/archive/archive.cs -- --feed <folder> --version <version> "
@@ -81,7 +81,7 @@ static class Archive {
         File.WriteAllText(Path.Combine(project, $"{ArchiveProject}.csproj"), $"""
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
-                <TargetFramework>netstandard2.1</TargetFramework>
+                <TargetFramework>netstandard2.0</TargetFramework>
                 <RestoreSources>{Path.GetFullPath(options.Feed)};https://api.nuget.org/v3/index.json</RestoreSources>
                 <RestorePackagesPath>{Path.Combine(publish, "packages")}</RestorePackagesPath>
               </PropertyGroup>

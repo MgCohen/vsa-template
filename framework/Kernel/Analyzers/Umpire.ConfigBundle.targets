@@ -7,11 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="" Visible="false" />
-    <ProjectReference Include="$(_UmpireConfigProject)" ReferenceOutputAssembly="false" Private="false"
-                      SetTargetFramework="TargetFramework=netstandard2.0" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="$(_UmpireConfigProject)" ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
   <Target Name="_UmpireEmbedConfigTree" BeforeTargets="PrepareResources" DependsOnTargets="ResolveProjectReferences">
-    <MSBuild Projects="$(_UmpireConfigProject)" Targets="GetTargetPath" Properties="TargetFramework=netstandard2.0">
+    <MSBuild Projects="$(_UmpireConfigProject)" Targets="GetTargetPath">
       <Output TaskParameter="TargetOutputs" ItemName="_UmpireConfigTreeFile" />
     </MSBuild>
     <ItemGroup>

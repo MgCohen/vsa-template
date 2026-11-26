@@ -70,12 +70,12 @@ A part builds for the lowest version of all its hosts. The lowest supported host
 
 | Part | Runs in | Target and limits | Reason |
 |---|---|---|---|
-| Runtime (`Umpire.dll`) | Unity player, Unity Editor, .NET apps, the engine | `netstandard2.1` only. `Microsoft.Extensions` 8.0 at most. | One build for all hosts (#301). Unity 6000.6 ships Microsoft.Extensions 8.0. |
+| Runtime (`Umpire.dll`) | Unity player, Unity Editor, .NET apps, the engine, the compiler | `netstandard2.0` only. `Microsoft.Extensions` 8.0 at most. | One build for all hosts (#301). Unity 6000.6 ships Microsoft.Extensions 8.0. |
 | .NET hosts (`Umpire.Web`, `Umpire.Console`, views) | .NET apps | `net10.0` | ASP.NET Core and SIGTERM exist only on .NET |
 | Analyzers | The C# compiler: .NET SDK, Visual Studio, Unity | `netstandard2.0`, Roslyn 4.10, `System.Collections.Immutable` and `System.Reflection.Metadata` 8.0 | The Unity 6000.6 compiler is Roslyn 4.10 on .NET 8 (`CS9057`, `CS8032`) |
 | Engine | The .NET SDK after the build, the .NET of the Unity Editor | `net8.0` with `RollForward` Major. The build hook uses `LatestMajor`. | The Unity 6000.6 Editor has only .NET 8. The engine loads the app definition, so it runs on the newest runtime. |
 | Tools and tests (`umpire`, `Umpire.Testing`, repository tests) | The .NET SDK | `net10.0`. The analyzer load tests also need a .NET 8 SDK (#289). | Only developers and CI run them |
-| Consumer app, .NET | The .NET SDK | Any current .NET. A module that a Unity app also uses stays on `netstandard2.1`. | One module, all hosts |
+| Consumer app, .NET | The .NET SDK | Any current .NET. A module that a Unity app also uses stays on `netstandard2.0` or `netstandard2.1`. | One module, all hosts |
 | Consumer app, Unity | The Unity compiler | Code in `Assets`, C# 9. The DLLs come from the release archive. | No MSBuild and no NuGet restore in Unity |
 
 ### What each host gives

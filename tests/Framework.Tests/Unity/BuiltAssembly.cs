@@ -14,16 +14,10 @@ public sealed record BuiltAssembly(string Path, string TargetFramework, IReadOnl
 
     public static string BinFolder => Repo.Path("artifacts~", "bin");
 
-    public static BuiltAssembly OfMultiTarget(string project, string targetFramework) =>
-        Read(System.IO.Path.Combine(BinFolder, project, $"{Configuration}_{targetFramework}", $"{project}.dll"));
-
     public static BuiltAssembly OfSingleTarget(string project) =>
         Read(System.IO.Path.Combine(BinFolder, project, Configuration, $"{project}.dll"));
 
-    public static BuiltAssembly OfPortable(string project) =>
-        Directory.Exists(System.IO.Path.Combine(BinFolder, project, $"{Configuration}_netstandard2.1"))
-            ? OfMultiTarget(project, "netstandard2.1")
-            : OfSingleTarget(project);
+    public static BuiltAssembly OfPortable(string project) => OfSingleTarget(project);
 
     static BuiltAssembly Read(string path) {
         using var stream = File.OpenRead(path);

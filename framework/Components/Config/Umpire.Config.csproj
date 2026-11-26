@@ -1,10 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The one reader of the .umpireconfig file (TOML). The engine, the kernel, the analyzers and the umpire tool use it.
-       The analyzers run in the compiler, so the reader also targets netstandard2.0. -->
+       It is a portable layer, so it targets netstandard2.0, and the analyzers can load it in the compiler. -->
   <PropertyGroup>
     <Description>Reads the .umpireconfig file of an Umpire block (TOML).</Description>
-    <TargetFramework></TargetFramework>
-    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
   <ItemGroup>

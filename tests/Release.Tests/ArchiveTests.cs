@@ -33,7 +33,7 @@ public sealed class ArchiveTests {
 
     [TestCase("manifest.json")]
     [TestCase(Notices)]
-    [TestCase("runtime/netstandard2.1/Umpire.dll")]
+    [TestCase("runtime/netstandard2.0/Umpire.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll")]
     [TestCase("engine/net8.0/umpire-engine.dll")]
@@ -117,7 +117,7 @@ public sealed class ArchiveTests {
 
     [Test]
     public void The_manifest_gives_the_Umpire_build_of_the_engine() =>
-        Assert.That(Text(manifest["engine"]!, "umpireBuild"), Is.EqualTo("netstandard2.1"));
+        Assert.That(Text(manifest["engine"]!, "umpireBuild"), Is.EqualTo("netstandard2.0"));
 
     [Test]
     public void The_manifest_lists_each_file_of_the_three_parts() {
@@ -196,7 +196,7 @@ public sealed class ArchiveTests {
 
     string AppOnTheRuntime(bool withStray) {
         var app = Path.Combine(folder, withStray ? "stray-app" : "concept-app");
-        var umpire = Path.Combine(tree, "runtime", "netstandard2.1", "Umpire.dll");
+        var umpire = Path.Combine(tree, "runtime", "netstandard2.0", "Umpire.dll");
         Directory.CreateDirectory(Path.Combine(app, "App", "Host"));
         File.WriteAllText(Path.Combine(app, "DiceGame.csproj"), $"""
             <Project Sdk="Microsoft.NET.Sdk">
