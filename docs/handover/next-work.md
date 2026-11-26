@@ -44,7 +44,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | The analyzer entry gets a fixed module list and its own `.umpireconfig` path | Spike finding |
 | Split the app, the composition and the host: `App` is the lifecycle with one start method and gets the host as a value, `Composition` only installs (core, kernel, modules, the self-install of the host), `AppHost` is only the transport | App and host split |
 | One operation flow for all transports. Each transport only converts its input (arguments, a request, a payload) and its output. `IRequest` is a basic type | App and host split |
-| `LocalHost` and `Send`, through the same operation flow | Entry design, App and host split |
+| Done: `LocalHost` and `Send`, through the `Operation` path, with a typed `Send` in the VSA kernel (PR #393). The engine accepts an app class with an open host | Entry design |
 | Done: `LoadedTypes` and `ClosedBase` in `framework/Kernel/Utility/`, namespace `Umpire.Utility` (PR #387). Still to move: the file writer and the version check, with phase 2 | Q1, P8 |
 | Done: our own TOML reader, no Tomlyn (PR #388) | K4 Q4 |
 | Make `App.Services` internal or protected, after a check of its users | Entry design |
@@ -105,6 +105,11 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - `Testing/` (`ArchitectureTest`) stays in `Umpire.Definition`. The markers stay in `Umpire`.
   - The archive has a separate part, `definition/netstandard2.1/`.
   - The example check entry of the engine (`BlockSearch.cs`) and `docs/architecture-engine.md` name the assembly `Umpire.Vsa`, which is correct only in source mode. This is older than #391.
+- #393, `LocalHost`:
+  - `LocalHost` is not sealed, and `Send` exists for each host that derives from `LocalHost`, so a custom or test host also gets it.
+  - The typed `Send` (VSA) and the untyped `Send` (core) have the same name. The caller gets the typed one only when it imports both namespaces.
+  - The sync `Send` blocks on the task, so it can deadlock on a thread with a `SynchronizationContext` (for example the Unity main thread). The docs say to use `SendAsync` there. The sibling spike found the same point.
+  - The operation lookup walks base classes only, not interfaces.
 - #392, the move to `netstandard2.0`:
   - The archive folders are now `runtime/netstandard2.0/` and `definition/netstandard2.0/`. `docs/consumers.md` said that these names stay the same. vsa-unity must change its paths, and it may need to skip more DLLs that Unity already ships (`System.Memory` and others).
   - The SDK now gives `IsExternalInit` to a consumer `netstandard2.0` project too, with the opt-out `UmpireIsExternalInitPolyfill=false`.
