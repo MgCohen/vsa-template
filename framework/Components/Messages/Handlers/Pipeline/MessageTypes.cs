@@ -1,8 +1,8 @@
 namespace Umpire.Messages.Handlers;
 
-using Umpire.Architecture;
 using Umpire.Kernels;
 using Umpire.Messages.Contracts;
+using Umpire.Utility;
 
 static class MessageTypes {
     internal static bool IsHandler(Type type) =>

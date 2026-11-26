@@ -23,33 +23,17 @@ static class Analyzer {
     public static Task Verify(string source, params DiagnosticResult[] expected) => Verify(source, "", expected);
 
     public static Task Verify(string source, string config, params DiagnosticResult[] expected) =>
-        Verify(source, config, null, expected);
-
-    public static Task VerifyIn(string assembly, string source, params DiagnosticResult[] expected) =>
-        Verify(source, "", assembly, expected);
-
-    public static Task VerifyIn(string assembly, string source, string config, params DiagnosticResult[] expected) =>
-        Verify(source, config, assembly, expected);
-
-    public static Task VerifyIn(string assembly, string source, (string Assembly, string Source) reference, params DiagnosticResult[] expected) =>
-        Verify(source, "", assembly, expected, test => {
-            test.TestState.AdditionalProjects[reference.Assembly].Sources.Add(reference.Source);
-            test.TestState.AdditionalProjectReferences.Add(reference.Assembly);
-        });
+        Verify(source, config, expected, null);
 
     public static Task VerifyFormatting(DiagnosticDescriptor rule, string source, string config, params DiagnosticResult[] expected) =>
-        Verify(source, config, null, expected, formatting: rule);
+        Verify(source, config, expected, rule);
 
-    static Task Verify(string source, string config, string? assembly, DiagnosticResult[] expected,
-        Action<AllRulesTest>? configure = null, DiagnosticDescriptor? formatting = null) {
+    static Task Verify(string source, string config, DiagnosticResult[] expected, DiagnosticDescriptor? formatting) {
         var test = new AllRulesTest {
             TestCode = formatting is not null ? source
                 : "using System;\nusing System.Net.Http;\nusing System.Threading;\nusing System.Threading.Tasks;\n" + source,
             ReferenceAssemblies = Net10,
         };
-        if (assembly is not null) {
-            test.SolutionTransforms.Add((solution, project) => solution.WithProjectAssemblyName(project, assembly));
-        }
         Type[] layers = [typeof(Umpire.Messages.Contracts.IMessage), typeof(Umpire.Vsa.Contracts.Requests.IRequest<>), typeof(Umpire.Vsa.Contracts.Events.IntegrationEvent),
             typeof(Umpire.Vsa.Handlers.Events.IntegrationEventHandler<>), typeof(Umpire.Vsa.Contracts.Requests.IRequestSender), typeof(Umpire.Vsa.Presenters.Presenter), typeof(Umpire.Kernels.Module), typeof(Umpire.Vsa.Composition.Plugin),
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection), typeof(Umpire.Vsa.Handlers.Commands.CommandHandler<,>),
@@ -66,11 +50,6 @@ static class Analyzer {
         test.TestState.AdditionalFiles.Add(("/.umpireconfig", umpireConfig));
         if (formatting is not null) {
             test.TestBehaviors |= TestBehaviors.SkipSuppressionCheck | TestBehaviors.SkipGeneratedCodeCheck;
-        }
-        configure?.Invoke(test);
-        foreach (var project in test.TestState.AdditionalProjects.Values) {
-            project.AnalyzerConfigFiles.Add(($"/{project.Name}/.globalconfig", globalConfig));
-            project.AdditionalFiles.Add(($"/{project.Name}/.umpireconfig", umpireConfig));
         }
         test.ExpectedDiagnostics.AddRange(expected);
         return test.RunAsync(TestContext.CurrentContext.CancellationToken);
@@ -193,7 +172,7 @@ public sealed class RecordPayloadRuleTests {
 public sealed class VsaAnalyzerTests {
     [Test]
     public void The_analyzer_has_each_rule_of_the_assembly() =>
-        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Is.SupersetOf(new[] { "UMP010201", "UMP010206" }));
+        Assert.That(new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id), Does.Contain("UMP010201"));
 
     [Test]
     public void Each_rule_has_a_unique_ID() =>

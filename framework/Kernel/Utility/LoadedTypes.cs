@@ -1,4 +1,4 @@
-namespace Umpire.Architecture;
+namespace Umpire.Utility;
 
 using System.Reflection;
 
@@ -11,5 +11,5 @@ public static class LoadedTypes {
         }
     }
 
-    public static bool IsCompilerGenerated(string typeName) => typeName.StartsWith('<');
+    public static bool IsCompilerGenerated(string typeName) => typeName.StartsWith("<", StringComparison.Ordinal);
 }

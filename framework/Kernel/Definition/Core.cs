@@ -9,6 +9,6 @@ public sealed record Core : KernelBlock {
     protected override void Define(Part part) {
         part.Add<KernelParts.App>().And<KernelParts.Kernels>().And<Hosts>().And<KernelParts.Operations>()
             .And<KernelParts.Modules>().And<KernelParts.Scan>().And<KernelParts.Factories>().And<KernelParts.Services>()
-            .And<KernelParts.Analyzers>();
+            .And<KernelParts.Utility>().And<KernelParts.Analyzers>();
     }
 }

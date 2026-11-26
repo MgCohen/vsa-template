@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 public abstract class RuleAnalyzer : DiagnosticAnalyzer {
-    const string TomlException = "Tomlyn.TomlException";
+    const string ConfigFormatException = "Umpire.Config.ConfigFormatException";
 
     public static readonly DiagnosticDescriptor OptionDescriptor = new(
         "UMP010001",
@@ -32,7 +32,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
     public static readonly DiagnosticDescriptor LoadDescriptor = new(
         "UMP010003",
         "The Umpire analyzers cannot load a library",
-        "The Umpire analyzers cannot load a library: {0} The analyzer DLL embeds Umpire.Config, Tomlyn and their dependencies. Use a "
+        "The Umpire analyzers cannot load a library: {0} The analyzer DLL embeds Umpire.Config. Use a "
             + "compiler on .NET 8 or later. The Umpire rules do not run until the library loads.",
         "Umpire",
         DiagnosticSeverity.Warning,
@@ -113,7 +113,7 @@ public abstract class RuleAnalyzer : DiagnosticAnalyzer {
 
     static bool IsTomlError(Exception e) {
         for (var type = e.GetType(); type is not null; type = type.BaseType) {
-            if (type.FullName == TomlException) {
+            if (type.FullName == ConfigFormatException) {
                 return true;
             }
         }

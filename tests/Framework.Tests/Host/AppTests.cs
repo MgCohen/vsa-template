@@ -142,20 +142,22 @@ public sealed class AppTests {
 
         Assert.That(references, Does.Not.Contain("Umpire.Kernels.Definition"));
         Assert.That(references, Does.Not.Contain("Umpire.Vsa"));
+        Assert.That(references, Does.Not.Contain("Umpire.Architecture"));
     }
 
     [Test]
-    public void The_kernel_uses_only_the_type_scan_of_the_definition_api() {
-        using var image = new PEReader(File.OpenRead(typeof(App).Assembly.Location));
+    public void The_definition_api_uses_only_the_utility_of_the_kernel() {
+        using var image = new PEReader(File.OpenRead(typeof(Architecture).Assembly.Location));
         var metadata = image.GetMetadataReader();
 
-        var used = metadata.TypeReferences.Select(metadata.GetTypeReference)
+        var namespaces = metadata.TypeReferences.Select(metadata.GetTypeReference)
             .Where(type => type.ResolutionScope.Kind == HandleKind.AssemblyReference
                 && metadata.GetString(metadata.GetAssemblyReference((AssemblyReferenceHandle)type.ResolutionScope).Name)
-                    == "Umpire.Architecture")
-            .Select(type => metadata.GetString(type.Name));
+                    == "Umpire.Kernels")
+            .Select(type => metadata.GetString(type.Namespace))
+            .Distinct();
 
-        Assert.That(used, Is.SubsetOf(new[] { nameof(LoadedTypes), nameof(ClosedBase) }));
+        Assert.That(namespaces, Is.EquivalentTo(new[] { "Umpire.Utility" }));
     }
 
     static async Task<int> RunUntilStop(LifecycleApp app) {

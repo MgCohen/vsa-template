@@ -21,7 +21,7 @@ flowchart LR
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
 | Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `App/Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the Umpire SDK packages hold the engine in `tools/net8.0/` |
 
-The runtime of an app references `Umpire.Architecture` through `Umpire.Kernels` (`LoadedTypes`), and Umpire.Sdk gives each project the package `Umpire` (one `Umpire.dll` with `Umpire.Architecture` and `Umpire.Vsa`). So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
+The runtime of an app does not reference `Umpire.Architecture`: `Umpire.Architecture` references `Umpire.Kernels` for `Umpire.Utility` (`LoadedTypes`, `ClosedBase`). Umpire.Sdk gives each project the package `Umpire` (one `Umpire.dll` with `Umpire.Architecture` and `Umpire.Vsa`). So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.1`, for Unity. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -684,6 +684,8 @@ A block is a folder tree of code with one check entry. The check entry names the
 
 - The engine reads the entries from the DLLs of the host output (with `MetadataLoadContext`, with no instance) and from the `.umpireconfig` files. The search for `.umpireconfig` skips `bin/`, `obj/` and each folder whose name ends with `~`.
 - A `.umpireconfig` file is a check entry only if it has the key `umpire.architecture` at the top level. With no key, it is only the root of the build output, of the rule values and of the module settings. The file is TOML. `UmpireConfig` (Umpire.Config) is its one reader, in the engine, the kernel and the `umpire` tool. A string needs quotes. A file-pattern section, for example `[*.cs]`, is not valid TOML.
+- The reader is our own (`TomlReader`, no package, #247). It reads this TOML subset: comments, tables `[a.b]`, bare, quoted and dotted keys, basic strings with escapes, literal strings, decimal integers, floats (a fraction, an exponent, `inf` and `nan`), booleans, arrays and inline tables. An array can have many lines. The keys of an inline table are on one line. Each other form gives a `ConfigFormatException` with the line and the column, for example a date, a hex integer, a multi-line string or an array of tables `[[name]]`.
+- Umpire reads each key with no case: `Value`, `Values`, `Get<T>` and the analyzers. Thus two keys of one table that differ only in case, for example `Max` and `max`, give a `ConfigFormatException`.
 - The entries in code come first. If one folder has an entry in code and the key `umpire.architecture`, the entry in code wins, and the engine gives the warning `UMP030304`.
 - The project folder of an assembly is the deepest common folder of its source files (not the generated files), or the first folder above it with a `.csproj` file.
 - For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).

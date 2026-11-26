@@ -9,7 +9,7 @@ static class HostArguments {
             }
             if (args[i].Contains('=')) {
                 options.Add(args[i]);
-            } else if (i + 1 < args.Length && !args[i + 1].StartsWith('-')) {
+            } else if (i + 1 < args.Length && !args[i + 1].StartsWith("-", StringComparison.Ordinal)) {
                 options.Add(args[i]);
                 options.Add(args[++i]);
             }

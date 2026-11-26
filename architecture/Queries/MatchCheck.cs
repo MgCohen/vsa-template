@@ -28,5 +28,5 @@ internal static class MatchCheck {
     }
 
     static bool SameInstance(Part group, Binding subject, Binding other) =>
-        group.Holds(other.Part) && group.Groups.All(g => subject.Values.GetValueOrDefault(g.Name) == other.Values.GetValueOrDefault(g.Name));
+        group.Holds(other.Part) && group.Groups.All(g => subject.Values.ValueOf(g.Name) == other.Values.ValueOf(g.Name));
 }

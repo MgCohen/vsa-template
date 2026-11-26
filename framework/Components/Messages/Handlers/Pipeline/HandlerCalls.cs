@@ -1,7 +1,7 @@
 namespace Umpire.Messages.Handlers;
 
-using Umpire.Architecture;
 using Umpire.Kernels;
+using Umpire.Utility;
 
 static class HandlerCalls {
     internal static bool IsCall(Type? type) =>

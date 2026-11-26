@@ -2,9 +2,9 @@ namespace Umpire.Messages.Handlers;
 
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
-using Umpire.Architecture;
 using Umpire.Kernels;
 using Umpire.Messages.Contracts;
+using Umpire.Utility;
 
 public sealed class Pipeline {
     public const int ValidationPriority = 0;

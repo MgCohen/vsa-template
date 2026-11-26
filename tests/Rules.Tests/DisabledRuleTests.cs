@@ -20,10 +20,13 @@ public sealed partial class DisabledRuleTests {
     }
 
     [Test]
+    public void The_section_of_the_disabled_rules_has_the_table() =>
+        Assert.That(Section(), Does.Contain("| Code | Class | Why disabled | Issue |"));
+
+    [Test]
     public void Each_row_of_the_table_names_issue_143() {
         var rows = TableRows().ToList();
 
-        Assert.That(rows, Is.Not.Empty);
         Assert.That(rows, Has.All.Contains("#143"));
     }
 
@@ -33,10 +36,12 @@ public sealed partial class DisabledRuleTests {
     static IEnumerable<string> Table() =>
         TableRows().Select(row => RowCode().Match(row).Groups["code"].Value);
 
-    static IEnumerable<string> TableRows() {
+    static IEnumerable<string> TableRows() =>
+        Section().Split('\n').Where(line => RowCode().IsMatch(line));
+
+    static string Section() {
         var section = Rules[Rules.IndexOf("## Disabled rules", StringComparison.Ordinal)..];
-        section = section[..section.IndexOf("\n## ", 1, StringComparison.Ordinal)];
-        return section.Split('\n').Where(line => RowCode().IsMatch(line));
+        return section[..section.IndexOf("\n## ", 1, StringComparison.Ordinal)];
     }
 
     [GeneratedRegex(@"^\| `(?<code>UMP\d{6})` \|")]

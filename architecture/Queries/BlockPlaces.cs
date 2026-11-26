@@ -25,7 +25,7 @@ static class BlockPlaces {
     }
 
     public static IReadOnlyList<BlockPlace> Empty(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
-        var inner = Relative(blockFolder, innerBlocks).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var inner = new HashSet<string>(Relative(blockFolder, innerBlocks), StringComparer.OrdinalIgnoreCase);
         return [.. resolved.Parts.Where(p => p.IsBlockPlace)
             .SelectMany(place => Folders(blockFolder, place.Path.Split('/'))
                 .Where(folder => !inner.Contains(folder) && (Directory.Exists(Full(blockFolder, folder)) || !HasDllForm(place)))
@@ -68,7 +68,7 @@ static class BlockPlaces {
     }
 
     static IEnumerable<string> Relative(string blockFolder, IReadOnlyList<string> innerBlocks) =>
-        innerBlocks.Select(folder => Path.GetRelativePath(blockFolder, folder).Replace('\\', '/').TrimEnd('/'))
+        innerBlocks.Select(folder => RelativePath.Of(blockFolder, folder).Replace('\\', '/').TrimEnd('/'))
             .Where(folder => folder != "." && !folder.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(folder));
 
     static string Join(string folder, string segment) => folder.Length == 0 ? segment : $"{folder}/{segment}";

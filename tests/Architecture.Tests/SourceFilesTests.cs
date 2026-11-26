@@ -15,11 +15,16 @@ public sealed class SourceFilesTests {
         var page = project.Write($"Host/{Generator}/App/Views/Pages/NotesPage_razor.g.cs", "namespace Views; public sealed class NotesPage { }");
         var info = project.Write("Host/obj/Debug/net10.0/Host.AssemblyInfo.cs", "namespace Host; public sealed class Info { public int Value() => 1; }");
         var flat = project.Write($"Host/{Generator}/Flat_razor.g.cs", "namespace Views; public sealed class Flat { }");
+        var razor = Path.Combine(project.Root, "Host", "Views", "Pages", "Home.razor");
+        var home = project.Write($"Host/{Generator}/Views_Pages_Home_razor.g.cs", $$"""
+            #pragma checksum "{{razor}}" "{8829d00f-11b8-4213-878b-770e8597ac16}" "00"
+            namespace Views { public sealed class Home { } }
+            """);
         var embedded = project.Write("Host/obj/Debug/net10.0/Embedded.g.cs", """
             namespace Microsoft.CodeAnalysis { internal sealed class EmbeddedAttribute : System.Attribute { } }
             namespace Validation { [Microsoft.CodeAnalysis.Embedded] internal sealed class ValidatableTypeAttribute : System.Attribute { } }
             """);
-        project.Compile("Host", project.Output, page, info, flat, embedded);
+        project.Compile("Host", project.Output, page, info, flat, home, embedded);
         sources = BinReader.Sources([Path.Combine(project.Output, "Host.dll")]);
     }
 
@@ -34,6 +39,11 @@ public sealed class SourceFilesTests {
     [Test]
     public void A_generated_file_with_no_hint_folder_maps_to_the_project_folder() {
         Assert.That(Relative(sources["Views.Flat"]), Is.EqualTo("Host/Flat_razor.g.cs"));
+    }
+
+    [Test]
+    public void A_flat_hint_of_a_razor_file_maps_to_the_folder_of_the_razor_file() {
+        Assert.That(Relative(sources["Views.Home"]), Is.EqualTo("Host/Views/Pages/Home_razor.g.cs"));
     }
 
     [Test]

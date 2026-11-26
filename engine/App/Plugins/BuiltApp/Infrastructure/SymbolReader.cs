@@ -5,6 +5,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using BuiltApp.Domain.Shared;
 using Umpire.Architecture;
+using Umpire.Utility;
 
 sealed class SymbolReader : IDisposable {
     static readonly Guid TypeDefinitionDocuments = new("932E74BC-DBA9-4478-8D46-0F32A7BAB3D3");
@@ -17,9 +18,11 @@ sealed class SymbolReader : IDisposable {
     readonly MetadataReaderProvider? symbols;
     readonly MetadataReader metadata;
     readonly MetadataReader? pdbOrNull;
+    readonly Lazy<IReadOnlyList<string>> sourceFiles;
     readonly Lazy<IReadOnlyList<string>> sourceFolders;
     readonly string? sourceRoot;
     readonly Dictionary<DocumentHandle, string> documentNames = [];
+    readonly Dictionary<string, ILookup<string, string>> flatHints = [];
 
     public SymbolReader(string dll, string? sourceRoot = null) {
         image = new PEReader(File.OpenRead(dll));
@@ -34,6 +37,7 @@ sealed class SymbolReader : IDisposable {
         }
         symbols = PortablePdb(Path.ChangeExtension(dll, ".pdb")) ?? EmbeddedPdb(image);
         pdbOrNull = symbols?.GetMetadataReader();
+        sourceFiles = new(() => [.. Documents().Where(file => !IsGenerated(file))]);
         sourceFolders = new(SourceFoldersAndParents);
         this.sourceRoot = sourceRoot;
     }
@@ -184,14 +188,36 @@ sealed class SymbolReader : IDisposable {
         var segments = source.File.Split(Separators);
         var output = Array.FindIndex(segments, BuildOutput.IsFolder);
         var project = ArtifactsProjectFolder(segments[output + 1]) ?? string.Join("/", segments[..output]);
-        return new Source($"{project}/{string.Join("/", HintPath(segments[(output + 1)..]))}", 1);
+        var hint = HintPath(segments[(output + 1)..]);
+        var path = hint.Length == 1 ? WithSourceFolders(project, hint[0]) : hint;
+        return new Source($"{project}/{string.Join("/", path)}", 1);
     }
+
+    string[] WithSourceFolders(string project, string hint) {
+        if (project.Length == 0) {
+            return [hint];
+        }
+        if (!flatHints.TryGetValue(project, out var hints)) {
+            hints = sourceFiles.Value
+                .Select(file => Path.GetRelativePath(project, file).Replace('\\', '/'))
+                .ToLookup(FlatHint, StringComparer.Ordinal);
+            flatHints[project] = hints;
+        }
+        if (hints[hint].Distinct(StringComparer.Ordinal).ToList() is not [var source]) {
+            return [hint];
+        }
+        var folders = source.Split('/');
+        return [.. folders[..^1], FlatHint(folders[^1])];
+    }
+
+    static string FlatHint(string relativePath) =>
+        string.Concat(relativePath.Select(c => char.IsLetterOrDigit(c) ? c : '_')) + ".g.cs";
 
     string? ArtifactsProjectFolder(string projectName) =>
         sourceFolders.Value.FirstOrDefault(folder => File.Exists(Path.Combine(folder, projectName + ".csproj")))?.Replace('\\', '/');
 
     IReadOnlyList<string> SourceFoldersAndParents() =>
-        [.. Documents().Where(file => !IsGenerated(file))
+        [.. sourceFiles.Value
             .SelectMany(file => Parents(Path.GetDirectoryName(file)))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(folder => folder.Length)];

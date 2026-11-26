@@ -1,6 +1,6 @@
 # Repository layout: architecture, framework, packs, engine and tools
 
-Umpire has five groups of code, and each group has one top folder. The definition API references no other C# project (its build gets the polyfill of Umpire.Sdk and the rule values of the kernel analyzers, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
+Umpire has five groups of code, and each group has one top folder. The definition API references only the markers and the kernel, for the shared helpers in `Umpire.Utility` (its build gets the polyfill of Umpire.Sdk and the rule values of the kernel analyzers, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
 
 To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
 
@@ -16,7 +16,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 
 ```mermaid
 flowchart BT
-    Kernel["framework/Kernel"] --> Architecture["architecture/"]
+    Architecture["architecture/"] --> Kernel["framework/Kernel"]
     Messages["framework/Components/Messages"] -. private .-> Kernel
     Kernel --> Config["framework/Components/Config"]
     Versions --> Config
@@ -77,7 +77,7 @@ ArchitectureTest<T> (a test of a definition)
 
 `architecture/Queries/` takes plain facts (`TypeFacts`: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
 
-The kernel references the definition API (`Umpire.Architecture`), for the type scan only (`LoadedTypes`, `ClosedBase`). The definition API is portable and has no ArchUnitNET.
+The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`). The runtime and the definition API (`Umpire.Architecture`) use them from there. The definition API is portable and has no ArchUnitNET.
 
 ## Two kinds of type
 

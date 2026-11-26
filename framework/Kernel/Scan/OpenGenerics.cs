@@ -1,6 +1,6 @@
 namespace Umpire.Kernels;
 
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public static class OpenGenerics {
     public static Type? Unify(Type openImplementation, Type service) =>
@@ -72,7 +72,7 @@ public static class OpenGenerics {
 
     public static string NameOf(Type definition) =>
         definition.IsGenericType
-            ? definition.FullName![..definition.FullName!.IndexOf('`')].Replace('+', '.')
+            ? definition.FullName!.Substring(0, definition.FullName!.IndexOf('`')).Replace('+', '.')
               + $"<{string.Join(", ", definition.GetGenericArguments().Select(a => a.Name))}>"
             : definition.FullName ?? definition.Name;
 

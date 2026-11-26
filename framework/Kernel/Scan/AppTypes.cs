@@ -3,7 +3,7 @@ namespace Umpire.Kernels;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public sealed class AppTypes {
     readonly AppAssemblies scan = new();
@@ -35,7 +35,7 @@ public sealed class AppTypes {
         .ThenBy(module => module.Name, StringComparer.Ordinal)];
 
     public static string NameOf(Type rootClass) =>
-        rootClass.Namespace is { } name ? name[(name.LastIndexOf('.') + 1)..] : rootClass.Name;
+        rootClass.Namespace is { } name ? name.Substring(name.LastIndexOf('.') + 1) : rootClass.Name;
 
     public IReadOnlyList<Type> ConcreteTypesOf(Type baseType) =>
         concreteTypes.GetOrAdd(baseType, FindConcreteTypes);

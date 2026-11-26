@@ -1,8 +1,7 @@
 <Project>
-  <!-- The kernel analyzer DLL embeds Umpire.Config, Tomlyn and their full netstandard2.0 dependency tree as resources.
-       ConfigReader loads them into a private AssemblyLoadContext, so the compiler of the host (for example Unity: Roslyn 4.10 with
-       System.Collections.Immutable 8.0) keeps its own System.Collections.Immutable. The analyzer DLLs compile against the
-       System.Collections.Immutable of Roslyn, and the package holds no dependency next to them. -->
+  <!-- The kernel analyzer DLL embeds the netstandard2.0 Umpire.Config.dll as a resource. Umpire.Config has no package dependency.
+       ConfigReader loads it into a private AssemblyLoadContext, so the reader never meets another copy of Umpire.Config in the
+       compiler process. The package holds no dependency next to the analyzer DLLs. -->
   <PropertyGroup>
     <_UmpireConfigProject>$(MSBuildThisFileDirectory)../../Components/Config/Umpire.Config.csproj</_UmpireConfigProject>
   </PropertyGroup>
@@ -13,10 +12,6 @@
   </ItemGroup>
   <Target Name="_UmpireEmbedConfigTree" BeforeTargets="PrepareResources" DependsOnTargets="ResolveProjectReferences">
     <MSBuild Projects="$(_UmpireConfigProject)" Targets="GetTargetPath" Properties="TargetFramework=netstandard2.0">
-      <Output TaskParameter="TargetOutputs" ItemName="_UmpireConfigTreeFile" />
-    </MSBuild>
-    <MSBuild Projects="$(_UmpireConfigProject)" Targets="UmpireConfigTree"
-             Properties="TargetFramework=netstandard2.0;CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Umpire.ConfigTree.targets">
       <Output TaskParameter="TargetOutputs" ItemName="_UmpireConfigTreeFile" />
     </MSBuild>
     <ItemGroup>
