@@ -5,8 +5,8 @@ Read this file first in a new session. It gives the state, the decisions, the ne
 | File | Content |
 |---|---|
 | `README.md` | State, decisions, queue, working rules |
-| `next-work.md` | The next code work (brief D) |
-| `open-questions.md` | Questions that wait for the user: K4, then the parked ones |
+| `next-work.md` | The work plan of the unified engine, in phases |
+| `open-questions.md` | The answers of the user (K4, topology) and the questions that wait |
 
 ## Goal of the phase
 
@@ -16,7 +16,8 @@ Make one base check system. VSA details come later.
 |---|---|
 | K0 engine, K1 reader, K2 jobs and rules | Decided |
 | K3 run model | Agreed for now (#293) |
-| K4 config, DLLs, packages (#331, #247) | Questions are ready, not answered |
+| K4 config, DLLs, packages (#331, #247) | Decided (see `open-questions.md`) |
+| Topology of the check system | Decided (see `open-questions.md` and the topology page) |
 | K5 definition API (#344) | Not started |
 | K6 | After K5, see the issues with the label `blocked: K1-K6` |
 
@@ -24,7 +25,7 @@ Make one base check system. VSA details come later.
 
 - Streams A (check model), B (link reversed) and C (VSA rule lines) are in `main` (#375).
 - Exit codes, the warning default and `UMP030513` are in `main` (#377). This repository stays strict (root `Directory.Build.props`, `engine/.umpireconfig`).
-- The check model is in `check/` (`docs/check-model.md`). The build still uses the engine in `engine/`. The switch to the new check is not done.
+- The check model is in `check/` (`docs/check-model.md`). The build still uses the engine in `engine/`. The topology review merges both into one engine (`next-work.md`, phase 3).
 - Last published preview: `0.2.0-preview.24`. It does not have #375 and #377. The consumers are not updated.
 - #78 is a paused draft. Do not touch it.
 
@@ -72,12 +73,9 @@ definition + one snapshot for each project -> app model (not saved) -> jobs -> o
 
 ## Queue
 
-1. `next-work.md` (brief D).
-2. K4 answers of the user, then the K4 work.
-3. The switch of the build to the new check, and then the removal of the ArchUnitNET reader.
-4. Managed files, then the depth of each operation (#362).
-5. K5 (#344), K6, #359, #360.
-6. A preview, then the consumer updates. These need the local computer (Unity), see `docs/consumers.md`. The app class changed, so the consumers must change too.
+1. `next-work.md`, phase 0: the spike. The Visual Studio test needs the computer of the user.
+2. `next-work.md`, phases 1 to 6.
+3. K5 (#344) with P11, K6, #359, #360, #362.
 
 ## Working rules of the user
 
@@ -115,4 +113,5 @@ definition + one snapshot for each project -> app model (not saved) -> jobs -> o
 |---|---|
 | Check goals and the K3 model | https://claude.ai/artifact/XA38aCcCmHVL8j97egQmEj |
 | Plan | https://claude.ai/artifact/NACemopjJv2LcsEFoY22H6 |
+| Check system topology (the target) | https://claude.ai/artifact/GQkEAJ48rdzvsDjPtXfBgf |
 | Tracker (its database has the rows) | https://claude.ai/artifact/6W18kfHNc1MTa5FA1Vi5AA |
