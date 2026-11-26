@@ -35,7 +35,7 @@ public sealed class AppTypes {
         .ThenBy(module => module.Name, StringComparer.Ordinal)];
 
     public static string NameOf(Type rootClass) =>
-        rootClass.Namespace is { } name ? name[(name.LastIndexOf('.') + 1)..] : rootClass.Name;
+        rootClass.Namespace is { } name ? name.Substring(name.LastIndexOf('.') + 1) : rootClass.Name;
 
     public IReadOnlyList<Type> ConcreteTypesOf(Type baseType) =>
         concreteTypes.GetOrAdd(baseType, FindConcreteTypes);

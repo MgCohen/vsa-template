@@ -12,6 +12,7 @@
     <InternalsVisibleTo Include="Umpire.Kernels.Definition" />
     <InternalsVisibleTo Include="Umpire.CheckModel.Export" />
     <InternalsVisibleTo Include="CheckModel.Tests" />
+    <InternalsVisibleTo Include="Architecture.Tests" />
   </ItemGroup>
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
   <ItemGroup>

@@ -17,7 +17,8 @@ public static class MarkedTypes {
         type is { IsClass: true, IsAbstract: false } && Marker(type, AutoRegisterName) is not null;
 
     public static ServiceLifetime LifetimeOf(Type type) =>
-        Marker(type, AutoRegisterName) is { ConstructorArguments: [{ Value: int lifetime }] }
+        Marker(type, AutoRegisterName) is { ConstructorArguments: { Count: 1 } arguments }
+            && arguments[0].Value is int lifetime
             ? (ServiceLifetime)lifetime
             : ServiceLifetime.Scoped;
 
@@ -37,7 +38,9 @@ public static class MarkedTypes {
     public static IEnumerable<Type> AutoCloseTypesOf(Assembly assembly) =>
         assembly.GetCustomAttributesData()
             .Where(a => a.AttributeType.FullName == AutoCloseName)
-            .Select(a => a.ConstructorArguments is [{ Value: Type type }] ? type : null)
+            .Select(a => a.ConstructorArguments is { Count: 1 } arguments && arguments[0].Value is Type type
+                ? type
+                : null)
             .OfType<Type>();
 
     static CustomAttributeData? Marker(Type type, string name) {

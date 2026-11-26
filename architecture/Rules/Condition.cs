@@ -18,7 +18,7 @@ public sealed class Condition : IEquatable<Condition> {
 
     public override bool Equals(object? obj) => Equals(obj as Condition);
 
-    public override int GetHashCode() => Same.Concat(Other).Aggregate(Same.Count, (hash, part) => HashCode.Combine(hash, part));
+    public override int GetHashCode() => Same.Concat(Other).Aggregate(Same.Count, (hash, part) => unchecked((hash * 31) + part.GetHashCode()));
 
     public override string ToString() => terms.Count == 0 ? "always" : string.Join(", ", terms);
 
@@ -27,6 +27,6 @@ public sealed class Condition : IEquatable<Condition> {
     internal Condition AndOther(Part group) => new(Same, [.. Other, group], [.. terms, $"other {group.Name}"]);
 
     internal bool Holds(IReadOnlyDictionary<string, string> from, IReadOnlyDictionary<string, string> to) =>
-        Same.All(g => from.GetValueOrDefault(g.Name) is { } value && value == to.GetValueOrDefault(g.Name))
-        && Other.All(g => from.GetValueOrDefault(g.Name) is { } value && to.GetValueOrDefault(g.Name) is { } other && value != other);
+        Same.All(g => from.ValueOf(g.Name) is { } value && value == to.ValueOf(g.Name))
+        && Other.All(g => from.ValueOf(g.Name) is { } value && to.ValueOf(g.Name) is { } other && value != other);
 }
