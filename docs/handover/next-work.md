@@ -39,7 +39,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Done: the test failures of `main` (#383, PR #384) | Clean base |
 | Done: no default interface methods, one handler call for each kind (PR #382) | DIM decision |
 | Done: the API sites that `netstandard2.0` does not have (PR #386) | P2 |
-| Move the portable layer to `netstandard2.0`, after #382. Also change the conditions on `'netstandard2.1'` (polyfills, packages, `Umpire.Sdk.Core.targets`) | P2, entry design |
+| Done: the portable layer and the bundles target `netstandard2.0` (PR #392) | P2, entry design |
 | If an app class still has a generic parameter after the app and host split, fix `AppClass.KernelsOf`: refuse only an open kernel | Spike, assumption 4 |
 | The analyzer entry gets a fixed module list and its own `.umpireconfig` path | Spike finding |
 | Split the app, the composition and the host: `App` is the lifecycle with one start method and gets the host as a value, `Composition` only installs (core, kernel, modules, the self-install of the host), `AppHost` is only the transport | App and host split |
@@ -105,6 +105,11 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - `Testing/` (`ArchitectureTest`) stays in `Umpire.Definition`. The markers stay in `Umpire`.
   - The archive has a separate part, `definition/netstandard2.1/`.
   - The example check entry of the engine (`BlockSearch.cs`) and `docs/architecture-engine.md` name the assembly `Umpire.Vsa`, which is correct only in source mode. This is older than #391.
+- #392, the move to `netstandard2.0`:
+  - The archive folders are now `runtime/netstandard2.0/` and `definition/netstandard2.0/`. `docs/consumers.md` said that these names stay the same. vsa-unity must change its paths, and it may need to skip more DLLs that Unity already ships (`System.Memory` and others).
+  - The SDK now gives `IsExternalInit` to a consumer `netstandard2.0` project too, with the opt-out `UmpireIsExternalInitPolyfill=false`.
+  - The archive test compiles a `netstandard2.1` app against the `netstandard2.0` DLLs, as a model of Unity.
+  - Not tested: the .NET Framework compiler of Visual Studio, and the archive tests that need a .NET 8 SDK.
 
 ## Later
 
