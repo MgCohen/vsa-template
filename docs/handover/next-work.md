@@ -92,6 +92,14 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | The tooling is a separate app, and `ConsoleHost` runs it | P7 |
 | `umpire check` starts the engine version of the app | Q2 (watch) |
 
+## End review
+
+Uncertain points of this work. The user reviews them at the end of the plan, not during the work.
+
+- Unify with the sibling design talk ("Design: host-agnostic app and entry points", draft spike #381, page https://claude.ai/artifact/F6jvJV9kdCe34Y2Jto2obD). Its "App and host split" (the app names only its kernel, the entry gives the host as a value, one fixed composition, an untyped `LocalHost.Invoke` in the core) differs from the "Entry design" of this plan (`EngineApp<THost>`). This plan continues with its own entry design until the unification pass.
+- #387: two rule lines follow the move of the type helpers: the part `KernelParts.Utility` in `Core`, and `For<Infrastructure>().Uses<KernelParts.Utility>()` in the engine definition.
+- #388: a reader error now comes for two keys that differ only in case, and for TOML forms that the reader does not support.
+
 ## Later
 
 - K5 (#344), with P11 (the scope of a rule).
