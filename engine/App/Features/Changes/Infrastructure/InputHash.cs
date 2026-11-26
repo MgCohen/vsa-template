@@ -12,6 +12,10 @@ public static class InputHash {
     static readonly string[] InputNames = [".umpireconfig", "global.json"];
     static readonly string[] LargeFolders = ["node_modules"];
     static readonly EnumerationOptions OneLevel = new() { IgnoreInaccessible = true };
+    static readonly EnumerationOptions FilesOfOneLevel = new() {
+        IgnoreInaccessible = true,
+        AttributesToSkip = FileAttributes.System,
+    };
 
     public static string Of(
         string block, string bin, string run,
@@ -47,7 +51,7 @@ public static class InputHash {
         if (!Directory.Exists(folder)) {
             return [];
         }
-        var files = Directory.EnumerateFiles(folder, "*", OneLevel).Where(IsInput);
+        var files = Directory.EnumerateFiles(folder, "*", FilesOfOneLevel).Where(IsInput);
         var folders = Directory.EnumerateDirectories(folder, "*", OneLevel)
             .Where(sub => !IsSkipped(Path.GetFileName(sub)) && !IsIgnored(block, sub, ignoredFolders));
         return files.Concat(folders.SelectMany(sub => BlockFiles(block, sub, ignoredFolders)));
@@ -56,7 +60,7 @@ public static class InputHash {
     static IEnumerable<string> FilesAbove(string block) {
         var start = Directory.GetParent(Path.GetFullPath(block));
         for (var folder = start; folder is not null; folder = folder.Parent) {
-            foreach (var file in Directory.EnumerateFiles(folder.FullName, "*", OneLevel).Where(IsInput)) {
+            foreach (var file in Directory.EnumerateFiles(folder.FullName, "*", FilesOfOneLevel).Where(IsInput)) {
                 yield return file;
             }
         }
