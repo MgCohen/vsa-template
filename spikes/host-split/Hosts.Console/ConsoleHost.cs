@@ -5,30 +5,34 @@ using Spike.Kernels;
 
 public class ConsoleHost : AppHost {
     readonly CancellationTokenSource stopping = new();
-    string[] args = [];
+    ConsoleCancelEventHandler? cancel;
     Task? work;
 
-    public override IServiceProvider Build(string[] args, AppParts app) {
-        this.args = args;
-        return base.Build(args, app);
-    }
-
     public override void Start(IServiceProvider services, AppStop stop) {
-        System.Console.CancelKeyPress += (_, e) => {
+        cancel = (_, e) => {
             e.Cancel = true;
             stop.Request(1);
         };
+        System.Console.CancelKeyPress += cancel;
         work = Task.Run(() => RunOne(services, stop, stopping.Token));
     }
 
     public override void Dispose() {
+        if (cancel is not null) {
+            System.Console.CancelKeyPress -= cancel;
+            cancel = null;
+        }
         stopping.Cancel();
-        work?.GetAwaiter().GetResult();
-        stopping.Dispose();
-        base.Dispose();
+        try {
+            work?.GetAwaiter().GetResult();
+        } catch (OperationCanceledException) {
+        } finally {
+            stopping.Dispose();
+            base.Dispose();
+        }
     }
 
-    protected override void Install(IServiceCollection services, AppTypes types) =>
+    protected override void Install(IServiceCollection services, AppTypes types, string[] args) =>
         services.AddSingleton(new CommandLine(args));
 
     static async Task RunOne(IServiceProvider services, AppStop stop, CancellationToken ct) {
@@ -41,10 +45,15 @@ public class ConsoleHost : AppHost {
             stop.Request(2);
             return;
         }
-        using var scope = services.CreateScope();
-        var result = await operation.Invoke(scope.ServiceProvider, Bind(operation.Input, line), ct).ConfigureAwait(false);
-        await System.Console.Out.WriteLineAsync(result.Error ?? result.Value?.ToString()).ConfigureAwait(false);
-        stop.Request(result.ExitCode);
+        try {
+            using var scope = services.CreateScope();
+            var result = await operation.Invoke(scope.ServiceProvider, Bind(operation.Input, line), ct).ConfigureAwait(false);
+            await System.Console.Out.WriteLineAsync(result.Error ?? result.Value?.ToString()).ConfigureAwait(false);
+            stop.Request(result.ExitCode);
+        } catch (Exception e) when (e is not OperationCanceledException) {
+            await System.Console.Error.WriteLineAsync($"{operation.Name} failed: {e.Message}").ConfigureAwait(false);
+            stop.Request(1);
+        }
     }
 
     static object Bind(Type input, CommandLine line) {

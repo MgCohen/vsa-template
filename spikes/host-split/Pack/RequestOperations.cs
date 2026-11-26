@@ -16,9 +16,13 @@ static class RequestOperations {
 
     static async Task<OperationResult> Send<TRequest, TResponse>(IServiceProvider services, object input, CancellationToken ct)
         where TRequest : IRequest<TResponse> {
-        var handler = services.GetRequiredService<RequestHandler<TRequest, TResponse>>();
-        var value = await handler.Handle((TRequest)input, ct).ConfigureAwait(false);
-        return new OperationResult(value, null, 0);
+        try {
+            var handler = services.GetRequiredService<RequestHandler<TRequest, TResponse>>();
+            var value = await handler.Handle((TRequest)input, ct).ConfigureAwait(false);
+            return new OperationResult(value, null, 0);
+        } catch (Exception e) when (e is not OperationCanceledException) {
+            return new OperationResult(null, $"{typeof(TRequest).Name} failed: {e.Message}", 1);
+        }
     }
 
     static string NameOf(Type request) =>

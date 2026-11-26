@@ -24,7 +24,7 @@ The output is `Hello, Linus.`, then `Hello, Ada.` and `Hello, Grace.`.
 | 3 | `Entries/Library/Program.cs` | The library entry: `app.Start(new LocalHost())`, then `Send`. The second start uses `FixedModules` with the same app |
 | 4 | `Runtime/App/App.cs` | The lifecycle: `Start(host)`, `Run(host)`, `Stop()`. `Start` returns the host with its own type |
 | 5 | `Runtime/Hosts/AppHost.cs` | `Compose` is fixed and not virtual: core, host `Install`, kernel, modules. The host gives the platform facts (`ModuleProvider`) |
-| 6 | `Hosts.Console/ConsoleHost.cs` | A transport that installs itself (`Install` adds `CommandLine`) and runs one operation |
+| 6 | `Hosts.Console/ConsoleHost.cs` | A transport that installs itself (`Install` adds `CommandLine` from `args`) and runs one operation |
 | 7 | `Runtime/Hosts/LocalHost.cs` | A transport of local calls: `Invoke(object)` gives an `OperationResult` |
 | 8 | `Pack/LocalSend.cs` | The pack adds the typed `Send<TResponse>`, so the core knows no request type |
 
@@ -44,7 +44,14 @@ The output is `Hello, Linus.`, then `Hello, Ada.` and `Hello, Grace.`.
 2. **An instance method hides an extension method.** When `LocalHost.Send(object)` exists, C# selects it before the typed extension `Send<TResponse>`. The core method is now `Invoke`, and the pack owns the name `Send`.
 3. **CA2000 at each entry.** `new ConsoleHost()` goes to `Run`, and the app disposes it at `Stop`. The analyzer cannot see this transfer, so each entry gets CA2000. The spike turns it off. Another solution is `Run<THost>()` with `new()`, but then a host cannot get values before the start, for example `ModuleProvider`.
 4. **A host is for one start only.** A second `Build` on the same host throws. Each start gets a new host, as before.
-5. **The console host needs the arguments in `Install`.** It keeps them in its `Build` override. We can also give the arguments to `Install`, or make them part of `Compose`.
+5. **The arguments are an input of `Compose`.** The console host needs them in `Install`. A first form kept them in a `Build` override, but then a direct caller of `Compose` (Unity) got no arguments. Now `Compose(services, args, app)` gives them to `Install`.
 6. **A test changes the platform facts, not the app.** `new LocalHost { ModuleProvider = new FixedModules(...) }` works with the app that ships. A root service of the app is a module (`GreetingModule`).
 7. **`netstandard2.0` works for the core, the pack and the console host**, with `LangVersion latest` and the `IsExternalInit` polyfill.
 8. **`LocalHost.Invoke` blocks on a task.** This is safe when the handlers use `ConfigureAwait(false)`, as `RequestOperations` does. A handler that does not use it can deadlock on a thread with a `SynchronizationContext`.
+9. **`AppStop` works with `Start` too.** With `Run`, the stop request wakes `Run`. With `Start` only, the app stops on the thread pool. The real `App` stops on the app thread, and the spike does not copy that.
+
+## Not in the spike
+
+- The real thread model of `App` (the app thread, a stop request during the start).
+- `CommandLine` takes the first word that is not an option as the request name, and it ignores unknown options.
+- A call of `LocalHost.Invoke` during `Dispose` is not guarded.

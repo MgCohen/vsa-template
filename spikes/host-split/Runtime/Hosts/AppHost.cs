@@ -4,15 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 public class AppHost : IDisposable {
     ServiceProvider? provider;
+    bool used;
 
     public IModuleProvider? ModuleProvider { get; init; }
 
     public virtual IServiceProvider Build(string[] args, AppParts app) {
-        if (provider is not null) {
-            throw new InvalidOperationException($"This {GetType().Name} is in use. Give a new host to each Start.");
-        }
+        Claim();
         var services = new ServiceCollection();
-        Compose(services, app);
+        Compose(services, args, app);
         provider = services.BuildServiceProvider();
         return provider;
     }
@@ -22,19 +21,27 @@ public class AppHost : IDisposable {
 
     public virtual void Dispose() {
         provider?.Dispose();
+        provider = null;
         GC.SuppressFinalize(this);
     }
 
-    public void Compose(IServiceCollection services, AppParts app) {
+    public void Compose(IServiceCollection services, string[] args, AppParts app) {
         var types = new AppTypes(ModuleProvider ?? new ScannedModules(app.Assembly));
         Core.Install(services, types);
-        Install(services, types);
+        Install(services, types, args);
         app.Kernel.Install(services, types);
         foreach (var module in types.Modules) {
             module.Install(services);
         }
     }
 
-    protected virtual void Install(IServiceCollection services, AppTypes types) {
+    protected virtual void Install(IServiceCollection services, AppTypes types, string[] args) {
+    }
+
+    protected void Claim() {
+        if (used) {
+            throw new InvalidOperationException($"This {GetType().Name} was used before. Give a new host to each Start.");
+        }
+        used = true;
     }
 }
