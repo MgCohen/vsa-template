@@ -293,7 +293,8 @@ public sealed class LoadAppTests {
     [Test]
     public void The_message_shows_the_classes_nearest_to_the_block_folder() {
         var far = Enumerable.Range(0, 9)
-            .Select(i => new UnloadedType(new($"A.View{i}", "A"), $"C:/a/App/Features/Views/View{i}.cs", "X.Base", "X"));
+            .Select(i => new UnloadedType(
+                new($"A.View{i}", "A"), Path.GetFullPath($"C:/a/App/Features/Views/View{i}.cs"), "X.Base", "X"));
         var dll = Unloaded("C:/a/App/MyApp.cs");
 
         var result = DefinitionSearch.Find(App, [dll with { Unloaded = [.. far, .. dll.Unloaded] }], [Vsa]);

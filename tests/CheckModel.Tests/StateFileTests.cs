@@ -6,17 +6,12 @@ public sealed class StateFileTests {
     [Test]
     public void A_failed_write_leaves_no_temporary_file() {
         using var temp = new TempState();
-        temp.State.Save(Snapshot.Of("Sample", []));
         var file = temp.State.SnapshotFile("Sample");
-        File.SetAttributes(file, FileAttributes.ReadOnly);
-        try {
-            Assert.That(() => temp.State.Save(Snapshot.Of("Sample", [Samples.File("Ui/Screen.cs")])),
-                Throws.InstanceOf<UnauthorizedAccessException>().Or.InstanceOf<IOException>());
-        } finally {
-            File.SetAttributes(file, FileAttributes.Normal);
-        }
+        Directory.CreateDirectory(file);
 
-        Assert.That(Directory.GetFiles(Path.GetDirectoryName(file)!), Is.EqualTo(new[] { file }));
+        Assert.That(() => temp.State.Save(Snapshot.Of("Sample", [Samples.File("Ui/Screen.cs")])),
+            Throws.InstanceOf<UnauthorizedAccessException>().Or.InstanceOf<IOException>());
+        Assert.That(Directory.GetFiles(Path.GetDirectoryName(file)!), Is.Empty);
     }
 
     [TestCase("definition")]
