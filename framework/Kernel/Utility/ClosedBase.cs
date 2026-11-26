@@ -1,4 +1,4 @@
-namespace Umpire.Architecture;
+namespace Umpire.Utility;
 
 public static class ClosedBase {
     public static Type? Of(Type type, Type definition) =>

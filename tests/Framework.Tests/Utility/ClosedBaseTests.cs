@@ -1,6 +1,6 @@
-namespace EngineCore.Tests;
+namespace Framework.Tests.Utility;
 
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public sealed class ClosedBaseTests {
     [Test]

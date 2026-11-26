@@ -4,12 +4,14 @@ using Umpire.Architecture;
 using Umpire.Architecture.Blocks;
 using Umpire.Vsa.Definition;
 using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
+using KernelParts = Umpire.Kernels.KernelParts;
 
 public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
         rules.For<Contracts.Commands>().And<Handlers.Commands>().And<Infrastructure>().And<Domain.Shared>()
             .Uses<EngineLibraries>().And<VersionLibraries>().And<ConfigLibraries>();
         rules.For<Infrastructure>().Uses<ArchUnitLibraries>();
+        rules.For<Infrastructure>().Uses<KernelParts.Utility>();
         rules.For<Host>().And<App>(Depth.Self).Uses<EngineLibraries>().And<VersionLibraries>();
         rules.For<DefinitionRoot>().Uses<EngineLibraries>();
     }

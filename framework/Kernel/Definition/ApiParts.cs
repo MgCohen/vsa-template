@@ -15,7 +15,5 @@ static class ApiParts {
 
     public sealed record Rules : Concept;
 
-    public sealed record Scan : Concept;
-
     public sealed record Testing : Concept;
 }

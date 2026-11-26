@@ -1,7 +1,7 @@
 namespace Umpire.Kernels;
 
 using System.Reflection;
-using Umpire.Architecture;
+using Umpire.Utility;
 
 sealed record ModuleRoot(string Name, Assembly Assembly, IReadOnlyList<Type> Classes) {
     internal static IReadOnlyList<ModuleRoot> In(Assembly assembly) => In(assembly, LoadedTypes.Of(assembly));

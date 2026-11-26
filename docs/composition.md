@@ -239,7 +239,7 @@ A request declares `Group`, `Name` and `Effect` as public static properties, by 
 - To select other modules, give a module provider in `AppHost.ModuleProvider` (`IModuleProvider`). The default is `ScannedModules` (the scan). `FixedModules(params Module[])` is a list by hand. It refuses a module type or a module name that it has two times. A custom provider calls `scan.In(assemblies)` to scan only some assemblies, for example a host that runs several apps in one process. `scan.In` does not skip an assembly that references `nunit.framework`: the provider selects its assemblies itself.
 - A provider gets only the module scan (`ModuleScan`), not the `AppTypes` instance. Reason: the type scans of `AppTypes` read the assemblies of the modules, so a provider that read them would ask for its own modules again.
 - `Build` makes one `AppTypes` instance: `new AppTypes(ModuleProvider, app.GetType().Assembly)`. The instance keeps the types of each assembly and the assemblies that reference each assembly, so it reads each assembly one time. The assemblies of the modules and the assembly of the app class are the scope of each other type scan (handlers, presenters, views, `[AutoRegister]`), so `Registered()` and `ConcreteTypesOf` read the same assemblies. The architecture check says where a type can be. A host can override `TypesOf(app)` to give another scope, for example a test host that scans only its modules. A second `Start` makes a new instance, so it also finds the assemblies that loaded later.
-- `LoadedTypes.Of(assembly)` (Umpire.Architecture) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
+- `LoadedTypes.Of(assembly)` (Umpire.Kernels, namespace `Umpire.Utility`) is the one load-safe read of the types of an assembly. The kernel, the unit test base and the rule engine use it.
 
 | Member | Gives |
 |---|---|
@@ -389,7 +389,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | Place | Use | Reason |
 |---|---|---|
 | `AppAssemblies` (Kernel) | `AppDomain.GetAssemblies`, `Assembly.Load`, `PEReader` | Finds the module assemblies. Only the `AppTypes` instance calls it |
-| `LoadedTypes.Of` (Architecture) | `GetTypes` | The one load-safe type read |
+| `LoadedTypes.Of` (Kernel, `Utility/`) | `GetTypes` | The one load-safe type read |
 | `ModuleRoot.Create` (Kernel) | `Activator.CreateInstance` | Creates the module class. A class with no public constructor with no parameters stops the start, with a message |
 | `OpenGenerics`, `ConstraintTypeArguments` (Kernel) | `MakeGenericType`, `GetFields` | Closes an open class: the scan, the descriptor close and the dispatch |
 | `OpenDescriptors` (Kernel) | `GetConstructors`, `GetParameters` | The constructor walk and the declared message close of `CloseOpenDescriptors` |
@@ -446,7 +446,8 @@ framework/Kernel/                      Umpire.Kernels
   Services/                            ServiceCollectionExtensions: Replace<TService, TImplementation>
   Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes, OpenGenerics
   Factories/                           IFactory<T>, AddFactory
-architecture/                          Umpire.Architecture: Architecture, LoadedTypes
+  Utility/                             Umpire.Utility: LoadedTypes, ClosedBase
+architecture/                          Umpire.Architecture: Architecture
 framework/Components/Messages/
   Contracts/                           IMessage, Envelope, Result, Error, Effect
   Handlers/                            PipelineBuilder, Pipeline, Pipelines, InlineRunner, Validator, Before, After, AddPipeline
