@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Entries/" />
+  <Folder Name="/Entries/Console/">
+    <Project Path="Entries/Console/Greeter.Console.csproj" />
+  </Folder>
+  <Folder Name="/Entries/Library/">
+    <Project Path="Entries/Library/Greeter.Library.csproj" />
+  </Folder>
+  <Folder Name="/Hosts.Console/">
+    <Project Path="Hosts.Console/Spike.Hosts.Console.csproj" />
+  </Folder>
+  <Folder Name="/Pack/">
+    <Project Path="Pack/Spike.Pack.csproj" />
+  </Folder>
+  <Folder Name="/Runtime/">
+    <Project Path="Runtime/Spike.Runtime.csproj" />
+  </Folder>
+  <Project Path="Greeter/Greeter.csproj" />
+</Solution>
