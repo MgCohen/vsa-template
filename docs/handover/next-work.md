@@ -53,7 +53,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Split the runtime and the definition: `Umpire.dll` ships no definition code | K4 Q1, Q2 |
+| Done: `Umpire.dll` ships no definition code. New packages `Umpire.Definition` and `Umpire.Vsa.Definition` (PR #391) | K4 Q1, Q2 |
 | Split core and VSA into two DLLs | K4 Q6 |
 | Remove `Microsoft.Extensions.Configuration` and `Logging`. First list what `IConfiguration` loses in the consumer repos | K4 Q5 |
 | Remove the SDK: the packages bring their own `build/` props and targets. This repository keeps `UseArtifactsOutput` | P7 |
