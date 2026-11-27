@@ -5,7 +5,9 @@ using Facts.Domain.Shared;
 using Umpire.Architecture;
 
 public static class SharedAssemblies {
-    static readonly HashSet<string> Names = Closure(typeof(Architecture).Assembly);
+    static readonly HashSet<string> Names = new(
+        Closure(typeof(Architecture).Assembly).Concat(Closure(typeof(Umpire.Kernels.Module).Assembly)),
+        StringComparer.OrdinalIgnoreCase);
 
     public static bool Contains(string name) => Names.Contains(name);
 

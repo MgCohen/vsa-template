@@ -32,15 +32,10 @@ static class PlatformPolyfills {
     }
 
     public static void MoveOver(string source, string destination) {
-        if (!File.Exists(destination)) {
-            File.Move(source, destination);
-            return;
-        }
         try {
-            File.Replace(source, destination, null);
-        } catch (IOException) when (IsWindows && File.Exists(source)) {
-            File.Delete(destination);
             File.Move(source, destination);
+        } catch (IOException) when (File.Exists(destination)) {
+            File.Replace(source, destination, null);
         }
     }
 
