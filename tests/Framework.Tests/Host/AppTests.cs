@@ -56,6 +56,14 @@ public sealed class AppTests {
     }
 
     [Test]
+    public void Only_the_app_class_and_the_framework_read_the_services_of_an_app() {
+        var services = typeof(App).GetProperty(nameof(App.Services), BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        Assert.That(services.GetMethod!.IsFamilyOrAssembly, Is.True);
+        Assert.That(typeof(IApp).GetProperty(nameof(App.Services)), Is.Null);
+    }
+
+    [Test]
     public void OnStop_runs_when_the_app_stops() {
         var app = new LifecycleApp();
         app.Start([]);

@@ -27,9 +27,19 @@
     <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Engine.Definition' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
   </PropertyGroup>
 
+  <!-- Each package targets the lowest framework that its code needs (decision P7). Umpire.Testing needs NUnit 4, which has no
+       netstandard2.0 build, and the umpire tool (with Umpire.Files) is a .NET tool, so they and their source projects target net8.0. Umpire.Web maps the
+       static assets of an app with MapStaticAssets, an API of ASP.NET Core 9, so it and its source projects target net9.0.
+       Umpire.Console is in the engine layer: it needs PosixSignalRegistration for SIGTERM. -->
   <PropertyGroup>
-    <TargetFramework Condition="'$(UmpirePortableLayer)' != 'true' and '$(UmpireEngineLayer)' != 'true'">net10.0</TargetFramework>
-    <TargetFramework Condition="'$(UmpireEngineLayer)' == 'true'">net8.0</TargetFramework>
+    <UmpireNet8Package Condition="$([System.String]::Copy(';Umpire.Vsa.Testing.Unit;Umpire.Testing;Umpire.Cli;Umpire.Files;').Contains(';$(MSBuildProjectName);'))">true</UmpireNet8Package>
+    <UmpireNet9Package Condition="$([System.String]::Copy(';Umpire.Hosts.Web;Umpire.Vsa.Views;Umpire.Web;').Contains(';$(MSBuildProjectName);'))">true</UmpireNet9Package>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework Condition="'$(UmpireNet9Package)' == 'true'">net9.0</TargetFramework>
+    <TargetFramework Condition="'$(UmpireEngineLayer)' == 'true' or '$(UmpireNet8Package)' == 'true'">net8.0</TargetFramework>
     <TargetFramework Condition="'$(UmpirePortableLayer)' == 'true'">netstandard2.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>

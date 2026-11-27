@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Umpire.Cli</RootNamespace>
     <PackAsTool>true</PackAsTool>
+    <!-- The tool targets net8.0. If .NET 8 is not installed, it runs on the newest runtime, for example the runtime of the .NET 10 SDK. -->
+    <RollForward>Major</RollForward>
     <ToolCommandName>umpire</ToolCommandName>
     <PackageId>Umpire.Cli</PackageId>
     <!-- Templates/ is a separate app that builds on its own. The tool holds its files as resources. -->

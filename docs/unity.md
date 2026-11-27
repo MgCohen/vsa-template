@@ -33,7 +33,7 @@ The reasons for the limits:
 | The host | `UnityHost : AppHost` with `Configure`: `App<VsaKernel, UnityHost>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
 | The host arguments | The base host reads only `--Key=Value` and `--Key value` of `args` into `HostArguments`, and it ignores other arguments (for example `-batchmode` or the player path). `UnityHost.Arguments(args)` can give other values | `docs/composition.md` |
-| The container | `host.Compose(services, arguments, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
+| The container | `host.Compose(services, arguments, kernel, types)`, or a bridge in `UnityHost.Start(services, stop)` | `docs/composition.md` |
 | The presenter scopes | The shell or the page resolves `PresenterScope` in its scope | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
 | The logger | An `ILoggerFactory` in `UnityHost.Configure`. The default is the null logger of `Microsoft.Extensions.Logging.Abstractions` | `docs/composition.md` |
