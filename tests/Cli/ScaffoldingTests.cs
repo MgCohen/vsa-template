@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Tests.Shared;
-using Umpire.Cli;
-using Umpire.Cli.Commands;
-using Umpire.Cli.Scaffolding;
+using Umpire.Cli.Features.Scaffold.Domain;
+using Umpire.Cli.Features.Scaffold.Slices.NewApp;
+using Umpire.Cli.Plugins.Commands.Domain.Shared;
 using Umpire.Files;
 
 namespace Cli.Tests;
@@ -111,7 +111,7 @@ public sealed class ScaffoldingTests {
     [Test]
     public void EachTrackedTemplateFileIsInTheTool() {
         var git = Process.Start(new ProcessStartInfo("git", "ls-files") {
-            WorkingDirectory = Repo.Path("tools", "cli", "Templates"),
+            WorkingDirectory = Repo.Path("tooling", "Templates"),
             RedirectStandardOutput = true,
         })!;
         var tracked = git.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -213,7 +213,7 @@ public sealed class ScaffoldingTests {
         var versions = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Packages.props")).Descendants("PackageVersion")
             .Where(e => e.Parent!.Attribute("Condition") is null)
             .ToDictionary(e => (string)e.Attribute("Include")!, e => (string)e.Attribute("Version")!);
-        var project = System.Xml.Linq.XDocument.Load(Repo.Path("tools", "cli", "Templates", "App", "Tests", "App.Tests.csproj"));
+        var project = System.Xml.Linq.XDocument.Load(Repo.Path("tooling", "Templates", "App", "Tests", "App.Tests.csproj"));
 
         var nunit = project.Descendants("PackageReference").Where(reference => ((string)reference.Attribute("Include")!).StartsWith("NUnit", StringComparison.Ordinal)).ToList();
 
@@ -310,9 +310,9 @@ public sealed class ScaffoldingTests {
 
     [Test]
     public void EachAddKindHasOneAddCommand() {
-        var adds = CommandList.All.OfType<AddCommand>().ToList();
+        var adds = Tool.Commands.Forms.Where(c => c.Group == "add").ToList();
 
-        Assert.That(adds.Select(c => c.Kind), Is.EqualTo(AddKind.All));
+        Assert.That(adds.Select(c => c.Name), Is.EqualTo(AddKind.All.Select(kind => kind.Noun)));
         Assert.That(adds.Select(c => c.Usage), Is.EqualTo(new[] {
             "umpire add module <Name>",
             "umpire add plugin <Name>",
@@ -322,5 +322,5 @@ public sealed class ScaffoldingTests {
         }));
     }
 
-    static IReadOnlyList<TextFile> NewApp(string name, params string[] sources) => NewAppCommand.Files(name, sources, Version);
+    static IReadOnlyList<TextFile> NewApp(string name, params string[] sources) => NewAppHandler.Files(name, sources, Version);
 }

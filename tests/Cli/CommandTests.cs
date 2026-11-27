@@ -1,43 +1,48 @@
 using Tests.Shared;
-using Umpire.Cli;
-using Umpire.Cli.Commands;
-using Umpire.Cli.Commands.Bases;
+using Umpire.Cli.Features.Scaffold.Domain;
+using Umpire.Cli.Features.Scaffold.Slices.NewApp;
+using Umpire.Cli.Features.Tool.Slices.Help;
+using Umpire.Cli.Host;
+using Umpire.Cli.Plugins.Commands.Contracts.Requests;
+using Umpire.Cli.Plugins.Commands.Domain.Shared;
 
 namespace Cli.Tests;
 
 public sealed class CommandTests {
-    static readonly Type[] Bases = [typeof(ToolCommand), typeof(AppCommand)];
-
     [Test]
-    public void EachCommandInheritsOneBaseAndIsInTheList() {
-        var commands = typeof(ToolCommand).Assembly.GetTypes()
-            .Where(t => t.Namespace == "Umpire.Cli.Commands" && t.Name.EndsWith("Command", StringComparison.Ordinal))
+    public void EachToolRequestIsASealedRecordWithAFormInTheList() {
+        var requests = typeof(ToolHost).Assembly.GetTypes()
+            .Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IToolRequest<>)))
             .ToList();
 
-        Assert.That(commands, Is.Not.Empty);
-        Assert.That(commands, Has.All.Matches<Type>(t => t.IsSubclassOf(typeof(ToolCommand)) && t.IsSealed));
-        Assert.That(commands.Select(t => t.BaseType), Has.All.Matches<Type>(b => Bases.Contains(b)));
-        Assert.That(CommandList.All.Select(c => c.GetType()).Distinct(), Is.EquivalentTo(commands));
+        Assert.That(requests, Is.Not.Empty);
+        Assert.That(requests, Has.All.Matches<Type>(t => t.IsSealed && t.GetMethod("<Clone>$") is not null));
+        Assert.That(requests, Has.All.Matches<Type>(t => t.Name.EndsWith("Request", StringComparison.Ordinal)));
+        Assert.That(Tool.Commands.Forms, Has.Count.EqualTo(requests.Count));
     }
 
     [Test]
     public void EachCommandHasItsOwnWords() =>
-        Assert.That(CommandList.All.Select(c => string.Join(' ', c.Words)), Is.Unique);
+        Assert.That(Tool.Commands.Forms.Select(c => string.Join(' ', c.Words)), Is.Unique);
+
+    [Test]
+    public void EachCommandHasItsOwnOrder() =>
+        Assert.That(Tool.Commands.Forms.Select(c => c.Order), Is.Unique);
 
     [Test]
     public void TheUsageListsEachCommand() {
-        var usage = CommandList.Usage;
+        var usage = HelpHandler.Usage(Tool.Commands.Forms);
 
-        foreach (var command in CommandList.All) {
+        foreach (var command in Tool.Commands.Forms.Where(c => c.Listed)) {
             Assert.That(usage, Does.Contain(command.Usage).And.Contain(command.Summary));
         }
-        Assert.That(usage, Does.Contain("umpire --version"));
+        Assert.That(usage, Does.Contain("umpire --version").And.Not.Contain("umpire help"));
     }
 
     [TestCase("add", "request", "X", "-m", "A", "-m", "B")]
     [TestCase("update", "--version", "1.0.0", "--version", "2.0.0")]
     public void AnOptionWithOneValueRejectsTwo(params string[] args) =>
-        Assert.That(() => CommandList.Run(args), Throws.TypeOf<UmpireException>().With.Message.Contain("one time only"));
+        Assert.That(() => Tool.Run(args), Throws.TypeOf<UmpireException>().With.Message.Contain("one time only"));
 
     [Test]
     public void ARequiredOptionIsChecked() =>
@@ -51,25 +56,25 @@ public sealed class CommandTests {
 
     [Test]
     public void ACommandThatTakesANameStopsWithoutIt() =>
-        Assert.That(() => CommandList.Run(["add", "module"]),
+        Assert.That(() => Tool.Run(["add", "module"]),
             Throws.TypeOf<UmpireException>().With.Message.Contain("Give the name: umpire add module <Name>"));
 
     [TestCase("add", "module", "Billing", "--force", "true")]
     [TestCase("doctor", "--version")]
     public void AnUnknownOptionStops(params string[] args) =>
-        Assert.That(() => CommandList.Run(args), Throws.TypeOf<UmpireException>().With.Message.Contain("Unknown option"));
+        Assert.That(() => Tool.Run(args), Throws.TypeOf<UmpireException>().With.Message.Contain("Unknown option"));
 
     [Test]
     public void AnUnknownCommandShowsTheUsage() =>
-        Assert.That(() => CommandList.Run(["add", "thing", "X"]),
+        Assert.That(() => Tool.Run(["add", "thing", "X"]),
             Throws.TypeOf<UmpireException>().With.Message.Contain("Unknown command").And.Message.Contain("Usage:"));
 
     [Test]
     public void ASourceCanBeGivenManyTimes() {
-        var input = CommandInput.Parse(new NewAppCommand(), ["Hello", "--source", "a", "--source", "b"]);
+        var input = CommandInput.Parse(NewAppRequest.Form, ["Hello", "--source", "a", "--source", "b"]);
 
         Assert.That(input.Name, Is.EqualTo("Hello"));
-        Assert.That(input.All(new NewAppCommand().Options[0]), Is.EqualTo(new[] { "a", "b" }));
+        Assert.That(input.All(NewAppRequest.Source), Is.EqualTo(new[] { "a", "b" }));
     }
 
     [TestCase("add", "module", "bad")]
@@ -150,7 +155,7 @@ public sealed class CommandTests {
             }
             prepare?.Invoke(folder);
             Environment.CurrentDirectory = folder;
-            var exitCode = CommandList.Run(args);
+            var exitCode = Tool.Run(args);
             inspect?.Invoke(folder);
             return exitCode;
         } finally {

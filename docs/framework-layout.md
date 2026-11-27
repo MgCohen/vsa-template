@@ -12,7 +12,8 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
 | Engine | `engine/` | The rule engine: the core library and the console entry (`Entries/Console/`) | `tools/net8.0/` of the package `Umpire.Engine` |
-| Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`), the bundle packages (`tools/bundle/`), with the build files of the packages, `Umpire.Engine` and the source mode | The developer |
+| Tooling | `tooling/` | The `umpire` tool (a VSA app and a checked block), its file writer (`tooling/Files/`) and its templates (`tooling/Templates/`) | The developer |
+| Tools | `tools/` | The bundle packages (`tools/bundle/`), with the build files of the packages, `Umpire.Engine` and the source mode, and the release archive (`tools/archive/`) | The developer |
 
 ```mermaid
 flowchart BT
@@ -27,8 +28,9 @@ flowchart BT
     Engine --> Versions
     Console["engine/Entries/Console"] --> Engine
     Testing["packs/Vsa/Tests/Unit"] -. compiles .-> Engine
-    Cli["tools/cli"] --> Versions["engine/Versions"]
-    Cli --> Files["tools/Files"]
+    Cli["tooling"] --> Versions["engine/Versions"]
+    Cli --> Vsa
+    Cli --> Files["tooling/Files"]
 ```
 
 ## Shipped files
@@ -72,7 +74,7 @@ This table is a guideline. **Not enforced in 0.1.0.**
 | A new fact of a built app | `engine/App/Plugins/Facts/`, behind a fact source (`IFactSource<TQuery, TFacts>`) |
 | An operation of the engine | `engine/App/Features/<Operation>/`: one feature module, one command |
 | A job of the engine | `engine/App/Features/Jobs/Slices/<Name>Job/`: one request and its handler |
-| A tool command | `tools/cli/Commands/`, on a base in `Commands/Bases/` |
+| A tool command | A slice in `tooling/App/Features/<Module>/Slices/<Command>/`: a request, a response and a handler |
 
 ## Where the rule answers are
 
@@ -136,7 +138,7 @@ See `composition.md` for each step.
 - The place of `Versions` (library or plugin).
 - A pack variant in this repository: `packs/<Base>.<Variant>/`, or another folder.
 - The checks that only one pack needs: `packs/<Name>/Checks/`.
-- The templates of each pack: `tools/cli/Templates/<Pack>/`.
+- The templates of each pack: `tooling/Templates/<Pack>/`.
 - The group folders (`framework/`, `packs/`, `tools/`): what they are, and if they stay.
 - A source folder (`src/`) for all code, so that the repository root holds only a small number of folders.
 - The place of `packs/`: at the top of the code folder, or under another folder.
