@@ -4,6 +4,20 @@ This plan replaces brief D. It follows the decisions in `open-questions.md`, sec
 
 Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides each merge of a PR about rules, analyzers or the public API.
 
+## State on 2026-11-27 (short)
+
+| Phase | State |
+|---|---|
+| 0 Spike | Done. The Visual Studio test waits for the computer of the user |
+| 1 Runtime base | Done: `netstandard2.0`, `LocalHost` and `Send`, own TOML reader, no default interface methods, utility folder |
+| 2 Packages | Done: `Umpire`, `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`, `Umpire.Engine`; no SDK; only DependencyInjection as a third-party runtime DLL; lowest targets |
+| Test speed | Done: `CS8032` fixed, two test sets, shared feed. Full set about 4 min, inner loop about 35 s plus the build |
+| 3 Engine | Done: `EngineApp<THost>`, jobs and operations, engine library on `netstandard2.0`, the check model and all analyzers inside the engine |
+| 4 Switch | In work |
+| 5, 6 | Not started |
+
+The user reviews the "End review" list below at the end.
+
 ## Phases
 
 | # | Phase | Depends on | Done when |
@@ -63,7 +77,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Done: `EngineApp<THost>`, the build job and the check job, the operations, the plugins Operations and Facts (PR #401). Done: the engine library on `netstandard2.0`, `Entries/Console/`, `check/` and `architecture/Queries/` in the engine (PR #403, #404). In work: the analyzers and `Entries/Analyzer/` with the compile job (3b part 2) | P1, entry design |
+| Done: `EngineApp<THost>`, the build job and the check job, the operations, the plugins Operations and Facts (PR #401). Done: the engine library on `netstandard2.0`, `Entries/Console/`, `check/` and `architecture/Queries/` in the engine (PR #403, #404). Done: the analyzers and `Entries/Analyzer/` with the compile job; `Umpire.Engine.Analyzer.dll` is the only Umpire analyzer; `check/` is removed (PR #405) | P1, entry design |
 | Jobs are requests in `App/Features/Jobs/`: compile job, build job, check job | P3, P9 |
 | Operations are feature modules: export, setup check, architecture check, code check, format, tests | P3, P4 |
 | Each job returns the same report type. The operations fill it | P4 |
@@ -111,6 +125,14 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #405, the analyzers in the engine:
+  - `Umpire` depends on `Umpire.Engine` with `PrivateAssets="none"`, so each project gets the analyzer entry and its DLLs. #398 had chosen `Umpire.Engine` only in the root project, so a library or a host that vendors the DLLs did not get the engine. Now each Umpire project downloads it.
+  - The analyzer items leave out the `System.*` DLLs. On the .NET Framework compiler (Visual Studio, `msbuild.exe`), `System.Text.Json`, `System.Memory` and similar DLLs may be missing. Not tested: the Visual Studio steps are in PR #405.
+  - The pack selection and the model facts are fact sources that the entry implements, with a `ConditionalWeakTable`: lazy, not plain data. `CompileJobReport` has two extra flags (`InModel`, `ChecksTypes`).
+  - The engine self-check reads only the bin of the console entry, so it does not check the analyzer DLL.
+  - `MetadataLoadContext` is pinned to 8.0.1 for `netstandard2.0`.
+  - A restore target for the entry can race in a parallel build of a fresh clone.
+  - The message of `UMP010003` still says "embeds Umpire.Config".
 - #403 and #404, the engine core and the check model:
   - The queries keep the namespace `Umpire.Architecture`, and the model keeps `Umpire.CheckModel`, as an exception to the namespace rule (written in `AGENTS.md`).
   - `ArchitectureTest` needs the queries, so `Umpire.Vsa.Testing.Unit` and the `Umpire.Testing` bundle compile a copy of the query files: two copies of one source. `Umpire.Definition` gives its internals to `Umpire.Engine` and `Umpire.Testing`.
