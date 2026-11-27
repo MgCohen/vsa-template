@@ -1,5 +1,5 @@
 namespace Versions.Domain.Shared;
 
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
-public sealed record CheckVersionsResult(IReadOnlyList<Finding> Findings) : IStepResult;
+public sealed record CheckVersionsResult(IReadOnlyList<Finding> Findings) : IOperationResult;

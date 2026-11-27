@@ -21,7 +21,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Term | Meaning | Code names |
 |---|---|---|
-| App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TKernel, THost>`, `IApp`, `NotesApp`, `EngineApp`; the root record `App` |
+| App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TKernel, THost>`, `IApp`, `NotesApp`, `EngineApp<THost>`; the root record `App` |
 | Host | The platform of an app. The host class builds the services and disposes them. It does not run or wait | `AppHost`, `WebHost`, `ConsoleHost`; the layer record `Host` |
 | Kernel | The install point of an architecture. `Core` installs the core services, then the kernel of the pack installs the layers | `Kernel`, `Core`, `VsaKernel` |
 | Operation | A request that a host exposes, with its group, name and effect | `Operation`, `Effect` |
@@ -33,7 +33,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Kind | Meaning | Example |
 |---|---|---|
-| App | The root of the app code. It runs, and its app class is the check entry | `App/`, the root record `App`, `NotesApp`, `EngineApp` |
+| App | The root of the app code. It runs, and its app class is the check entry | `App/`, the root record `App`, `NotesApp`, `EngineApp<THost>` |
 | Definition | The root of the architecture class of a block, with its records and externals | `Definition/`, the root record `Definition` |
 | Pack | A block with one architecture and its kernel | `packs/Vsa/`, the record `Pack` |
 | Core | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, the root record `Core`, `Architecture<TKernel>` |
@@ -88,7 +88,8 @@ Each block kind has a record on the base `Block`. `Umpire.Architecture.Blocks` h
 
 | Term | Meaning | Code names |
 |---|---|---|
-| Engine step | One feature module of the engine with one command | `EngineStep<TResult>` |
+| Job | One call of the engine: one request with its request handler, one input and one report. The build job runs after each build, and the check job also builds | `BuildJobRequest`, `CheckJobRequest`, `JobReport` |
+| Operation | A unit of work inside a job: one feature module of the engine with one command | `JobOperation<TResult>` |
 | Finding | One result line: code, severity, message, file and line | `Finding` |
 | Rule ID | `UMP` and six digits: area (2), group (2), case (2). Area `01` analyzers, `02` rule findings, `03` engine run | `UMP030401` |
 

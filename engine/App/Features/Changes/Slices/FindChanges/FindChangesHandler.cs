@@ -2,8 +2,8 @@ namespace Changes.Slices.FindChanges;
 
 using Changes.Domain.Shared;
 using Changes.Infrastructure;
-using Steps.Domain.Shared;
-using Steps.Infrastructure;
+using Operations.Domain.Shared;
+using Operations.Infrastructure;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 

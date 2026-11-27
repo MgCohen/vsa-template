@@ -1,8 +1,8 @@
 namespace Rules.Slices.CheckRules;
 
-using BuiltApp.Infrastructure;
+using Facts.Infrastructure;
 using Rules.Domain;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 sealed class BadFolderAliasRule : PlaceRule {
     public override int Number => 6;

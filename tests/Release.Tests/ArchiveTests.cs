@@ -188,8 +188,8 @@ public sealed class ArchiveTests {
     public void The_engine_of_the_archive_checks_an_app_with_its_own_concept_compiled_against_the_runtime() {
         var root = Net8DotnetRoot();
         var app = AppOnTheRuntime(withStray: false);
-        var output = Engine(root, "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
-            "--stage", "Check", "--projectchecks", "false", "--mode", "Error");
+        var output = Engine(root, "jobs", "build", "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
+            "--projectchecks", "false", "--mode", "Error");
 
         Assert.That(output, Does.Contain("umpire-engine: 0 errors,").And.Not.Contain("UMP030001"), output);
     }
@@ -198,8 +198,8 @@ public sealed class ArchiveTests {
     public void The_engine_of_the_archive_finds_a_wrong_type_in_an_app_compiled_against_the_runtime() {
         var root = Net8DotnetRoot();
         var app = AppOnTheRuntime(withStray: true);
-        var output = Engine(root, "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
-            "--stage", "Check", "--projectchecks", "false", "--mode", "Error");
+        var output = Engine(root, "jobs", "build", "--project", app, "--block", app, "--bin", Path.Combine(app, "out"),
+            "--projectchecks", "false", "--mode", "Error");
 
         Assert.That(output, Does.Contain("error UMP020202").And.Contain("Stray"), output);
     }

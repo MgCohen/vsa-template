@@ -101,7 +101,7 @@ public sealed class OneLineBuildTests {
     [Test]
     public void The_package_path_gives_the_runtime_flag_before_the_engine_file() {
         var run = workspace.Dotnet("build", "OneLine.csproj", "--no-restore", "-nodeReuse:false", "-v:n");
-        var command = Lines(run, "umpire-engine.dll\" --stage Check").FirstOrDefault() ?? "";
+        var command = Lines(run, "umpire-engine.dll\" jobs build").FirstOrDefault() ?? "";
 
         Assert.That(command, Does.Contain("exec --roll-forward LatestMajor \""), run.Output);
     }
@@ -325,7 +325,7 @@ public sealed class OneLineBuildTests {
         Assert.That(references.Output, Does.Not.Contain("\"Umpire.Definition\""), references.Output);
     }
 
-    DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "--project", workspace.Src,
+    DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "jobs", "check", "--project", workspace.Src,
         "--bin", Path.Combine(workspace.Src, "artifacts~", "bin", "OneLine", "debug"));
 
     DotnetResult Evaluate(params string[] args) =>

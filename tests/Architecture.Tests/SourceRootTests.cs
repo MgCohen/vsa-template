@@ -1,7 +1,7 @@
 namespace EngineCore.Tests;
 
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
 
 public sealed class SourceRootTests {
     const string PackageFolder = "Packages/com.vendor.game";

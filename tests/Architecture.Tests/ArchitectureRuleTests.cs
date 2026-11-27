@@ -2,7 +2,7 @@ namespace EngineCore.Tests;
 
 using Rules.Domain;
 using Rules.Slices.CheckRules;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 using Umpire.Config;
 
 public sealed class ArchitectureRuleTests {

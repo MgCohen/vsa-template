@@ -2,15 +2,16 @@ namespace Blocks.Slices.FindBlocks;
 
 using Blocks.Domain.Shared;
 using Blocks.Infrastructure;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
-using Steps.Domain.Shared;
-using Steps.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
+using Operations.Domain.Shared;
+using Operations.Infrastructure;
 using Umpire.Config;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
-sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCommand, FindBlocksResult> {
+sealed class FindBlocksHandler(RunOptions options, IFactSource<BinQuery, BinFacts> bins)
+    : CommandHandler<FindBlocksCommand, FindBlocksResult> {
     public override Task<Result<FindBlocksResult>> HandleAsync(IEnvelope<FindBlocksCommand> envelope) =>
         Task.FromResult(Find(envelope.Message));
 
@@ -19,8 +20,9 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
         if (TargetRuntime.NewerThanEngine(Path.GetFullPath(command.Bin)) is { } newer) {
             return new Error(BlocksCodes.NewerRuntime, NewerRuntime(newer));
         }
-        using var reader = new BinReader(Path.GetFullPath(command.Bin), new ReadOptions(options.References, options.SourceRoot, options.IgnoredFolders));
-        var bin = reader.Index();
+        var read = new ReadOptions(options.References, options.SourceRoot, options.IgnoredFolders);
+        using var facts = bins.Read(new BinQuery(Path.GetFullPath(command.Bin), read));
+        var bin = facts.Index;
         var above = EntryFiles.Above(BlockSearch.IsDeclared(command.Declared) ? Path.GetFullPath(command.Declared) : project);
         var folder = BlockSearch.Folder(project, command.Declared, [.. bin.Entries, .. above]);
         if (folder is not null) {
@@ -29,7 +31,7 @@ sealed class FindBlocksHandler(RunOptions options) : CommandHandler<FindBlocksCo
                 source => aliases.BlockOfAliasedSource(folder, source));
         }
         IReadOnlyList<BlockEntry> files = folder is null ? above : [.. above, .. EntryFiles.Below(folder)];
-        IReadOnlyList<BlockEntry> entries = [.. bin.Entries, .. files.Select(reader.Check)];
+        IReadOnlyList<BlockEntry> entries = [.. bin.Entries, .. files.Select(facts.Check)];
         var found = BlockSearch.Find(project, folder, entries, bin);
         if (!found.IsSuccess || command.IsUsed) {
             return found;

@@ -1,6 +1,6 @@
 namespace EngineCore.Tests;
 
-using BuiltApp.Infrastructure;
+using Facts.Infrastructure;
 using Umpire.Architecture;
 
 public sealed class ArtifactsSourceFilesTests {

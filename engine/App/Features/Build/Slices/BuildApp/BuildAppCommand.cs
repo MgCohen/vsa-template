@@ -1,11 +1,10 @@
 namespace Build.Slices.BuildApp;
 
 using Build.Domain.Shared;
-using Steps.Contracts.Commands;
-using Steps.Domain.Shared;
+using Operations.Contracts.Commands;
+using Operations.Domain.Shared;
 
 public sealed record BuildAppCommand(string Project, string Bin)
-    : EngineStep<BuildAppResult>, IStepGroup, IStepStage {
+    : JobOperation<BuildAppResult>, IOperationGroup {
     public static int Group => 1;
-    public static Stage Stages => Stage.Build;
 }

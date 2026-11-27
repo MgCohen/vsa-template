@@ -1,16 +1,17 @@
 using Blocks.Domain.Shared;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
 using LoadApp.Domain.Shared;
-using Steps.Domain.Shared;
-using Steps.Infrastructure;
+using Operations.Domain.Shared;
+using Operations.Infrastructure;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 namespace LoadApp.Slices.LoadApp;
 
-sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand, AppInput> {
+sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, AppLoader> definitions)
+    : CommandHandler<LoadAppCommand, AppInput> {
     public override Task<Result<AppInput>> HandleAsync(IEnvelope<LoadAppCommand> envelope) =>
         Task.FromResult(Load(envelope.Message));
 
@@ -18,7 +19,7 @@ sealed class LoadAppHandler(RunOptions options) : CommandHandler<LoadAppCommand,
         var blocks = command.Blocks;
         var root = blocks.Current.Folder;
         var bin = command.Bin;
-        var loader = new AppLoader(bin.Bin, options.References);
+        var loader = definitions.Read(new DefinitionQuery(bin.Bin, options.References));
         var skip = Names(command.Skip);
         var app = bin.AppDlls(root, skip);
         if (app.Count == 0) {

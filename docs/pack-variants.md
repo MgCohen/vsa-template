@@ -55,7 +55,7 @@ flowchart LR
 The build of the app also checks the pack block. Run only the pack check by hand:
 
 ```bash
-dotnet umpire-engine.dll --project App/Packs/Ecs --bin <host output>
+dotnet umpire-engine.dll jobs build --project App/Packs/Ecs --bin <host output>
 ```
 
 ## The variant architecture

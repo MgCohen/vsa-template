@@ -1,10 +1,9 @@
 namespace Rules.Slices.CheckRules;
 
 using LoadApp.Domain.Shared;
-using Steps.Contracts.Commands;
-using Steps.Domain.Shared;
+using Operations.Contracts.Commands;
+using Operations.Domain.Shared;
 
-public sealed record CheckRulesCommand(AppInput App) : EngineStep<CheckRulesResult>, IStepGroup, IStepStage {
+public sealed record CheckRulesCommand(AppInput App) : JobOperation<CheckRulesResult>, IOperationGroup {
     public static int Group => 6;
-    public static Stage Stages => Stage.Check;
 }

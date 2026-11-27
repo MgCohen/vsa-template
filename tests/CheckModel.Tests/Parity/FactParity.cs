@@ -17,7 +17,7 @@ sealed class FactParity(EngineRun engine, Data.AppModel app) {
     ];
 
     static readonly string[] constantsOfLibraries = [
-        "BuiltApp.Infrastructure.AppLoader -> Umpire.Kernels.Pack",
+        "Facts.Infrastructure.AppLoader -> Umpire.Kernels.Pack",
         "Rules.Slices.CheckRules.WideExposureRule -> Umpire.Architecture.Permission",
         "Blocks.Infrastructure.BlockProjects -> Umpire.Config.UmpireConfig",
     ];

@@ -2,7 +2,7 @@ namespace EngineCore.Tests;
 
 using Kit;
 using Umpire.Architecture;
-using BuiltApp.Infrastructure;
+using Facts.Infrastructure;
 using Rules.Slices.CheckRules;
 
 public sealed class GoodAppTests {

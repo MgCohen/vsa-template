@@ -1,7 +1,6 @@
 namespace UmpireEngine;
 
-using Umpire.Hosts.Console;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 
-public class EngineApp : App<VsaKernel, ConsoleHost>;
+public class EngineApp<THost> : App<VsaKernel, THost> where THost : AppHost, new();

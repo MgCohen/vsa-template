@@ -1,8 +1,8 @@
 namespace EngineCore.Tests;
 
 using Rules.Slices.CheckRules;
-using BuiltApp.Domain.Shared;
-using Steps.Domain.Shared;
+using Facts.Domain.Shared;
+using Operations.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 using Umpire.Kernels;

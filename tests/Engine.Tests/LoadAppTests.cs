@@ -1,9 +1,9 @@
 using Blocks.Domain.Shared;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
 using LoadApp.Slices.LoadApp;
 using Microsoft.Extensions.DependencyInjection;
-using Steps.Infrastructure;
+using Operations.Infrastructure;
 using Tests.Shared;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
@@ -323,7 +323,7 @@ public sealed class LoadAppTests {
         var command = new LoadAppCommand(new BlockTree(entry, []), bin, "");
         using var services = new ServiceCollection().BuildServiceProvider();
 
-        var input = (await new LoadAppHandler(new RunOptions()).HandleAsync(Envelope.For(command, services))).Value;
+        var input = (await new LoadAppHandler(new RunOptions(), new DefinitionSource()).HandleAsync(Envelope.For(command, services))).Value;
 
         Assert.That(new ResolvedArchitecture(input.Architecture).Parts.Where(p => p.IsExternal), Is.Empty);
         Assert.That(input.Dlls.Select(Path.GetFileNameWithoutExtension), Does.Contain("Umpire.Architecture"));

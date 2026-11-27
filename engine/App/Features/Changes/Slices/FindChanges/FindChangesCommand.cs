@@ -1,11 +1,10 @@
 namespace Changes.Slices.FindChanges;
 
 using Changes.Domain.Shared;
-using Steps.Contracts.Commands;
-using Steps.Domain.Shared;
+using Operations.Contracts.Commands;
+using Operations.Domain.Shared;
 
 public sealed record FindChangesCommand(string Block, string Bin, string Run)
-    : EngineStep<ChangesResult>, IStepGroup, IStepStage {
+    : JobOperation<ChangesResult>, IOperationGroup {
     public static int Group => 2;
-    public static Stage Stages => Stage.Check;
 }

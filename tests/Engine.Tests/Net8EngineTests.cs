@@ -17,7 +17,7 @@ public sealed class Net8EngineTests {
             TempFolder.Copy(EngineBin(), bin);
             TempFolder.Delete(Repo.Path("engine", "artifacts~", "umpire-checks"));
 
-            var run = dotnet.Run("exec", Path.Combine(bin, "umpire-engine.dll"), "--stage", "Check",
+            var run = dotnet.Run("exec", Path.Combine(bin, "umpire-engine.dll"), "jobs", "build",
                 "--project", Repo.Path("engine"), "--block", Repo.Path("engine"), "--bin", bin);
 
             Assert.That(run.ExitCode, Is.EqualTo(0), run.Output);

@@ -1,6 +1,6 @@
 namespace Rules.Domain;
 
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 public sealed class RuleValues(string code, IReadOnlyDictionary<string, string> values) {
     public string? Value(string key) =>

@@ -2,7 +2,7 @@ namespace Build.Slices.BuildApp;
 
 using Build.Domain.Shared;
 using Build.Infrastructure;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 

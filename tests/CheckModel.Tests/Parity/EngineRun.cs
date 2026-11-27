@@ -3,12 +3,12 @@ namespace CheckModel.Tests;
 using Blocks.Domain.Shared;
 using Blocks.Infrastructure;
 using Blocks.Slices.FindBlocks;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
 using LoadApp.Slices.LoadApp;
 using Rules.Domain;
 using Rules.Slices.CheckRules;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.Config;
 
@@ -26,7 +26,7 @@ sealed class EngineRun {
         var configured = FolderAliasConfig.Of(Config, blocks.Current.Folder);
         Aliases = [.. configured.Aliases, .. aliases];
         Check = ArchitectureCheck.Load(
-            definition, [.. dlls.Select(d => d.Path)], Sources, blocks, RuleConfig.Of(RuleKeys.Of(Config)), ignored, null,
+            new TypeFactSource(), definition, [.. dlls.Select(d => d.Path)], Sources, blocks, RuleConfig.Of(RuleKeys.Of(Config)), ignored, null,
             configured with { Aliases = Aliases });
     }
 

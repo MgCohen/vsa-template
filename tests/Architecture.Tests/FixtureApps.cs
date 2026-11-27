@@ -3,12 +3,12 @@ namespace EngineCore.Tests;
 using System.Runtime.CompilerServices;
 using Umpire.Architecture;
 using Blocks.Domain.Shared;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
 using LoadApp.Domain.Shared;
 using Rules.Domain;
 using Rules.Slices.CheckRules;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 static class FixtureApps {
     public static readonly string Root = FixtureRoot();
@@ -31,7 +31,7 @@ static class FixtureApps {
         var dlls = app.Concat(index.ExternalDlls(externals)).Concat(index.ReferencedDlls(app, [])).Distinct().ToList();
         var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
         return ArchitectureCheck.Load(
-            definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks, RuleConfig.Empty,
+            new TypeFactSource(), definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks, RuleConfig.Empty,
             options?.IgnoredFolders, options?.References, aliases is null ? null : new FolderAliasConfig(aliases, []));
     }
 

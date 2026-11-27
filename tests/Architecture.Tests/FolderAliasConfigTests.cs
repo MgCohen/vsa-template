@@ -1,10 +1,10 @@
 namespace EngineCore.Tests;
 
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
 using Rules.Slices.CheckRules;
-using Steps.Domain.Shared;
-using Steps.Infrastructure;
+using Operations.Domain.Shared;
+using Operations.Infrastructure;
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
@@ -114,7 +114,7 @@ public sealed class FolderAliasConfigTests {
         Assert.That(FolderAliasConfig.Normal(folder), Is.EqualTo(normal));
 
     ArchitectureCheck Check(Architecture definition, string block) =>
-        CheckRulesHandler.Load(FixtureApps.Input(definition, project.Output, block, ReadOptions.None), new RunOptions());
+        CheckRulesHandler.Load(FixtureApps.Input(definition, project.Output, block, ReadOptions.None), new RunOptions(), new TypeFactSource());
 
     static string Part(string type, ArchitectureCheck check) {
         var part = check.Bindings.Of(type)!.Part;

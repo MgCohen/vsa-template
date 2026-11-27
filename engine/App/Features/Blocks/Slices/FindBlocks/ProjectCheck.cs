@@ -2,7 +2,7 @@ namespace Blocks.Slices.FindBlocks;
 
 using Blocks.Domain;
 using Blocks.Infrastructure;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 static class ProjectCheck {
     public static IReadOnlyList<Finding> Findings(
