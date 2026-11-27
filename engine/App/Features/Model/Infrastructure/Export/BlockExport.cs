@@ -1,6 +1,7 @@
 namespace Umpire.CheckModel.Export;
 
 using System.Text.RegularExpressions;
+using Facts.Infrastructure;
 using Umpire.Utility;
 
 public static class BlockExport {
@@ -19,7 +20,7 @@ public static class BlockExport {
         input.IgnoredFolders,
         input.FolderAliases,
         input.DefinitionSources,
-        [.. input.InputFiles.Concat(SourceFiles.ConfigFiles(input.Block)).Distinct(StringComparer.OrdinalIgnoreCase).Select(file => FileMark.Of(input.Block, file))],
+        [.. input.InputFiles.Concat(SourceFiles.ConfigFiles(input.Block)).Distinct(StringComparer.OrdinalIgnoreCase).Select(file => DiskFiles.Mark(input.Block, file))],
         Severities(input.Config),
         [.. input.Snapshots.Select(place => place with { File = Relative(state.Folder, place.File) })]);
 

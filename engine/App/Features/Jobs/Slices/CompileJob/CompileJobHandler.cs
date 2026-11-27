@@ -14,6 +14,9 @@ sealed class CompileJobHandler(ICommandSender commands, OperationLog log)
     public override async Task<Result<CompileJobReport>> HandleAsync(IEnvelope<CompileJobRequest> envelope) {
         var job = envelope.Message;
         var ct = envelope.Cancellation;
+        if (job.Stage == CompileStage.Load) {
+            return await CodesOf(job, ct);
+        }
         var checksTypes = job.Stage != CompileStage.End
             && await commands.SendAsync(new CheckCodeCommand(job.Project, job.Stage, job.File, job.Type), ct) is { IsSuccess: true } code
             && code.Value.ChecksTypes;
@@ -21,5 +24,13 @@ sealed class CompileJobHandler(ICommandSender commands, OperationLog log)
             && await commands.SendAsync(new CheckTypesCommand(job.Project, job.Stage, job.Type, job.HasErrors), ct) is { IsSuccess: true } types
             && types.Value.InModel;
         return new CompileJobReport(ReportMode.Warn, [.. log.Findings], inModel, checksTypes || inModel);
+    }
+
+    async Task<CompileJobReport> CodesOf(CompileJobRequest job, CancellationToken ct) {
+        var code = await commands.SendAsync(new CheckCodeCommand(job.Project, job.Stage), ct);
+        var types = await commands.SendAsync(new CheckTypesCommand(job.Project, job.Stage), ct);
+        return new CompileJobReport(ReportMode.Warn, [.. log.Findings], false, false) {
+            Codes = [.. code.IsSuccess ? code.Value.Codes : [], .. types.IsSuccess ? types.Value.Codes : []],
+        };
     }
 }

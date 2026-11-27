@@ -1,7 +1,6 @@
 namespace UmpireEngine;
 
 using System.Collections.Concurrent;
-using CodeCheck.Slices.CheckCode;
 using Facts.Domain.Shared.Compile;
 using Jobs.Slices.CompileJob;
 using Microsoft.CodeAnalysis;
@@ -49,7 +48,7 @@ sealed class CompileRun {
             config?.Path ?? "",
             config?.GetText(cancellation)?.ToString() ?? "",
             string.Equals(Value(global, FrameworkProperty), "true", StringComparison.OrdinalIgnoreCase),
-            [.. CodeRule.All.Select(rule => rule.Id).Where(id => RuleSuppression.IsOff(id, compilation, cancellation))],
+            [.. Descriptors.CodeRules.Where(id => RuleSuppression.IsOff(id, compilation, cancellation))],
             [.. compilation.ReferencedAssemblyNames.Select(assembly => assembly.Name)],
             new ModelSettings(
                 Value(global, FolderProperty), Value(global, StateProperty), Value(global, ModeProperty),
@@ -109,7 +108,7 @@ sealed class CompileRun {
 
     static AdditionalText? ConfigFileOf(AnalyzerOptions options) =>
         options.AdditionalFiles.FirstOrDefault(file =>
-            string.Equals(Path.GetFileName(file.Path), Umpire.Config.UmpireConfig.FileName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(Path.GetFileName(file.Path), CompileProject.ConfigFile, StringComparison.OrdinalIgnoreCase));
 
     static string? Value(AnalyzerConfigOptions options, string key) =>
         options.TryGetValue(key, out var value) && value.Length > 0 ? value : null;

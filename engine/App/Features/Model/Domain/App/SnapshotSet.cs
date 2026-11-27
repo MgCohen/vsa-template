@@ -1,58 +1,15 @@
 namespace Umpire.CheckModel;
 
-sealed class SnapshotSet {
-    readonly List<LoadedSnapshot> own = [];
-    readonly List<LoadedSnapshot> others = [];
-    readonly List<LoadedSnapshot> libraries = [];
-    readonly List<SnapshotProblem> problems = [];
-    readonly HashSet<string> projects = new(StringComparer.OrdinalIgnoreCase);
-    readonly string? target;
-
-    public SnapshotSet(StateFolder state, BlockSettings settings, Snapshot? current, string? target = null) {
-        Current = current;
-        this.target = target ?? current?.Target;
-        var root = state.BlockOf(settings);
-        if (current is not null) {
-            projects.Add(current.Project);
-            own.Add(LoadedSnapshot.Of(root, current));
-        }
-        foreach (var project in settings.Projects.Where(projects.Add)) {
-            Load(project, state.SnapshotFile(project, settings.SnapshotOf(project, this.target)), root, own);
-        }
-        foreach (var other in settings.OtherStates.Select(folder => StateFolder.At(BlockPath.In(state.Folder, folder)))) {
-            AddOther(other);
-        }
-        foreach (var library in settings.Libraries.Where(projects.Add)) {
-            Load(library, state.LibraryFile(library), root, libraries);
-        }
-    }
-
-    public Snapshot? Current { get; }
-    public IReadOnlyList<LoadedSnapshot> Own => own;
-    public IReadOnlyList<LoadedSnapshot> Libraries => libraries;
-    public IReadOnlyList<LoadedSnapshot> All => [.. own, .. others, .. libraries];
-    public IReadOnlyList<LoadedSnapshot> Saved => [.. own.Concat(others).Where(s => !ReferenceEquals(s.Snapshot, Current))];
-    public IReadOnlyList<SnapshotProblem> Problems => problems;
-
-    void AddOther(StateFolder other) {
-        try {
-            var settings = BlockSettings.Read(StateFile.Read(other.BlockFile));
-            if (settings.Inputs.Any(mark => !mark.IsCurrent(other.BlockOf(settings)))) {
-                problems.Add(new SnapshotProblem(other.Folder, other.BlockFile, "The block file is old.", IsState: true));
-            }
-            foreach (var project in settings.Projects.Where(projects.Add)) {
-                Load(project, other.SnapshotFile(project, settings.SnapshotOf(project, target)), other.BlockOf(settings), others);
-            }
-        } catch (Exception e) when (e is FormatException or IOException or UnauthorizedAccessException) {
-            problems.Add(new SnapshotProblem(other.Folder, other.BlockFile, e.Message, IsState: true));
-        }
-    }
-
-    void Load(string project, string file, string root, List<LoadedSnapshot> list) {
-        try {
-            list.Add(LoadedSnapshot.Of(root, SnapshotCache.Read(file)));
-        } catch (Exception e) when (e is FormatException or IOException or UnauthorizedAccessException) {
-            problems.Add(new SnapshotProblem(project, file, e.Message, IsLibrary: ReferenceEquals(list, libraries)));
-        }
-    }
+sealed class SnapshotSet(
+    Snapshot? current,
+    IReadOnlyList<LoadedSnapshot> own,
+    IReadOnlyList<LoadedSnapshot> others,
+    IReadOnlyList<LoadedSnapshot> libraries,
+    IReadOnlyList<SnapshotProblem> problems) {
+    public Snapshot? Current { get; } = current;
+    public IReadOnlyList<LoadedSnapshot> Own { get; } = own;
+    public IReadOnlyList<LoadedSnapshot> Libraries { get; } = libraries;
+    public IReadOnlyList<LoadedSnapshot> All => [.. Own, .. others, .. Libraries];
+    public IReadOnlyList<LoadedSnapshot> Saved => [.. Own.Concat(others).Where(s => !ReferenceEquals(s.Snapshot, Current))];
+    public IReadOnlyList<SnapshotProblem> Problems { get; } = problems;
 }

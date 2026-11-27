@@ -1,5 +1,6 @@
 namespace CheckModel.Tests;
 
+using Facts.Infrastructure;
 using Microsoft.CodeAnalysis;
 using Umpire.CheckModel;
 
@@ -38,7 +39,7 @@ public sealed class TrustTests {
         build.Write("Data/Handler.cs", Handler);
         build.Analyze(build.Compile("Data", [build.Compile("Ui", "Ui/Request.cs")], "Data/Handler.cs"));
 
-        var report = ModelCheck.Run(build.State);
+        var report = StateCheck.Run(build.State);
 
         Assert.That(report.Findings.Select(f => f.Code), Has.Member(RuleCodes.Match).And.Member(RuleCodes.Count));
         Assert.That(report.HasErrors, Is.False);
@@ -47,10 +48,10 @@ public sealed class TrustTests {
     [Test]
     public void A_use_of_an_old_type_is_a_warning_in_the_command() {
         using var build = Wrong();
-        Assert.That(ModelCheck.Run(build.State).HasErrors, Is.True);
+        Assert.That(StateCheck.Run(build.State).HasErrors, Is.True);
         build.Write("Ui/Screen.cs", "namespace Sample;\n\npublic class Screen;\n");
 
-        var report = ModelCheck.Run(build.State);
+        var report = StateCheck.Run(build.State);
 
         Assert.That(report.Findings.Where(f => f.Code == RuleCodes.DeniedUse).Select(f => f.Severity), Is.EqualTo(new[] { Severity.Warning }));
     }
@@ -63,7 +64,7 @@ public sealed class TrustTests {
         File.Move(build.State.SnapshotFile("Ui"), Target(other.State.SnapshotFile("Ui")));
         build.Save(Samples.Layers, Samples.Settings("Data") with { OtherStates = [BlockPath.Of(build.State.Folder, other.State.Folder)] });
 
-        var report = ModelCheck.Run(build.State);
+        var report = StateCheck.Run(build.State);
 
         Assert.That(report.HasErrors, Is.False);
         Assert.That(report.Findings.Select(f => f.Code), Has.Member(DataCodes.OldSnapshot));
@@ -120,7 +121,7 @@ public sealed class TrustTests {
         var external = Samples.Part(Samples.Concept("Library"), "Library") with { External = "Kit" };
         build.Save(Samples.Layers with { Parts = [.. Samples.Layers.Parts, external] }, Samples.Settings("Data") with { Libraries = ["Kit"] });
         var dll = build.Write("Kit.dll", "first");
-        build.State.SaveLibrary(Snapshot.Of("Kit", []) with { Source = FileMark.Of(build.Block, dll) });
+        build.State.SaveLibrary(Snapshot.Of("Kit", []) with { Source = DiskFiles.Mark(build.Block, dll) });
         build.Write("Kit/Screen.cs", "namespace Sample;\npublic class Screen;\n");
         build.Write("Data/Store.cs", "namespace Other;\npublic class Store {\n    public object Make() => new Sample.Screen();\n}\n");
         var compiled = build.Compile("Data", [build.Compile("Kit", "Kit/Screen.cs")], "Data/Store.cs");
@@ -134,7 +135,7 @@ public sealed class TrustTests {
         var data = build.Compile("Data", [build.Compile("Kit", "Kit/Screen.cs")], "Data/Store.cs");
 
         Assert.That(build.Analyze(data).Where(d => d.Id == RuleCodes.DeniedUse).Select(d => d.Severity), Is.EqualTo(new[] { DiagnosticSeverity.Warning }));
-        Assert.That(ModelCheck.Run(build.State).HasErrors, Is.False);
+        Assert.That(StateCheck.Run(build.State).HasErrors, Is.False);
     }
 
     [TestCase("Definition/Layers.cs")]
@@ -142,13 +143,13 @@ public sealed class TrustTests {
     public void An_old_definition_or_block_file_gives_warnings(string changed) {
         using var build = Wrong();
         build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with {
-            DefinitionSources = [FileMark.Of(build.Block, build.Write("Definition/Layers.cs", "first"))],
-            Inputs = [FileMark.Of(build.Block, Path.Combine(build.Block, ".umpireconfig"))],
+            DefinitionSources = [DiskFiles.Mark(build.Block, build.Write("Definition/Layers.cs", "first"))],
+            Inputs = [DiskFiles.Mark(build.Block, Path.Combine(build.Block, ".umpireconfig"))],
         });
-        Assert.That(ModelCheck.Run(build.State).HasErrors, Is.True);
+        Assert.That(StateCheck.Run(build.State).HasErrors, Is.True);
 
         build.Write(changed, "second");
-        var report = ModelCheck.Run(build.State);
+        var report = StateCheck.Run(build.State);
 
         Assert.That(report.Findings.Where(f => f.Code == RuleCodes.DeniedUse).Select(f => f.Severity), Is.EqualTo(new[] { Severity.Warning }));
         Assert.That(report.Findings.Select(f => f.Code), Has.Member(DataCodes.OldSnapshot).And.Member(DataCodes.NotComplete));
@@ -160,7 +161,7 @@ public sealed class TrustTests {
         using var build = Wrong();
         build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with { DefinitionSources = [] });
 
-        Assert.That(ModelCheck.Run(build.State).HasErrors, Is.False);
+        Assert.That(StateCheck.Run(build.State).HasErrors, Is.False);
     }
 
     [Test]
@@ -168,8 +169,8 @@ public sealed class TrustTests {
         using var build = Wrong();
         build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with { Mode = CheckMode.Warn });
 
-        Assert.That(ModelCheck.Run(build.State).HasErrors, Is.False);
-        Assert.That(ModelCheck.Run(build.State, CheckMode.Error).HasErrors, Is.True);
+        Assert.That(StateCheck.Run(build.State).HasErrors, Is.False);
+        Assert.That(StateCheck.Run(build.State, CheckMode.Error).HasErrors, Is.True);
     }
 
     static SampleBuild Wrong() {

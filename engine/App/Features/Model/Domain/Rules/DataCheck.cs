@@ -8,7 +8,7 @@ public static class DataCheck {
             Add(report, DataCodes.NoSnapshot, Text(problem), null);
         }
         foreach (var snapshot in app.Saved) {
-            foreach (var file in Freshness.OldFiles(snapshot)) {
+            foreach (var file in Freshness.OldFiles(snapshot, app.Files)) {
                 Add(report, DataCodes.OldSnapshot,
                     $"The snapshot of {snapshot.Snapshot.Project} is old: the file changed after the last build of the project. {Fix}",
                     file);

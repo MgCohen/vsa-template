@@ -55,8 +55,8 @@ public sealed class ParityTests {
     static void Same(DllRun engine, int findings, params string[] otherProjects) {
         using var dll = engine;
         using var run = new ModelRun(engine, otherProjects);
-        var facts = new FactParity(engine.Model, Data.AppModel.Load(run.State));
-        var report = Data.ModelCheck.Run(run.State);
+        var facts = new FactParity(engine.Model, Data.AppModels.Load(run.State));
+        var report = Data.StateCheck.Run(run.State);
         var expected = engine.Findings().Select(f => $"{f.File} {f.Severity} {f.Code}: {f.Message}").Order().ToList();
         var actual = report.Findings.Select(f => $"{f.File} {f.Severity} {f.Code}: {f.Text}").Order().ToList();
         Assert.Multiple(() => {

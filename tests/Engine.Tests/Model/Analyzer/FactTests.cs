@@ -160,7 +160,7 @@ public sealed class FactTests {
         build.Write("Ui/All.cs", Source);
         var snapshot = new ProjectFacts(build.Compile("Sample", "Ui/All.cs"), build.Block).Full();
 
-        Assert.That(Snapshot.Read(snapshot.Write()).Write(), Is.EqualTo(snapshot.Write()));
+        Assert.That(SnapshotText.Read(snapshot.Write()).Write(), Is.EqualTo(snapshot.Write()));
     }
 
     static TypeFacts Facts(string name) {

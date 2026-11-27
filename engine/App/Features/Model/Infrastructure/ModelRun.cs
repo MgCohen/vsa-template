@@ -127,7 +127,7 @@ public sealed class ModelRun {
         }
         var block = state.BlockOf(settings);
         var facts = source.Read(new ModelQuery(project, block));
-        var app = AppModel.Load(state, settings, facts.Current, CheckModes.Parse(project.Model.Mode), project.Model.Target);
+        var app = AppModels.Load(state, settings, facts.Current, CheckModes.Parse(project.Model.Mode), project.Model.Target);
         return new Loaded(state, block, facts, app, project.Model.Saves ? NotCompiled(facts, block) : []);
     }
 
@@ -180,7 +180,7 @@ public sealed class ModelRun {
             return file;
         }
         var modified = File.GetLastWriteTimeUtc(path).Ticks;
-        return file with { Modified = FileHash.Of(path) == file.Hash ? modified : 0 };
+        return file with { Modified = DiskFiles.Hash(path) == file.Hash ? modified : 0 };
     }
 
     static Finding Data(string code, string text) => new(code, Severity.Warning, text);

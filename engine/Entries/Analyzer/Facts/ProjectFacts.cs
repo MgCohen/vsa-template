@@ -2,7 +2,7 @@ namespace UmpireEngine;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Model.Infrastructure;
+using Facts.Infrastructure;
 using Umpire.CheckModel;
 
 public sealed class ProjectFacts : IModelFacts {
@@ -75,7 +75,7 @@ public sealed class ProjectFacts : IModelFacts {
         var text = tree.GetText();
         return text.ChecksumAlgorithm == SourceHashAlgorithm.Sha256
             ? BitConverter.ToString([.. text.GetChecksum()]).Replace("-", "").ToLowerInvariant()
-            : FileHash.Of(tree.FilePath);
+            : DiskFiles.Hash(tree.FilePath);
     }
 
     bool HasFriends => compilation.Assembly.GetAttributes()
@@ -99,7 +99,7 @@ public sealed class ProjectFacts : IModelFacts {
 
     FileFacts FactsOf(SyntaxTree tree, ILookup<string, TypeFacts> byFile) {
         var file = places.FileOf(tree);
-        var hash = !File.Exists(file) ? "" : IsOwnFile(tree, file) ? Hash(tree) : FileHash.Of(file);
+        var hash = !File.Exists(file) ? "" : IsOwnFile(tree, file) ? Hash(tree) : DiskFiles.Hash(file);
         return new FileFacts(BlockPath.Of(block, file), hash, 0, places.IsGenerated(tree), [.. byFile[file]]);
     }
 
