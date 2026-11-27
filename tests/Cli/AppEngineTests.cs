@@ -1,6 +1,6 @@
 using Tests.Shared;
-using Umpire.Cli;
-using Umpire.Cli.Scaffolding;
+using Umpire.Cli.Features.Checks.Infrastructure;
+using Umpire.Cli.Plugins.Commands.Domain.Shared;
 
 namespace Cli.Tests;
 

@@ -45,6 +45,36 @@ public sealed class ConsoleStopTests {
     }
 
     [Test]
+    public void A_host_that_cancels_on_a_signal_ends_the_run_with_the_exit_code_of_the_operation() {
+        var app = new TestApp<SignalConsoleHost>(new WaitModule());
+        var run = Task.Run(() => app.Run(["child"]));
+        var deadline = DateTime.UtcNow + limit;
+        while (!ChildHandler.Waiting && !run.IsCompleted && DateTime.UtcNow < deadline) {
+            Thread.Sleep(5);
+        }
+
+        AppSignals.InterruptAllListeners();
+
+        Assert.That(run.Wait(limit), Is.True);
+        Assert.That(run.Result, Is.EqualTo(ChildHandler.ExitCode));
+    }
+
+    [Test]
+    public void A_host_that_cancels_on_a_signal_ends_with_exit_code_zero_if_the_operation_throws_the_cancel() {
+        var app = new TestApp<SignalConsoleHost>(new WaitModule());
+        var run = Task.Run(() => app.Run(["wait"]));
+        var deadline = DateTime.UtcNow + limit;
+        while (app.State != AppState.Running && !run.IsCompleted && DateTime.UtcNow < deadline) {
+            Thread.Sleep(5);
+        }
+
+        AppSignals.InterruptAllListeners();
+
+        Assert.That(run.Wait(limit), Is.True);
+        Assert.That(run.Result, Is.Zero);
+    }
+
+    [Test]
     public void Stop_of_a_started_console_app_cancels_the_operation() {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
         app.Start(["wait"]);
@@ -103,6 +133,27 @@ public sealed class ConsoleStopTests {
         public override async Task<Result<WaitResponse>> HandleAsync(IEnvelope<WaitRequest> envelope) {
             await Task.Delay(Timeout.Infinite, envelope.Cancellation);
             return new WaitResponse();
+        }
+    }
+
+    public sealed record ChildRequest : IRequest<ChildResponse>;
+
+    public sealed record ChildResponse(int ExitCode) : IResponse, IExitCode;
+
+    public sealed class ChildHandler : RequestHandler<ChildRequest, ChildResponse> {
+        public const int ExitCode = 7;
+
+        public static bool Waiting { get; private set; }
+
+        public override async Task<Result<ChildResponse>> HandleAsync(IEnvelope<ChildRequest> envelope) {
+            Waiting = true;
+            try {
+                await Task.Delay(Timeout.Infinite, envelope.Cancellation);
+            } catch (OperationCanceledException) {
+            } finally {
+                Waiting = false;
+            }
+            return new ChildResponse(ExitCode);
         }
     }
 

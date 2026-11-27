@@ -16,7 +16,8 @@ public sealed class RepositoryConfigTests {
         ["tests/Fixtures/Built/OneLine/.umpireconfig"] = new() { ["umpire.UMP010101.max"] = "60" },
         ["tests/Fixtures/Built/Shop/.umpireconfig"] = [],
         ["tests/Fixtures/Notes/.umpireconfig"] = [],
-        ["tools/cli/Templates/.umpireconfig"] = [],
+        ["tooling/.umpireconfig"] = new() { ["umpire.check.mode"] = "Error" },
+        ["tooling/Templates/.umpireconfig"] = [],
     };
 
     static readonly Dictionary<string, Dictionary<string, string>> documentBlocks = new() {
