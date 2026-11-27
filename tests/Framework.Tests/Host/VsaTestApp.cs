@@ -4,7 +4,7 @@ using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 
 abstract class VsaTestApp(Func<AppHost> create) : App {
-    AppInstance? running;
+    volatile AppInstance? running;
 
     public override Kernel Kernel { get; } = new VsaKernel();
 

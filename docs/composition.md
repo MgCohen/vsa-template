@@ -82,7 +82,7 @@ To add app rules, derive an architecture from `VsaArchitecture`, override `Rules
 | `State` | `Running` from the start of the host work until the stop. `AppInstance.State` is `Stopped` after its own run |
 | `Services` | The services of the running app, else `null` |
 
-A second `Run` while the app runs is an error. A stopped instance does nothing: its `Stop` does not stop the next run. One host is for one run: give a new host to each `Run`, so the app can run again in the same process.
+A second `Run` while the app runs is an error. A host is for one run: a second `Run` with the same host is an error. A stopped instance does nothing: its `Stop` does not stop the next run. One host is for one run: give a new host to each `Run`, so the app can run again in the same process.
 
 ### One stop path
 
@@ -101,6 +101,7 @@ AppInstance.Stop() on another thread ──► request, then wait until Stopped
 | `Run` on a thread with a `SynchronizationContext` | That context. `Run` keeps `SynchronizationContext.Current` |
 | `Run` on a thread with no context | The thread pool |
 
+- Do not block a thread with a `SynchronizationContext` on `Completion` (`.Wait()`, `.GetAwaiter().GetResult()`): the stop is posted to that thread, so the wait does not end. Use `await`. `Program.cs` has no context, so `return await` is safe.
 - The inline rule prevents a deadlock. `Stop()` on the Unity main thread does not wait for work that it posted to the main thread.
 - A stop request during `Run`, for example in `OnStart`, runs after `Run` returns.
 - The first request gives the exit code. The app ignores a request of an earlier run.
@@ -594,7 +595,7 @@ Modes = { easy = 1, hard = 5 }
 
 `Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.0` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, and they build for `net9.0` only: Umpire.Hosts.Web calls `MapStaticAssets` (ASP.NET Core 9), and Umpire.Vsa.Views is in the same bundle, `Umpire.Web`. Each package targets the lowest framework that its code needs: see "Runtime targets" in `docs/requirements.md`. The limits of the `netstandard2.0` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
-A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add an `ILoggerFactory` of its platform. Its launcher calls `app.Run(new GameHost(args))` and keeps the `AppInstance`, then calls `instance.Stop()`. `Run` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
+A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add an `ILoggerFactory` of its platform. Its launcher calls `app.Run(new GameHost(args))` and keeps the `AppInstance`, then calls `instance.Stop()`. `Run` keeps the `SynchronizationContext` of its caller (the Unity main thread), so `AppStop.Request` from any thread stops the app on that thread:
 
 ```csharp
 public sealed class GameHost(string[] args) : AppHost(args) {

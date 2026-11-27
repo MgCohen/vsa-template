@@ -23,7 +23,7 @@ public abstract class App : IApp {
     int exitCode;
     Exception? stopError;
     ManualResetEventSlim stopped = new(initialState: true);
-    TaskCompletionSource<int> completion = new();
+    TaskCompletionSource<int> completion = null!;
 
     public abstract Kernel Kernel { get; }
 
@@ -48,6 +48,12 @@ public abstract class App : IApp {
             throw new ArgumentNullException(nameof(host));
         }
         var current = Begin();
+        try {
+            host.Claim();
+        } catch {
+            EndFailedStart(stopped);
+            throw;
+        }
         ManualResetEventSlim done;
         Task<int> completed;
         lock (gate) {
@@ -99,7 +105,7 @@ public abstract class App : IApp {
             }
         }
         if (inline) {
-            StopNow();
+            StopNow(run);
             return;
         }
         OnRequest(run, code);
@@ -200,17 +206,17 @@ public abstract class App : IApp {
             }
         }
         try {
-            StopNow(logErrors: onThreadPool);
+            StopNow(from, logErrors: onThreadPool);
         } catch when (onThreadPool) {
         }
     }
 
-    int StopNow(bool logErrors = false) {
+    int StopNow(int run, bool logErrors = false) {
         AppHost? stopping;
         ManualResetEventSlim done;
         TaskCompletionSource<int> completed;
         lock (gate) {
-            if (state != AppState.Running || starting) {
+            if (run != generation || state != AppState.Running || starting) {
                 return exitCode;
             }
             completed = completion;
@@ -234,6 +240,7 @@ public abstract class App : IApp {
         done.Set();
         if (error is not null) {
             completed.TrySetException(error);
+            _ = completed.Task.Exception;
             ExceptionDispatchInfo.Capture(error).Throw();
         }
         completed.TrySetResult(code);

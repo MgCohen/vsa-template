@@ -132,6 +132,19 @@ public sealed class AppTests {
     }
 
     [Test]
+    public void A_host_is_for_one_run() {
+        var app = new LifecycleApp();
+        var host = new AppHost { ModuleProvider = new FixedModules() };
+        app.Run(host).Stop();
+
+        var error = Assert.Throws<InvalidOperationException>(() => app.Run(host));
+
+        Assert.That(error!.Message, Is.EqualTo("AppHost is for one run only. Give a new host to each App.Run."));
+        Assert.That(app.State, Is.EqualTo(AppState.Stopped));
+        app.Start().Stop();
+    }
+
+    [Test]
     public void Run_with_no_host_is_an_error() {
         Assert.Throws<ArgumentNullException>(() => new LifecycleApp().Run(null!));
     }

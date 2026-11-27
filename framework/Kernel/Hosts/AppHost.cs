@@ -5,6 +5,7 @@ using Umpire.Config;
 
 public class AppHost : IDisposable {
     ServiceProvider? provider;
+    int claimed;
 
     public AppHost() : this([]) {
     }
@@ -22,6 +23,13 @@ public class AppHost : IDisposable {
         Compose(services, Arguments(Args), app);
         provider = services.BuildServiceProvider();
         return provider;
+    }
+
+    internal void Claim() {
+        if (Interlocked.Exchange(ref claimed, 1) == 1) {
+            throw new InvalidOperationException(
+                $"{GetType().Name} is for one run only. Give a new host to each App.Run.");
+        }
     }
 
     public virtual void Start(IServiceProvider services, AppStop stop) {

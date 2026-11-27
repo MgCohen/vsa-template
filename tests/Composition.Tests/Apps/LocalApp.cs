@@ -5,7 +5,7 @@ using Umpire.Vsa.Composition;
 
 public sealed class LocalApp<THost>(params Module[] modules) : App<VsaKernel>
     where THost : LocalHost, new() {
-    AppInstance? running;
+    volatile AppInstance? running;
 
     public THost Host { get; private set; } = new() { ModuleProvider = new FixedModules([.. modules]) };
 

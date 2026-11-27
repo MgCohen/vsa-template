@@ -191,9 +191,11 @@ public sealed class UmpireToolTests {
 
             using Shop.Packs.Ecs.Kernel;
             using Umpire.Kernels;
-            {(hostNamespace == "Umpire.Kernels" ? "" : $"using {hostNamespace};")}
 
-            public class ShopApp : App<EcsKernel, {host}>;
+            public class ShopApp : App<EcsKernel>;
+            """);
+        File.WriteAllText(Path.Combine(app, "App", "Program.cs"), $"""
+            return await new Shop.Host.ShopApp().Run(new {hostNamespace}.{host}(args));
             """);
 
         Dotnet.Run(app, env, "build", "Shop.csproj", "-nodeReuse:false").EnsureSuccess();

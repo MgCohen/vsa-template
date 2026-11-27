@@ -166,7 +166,9 @@ public sealed class ConsoleStopTests {
 
         public override Task<Result<WaitResponse>> HandleAsync(IEnvelope<HaltRequest> envelope) {
             StopReturned = false;
-            SpinWait.SpinUntil(() => App!.Running is not null, TimeSpan.FromSeconds(10));
+            if (!SpinWait.SpinUntil(() => App!.Running is not null, TimeSpan.FromSeconds(10))) {
+                throw new TimeoutException("The run did not return its instance.");
+            }
             App!.Stop();
             StopReturned = true;
             return Task.FromResult<Result<WaitResponse>>(new WaitResponse());
