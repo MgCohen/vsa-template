@@ -9,4 +9,5 @@ public sealed record BlockInput(string Block, IReadOnlyList<string> Projects) {
     public IReadOnlyList<FileMark> DefinitionSources { get; init; } = [];
     public IReadOnlyList<string> InputFiles { get; init; } = [];
     public IEnumerable<KeyValuePair<string, string>> Config { get; init; } = [];
+    public IReadOnlyList<SnapshotPlace> Snapshots { get; init; } = [];
 }

@@ -10,9 +10,10 @@ public sealed class AppModel {
     readonly Places places;
     readonly FolderPaths paths;
 
-    AppModel(Definition definition, BlockSettings settings, StateFolder state, CurrentProject? current, bool isDefinitionOfBlock) {
+    AppModel(
+        Definition definition, BlockSettings settings, StateFolder state, CurrentProject? current, bool isDefinitionOfBlock, string? target) {
         var block = state.BlockOf(settings);
-        var snapshots = new SnapshotSet(state, settings, current?.Snapshot);
+        var snapshots = new SnapshotSet(state, settings, current?.Snapshot, target);
         Definition = definition;
         Settings = settings;
         Block = block;
@@ -56,14 +57,16 @@ public sealed class AppModel {
     public static AppModel Load(StateFolder state, CurrentProject? current = null, CheckMode? mode = null) =>
         Load(state, state.ReadBlock(), current, mode);
 
-    public static AppModel Load(StateFolder state, BlockSettings settings, CurrentProject? current = null, CheckMode? mode = null) {
+    public static AppModel Load(
+        StateFolder state, BlockSettings settings, CurrentProject? current = null, CheckMode? mode = null, string? target = null) {
         var text = state.ReadDefinition();
         return new AppModel(
-            Definition.Read(text), settings with { Mode = mode ?? settings.Mode }, state, current, FileHash.OfText(text) == settings.DefinitionHash);
+            Definition.Read(text), settings with { Mode = mode ?? settings.Mode }, state, current,
+            FileHash.OfText(text) == settings.DefinitionHash, target);
     }
 
     public static AppModel Load(Definition definition, StateFolder state, CurrentProject? current = null) =>
-        new(definition, state.ReadBlock(), state, current, true);
+        new(definition, state.ReadBlock(), state, current, true, null);
 
     public IReadOnlyList<AppType> TypesOf(string project) => [.. Types.Where(t => t.Project == project)];
 

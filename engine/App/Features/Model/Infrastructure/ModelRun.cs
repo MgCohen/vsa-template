@@ -3,15 +3,20 @@ namespace Model.Infrastructure;
 using Facts.Domain.Shared.Compile;
 using Facts.Infrastructure;
 using Umpire.CheckModel;
+using Umpire.CheckModel.Export;
 using Umpire.Config;
 
 public sealed class ModelRun {
+    const string MappedRoot = "/_/";
+
     readonly CompileProject project;
     readonly Loaded? loaded;
+    readonly IFactSource<ModelQuery, IModelFacts>? unloaded;
 
-    ModelRun(CompileProject project, Loaded? loaded, IReadOnlyList<Finding> notices) {
+    ModelRun(CompileProject project, Loaded? loaded, IReadOnlyList<Finding> notices, IFactSource<ModelQuery, IModelFacts>? unloaded = null) {
         this.project = project;
         this.loaded = loaded;
+        this.unloaded = unloaded;
         Notices = notices;
     }
 
@@ -21,7 +26,9 @@ public sealed class ModelRun {
 
     public static ModelRun Start(CompileProject project, IFactSource<ModelQuery, IModelFacts> source) {
         try {
-            return new ModelRun(project, Load(project, source), []);
+            return SavesOnly(project.Model)
+                ? new ModelRun(project, null, [], source)
+                : new ModelRun(project, Load(project, source), [], source);
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException or InvalidOperationException
             or ArgumentException or NotSupportedException) {
             return new ModelRun(project, null, [new Finding(DataCodes.NoModel, Severity.Warning, $"The check model cannot load: {e.Message}")]);
@@ -41,7 +48,9 @@ public sealed class ModelRun {
 
     public IReadOnlyList<Finding> End(bool hasErrors) {
         if (loaded is not { } run) {
-            return Notices;
+            return unloaded is not null && project.Model.Saves && !hasErrors && SavesOnly(project.Model)
+                ? [.. Notices, .. Save()]
+                : Notices;
         }
         var app = run.App;
         var referenced = project.References;
@@ -61,12 +70,52 @@ public sealed class ModelRun {
             return findings;
         }
         try {
-            run.State.Save(app.WithSurfaces(Full(run, run.NotCompiled)));
+            if (project.Model.State is { Length: > 0 } || project.Model.Snapshot is not { Length: > 0 } own) {
+                run.State.Save(app.WithSurfaces(Full(run.Facts, run.Block, run.NotCompiled) with { Root = null }));
+            } else {
+                StateFolder.SaveSnapshot(own, app.WithSurfaces(Full(run.Facts, run.Block, run.NotCompiled)));
+            }
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
             findings.Add(Data(DataCodes.NotSaved, $"The snapshot of {project.Name} is not saved: {e.Message}"));
         }
         return findings;
     }
+
+    static bool SavesOnly(ModelSettings model) =>
+        model.Saves && model.State is not { Length: > 0 } && (model.Snapshot is { Length: > 0 } || model.Library is { Length: > 0 });
+
+    IReadOnlyList<Finding> Save() {
+        var folder = FolderOf(project);
+        if (folder is null) {
+            return [Data(DataCodes.NotSaved, $"The snapshot of {project.Name} is not saved: the project has no source folder.")];
+        }
+        try {
+            var facts = unloaded!.Read(new ModelQuery(project, folder));
+            if (NotCompiled(facts, folder) is not { } notCompiled) {
+                return [Data(DataCodes.NotSaved, $"The snapshot of {project.Name} is not saved: a folder of the project cannot be read.")];
+            }
+            var full = Full(facts, folder, notCompiled);
+            if (project.Model.Library is { Length: > 0 } library) {
+                StateFolder.SaveSnapshot(library, LibraryExport.Of(full, null, path => LibraryPath(path, project.Model.LibraryRoot)));
+            }
+            if (project.Model.Snapshot is { Length: > 0 } file) {
+                StateFolder.SaveSnapshot(file, full);
+            }
+            return [];
+        } catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException or InvalidOperationException
+            or ArgumentException or NotSupportedException) {
+            return [Data(DataCodes.NotSaved, $"The snapshot of {project.Name} is not saved: {e.Message}")];
+        }
+    }
+
+    static string LibraryPath(string path, string? root) => root is { Length: > 0 } && BlockPath.IsUnder(root, path)
+        ? MappedRoot + BlockPath.Of(root, path)
+        : path.Replace('\\', '/');
+
+    static string? FolderOf(CompileProject project) =>
+        project.Model.ProjectFolder is { Length: > 0 } given ? BlockPath.Full(given)
+        : project.Model.SourceFolders.Count > 0 ? project.Model.SourceFolders[0]
+        : null;
 
     static Loaded? Load(CompileProject project, IFactSource<ModelQuery, IModelFacts> source) {
         if (StateOf(project) is not { } state) {
@@ -78,7 +127,7 @@ public sealed class ModelRun {
         }
         var block = state.BlockOf(settings);
         var facts = source.Read(new ModelQuery(project, block));
-        var app = AppModel.Load(state, settings, facts.Current, CheckModes.Parse(project.Model.Mode));
+        var app = AppModel.Load(state, settings, facts.Current, CheckModes.Parse(project.Model.Mode), project.Model.Target);
         return new Loaded(state, block, facts, app, project.Model.Saves ? NotCompiled(facts, block) : []);
     }
 
@@ -86,6 +135,9 @@ public sealed class ModelRun {
         var model = project.Model;
         if (model.State is { Length: > 0 } given) {
             return StateFolder.At(Path.Combine(model.ProjectFolder ?? "", given)) is { HasDefinition: true } state ? state : null;
+        }
+        if (model.Snapshot is { Length: > 0 } snapshot && StatePointer.Read(snapshot) is { HasDefinition: true } pointed) {
+            return pointed;
         }
         if (project.ConfigPath is { Length: > 0 } file
             && Path.GetDirectoryName(Path.GetFullPath(file)) is { } folder
@@ -113,11 +165,13 @@ public sealed class ModelRun {
         }
     }
 
-    static Snapshot Full(Loaded run, IReadOnlyList<string> notCompiled) {
-        var full = run.Facts.Full();
+    Snapshot Full(IModelFacts facts, string block, IReadOnlyList<string> notCompiled) {
+        var full = facts.Full();
         return full with {
             NotCompiled = notCompiled,
-            Files = [.. full.Files.Select(file => Dated(file, BlockPath.In(run.Block, file.Path)))],
+            Files = [.. full.Files.Select(file => Dated(file, BlockPath.In(block, file.Path)))],
+            Root = BlockPath.Full(block),
+            Target = project.Model.Target,
         };
     }
 

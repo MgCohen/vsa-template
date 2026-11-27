@@ -78,7 +78,7 @@ public sealed class DefinitionBuildTests {
     [TestCase("<TargetFramework>net8.0</TargetFramework>", "Exe")]
     [TestCase("<TargetFramework>netstandard2.0</TargetFramework>", "Library")]
     [TestCase("<TargetFramework>netstandard2.1</TargetFramework>", "Library")]
-    [TestCase("<TargetFrameworks>net8.0;net10.0</TargetFrameworks><TargetFramework />", "Exe")]
+    [TestCase("<TargetFrameworks>net8.0;net10.0</TargetFrameworks>", "Exe")]
     public void A_root_with_another_target_builds_its_definition(string target, string output) {
         WriteRoot($"{target}<OutputType>{output}</OutputType>");
         if (output == "Library") {

@@ -6,15 +6,18 @@ sealed class SnapshotSet {
     readonly List<LoadedSnapshot> libraries = [];
     readonly List<SnapshotProblem> problems = [];
     readonly HashSet<string> projects = new(StringComparer.OrdinalIgnoreCase);
-    public SnapshotSet(StateFolder state, BlockSettings settings, Snapshot? current) {
+    readonly string? target;
+
+    public SnapshotSet(StateFolder state, BlockSettings settings, Snapshot? current, string? target = null) {
         Current = current;
+        this.target = target ?? current?.Target;
         var root = state.BlockOf(settings);
         if (current is not null) {
             projects.Add(current.Project);
-            own.Add(new LoadedSnapshot(root, current));
+            own.Add(LoadedSnapshot.Of(root, current));
         }
         foreach (var project in settings.Projects.Where(projects.Add)) {
-            Load(project, state.SnapshotFile(project), root, own);
+            Load(project, state.SnapshotFile(project, settings.SnapshotOf(project, this.target)), root, own);
         }
         foreach (var other in settings.OtherStates.Select(folder => StateFolder.At(BlockPath.In(state.Folder, folder)))) {
             AddOther(other);
@@ -38,7 +41,7 @@ sealed class SnapshotSet {
                 problems.Add(new SnapshotProblem(other.Folder, other.BlockFile, "The block file is old.", IsState: true));
             }
             foreach (var project in settings.Projects.Where(projects.Add)) {
-                Load(project, other.SnapshotFile(project), other.BlockOf(settings), others);
+                Load(project, other.SnapshotFile(project, settings.SnapshotOf(project, target)), other.BlockOf(settings), others);
             }
         } catch (Exception e) when (e is FormatException or IOException or UnauthorizedAccessException) {
             problems.Add(new SnapshotProblem(other.Folder, other.BlockFile, e.Message, IsState: true));
@@ -47,7 +50,7 @@ sealed class SnapshotSet {
 
     void Load(string project, string file, string root, List<LoadedSnapshot> list) {
         try {
-            list.Add(new LoadedSnapshot(root, SnapshotCache.Read(file)));
+            list.Add(LoadedSnapshot.Of(root, SnapshotCache.Read(file)));
         } catch (Exception e) when (e is FormatException or IOException or UnauthorizedAccessException) {
             problems.Add(new SnapshotProblem(project, file, e.Message, IsLibrary: ReferenceEquals(list, libraries)));
         }

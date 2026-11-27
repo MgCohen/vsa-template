@@ -2,4 +2,4 @@ namespace Model.Slices.ExportModel;
 
 using Operations.Domain.Shared;
 
-public sealed record ExportModelResult(IReadOnlyList<Finding> Findings) : IOperationResult;
+public sealed record ExportModelResult(IReadOnlyList<Finding> Findings, string State) : IOperationResult;

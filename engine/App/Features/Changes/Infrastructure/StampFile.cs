@@ -8,6 +8,7 @@ public static class StampFile {
     public static string? Read(string bin) => File.Exists(In(bin)) ? File.ReadAllText(In(bin)).Trim() : null;
 
     public static string Write(string bin, string hash) {
+        Directory.CreateDirectory(bin);
         File.WriteAllText(In(bin), hash + "\n");
         return In(bin);
     }

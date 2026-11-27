@@ -1,0 +1,40 @@
+<Project>
+  <!-- The snapshot of each compile. The analyzer entry of the engine saves the facts of the types of the project at the end of
+       a compile in the intermediate output path (UmpireSnapshot), one file for each project and target framework. The file
+       needs no definition, so the first build also has it. The output of Build and GetTargetPath gives the snapshot of the
+       project and the snapshots of its definition projects to the projects that reference it (metadata UmpireSnapshots: one
+       line "assembly|target framework|file" for each snapshot, with ";" between the lines). After the build, each project
+       writes the list of the snapshots of its own projects and of all the projects that it references (UmpireSnapshotList).
+       The engine reads the list of the root project. -->
+  <PropertyGroup>
+    <UmpireSnapshot Condition="'$(UmpireSnapshot)' == ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'umpire', 'snapshot.json'))</UmpireSnapshot>
+    <UmpireSnapshotList Condition="'$(UmpireSnapshotList)' == ''">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'umpire', 'snapshots.txt'))</UmpireSnapshotList>
+  </PropertyGroup>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="UmpireSnapshot;TargetFramework;ProjectDir;DesignTimeBuild" />
+  </ItemGroup>
+  <Target Name="_UmpireSnapshotOfTargetPath" AfterTargets="GetTargetPathWithTargetPlatformMoniker;CopyFilesToOutputDirectory">
+    <PropertyGroup>
+      <_UmpireUsedChains>@(_ResolvedProjectReferencePaths->'%(UmpireSnapshots)');@(_UmpireDefinition->'%(UmpireSnapshots)');@(_UmpirePackDefinitionOutput->'%(UmpireSnapshots)')</_UmpireUsedChains>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireUsedSnapshot Include="$([MSBuild]::Unescape($(_UmpireUsedChains)))" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_UmpireSnapshots>$(AssemblyName)|$(TargetFramework)|$(UmpireSnapshot)</_UmpireSnapshots>
+      <_UmpireSnapshots Condition="'@(_UmpireUsedSnapshot)' != ''">$(_UmpireSnapshots)%3B@(_UmpireUsedSnapshot->Distinct(), '%3B')</_UmpireSnapshots>
+    </PropertyGroup>
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker>
+        <UmpireSnapshots>$(_UmpireSnapshots)</UmpireSnapshots>
+      </TargetPathWithTargetPlatformMoniker>
+    </ItemGroup>
+  </Target>
+  <Target Name="_UmpireSnapshotList" AfterTargets="Build" DependsOnTargets="_UmpireSnapshotOfTargetPath"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'">
+    <ItemGroup>
+      <_UmpireSnapshotLine Include="$([MSBuild]::Unescape($(_UmpireSnapshots)))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(UmpireSnapshotList)" Lines="@(_UmpireSnapshotLine->Distinct())" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+</Project>

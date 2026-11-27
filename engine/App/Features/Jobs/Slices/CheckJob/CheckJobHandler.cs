@@ -9,8 +9,8 @@ using Changes.Slices.WriteStamp;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
 using Model.Slices.CheckModel;
+using Model.Slices.ExportModel;
 using Operations.Infrastructure;
-using Rules.Slices.CheckRules;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Handlers.Requests;
@@ -21,13 +21,18 @@ sealed class CheckJobHandler(ICommandSender commands, OperationLog log, RunOptio
     public override async Task<Result<CheckJobReport>> HandleAsync(IEnvelope<CheckJobRequest> envelope) {
         var given = envelope.Message;
         if (given.Model) {
-            var model = await commands.SendAsync(new CheckModelCommand(given.Folder, given.State, given.Mode), envelope.Cancellation);
+            options.Apply(CheckSettings.Of(
+                given.Folder, given.References, given.SourceRoot, given.IgnoredFolders, given.ProjectChecks));
+            options.Use(given.State, given.Snapshots, given.Bin);
+            var state = given.State.Length > 0 || options.State is null ? given.State : options.StateOf(given.Folder, false);
+            var model = await commands.SendAsync(new CheckModelCommand(given.Folder, state, given.Mode), envelope.Cancellation);
             return new CheckJobReport(model.IsSuccess ? model.Value.Mode : CheckMode.Of(given.Mode, given.Folder), [.. log.Findings]);
         }
         var job = given with { Mode = CheckMode.Of(given.Mode, given.Folder) };
         options.FailFast = job.FailFast;
         options.Apply(
             CheckSettings.Of(job.Folder, job.References, job.SourceRoot, job.IgnoredFolders, job.ProjectChecks));
+        options.Use(job.State, job.Snapshots, job.Bin);
         var build = await commands.SendAsync(new BuildAppCommand(job.Project, job.Bin), envelope.Cancellation);
         if (build.IsSuccess && !build.Value.Failed) {
             await Check(job, envelope.Cancellation);
@@ -80,10 +85,14 @@ sealed class CheckJobHandler(ICommandSender commands, OperationLog log, RunOptio
         var app = versions.IsSuccess
             ? await commands.SendAsync(new LoadAppCommand(tree, found.Bin, job.Skip, find.IsUsed), ct)
             : log.Skip<LoadAppCommand, AppInput>();
-        if (app.IsSuccess) {
-            await commands.SendAsync(new CheckRulesCommand(app.Value), ct);
+        var state = options.StateOf(tree.Current.Folder, find.IsUsed);
+        var export = app.IsSuccess
+            ? await commands.SendAsync(new ExportModelCommand(app.Value, found.Bin, state, options.Snapshots, job.Mode!.Value), ct)
+            : log.Skip<ExportModelCommand, ExportModelResult>();
+        if (export.IsSuccess) {
+            await commands.SendAsync(new CheckModelCommand(tree.Current.Folder, export.Value.State, job.Mode), ct);
         } else {
-            log.Skip<CheckRulesCommand, CheckRulesResult>();
+            log.Skip<CheckModelCommand, CheckModelResult>();
         }
     }
 

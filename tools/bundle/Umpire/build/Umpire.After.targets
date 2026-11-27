@@ -2,6 +2,7 @@
   <!-- The targets of the package Umpire, after the targets of the .NET SDK (Umpire.props adds this file to
        AfterMicrosoftNETSdkTargets). -->
   <Import Project="$(MSBuildThisFileDirectory)Umpire.Codes.props" />
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.Snapshot.targets" />
 
   <!-- An app has one root project in the app root. It compiles each file in its folder tree. A nested project is optional,
        for example a test project or a separate assembly. The parent project does not compile the files of a nested project,
@@ -141,10 +142,14 @@
        many apps). -->
   <PropertyGroup>
     <UmpireEngineRollForward Condition="'$(UmpireEngineRollForward)' == ''">LatestMajor</UmpireEngineRollForward>
+    <UmpireStateFolder Condition="'$(UmpireStateFolder)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'umpire', 'check'))</UmpireStateFolder>
     <_UmpireDotnet Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</_UmpireDotnet>
     <_UmpireDotnet Condition="'$(_UmpireDotnet)' == ''">dotnet</_UmpireDotnet>
   </PropertyGroup>
-  <Target Name="UmpireCheck" AfterTargets="Build"
+  <!-- The state folder of the check (UmpireStateFolder) is in the intermediate output path of the root project. The engine
+       writes the state files there: definition.json, block.json, libraries/ and the check stamps. The list of the snapshots
+       (UmpireSnapshotList, Umpire.Snapshot.targets) gives the facts of each project. -->
+  <Target Name="UmpireCheck" AfterTargets="Build" DependsOnTargets="_UmpireSnapshotList"
           Condition="'$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(DesignTimeBuild)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'">
     <PropertyGroup>
       <UmpireEngineFile Condition="'$(_UmpireIsEngine)' == 'true'">$(TargetPath)</UmpireEngineFile>
@@ -175,7 +180,7 @@
          app, so it runs on the newest installed runtime (LatestMajor): RollForward Major alone selects .NET 8 when it is
          installed, and a net10.0 app does not load there. -->
     <Exec Condition="'$(_UmpireEngineFound)' == 'true'" IgnoreExitCode="true" StandardOutputImportance="high" StandardErrorImportance="high" ConsoleToMSBuild="true"
-          Command="&quot;$(_UmpireDotnet)&quot; exec --roll-forward $(UmpireEngineRollForward) &quot;$(UmpireEngineFile)&quot; jobs build --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireModeArgument)">
+          Command="&quot;$(_UmpireDotnet)&quot; exec --roll-forward $(UmpireEngineRollForward) &quot;$(UmpireEngineFile)&quot; jobs build --project &quot;$(MSBuildProjectDirectory.TrimEnd('\').TrimEnd('/'))&quot;$(_UmpireBlockArgument) --bin &quot;$(TargetDir.TrimEnd('\').TrimEnd('/'))&quot; --state &quot;$(UmpireStateFolder.TrimEnd('\').TrimEnd('/'))&quot; --snapshots &quot;$(UmpireSnapshotList)&quot;$(_UmpireModeArgument)">
       <Output TaskParameter="ExitCode" PropertyName="_UmpireCheckExit" />
       <Output TaskParameter="ConsoleOutput" ItemName="_UmpireCheckLine" />
     </Exec>

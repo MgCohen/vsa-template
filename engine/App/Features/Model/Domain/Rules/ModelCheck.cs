@@ -5,7 +5,18 @@ public static class ModelCheck {
         var report = new Report();
         report.Describe("state", state.Folder);
         try {
-            Run(AppModel.Load(state, null, mode), report);
+            var settings = state.ReadBlock();
+            var targets = settings.Targets;
+            if (targets.Count < 2) {
+                Run(AppModel.Load(state, settings, null, mode), report);
+                return report;
+            }
+            report.Describe("targets", string.Join(", ", targets));
+            foreach (var target in targets) {
+                var one = new Report();
+                Run(AppModel.Load(state, settings, null, mode, target), one);
+                report.Join(one);
+            }
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException or InvalidOperationException) {
             report.Fail(e.Message);
         }

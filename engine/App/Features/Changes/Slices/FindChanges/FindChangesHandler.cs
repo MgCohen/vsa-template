@@ -13,7 +13,7 @@ sealed class FindChangesHandler(RunOptions options) : CommandHandler<FindChanges
     public override Task<Result<ChangesResult>> HandleAsync(IEnvelope<FindChangesCommand> envelope) {
         var command = envelope.Message;
         var hash = InputHash.Of(command.Block, command.Bin, command.Run, options.References, options.IgnoredFolders);
-        var same = StampFile.Read(command.Bin) == hash;
+        var same = StampFile.Read(options.StampFolder(command.Bin)) == hash;
         Finding[] findings = same ? [new Finding(ChangesCodes.Same, FindingSeverity.Info, Skipped)] : [];
         return Task.FromResult<Result<ChangesResult>>(new ChangesResult(findings, same, hash));
     }

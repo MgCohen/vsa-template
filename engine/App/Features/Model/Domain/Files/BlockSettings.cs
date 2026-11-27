@@ -13,11 +13,22 @@ public sealed record BlockSettings(
     IReadOnlyList<FolderAlias> FolderAliases,
     IReadOnlyList<FileMark> DefinitionSources,
     IReadOnlyList<FileMark> Inputs,
-    IReadOnlyDictionary<string, string> Severities) {
-    public const int CurrentFormat = 2;
+    IReadOnlyDictionary<string, string> Severities,
+    IReadOnlyList<SnapshotPlace> Snapshots) {
+    public const int CurrentFormat = 3;
+
+    public IReadOnlyList<string> Targets => [.. Snapshots
+        .GroupBy(s => s.Project, StringComparer.OrdinalIgnoreCase).Where(project => project.Count() > 1).SelectMany(project => project)
+        .Select(s => s.Target).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(t => t, StringComparer.Ordinal)];
 
     public static BlockSettings Of(string block, params string[] projects) => new(
-        CurrentFormat, block, CheckModes.Default, "", projects, [], [], [], [], [], [], [], new Dictionary<string, string>());
+        CurrentFormat, block, CheckModes.Default, "", projects, [], [], [], [], [], [], [], new Dictionary<string, string>(), []);
+
+    public string? SnapshotOf(string project, string? target) {
+        var places = Snapshots.Where(s => string.Equals(s.Project, project, StringComparison.OrdinalIgnoreCase)).ToList();
+        return (places.FirstOrDefault(s => target is not null && string.Equals(s.Target, target, StringComparison.OrdinalIgnoreCase))
+            ?? places.FirstOrDefault())?.File;
+    }
 
     public static BlockSettings Read(string text) {
         var settings = JsonReader.Read<BlockSettings>(text);

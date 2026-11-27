@@ -14,6 +14,23 @@
                       ReferenceOutputAssembly="false" PrivateAssets="all" AdditionalProperties="UmpireAnalyzerBuild=true" />
   </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)tools/bundle/SourceMode/Umpire.EngineAnalyzer.targets" Condition="'$(UsingUmpireBuild)' != 'true'" />
+  <Import Project="$(MSBuildThisFileDirectory)tools/bundle/Umpire/build/Umpire.Snapshot.targets" Condition="'$(UsingUmpireBuild)' != 'true' and '$(UmpireAnalyzerBuild)' != 'true' and '$(_UmpireUseBundle)' != 'true' and '$(UmpireNoAnalyzer)' != 'true'" />
+
+  <!-- The library pass of a bundle (UmpireLibraryPass, tools/bundle/Engine/Umpire.Engine.csproj). The bundles have no analyzer, because
+       the analyzer entry builds on them. This pass compiles a bundle again with the analyzer entry from UmpireLibraryAnalyzer. The
+       compile job saves the facts of the shipped DLL in UmpireLibraryFolder, with the source paths under /_/ as in the PDB of the
+       bundle. The check reads these files for the DLLs of the packages, so it reads no PDB. -->
+  <PropertyGroup Condition="'$(UmpireLibraryPass)' == 'true'">
+    <UmpireLibrary>$([MSBuild]::NormalizePath('$(UmpireLibraryFolder)', '$(AssemblyName).json'))</UmpireLibrary>
+    <UmpireLibraryRoot>$(UmpireRoot)</UmpireLibraryRoot>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);UMP010001;UMP010002;UMP010003;UMP010101;UMP010102;UMP010103;UMP010104;UMP010105;UMP010106;UMP010107;UMP010201</NoWarn>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UmpireLibraryPass)' == 'true'">
+    <CompilerVisibleProperty Include="UmpireLibrary;UmpireLibraryRoot;DesignTimeBuild" />
+    <Analyzer Include="$(UmpireLibraryAnalyzer)*.dll" Exclude="$(UmpireLibraryAnalyzer)Microsoft.CodeAnalysis*.dll;$(UmpireLibraryAnalyzer)System.*.dll" />
+    <Analyzer Include="$(UmpireLibraryAnalyzer)System.Reflection.MetadataLoadContext.dll" Condition="Exists('$(UmpireLibraryAnalyzer)System.Reflection.MetadataLoadContext.dll')" />
+  </ItemGroup>
 
   <!-- The pack takes the documentation file from bin/. The file is not there, so the pack does not take it. -->
   <Target Name="_UmpireKeepDocumentationFileInObj" AfterTargets="DocumentationProjectOutputGroup"

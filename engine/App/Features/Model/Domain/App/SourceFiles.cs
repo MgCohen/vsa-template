@@ -9,6 +9,10 @@ public static class SourceFiles {
     public static IEnumerable<string> ConfigFiles(string block) => Folders(block, _ => true)
         .Select(folder => Path.Combine(folder, ConfigFile)).Where(File.Exists);
 
+    public static IEnumerable<string> ProjectFiles(string block) => Directory.Exists(block)
+        ? Folders(block, _ => true).SelectMany(folder => Directory.GetFiles(folder, ProjectFile))
+        : [];
+
     public static IEnumerable<string> In(string folder) => Directory.Exists(folder)
         ? Folders(folder, sub => Directory.GetFiles(sub, ProjectFile).Length == 0).SelectMany(sub => Patterns.SelectMany(p => Directory.GetFiles(sub, p)))
         : [];

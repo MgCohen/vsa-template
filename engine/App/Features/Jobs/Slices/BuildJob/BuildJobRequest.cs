@@ -14,8 +14,10 @@ public sealed record BuildJobRequest(
     string References = "",
     string SourceRoot = "",
     string IgnoredFolders = "",
-    bool? ProjectChecks = null)
-    : JobRequest(Project, Bin, Block, Mode, Skip, FailFast, References, SourceRoot, IgnoredFolders, ProjectChecks),
+    bool? ProjectChecks = null,
+    string State = "",
+    string Snapshots = "")
+    : JobRequest(Project, Bin, Block, Mode, Skip, FailFast, References, SourceRoot, IgnoredFolders, ProjectChecks, State, Snapshots),
       IRequest<BuildJobReport> {
     public static string Name => "build";
 }

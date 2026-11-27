@@ -16,8 +16,9 @@ public sealed record CheckJobRequest(
     string IgnoredFolders = "",
     bool? ProjectChecks = null,
     bool Model = false,
-    string State = "")
-    : JobRequest(Project, Bin, Block, Mode, Skip, FailFast, References, SourceRoot, IgnoredFolders, ProjectChecks),
+    string State = "",
+    string Snapshots = "")
+    : JobRequest(Project, Bin, Block, Mode, Skip, FailFast, References, SourceRoot, IgnoredFolders, ProjectChecks, State, Snapshots),
       IRequest<CheckJobReport> {
     public static string Name => "check";
 }
