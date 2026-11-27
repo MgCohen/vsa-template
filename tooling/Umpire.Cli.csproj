@@ -11,6 +11,9 @@
     <RollForward>Major</RollForward>
     <ToolCommandName>umpire</ToolCommandName>
     <PackageId>Umpire.Cli</PackageId>
+    <!-- A pack builds the tool to ship it. The normal build of this repository checks the block. A pack can give its own
+         ArtifactsPath, and then the engine of the source build is not in engine/artifacts~/. -->
+    <UmpireCheck Condition="'$(_IsPacking)' == 'true'">false</UmpireCheck>
     <!-- Templates/ is a separate app that builds on its own. The tool holds its files as resources. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);Templates/**</DefaultItemExcludes>
   </PropertyGroup>
@@ -32,6 +35,12 @@
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
     <ProjectReference Include="Files/Umpire.Files.csproj" />
   </ItemGroup>
+  <!-- The tool reads no module settings, so its output and its package have no .umpireconfig file (NU5119). -->
+  <Target Name="_UmpireCliNoConfigFile" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <None Remove="$(UmpireConfigFile)" />
+    </ItemGroup>
+  </Target>
   <!-- The tool holds the template files as resources. Umpire.After.targets removes the files of a nested project from
        EmbeddedResource (Templates/ has its own project), so a target adds them after the evaluation. -->
   <ItemGroup>
