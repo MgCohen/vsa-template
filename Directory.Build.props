@@ -11,8 +11,9 @@
     <IsPackable Condition="'$(UmpireBundled)' == 'true'">false</IsPackable>
   </PropertyGroup>
 
-  <!-- All build output goes to artifacts~, so no bin/ or obj/ folder is next to the code. The library projects and the test
-       projects share the artifacts~ folder of the repository root. Each block (engine, fixtures, templates) sets its own. -->
+  <!-- All build output goes to artifacts~, so no bin/ or obj/ folder is next to the code (the standard .NET artifacts layout).
+       The library projects and the test projects share the artifacts~ folder of the repository root. Each block (engine,
+       fixtures, templates) sets its own. A consumer app gets the same two lines from umpire init. -->
   <PropertyGroup>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
@@ -32,8 +33,11 @@
     <TargetFramework Condition="'$(UmpirePortableLayer)' == 'true'">netstandard2.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-  <!-- The general build settings of each Umpire project: the same file as in Umpire.Sdk. -->
-  <Import Project="$(MSBuildThisFileDirectory)tools/sdk/Sdk/Umpire.Common.props" />
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
 
   <!-- The findings of the architecture check are errors in this repository: the engine, the templates and the framework blocks.
        The default of an app is Warn. A new app does not get this file. -->
@@ -42,7 +46,7 @@
   </PropertyGroup>
 
   <!-- The Umpire analyzer findings are warnings by default. These codes are errors in this repository. An .editorconfig severity
-       cannot do this, because WarningsNotAsErrors of the Umpire SDK (Umpire.Codes.props) wins over it. -->
+       cannot do this, because WarningsNotAsErrors of the package Umpire (Umpire.Codes.props) wins over it. -->
   <PropertyGroup>
     <WarningsAsErrors>$(WarningsAsErrors);UMP010001;UMP010002;UMP010003;UMP010107;UMP010201</WarningsAsErrors>
   </PropertyGroup>
@@ -55,7 +59,7 @@
     <RepositoryUrl>https://github.com/MgCohen/vsa-template</RepositoryUrl>
   </PropertyGroup>
 
-  <!-- The style switches of this repository. The rules are in the root .editorconfig. Umpire.Sdk ships no style, so a consumer
+  <!-- The style switches of this repository. The rules are in the root .editorconfig. The Umpire packages ship no style, so a consumer
        app sets its own. -->
   <PropertyGroup>
     <EnforceCodeStyleInBuild Condition="'$(EnforceCodeStyleInBuild)' == ''">true</EnforceCodeStyleInBuild>
@@ -73,6 +77,6 @@
   <!-- netstandard2.0 does not have some types that the compiler needs. The analyzer and check model projects also target
        netstandard2.0, but they are not portable layers, so they add the polyfills that they need. -->
   <ItemGroup Condition="'$(UmpirePortableLayer)' == 'true'">
-    <Compile Include="$(MSBuildThisFileDirectory)tools/sdk/Polyfills~/*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)tools/bundle/Umpire/build/Polyfills~/*.cs" />
   </ItemGroup>
 </Project>

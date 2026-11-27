@@ -9,7 +9,7 @@ sealed class UpdateCommand : AppCommand {
     public override IReadOnlyList<string> Words => ["update"];
 
     public override string Summary =>
-        "Moves the Umpire SDKs and the Umpire packages of the app to the version of this tool, or to <version>.";
+        "Moves the Umpire packages of the app to the version of this tool, or to <version>.";
 
     public override IReadOnlyList<CommandOption> Options => [Version];
 
@@ -25,6 +25,11 @@ sealed class UpdateCommand : AppCommand {
 
     protected override int Run(string block, CommandInput input) {
         var target = input.Single(Version) ?? ToolVersion.Current;
+        var removed = VersionSlots.RemovedSdks(block);
+        if (removed is not []) {
+            throw new UmpireException(
+                "Change these by hand: " + string.Join("; ", removed) + ". Then run 'umpire update' again.");
+        }
         var changed = SetVersion(block, target);
         Console.WriteLine($"Umpire {target}:");
         foreach (var file in changed) {

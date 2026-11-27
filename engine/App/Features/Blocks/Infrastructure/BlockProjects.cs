@@ -11,7 +11,7 @@ public static class BlockProjects {
             .Where(sub => !innerFolders.Any(inner => IsAtOrUnder(sub, inner)))
             .SelectMany(sub => Directory.GetFiles(sub, "*.csproj"))
             .Order(StringComparer.OrdinalIgnoreCase)
-            .Select(file => new BlockProject(DiskPath.Of(file), VersionSlots.HasUmpireMainSdk(file)))];
+            .Select(file => new BlockProject(DiskPath.Of(file), VersionSlots.UsesUmpire(file)))];
 
     public static bool HasConfigFile(string folder) => File.Exists(Path.Combine(folder, UmpireConfig.FileName));
 

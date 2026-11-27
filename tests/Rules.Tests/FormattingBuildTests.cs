@@ -6,7 +6,7 @@ namespace Rules.Tests;
 [NonParallelizable]
 [Category("Package")]
 public sealed class FormattingBuildTests {
-    static readonly string[] styleFiles = ["Directory.Build.props", "tools/sdk/Umpire.Sdk.Dev.props"];
+    static readonly string[] styleFiles = ["Directory.Build.props", "tools/bundle/SourceMode/Umpire.SourceMode.props"];
     static readonly string[] styleSwitches =
         ["AnalysisLevel", "EnforceCodeStyleInBuild", "GenerateDocumentationFile", "NoWarn"];
     Workspace workspace = null!;
@@ -96,7 +96,7 @@ public sealed class FormattingBuildTests {
     }
 
     [Test]
-    public void Umpire_Sdk_gives_a_consumer_no_style() {
+    public void The_Umpire_packages_give_a_consumer_no_style() {
         using var plain = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
         var result = plain.Dotnet("build", "App/Features/Styled/Styled.csproj", "-nodeReuse:false");
         var style = result.Output.Split('\n').Where(line => line.Contains(" warning IDE", StringComparison.Ordinal));

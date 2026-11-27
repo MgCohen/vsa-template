@@ -1,5 +1,5 @@
 <Project>
-  <!-- The fixtures build against the framework source in this repository (Umpire.Sdk source mode).
+  <!-- The fixtures build against the framework source in this repository (source mode, Umpire.SourceMode.props).
        This file does not import tests/Directory.Build.props: a fixture is not a test project. -->
   <Import Project="$(MSBuildThisFileDirectory)../../Directory.Build.props" />
   <PropertyGroup>
@@ -15,4 +15,5 @@
     <UmpireBlock>$(MSBuildThisFileDirectory)$(_UmpireDevApp.Substring(0, $(_UmpireDevApp.IndexOf('/'))))/</UmpireBlock>
     <ArtifactsPath>$(UmpireBlock)artifacts~</ArtifactsPath>
   </PropertyGroup>
+  <Import Project="$(UmpireFrameworkSourceDir)tools/bundle/SourceMode/Umpire.SourceMode.props" />
 </Project>

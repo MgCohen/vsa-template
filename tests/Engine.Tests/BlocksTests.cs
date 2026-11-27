@@ -416,8 +416,8 @@ public sealed class BlocksTests {
     public void The_projects_of_a_block_skip_the_inner_blocks_and_the_build_output() {
         var root = TempFolder.Create();
         try {
-            WriteFile(root, "App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.1" />""");
-            WriteFile(root, "Tests/App.Tests.csproj", "<Project>\n  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))\" />\n</Project>");
+            WriteFile(root, "App.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" /></ItemGroup></Project>""");
+            WriteFile(root, "Tests/App.Tests.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Testing\" Version=\"$(UmpireVersion)\" />\n  </ItemGroup>\n</Project>");
             WriteFile(root, "Tools/Tool.csproj", """<Project Sdk="Microsoft.NET.Sdk" />""");
             WriteFile(root, "Inner/Inner.csproj", """<Project Sdk="Microsoft.NET.Sdk" />""");
             WriteFile(root, "artifacts~/Copy.csproj", """<Project Sdk="Microsoft.NET.Sdk" />""");
@@ -425,7 +425,7 @@ public sealed class BlocksTests {
 
             var projects = BlockProjects.In(full, [Path.Combine(full, "Inner")]);
 
-            Assert.That(projects.Select(p => $"{Path.GetRelativePath(full, p.File).Replace('\\', '/')} {p.HasUmpireSdk}"),
+            Assert.That(projects.Select(p => $"{Path.GetRelativePath(full, p.File).Replace('\\', '/')} {p.HasUmpirePackage}"),
                 Is.EqualTo(new[] { "App.csproj True", "Tests/App.Tests.csproj True", "Tools/Tool.csproj False" }));
         } finally {
             TempFolder.Delete(root);

@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CheckModel.Tests" />
-    <Compile Include="../../tools/sdk/Polyfills~/IsExternalInit.cs" LinkBase="Polyfills" />
+    <Compile Include="../../tools/bundle/Umpire/build/Polyfills~/IsExternalInit.cs" LinkBase="Polyfills" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(UmpireAnalyzerRoslynVersion)" PrivateAssets="all" />
     <ProjectReference Include="../Model/Umpire.CheckModel.csproj" />
     <ProjectReference Include="../../framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" />

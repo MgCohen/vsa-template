@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Umpire.Web.dll: the web host and the views of the VSA pack. Umpire.Sdk.Web adds it to a web app. The views need the
+  <!-- Umpire.Web.dll: the web host and the views of the VSA pack. A web app references it. The views need the
        VSA kernel, so the package depends on Umpire.Vsa. -->
   <PropertyGroup>
     <Description>The Umpire web host and the views of the VSA pack.</Description>
@@ -9,6 +9,6 @@
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../Vsa/Umpire.Vsa.Kernel.csproj" />
+    <ProjectReference Include="../Vsa/Umpire.Vsa.Kernel.csproj" PrivateAssets="none" />
   </ItemGroup>
 </Project>

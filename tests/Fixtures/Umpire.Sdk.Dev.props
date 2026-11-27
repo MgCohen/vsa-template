@@ -1,3 +1,0 @@
-<Project>
-  <Import Project="$(MSBuildThisFileDirectory)../../tools/sdk/Umpire.Sdk.Dev.props" />
-</Project>

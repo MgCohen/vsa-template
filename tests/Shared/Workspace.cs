@@ -1,7 +1,6 @@
 namespace Tests.Shared;
 
 using System.Diagnostics;
-using System.Text.Json.Nodes;
 using System.Xml.Linq;
 
 public sealed class Workspace : IDisposable {
@@ -30,12 +29,7 @@ public sealed class Workspace : IDisposable {
     public void Dispose() => TempFolder.Delete(Root);
 
     void WriteConsumerFiles() {
-        var globalJson = JsonNode.Parse(File.ReadAllText(Repo.Path("global.json")))!;
-        globalJson["msbuild-sdks"] = new JsonObject {
-            ["Umpire.Sdk"] = LocalFeed.Version,
-            ["Umpire.Sdk.Web"] = LocalFeed.Version,
-        };
-        File.WriteAllText(Path.Combine(Src, "global.json"), globalJson.ToJsonString());
+        File.Copy(Repo.Path("global.json"), Path.Combine(Src, "global.json"), overwrite: true);
 
         var globalPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
@@ -66,7 +60,7 @@ public sealed class Workspace : IDisposable {
 
         var packages = XDocument.Load(Repo.Path("Directory.Packages.props"));
         var items = packages.Root!.Element("ItemGroup")!;
-        foreach (var id in LocalFeed.Packages.Where(id => id != "Umpire.Sdk")) {
+        foreach (var id in LocalFeed.Packages) {
             items.Add(new XElement("PackageVersion", new XAttribute("Include", id), new XAttribute("Version", LocalFeed.Version)));
         }
         packages.Save(Path.Combine(Root, "Directory.Packages.props"));

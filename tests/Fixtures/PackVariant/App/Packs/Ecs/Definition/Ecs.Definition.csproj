@@ -1,8 +1,9 @@
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- The definition of the pack. It names the kernel of the pack. -->
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa.Definition" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Kernel/Ecs.Kernel.csproj" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

@@ -1,0 +1,13 @@
+<Project>
+  <!-- The settings of a Directory.Build.props file in a parent folder stay. -->
+  <PropertyGroup>
+    <ParentBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</ParentBuildProps>
+  </PropertyGroup>
+  <Import Project="$(ParentBuildProps)" Condition="'$(ParentBuildProps)' != ''" />
+  <!-- All build output goes to artifacts~ in this folder, in the standard .NET artifacts layout, so no bin/ or obj/ folder
+       is next to the code. The Umpire check does not read a folder whose name ends with ~. -->
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
+  </PropertyGroup>
+</Project>

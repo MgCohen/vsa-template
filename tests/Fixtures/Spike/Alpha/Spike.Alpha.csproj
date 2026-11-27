@@ -1,7 +1,8 @@
-<Project>
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Umpire.Definition" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
   <PropertyGroup>
-    <UmpireDefaultPack>false</UmpireDefaultPack>
     <UmpireDefinitionProject>true</UmpireDefinitionProject>
   </PropertyGroup>
   <ItemGroup>
@@ -10,5 +11,4 @@
   <ItemGroup>
     <ProjectReference Include="../Bravo/Spike.Bravo.csproj" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

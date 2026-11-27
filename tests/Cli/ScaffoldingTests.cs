@@ -92,6 +92,7 @@ public sealed class ScaffoldingTests {
             ("App/Tests/App.Tests.csproj", App),
             ("App/Tests/SampleAppArchitectureTests.cs", App),
             ("App/Tests/SampleModuleStatusTests.cs", Module),
+            ("Directory.Build.props.template", Setup),
             ("Properties/launchSettings.json", App),
             ("SampleApp.csproj", App),
             ("SampleApp.slnx.template", App),
@@ -116,7 +117,7 @@ public sealed class ScaffoldingTests {
         var tracked = git.StandardOutput.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         git.WaitForExit();
 
-        Assert.That(Templates.All(), Is.EqualTo(tracked.Where(f => f is not ("Directory.Build.props" or "Umpire.Sdk.Dev.props")).Order(StringComparer.Ordinal)));
+        Assert.That(Templates.All(), Is.EqualTo(tracked.Where(f => f is not "Directory.Build.props").Order(StringComparer.Ordinal)));
     }
 
     [Test]
@@ -143,38 +144,48 @@ public sealed class ScaffoldingTests {
     }
 
     [Test]
-    public void NewAppHasAnUmpireconfigFileAndNoBuildProps() {
-        var paths = NewApp("Hello").Select(f => f.Path).ToList();
+    public void NewAppHasAnUmpireconfigFileAndTheArtifactsOutput() {
+        var files = NewApp("Hello");
+        var paths = files.Select(f => f.Path).ToList();
 
         Assert.That(paths, Does.Contain(".umpireconfig"));
-        Assert.That(paths, Has.None.EqualTo("Directory.Build.props").And.None.EqualTo("dotnet-tools.json").And.None.EqualTo("global.json"));
+        Assert.That(paths, Has.None.EqualTo("dotnet-tools.json").And.None.EqualTo("global.json"));
+        Assert.That(files.Single(f => f.Path == "Directory.Build.props").Content,
+            Does.Contain("<UseArtifactsOutput>true</UseArtifactsOutput>").And.Contain("<ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>"));
     }
 
     [Test]
-    public void NewAppWritesTheToolVersionToTheFirstLineOfEachProject() {
+    public void NewAppWritesTheToolVersionToEachUmpirePackage() {
         var files = NewApp("Hello");
 
-        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\""));
-        Assert.That(files.Single(f => f.Path == "App/Tests/App.Tests.csproj").Content, Does.StartWith($"<Project Sdk=\"Umpire.Sdk/{Version}\">"));
+        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content, Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">")
+            .And.Contain($"<PackageReference Include=\"Umpire.Web\" Version=\"{Version}\" />"));
+        Assert.That(files.Single(f => f.Path == "App/Tests/App.Tests.csproj").Content, Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk\">")
+            .And.Contain($"<PackageReference Include=\"Umpire.Testing\" Version=\"{Version}\" />"));
         Assert.That(files.Single(f => f.Path == "Hello.slnx").Content, Does.Contain("<Project Path=\"Hello.csproj\" />"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains(Templates.VersionToken));
     }
 
     [Test]
-    public void ANewAppGetsTheRuleEngineAndNUnitFromTheSdk() {
-        var projects = NewApp("Hello").Where(f => f.Path.EndsWith(".csproj", StringComparison.Ordinal)).Select(f => f.Content);
+    public void ANewAppGetsTheRuleEngineInTheRootProjectAndNUnitInTheTestProject() {
+        var files = NewApp("Hello");
 
-        Assert.That(projects, Has.None.Contains("Umpire.Engine.Build").And.None.Contains("NUnit"));
+        Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
+            Does.Contain($"<PackageReference Include=\"Umpire.Engine\" Version=\"{Version}\" PrivateAssets=\"all\" />"));
+        Assert.That(files.Single(f => f.Path == "App/Tests/App.Tests.csproj").Content,
+            Does.Contain($"<PackageReference Include=\"NUnit\" Version=\"{ToolVersion.NUnit}\" />")
+                .And.Contain($"<PackageReference Include=\"NUnit3TestAdapter\" Version=\"{ToolVersion.NUnitAdapter}\" />")
+                .And.Contain("<EnableNUnitRunner>true</EnableNUnitRunner>"));
     }
 
     [Test]
-    public void NewAppHasOneRootProjectWithTheWebSdkAndVsaSdk() {
+    public void NewAppHasOneRootProjectWithTheWebSdkAndTheWebPackage() {
         var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
         var projects = files.Where(f => f.Path.EndsWith(".csproj")).Select(f => f.Path).Order(StringComparer.Ordinal);
 
         Assert.That(projects, Is.EqualTo(["App/Tests/App.Tests.csproj", "Hello.csproj"]));
         Assert.That(files.Single(f => f.Path == "Hello.csproj").Content,
-            Is.EqualTo($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\" />\n"));
+            Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n").And.Contain("<TargetFramework>net10.0</TargetFramework>"));
     }
 
     [Test]
@@ -204,10 +215,13 @@ public sealed class ScaffoldingTests {
             .ToDictionary(e => (string)e.Attribute("Include")!, e => (string)e.Attribute("Version")!);
         var project = System.Xml.Linq.XDocument.Load(Repo.Path("tools", "cli", "Templates", "App", "Tests", "App.Tests.csproj"));
 
-        foreach (var reference in project.Descendants("PackageReference")) {
-            var id = (string)reference.Attribute("Include")!;
-            Assert.That((string?)reference.Attribute("Version"), Is.EqualTo(versions[id]), id);
-        }
+        var nunit = project.Descendants("PackageReference").Where(reference => ((string)reference.Attribute("Include")!).StartsWith("NUnit", StringComparison.Ordinal)).ToList();
+
+        Assert.That(nunit, Has.Count.EqualTo(2));
+        Assert.That(ToolVersion.NUnit, Is.EqualTo(versions["NUnit"]));
+        Assert.That(ToolVersion.NUnitAdapter, Is.EqualTo(versions["NUnit3TestAdapter"]));
+        Assert.That(nunit.Select(reference => (string?)reference.Attribute("Version")),
+            Is.EqualTo(new[] { "$(UmpireNUnitVersion)", "$(UmpireNUnitAdapterVersion)" }));
     }
 
     [Test]
@@ -224,8 +238,17 @@ public sealed class ScaffoldingTests {
         var files = Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version);
 
         var root = files.Single(f => f.Path == "Hello.csproj").Content;
-        Assert.That(root.Trim(), Is.EqualTo($"<Project Sdk=\"Umpire.Sdk.Web/{Version}\" />"));
+        Assert.That(root, Does.Contain($"Version=\"{Version}\"").And.Not.Contain("Umpire.Sdk"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("$(Umpire"));
+    }
+
+    [Test]
+    public void WithCentralVersionsEachPackageGetsVersionOverride() {
+        var files = Templates.WithCentralVersions(
+            Templates.Files(TemplateGroup.App, new Dictionary<string, string> { [Templates.App] = "Hello" }, Version), central: true);
+
+        var root = files.Single(f => f.Path == "Hello.csproj").Content;
+        Assert.That(root, Does.Contain($"<PackageReference Include=\"Umpire.Web\" VersionOverride=\"{Version}\" />").And.Not.Contain(" Version="));
     }
 
     [Test]

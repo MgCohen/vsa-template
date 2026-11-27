@@ -1,0 +1,8 @@
+<Project>
+  <!-- The package Umpire.Vsa names the definition of its pack for the architecture check. Each project that is not a definition
+       project and not a test project copies Umpire.Vsa.Definition.dll from the engine folder (UmpireEngineDir) to its folder
+       umpire-definitions (_UmpireCopyDefinitions in Umpire.After.targets of the package Umpire). -->
+  <ItemGroup Condition="'$(UmpireDefinitionProject)' != 'true' and '$(UmpireTestProject)' != 'true'">
+    <_UmpirePackDefinition Include="Umpire.Vsa" Package="Umpire.Vsa.Definition" />
+  </ItemGroup>
+</Project>

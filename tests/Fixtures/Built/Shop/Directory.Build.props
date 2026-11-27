@@ -1,0 +1,12 @@
+<Project>
+  <!-- The general settings and the artifacts output of the app, as a consumer writes them. DefinitionBuildTests builds the app
+       with no Directory.Build.props file of the workspace. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
+  </PropertyGroup>
+</Project>

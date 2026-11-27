@@ -1,7 +1,8 @@
-<Project>
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa.Definition" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Kernel/Beta.Kernel.csproj" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

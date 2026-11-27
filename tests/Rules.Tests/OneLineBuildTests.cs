@@ -10,7 +10,7 @@ public sealed class OneLineBuildTests {
     DotnetResult engine = null!;
     DotnetResult build = null!;
 
-    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.sdk.web", LocalFeed.Version, "tools", "net8.0",
+    string Engine => Path.Combine(workspace.Env["NUGET_PACKAGES"], "umpire.engine", LocalFeed.Version, "tools", "net8.0",
         "umpire-engine.dll");
 
     [OneTimeSetUp]
@@ -82,11 +82,11 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_sdk_package_has_the_rule_engine() =>
+    public void The_engine_package_has_the_rule_engine() =>
         Assert.That(File.Exists(Engine), Is.True, first.Output);
 
     [Test]
-    public void The_engine_of_the_sdk_package_targets_net8_with_roll_forward_Major() {
+    public void The_engine_of_the_engine_package_targets_net8_with_roll_forward_Major() {
         var config = File.ReadAllText(Path.ChangeExtension(Engine, ".runtimeconfig.json"));
         Assert.That(config, Does.Contain("\"tfm\": \"net8.0\"").And.Contain("\"rollForward\": \"Major\"")
             .And.Not.Contain("Microsoft.AspNetCore.App"), config);
@@ -210,7 +210,7 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void An_artifacts_path_of_a_Directory_Build_props_file_wins() {
+    public void The_artifacts_path_comes_from_the_nearest_Directory_Build_props_file() {
         var props = Path.Combine(workspace.Src, "App", "Tests", "Directory.Build.props");
         File.WriteAllText(props, """
             <Project>
@@ -230,18 +230,18 @@ public sealed class OneLineBuildTests {
     [Test]
     public void An_engine_file_of_a_Directory_Build_props_file_wins() {
         var props = Path.Combine(workspace.Src, "Directory.Build.props");
-        File.WriteAllText(props, """
-            <Project>
+        var text = File.ReadAllText(props);
+        File.WriteAllText(props, text.Replace("</Project>", """
               <PropertyGroup>
                 <UmpireEngineFile>C:/tools/my-engine.dll</UmpireEngineFile>
               </PropertyGroup>
             </Project>
-            """);
+            """, StringComparison.Ordinal));
         try {
             var path = Evaluate("OneLine.csproj", "-getProperty:UmpireEngineFile");
             Assert.That(path.Output.Trim(), Is.EqualTo("C:/tools/my-engine.dll"), path.Output);
         } finally {
-            File.Delete(props);
+            File.WriteAllText(props, text);
         }
     }
 
@@ -253,22 +253,44 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_root_project_gets_no_engine_package() {
+    public void The_root_project_gets_the_engine_package_only_for_its_build() {
+        var deps = File.ReadAllText(Path.Combine(workspace.Src, "artifacts~", "bin", "OneLine", "debug", "OneLine.deps.json"));
         var references = Evaluate("OneLine.csproj", "-getItem:PackageReference");
-        Assert.That(references.Output, Does.Not.Contain("Umpire.Engine"), references.Output);
+        Assert.That(references.Output, Does.Contain("\"Umpire.Engine\""), references.Output);
+        Assert.That(deps, Does.Not.Contain("umpire-engine"), deps);
     }
 
     [Test]
-    public void The_web_root_project_gets_the_core_the_VSA_and_the_web_bundles() {
-        var references = Evaluate("OneLine.csproj", "-getItem:PackageReference");
-        Assert.That(references.Output, Does.Contain("\"Umpire\"").And.Contain("\"Umpire.Vsa\"").And.Contain("\"Umpire.Web\"")
-            .And.Not.Contain("\"Umpire.Vsa.Definition\""), references.Output);
+    public void The_web_package_brings_the_core_and_the_VSA_bundles() {
+        var assets = File.ReadAllText(Path.Combine(workspace.Src, "artifacts~", "obj", "OneLine", "project.assets.json"));
+        Assert.That(assets, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Vsa/").And.Contain("\"Umpire.Web/")
+            .And.Not.Contain("\"Umpire.Vsa.Definition/"));
     }
 
     [Test]
-    public void A_project_with_no_default_pack_gets_only_the_core_bundle() {
-        var references = Evaluate("OneLine.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false", "-p:UmpireWeb=false");
-        Assert.That(references.Output, Does.Contain("\"Umpire\"").And.Not.Contain("\"Umpire.Vsa"), references.Output);
+    public void A_project_with_only_the_core_package_gets_no_pack_definition() {
+        var folder = Path.Combine(workspace.Src, "App", "Core");
+        Directory.CreateDirectory(folder);
+        File.WriteAllText(Path.Combine(folder, "Core.csproj"), """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="Umpire" />
+              </ItemGroup>
+            </Project>
+            """);
+        try {
+            workspace.Dotnet("restore", "App/Core/Core.csproj", "-nodeReuse:false").EnsureSuccess();
+            var definitions = Evaluate("App/Core/Core.csproj", "-getItem:_UmpirePackDefinition");
+            var assets = File.ReadAllText(Path.Combine(workspace.Src, "artifacts~", "obj", "Core", "project.assets.json"));
+
+            Assert.That(definitions.Output, Does.Not.Contain("Umpire.Vsa"), definitions.Output);
+            Assert.That(assets, Does.Contain("\"Umpire/").And.Not.Contain("\"Umpire.Vsa/"));
+        } finally {
+            Directory.Delete(folder, true);
+        }
     }
 
     [Test]
@@ -296,10 +318,11 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_test_bases_of_the_default_pack_can_be_left_out() {
-        var references = Evaluate("App/Tests/OneLine.Tests.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false");
-        Assert.That(references.Output, Does.Not.Contain("\"Umpire.Testing\""), references.Output);
-        Assert.That(references.Output, Does.Contain("\"Umpire.Definition\""), references.Output);
+    public void The_test_project_names_its_test_packages_itself() {
+        var references = Evaluate("App/Tests/OneLine.Tests.csproj", "-getItem:PackageReference");
+        Assert.That(references.Output, Does.Contain("\"Umpire.Testing\"").And.Contain("\"NUnit\"").And.Contain("\"NUnit3TestAdapter\""),
+            references.Output);
+        Assert.That(references.Output, Does.Not.Contain("\"Umpire.Definition\""), references.Output);
     }
 
     DotnetResult RunEngine() => workspace.Dotnet("exec", Engine, "--project", workspace.Src,

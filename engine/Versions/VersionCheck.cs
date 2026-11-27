@@ -9,7 +9,7 @@ public static class VersionCheck {
     public static string Message(IReadOnlyList<VersionSlot> mismatches, string expected) =>
         $"The versions are not the same. Expected Umpire {expected}, found: "
         + string.Join("; ", mismatches.Select(Found))
-        + ". Use one version for the tool, Umpire.Sdk and all Umpire.* packages: run dotnet umpire update.";
+        + ". Use one version for the tool and all Umpire packages: run dotnet umpire update.";
 
     public static string Shown(VersionSlot slot) => slot switch {
         { Version: null } => "(no version)",

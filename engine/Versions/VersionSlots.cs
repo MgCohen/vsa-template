@@ -8,11 +8,11 @@ using System.Xml.Linq;
 using Umpire.Architecture;
 
 public static class VersionSlots {
+    public const string CorePackage = "Umpire";
     public const string PackagePrefix = "Umpire.";
-    public const string Sdk = "Umpire.Sdk";
-    public const string WebSdk = "Umpire.Sdk.Web";
+    public const string RemovedSdk = "Umpire.Sdk";
+    public const string RemovedWebSdk = "Umpire.Sdk.Web";
     const string CentralFile = "Directory.Packages.props";
-    const string DevProps = "Umpire.Sdk.Dev.props";
     const LoadOptions KeepLayout = LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo;
     static readonly JsonDocumentOptions JsonAsDotnetReadsIt = new() {
         CommentHandling = JsonCommentHandling.Skip,
@@ -35,40 +35,33 @@ public static class VersionSlots {
             ? [.. Directory.GetFiles(bin, "*.deps.json").Order(StringComparer.Ordinal).SelectMany(PackagesOfDeps)]
             : [];
 
-    public static bool HasUmpireMainSdk(string projectFile) {
-        if (ParsedOrNull(projectFile)?.Root is not { } root) {
-            return false;
-        }
-        var main = ((string?)root.Attribute("Sdk") ?? "").Split(';', StringSplitOptions.TrimEntries);
-        return main.Any(part => IsSdk(part.Split('/')[0].Trim()))
-            || root.Elements().Any(element => element.Name.LocalName == "Import"
-                && ((string?)element.Attribute("Project") ?? "").Contains(DevProps, StringComparison.Ordinal));
-    }
+    public static bool UsesUmpire(string projectFile) =>
+        ParsedOrNull(projectFile)?.Descendants().Any(element => element.Name.LocalName == "PackageReference"
+            && Id(element) is string id && IsUmpire(id)) ?? false;
 
-    public static bool UsesUmpireSdk(string projectFile) =>
-        ParsedOrNull(projectFile)?.Descendants().Any(NamesUmpireSdk) ?? false;
+    public static bool UsesRemovedSdk(string projectFile) =>
+        ParsedOrNull(projectFile)?.Descendants().Any(NamesRemovedSdk) ?? false;
 
-    public static IReadOnlyList<string> UnpinnedSdks(string root) {
+    public static IReadOnlyList<string> RemovedSdks(string root) {
         if (!Directory.Exists(root)) {
             return [];
         }
         var projects = ProjectFiles(root)
-            .Where(file => ParsedOrNull(Path.Combine(root, file))?.Root?.Attribute("Sdk") is XAttribute sdk
-                && sdk.Value.Split(';', StringSplitOptions.TrimEntries).Any(IsSdk))
-            .Select(file => $"{file}: an Umpire SDK with no version. Write the version after the SDK name, "
-                + $"for example Sdk=\"{Sdk}/<version>\"");
+            .Where(file => UsesRemovedSdk(Path.Combine(root, file)))
+            .Select(file => $"{file}: the Umpire SDK, which does not exist any more. Make the main SDK "
+                + "Microsoft.NET.Sdk or Microsoft.NET.Sdk.Web, and add the Umpire packages as PackageReference items "
+                + "('umpire init' does this for the root project)");
         var globalJson = GlobalJsonAbove(root) is string file
             && Json(file)?["msbuild-sdks"] is JsonObject sdks
-            && sdks.Any(pair => IsSdk(pair.Key))
-                ? [$"{file}: an Umpire pin in msbuild-sdks. "
-                    + "Remove the entry, and write the version in each project file"]
+            && sdks.Any(pair => IsRemovedSdk(pair.Key))
+                ? [$"{file}: an Umpire SDK pin in msbuild-sdks. The Umpire SDK does not exist any more. Remove the entry"]
                 : Array.Empty<string>();
         return [.. globalJson, .. projects];
     }
 
-    public static bool IsSdk(string? name) =>
-        string.Equals(name, Sdk, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(name, WebSdk, StringComparison.OrdinalIgnoreCase);
+    public static bool IsRemovedSdk(string? name) =>
+        string.Equals(name, RemovedSdk, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(name, RemovedWebSdk, StringComparison.OrdinalIgnoreCase);
 
     public static IReadOnlyList<string> ProjectFiles(string root) =>
         [.. Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
@@ -77,10 +70,10 @@ public static class VersionSlots {
             .Where(file => !file.Split('/')[..^1].Any(BuildOutput.IsIgnored))
             .Order(StringComparer.Ordinal)];
 
-    static bool NamesUmpireSdk(XElement element) =>
+    static bool NamesRemovedSdk(XElement element) =>
         element.Name.LocalName == "Sdk"
-            ? IsSdk((string?)element.Attribute("Name"))
-            : element.Attribute("Sdk")?.Value.Split(';').Any(part => IsSdk(part.Split('/')[0].Trim())) ?? false;
+            ? IsRemovedSdk((string?)element.Attribute("Name"))
+            : element.Attribute("Sdk")?.Value.Split(';').Any(part => IsRemovedSdk(part.Split('/')[0].Trim())) ?? false;
 
     static XDocument? ParsedOrNull(string file) {
         try {
@@ -108,7 +101,7 @@ public static class VersionSlots {
         }
         foreach (var (key, library) in libraries) {
             var isPackage = library?["type"]?.GetValue<string>() == "package";
-            if (isPackage && key.Split('/') is [var id, var version] && IsVsa(id)) {
+            if (isPackage && key.Split('/') is [var id, var version] && IsUmpire(id)) {
                 yield return new VersionSlot(Path.GetFileName(deps), id, version);
             }
         }
@@ -116,39 +109,14 @@ public static class VersionSlots {
 
     static VersionFile ProjectFile(string root, ProjectDocument project, IReadOnlyDictionary<string, string> central) {
         var slots = project.Document.Descendants()
-            .SelectMany(element => SdkPins(project.File, element).Concat(Packages(project.File, element, central)))
+            .SelectMany(element => Packages(project.File, element, central))
             .ToList();
         return new VersionFile(project.File, slots, () => Save(project.Document, Path.Combine(root, project.File)));
     }
 
-    static IEnumerable<VersionSlot> SdkPins(string file, XElement element) {
-        if (element.Name.LocalName == "Sdk") {
-            var name = (string?)element.Attribute("Name");
-            if (IsSdk(name) && element.Attribute("Version") is XAttribute version) {
-                yield return new VersionSlot(file, name!, version.Value, Line(element), value => version.Value = value);
-            }
-            yield break;
-        }
-        if (element.Attribute("Sdk") is not XAttribute sdk) {
-            yield break;
-        }
-        var parts = sdk.Value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        foreach (var part in parts) {
-            if (part.Split('/') is [var name, var version] && IsSdk(name)) {
-                yield return new VersionSlot(
-                    file, name, version, Line(element), value => sdk.Value = WithSdk(sdk.Value, value));
-            }
-        }
-    }
-
-    static string WithSdk(string sdks, string version) =>
-        string.Join(';', sdks.Split(';').Select(part => SdkPinName(part) is string name ? $"{name}/{version}" : part));
-
-    static string? SdkPinName(string part) => part.Trim().Split('/') is [var name, _] && IsSdk(name) ? name : null;
-
     static IEnumerable<VersionSlot> Packages(
         string file, XElement element, IReadOnlyDictionary<string, string> central) {
-        if (!IsPackage(element) || Id(element) is not string id || !IsVsa(id)) {
+        if (!IsPackage(element) || Id(element) is not string id || !IsUmpire(id)) {
             yield break;
         }
         if (VersionAttribute(element) is XAttribute version) {
@@ -188,7 +156,9 @@ public static class VersionSlots {
         document.Save(writer);
     }
 
-    static bool IsVsa(string id) => id.StartsWith(PackagePrefix, StringComparison.OrdinalIgnoreCase);
+    static bool IsUmpire(string id) =>
+        string.Equals(id, CorePackage, StringComparison.OrdinalIgnoreCase)
+        || id.StartsWith(PackagePrefix, StringComparison.OrdinalIgnoreCase);
 
     static bool IsPackage(XElement element) => element.Name.LocalName is "PackageReference" or "PackageVersion";
 

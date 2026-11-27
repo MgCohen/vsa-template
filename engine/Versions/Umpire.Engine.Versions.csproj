@@ -1,18 +1,16 @@
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- The Umpire version check (UMP030401): each place of an app that gives an Umpire version, and the compare.
        The engine step CheckVersions and the umpire tool (doctor, update) use it. The tool and the engine bundle the DLL.
-       It is a library with no pack, so it has no default pack. -->
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+       It is a library with no pack, so it references only the package Umpire. -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <UmpireDefaultPack>false</UmpireDefaultPack>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Umpire" Version="$(UmpireVersion)" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" Condition="'$(_UmpireUseBundle)' != 'true'" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)architecture/Umpire.Architecture.csproj" Condition="'$(_UmpireUseBundle)' != 'true'" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Definition/Umpire.Definition.csproj" Condition="'$(_UmpireUseBundle)' == 'true'" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
   <ItemGroup>
     <AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Kernels.ComponentArchitecture, Umpire.Kernels.Definition" />

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The package Umpire.Engine: the rule engine in tools/net8.0/ and build/Umpire.Engine.props, which gives its path to the
+       architecture check of the package Umpire (UmpireEngineFile, UmpireEngineDir). The root project of an app references
+       it with PrivateAssets="all". The package has no DLL and no dependency. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>The Umpire rule engine: the architecture check after the build of the root project of an app.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="build/**" />
+    <None Include="build/*" Pack="true" PackagePath="build" />
+  </ItemGroup>
+  <!-- The engine builds with the global properties of the pack (configuration, version), on the bundles (_UmpireUseBundle),
+       in its own output folder, and with no self-check: the source build of the engine checks it. It loads the definition of
+       an app, so its Architecture type must come from the same Umpire.Definition.dll as the app. -->
+  <PropertyGroup>
+    <_UmpireEngineProject>$(UmpireRoot)engine/Engine.csproj</_UmpireEngineProject>
+    <_UmpireEngineProperties>_UmpireUseBundle=true;UmpireCheck=false;ArtifactsPath=$(ArtifactsPath)/engine-bundle</_UmpireEngineProperties>
+  </PropertyGroup>
+  <Target Name="_UmpireEngineInPackage" BeforeTargets="_GetPackageFiles">
+    <!-- The output folder of the engine is new, so it needs its own restore. A restore needs its own evaluation. -->
+    <MSBuild Projects="$(_UmpireEngineProject)" Targets="Restore"
+             Properties="$(_UmpireEngineProperties);MSBuildRestoreSessionId=umpire-engine" />
+    <MSBuild Projects="$(_UmpireEngineProject)" Targets="Build;GetTargetPath"
+             Properties="$(_UmpireEngineProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="_UmpireEngineTarget" />
+    </MSBuild>
+    <PropertyGroup>
+      <_UmpireEngineDir>@(_UmpireEngineTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check;$(_UmpireEngineDir)umpire-definitions/**" />
+      <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net8.0/%(RecursiveDir)" Visible="false" />
+    </ItemGroup>
+  </Target>
+</Project>

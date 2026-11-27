@@ -77,7 +77,7 @@ public sealed class UmpireToolTests {
         });
 
         var rootProject = Path.Combine(app, "Hello.csproj");
-        File.WriteAllText(rootProject, File.ReadAllText(rootProject).Replace($"Umpire.Sdk.Web/{LocalFeed.Version}", "Umpire.Sdk.Web/0.0.1"));
+        File.WriteAllText(rootProject, File.ReadAllText(rootProject).Replace($"Include=\"Umpire.Web\" Version=\"{LocalFeed.Version}\"", "Include=\"Umpire.Web\" Version=\"0.0.1\""));
         var doctor = Tool(app, "doctor");
         Assert.That(doctor.Succeeded, Is.False, doctor.Output);
         Assert.That(doctor.Output, Does.Contain("The versions are not the same"));
@@ -110,7 +110,18 @@ public sealed class UmpireToolTests {
     public void ADefinitionInTheAppNamesEachLayerWithNoFullName() {
         var app = NewApp("Shop");
         var definition = Directory.CreateDirectory(Path.Combine(app, "Definition")).FullName;
-        File.WriteAllText(Path.Combine(definition, "Shop.Definition.csproj"), $"<Project Sdk=\"Umpire.Sdk/{LocalFeed.Version}\" />\n");
+        File.WriteAllText(Path.Combine(definition, "Shop.Definition.csproj"), $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <ImplicitUsings>enable</ImplicitUsings>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="Umpire.Vsa.Definition" Version="{LocalFeed.Version}" PrivateAssets="all" />
+              </ItemGroup>
+            </Project>
+
+            """);
         File.WriteAllText(Path.Combine(definition, "ShopArchitecture.cs"), """
             namespace Shop.Host;
 
@@ -149,11 +160,17 @@ public sealed class UmpireToolTests {
     public void ANet8AppWithAPackVariantBuilds() {
         var app = NewApp("Shop");
         File.WriteAllText(Path.Combine(app, "Shop.csproj"), $"""
-            <Project Sdk="Umpire.Sdk/{LocalFeed.Version}">
+            <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <TargetFramework>net8.0</TargetFramework>
                 <OutputType>Exe</OutputType>
+                <Nullable>enable</Nullable>
+                <ImplicitUsings>enable</ImplicitUsings>
               </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="Umpire.Vsa" Version="{LocalFeed.Version}" />
+                <PackageReference Include="Umpire.Engine" Version="{LocalFeed.Version}" PrivateAssets="all" />
+              </ItemGroup>
             </Project>
             """);
         Directory.Delete(Path.Combine(app, "Views"), recursive: true);

@@ -1,1 +1,14 @@
-<Project Sdk="Umpire.Sdk" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+</Project>

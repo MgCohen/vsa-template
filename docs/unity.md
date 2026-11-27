@@ -46,7 +46,7 @@ Unity cannot restore NuGet packages. Each release has the archive `umpire-<versi
 
 ## Unity app build
 
-Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). vsa-unity sets `UmpireExcludedFolders` (for example `Assets`), so that Umpire.Sdk does not compile `Assets/`.
+The Umpire packages have no Unity build steps. The UPM package `vsa-unity` gives the Unity parts: the copy of the module DLLs to `Assets/Plugins/VSA/` and the .NET tests of the module sources in `Assets/` (MgCohen/vsa-unity#8). vsa-unity sets `UmpireExcludedFolders` (for example `Assets`), so that the build files of the package `Umpire` do not compile `Assets/`.
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
@@ -54,14 +54,14 @@ The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base t
 
 ## Build output
 
-An app on the Umpire SDK writes all build output to `artifacts~/` in the block root: the folder of the nearest `.umpireconfig`. The SDK sets `UseArtifactsOutput` and `ArtifactsPath` before the .NET SDK, because it is the main SDK of each project. A folder whose name ends with `~` is not source: the rule engine and `umpire init` do not read it.
+An Umpire app writes all build output to `artifacts~/` in the app folder: `umpire new app` and `umpire init` write `UseArtifactsOutput` and `ArtifactsPath` in its `Directory.Build.props`. The Umpire packages do not set the output folder. A folder whose name ends with `~` is not source: the rule engine and `umpire init` do not read it.
 
 | Need | Do this in `Directory.Build.props` |
 |------|-------------------------------------|
 | Another output folder | Set `ArtifactsPath` to that folder |
 | Output next to each project (`bin/`, `obj/`) | Set `UseArtifactsOutput` to `false` |
 
-The .NET SDK reads these two properties only before its own props: from the Umpire SDK, from `Directory.Build.props` or from the command line. A value in a project file gives `NETSDK1199`.
+The .NET SDK reads these two properties only before its own props: from `Directory.Build.props` or from the command line. A value in a project file gives `NETSDK1199`.
 
 ## Layers that Unity can use
 
@@ -91,7 +91,7 @@ The portable projects target `netstandard2.0`, and not `netstandard2.1`, because
 - On `netstandard2.0`, the 8.0 `Microsoft.Extensions` packages depend on more packages, for example `Microsoft.Bcl.AsyncInterfaces`, `System.Memory`, `System.Buffers` and `System.Threading.Tasks.Extensions`. The portable projects add no direct reference to them.
 
 - The archive holds each DLL of the runtime, also a DLL that Unity ships. vsa-unity does not copy a DLL that Unity ships: a second copy is a compile error. The manifest gives the version of each DLL.
-- `netstandard2.0` does not have `IsExternalInit`. The layers compile `tools/sdk/Polyfills~/` for that target (the name ends with `~`, so the engine does not count the file as a source of the block). The polyfill is internal, so each Unity assembly with a record has its own copy. Umpire.Sdk also gives the polyfill to each `netstandard2.0` and `netstandard2.1` project of an app. A project with its own `IsExternalInit` sets `UmpireIsExternalInitPolyfill` to `false`.
+- `netstandard2.0` does not have `IsExternalInit`. The layers compile `tools/bundle/Umpire/build/Polyfills~/` for that target (the name ends with `~`, so the engine does not count the file as a source of the block). The polyfill is internal, so each Unity assembly with a record has its own copy. The package `Umpire` also gives the polyfill to each `netstandard2.0` and `netstandard2.1` project of an app. A project with its own `IsExternalInit` sets `UmpireIsExternalInitPolyfill` to `false`.
 - `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. vsa-unity must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
 
 ## Non-goals

@@ -22,7 +22,8 @@ sealed class NewAppCommand : ToolCommand {
         input.EnsureRequiredOptions();
         var block = Path.GetFullPath(name);
         var version = ToolVersion.Current;
-        var plan = SetupTasks.Plan(Context(name, block, input.All(Source), version));
+        var central = CentralVersions.Above(Path.GetDirectoryName(block)!);
+        var plan = SetupTasks.Plan(Context(name, block, input.All(Source), version, central));
         Console.WriteLine($"Making the app {name} (Umpire {version}):");
         NewFiles.Write(
             block,
@@ -41,12 +42,12 @@ sealed class NewAppCommand : ToolCommand {
         Plan(name, sources, version).Files;
 
     internal static SetupPlan Plan(string name, IReadOnlyList<string> sources, string version) =>
-        SetupTasks.Plan(Context(name, Path.GetFullPath(name), sources, version));
+        SetupTasks.Plan(Context(name, Path.GetFullPath(name), sources, version, central: false));
 
-    static SetupContext Context(string name, string block, IReadOnlyList<string> sources, string version) {
+    static SetupContext Context(string name, string block, IReadOnlyList<string> sources, string version, bool central) {
         var context = new SetupContext(block, $"{name}.csproj", version, sources, existingApp: false);
         var names = new Dictionary<string, string> { [Templates.App] = name };
-        foreach (var file in Templates.Files(TemplateGroup.App, names, version)) {
+        foreach (var file in Templates.WithCentralVersions(Templates.Files(TemplateGroup.App, names, version), central)) {
             context.Add(file);
         }
         return context;

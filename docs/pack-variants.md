@@ -43,7 +43,7 @@ flowchart LR
     App -.->|builds first| Definition
 ```
 
-`EcsKernel` derives from `VsaKernel`, so the app class selects VSA, and the VSA analyzers run. The Umpire SDK adds both links of the root project: the reference to each `App/Packs/<Name>/Kernel/*.csproj`, and the build of each `Definition/*.csproj`. The kernel of the variant is a project, because the definition names it and the definition builds before the app.
+`EcsKernel` derives from `VsaKernel`, so the app class selects VSA, and the VSA analyzers run. The build files of the package `Umpire` add both links of the root project: the reference to each `App/Packs/<Name>/Kernel/*.csproj`, and the build of each `Definition/*.csproj`. A package restore does not see these links, so the build restores their projects itself. If the kernel has its own `PackageReference` items, add the reference to the kernel to the root project yourself, so that the restore of the root project gets these packages. The kernel of the variant is a project, because the definition names it and the definition builds before the app.
 
 | Check | Block folder | Definition | Checks |
 |---|---|---|---|

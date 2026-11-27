@@ -251,7 +251,7 @@ A request declares `Group`, `Name` and `Effect` as public static properties, by 
 - `RequestOperations` reads the metadata with no generic call, and it makes the generic call only when a host invokes the operation. A host with no transport (for example Unity) never invokes one, so IL2CPP needs no generic instance at compose.
 - A response that implements `IExitCode` gives the exit code of the console. An error gives 1. Else the code is 0.
 - If the app has one request, the console words are optional. Else the console needs the name, or the group and the name.
-- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IRequestSender` require it. Umpire.Sdk also uses it to find the contract files of a slice.
+- `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IRequestSender` require it. The build files of the package `Umpire` also use it to find the contract files of a slice.
 
 ## AppTypes finds the parts of the app
 
@@ -622,6 +622,6 @@ A bridge to another container (fallback or side by side) reads `App.Services` af
 ## Open questions
 
 - Remote request sender: an `IRequestSender` over HTTP, for a view or a Unity client in another process. It can use the same routes as the HTTP API.
-- Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). Umpire.Sdk knows the module projects at build time, so it can write the list in the host assembly.
+- Other type sources: a source generator or a hand list, behind one source interface that an app can replace (#138). The build files of the package `Umpire` know the module projects at build time, so it can write the list in the host assembly.
 - The pack: keep it as a join of architecture, kernel and host, or replace it at the app level (#198).
 - The copy of the base `Build` in `ConsoleHost` (#203).
