@@ -3,11 +3,12 @@ namespace Operations.Infrastructure;
 using Umpire.Config;
 
 public sealed record CheckSettings(
-    IReadOnlyList<string> References, string? SourceRoot, IReadOnlyList<string> IgnoredFolders, bool ProjectChecks) {
+    IReadOnlyList<string> References, string? SourceRoot, IReadOnlyList<string> IgnoredFolders, bool ProjectChecks, string? State = null) {
     public const string ReferencesKey = "umpire.check.references";
     public const string SourceRootKey = "umpire.check.source_root";
     public const string IgnoredFoldersKey = "umpire.check.ignored_folders";
     public const string ProjectChecksKey = "umpire.check.project_checks";
+    public const string StateKey = "umpire.check.state";
     static readonly char[] ListSeparators = [',', ';'];
     static readonly string[] Off = ["false", "0", "no", "off"];
 
@@ -21,7 +22,8 @@ public sealed record CheckSettings(
             given.Count > 0 ? given : Folders(config.Value(ReferencesKey), root),
             RootOfSources(sourceRoot, config.Value(SourceRootKey), root),
             ignored.Length > 0 ? ignored : List(config.Value(IgnoredFoldersKey)),
-            projectChecks ?? IsOn(config.Value(ProjectChecksKey)));
+            projectChecks ?? IsOn(config.Value(ProjectChecksKey)),
+            config.Value(StateKey) is { Length: > 0 } state ? Path.GetFullPath(Path.Combine(root, state)) : null);
     }
 
     static bool IsOn(string? value) => !Off.Contains(value ?? "", StringComparer.OrdinalIgnoreCase);

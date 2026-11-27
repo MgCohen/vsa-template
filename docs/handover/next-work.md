@@ -77,12 +77,13 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| The export operation writes `definition.json` and the snapshots, one for each target framework | P6, brief D items 1 and 2 |
-| The Umpire build saves `libraries/Umpire.json`, and the package ships it. No PDB read | Q8 |
-| The build runs the build job of the new engine | Queue item 3 of the hand-over |
-| Remove `BinReader`, `SymbolReader` and ArchUnitNET | K1, Q8 |
-| Examine whether `block.json` is necessary | P6 |
-| Check whether brief D item 6 (a multi-target root clears `TargetFramework`) still applies with no SDK | P7 |
+| Done (PR-SWITCH): the build job sends ExportModel, then CheckModel. Each compile saves one snapshot for each project and target in its intermediate output path, with no definition. A finding that two targets give is in the report one time, and ExportModel deletes the snapshot of a removed target | P6, brief D items 1 and 2 |
+| Done (PR-SWITCH): the package build runs the compile job on the source of each bundle (`UmpireLibraryPass`), and `Umpire.Engine` ships `tools/net8.0/libraries/<assembly>.json`. The check reads no PDB for the type facts | Q8 |
+| Done (PR-SWITCH): the build runs the build job on the model path. The same findings and codes on the fixtures. Only the place of some findings changes (the line of the use, the line of the type name) | Queue item 3 of the hand-over |
+| Done (PR-SWITCH): the state files are in the intermediate output path (`obj/.../umpire/`), also the run stamp. The block stamps stay in `artifacts~/umpire-checks/` of the block, because each app that uses the block reads them | P7 |
+| Remove `TypeFactSource`, the Rules operation and ArchUnitNET; convert `tests/Architecture.Tests` and the parity tests to the model. `SymbolReader` stays for the Blocks operation (the check entries and the DLLs of a block) until the snapshots give these facts | K1, Q8 |
+| Done (PR-SWITCH): `block.json` stays. The compile needs the projects of the block, the place of each snapshot, the mode, the severities and the marks, and the definition does not hold them | P6 |
+| Done (PR-SWITCH): brief D item 6 does not apply with no SDK. A multi-target root builds with no `<TargetFramework />`, and the package test has no workaround. Each inner build checks its own target | P7 |
 
 ## Phase 5: consumers of the engine
 
@@ -120,6 +121,15 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The root project references `Umpire.Engine` itself (else `UMP030003`); it is not a dependency of `Umpire`.
   - The engine state files did not move to the intermediate output path yet (phase 3).
   - `init` does nothing if `Directory.Build.props` exists. The fixtures `Built/NoPack` and `Built/PackGraph` seem unused.
+- PR-SWITCH, the switch to the model path:
+  - The analyzer of a build compile saves only and reports no type finding; the build job reports all. An editor compile checks types with the state of the last build (`state.txt`).
+  - "Selected by hash" of brief D item 1 is read as: one snapshot file for each target (the intermediate path has the target), and the check selects the snapshot of each target.
+  - A multi-target root checks in each inner build, so a finding of two targets is in the build output one time for each inner build. One check in the outer build needs `buildMultiTargeting/` files in each Umpire package.
+  - With no `--state`, the engine takes the state folder from `--bin` (the folder `bin` becomes `obj`). The in-process tests use this.
+  - A build with `-p:BuildProjectReferences=false` gives the snapshots of the direct references only.
+  - Each compile in a build writes a snapshot, also of the framework projects and the test projects of this repository.
+  - `state.txt` next to a snapshot names the state of the last root build that checked the project. Two roots that share a project write over it.
+  - With no `--state`, no key and no `bin` folder in `--bin`, the state folder is `artifacts~/umpire` in the block (a `~` folder, so Unity does not import it).
 - #396, the shared feed: the hash includes each root file, so an edit of `AGENTS.md` or `README.md` makes a new pack. A feed with no use for two hours is deleted. The in-process tests of `UMP030512` and `UMP030513` delete a DLL from a copy of the bin, where the old cases used a real SDK build. The lock was not tested on Windows.
 - #393, `LocalHost`:
   - `LocalHost` is not sealed, and `Send` exists for each host that derives from `LocalHost`, so a custom or test host also gets it.

@@ -41,7 +41,25 @@
     <PropertyGroup>
       <_UmpireEngineDir>@(_UmpireEngineTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineDir>
       <_UmpireAnalyzerDir>@(_UmpireAnalyzerTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireAnalyzerDir>
+      <_UmpireLibraryFolder>$(ArtifactsPath)/engine-bundle/libraries/</_UmpireLibraryFolder>
     </PropertyGroup>
+    <!-- The library facts of each shipped DLL (decision Q8): the compile job runs on the source of each bundle and saves
+         libraries/<assembly>.json. The check reads them in place of the PDB of the package DLLs. -->
+    <ItemGroup>
+      <_UmpireLibraryBundle Include="$(UmpireRoot)tools/bundle/Umpire/Umpire.csproj;$(UmpireRoot)tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" />
+      <_UmpireLibraryBundle Include="$(UmpireRoot)tools/bundle/Definition/Umpire.Definition.csproj;$(UmpireRoot)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
+      <_UmpireLibraryBundle Include="$(UmpireRoot)tools/bundle/Web/Umpire.Web.csproj;$(UmpireRoot)tools/bundle/Console/Umpire.Console.csproj;$(UmpireRoot)tools/bundle/Testing/Umpire.Testing.csproj" />
+    </ItemGroup>
+    <RemoveDir Directories="$(_UmpireLibraryFolder)" />
+    <MSBuild Projects="@(_UmpireLibraryBundle)" Targets="Restore"
+             Properties="$(_UmpireEngineProperties);MSBuildRestoreSessionId=umpire-libraries" />
+    <MSBuild Projects="@(_UmpireLibraryBundle)" Targets="Rebuild"
+             Properties="$(_UmpireEngineProperties);UmpireLibraryPass=true;UmpireLibraryAnalyzer=$(_UmpireAnalyzerDir);UmpireLibraryFolder=$(_UmpireLibraryFolder);ArtifactsPivots=library" />
+    <ItemGroup>
+      <_UmpireLibraryFile Include="@(_UmpireLibraryBundle->'$(_UmpireLibraryFolder)%(Filename).json')" Condition="Exists('$(_UmpireLibraryFolder)%(Filename).json')" />
+      <_UmpireLibraryFile Include="$(_UmpireLibraryFolder)Umpire.Vsa.json" Condition="Exists('$(_UmpireLibraryFolder)Umpire.Vsa.json')" />
+      <None Include="@(_UmpireLibraryFile)" Pack="true" PackagePath="tools/net8.0/libraries" Visible="false" />
+    </ItemGroup>
     <ItemGroup>
       <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check;$(_UmpireEngineDir)umpire-definitions/**" />
       <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net8.0/%(RecursiveDir)" Visible="false" />

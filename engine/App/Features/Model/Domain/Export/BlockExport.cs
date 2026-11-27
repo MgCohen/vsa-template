@@ -20,7 +20,8 @@ public static class BlockExport {
         input.FolderAliases,
         input.DefinitionSources,
         [.. input.InputFiles.Concat(SourceFiles.ConfigFiles(input.Block)).Distinct(StringComparer.OrdinalIgnoreCase).Select(file => FileMark.Of(input.Block, file))],
-        Severities(input.Config));
+        Severities(input.Config),
+        [.. input.Snapshots.Select(place => place with { File = Relative(state.Folder, place.File) })]);
 
     static CheckMode ModeOf(IEnumerable<KeyValuePair<string, string>> config) =>
         CheckModes.Of(config.LastOrDefault(pair => string.Equals(pair.Key, CheckModes.Key, StringComparison.OrdinalIgnoreCase)).Value);

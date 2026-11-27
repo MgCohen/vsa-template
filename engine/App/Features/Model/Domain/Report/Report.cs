@@ -28,4 +28,18 @@ public sealed class Report {
     public void Describe(string name, string value) => metadata[name] = value;
 
     public void Fail(string reason) => Reason ??= reason;
+
+    public void Join(Report other) {
+        var known = new HashSet<Finding>(findings);
+        findings.AddRange(other.findings.Where(known.Add));
+        foreach (var pair in other.metadata.Where(pair => !metadata.ContainsKey(pair.Key))) {
+            metadata[pair.Key] = pair.Value;
+        }
+        if (!other.IsComplete) {
+            Doubt();
+        }
+        if (other.Reason is { } reason) {
+            Fail(reason);
+        }
+    }
 }

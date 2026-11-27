@@ -2,7 +2,7 @@ namespace Umpire.CheckModel;
 
 public sealed class StateFolder {
     public const string Key = "umpire.check.state";
-    const string DefaultFolder = "artifacts~/umpire-model";
+    const string DefaultFolder = "artifacts~/umpire";
     const string Extension = ".json";
 
     StateFolder(string folder) {
@@ -43,6 +43,8 @@ public sealed class StateFolder {
 
     public string SnapshotFile(string project) => Path.Combine(Snapshots, project + Extension);
 
+    public string SnapshotFile(string project, string? place) => place is null ? SnapshotFile(project) : BlockPath.In(Folder, place);
+
     public void Save(Definition definition, BlockSettings settings) {
         Save(definition);
         Save(settings with { DefinitionHash = FileHash.OfText(definition.Write()) });
@@ -53,6 +55,8 @@ public sealed class StateFolder {
     public bool Save(BlockSettings settings) => StateFile.Save(BlockFile, settings.Write());
 
     public bool Save(Snapshot snapshot) => StateFile.Save(SnapshotFile(snapshot.Project), snapshot.Write());
+
+    public static bool SaveSnapshot(string file, Snapshot snapshot) => StateFile.Save(file, snapshot.Write());
 
     public bool SaveLibrary(Snapshot library) => StateFile.Save(LibraryFile(library.Project), library.Write());
 

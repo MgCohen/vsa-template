@@ -7,4 +7,6 @@ using Umpire.Architecture;
 public sealed record AppInput(
     Architecture Architecture, BlockTree Blocks, IReadOnlyList<string> Dlls, IReadOnlyDictionary<string, Source> Sources) : IOperationResult {
     public IReadOnlyList<Finding> Findings { get; init; } = [];
+
+    public IReadOnlyList<string> Projects { get; init; } = [];
 }
