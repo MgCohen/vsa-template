@@ -3,7 +3,6 @@ using Blocks.Slices.FindBlocks;
 using Build.Slices.BuildApp;
 using Changes.Slices.FindChanges;
 using LoadApp.Slices.LoadApp;
-using Rules.Slices.CheckRules;
 using Operations.Domain.Shared;
 using Operations.Infrastructure;
 using Tests.Shared;
@@ -15,7 +14,7 @@ using Model.Slices.ExportModel;
 namespace Engine.Tests;
 
 public sealed class CodeTests {
-    static readonly Assembly Engine = typeof(CheckRulesCommand).Assembly;
+    static readonly Assembly Engine = typeof(CheckModelCommand).Assembly;
 
     static IEnumerable<Type> EngineTypes => Engine.GetTypes().Where(t => !t.IsAbstract && !t.IsInterface);
 
@@ -34,7 +33,6 @@ public sealed class CodeTests {
             Assert.That(FindBlocksCommand.Group, Is.EqualTo(3));
             Assert.That(CheckVersionsCommand.Group, Is.EqualTo(4));
             Assert.That(LoadAppCommand.Group, Is.EqualTo(5));
-            Assert.That(CheckRulesCommand.Group, Is.EqualTo(6));
             Assert.That(ExportModelCommand.Group, Is.EqualTo(7));
             Assert.That(CheckModelCommand.Group, Is.EqualTo(8));
             Assert.That(OperationCode.Of<CheckModelCommand>(1), Is.EqualTo(Umpire.CheckModel.DataCodes.NoModel));
@@ -94,7 +92,8 @@ public sealed class CodeTests {
             .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static))
             .Where(f => f.FieldType == typeof(string))
             .Select(f => (string)f.GetValue(null)!);
-        var rules = ArchitectureRule.All.Select(rule => rule.Code);
+        var rules = typeof(Umpire.CheckModel.RuleCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(f => f.IsLiteral).Select(f => (string)f.GetValue(null)!);
 
         var listed = SdkCodes.All.Where(code => code[3..5] is "02" or "03");
 

@@ -12,7 +12,7 @@ Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides e
 | 1 | Runtime base | 0 | The runtime targets `netstandard2.0`. `LocalHost` and `Send` work. The utility folder holds the shared code |
 | 2 | Packages | 1 | Four packages: `Umpire`, `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`. No SDK. Only DependencyInjection as a third-party DLL |
 | 3 | Engine | 1 | `engine/` is `EngineApp<THost>` on `netstandard2.0`, with jobs, operations, and the plugins Jobs and Facts. `check/` and our analyzers are inside it |
-| 4 | Switch | 2, 3 | The build uses the new engine. No ArchUnitNET, no PDB read |
+| 4 | Switch | 2, 3 | The build uses the new engine. No ArchUnitNET. A PDB is read only for a DLL with no snapshot |
 | 5 | Consumers of the engine | 4 | `Umpire.Testing` and the tooling use the engine through their hosts |
 | 6 | Release | 5 | A preview, then the consumer updates (local computer) |
 
@@ -82,7 +82,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Done (PR #406): the package build runs the compile job on the source of each bundle (`UmpireLibraryPass`), and `Umpire.Engine` ships `tools/net8.0/libraries/<assembly>.json`. The check reads no PDB for the type facts | Q8 |
 | Done (PR #406): the build runs the build job on the model path. The same findings and codes on the fixtures. Only the place of some findings changes (the line of the use, the line of the type name) | Queue item 3 of the hand-over |
 | Done (PR #406): the state files are in the intermediate output path (`obj/.../umpire/`), also the run stamp. The block stamps stay in `artifacts~/umpire-checks/` of the block, because each app that uses the block reads them | P7 |
-| Remove `TypeFactSource`, the Rules operation and ArchUnitNET. Open: `tests/Architecture.Tests` (about 500 cases) reads the bindings of the old check, and the DLLs of a reference folder (`umpire.check.references`, Unity) have no snapshot yet, so only the old check reads their types. Then convert the parity tests. `SymbolReader` stays for the Blocks operation (the check entries and the DLLs of a block) until the snapshots give these facts | K1, Q8 |
+| Done (PR #412): no ArchUnitNET, no `TypeFactSource` and no Rules operation. ExportModel reads the DLLs of a reference folder (`umpire.check.references`, Unity) with `DllSource` (`MetadataLoadContext`, IL and PDB), and CheckModel checks their types. `tests/Architecture.Tests` and the parity tests run on the model path. `SymbolReader` stays for the Blocks operation and for the DLL facts | K1, Q8, reference folders C |
 | Done (PR #406): `block.json` stays. The compile needs the projects of the block, the place of each snapshot, the mode, the severities and the marks, and the definition does not hold them | P6 |
 | Done (PR #406): brief D item 6 does not apply with no SDK. A multi-target root builds with no `<TargetFramework />`, and the package test has no workaround. Each inner build checks its own target | P7 |
 
@@ -135,11 +135,18 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - "Selected by hash" of brief D item 1 is read as: one snapshot file for each target (the intermediate path has the target), and the check selects the snapshot of each target.
   - A multi-target root checks in each inner build, so a finding of two targets is in the build output one time for each inner build. One check in the outer build needs `buildMultiTargeting/` files in each Umpire package.
   - With no `--state`, the engine takes the state folder from `--bin` (the folder `bin` becomes `obj`). The in-process tests use this.
-  - A DLL of a reference folder (`umpire.check.references`, for example the Unity `ScriptAssemblies`) has no snapshot, so the build job gives `UMP030802` for it and does not check its types. The Unity compile must save the snapshots first.
   - A build with `-p:BuildProjectReferences=false` gives the snapshots of the direct references only.
   - Each compile in a build writes a snapshot, also of the framework projects and the test projects of this repository.
   - `state.txt` next to a snapshot names the state of the last root build that checked the project. Two roots that share a project write over it.
   - With no `--state`, no key and no `bin` folder in `--bin`, the state folder is `artifacts~/umpire` in the block (a `~` folder, so Unity does not import it).
+- PR #412, the switch without ArchUnitNET:
+  - ExportModel reads the facts of an app DLL only if the DLL has no snapshot and `deps.json` does not list it as a project. A project with no snapshot still gives `UMP030802`.
+  - The DLL facts follow the IL. A `nameof`, a constant or an enum value is not a use, and a type of compiler output is a use. See "Compile facts and DLL facts" in `check-model.md`.
+  - If a reference DLL does not resolve (for example `UnityEngine.dll` is not in a reference folder), a type keeps only the name of its direct base. A rule that names a deeper base type cannot see it. vsa-unity can add the folder of the Unity DLLs to `umpire.check.references`.
+  - The hash of a file comes from the PDB, only for SHA-256. With another algorithm, the file is never old. Not tested with a Unity PDB.
+  - An `External` DLL with a PDB and no library file gets library facts from the DLL, so its types can bind to a placed block body.
+  - Changed expectations: 5 lines in `VsaAppTests` (the line of the use), the base-type exposures of `BellPresenter` (the model has no `System.Object` base exposure), the model part tree has no `(root)` part, the module list of the engine has no `Rules`. The two tests of the rule values (`umpire.<key>`, `umpire.<code>.<key>`) test the severity keys: no rule read another value.
+  - `tests/Architecture.Tests` keeps its query tests on plain data, because the definition test base uses the queries.
 - #396, the shared feed: the hash includes each root file, so an edit of `AGENTS.md` or `README.md` makes a new pack. A feed with no use for two hours is deleted. The in-process tests of `UMP030512` and `UMP030513` delete a DLL from a copy of the bin, where the old cases used a real SDK build. The lock was not tested on Windows.
 - #393, `LocalHost`:
   - `LocalHost` is not sealed, and `Send` exists for each host that derives from `LocalHost`, so a custom or test host also gets it.

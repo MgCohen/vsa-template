@@ -23,6 +23,7 @@ flowchart LR
 | ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files in the build job and the check job |
 | CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state, after ExportModel or with `jobs check --model true` |
 | CheckTypes operation | `engine/App/Features/Model/Slices/CheckTypes/` | The checks of each type in a compile (the compile job) |
+| DLL snapshots | `engine/App/Features/Model/Infrastructure/DllSnapshots.cs` | The snapshot of a DLL from the DLL facts of the Facts plugin (`DllSource`) |
 | Analyzer entry | `engine/Entries/Analyzer/` | The facts from symbols (`Facts/`, `ProjectFacts`). It sends the compile job |
 
 The model domain is generic: no part of it knows a slice or a feature. The domain uses no Roslyn and no package, so the compiler can load the engine core for the analyzer. No part is a package.
@@ -37,7 +38,8 @@ A build writes the state folder of a block in the intermediate output path of th
 | `block.json` | Block folder, projects, place and target of each snapshot, libraries, inner blocks, severities, mode, marks | `BlockExport` |
 | `snapshot.json` of a project | The type facts of a project and target, the folder of its paths (`root`) and the target framework | The analyzer, in the intermediate output path of the project |
 | `snapshots/<project>.json` | The type facts of a project, with `UmpireCheckState` | The analyzer |
-| `libraries/<assembly>.json` | The source paths and base types of DLL types | `LibraryExport`, from a snapshot or from the file of the package `Umpire.Engine` |
+| `snapshots/<assembly>.json` of a DLL | The DLL facts of an app DLL with no snapshot, for example of a reference folder | ExportModel (`DllSnapshots`) |
+| `libraries/<assembly>.json` | The source paths and base types of DLL types | `LibraryExport`, from a snapshot, from the DLL facts or from the file of the package `Umpire.Engine` |
 
 A writer does not write a file again if only its date is different. A writer leaves out an empty list and a value that is false. A reader fails on an unknown field, another missing field or another format.
 
@@ -128,27 +130,28 @@ The package `Umpire` puts these codes and all rule codes in `WarningsNotAsErrors
 
 A check that does not come to its end gives `UMP030801`: a warning in the mode `Warn`, else an error.
 
-## Differences from the rule engine
+## Compile facts and DLL facts
 
-`tests/Engine.Tests/Model/Parity` compares the two sides on the fixtures and on the blocks of this repository. The findings of the model rules, the diagnostics of the analyzer, the severities and the facts are the same, with these differences in the facts:
+The model gets the type facts of a project from one of two sources. `tests/Engine.Tests/Model/Parity` compares them on the fixtures and on the blocks of this repository.
 
-| Topic | Rule engine | Check model |
+| Source | Made by | Used for |
 |---|---|---|
-| Place of a denied use | First line of the type | Line of the use |
+| Compile facts | The analyzer entry, at the end of each compile | Each project of a build |
+| DLL facts | `DllSource` of the Facts plugin, in ExportModel | A DLL of a reference folder, and an `External` DLL with no library file |
+
+The findings of the model rules, the diagnostics of the analyzer and the severities are the same on the two sources. The texts are the same. These facts differ:
+
+| Topic | DLL facts | Compile facts |
+|---|---|---|
+| Place of a denied use | Line of the sequence point of the use | Line and column of the use |
 | Place of a type | First method body | Type name |
 | Razor view | `_razor.g.cs` path | `.razor` file |
 | `nameof`, constants, enum values | Not a use | A use |
 | Written type arguments | Not always a use | A use |
-| Top-level program | No type | The type `Program` |
-| Class with only nested types | No type | A type |
 | Type only in compiler output | A use | Not a use |
-| Framework DLL in an External | Not read | A use by its name |
 | Deconstruct of a generic type | Not an exposure | An exposure |
-| Count in the analyzer, many projects | Error | Warning |
-| Type that fits two parts | The job stops | `UMP020201` |
-| `UMP020205`, `UMP020206` | Setup findings | Not in the model |
 
-"Type only in compiler output" is the array of a `params` call, the type of a default argument, the result type of an `await` and the `Dispose` call of a `using`. `FactParity` lists each case. `UMP020205` and `UMP020206` are about the setup of the DLL folders and of the folder aliases, not about types.
+"Type only in compiler output" is the array of a `params` call, the type of a default argument, the result type of an `await` and the `Dispose` call of a `using`. `FactParity` lists each case.
 
 ## Limits
 

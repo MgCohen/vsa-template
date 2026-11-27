@@ -1,13 +1,13 @@
 # VSA checks
 
-The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, ArchUnitNET, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`packs/Vsa/Definition/VsaArchitecture.cs`, see `architecture-engine.md`).
+The VSA checks ship with the framework and run on the modules of the consumer. Libraries do the work: the .NET analyzers, Roslyn, `System.Reflection.Metadata`, NUnit and NSubstitute. VSA adds base classes and one architecture definition (`packs/Vsa/Definition/VsaArchitecture.cs`, see `architecture-engine.md`).
 
 ## Levels
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
 | Editor and build | Analyzers | Built-in .NET analyzers + the analyzer entry of the engine (package `Umpire.Engine`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
-| Build of the host | Architecture | The rule engine in the package `Umpire.Engine` (ArchUnitNET) | `UMP02xxxx` |
+| Build of the host | Architecture | The rule engine in the package `Umpire.Engine` (the check model) | `UMP02xxxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
 
@@ -216,7 +216,7 @@ The compiler owns some assemblies, for example Roslyn and `System.Collections.Im
 | `Umpire.Engine.dll`, `Umpire.Engine.Versions.dll` | The engine core |
 | `Umpire.dll`, `Umpire.Vsa.dll`, `Umpire.Definition.dll`, `Umpire.Vsa.Definition.dll` | The bundles |
 | `Microsoft.Extensions.*`, `Microsoft.Bcl.AsyncInterfaces.dll` | The dependency injection |
-| `ArchUnitNET.dll`, `Mono.Cecil*.dll`, `System.Reflection.MetadataLoadContext.dll` and others | The other dependencies of the engine core |
+| `System.Reflection.MetadataLoadContext.dll` and others | The other dependencies of the engine core |
 
 - The compiler gives `Microsoft.CodeAnalysis*` and the `System.*` libraries, so they are not analyzer items. `System.Reflection.MetadataLoadContext` is not in the runtime, so it is an analyzer item.
 - The package `Umpire.Engine` holds the items in `analyzers/dotnet/cs/`. The package `Umpire` depends on it, so each project with an Umpire package gets the analyzer.

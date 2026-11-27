@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Model;
 using Model.Infrastructure;
 using Operations;
-using Rules;
 using Umpire.Kernels;
 using Versions;
 
@@ -23,7 +22,7 @@ public sealed class CompileHost : LocalHost {
 
     public static Module[] Modules() => [
         new BlocksModule(), new BuildModule(), new ChangesModule(), new CodeCheckModule(), new JobsModule(), new LoadAppModule(),
-        new ModelModule(), new RulesModule(), new VersionsModule(), new FactsPlugin(), new OperationsPlugin(),
+        new ModelModule(), new VersionsModule(), new FactsPlugin(), new OperationsPlugin(),
     ];
 
     protected override IReadOnlyList<ISettingsProvider> Settings(AppTypes types) => [];

@@ -16,14 +16,14 @@ flowchart LR
 
 | Project | Path | Contains |
 |---|---|---|
-| `Umpire.Architecture` | `architecture/` | The definition API and the plain data of its compiled form. No ArchUnitNET |
-| `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
+| `Umpire.Architecture` | `architecture/` | The definition API and the plain data of its compiled form. No DLL reader |
+| `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No DLL reader |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the compile job, the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp, Rules, CodeCheck and the operations of the check model. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, and the interface `IDefinitionLoader` for the one definition type. The type facts come from the snapshots of the compile. `TypeFactSource` (ArchUnitNET) is only for the Rules operation, which no job sends. Its root project `engine/Engine.csproj` is not a package |
+| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the compile job, the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp, CodeCheck and the operations of the check model. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `DllSource` (`DllReader`) for the type facts of a DLL with no snapshot, and the interface `IDefinitionLoader` for the one definition type. The type facts of a project come from the snapshots of the compile. Its root project `engine/Engine.csproj` is not a package |
 | Console entry | `engine/Entries/Console/` | `net8.0` executable `umpire-engine`: `EngineConsoleHost`, `ConsoleReport`, `HookMismatch` and `DefinitionSource` (`AppLoader`, an `AssemblyLoadContext`). The package `Umpire.Engine` holds it in `tools/net8.0/` |
 | Analyzer entry | `engine/Entries/Analyzer/` | `netstandard2.0` Roslyn analyzer `Umpire.Engine.Analyzer`: `EngineAnalyzer`, `CompileHost` (a `LocalHost`), the fact readers of the compile job in `Facts/`. The package `Umpire.Engine` holds it in `analyzers/dotnet/cs/` |
 
-The runtime of an app does not reference `Umpire.Architecture`, and `Umpire.Architecture` references no runtime project. A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
+The runtime of an app does not reference `Umpire.Architecture`, and `Umpire.Architecture` references no runtime project. A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler.
 
 ## Definition API
 
@@ -273,7 +273,7 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 ## External parts
 
-An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions` or ArchUnitNET. It binds the types of a DLL by its name, not by its folder. A type also matches by its namespace. The longest matching name wins. A rule that names an `External` gives it its part: `rules.For<Infrastructure>().Uses<ArchUnitLibraries>()`. The types of an external DLL are rule targets only: a rule can allow or deny them, and an `External` is never the subject of a rule.
+An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions`. It binds the types of a DLL by its name, not by its folder. A type also matches by its namespace. The longest matching name wins. A rule that names an `External` gives it its part: `rules.For<Infrastructure>().Uses<ConfigLibraries>()`. The types of an external DLL are rule targets only: a rule can allow or deny them, and an `External` is never the subject of a rule.
 
 The Umpire DLLs are DLLs with structure. A type in a kernel body (the root `Core`, `MessagesComponent` and the kernel root `Kernel`) binds to that body by its PDB path (see "Binding"). Each other Umpire type, for example a marker, `UmpireConfig` or `VsaArchitecture`, binds to the External `UmpireLibraries` (`Assembly => "Umpire"`, in `VsaArchitecture`). The module classes, `Host`, the `App` root and the `Definition` root can use `UmpireLibraries`, so the app class can name the pack. Other parts cannot.
 
@@ -469,7 +469,35 @@ rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure 
 | Source file out of the block folder | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
-The check model reads the source file and the place of each type from the snapshot of its project. For a DLL of another block or of a package, it reads the library facts (`libraries/<assembly>.json`): the full name, the source path and the base types of each type. A project DLL gets its library facts from its snapshot. A package DLL gets them from the file that the package `Umpire.Engine` ships in `tools/net8.0/libraries/`, with the source paths under `/_/`. The Blocks operation still reads the PDB of each DLL to find the check entries and the DLLs of a block (`BinReader`).
+The check model reads the source file and the place of each type from the snapshot of its project. For a DLL of another block or of a package, it reads the library facts (`libraries/<assembly>.json`): the full name, the source path and the base types of each type. A project DLL gets its library facts from its snapshot. A package DLL gets them from the file that the package `Umpire.Engine` ships in `tools/net8.0/libraries/`, with the source paths under `/_/`. The Blocks operation reads the PDB of each DLL to find the check entries and the DLLs of a block (`BinReader`). A DLL with no snapshot gets its facts from the DLL itself (see "DLL facts").
+
+### DLL facts
+
+A DLL of a reference folder (`umpire.check.references`, for example the Unity `ScriptAssemblies`) has no snapshot, because no compile of this build makes it. ExportModel reads its type facts with `DllSource` of the Facts plugin, and CheckModel checks its types as the types of a project.
+
+```mermaid
+flowchart LR
+    D["DLL and PDB"] --> R["DllReader: MetadataLoadContext, IL, sequence points"]
+    R --> F["DllFacts (Facts plugin)"]
+    F --> S["DllSnapshots: snapshots/assembly.json"]
+    S --> M["CheckModel"]
+```
+
+| DLL | Condition | Facts |
+|---|---|---|
+| App DLL | Source under the block, no snapshot, not a project of `deps.json` | A snapshot in `snapshots/<assembly>.json` of the state folder |
+| DLL of an `External` | No snapshot, no file in `tools/net8.0/libraries/`, a PDB | Library facts in `libraries/<assembly>.json` |
+| Project DLL with no snapshot | A project of `deps.json` | `UMP030802`: build the project again |
+
+| Fact | Source |
+|---|---|
+| Type, bases, interfaces, members, attributes, traits | `MetadataLoadContext`. If a base DLL does not resolve, the name of the direct base comes from the metadata |
+| Uses in method bodies | The IL tokens of each method, also of the compiler-made nested types (lambdas, closures, state machines) |
+| File, line and column of a type | The first sequence point of the type in the PDB, as `TypeSources` of `SymbolReader` |
+| Line of a use | The sequence point of the IL instruction |
+| Hash of a file | The SHA-256 checksum of the PDB document. With another algorithm, the file has no hash and is not marked old |
+
+The facts of a DLL follow the IL, not the source: a `nameof`, a constant and an enum value are not a use, and a type only in compiler output is a use. If two DLLs have one type, the DLL that comes first wins: the reference folders come before `--bin`.
 
 ## Folder aliases
 
@@ -483,7 +511,7 @@ A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder 
 
 | Source | Gives the aliases |
 |---|---|
-| `umpire.check.folder_aliases` in the `.umpireconfig` of the block folder | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). The Rules operation reads the table for each block (`FolderAliasConfig`) |
+| `umpire.check.folder_aliases` in the `.umpireconfig` of the block folder | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). ExportModel reads the table for each block (`FolderAliasConfig`) |
 | `config.FolderAliases` in `Architecture.Configure` | A definition adds aliases in code. The engine uses the aliases of the code and of the config file together |
 
 Rules:
@@ -514,37 +542,27 @@ The engine knows no host build system. A host that compiles the app in its own w
 
 `CheckSettings` (`engine/App/Plugins/Operations/Infrastructure`) reads the settings, and `RunOptions` (same folder) gives them to the operations.
 
-## The checks of the Rules operation
+## The architecture findings
 
-The build job and the check job check with the check model (ExportModel, then CheckModel). The model rules (`engine/App/Features/Model/Domain/Rules/`) give the same codes as the rule classes below, and ExportModel gives `UMP020205` and `UMP020206`. The parity tests (`tests/Engine.Tests/Model/Parity/`) compare the two. The Rules operation stays for these tests and for `tests/Architecture.Tests`, and no job sends it.
+The build job and the check job check with the check model: ExportModel, then CheckModel. The model rules are in `engine/App/Features/Model/Domain/Rules/`, and `RuleCodes` holds their codes. ExportModel gives the setup findings `UMP020205` and `UMP020206`. See `check-model.md`.
 
-Each architecture rule is one class in `engine/App/Features/Rules/Slices/CheckRules/` on a group base. The rule sets only its `Number` and, if it is not an error, its `Severity`. The group base sets the group, and `ArchitectureRule` makes the code: `UMP02` + group + number. `ArchitectureCheck.Findings()` (the Rules operation) runs `ArchitectureRule.All`, so the engine knows no code. Other code finds a rule by its type: `ArchitectureRule.Of<DeniedUseRule>()`.
+| ID | Model rule | Severity | Problem |
+|---|---|---|---|
+| `UMP020101` | `ReferenceCheck` | Error | A type uses a part that the rules deny |
+| `UMP020102` | `ReferenceCheck` | Error | A type exposes a part with more access than its rule allows |
+| `UMP020201` | `LocationCheck` | Error | A type is not assignable to the `OfType` of its part |
+| `UMP020202` | `LocationCheck` | Error | A type is in a folder that the definition does not have |
+| `UMP020204` | `ContentCheck` | Error | A type name does not obey the name rule of its part (see "Content of a part") |
+| `UMP020205` | ExportModel | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
+| `UMP020206` | ExportModel | Warning | A value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it |
+| `UMP020301` | `ReferenceCheck` | Error | A count of the definition is not in its limit (see "Counts and matches") |
+| `UMP020302` | `ReferenceCheck` | Error | A match of the definition does not hold (see "Counts and matches") |
+| `UMP020303` | `ContentCheck` | Error | A type does not have the traits that `Are` of its part needs (see "Content of a part") |
+| `UMP020304` | `ReferenceCheck` | Error | Code outside the parts of `Type<T>().OnlyIn<S>()` uses `T` (see "Content of a part") |
+| `UMP020401` | `BlockPlaceCheck` | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
+| `UMP020402` | `BlockPlaceCheck` | Error | A block place folder (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry. A place with no folder is the DLL form |
 
-```csharp
-sealed class DeniedUseRule : UseRule {
-    public override int Number => 1;
-
-    protected override IEnumerable<Finding> Find(ArchitectureCheck check, RuleValues values) => ...;
-}
-```
-
-| ID | Class | Group base | Severity | Problem |
-|---|---|---|---|---|
-| `UMP020101` | `DeniedUseRule` | `UseRule` (01) | Error | A type uses a part that the rules deny |
-| `UMP020102` | `WideExposureRule` | `UseRule` (01) | Error | A type exposes a part with more access than its rule allows |
-| `UMP020201` | `WrongTypeRule` | `PlaceRule` (02) | Error | A type is not assignable to the `OfType` of its part |
-| `UMP020202` | `UnmappedTypeRule` | `PlaceRule` (02) | Error | A type is in a folder that the definition does not have |
-| `UMP020204` | `WrongNameRule` | `PlaceRule` (02) | Error | A type name does not obey the name rule of its part (see "Content of a part") |
-| `UMP020205` | `MissingReferenceRule` | `PlaceRule` (02) | Warning | A reference folder (`umpire.check.references`, `--references`) does not exist, so the checks do not read its DLLs |
-| `UMP020206` | `BadFolderAliasRule` | `PlaceRule` (02) | Warning | A value in `umpire.check.folder_aliases` is not a list of folders, so the checks do not use it |
-| `UMP020301` | `CountRule` | `StatementRule` (03) | Error | A count of the definition is not in its limit (see "Counts and matches") |
-| `UMP020302` | `MatchRule` | `StatementRule` (03) | Error | A match of the definition does not hold (see "Counts and matches") |
-| `UMP020303` | `WrongTraitRule` | `StatementRule` (03) | Error | A type does not have the traits that `Are` of its part needs (see "Content of a part") |
-| `UMP020304` | `TypePlaceRule` | `StatementRule` (03) | Error | Code outside the parts of `Type<T>().OnlyIn<S>()` uses `T` (see "Content of a part") |
-| `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
-| `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place folder (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry. A place with no folder is the DLL form |
-
-The Rules operation reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` table as a dotted key, with no case (`RuleKeys` in the Operations plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
+ExportModel reads the nearest `.umpireconfig` file at or above the block folder and writes the severity of each code to `block.json`. The key `umpire.<code>.severity` has no case. It is the same key as for the analyzers:
 
 ```toml
 umpire.UMP020101.severity = "warning"   # error, warning, suggestion, or none (the rule does not run)
@@ -692,7 +710,7 @@ The table gives the severity in the mode `Error`.
 | `UMP030510` | 05 LoadApp | Error | No app class or no definition of the app loads, because an assembly is not in the bin or the reference folders. The message names each class, the type that did not load and its assembly (at most five) |
 | `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
-A TOML error in `.umpireconfig` throws in the Blocks operation, and the job gives `UMP030001` with the file, the line and the column. The Rules operation (group `06`) gives the rule findings of area `02`. The console report has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
+A TOML error in `.umpireconfig` throws in the Blocks operation, and the job gives `UMP030001` with the file, the line and the column. CheckModel (group `08`) gives the rule findings of area `02`. Group `06` has no operation. The console report has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
 
 ### Blocks and check entries
 
@@ -721,8 +739,8 @@ A block is a folder tree of code with one check entry. The check entry names the
 - The nearest block wins: a source file belongs to the deepest block folder above it.
 - The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The place gets the body of its record, and an overlay (`For<T>().Add<TPart>()` or `For<T>().ExtendedBy<TBlock>()`) can add parts to it. The outer definition adds no other part to a place. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
 - An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place folder with no check entry gives `UMP020402`. A place of a block with a body and no folder is the DLL form: its types bind by their PDB path (see "Binding"). A place with no body and no folder gives `UMP020402`.
-- The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
-- After the check of the block, the run checks each used block with its own definition, the same bin and the same operations (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
+- The check also reads the library facts of the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
+- After the check of the block, the run checks each used block with its own definition, the same bin and the same operations (FindBlocks, Versions, LoadApp, ExportModel, CheckModel). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
 - Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type, of for an app block each DLL with a definition of a kernel, and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the state folder) skips the full run when no input of the run changed (`UMP030201`). The block stamp stays in the block folder and not in the state folder of one root project, because each app that uses the block reads it.
 - Known gap of a used block: the bin has only the DLLs of the block that the host references, so the check sees only that part (for example, the engine bin has no `Umpire.Engine.Analyzer`). Each set of DLLs gets its own stamp.
 
@@ -795,7 +813,7 @@ The console report (`ConsoleReport`) sorts the findings: the findings with no fi
 
 ## Tests of the engine
 
-`tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. `BadApp` has one known problem for each rule ID. `VsaApp` is in the VSA layout and uses `VsaArchitecture`: it has one case for each VSA check, and `VsaAppTests` lists each finding that it expects. `CountTests` and `MatchTests` check the counts, the matches and `Required` on plain type facts, with no DLL.
+`tests/Architecture.Tests` uses the fixture apps in `tests/Fixtures/Architecture/` (`GoodApp`, `BadApp`, and the marker DLL `Kit`) with a small test definition. The test harness (`FixtureApps`, `CheckedApp`) reads the DLLs of the test bin with the DLL reader of the Facts plugin, writes a state folder and runs `ModelCheck`: it is the path of a reference folder. `BadApp` has one known problem for each rule ID. `VsaApp` is in the VSA layout and uses `VsaArchitecture`: it has one case for each VSA check, and `VsaAppTests` lists each finding that it expects. `CountTests` and `MatchTests` check the counts, the matches and `Required` on plain type facts, with no DLL.
 
 ## Tests of a definition
 
@@ -823,7 +841,7 @@ public sealed class NotesArchitectureTests : VsaArchitectureTest {
 | `Place.Path`, `Place.Values` | The path of the part instance and the group values, for example `Feature` = `Notebook` |
 | `Place.IsMapped` | `false` if the engine does not bind the type: `UMP020202`, a folder outside the block, a build output folder, or an inner block folder with no block place |
 
-The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules operation. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
+The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place` of the engine queries. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
 
 The folder is the path in the block with no folder alias. For an app with the alias `"src/Game" = [""]`, write `App/Features/Notebook`, not `src/Game/App/Features/Notebook`.
 

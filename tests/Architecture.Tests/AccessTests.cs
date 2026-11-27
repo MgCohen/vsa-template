@@ -1,8 +1,8 @@
 namespace EngineCore.Tests;
 
-using ArchUnitNET.Loader;
-using Umpire.Architecture;
 using Facts.Infrastructure;
+using Model.Infrastructure;
+using Umpire.Architecture;
 
 public record OpenTarget : Concept;
 
@@ -25,9 +25,12 @@ public class VisibilityShapes {
 
     int PrivateMember() => 0;
 
-    internal static ArchUnitNET.Domain.IType Type() =>
-        new ArchLoader().LoadAssemblies(typeof(VisibilityShapes).Assembly).Build().Types
-            .Single(t => t.FullName == typeof(VisibilityShapes).FullName);
+    internal static Umpire.CheckModel.TypeFacts Type() {
+        var dll = typeof(VisibilityShapes).Assembly.Location;
+        var facts = new DllSource().Read(new DllQuery([dll], []));
+        return DllSnapshots.Of(facts, Path.GetDirectoryName(dll)!).Single().Files.SelectMany(f => f.Types)
+            .Single(t => t.Name.FullName == typeof(VisibilityShapes).FullName);
+    }
 }
 
 public sealed class AccessArchitecture<TTarget>(Access options, Access? method) : Architecture where TTarget : Concept, new() {
@@ -70,7 +73,8 @@ public sealed class AccessTests {
     [TestCase("PrivateProtectedMember", ExpectedResult = Access.Internal)]
     [TestCase("PrivateMember", ExpectedResult = Access.Internal)]
     public Access A_member_visibility_maps_to_internal_or_public(string member) {
-        return Exposures.Of(VisibilityShapes.Type(), _ => false).First(e => e.Member.StartsWith(member + "(", StringComparison.Ordinal)).Access;
+        var access = Umpire.CheckModel.Exposure.AccessOf(VisibilityShapes.Type().Content.Members.First(m => m.Name == member).Access);
+        return Enum.Parse<Access>(access.ToString());
     }
 
     [Test]

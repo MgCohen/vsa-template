@@ -1,7 +1,9 @@
 namespace Model.Slices.ExportModel;
 
 using Facts.Domain.Shared;
+using Facts.Domain.Shared.Dll;
 using Facts.Infrastructure;
+using Model.Infrastructure;
 using LoadApp.Domain.Shared;
 using Operations.Domain.Shared;
 using Operations.Infrastructure;
@@ -14,7 +16,8 @@ using Umpire.Vsa.Handlers.Commands;
 using Data = Umpire.CheckModel;
 using Finding = Operations.Domain.Shared.Finding;
 
-sealed class ExportModelHandler(RunOptions options) : CommandHandler<ExportModelCommand, ExportModelResult> {
+sealed class ExportModelHandler(RunOptions options, IFactSource<DllQuery, IReadOnlyList<DllFacts>> dlls)
+    : CommandHandler<ExportModelCommand, ExportModelResult> {
     const string LibraryFolder = "libraries";
 
     public override Task<Result<ExportModelResult>> HandleAsync(IEnvelope<ExportModelCommand> envelope) =>
@@ -31,6 +34,7 @@ sealed class ExportModelHandler(RunOptions options) : CommandHandler<ExportModel
         var config = UmpireConfig.Find(block);
         var problems = new List<Finding>();
         var libraries = Libraries(command, places, projects, block, problems);
+        libraries.AddRange(FromDlls(command, places, projects, resolved, state, problems));
         var input = new BlockInput(block, app.Projects) {
             Libraries = [.. libraries.Select(library => library.Project)],
             InnerBlocks = app.Blocks.InnerFolders,
@@ -50,11 +54,12 @@ sealed class ExportModelHandler(RunOptions options) : CommandHandler<ExportModel
         }
         SnapshotFiles.Complete(state, own);
         SnapshotFiles.RemoveOld(before, own);
-        return new ExportModelResult([.. Setup(settings, FolderAliasConfig.Of(config, block).BadKeys), .. problems], state.Folder);
+        return new ExportModelResult(
+            [.. Setup(options.References, settings, FolderAliasConfig.Of(config, block).BadKeys), .. problems], state.Folder);
     }
 
-    IEnumerable<Finding> Setup(BlockSettings settings, IReadOnlyList<string> badAliases) {
-        var found = options.References.Where(folder => !Directory.Exists(folder)).Select(folder => new Finding(
+    internal static IEnumerable<Finding> Setup(IReadOnlyList<string> references, BlockSettings settings, IReadOnlyList<string> badAliases) {
+        var found = references.Where(folder => !Directory.Exists(folder)).Select(folder => new Finding(
             RuleCodes.MissingReference, FindingSeverity.Warning,
             $"The reference folder {folder} does not exist, so the checks do not read its DLLs. "
             + "Make the folder, or remove it from umpire.check.references (--references)."))
@@ -114,6 +119,33 @@ sealed class ExportModelHandler(RunOptions options) : CommandHandler<ExportModel
             }
         }
         return libraries;
+    }
+
+    List<Data.Snapshot> FromDlls(
+        ExportModelCommand command, IReadOnlyList<SnapshotPlace> places, HashSet<string> projects, ResolvedArchitecture resolved,
+        StateFolder state, List<Finding> problems) {
+        var block = command.App.Blocks.Current.Folder;
+        var externals = resolved.Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
+        var bin = command.Bin.Dlls.ToDictionary(dll => dll.Path, StringComparer.OrdinalIgnoreCase);
+        var unread = command.App.Dlls.Where(dll => bin.TryGetValue(dll, out var found) && !found.IsProject
+            && !places.Any(p => string.Equals(p.Project, found.Name, StringComparison.OrdinalIgnoreCase) && File.Exists(p.File))).ToList();
+        var own = unread.Where(dll => projects.Contains(bin[dll].Name)).ToList();
+        var named = unread.Where(dll => !projects.Contains(bin[dll].Name) && Shipped(bin[dll].Name) is null
+            && externals.Any(e => bin[dll].Name == e || bin[dll].Name.StartsWith(e + ".", StringComparison.Ordinal))).ToList();
+        var read = dlls.Read(new DllQuery([.. own, .. named], [.. command.Bin.Dlls.Select(d => d.Path)], options.SourceRoot))
+            .ToDictionary(facts => facts.Path, StringComparer.OrdinalIgnoreCase);
+        foreach (var dll in own) {
+            if (File.Exists(state.SnapshotFile(bin[dll].Name))) {
+                File.Delete(state.SnapshotFile(bin[dll].Name));
+            }
+            if (!read.ContainsKey(dll)) {
+                problems.Add(NoFacts(bin[dll].Name, $"the DLL {dll} or its PDB cannot be read"));
+            }
+        }
+        foreach (var snapshot in DllSnapshots.Of([.. own.Where(read.ContainsKey).Select(dll => read[dll])], block)) {
+            state.Save(snapshot);
+        }
+        return [.. named.Where(read.ContainsKey).Select(dll => LibraryExport.Of(DllSnapshots.Of([read[dll]], block)[0], FileMark.Of(block, dll)))];
     }
 
     static Finding NoFacts(string assembly, string reason) => new(DataCodes.NoSnapshot, FindingSeverity.Warning,
