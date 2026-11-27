@@ -6,28 +6,47 @@ using Umpire.Messages.Contracts;
 public sealed class Pipelines {
     readonly IServiceProvider root;
     readonly IReadOnlyList<PipelineDefinition> definitions;
+    readonly HubSteps hubSteps;
     readonly ConcurrentDictionary<PipelineDefinition, Pipeline> built = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Pipeline>> broadcasts = new();
 
-    internal Pipelines(IServiceProvider root, IEnumerable<PipelineDefinition> definitions) {
+    internal Pipelines(IServiceProvider root, IEnumerable<PipelineDefinition> definitions, IEnumerable<HubStepEntry> hubSteps) {
         this.root = root;
         this.definitions = [.. definitions];
+        this.hubSteps = new HubSteps(hubSteps);
     }
 
-    internal async Task<Result<TResult>> SendAsync<TResult>(
+    internal Task<Result<TResult>> SendAsync<TResult>(
         Type handlerBase, object message, IServiceProvider services, CancellationToken ct) {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
-        var envelope = await For(handlerBase, message.GetType()).RunAsync(message, services, ct);
-        return EnvelopeResults.Of<TResult>(envelope);
+        return hubSteps.RunAsync(message, services,
+            async () => EnvelopeResults.Of<TResult>(await For(handlerBase, message.GetType()).RunAsync(message, services, ct)),
+            error => (Result<TResult>)error);
     }
 
-    internal async Task<Result<Unit>> PublishAsync(
+    internal Task<Result<Unit>> PublishAsync(
         IBroadcastMessage message, IServiceProvider services, CancellationToken ct) {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
+        return hubSteps.RunAsync(message, services, () => RunBroadcastAsync(message, services, ct), error => (Result<Unit>)error);
+    }
+
+    internal async Task<IMessageResult> SendAsync(object message, IServiceProvider services, CancellationToken ct) {
+        if (message is null) {
+            throw new ArgumentNullException(nameof(message));
+        }
+        if (message is IBroadcastMessage broadcast) {
+            return await PublishAsync(broadcast, services, ct);
+        }
+        return await hubSteps.RunAsync(message, services,
+            async () => EnvelopeResults.Untyped(await For(message.GetType()).RunAsync(message, services, ct)),
+            error => (IMessageResult)(Result<Unit>)error);
+    }
+
+    async Task<Result<Unit>> RunBroadcastAsync(IBroadcastMessage message, IServiceProvider services, CancellationToken ct) {
         var pipelines = broadcasts.GetOrAdd(message.GetType(), BroadcastsOf);
         if (pipelines.Count == 0) {
             throw new InvalidOperationException($"No pipeline runs {message.GetType().Name}.");
@@ -54,6 +73,21 @@ public sealed class Pipelines {
             ?? throw new InvalidOperationException(
                 $"No pipeline runs the handlers of {handlerBase.Name.Split('`')[0]}, "
                 + $"so {message.Name} has no pipeline.");
+    }
+
+    Pipeline For(Type message) {
+        var candidates = definitions
+            .Where(d => d.Message.IsAssignableFrom(message) && !typeof(IBroadcastMessage).IsAssignableFrom(d.Message))
+            .Select(Instance)
+            .Where(p => p.Runs(message))
+            .ToList();
+        var nearest = MessageTypes.Narrowest(candidates, p => p.Definition.Message);
+        return nearest.Count switch {
+            1 => nearest[0],
+            0 => throw new InvalidOperationException($"No pipeline has a handler for {message.Name}."),
+            _ => throw new InvalidOperationException(
+                $"Two pipelines have a handler for {message.Name}. Send it through the sender of its kind."),
+        };
     }
 
     IReadOnlyList<Pipeline> BroadcastsOf(Type message) {

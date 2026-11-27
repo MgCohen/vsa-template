@@ -5,6 +5,14 @@ using Umpire.Messages.Contracts;
 static class EnvelopeResults {
     internal const string FaultCode = "Fault";
 
+    internal static IMessageResult Untyped(Envelope envelope) => envelope.State switch {
+        EnvelopeState.Rejected => ((Result<Unit>)envelope.Error!).On(envelope),
+        EnvelopeState.Faulted => ((Result<Unit>)new Error(FaultCode, envelope.Exception!.Message)).On(envelope),
+        EnvelopeState.Accepted when envelope.Result is { } result => result,
+        _ => throw new InvalidOperationException(
+            $"Envelope {envelope.Id} is {envelope.State}, so it has no result."),
+    };
+
     internal static Result<T> Of<T>(Envelope envelope) => envelope.State switch {
         EnvelopeState.Rejected => ((Result<T>)envelope.Error!).On(envelope),
         EnvelopeState.Faulted => ((Result<T>)new Error(FaultCode, envelope.Exception!.Message)).On(envelope),
