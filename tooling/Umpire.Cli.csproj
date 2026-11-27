@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The umpire tool. It ships as a .NET tool with the same version as the Umpire packages. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- The assembly name is not Umpire.*: the check binds an assembly Umpire.* to the External UmpireLibraries and does
+         not check its types (as umpire-engine of the engine block). The package id stays Umpire.Cli. -->
+    <AssemblyName>umpire-cli</AssemblyName>
+    <RootNamespace>Umpire.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <!-- The tool targets net8.0. If .NET 8 is not installed, it runs on the newest runtime, for example the runtime of the .NET 10 SDK. -->
+    <RollForward>Major</RollForward>
+    <ToolCommandName>umpire</ToolCommandName>
+    <PackageId>Umpire.Cli</PackageId>
+    <!-- A pack builds the tool to ship it. The normal build of this repository checks the block. A pack can give its own
+         ArtifactsPath, and then the engine of the source build is not in engine/artifacts~/. -->
+    <UmpireCheck Condition="'$(_IsPacking)' == 'true'">false</UmpireCheck>
+    <!-- Templates/ is a separate app that builds on its own. The tool holds its files as resources. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Templates/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cli.Tests" />
+  </ItemGroup>
+  <!-- The test project of a new app gives the NUnit versions of this repository. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="UmpireNUnitVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit')->'%(Version)')" />
+    <AssemblyMetadata Include="UmpireNUnitAdapterVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit3TestAdapter')->'%(Version)')" />
+  </ItemGroup>
+  <!-- The tool is a VSA app: UmpireTool<ToolHost> is App<VsaKernel, ToolHost>, and ToolHost is a ConsoleHost. Each command is a
+       request of a feature module, and the host converts the command line of the tool into that request. The build checks
+       this folder as a block (UmpireBlock in Directory.Build.props). -->
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
+    <PackageReference Include="Umpire.Console" Version="$(UmpireVersion)" />
+    <PackageReference Include="Umpire.Engine" Version="$(UmpireVersion)" PrivateAssets="all" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
+    <ProjectReference Include="Files/Umpire.Files.csproj" />
+  </ItemGroup>
+  <!-- The tool reads no module settings, so its output and its package have no .umpireconfig file (NU5119). -->
+  <Target Name="_UmpireCliNoConfigFile" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <None Remove="$(UmpireConfigFile)" />
+    </ItemGroup>
+  </Target>
+  <!-- The tool holds the template files as resources. Umpire.After.targets removes the files of a nested project from
+       EmbeddedResource (Templates/ has its own project), so a target adds them after the evaluation. -->
+  <ItemGroup>
+    <_UmpireCliTemplate Include="Templates/**" Exclude="Templates/*.props;Templates/**/artifacts~/**;Templates/**/bin/**;Templates/**/obj/**;Templates/**/*.user;Templates/**/*.db;Templates/**/*.db-shm;Templates/**/*.db-wal"
+                        LogicalName="Templates/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="_UmpireCliTemplates" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <EmbeddedResource Include="@(_UmpireCliTemplate)" />
+    </ItemGroup>
+  </Target>
+</Project>

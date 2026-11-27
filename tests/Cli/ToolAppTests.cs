@@ -1,18 +1,12 @@
 using Tests.Shared;
-using Umpire.Cli;
-using Umpire.Cli.Commands;
-using Umpire.Cli.Host;
-using Umpire.Kernels;
+using Umpire.Cli.Plugins.Commands.Domain.Shared;
 
 namespace Cli.Tests;
 
 public sealed class ToolAppTests {
-    static readonly string ToolFile = Path.Combine(AppContext.BaseDirectory, "Umpire.Cli.dll");
+    static readonly string ToolFile = Path.Combine(AppContext.BaseDirectory, "umpire-cli.dll");
 
     static IEnumerable<string[]> HelpForms() => [[], ["help"], ["-h"], ["--help"]];
-
-    static IReadOnlyList<Operation> Operations() =>
-        [.. CommandList.All.Select(ToolOperations.Of), ToolOperations.Help, ToolOperations.Version];
 
     [Test]
     public void TheVersionIsTheVersionOfTheTool() {
@@ -36,6 +30,15 @@ public sealed class ToolAppTests {
 
         Assert.That(result.ExitCode, Is.EqualTo(1));
         Assert.That(result.Output, Does.StartWith("umpire: Unknown command: add thing X").And.Contain("Usage:"));
+    }
+
+    [TestCase("version")]
+    [TestCase("help", "me")]
+    public void AWordThatIsNotACommandIsUnknown(params string[] args) {
+        var result = Run(Repo.Root, args);
+
+        Assert.That(result.ExitCode, Is.EqualTo(1));
+        Assert.That(result.Output, Does.StartWith($"umpire: Unknown command: {string.Join(' ', args)}"));
     }
 
     [Test]
@@ -64,23 +67,23 @@ public sealed class ToolAppTests {
     [TestCase(new[] { "update", "--version", "1.0.0" }, new[] { "update" })]
     [TestCase(new[] { "check", "-c", "Release" }, new[] { "check" })]
     [TestCase(new[] { "--version" }, new[] { "version" })]
+    [TestCase(new[] { "version" }, new[] { "help" })]
     [TestCase(new[] { "add", "thing", "X" }, new[] { "help" })]
     [TestCase(new[] { "-h" }, new[] { "help" })]
-    public void TheHostGivesTheWordsOfOneOperation(string[] args, string[] words) =>
-        Assert.That(new ToolLine(args).Words, Is.EqualTo(words));
+    public void TheHostSelectsTheRequestOfTheCommandLine(string[] args, string[] words) =>
+        Assert.That(Tool.Commands.Select(args).Words, Is.EqualTo(words));
 
     [Test]
-    public void TheWordsOfEachCommandSelectOnlyItsOwnOperation() {
-        var operations = Operations();
+    public void EachCommandHasItsOwnOperationName() =>
+        Assert.That(Tool.Commands.Forms.Select(form => $"{form.Group} {form.Name}"), Is.Unique);
 
-        foreach (var command in CommandList.All) {
-            var words = command.Words;
-            var selected = operations.Where(o => words.Count == 1
-                ? o.Name == words[0]
-                : o.Group == words[0] && o.Name == words[1]);
-            Assert.That(selected.Count(), Is.EqualTo(1), string.Join(' ', words));
-        }
-    }
+    [TestCase(new[] { "test" }, true)]
+    [TestCase(new[] { "check", "--mode", "Error" }, true)]
+    [TestCase(new[] { "doctor" }, false)]
+    [TestCase(new[] { "new", "app", "Hello" }, false)]
+    [TestCase(new[] { "add", "thing" }, false)]
+    public void OnlyTheCommandsWithAChildProcessWaitForItAfterAStopSignal(string[] args, bool waits) =>
+        Assert.That(Tool.Commands.CancelsOnSignal(args), Is.EqualTo(waits));
 
     static DotnetResult Run(string folder, params string[] args) => Dotnet.Run(folder, null, [ToolFile, .. args]);
 }

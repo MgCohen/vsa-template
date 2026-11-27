@@ -175,6 +175,15 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The root project references `Umpire.Engine` itself (else `UMP030003`); it is not a dependency of `Umpire`.
   - The engine state files did not move to the intermediate output path yet (phase 3).
   - `init` does nothing if `Directory.Build.props` exists. The fixtures `Built/NoPack` and `Built/PackGraph` seem unused.
+- The tool as a VSA app (`tooling/`, options B and C):
+  - The check binds each in-block type of an assembly `Umpire.*` to the External `UmpireLibraries` (`Places.Place`), so it does not check these types. The tool assembly is now `umpire-cli` for this reason. The engine core `Umpire.Engine` has the same gap: the engine block check reads only the types of `umpire-engine` and `Engine.Definition`. The engine is not changed here.
+  - `UmpireTool<THost>` has an open host, so the tests run the tool in the test process on a `LocalHost`.
+  - `ToolHost` wraps the operation of each request: the input type of the operation is `ToolInput`, and the request comes from `IToolRequest<TSelf>.From` when the operation runs. `ConsoleHost` got two extension points: `Select` and `CancelsOnSignal`.
+  - The command line types (`CommandForm`, `CommandOption`, `CommandInput`, `ToolCall`) are in `Domain/Shared/` of the plugin, because `Contracts.Requests` holds only requests and responses. The host uses them by a rule of `ToolArchitecture`.
+  - The handlers still throw `UmpireException`. `ToolHandler<,>` changes it into an `Error`.
+  - After a signal, the tool sends SIGTERM to the child with the `kill` command (not on Windows), waits 10 seconds, then kills its process tree. On Linux a killed child gives exit code 137. If `umpire test` stops before its last project, it gives 130 when the last child gave 0. A `CancelsOnSignal` host whose operation throws the cancel still ends with exit code 0.
+  - `CommandOption.Required` only changes the usage text. Each handler checks its required options (`form.Missing`), because the order is the name, then the app folder, then the options.
+  - `Templates/` is a block of its own inside the tool block. Its files go into the tool as resources by a target (`_UmpireCliTemplates`), because `Umpire.After.targets` removes the files of a nested project.
 - PR #406, the switch to the model path:
   - The analyzer of a build compile saves only and reports no type finding; the build job reports all. An editor compile checks types with the state of the last build (`state.txt`).
   - "Selected by hash" of brief D item 1 is read as: one snapshot file for each target (the intermediate path has the target), and the check selects the snapshot of each target.

@@ -151,7 +151,6 @@ If two placed blocks match one path, the engine gives an error that names both. 
 ## Open questions
 
 - `Block<T>` as a typed check entry for module kinds, and the block name family (#202).
-- A tool as an app with a lighter host: `tools/cli` has no app class.
 - The runtime `Kernel` class: the pack can install the layers itself (q29 of the decision log).
 - The block root in a DLL by folder name and body: review it before the first preview (d47).
 - A guideline shape for the core.

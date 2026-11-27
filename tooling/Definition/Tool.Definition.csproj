@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The definition of the umpire tool. The tool project builds it first and does not reference it. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa.Definition" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
