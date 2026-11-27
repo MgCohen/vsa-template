@@ -212,7 +212,7 @@ To make a finding fail the build, write `umpire.check.mode = "Error"` in `.umpir
 | Rule | `no rule allows it (DefaultPermission = Deny)` | A use is denied when no rule allows it |
 | Fix | `Remove the use, or change the rule in Rules.` | The two ways to fix it |
 
-The folders select the parts. Two slices are two instances of the group `Slice`, and the VSA rules let a slice use only its own types and `Slices/Shared/`. The codes of all checks are in [architecture-engine.md](architecture-engine.md) ("The checks of the Rules operation").
+The folders select the parts. Two slices are two instances of the group `Slice`, and the VSA rules let a slice use only its own types and `Slices/Shared/`. The codes of all checks are in [architecture-engine.md](architecture-engine.md) ("The architecture findings").
 
 ### Fix the error
 

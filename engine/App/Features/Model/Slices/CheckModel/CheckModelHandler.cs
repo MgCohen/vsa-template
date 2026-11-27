@@ -59,7 +59,7 @@ sealed class CheckModelHandler : CommandHandler<CheckModelCommand, CheckModelRes
             : StateFolder.Of(block);
     }
 
-    static Operations.Domain.Shared.Finding Converted(ModelFinding finding) => new(
+    internal static Operations.Domain.Shared.Finding Converted(ModelFinding finding) => new(
         finding.Code, SeverityOf(finding.Severity), finding.Text, finding.File, finding.File is null ? null : finding.Line,
         finding.File is null ? null : finding.Column);
 

@@ -115,7 +115,7 @@ public sealed class ArchiveTests {
     [Test]
     public void The_notices_give_the_license_of_each_third_party_package() {
         var notices = File.ReadAllText(Path.Combine(tree, Notices));
-        Assert.That(notices, Does.Not.Contain("Tomlyn").And.Contain("TngTech.ArchUnitNET"));
+        Assert.That(notices, Does.Not.Contain("Tomlyn").And.Not.Contain("TngTech.ArchUnitNET").And.Contain("System.Reflection.MetadataLoadContext"));
     }
 
     [Test]
