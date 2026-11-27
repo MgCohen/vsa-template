@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Tests of the rule engine app. They run the engine modules in the test process on tests/Fixtures/Notes,
-       whose assemblies are in the test output. -->
+       whose assemblies are in the test output. Model/: the tests of the check model (the data, the files, the rules,
+       the export, the analyzer), and its parity with the engine (Model/Parity/ compiles fixtures with the analyzer). -->
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" Aliases="testing" />
+    <ProjectReference Include="$(RepoRoot)engine/Entries/Console/Engine.Console.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Notes/Notes.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/TwoApps/TwoApps.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Blocks/Blocks.csproj" />
@@ -21,5 +24,13 @@
     <ProjectReference Include="$(RepoRoot)tools/bundle/Umpire/Umpire.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)tools/bundle/Definition/Umpire.Definition.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)check/Analyzer/Umpire.CheckModel.Analyzer.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <Compile Include="$(RepoRoot)tests/Architecture.Tests/FixtureArchitecture.cs" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/Kit/Kit.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" Exclude="$(RepoRoot)tests/Fixtures/Architecture/Kit/Kit.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

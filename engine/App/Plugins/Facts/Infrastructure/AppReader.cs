@@ -4,6 +4,7 @@ using ArchUnitNET.Domain;
 using ArchUnitNET.Loader;
 using Facts.Domain.Shared;
 using Umpire.Architecture;
+using Umpire.Utility;
 
 public static class AppReader {
     public static LoadedApp Read(
@@ -18,7 +19,7 @@ public static class AppReader {
 
     static bool IsIgnored(TypeFacts fact, string blockFolder, IReadOnlyList<string> ignoredFolders) =>
         ignoredFolders.Count > 0 && fact.Source is { } source
-        && ReadOptions.IsIgnored(Path.GetRelativePath(blockFolder, Path.GetFullPath(source.File)), ignoredFolders);
+        && ReadOptions.IsIgnored(RelativePath.Of(blockFolder, Path.GetFullPath(source.File)), ignoredFolders);
 
     static ArchUnitNET.Domain.Architecture Load(IReadOnlyList<string> files) {
         var loader = new ArchLoader();

@@ -14,7 +14,7 @@ sealed class CheckVersionsHandler : CommandHandler<CheckVersionsCommand, CheckVe
         var slots = VersionSlots.InApp(Path.GetFullPath(command.BlockFolder)).SelectMany(file => file.Slots)
             .Concat(VersionSlots.InBin(Path.GetFullPath(command.Bin)));
         var mismatches = VersionCheck.Mismatches(slots, expected);
-        return mismatches is []
+        return mismatches is { Count: 0 }
             ? new CheckVersionsResult([])
             : new Error(VersionCheck.Code, VersionCheck.Message(mismatches, expected));
     }

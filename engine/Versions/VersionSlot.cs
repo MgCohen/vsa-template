@@ -10,7 +10,7 @@ public sealed class VersionSlot(
 
     public string? Text { get; private set; } = text;
 
-    public string? Version => Text is string value && IsExactRange(value) ? value[1..^1].Trim() : Text;
+    public string? Version => Text is string value && IsExactRange(value) ? value.Substring(1, value.Length - 2).Trim() : Text;
 
     public bool IsChecked => Text is null || !Text.Contains(PropertyStart, StringComparison.Ordinal);
 
@@ -27,5 +27,5 @@ public sealed class VersionSlot(
     }
 
     static bool IsExactRange(string value) =>
-        value.StartsWith('[') && value.EndsWith(']') && !value.Contains(',', StringComparison.Ordinal);
+        value.StartsWith('[') && value.EndsWith(']') && !value.Contains(',');
 }

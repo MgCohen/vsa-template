@@ -1,6 +1,5 @@
 namespace Changes.Infrastructure;
 
-using System.Security.Cryptography;
 using System.Text;
 
 public static class BlockHash {
@@ -8,7 +7,7 @@ public static class BlockHash {
 
     public static string View(string definition, IReadOnlyList<string> dlls, string run) =>
         Hash([definition, run, .. dlls.Select(dll => Path.GetFileName(dll)).Order(StringComparer.OrdinalIgnoreCase)])
-            [..ViewLength];
+            .Substring(0, ViewLength);
 
     public static string Inputs(string block, string definition, IReadOnlyList<string> dlls, string run) {
         var lines = new List<string> { definition, run, InputHash.Engine() };
@@ -24,9 +23,9 @@ public static class BlockHash {
             return "";
         }
         using var stream = File.OpenRead(file);
-        return Convert.ToHexString(SHA256.HashData(stream));
+        return PlatformPolyfills.Sha256Hex(stream);
     }
 
     static string Hash(IEnumerable<string> lines) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("\n", lines))));
+        PlatformPolyfills.Sha256Hex(Encoding.UTF8.GetBytes(string.Join("\n", lines)));
 }

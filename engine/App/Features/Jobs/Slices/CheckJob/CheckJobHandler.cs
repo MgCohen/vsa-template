@@ -8,6 +8,7 @@ using Changes.Slices.WriteBlockStamp;
 using Changes.Slices.WriteStamp;
 using LoadApp.Domain.Shared;
 using LoadApp.Slices.LoadApp;
+using Model.Slices.CheckModel;
 using Operations.Infrastructure;
 using Rules.Slices.CheckRules;
 using Umpire.Messages.Contracts;
@@ -19,6 +20,10 @@ sealed class CheckJobHandler(ICommandSender commands, OperationLog log, RunOptio
     : RequestHandler<CheckJobRequest, CheckJobReport> {
     public override async Task<Result<CheckJobReport>> HandleAsync(IEnvelope<CheckJobRequest> envelope) {
         var given = envelope.Message;
+        if (given.Model) {
+            var model = await commands.SendAsync(new CheckModelCommand(given.Folder, given.State, given.Mode), envelope.Cancellation);
+            return new CheckJobReport(model.IsSuccess ? model.Value.Mode : CheckMode.Of(given.Mode, given.Folder), [.. log.Findings]);
+        }
         var job = given with { Mode = CheckMode.Of(given.Mode, given.Folder) };
         options.FailFast = job.FailFast;
         options.Apply(

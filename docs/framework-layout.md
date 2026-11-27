@@ -11,19 +11,22 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Architecture | `architecture/` | The definition API and the rule answers | Each pack and the engine |
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
-| Engine | `engine/` | The rule engine app | `tools/net8.0/` of the package `Umpire.Engine` |
+| Engine | `engine/` | The rule engine: the core library and the console entry (`Entries/Console/`) | `tools/net8.0/` of the package `Umpire.Engine` |
 | Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`), the bundle packages (`tools/bundle/`), with the build files of the packages, `Umpire.Engine` and the source mode | The developer |
 
 ```mermaid
 flowchart BT
-    Architecture["architecture/"] --> Kernel["framework/Kernel"]
+    Architecture["architecture/"]
     Messages["framework/Components/Messages"] -. private .-> Kernel
     Kernel --> Config["framework/Components/Config"]
-    Versions --> Config
-    Vsa["packs/Vsa"] --> Kernel
+    Versions --> Kernel
+    Vsa["packs/Vsa"] --> Kernel["framework/Kernel"]
     Vsa --> Messages
     Vsa --> Architecture
     Engine["engine/"] --> Vsa
+    Engine --> Versions
+    Console["engine/Entries/Console"] --> Engine
+    Testing["packs/Vsa/Tests/Unit"] -. compiles .-> Engine
     Cli["tools/cli"] --> Versions["engine/Versions"]
     Cli --> Files["tools/Files"]
 ```
@@ -40,7 +43,7 @@ The projects of the groups are for development: their references enforce the lay
 | `Umpire.Vsa.Definition` | `Umpire.Vsa.Definition.dll` (`netstandard2.0`) | Umpire.Vsa (`packs/Vsa/Definition/`) | `Umpire.Definition`, `Umpire.Vsa` |
 | `Umpire.Web` | `Umpire.Web.dll` | Umpire.Hosts.Web, Umpire.Vsa.Views | `Umpire.Vsa` |
 | `Umpire.Console` | `Umpire.Console.dll` | Umpire.Hosts.Console | `Umpire` |
-| `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit | `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition` |
+| `Umpire.Testing` | `Umpire.Testing.dll` | Umpire.Vsa.Testing.Unit, and the query files of the engine core | `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition` |
 
 The core `Umpire` holds no pack and no definition code. The VSA kernel is in `Umpire.Vsa`, so an app with another pack and no web host gets no VSA code and no VSA analyzer. The definition code is check-time code, so it is in the two definition packages. The views and the VSA test bases stay in `Umpire.Web` and `Umpire.Testing`, so these two packages depend on `Umpire.Vsa`.
 
@@ -61,7 +64,7 @@ This table is a guideline. **Not enforced in 0.1.0.**
 | You add | Folder |
 |---|---|
 | A type of the definition API | `architecture/` |
-| A rule question on plain data | `architecture/Queries/` |
+| A rule question on plain data | `engine/App/Plugins/Facts/Domain/Shared/Queries/` |
 | A type that each app needs to start | `framework/Kernel/` |
 | A free block for two or more packs | `framework/Components/<Name>/` |
 | A new architecture | `packs/<Name>/`: `Definition/`, `Kernel/`, `Tests/` |
@@ -76,18 +79,18 @@ This table is a guideline. **Not enforced in 0.1.0.**
 ```
 engine Rules operation (engine/App/Features/Rules)
 ├─ Facts plugin: DLL and PDB facts               ArchUnitNET (the only place)
-├─ ResolvedArchitecture.Place(facts)              architecture/Queries: PartOf
-├─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Queries: ResolvedArchitecture
-└─ ResolvedArchitecture.Counts, Matches(bindings) architecture/Queries: CountCheck, MatchCheck
+├─ ResolvedArchitecture.Place(facts)              Facts plugin, Queries: PartOf
+├─ ResolvedArchitecture.DecisionFor(a, b)         Facts plugin, Queries: ResolvedArchitecture
+└─ ResolvedArchitecture.Counts, Matches(bindings) Facts plugin, Queries: CountCheck, MatchCheck
 
-ArchitectureTest<T> (a test of a definition)
-├─ reflection: the base types of one type        architecture/Testing: TypeFactsOf
-└─ ResolvedArchitecture.Place, DecisionFor        architecture/Queries: PartOf, ResolvedArchitecture
+ArchitectureTest<T> (a test of a definition, packs/Vsa/Tests/Unit)
+├─ reflection: the base types of one type        TypeFactsOf
+└─ ResolvedArchitecture.Place, DecisionFor        Facts plugin, Queries: PartOf, ResolvedArchitecture
 ```
 
-`architecture/Queries/` takes plain facts (`TypeFacts`: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
+The queries (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) take plain facts (`TypeFacts` of the definition API: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. They use only the definition API and `Umpire.Utility`, so the definition test base (`packs/Vsa/Tests/Unit/` and the package `Umpire.Testing`) compiles a copy of them. A test project thus gets no engine module. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
 
-The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`). The runtime and the definition API (`Umpire.Architecture`) use them from there. The definition API is portable and has no ArchUnitNET.
+The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` and the path helpers `RelativePath` and `BuildOutput` are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`). The runtime, the engine and the version check use them from there. The definition API is portable and has no ArchUnitNET.
 
 ## Two kinds of type
 

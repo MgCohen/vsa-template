@@ -1,6 +1,6 @@
 # Check model
 
-The check model is the check side of the K3 decision (#293). It is in `check/`, next to the rule engine. The rule engine runs in the builds, and no build uses the check model. The names and the packages of the check model are working names (K4, K6).
+The check model is the check side of the K3 decision (#293). It is a part of the engine core: the feature module `engine/App/Features/Model/`. The build job and the hook do not use it. The names and the packages of the check model are working names (K4, K6).
 
 ```mermaid
 flowchart LR
@@ -8,7 +8,7 @@ flowchart LR
     S[one snapshot per project] --> M
     B[block.json, libraries] --> M
     M --> A[analyzer: each type]
-    M --> C[command: all types]
+    M --> C[check job --model: all types]
     A -->|saves| S
     A --> R[report]
     C --> R
@@ -16,18 +16,19 @@ flowchart LR
 
 ## Projects
 
-| Project | Folder | Target | Contains |
-|---|---|---|---|
-| Umpire.CheckModel | `check/Model/` | `netstandard2.0` | Data, app model, report, operations. No Roslyn, no package |
-| Umpire.CheckModel.Export | `check/Export/` | `net8.0` | The definition, block and library files |
-| Umpire.CheckModel.Analyzer | `check/Analyzer/` | `netstandard2.0` | The facts from symbols, the checks in a compile |
-| Umpire.CheckModel.Command | `check/Command/` | `net8.0` | The last job, `umpire-check` |
+| Part | Folder | Contains |
+|---|---|---|
+| Model domain | `engine/App/Features/Model/Domain/` | Data, app model, state files, report, model rules (`Rules/`, run by `ModelCheck`). Namespace `Umpire.CheckModel` |
+| Export | `engine/App/Features/Model/Domain/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export` |
+| ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files. No job sends it |
+| CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state (`jobs check --model true`) |
+| Umpire.CheckModel.Analyzer | `check/Analyzer/` | The facts from symbols, the checks in a compile. It references the engine core |
 
-The core is generic: no project of the check model knows a slice or a feature. No project is a package.
+The model domain is generic: no part of it knows a slice or a feature. The domain uses no Roslyn and no package, so the compiler can load the engine core for the analyzer. No part is a package.
 
 ## Saved files
 
-All files are in one state folder. The default is `artifacts~/umpire-model` in the block folder. The key `umpire.check.state` in `.umpireconfig` changes it: a relative folder starts at the folder of the file. The flag `--state` of the command and the MSBuild property `UmpireCheckState` of the analyzer win over the key.
+All files are in one state folder. The default is `artifacts~/umpire-model` in the block folder. The key `umpire.check.state` in `.umpireconfig` changes it: a relative folder starts at the folder of the file. The option `--state` of the check job and the MSBuild property `UmpireCheckState` of the analyzer win over the key.
 
 | File | Contains | Written by |
 |---|---|---|
@@ -54,11 +55,11 @@ A writer does not write a file again if only its date is different. A writer lea
 
 The facts of a type are complete: no check reads the code again. A partial type has facts in each of its files. The snapshot does not have the part of a type or a rule, so a changed rule needs no compile.
 
-## App model and operations
+## App model and model rules
 
 `AppModel.Load(state)` joins the definition and the snapshots, and nothing saves the result. A type gets its part from its file. A type with no part of its own in a shared folder gets the part of the type that uses it.
 
-| Operation | Findings |
+| Model rule | Findings |
 |---|---|
 | `LocationCheck` | `UMP020201`, `UMP020202` |
 | `ContentCheck` | `UMP020204`, `UMP020303` |
@@ -66,11 +67,11 @@ The facts of a type are complete: no check reads the code again. A partial type 
 | `BlockPlaceCheck` | `UMP020401`, `UMP020402`, all types only |
 | `DataCheck` | `UMP030802`, `UMP030803`, all saved data |
 
-An operation gets the app model, the types and the report. A report that did not run to its end has `Succeeded` false and a reason. A report with findings can succeed.
+A model rule gets the app model, the types and the report. A report that did not run to its end has `Succeeded` false and a reason. A report with findings can succeed.
 
 ## Trust
 
-A finding is an error only if each fact that decides it is current (`Trust`). If one fact is old or missing, the finding is a warning, in the analyzer and in the command.
+A finding is an error only if each fact that decides it is current (`Trust`). If one fact is old or missing, the finding is a warning, in the analyzer and in the check job.
 
 | Finding | Facts that decide it |
 |---|---|
@@ -110,20 +111,20 @@ It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `Desig
 
 The package `Umpire` puts these codes and all rule codes in `WarningsNotAsErrors` (`tools/bundle/Umpire/build/Umpire.Codes.props`), so `TreatWarningsAsErrors` makes no error of a warning.
 
-## Command
+## Check job with the model
 
-`umpire-check [--root <block folder>] [--state <state folder>] [--mode Error|Warn]` checks all types with no compile. Its lines are `file(line,col): error|warning CODE: text`. `umpire.check.mode` is in `block.json`, and `--mode` or `UmpireCheckMode` wins over it. The default mode is `Warn`: each error is a warning.
+`umpire-engine jobs check --model true --project <block folder> --bin <folder> [--block <block folder>] [--state <state folder>] [--mode Error|Warn]` checks all types with no compile (the CheckModel operation, group `08`). The job does not read `--bin`. Its lines are the lines of the engine report: `file(line,col): error|warning CODE: text`. `umpire.check.mode` is in `block.json`, and `--mode` wins over it. If `block.json` cannot be read, the mode comes from `.umpireconfig`, and the default is `Warn`: each error is a warning.
 
 | Exit code | Meaning |
 |---|---|
-| 0 | The check came to its end with no finding |
-| 1 | The check came to its end with findings: errors or warnings, also old or missing data |
-| 2 | The check broke: it did not come to its end. It writes `UMP030801`, a warning in the mode `Warn` |
-| 3 | Bad flags |
+| 0 | The check has no error |
+| 1 | The check has an error |
+
+A check that does not come to its end gives `UMP030801`: a warning in the mode `Warn`, else an error.
 
 ## Differences from the rule engine
 
-`tests/CheckModel.Tests/Parity` compares the two sides on the fixtures and on the blocks of this repository. The findings of the command, the diagnostics of the analyzer, the severities and the facts are the same, with these differences in the facts:
+`tests/Engine.Tests/Model/Parity` compares the two sides on the fixtures and on the blocks of this repository. The findings of the model rules, the diagnostics of the analyzer, the severities and the facts are the same, with these differences in the facts:
 
 | Topic | Rule engine | Check model |
 |---|---|---|
@@ -155,7 +156,7 @@ The package `Umpire` puts these codes and all rule codes in `WarningsNotAsErrors
 
 ## Open questions
 
-- When and by which job does a build write `definition.json`, `block.json` and the library files? `check/Export` has no build step.
+- When and by which job does a build write `definition.json`, `block.json` and the library files? No job sends the ExportModel operation.
 - What writes the library facts of a package (`Umpire.dll`) for a host with no engine, for example Unity?
 - A project with many target frameworks has one snapshot file, and the last compile wins (#362). One file for each target, or only one target?
 - A snapshot has about 7 KB for each type. Is a name table necessary?

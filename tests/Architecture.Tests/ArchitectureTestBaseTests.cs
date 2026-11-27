@@ -1,11 +1,14 @@
 namespace EngineCore.Tests;
 
+extern alias testing;
+
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Definition;
 using Umpire.Vsa.Handlers.Commands;
 using Umpire.Vsa.Handlers.Requests;
+using testing::Umpire.Architecture;
 
 public sealed class ArchitectureTestBaseTests : ArchitectureTest<VsaArchitecture> {
     const string Slice = "App/Features/Notebook/Slices/Archive";

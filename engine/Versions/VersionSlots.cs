@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml;
 using System.Xml.Linq;
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public static class VersionSlots {
     public const string CorePackage = "Umpire";
@@ -66,9 +66,14 @@ public static class VersionSlots {
     public static IReadOnlyList<string> ProjectFiles(string root) =>
         [.. Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
             .Concat(Directory.EnumerateFiles(root, "Directory.*.props", SearchOption.AllDirectories))
-            .Select(file => Path.GetRelativePath(root, file).Replace('\\', '/'))
-            .Where(file => !file.Split('/')[..^1].Any(BuildOutput.IsIgnored))
+            .Select(file => RelativePath.Of(root, file).Replace('\\', '/'))
+            .Where(file => !Folders(file).Any(BuildOutput.IsIgnored))
             .Order(StringComparer.Ordinal)];
+
+    static IEnumerable<string> Folders(string file) {
+        var segments = file.Split('/');
+        return segments.Take(segments.Length - 1);
+    }
 
     static bool NamesRemovedSdk(XElement element) =>
         element.Name.LocalName == "Sdk"
@@ -101,8 +106,8 @@ public static class VersionSlots {
         }
         foreach (var (key, library) in libraries) {
             var isPackage = library?["type"]?.GetValue<string>() == "package";
-            if (isPackage && key.Split('/') is [var id, var version] && IsUmpire(id)) {
-                yield return new VersionSlot(Path.GetFileName(deps), id, version);
+            if (isPackage && key.Split('/') is { Length: 2 } parts && IsUmpire(parts[0])) {
+                yield return new VersionSlot(Path.GetFileName(deps), parts[0], parts[1]);
             }
         }
     }
@@ -174,6 +179,6 @@ public static class VersionSlots {
 
     sealed record TextContent(string Text, bool Bom) {
         public static TextContent Read(string path) =>
-            new(File.ReadAllText(path), File.ReadAllBytes(path) is [0xEF, 0xBB, 0xBF, ..]);
+            new(File.ReadAllText(path), File.ReadAllBytes(path) is { Length: >= 3 } bytes && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF);
     }
 }

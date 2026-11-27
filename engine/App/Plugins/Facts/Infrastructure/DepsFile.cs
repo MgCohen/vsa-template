@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 public static class DepsFile {
     const string Project = "project";
 
-    public static IReadOnlySet<string> ProjectAssemblies(string bin) {
+    public static ISet<string> ProjectAssemblies(string bin) {
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var files = Directory.Exists(bin) ? Directory.GetFiles(bin, "*.deps.json") : [];
         foreach (var file in files) {

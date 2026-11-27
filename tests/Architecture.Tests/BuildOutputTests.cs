@@ -1,6 +1,7 @@
 namespace EngineCore.Tests;
 
 using Umpire.Architecture;
+using Umpire.Utility;
 
 public sealed class BuildOutputTests {
     [TestCase("Src/obj/Debug/X.cs")]

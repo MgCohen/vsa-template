@@ -1,9 +1,12 @@
 namespace EngineCore.Tests;
 
+extern alias testing;
+
 using System.Reflection;
 using Rules.Slices.CheckRules;
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
+using testing::Umpire.Architecture;
 
 public sealed class ArchitectureTestEngineTests : ArchitectureTest<VsaArchitecture> {
     static readonly string Block = FixtureApps.Block("VsaApp");

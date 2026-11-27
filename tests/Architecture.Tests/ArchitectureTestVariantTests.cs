@@ -1,8 +1,11 @@
 namespace EngineCore.Tests;
 
+extern alias testing;
+
 using PackVariant.EcsFeatures.Combat.Systems;
 using PackVariant.Packs.Ecs.Definition;
 using Umpire.Architecture;
+using testing::Umpire.Architecture;
 
 public sealed class ArchitectureTestVariantTests : ArchitectureTest<EcsArchitecture> {
     [Test]
