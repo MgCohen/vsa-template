@@ -7,7 +7,7 @@ using Spike.Core;
 public abstract class Plugin : Core.Module;
 
 public sealed class PackKernel : Kernel {
-    public override void Configure(IServiceCollection services, Assembly app) {
+    protected override void Configure(IServiceCollection services, Assembly app) {
         var handlers = new Dictionary<Type, HandlerCall>();
         var requests = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
         foreach (var handler in app.GetTypes().Where(t => !t.IsAbstract && t.BaseType is { IsGenericType: true } b

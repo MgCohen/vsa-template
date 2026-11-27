@@ -9,9 +9,9 @@ public abstract class App<TKernel> where TKernel : Kernel, new() {
         var services = new ServiceCollection();
         services.AddSingleton<Hub>();
         services.AddScoped<IHub>(scope => new ScopedHub(scope.GetRequiredService<Hub>(), scope));
-        new TKernel().Configure(services, GetType().Assembly);
+        new TKernel().Install(services, GetType().Assembly);
         foreach (var module in GetType().Assembly.GetTypes().Where(t => typeof(Module).IsAssignableFrom(t) && !t.IsAbstract)) {
-            ((Module)Activator.CreateInstance(module)!).Configure(services);
+            ((Module)Activator.CreateInstance(module)!).Install(services);
         }
         var instance = new AppInstance(services.BuildServiceProvider());
         foreach (var host in hosts) {
@@ -82,9 +82,14 @@ public abstract class AppHost {
 }
 
 public abstract class Kernel {
-    public abstract void Configure(IServiceCollection services, Assembly app);
+    public void Install(IServiceCollection services, Assembly app) => Configure(services, app);
+
+    protected abstract void Configure(IServiceCollection services, Assembly app);
 }
 
 public abstract class Module {
-    public abstract void Configure(IServiceCollection services);
+    public void Install(IServiceCollection services) => Configure(services);
+
+    protected virtual void Configure(IServiceCollection services) {
+    }
 }

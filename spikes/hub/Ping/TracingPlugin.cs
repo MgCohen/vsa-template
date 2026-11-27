@@ -22,7 +22,7 @@ public sealed class RequestTimer : PipelineStep<IRequest> {
 }
 
 public sealed class TracingPlugin : Plugin {
-    public override void Configure(IServiceCollection services) {
+    protected override void Configure(IServiceCollection services) {
         services.AddHubStep<TraceStep>();
         services.AddStep<RequestTimer, IRequest>();
     }

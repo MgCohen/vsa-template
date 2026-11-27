@@ -1,8 +1,6 @@
 namespace Spike.Pack;
 
-public interface IRequest;
-
-public interface IRequest<TResponse> : IRequest;
+using Spike.Core;
 
 public interface IRequestHandler {
     Task<object?> Handle(object request, CancellationToken ct);
