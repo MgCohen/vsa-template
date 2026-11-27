@@ -15,10 +15,13 @@ public sealed class UmpireToolTests {
     public void SetUp() {
         root = TempFolder.Stable(TestContext.CurrentContext.Test.FullName);
         env = new Dictionary<string, string> {
-            ["NUGET_PACKAGES"] = Path.Combine(root, "nuget"),
+            ["NUGET_PACKAGES"] = LocalFeed.NuGetCache,
             ["DOTNET_CLI_HOME"] = Path.Combine(root, "home"),
         };
     }
+
+    [TearDown]
+    public void TearDown() => TempFolder.Delete(root);
 
     [Test]
     [CancelAfter(600_000)]
@@ -59,7 +62,9 @@ public sealed class UmpireToolTests {
         Assert.That(pluginOfModule.Succeeded, Is.False);
         Assert.That(pluginOfModule.Output, Does.Contain("The module Billing exists"));
 
-        Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        var build = Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        Assert.That(build.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
+        Assert.That(File.Exists(Path.Combine(app, "artifacts~", "bin", "Hello", "release", ".umpire-check")), Is.True, build.Output);
         Assert.That(Tool(app, "test", "-c", "Release").EnsureSuccess().Output,
             Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d*"));
         await RunAndCall(app, ct, async (client, output) => {
@@ -84,10 +89,18 @@ public sealed class UmpireToolTests {
 
     [Test]
     [CancelAfter(600_000)]
-    public async Task NewAppWithNoModuleBuildsAndRuns(CancellationToken ct) {
+    public async Task NewAppWithNoModuleBuildsOnlyToArtifactsAndRuns(CancellationToken ct) {
         var app = NewApp();
 
         Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+
+        var artifacts = Path.Combine(app, "artifacts~");
+        Assert.That(File.Exists(Path.Combine(artifacts, "bin", "Hello", "release", "Hello.dll")), Is.True);
+        var outputFoldersNextToCode = Directory.EnumerateDirectories(app, "*", SearchOption.AllDirectories)
+            .Select(folder => Path.GetRelativePath(app, folder).Replace('\\', '/'))
+            .Where(folder => !folder.StartsWith("artifacts~", StringComparison.Ordinal))
+            .Where(folder => Path.GetFileName(folder) is "bin" or "obj");
+        Assert.That(outputFoldersNextToCode, Is.Empty);
         await RunAndCall(app, ct, async (client, _) =>
             Assert.That(await client.GetStringAsync("/", ct), Does.Contain("<h1>Hello</h1>")));
     }
@@ -162,48 +175,6 @@ public sealed class UmpireToolTests {
             """);
 
         Dotnet.Run(app, env, "build", "Shop.csproj", "-nodeReuse:false").EnsureSuccess();
-    }
-
-    [Test]
-    [CancelAfter(600_000)]
-    public void ANewAppWritesItsBuildOutputOnlyToArtifacts() {
-        var app = NewApp();
-
-        Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
-
-        var artifacts = Path.Combine(app, "artifacts~");
-        Assert.That(File.Exists(Path.Combine(artifacts, "bin", "Hello", "debug", "Hello.dll")), Is.True);
-        var outputFoldersNextToCode = Directory.EnumerateDirectories(app, "*", SearchOption.AllDirectories)
-            .Select(folder => Path.GetRelativePath(app, folder).Replace('\\', '/'))
-            .Where(folder => !folder.StartsWith("artifacts~", StringComparison.Ordinal))
-            .Where(folder => Path.GetFileName(folder) is "bin" or "obj");
-        Assert.That(outputFoldersNextToCode, Is.Empty);
-    }
-
-    [Test]
-    [CancelAfter(600_000)]
-    public void NewAppChecksTheArchitecture() {
-        var app = NewApp();
-        Tool(app, "add", "module", "Billing").EnsureSuccess();
-        Tool(app, "add", "request", "CreateInvoice", "-m", "Billing").EnsureSuccess();
-
-        var clean = Dotnet.Run(app, env, "build", "Hello.slnx", "-nodeReuse:false").EnsureSuccess();
-        Assert.That(clean.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
-        Assert.That(File.Exists(Path.Combine(app, "artifacts~", "bin", "Hello", "debug", ".umpire-check")), Is.True, clean.Output);
-
-        var probe = Path.Combine(Directory.CreateDirectory(Path.Combine(app, "App", "Host")).FullName, "Probe.cs");
-        File.WriteAllText(probe, """
-            namespace Hello.Host;
-
-            public static class Probe {
-                public static Hello.Features.Billing.Slices.CreateInvoice.CreateInvoiceRequest? Request { get; set; }
-            }
-            """);
-        var denied = Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Error");
-        Assert.That(denied.Succeeded, Is.False, denied.Output);
-        Assert.That(denied.Output, Does.Contain($"{probe}(4,95): error UMP020101: Probe in Host"));
-
-        Dotnet.Run(app, env, "build", "Hello.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
     }
 
     string NewApp(string name = "Hello") {

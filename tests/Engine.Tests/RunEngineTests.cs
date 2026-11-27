@@ -324,7 +324,7 @@ public sealed class RunEngineTests {
     internal static async Task<RunEngineResponse> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
         Stage stage = Stage.Check, bool keepStamp = false, bool? projectChecks = null,
-        ReportMode? mode = ReportMode.Error) {
+        ReportMode? mode = ReportMode.Error, string ignoredFolders = "") {
         using var host = new EngineTestApp(
             new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
             new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
@@ -335,7 +335,8 @@ public sealed class RunEngineTests {
             StampFile.Delete(output);
         }
         var request = new RunEngineRequest(
-            project ?? declared, output, declared, mode, FailFast: failFast, Stage: stage, ProjectChecks: projectChecks);
+            project ?? declared, output, declared, mode, FailFast: failFast, Stage: stage, IgnoredFolders: ignoredFolders,
+            ProjectChecks: projectChecks);
         var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
         return result.Value;
     }

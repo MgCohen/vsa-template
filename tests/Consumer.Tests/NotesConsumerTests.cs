@@ -9,13 +9,16 @@ namespace Consumer.Tests;
 
 [Category("Package")]
 public sealed partial class NotesConsumerTests {
+    const string Summary = "umpire-engine: ";
+
     [Test]
-    [CancelAfter(10 * 60 * 1000)]
-    public async Task NotesBuildsFromThePackagesAndRuns(CancellationToken ct) {
+    [CancelAfter(20 * 60 * 1000)]
+    public async Task NotesBuildsFromThePackagesRunsAndChecksItsArchitecture(CancellationToken ct) {
         using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
         UsePackages(workspace.Src);
 
-        workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        var clean = workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
+        Assert.That(clean.Output, Does.Contain(Summary).And.Contain("0 errors"));
         var runtimeDependencies = File.ReadAllText(Path.Combine(workspace.Src, "artifacts~", "bin", "Notes", "release", "Notes.deps.json"));
         Assert.That(runtimeDependencies, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Vsa/").And.Contain("\"Umpire.Web/").And.Not.Contain("Umpire.Vsa.Definition").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
 
@@ -41,6 +44,56 @@ public sealed partial class NotesConsumerTests {
             app.Kill(entireProcessTree: true);
             await app.WaitForExitAsync(CancellationToken.None);
         }
+
+        TheBuildRunsTheRuleEngine(workspace);
+    }
+
+    static void TheBuildRunsTheRuleEngine(Workspace workspace) {
+        DotnetResult Build(params string[] args) =>
+            workspace.Dotnet(["build", "Notes.csproj", "-c", "Release", "--no-restore", "-nodeReuse:false", .. args]);
+
+        var again = Build().EnsureSuccess();
+        Assert.That(again.Output, Does.Contain("UMP030201"), "A build with no change runs the check again.");
+
+        var probe = Path.Combine(Directory.CreateDirectory(Path.Combine(workspace.Src, "App", "Host")).FullName, "Probe.cs");
+        File.WriteAllText(probe, """
+            namespace Notes.Host;
+
+            public static class Probe {
+                public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
+            }
+            """);
+        var finding = $"{probe}(4,90): error UMP020101: Probe in Host";
+
+        var build = Build("-p:UmpireCheckMode=Error");
+        Assert.That(build.Succeeded, Is.False, build.Output);
+        Assert.That(build.Output, Does.Contain(finding));
+        Assert.That(build.Output, Does.Not.Contain("UMP030004"), "A finding is not an engine crash.");
+
+        var warned = Build().EnsureSuccess();
+        Assert.That(warned.Output, Does.Contain($"{probe}(4,90): warning UMP020101: Probe in Host"));
+
+        File.Delete(probe);
+        var domainProbe = Path.Combine(workspace.Src, "App", "Features", "Notebook", "Domain", "SenderProbe.cs");
+        File.WriteAllText(domainProbe, """
+            namespace Notes.Features.Notebook.Domain;
+
+            public static class SenderProbe {
+                public static Umpire.Vsa.Contracts.Requests.IRequestSender? Sender { get; set; }
+            }
+            """);
+
+        var layer = Build("-p:UmpireCheckMode=Error");
+        Assert.That(layer.Succeeded, Is.False, layer.Output);
+        Assert.That(layer.Output, Does.Contain($"{domainProbe}(").And.Contain("error UMP020101: SenderProbe in Domain"),
+            "A use of a layer in Umpire.Vsa.dll is a finding.");
+
+        var skipped = Build("-p:UmpireCheckMode=Error", "-p:UmpireCheck=false");
+        Assert.That(skipped.Succeeded, Is.True, skipped.Output);
+        Assert.That(skipped.Output, Does.Not.Contain("UMP020101"), "UmpireCheck=false runs no check.");
+
+        File.Delete(domainProbe);
+        Build().EnsureSuccess();
     }
 
     const string WebProject = "<Project Sdk=\"Microsoft.NET.Sdk.Web\">";
