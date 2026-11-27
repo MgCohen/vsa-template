@@ -13,11 +13,15 @@ Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides e
 | 2 Packages | Done: `Umpire`, `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`, `Umpire.Engine`; no SDK; only DependencyInjection as a third-party runtime DLL; lowest targets |
 | Test speed | Done: `CS8032` fixed, two test sets, shared feed. Full set about 4 min, inner loop about 35 s plus the build |
 | 3 Engine | Done: `EngineApp<THost>`, jobs and operations, engine library on `netstandard2.0`, the check model and all analyzers inside the engine |
-| 4 Switch | Part 1 done (#406): the build checks on the model path from the snapshots of the compile, and no PDB is read for type facts. Part 2 in work: reference folders with `MetadataLoadContext`, remove ArchUnitNET |
+| 4 Switch | Part 1 done (#406): the build checks on the model path from the snapshots of the compile, and no PDB is read for type facts. Part 2 done (#412): the engine reads reference folder DLLs into the model with `MetadataLoadContext`; ArchUnitNET, `TypeFactSource` and the Rules operation are gone |
 | 5 Consumers of the engine | Done (#407): the `umpire` tool is an app on `ConsoleHost`, `umpire check` runs the engine of the app, `VsaUnitTest` sends requests through `LocalHost`. The definition test base keeps the engine queries |
 | 6 Release | Not started: needs the computer of the user |
 
 Answers of 2026-11-27 (see `open-questions.md`): reference folders C (read with `MetadataLoadContext`, ArchUnitNET goes), the tool B (a VSA app in `tooling/`), exit code C (the tool gives the exit code of its child).
+
+Open questions from #412:
+1. A project DLL in `deps.json` with no snapshot gives `UMP030802`, and the engine does not read it. A: keep it (now). B: read the DLL facts as a fallback, with a warning. Opinion: A.
+2. Base type chains in Unity. A: vsa-unity adds the Unity DLL folder to `umpire.check.references`. B: the engine finds the Unity DLLs. Opinion: A.
 
 Watch: two full runs had 5 failures in `UmpireToolTests` while another session used the machine. The class passed alone and in the third full run.
 
