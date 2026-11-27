@@ -32,7 +32,6 @@
   <ItemGroup>
     <PackageReference Include="System.Reflection.MetadataLoadContext" />
     <PackageReference Include="System.Text.Json" />
-    <PackageReference Include="TngTech.ArchUnitNET" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="umpire-engine" />
