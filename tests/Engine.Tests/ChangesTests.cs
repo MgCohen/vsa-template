@@ -9,16 +9,21 @@ public sealed class ChangesTests {
     static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
     static readonly string TwoApps = Repo.Path("tests", "Fixtures", "TwoApps");
     static readonly string Bin = AppContext.BaseDirectory;
+    static readonly string State = RunEngineTests.StateOf(Bin);
 
     [TearDown]
-    public void Delete() => StampFile.Delete(Bin);
+    public void Delete() {
+        if (Directory.Exists(State)) {
+            StampFile.Delete(State);
+        }
+    }
 
     [Test]
     public async Task A_check_with_no_finding_writes_the_stamp() {
         var result = await RunEngineTests.Run(project: Notes);
 
         Assert.That(result.ExitCode, Is.Zero, string.Join("\n", result.Lines));
-        Assert.That(StampFile.Read(Bin), Is.Not.Null.And.Not.Empty);
+        Assert.That(StampFile.Read(State), Is.Not.Null.And.Not.Empty);
     }
 
     [Test]
@@ -26,12 +31,12 @@ public sealed class ChangesTests {
         var result = await RunEngineTests.Run(block: TwoApps);
 
         Assert.That(result.ExitCode, Is.EqualTo(1), string.Join("\n", result.Lines));
-        Assert.That(StampFile.Read(Bin), Is.Null);
+        Assert.That(StampFile.Read(State), Is.Null);
     }
 
     [Test]
     public async Task A_stamp_with_the_same_inputs_stops_the_check() {
-        StampFile.Write(Bin, InputHash.Of(TwoApps, Bin, $"Error||{TwoApps}||||True"));
+        StampFile.Write(State, InputHash.Of(TwoApps, Bin, $"Error||{TwoApps}||||True"));
 
         var result = await RunEngineTests.Run(block: TwoApps, keepStamp: true);
 

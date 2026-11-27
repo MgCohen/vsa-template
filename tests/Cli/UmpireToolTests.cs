@@ -64,7 +64,7 @@ public sealed class UmpireToolTests {
 
         var build = Dotnet.Run(app, env, "build", "Hello.slnx", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         Assert.That(build.Output, Does.Contain("umpire-engine: ").And.Contain("0 errors").And.Not.Contain("error UMP"));
-        Assert.That(File.Exists(Path.Combine(app, "artifacts~", "bin", "Hello", "release", ".umpire-check")), Is.True, build.Output);
+        Assert.That(File.Exists(Path.Combine(app, "artifacts~", "obj", "Hello", "release", "umpire", "check", ".umpire-check")), Is.True, build.Output);
         Assert.That(Tool(app, "test", "-c", "Release").EnsureSuccess().Output,
             Does.Contain("failed: 0").And.Match(@"succeeded: [1-9]\d*"));
         await RunAndCall(app, ct, async (client, output) => {

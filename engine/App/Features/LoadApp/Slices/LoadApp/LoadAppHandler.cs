@@ -38,6 +38,7 @@ sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, IDe
         var dlls = app.Concat(bin.ExternalDlls(externals)).Concat(bin.ReferencedDlls(app, skip)).Distinct().ToList();
         return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls)) {
             Findings = command.IsUsed || !options.ProjectChecks ? [] : Unloaded(root, bin),
+            Projects = [.. app.Select(dll => dll.Name)],
         };
     }
 

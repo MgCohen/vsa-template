@@ -168,7 +168,16 @@ The packages do not set the output folder. The .NET SDK reads `UseArtifactsOutpu
 </Project>
 ```
 
-Each project then writes to `artifacts~/bin/<Project>/` and `artifacts~/obj/<Project>/`, and no `bin/` or `obj/` folder is next to the code. The engine writes its stamp `.umpire-check` to the output folder of the root project, and the check stamps of the blocks to `artifacts~/umpire-checks/` of each block.
+Each project then writes to `artifacts~/bin/<Project>/` and `artifacts~/obj/<Project>/`, and no `bin/` or `obj/` folder is next to the code. A build writes these check files. No file needs a manual step:
+
+| File | Place | Contains |
+|---|---|---|
+| `umpire/snapshot.json` | Intermediate output of each project and target | The type facts of the compile |
+| `umpire/snapshots.txt` | Intermediate output of each project | The snapshots of the projects that it uses |
+| `umpire/check/` | Intermediate output of the root project | `definition.json`, `block.json`, `libraries/`, `.umpire-check` |
+| `umpire-checks/` | `artifacts~/` of each block | The check stamp of the block |
+
+The facts of the Umpire DLLs come from `tools/net8.0/libraries/` of the package `Umpire.Engine`, so the check reads no PDB of a package. A root project with more than one target framework (`TargetFrameworks`) needs no other property: each inner build checks its own target.
 
 These settings must be in place before NuGet imports the package files, so a package cannot give them:
 

@@ -63,7 +63,7 @@ public sealed partial class NotesConsumerTests {
                 public static Notes.Features.Notebook.Slices.CreateNote.CreateNoteRequest? Request { get; set; }
             }
             """);
-        var finding = $"{probe}(4,90): error UMP020101: Probe in Host";
+        var finding = $"{probe}(4,61): error UMP020101: Probe in Host";
 
         var build = Build("-p:UmpireCheckMode=Error");
         Assert.That(build.Succeeded, Is.False, build.Output);
@@ -71,7 +71,7 @@ public sealed partial class NotesConsumerTests {
         Assert.That(build.Output, Does.Not.Contain("UMP030004"), "A finding is not an engine crash.");
 
         var warned = Build().EnsureSuccess();
-        Assert.That(warned.Output, Does.Contain($"{probe}(4,90): warning UMP020101: Probe in Host"));
+        Assert.That(warned.Output, Does.Contain($"{probe}(4,61): warning UMP020101: Probe in Host"));
 
         File.Delete(probe);
         var domainProbe = Path.Combine(workspace.Src, "App", "Features", "Notebook", "Domain", "SenderProbe.cs");

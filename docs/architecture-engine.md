@@ -1,15 +1,15 @@
 # Architecture engine
 
-The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `new ResolvedArchitecture(definition)` compiles the definition one time: the block, the options of each part, the use rules, the counts and the matches. If the definition has an error, the constructor throws. The queries of the engine (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) give the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`ResolvedArchitecture.DecisionFor`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `new ResolvedArchitecture(definition)` compiles the definition one time: the block, the options of each part, the use rules, the counts and the matches. If the definition has an error, the constructor throws. The queries of the engine (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) give the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`ResolvedArchitecture.DecisionFor`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) writes the definition as data, reads the snapshots of the compile, and writes each problem as a `Finding`, after each build of the host. The check model (`docs/check-model.md`) does the checks.
 
 ```mermaid
 flowchart LR
-    L["TypeFactSource (Facts plugin)"] --> A["TypeFacts"]
-    A --> B["PartOf (Queries)"]
-    D[Definition: Umpire.Architecture] --> B
-    B --> S[Bindings]
-    S --> C["ArchitectureRule.All + DecisionFor"]
-    C --> F["Finding (code, severity, message, file, line)"]
+    C["compile: analyzer entry"] -->|saves| S["snapshot of each project"]
+    D[Definition: Umpire.Architecture] --> E["ExportModel"]
+    E -->|writes| J["definition.json, block.json, libraries/"]
+    S --> M["CheckModel: app model"]
+    J --> M
+    M --> F["Finding (code, severity, message, file, line)"]
 ```
 
 ## Projects
@@ -19,7 +19,7 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and the plain data of its compiled form. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the compile job, the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp, Rules, CodeCheck and the operations of the check model. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `TypeFactSource` (ArchUnitNET) for the type facts, and the interface `IDefinitionLoader` for the one definition type. Its root project `engine/Engine.csproj` is not a package |
+| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the compile job, the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp, Rules, CodeCheck and the operations of the check model. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, and the interface `IDefinitionLoader` for the one definition type. The type facts come from the snapshots of the compile. `TypeFactSource` (ArchUnitNET) is only for the Rules operation, which no job sends. Its root project `engine/Engine.csproj` is not a package |
 | Console entry | `engine/Entries/Console/` | `net8.0` executable `umpire-engine`: `EngineConsoleHost`, `ConsoleReport`, `HookMismatch` and `DefinitionSource` (`AppLoader`, an `AssemblyLoadContext`). The package `Umpire.Engine` holds it in `tools/net8.0/` |
 | Analyzer entry | `engine/Entries/Analyzer/` | `netstandard2.0` Roslyn analyzer `Umpire.Engine.Analyzer`: `EngineAnalyzer`, `CompileHost` (a `LocalHost`), the fact readers of the compile job in `Facts/`. The package `Umpire.Engine` holds it in `analyzers/dotnet/cs/` |
 
@@ -162,7 +162,7 @@ The kernel is three blocks: the root `Core`, `MessagesComponent` and the kernel 
 
 | Check | Kernel form | Binding | Rules |
 |---|---|---|---|
-| An app | A DLL: the project DLLs, or `Umpire.dll` and `Umpire.Vsa.dll` in a package | By the PDB path of each type | The rules of the app toward the kernel |
+| An app | A DLL: the project DLLs, or `Umpire.dll` and `Umpire.Vsa.dll` in a package | By the source path of each type in its library facts | The rules of the app toward the kernel |
 | The pack | Source: the folder `Kernel/` of the pack | By folder | The rules of the architecture under `Kernel` |
 
 For the pack check, the engine reads the definition in `Definition/` of the pack (`BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. `PackArchitecture` gets the kernel body of the packed architecture into its own `kernel` part. The type requirements of the layer concepts (`OfTypes`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. `rules.For<Kernel>().Uses<Kernel>()` allows each use between two kernel layers: the check covers the shape of the kernel.
@@ -469,7 +469,7 @@ rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure 
 | Source file out of the block folder | Not checked |
 | Source file in no folder alias (if the definition has aliases) | Not checked |
 
-The engine reads the source file and the first line of each type from the PDB file, with System.Reflection.Metadata (`BinReader`, one time for each run).
+The check model reads the source file and the place of each type from the snapshot of its project. For a DLL of another block or of a package, it reads the library facts (`libraries/<assembly>.json`): the full name, the source path and the base types of each type. A project DLL gets its library facts from its snapshot. A package DLL gets them from the file that the package `Umpire.Engine` ships in `tools/net8.0/libraries/`, with the source paths under `/_/`. The Blocks operation still reads the PDB of each DLL to find the check entries and the DLLs of a block (`BinReader`).
 
 ## Folder aliases
 
@@ -515,6 +515,8 @@ The engine knows no host build system. A host that compiles the app in its own w
 `CheckSettings` (`engine/App/Plugins/Operations/Infrastructure`) reads the settings, and `RunOptions` (same folder) gives them to the operations.
 
 ## The checks of the Rules operation
+
+The build job and the check job check with the check model (ExportModel, then CheckModel). The model rules (`engine/App/Features/Model/Domain/Rules/`) give the same codes as the rule classes below, and ExportModel gives `UMP020205` and `UMP020206`. The parity tests (`tests/Engine.Tests/Model/Parity/`) compare the two. The Rules operation stays for these tests and for `tests/Architecture.Tests`, and no job sends it.
 
 Each architecture rule is one class in `engine/App/Features/Rules/Slices/CheckRules/` on a group base. The rule sets only its `Number` and, if it is not an error, its `Severity`. The group base sets the group, and `ArchitectureRule` makes the code: `UMP02` + group + number. `ArchitectureCheck.Findings()` (the Rules operation) runs `ArchitectureRule.All`, so the engine knows no code. Other code finds a rule by its type: `ArchitectureRule.Of<DeniedUseRule>()`.
 
@@ -568,11 +570,14 @@ umpire-engine jobs build --project <root> --block <block> --bin <output> [--mode
 ├─ 3 Blocks
 ├─ 4 Versions
 ├─ 5 LoadApp
-└─ 6 Rules
+├─ 7 ExportModel writes definition.json, block.json and libraries/ to the state folder
+└─ 8 CheckModel  checks all types from the state folder and the snapshots
 
 dotnet build <root project>
+├─ CoreCompile of each project: the analyzer entry saves obj/.../umpire/snapshot.json
+├─ _UmpireSnapshotList: obj/.../umpire/snapshots.txt (the snapshot of each project of the root)
 └─ UmpireCheck (Umpire.After.targets of the package Umpire, AfterTargets="Build")
-   └─ umpire-engine jobs build --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
+   └─ umpire-engine jobs build --project <root> --bin <output> --state <obj>/umpire/check --snapshots <obj>/umpire/snapshots.txt [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
 ```
 
 A job is one call of the engine: one request, one input and one report. The words `jobs build` and `jobs check` select the job. The console entry has no word for the compile job: only the analyzer entry sends it (see "The compile job"). A call with no job word comes from a hook of another Umpire version, for example the old form `--stage Check`. The engine then runs no job and gives `UMP030401`: give `Umpire` and `Umpire.Engine` the same version, or run `umpire update`. Each job handler names its operations in order. The operations fill the report (`JobReport`: the mode and the findings), and the caller converts it. The console entry (`EngineConsoleHost`, `ConsoleReport`) writes the `file(line,col): error CODE: text` lines and gives the exit code.
@@ -590,7 +595,24 @@ In the mode `Warn`, each error is a warning, also the codes of the group `00` an
 
 The compile job of the analyzer entry gets the text of `.umpireconfig` from the compiler (see "Rule files" in `architecture-rules.md`), so no operation runs before the compile. The Build operation of the check job builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build operation fails, the check job skips the other operations. If the engine file does not exist, for example because the root project has no `Umpire.Engine`, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
 
-The Changes operation makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
+The Changes operation makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in the state folder. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
+
+### State files
+
+All state files are in the intermediate output path (`obj/`, or `artifacts~/obj/` with `UseArtifactsOutput`). A build of the root project writes them with no manual step.
+
+| File | Place | Written by |
+|---|---|---|
+| `snapshot.json` | `$(IntermediateOutputPath)umpire/` of each project and target framework | The analyzer entry, at the end of a compile (`UmpireSnapshot`) |
+| `state.txt` | Next to each snapshot | ExportModel: the state folder of the block of the project |
+| `snapshots.txt` | `$(IntermediateOutputPath)umpire/` of each project | The build (`UmpireSnapshotList`): one line `assembly\|target\|file` for each project that the project uses |
+| `definition.json`, `block.json`, `libraries/` | The state folder: `$(IntermediateOutputPath)umpire/check/` of the root project (`UmpireStateFolder`) | ExportModel |
+| The same files of a used block | `check/used/<folder>-<hash>/` | ExportModel |
+| `.umpire-check` | The state folder | Changes, after a clean check |
+
+The compile saves a snapshot with no definition, so the first build also has all files. The compile in a build saves only, and the build job gives all findings. A compile in an editor finds the state of the last build with `state.txt` and checks each type. ExportModel completes the surface of each reference in a snapshot of the block, and it deletes the snapshot of a target that the list no longer has. A project with two target frameworks has one snapshot for each target. CheckModel checks each target, and a finding that two targets give is in the report one time. With no `--state`, the job takes the key `umpire.check.state`, else the folder `umpire/check` in the intermediate path of `--bin` (the folder `bin` of the path becomes `obj`). With no `--snapshots`, it takes `umpire/snapshots.txt` there.
+
+`block.json` stays a separate file: the compile of a project needs the projects of the block, the place of each snapshot, the mode, the severities and the marks of the inputs, and the definition does not hold them. ExportModel writes the two files in one run, and `block.json` has the hash of `definition.json`.
 
 One definition applies to one block: the folder tree of code that the definition checks. The definition applies to its block folder, not to the repository. `Architecture.Configure` places the roots in the block folder, and each part path is relative to it. A source file outside the block folder is not checked.
 
@@ -701,7 +723,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 - An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place folder with no check entry gives `UMP020402`. A place of a block with a body and no folder is the DLL form: its types bind by their PDB path (see "Binding"). A place with no body and no folder gives `UMP020402`.
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
 - After the check of the block, the run checks each used block with its own definition, the same bin and the same operations (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
-- Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type, of for an app block each DLL with a definition of a kernel, and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the bin) still skips the full run when no input of the run changed (`UMP030201`).
+- Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type, of for an app block each DLL with a definition of a kernel, and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the state folder) skips the full run when no input of the run changed (`UMP030201`). The block stamp stays in the block folder and not in the state folder of one root project, because each app that uses the block reads it.
 - Known gap of a used block: the bin has only the DLLs of the block that the host references, so the check sees only that part (for example, the engine bin has no `Umpire.Engine.Analyzer`). Each set of DLLs gets its own stamp.
 
 ### Projects of a block

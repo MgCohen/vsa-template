@@ -6,6 +6,8 @@ public static class RuleCodes {
     public const string WrongType = "UMP020201";
     public const string UnmappedType = "UMP020202";
     public const string WrongName = "UMP020204";
+    public const string MissingReference = "UMP020205";
+    public const string BadFolderAlias = "UMP020206";
     public const string Count = "UMP020301";
     public const string Match = "UMP020302";
     public const string WrongTrait = "UMP020303";

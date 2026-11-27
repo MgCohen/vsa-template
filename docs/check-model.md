@@ -1,6 +1,6 @@
 # Check model
 
-The check model is the check side of the K3 decision (#293). It is a part of the engine core: the feature module `engine/App/Features/Model/`. The build job and the hook do not use it. The names and the packages of the check model are working names (K4, K6).
+The check model is the check side of the K3 decision (#293). It is a part of the engine core: the feature module `engine/App/Features/Model/`. The build job checks with it after each build (ExportModel, then CheckModel). The names and the packages of the check model are working names (K4, K6).
 
 ```mermaid
 flowchart LR
@@ -20,8 +20,8 @@ flowchart LR
 |---|---|---|
 | Model domain | `engine/App/Features/Model/Domain/` | Data, app model, state files, report, model rules (`Rules/`, run by `ModelCheck`). Namespace `Umpire.CheckModel` |
 | Export | `engine/App/Features/Model/Domain/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export` |
-| ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files. No job sends it |
-| CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state (`jobs check --model true`) |
+| ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files in the build job and the check job |
+| CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state, after ExportModel or with `jobs check --model true` |
 | CheckTypes operation | `engine/App/Features/Model/Slices/CheckTypes/` | The checks of each type in a compile (the compile job) |
 | Analyzer entry | `engine/Entries/Analyzer/` | The facts from symbols (`Facts/`, `ProjectFacts`). It sends the compile job |
 
@@ -29,14 +29,15 @@ The model domain is generic: no part of it knows a slice or a feature. The domai
 
 ## Saved files
 
-All files are in one state folder. The default is `artifacts~/umpire-model` in the block folder. The key `umpire.check.state` in `.umpireconfig` changes it: a relative folder starts at the folder of the file. The option `--state` of the check job and the MSBuild property `UmpireCheckState` of the analyzer win over the key.
+A build writes the state folder of a block in the intermediate output path of the root project (`umpire/check/`, see "State files" in `architecture-engine.md`). The option `--state` of a job gives another folder. The MSBuild property `UmpireCheckState` gives the state folder to the analyzer: it then reads and saves `snapshots/<project>.json` in that folder, and it reports its findings in a build too (the parity tests use it). With no `--state`, the key `umpire.check.state` in `.umpireconfig` gives the folder, else the folder `umpire/check` in the intermediate output path of `--bin`, else `artifacts~/umpire` in the block folder.
 
 | File | Contains | Written by |
 |---|---|---|
 | `definition.json` | Parts, rules, names, places | `DefinitionExport` |
-| `block.json` | Block folder, projects, libraries, inner blocks, severities, mode, marks | `BlockExport` |
-| `snapshots/<project>.json` | The type facts of a project | The analyzer |
-| `libraries/<assembly>.json` | The source paths of DLL types | `LibraryExport` |
+| `block.json` | Block folder, projects, place and target of each snapshot, libraries, inner blocks, severities, mode, marks | `BlockExport` |
+| `snapshot.json` of a project | The type facts of a project and target, the folder of its paths (`root`) and the target framework | The analyzer, in the intermediate output path of the project |
+| `snapshots/<project>.json` | The type facts of a project, with `UmpireCheckState` | The analyzer |
+| `libraries/<assembly>.json` | The source paths and base types of DLL types | `LibraryExport`, from a snapshot or from the file of the package `Umpire.Engine` |
 
 A writer does not write a file again if only its date is different. A writer leaves out an empty list and a value that is false. A reader fails on an unknown field, another missing field or another format.
 
@@ -102,7 +103,9 @@ The analyzer entry of the engine sends the compile job, and the CheckTypes opera
 2. For each type the entry gives the name, and the engine runs the three checks with the references of that type.
 3. At the end the engine saves the snapshot of the project.
 
-It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `DesignTimeBuild` or a compile error. `UmpireSaveSnapshot` selects another answer for one run. It checks only the projects in `block.json`, and it does nothing in a block with no `definition.json`.
+It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `DesignTimeBuild` or a compile error. `UmpireSaveSnapshot` selects another answer for one run. A compile that saves to its own `snapshot.json` (`UmpireSnapshot`) does steps 1 and 2 only in an editor. In a build it only saves, with no definition, and the build job gives the findings. An editor compile finds the state of the last build with `state.txt` next to the snapshot. It checks only the projects in `block.json`, and it does nothing in a block with no `definition.json`.
+
+The package build runs the compile job on the source of each shipped Umpire DLL (`UmpireLibraryPass` in `tools/bundle/Engine/Umpire.Engine.csproj`). With `UmpireLibrary`, the compile saves the library facts of the DLL, with the source paths under `/_/`. The package `Umpire.Engine` ships them in `tools/net8.0/libraries/`.
 
 | Code | Meaning |
 |---|---|
@@ -158,9 +161,7 @@ A check that does not come to its end gives `UMP030801`: a warning in the mode `
 
 ## Open questions
 
-- When and by which job does a build write `definition.json`, `block.json` and the library files? No job sends the ExportModel operation.
 - What writes the library facts of a package (`Umpire.dll`) for a host with no engine, for example Unity?
-- A project with many target frameworks has one snapshot file, and the last compile wins (#362). One file for each target, or only one target?
 - A snapshot has about 7 KB for each type. Is a name table necessary?
 - A missing snapshot gives a warning only in a project that references the missing project. Must each project of the block give it?
 - Does a `nameof`, a constant or an enum value of a denied type break a use rule?

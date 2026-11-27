@@ -4,10 +4,10 @@ using Umpire.CheckModel;
 
 public sealed class StateFolderTests {
     [Test]
-    public void The_default_folder_is_in_the_build_output_of_the_block() {
+    public void The_default_folder_is_in_the_intermediate_output_of_the_block() {
         using var temp = new TempState();
 
-        Assert.That(temp.State.Folder, Is.EqualTo(Path.Combine(temp.Block, "artifacts~", "umpire-model")));
+        Assert.That(temp.State.Folder, Is.EqualTo(Path.Combine(temp.Block, "artifacts~", "umpire")));
     }
 
     [Test]

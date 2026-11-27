@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Operations;
 using Operations.Contracts.Requests;
 using Operations.Domain.Shared;
+using Operations.Infrastructure;
 using Rules;
 using Versions;
 using Tests.Shared;
@@ -27,7 +28,7 @@ namespace Engine.Tests;
 
 public sealed class RunEngineTests {
     const string RulesSkipped =
-        "umpire-engine: UMP030002: CheckRules skipped, because an earlier operation failed.";
+        "umpire-engine: UMP030002: ExportModel skipped, because an earlier operation failed.";
     static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
 
     [Test]
@@ -327,6 +328,9 @@ public sealed class RunEngineTests {
         new VersionsModule(), new LoadAppModule(), new RulesModule(), new ModelModule(), new CodeCheckModule(),
     ];
 
+    internal static string StateOf(string bin) =>
+        RunOptions.OwnFolderOf(bin) is { } own ? Path.Combine(own, "check") : bin;
+
     internal static async Task<ConsoleOutput> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
         bool build = false, bool keepStamp = false, bool? projectChecks = null,
@@ -341,8 +345,8 @@ public sealed class RunEngineTests {
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;
-        if (Directory.Exists(output) && keepStamp is false) {
-            StampFile.Delete(output);
+        if (Directory.Exists(StateOf(output)) && keepStamp is false) {
+            StampFile.Delete(StateOf(output));
         }
         var requests = scope.ServiceProvider.GetRequiredService<IRequestSender>();
         if (build) {

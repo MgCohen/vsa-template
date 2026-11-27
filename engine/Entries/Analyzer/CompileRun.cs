@@ -15,6 +15,10 @@ sealed class CompileRun {
     const string StateProperty = "build_property.UmpireCheckState";
     const string ModeProperty = "build_property.UmpireCheckMode";
     const string FrameworkProperty = "build_property.UmpireFrameworkCode";
+    const string SnapshotProperty = "build_property.UmpireSnapshot";
+    const string TargetProperty = "build_property.TargetFramework";
+    const string LibraryProperty = "build_property.UmpireLibrary";
+    const string LibraryRootProperty = "build_property.UmpireLibraryRoot";
     const string RequestType = "Umpire.Vsa.Contracts.Requests.IRequest`1";
 
     readonly Compilation compilation;
@@ -49,7 +53,12 @@ sealed class CompileRun {
             [.. compilation.ReferencedAssemblyNames.Select(assembly => assembly.Name)],
             new ModelSettings(
                 Value(global, FolderProperty), Value(global, StateProperty), Value(global, ModeProperty),
-                SourceFolders(compilation), BuildHost.Saves(global)));
+                SourceFolders(compilation), BuildHost.Saves(global)) {
+                Snapshot = Value(global, SnapshotProperty),
+                Target = Value(global, TargetProperty),
+                Library = Value(global, LibraryProperty),
+                LibraryRoot = Value(global, LibraryRootProperty),
+            });
         CompileProjects.Add(project, compilation);
         var run = new CompileRun(compilation, project, options, cancellation);
         var report = CompileApp.Send(new CompileJobRequest(project, CompileStage.Start), cancellation);
@@ -79,13 +88,24 @@ sealed class CompileRun {
     }
 
     public void End(CompilationAnalysisContext context) {
-        var hasErrors = inModel && project.Model.Saves
-            && context.Compilation.GetDiagnostics(context.CancellationToken).Any(d => d.DefaultSeverity == DiagnosticSeverity.Error);
+        var model = project.Model;
+        var hasErrors = model.Saves && HasErrors(context.Compilation, inModel, model.Snapshot is not null || model.Library is not null,
+            context.CancellationToken);
         Report(new CompileJobRequest(project, CompileStage.End, HasErrors: hasErrors), context.ReportDiagnostic, context.CancellationToken);
         while (atEnd.TryDequeue(out var diagnostic)) {
             context.ReportDiagnostic(diagnostic);
         }
     }
+
+    static bool HasErrors(Compilation compiled, bool inModel, bool savesOwn, CancellationToken cancellation) {
+        if (inModel) {
+            return compiled.GetDiagnostics(cancellation).Any(IsError);
+        }
+        return savesOwn
+            && (compiled.GetParseDiagnostics(cancellation).Any(IsError) || compiled.GetDeclarationDiagnostics(cancellation).Any(IsError));
+    }
+
+    static bool IsError(Diagnostic diagnostic) => diagnostic.DefaultSeverity == DiagnosticSeverity.Error;
 
     static AdditionalText? ConfigFileOf(AnalyzerOptions options) =>
         options.AdditionalFiles.FirstOrDefault(file =>
