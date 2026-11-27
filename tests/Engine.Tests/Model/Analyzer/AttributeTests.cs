@@ -1,7 +1,7 @@
 namespace CheckModel.Tests;
 
 using Umpire.CheckModel;
-using Umpire.CheckModel.Analyzer;
+using UmpireEngine;
 
 public sealed class AttributeTests {
     [TestCase("class S { int P { [Mark] get; } }")]

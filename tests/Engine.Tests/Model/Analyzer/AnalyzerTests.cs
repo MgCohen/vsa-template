@@ -19,6 +19,20 @@ public sealed class AnalyzerTests {
         Assert.That(diagnostic.Location.GetLineSpan().StartLinePosition.Line, Is.EqualTo(2));
     }
 
+    [TestCase("public string Name() => nameof(Screen);", "public class Screen;")]
+    [TestCase("public int Size() => Screen.Max;", "public class Screen { public const int Max = 1; }")]
+    [TestCase("public object Shade() => Screen.Dark;", "public enum Screen { Dark }")]
+    public void A_name_a_constant_and_an_enum_value_are_a_use(string member, string screen) {
+        using var build = new SampleBuild();
+        build.Write("Ui/Screen.cs", $"namespace Sample;\n{screen}\n");
+        build.Write("Data/Store.cs", $"namespace Sample;\npublic class Store {{\n    {member}\n}}\n");
+
+        var diagnostic = build.Analyze(build.Compile("Sample", "Ui/Screen.cs", "Data/Store.cs")).Single();
+
+        Assert.That((diagnostic.Id, diagnostic.Location.GetLineSpan().StartLinePosition.Line), Is.EqualTo(("UMP020101", 2)));
+        Assert.That(diagnostic.GetMessage(), Does.StartWith("Store in Data (Data) uses Screen in Ui (Ui)"));
+    }
+
     [Test]
     public void A_build_saves_the_snapshot_and_the_command_gives_the_same_finding() {
         using var build = new SampleBuild();

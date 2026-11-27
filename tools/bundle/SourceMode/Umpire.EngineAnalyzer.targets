@@ -1,0 +1,42 @@
+<Project>
+  <!-- The analyzer entry of the engine in this repository. The compiler loads a dependency of an analyzer only if that file is an
+       analyzer item, so each DLL in the output folder of the entry is an analyzer item, as in the package Umpire.Engine. The compiler
+       gives Microsoft.CodeAnalysis and the System libraries, so they are not analyzer items. All items come from one folder, so the
+       compiler server does not take a dependency from another folder (CS8032). A design-time build before the first build has only
+       the entry DLL. -->
+  <!-- The restore of a project does not see the reference to the entry (MSBuildIsRestoring), because the entry depends on the
+       projects that it checks. A solution restore restores the entry. A build of one project with no restore of the entry
+       restores the entry and the bundles of the analyzer build first. -->
+  <Target Name="_UmpireRestoreEngineAnalyzer" BeforeTargets="_GetProjectReferenceTargetFrameworkProperties;ResolveProjectReferences"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(MSBuildIsRestoring)' != 'true'">
+    <ItemGroup>
+      <_UmpireEngineAnalyzerProject Include="@(ProjectReference)" Condition="'%(ProjectReference.OutputItemType)' == '_UmpireEngineAnalyzer'" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_UmpireEngineAnalyzerSource>@(_UmpireEngineAnalyzerProject->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineAnalyzerSource>
+      <_UmpireEngineAnalyzerAssets>$(_UmpireEngineAnalyzerSource)../../artifacts~/obj/Engine.Analyzer/project.assets.json</_UmpireEngineAnalyzerAssets>
+      <_UmpireBundleSource>$(_UmpireEngineAnalyzerSource)../../../tools/bundle/</_UmpireBundleSource>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_UmpireEngineAnalyzerSource)' != '' and !Exists('$(_UmpireEngineAnalyzerAssets)')">
+      <_UmpireEngineAnalyzerRestore Include="@(_UmpireEngineAnalyzerProject->'%(FullPath)')" />
+      <_UmpireEngineAnalyzerRestore Include="$(_UmpireBundleSource)Umpire/Umpire.csproj;$(_UmpireBundleSource)Vsa/Umpire.Vsa.Kernel.csproj" />
+      <_UmpireEngineAnalyzerRestore Include="$(_UmpireBundleSource)Definition/Umpire.Definition.csproj;$(_UmpireBundleSource)VsaDefinition/Umpire.Vsa.Definition.csproj" />
+    </ItemGroup>
+    <MSBuild Projects="@(_UmpireEngineAnalyzerRestore)" Targets="Restore" Condition="'@(_UmpireEngineAnalyzerRestore)' != ''"
+             Properties="MSBuildRestoreSessionId=$([System.Guid]::NewGuid());MSBuildIsRestoring=true"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath;UmpireAnalyzerBuild" />
+  </Target>
+  <Target Name="_UmpireEngineAnalyzerFiles" AfterTargets="ResolveProjectReferences" Condition="'@(_UmpireEngineAnalyzer)' != ''">
+    <PropertyGroup>
+      <_UmpireEngineAnalyzerDir>@(_UmpireEngineAnalyzer->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineAnalyzerDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireEngineAnalyzerFile Include="$(_UmpireEngineAnalyzerDir)*.dll"
+                                 Exclude="$(_UmpireEngineAnalyzerDir)Microsoft.CodeAnalysis*.dll;$(_UmpireEngineAnalyzerDir)System.*.dll;@(_UmpireEngineAnalyzer->'%(FullPath)')" />
+      <_UmpireEngineAnalyzerFile Include="$(_UmpireEngineAnalyzerDir)System.Reflection.MetadataLoadContext.dll"
+                                 Condition="Exists('$(_UmpireEngineAnalyzerDir)System.Reflection.MetadataLoadContext.dll')" />
+      <Analyzer Include="@(_UmpireEngineAnalyzer->'%(FullPath)')" />
+      <Analyzer Include="@(_UmpireEngineAnalyzerFile)" />
+    </ItemGroup>
+  </Target>
+</Project>

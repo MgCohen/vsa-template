@@ -21,7 +21,6 @@ public sealed class PortableTargetTests {
         var netstandardProjects = Directory.GetDirectories(BuiltAssembly.BinFolder)
             .Select(Path.GetFileName)
             .Where(project => IsNetstandard20(project!))
-            .Except(PortableProjects.Analyzers)
             .Except(PortableProjects.OtherNetstandard20Projects);
 
         Assert.That(netstandardProjects, Is.SubsetOf(PortableProjects.Names),

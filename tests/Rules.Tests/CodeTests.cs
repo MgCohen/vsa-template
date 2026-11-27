@@ -1,61 +1,54 @@
 using System.Text.RegularExpressions;
 using Tests.Shared;
-using Umpire.Kernels;
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
+using UmpireEngine;
 
 namespace Rules.Tests;
 
 public sealed partial class CodeTests {
     static readonly string[] CodeFiles = ["*.cs", "*.md", "*.globalconfig", "*.targets", "*.props", "*.template"];
     static readonly string[] SkippedFolders = ["artifacts~", "bin", "obj", ".git", ".claude", "proposals"];
-    static readonly string[] BaseIds =
-        [RuleAnalyzer.OptionDescriptor.Id, RuleAnalyzer.ConfigDescriptor.Id, RuleAnalyzer.LoadDescriptor.Id];
+    static readonly string[] BaseIds = [.. CodeRule.Notices.Select(notice => notice.Id)];
     static readonly string[] RetiredIds = ["UMP010202", "UMP010203", "UMP010204", "UMP010205", "UMP010206", "UMP010207"];
 
     [Test]
-    public void Each_rule_of_the_Kernel_analyzers_has_an_ID_of_block_01_group_00_or_01() {
-        var ids = new KernelAnalyzer().SupportedDiagnostics.Select(d => d.Id);
+    public void Each_kernel_rule_has_an_ID_of_block_01_group_01() {
+        var ids = CodeRule.All.OfType<KernelRule>().Select(rule => rule.Id);
 
-        Assert.That(ids, Has.All.Matches(@"^UMP010[01]\d{2}$"));
+        Assert.That(ids, Has.All.Matches(@"^UMP010[1]\d{2}$"));
     }
 
     [Test]
-    public void Each_rule_of_the_VSA_analyzers_has_an_ID_of_block_01_group_00_or_02() {
-        var ids = new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id);
+    public void Each_VSA_rule_has_an_ID_of_block_01_group_02() {
+        var ids = CodeRule.All.OfType<VsaRule>().Select(rule => rule.Id).ToList();
 
-        Assert.That(ids, Has.All.Matches(@"^UMP010[02]\d{2}$"));
+        Assert.That(ids, Has.All.Matches(@"^UMP010[2]\d{2}$"));
         Assert.That(ids.Where(id => id[3..7] == "0102"), Is.Not.Empty);
     }
 
     [Test]
     public void Each_rule_number_is_from_1_to_99() {
-        var rules = new KernelAnalyzer().Rules.Concat(new VsaAnalyzer().Rules);
+        var rules = CodeRule.All;
 
         Assert.That(rules.Where(rule => rule.Number is < 1 or > 99).Select(rule => rule.GetType().Name), Is.Empty);
     }
 
     [Test]
     public void Each_rule_ID_belongs_to_one_rule() {
-        var ids = new KernelAnalyzer().SupportedDiagnostics.Concat(new VsaAnalyzer().SupportedDiagnostics)
-            .Select(d => d.Id)
-            .Where(id => !BaseIds.Contains(id)).ToList();
+        var ids = AnalyzerIds().Where(id => !BaseIds.Contains(id)).ToList();
 
         Assert.That(ids, Is.Unique);
     }
 
     [Test]
     public void No_rule_has_a_retired_ID() {
-        var ids = new VsaAnalyzer().SupportedDiagnostics.Select(d => d.Id);
-
-        Assert.That(ids.Intersect(RetiredIds), Is.Empty);
+        Assert.That(AnalyzerIds().Intersect(RetiredIds), Is.Empty);
     }
 
     [Test]
     public void Each_analyzer_rule_is_in_the_rules_table_of_the_docs() {
         var docs = File.ReadAllText(Repo.Path("docs", "architecture-rules.md"));
-        var ids = new KernelAnalyzer().SupportedDiagnostics.Concat(new VsaAnalyzer().SupportedDiagnostics).Select(d => d.Id);
-
-        Assert.That(ids.Where(id => !docs.Contains($"| `{id}` |", StringComparison.Ordinal)), Is.Empty);
+        Assert.That(AnalyzerIds().Where(id => !docs.Contains($"| `{id}` |", StringComparison.Ordinal)), Is.Empty);
     }
 
     [Test]
@@ -68,6 +61,9 @@ public sealed partial class CodeTests {
 
         Assert.That(wrong, Is.Empty, "Write each Umpire code as UMP and six digits: block, group, case.");
     }
+
+    static IEnumerable<string> AnalyzerIds() => new EngineAnalyzer().SupportedDiagnostics.Select(d => d.Id)
+        .Where(id => id.StartsWith("UMP01", StringComparison.Ordinal));
 
     static IEnumerable<string> RepositoryFiles() => CodeFiles
         .SelectMany(pattern => Directory.EnumerateFiles(Repo.Root, pattern, SearchOption.AllDirectories))

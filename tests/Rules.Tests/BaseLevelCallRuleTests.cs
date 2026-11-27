@@ -1,10 +1,10 @@
 using Tests.Shared;
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
 
 namespace Rules.Tests;
 
 public sealed class BaseLevelCallRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new BaseLevelCallRule().Rule;
+    static readonly CodeRule Rule = new BaseLevelCallRule();
 
     [Test]
     public Task A_base_call_in_the_rules_of_a_derived_architecture_fails() => Analyzer.VerifyFormatting(Rule, """

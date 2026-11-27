@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The analyzer entry of the rule engine: a Roslyn analyzer that composes EngineApp<CompileHost> one time for each compiler
+       process and sends the compile job. It reads the facts of the compilation (the symbols and the syntax), and the engine
+       checks them. The compiler loads a dependency of an analyzer only if it is an analyzer item, so each DLL of the output
+       folder is an analyzer item (CopyLocalLockFileAssemblies, Umpire.EngineAnalyzer.targets), except the DLLs that the
+       compiler gives. A build with UmpireAnalyzerBuild=true is the analyzer of each project of this repository: it builds on
+       the bundles (_UmpireUseBundle), in its own output folder, with no analyzer. RS1035: the fact readers hash the source
+       files of a mapped tree. RS1030: the reference reader takes the semantic model of each declaration. -->
+  <PropertyGroup>
+    <AssemblyName>Umpire.Engine.Analyzer</AssemblyName>
+    <RootNamespace>UmpireEngine</RootNamespace>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <NoWarn>$(NoWarn);RS1035;RS1030;RS2008</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(UmpireAnalyzerRoslynVersion)" PrivateAssets="all" />
+    <ProjectReference Include="../../Engine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Engine.Tests" />
+    <InternalsVisibleTo Include="Rules.Tests" />
+  </ItemGroup>
+</Project>

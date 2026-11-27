@@ -1,6 +1,6 @@
 namespace Rules.Tests;
 
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
 
 public sealed class PackSelectionTests {
     const string Request = """
@@ -128,5 +128,5 @@ public sealed class PackSelectionTests {
         """, Found());
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Found() =>
-        Analyzer.Diagnostic(new RecordPayloadRule().Rule, 0, "GetItems", "a request");
+        Analyzer.Diagnostic(new RecordPayloadRule(), 0, "GetItems", "a request");
 }

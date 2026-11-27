@@ -19,8 +19,9 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and the plain data of its compiled form. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp and Rules. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `TypeFactSource` (ArchUnitNET) for the type facts, and the interface `IDefinitionLoader` for the one definition type. Its root project `engine/Engine.csproj` is not a package |
+| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the compile job, the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp, Rules, CodeCheck and the operations of the check model. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `TypeFactSource` (ArchUnitNET) for the type facts, and the interface `IDefinitionLoader` for the one definition type. Its root project `engine/Engine.csproj` is not a package |
 | Console entry | `engine/Entries/Console/` | `net8.0` executable `umpire-engine`: `EngineConsoleHost`, `ConsoleReport`, `HookMismatch` and `DefinitionSource` (`AppLoader`, an `AssemblyLoadContext`). The package `Umpire.Engine` holds it in `tools/net8.0/` |
+| Analyzer entry | `engine/Entries/Analyzer/` | `netstandard2.0` Roslyn analyzer `Umpire.Engine.Analyzer`: `EngineAnalyzer`, `CompileHost` (a `LocalHost`), the fact readers of the compile job in `Facts/`. The package `Umpire.Engine` holds it in `analyzers/dotnet/cs/` |
 
 The runtime of an app does not reference `Umpire.Architecture`, and `Umpire.Architecture` references no runtime project. A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
 
@@ -574,7 +575,7 @@ dotnet build <root project>
    └─ umpire-engine jobs build --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
 ```
 
-A job is one call of the engine: one request, one input and one report. The words `jobs build` and `jobs check` select the job. A call with no job word comes from a hook of another Umpire version, for example the old form `--stage Check`. The engine then runs no job and gives `UMP030401`: give `Umpire` and `Umpire.Engine` the same version, or run `umpire update`. Each job handler names its operations in order. The operations fill the report (`JobReport`: the mode and the findings), and the caller converts it. The console entry (`EngineConsoleHost`, `ConsoleReport`) writes the `file(line,col): error CODE: text` lines and gives the exit code.
+A job is one call of the engine: one request, one input and one report. The words `jobs build` and `jobs check` select the job. The console entry has no word for the compile job: only the analyzer entry sends it (see "The compile job"). A call with no job word comes from a hook of another Umpire version, for example the old form `--stage Check`. The engine then runs no job and gives `UMP030401`: give `Umpire` and `Umpire.Engine` the same version, or run `umpire update`. Each job handler names its operations in order. The operations fill the report (`JobReport`: the mode and the findings), and the caller converts it. The console entry (`EngineConsoleHost`, `ConsoleReport`) writes the `file(line,col): error CODE: text` lines and gives the exit code.
 
 | Value | Source | Scope |
 |---|---|---|
@@ -587,7 +588,7 @@ In the mode `Warn`, each error is a warning, also the codes of the group `00` an
 
 `tools/bundle/Umpire/build/Umpire.Codes.props` is the one list of the Umpire codes. The package `Umpire` adds it to `WarningsNotAsErrors` and `MSBuildWarningsNotAsErrors`, so `TreatWarningsAsErrors` and `-warnaserror` do not make a warning an error. A code in `WarningsAsErrors` of the project stays an error. This repository uses the mode `Error` (`UmpireCheckMode` in the root `Directory.Build.props`).
 
-The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no operation runs before the compile. The Build operation of the check job builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build operation fails, the check job skips the other operations. If the engine file does not exist, for example because the root project has no `Umpire.Engine`, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
+The compile job of the analyzer entry gets the text of `.umpireconfig` from the compiler (see "Rule files" in `architecture-rules.md`), so no operation runs before the compile. The Build operation of the check job builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build operation fails, the check job skips the other operations. If the engine file does not exist, for example because the root project has no `Umpire.Engine`, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
 
 The Changes operation makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
@@ -629,8 +630,8 @@ The app class names its kernel and its host, and the definition names its kernel
 - Each definition with its source in the app block must be the used definition, a base of it, or the definition of an inner block. Else the engine gives `UMP030511`. The definition of an inner pack that names another kernel than the app is not ignored, also if it is a base of the kernel of the app: the pack check uses it. Definitions in a `Tests/` folder, in `umpire.check.ignored_folders` and in DLLs that are not app DLLs do not count.
 - The SDK finds the definition projects below the folder of the project. For a pack kernel outside that folder, put a reference to its definition project in the project file: `<ProjectReference Include="..." ReferenceOutputAssembly="false" Private="false" OutputItemType="_UmpireDefinition" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />`. Without it, the app gets the definition of a base kernel.
 - If another check entry is in the folder of an app with a definition, the definition wins.
-- An app class and the key `umpire.architecture` in one folder: the app class makes the folder an app block. If `Definition/` has a definition, it wins, and the key gives `UMP030304`. Else the key names the definition, with no warning. The analyzers read the kernel of the app class in both cases.
-- The analyzers also read each `Kernel` subclass of the compilation as an entry. A kernel of another pack in a project with no app turns the rules of this pack off.
+- An app class and the key `umpire.architecture` in one folder: the app class makes the folder an app block. If `Definition/` has a definition, it wins, and the key gives `UMP030304`. Else the key names the definition, with no warning. The analyzer entry reads the kernel of the app class in both cases.
+- The analyzer entry also reads each `Kernel` subclass of the compilation as an entry. A kernel of another pack in a project with no app turns the rules of this pack off.
 
 ### Engine codes
 
@@ -686,7 +687,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 - The engine reads the entries from the DLLs of the host output (with `MetadataLoadContext`, with no instance) and from the `.umpireconfig` files. The search for `.umpireconfig` skips `bin/`, `obj/` and each folder whose name ends with `~`.
 - A `.umpireconfig` file is a check entry only if it has the key `umpire.architecture` at the top level. With no key, it is only the root of the build output, of the rule values and of the module settings. The file is TOML. `UmpireConfig` (Umpire.Config) is its one reader, in the engine, the kernel and the `umpire` tool. A string needs quotes. A file-pattern section, for example `[*.cs]`, is not valid TOML.
 - The reader is our own (`TomlReader`, no package, #247). It reads this TOML subset: comments, tables `[a.b]`, bare, quoted and dotted keys, basic strings with escapes, literal strings, decimal integers, floats (a fraction, an exponent, `inf` and `nan`), booleans, arrays and inline tables. An array can have many lines. The keys of an inline table are on one line. Each other form gives a `ConfigFormatException` with the line and the column, for example a date, a hex integer, a multi-line string or an array of tables `[[name]]`.
-- Umpire reads each key with no case: `Value`, `Values`, `Get<T>` and the analyzers. Thus two keys of one table that differ only in case, for example `Max` and `max`, give a `ConfigFormatException`.
+- Umpire reads each key with no case: `Value`, `Values`, `Get<T>` and the code check. Thus two keys of one table that differ only in case, for example `Max` and `max`, give a `ConfigFormatException`.
 - The entries in code come first. If one folder has an entry in code and the key `umpire.architecture`, the entry in code wins, and the engine gives the warning `UMP030304`.
 - The project folder of an assembly is the deepest common folder of its source files (not the generated files), or the first folder above it with a `.csproj` file.
 - For an app, the block folder is the folder of the root project. If the root project of a consumer is in a folder below `global.json`, its block folder is that project folder, not the folder of `global.json`. To keep the folder of `global.json`, give `--block` (MSBuild `UmpireBlock`).
@@ -701,7 +702,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
 - After the check of the block, the run checks each used block with its own definition, the same bin and the same operations (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
 - Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type, of for an app block each DLL with a definition of a kernel, and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the bin) still skips the full run when no input of the run changed (`UMP030201`).
-- Known gap of a used block: the bin has only the DLLs of the block that the host references, so the check sees only that part (for example, the engine bin has no `Umpire.Vsa.Analyzers`). Each set of DLLs gets its own stamp.
+- Known gap of a used block: the bin has only the DLLs of the block that the host references, so the check sees only that part (for example, the engine bin has no `Umpire.Engine.Analyzer`). Each set of DLLs gets its own stamp.
 
 ### Projects of a block
 
@@ -715,6 +716,29 @@ After it finds the block, the operation `FindBlocks` reads the `.csproj` files o
 `PackArchitecture` (Umpire.Kernels.Definition) is the shape of a pack: the folders `Definition/` (at least one `Architecture` class), `Kernel/` and `Tests/`. A file in another folder is unmapped (`UMP020202`). `Definition/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack. In the check of a pack, `Kernel/` has the kernel body of that architecture, and it has at most one `Kernel` class.
 
 `VsaArchitecture` marks `Packs/` of the `App` root with `AddBlockGroup<Pack>("Packs")`, so each `App/Packs/<Name>/` of a VSA app is the place of a pack block. The app host and each module may use `Pack`. A pack variant in that folder inherits `VsaArchitecture` and adds parts and rules: see `pack-variants.md`.
+
+## The compile job
+
+The analyzer entry (`engine/Entries/Analyzer/`) runs the compile job in the compiler. It composes `EngineApp<CompileHost>` one time for each compiler process, and it sends one request for each stage of a compilation.
+
+```csharp
+static readonly Lazy<EngineApp<CompileHost>> Running = new(Start, LazyThreadSafetyMode.ExecutionAndPublication);
+
+public static CompileJobReport Send(CompileJobRequest request) {
+    var result = Running.Value.Send(request);
+    return result.IsSuccess ? result.Value : throw new InvalidOperationException(...);
+}
+```
+
+| Part | Path | Does |
+|---|---|---|
+| `CompileJobRequest` | `App/Features/Jobs/Slices/CompileJob/` | The project facts, the stage, the facts of one file or one type |
+| `CheckCodeCommand` | `App/Features/CodeCheck/Slices/CheckCode/` | The code rules (`CodeRule`, `UMP01xxxx`) |
+| `CheckTypesCommand` | `App/Features/Model/Slices/CheckTypes/` | The type checks of the check model, type scope only |
+| Compile facts | `App/Plugins/Facts/Domain/Shared/Compile/` | Plain records: `CompileProject`, `CodeFile`, `CodeType` |
+| `PackSource`, `ModelSource` | `engine/Entries/Analyzer/` | The fact sources of the compilation |
+
+The rules with app scope (counts of a block, block places, the setup findings) run only in the build job and in the check job. In the compile job, the check model checks each type of its project: the place, the content and the uses of the type. A `nameof`, a constant and an enum value of a type are a use of that type. `CompileHost` has a fixed module list and no module settings, and `CompileHost.Modules()` names each module of the engine assembly (`RunEngineTests`).
 
 ## One version
 

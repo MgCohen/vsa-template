@@ -1,39 +1,54 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The package Umpire.Engine: the rule engine in tools/net8.0/ and build/Umpire.Engine.props, which gives its path to the
-       architecture check of the package Umpire (UmpireEngineFile, UmpireEngineDir). The root project of an app references
-       it with PrivateAssets="all". The package has no DLL and no dependency. -->
+  <!-- The package Umpire.Engine: the rule engine in two entries. tools/net8.0/ holds the console entry, and build/Umpire.Engine.props
+       gives its path to the architecture check of the package Umpire (UmpireEngineFile, UmpireEngineDir). analyzers/dotnet/cs/
+       holds the analyzer entry and each DLL that it loads, because the compiler loads a dependency of an analyzer only if it is an
+       analyzer item. The compiler gives Microsoft.CodeAnalysis and the System libraries, so the package does not hold them. The
+       package Umpire depends on this package, so each project with an Umpire package gets the analyzer. The package has no
+       library and no dependency. -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Description>The Umpire rule engine: the architecture check after the build of the root project of an app.</Description>
+    <Description>The Umpire rule engine: the analyzer of each Umpire project and the architecture check after the build of the root project of an app.</Description>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NoWarn>$(NoWarn);NU5128;NU5100</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="build/**" />
     <None Include="build/*" Pack="true" PackagePath="build" />
   </ItemGroup>
-  <!-- The engine builds with the global properties of the pack (configuration, version), on the bundles (_UmpireUseBundle),
-       in its own output folder, and with no self-check: the source build of the engine checks it. It loads the definition of
-       an app, so its Architecture type must come from the same Umpire.Definition.dll as the app. -->
+  <!-- The entries build with the global properties of the pack (configuration, version), on the bundles (_UmpireUseBundle),
+       in their own output folder, and with no self-check: the source build of the engine checks it. The engine loads the
+       definition of an app, so its Architecture type must come from the same Umpire.Definition.dll as the app. -->
   <PropertyGroup>
     <_UmpireEngineProject>$(UmpireRoot)engine/Entries/Console/Engine.Console.csproj</_UmpireEngineProject>
+    <_UmpireAnalyzerProject>$(UmpireRoot)engine/Entries/Analyzer/Engine.Analyzer.csproj</_UmpireAnalyzerProject>
     <_UmpireEngineProperties>_UmpireUseBundle=true;UmpireCheck=false;ArtifactsPath=$(ArtifactsPath)/engine-bundle</_UmpireEngineProperties>
   </PropertyGroup>
   <Target Name="_UmpireEngineInPackage" BeforeTargets="_GetPackageFiles">
-    <!-- The output folder of the engine is new, so it needs its own restore. A restore needs its own evaluation. -->
+    <!-- The output folder of the entries is new, so they need their own restore. A restore needs its own evaluation. -->
     <MSBuild Projects="$(_UmpireEngineProject)" Targets="Restore"
              Properties="$(_UmpireEngineProperties);MSBuildRestoreSessionId=umpire-engine" />
+    <MSBuild Projects="$(_UmpireAnalyzerProject)" Targets="Restore"
+             Properties="$(_UmpireEngineProperties);MSBuildRestoreSessionId=umpire-engine-analyzer" />
     <MSBuild Projects="$(_UmpireEngineProject)" Targets="Build;GetTargetPath"
              Properties="$(_UmpireEngineProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="_UmpireEngineTarget" />
     </MSBuild>
+    <MSBuild Projects="$(_UmpireAnalyzerProject)" Targets="Build;GetTargetPath"
+             Properties="$(_UmpireEngineProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="_UmpireAnalyzerTarget" />
+    </MSBuild>
     <PropertyGroup>
       <_UmpireEngineDir>@(_UmpireEngineTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireEngineDir>
+      <_UmpireAnalyzerDir>@(_UmpireAnalyzerTarget->'%(RootDir)%(Directory)'->Distinct())</_UmpireAnalyzerDir>
     </PropertyGroup>
     <ItemGroup>
       <_UmpireEngineFile Include="$(_UmpireEngineDir)**" Exclude="$(_UmpireEngineDir)**/*.pdb;$(_UmpireEngineDir).umpireconfig;$(_UmpireEngineDir).umpire-check;$(_UmpireEngineDir)umpire-definitions/**" />
       <None Include="@(_UmpireEngineFile)" Pack="true" PackagePath="tools/net8.0/%(RecursiveDir)" Visible="false" />
+      <_UmpireAnalyzerFile Include="$(_UmpireAnalyzerDir)*.dll;$(_UmpireAnalyzerDir)Umpire.Engine.Analyzer.deps.json"
+                           Exclude="$(_UmpireAnalyzerDir)Microsoft.CodeAnalysis*.dll;$(_UmpireAnalyzerDir)System.*.dll" />
+      <_UmpireAnalyzerFile Include="$(_UmpireAnalyzerDir)System.Reflection.MetadataLoadContext.dll" />
+      <None Include="@(_UmpireAnalyzerFile)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
   </Target>
 </Project>

@@ -1,1 +1,0 @@
-Umpire.Kernels.Analyzers.dll embeds Umpire.Config.dll as a resource. It embeds no third-party library.

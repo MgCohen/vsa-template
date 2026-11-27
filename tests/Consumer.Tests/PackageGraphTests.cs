@@ -38,14 +38,13 @@ public sealed class PackageGraphTests {
 
     [Test]
     public void An_app_with_no_default_pack_gets_no_VSA_package() =>
-        Assert.That(noPackAssets, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Kernels.Analyzers/")
-            .And.Not.Contain("\"Umpire.Vsa/").And.Not.Contain("\"Umpire.Vsa.Analyzers/"));
+        Assert.That(noPackAssets, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Engine/").And.Not.Contain("\"Umpire.Vsa/"));
 
     [Test]
-    public void An_app_with_no_default_pack_compiles_with_the_kernel_analyzer_and_no_VSA_analyzer() {
+    public void An_app_with_no_default_pack_compiles_with_the_analyzer_entry_of_the_engine() {
         var names = noPackAnalyzers.Select(Path.GetFileName).ToList();
-        Assert.That(names, Has.Exactly(1).EqualTo("Umpire.Kernels.Analyzers.dll"), string.Join("\n", noPackAnalyzers));
-        Assert.That(names, Has.None.EqualTo("Umpire.Vsa.Analyzers.dll"), string.Join("\n", noPackAnalyzers));
+        Assert.That(names, Has.Exactly(1).EqualTo("Umpire.Engine.Analyzer.dll"), string.Join("\n", noPackAnalyzers));
+        Assert.That(noPackAnalyzers.Select(Path.GetDirectoryName).Distinct(), Has.Exactly(1).Items, string.Join("\n", noPackAnalyzers));
     }
 
     static IReadOnlyList<string> Analyzers(Workspace workspace, string project) {
@@ -57,44 +56,37 @@ public sealed class PackageGraphTests {
             .Where(path => Path.GetFileName(path).StartsWith("Umpire.", StringComparison.Ordinal))];
     }
 
-    [TestCase("Umpire.Kernels.Analyzers")]
-    [TestCase("Umpire.Vsa.Analyzers")]
-    public void Each_analyzer_package_holds_only_analyzer_DLLs(string package) {
-        var analyzers = Entries(package).Where(entry => entry.StartsWith("analyzers/", StringComparison.Ordinal)).ToList();
-        Assert.That(analyzers, Has.Member($"analyzers/dotnet/cs/{package}.dll"));
-        Assert.That(analyzers, Has.All.Matches<string>(entry => entry.EndsWith(".Analyzers.dll", StringComparison.Ordinal)));
-    }
-
-    [TestCase("Umpire.Kernels.Analyzers")]
-    [TestCase("Umpire.Vsa.Analyzers")]
-    public void Each_analyzer_package_holds_the_notices_of_the_embedded_libraries(string package) =>
-        Assert.That(Entries(package), Has.Member("THIRD-PARTY-NOTICES.txt"));
-
-    [TestCase("Umpire.Kernels.Analyzers")]
-    [TestCase("Umpire.Vsa.Analyzers")]
-    public void No_analyzer_package_has_a_rule_values_file(string package) =>
-        Assert.That(Entries(package).Where(entry => entry.StartsWith("build", StringComparison.Ordinal)), Is.Empty);
-
     [Test]
-    public void The_VSA_analyzer_package_holds_the_kernel_analyzer_in_its_own_folder() =>
-        Assert.That(Entries("Umpire.Vsa.Analyzers"), Is.SupersetOf(new[] {
-            "analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll",
-            "analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll",
+    public void The_engine_package_holds_the_analyzer_entry_and_each_DLL_that_it_loads() =>
+        Assert.That(Entries("Umpire.Engine"), Is.SupersetOf(new[] {
+            "analyzers/dotnet/cs/Umpire.Engine.Analyzer.dll",
+            "analyzers/dotnet/cs/Umpire.Engine.dll",
+            "analyzers/dotnet/cs/Umpire.dll",
+            "analyzers/dotnet/cs/Umpire.Vsa.dll",
+            "analyzers/dotnet/cs/Microsoft.Extensions.DependencyInjection.dll",
+            "analyzers/dotnet/cs/Microsoft.Bcl.AsyncInterfaces.dll",
         }));
 
-    [TestCase("Umpire", "Umpire.Kernels.Analyzers")]
-    [TestCase("Umpire.Vsa", "Umpire.Vsa.Analyzers")]
-    public void A_runtime_package_brings_its_analyzers(string package, string analyzers) {
-        var dependencies = Nuspec(package).Descendants().Where(e => e.Name.LocalName == "dependency")
-            .Where(e => (string?)e.Attribute("id") == analyzers).ToList();
+    [Test]
+    public void The_engine_package_holds_no_DLL_that_the_compiler_gives() =>
+        Assert.That(Entries("Umpire.Engine").Where(entry => entry.StartsWith("analyzers/", StringComparison.Ordinal))
+            .Select(entry => entry["analyzers/dotnet/cs/".Length..])
+            .Where(name => name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal)
+                || (name.StartsWith("System.", StringComparison.Ordinal) && name != "System.Reflection.MetadataLoadContext.dll")),
+            Is.Empty);
+
+    [Test]
+    public void No_old_analyzer_package_is_in_the_feed() =>
+        Assert.That(LocalFeed.Packages, Has.None.EqualTo("Umpire.Kernels.Analyzers").And.None.EqualTo("Umpire.Vsa.Analyzers"));
+
+    [Test]
+    public void The_core_package_brings_the_analyzer_of_the_engine() {
+        var dependencies = Nuspec("Umpire").Descendants().Where(e => e.Name.LocalName == "dependency")
+            .Where(e => (string?)e.Attribute("id") == "Umpire.Engine").ToList();
         Assert.That(dependencies, Is.Not.Empty);
         Assert.That(dependencies.Select(e => (string?)e.Attribute("exclude") ?? ""),
             Has.None.Contains("Analyzers").And.None.Contains("Build"));
     }
-
-    [Test]
-    public void The_core_package_holds_the_target_that_keeps_one_kernel_analyzer() =>
-        Assert.That(Entries("Umpire"), Is.SupersetOf(new[] { "build/Umpire.targets", "buildTransitive/Umpire.targets" }));
 
     [Test]
     public void The_core_package_depends_on_no_pack_and_no_definition_package() =>
@@ -131,13 +123,14 @@ public sealed class PackageGraphTests {
 
     [Test]
     public void An_app_with_the_default_pack_gets_the_core_and_the_VSA_package() =>
-        Assert.That(assets, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Vsa/").And.Contain("\"Umpire.Vsa.Analyzers/"));
+        Assert.That(assets, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Vsa/").And.Contain("\"Umpire.Engine/"));
 
     [Test]
-    public void An_app_compiles_with_one_kernel_analyzer_the_copy_next_to_the_VSA_analyzer() {
-        var kernel = analyzers.Where(path => Path.GetFileName(path) == "Umpire.Kernels.Analyzers.dll").ToList();
-        Assert.That(kernel, Has.Count.EqualTo(1), string.Join("\n", analyzers));
-        Assert.That(kernel[0], Does.Contain("umpire.vsa.analyzers"), string.Join("\n", analyzers));
+    public void An_app_compiles_with_one_analyzer_entry_from_the_engine_package() {
+        var entry = analyzers.Where(path => Path.GetFileName(path) == "Umpire.Engine.Analyzer.dll").ToList();
+        Assert.That(entry, Has.Count.EqualTo(1), string.Join("\n", analyzers));
+        Assert.That(entry[0], Does.Contain("umpire.engine"), string.Join("\n", analyzers));
+        Assert.That(analyzers.Select(Path.GetDirectoryName).Distinct(), Has.Exactly(1).Items, string.Join("\n", analyzers));
     }
 
     [Test]

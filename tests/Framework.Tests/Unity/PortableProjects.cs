@@ -25,9 +25,7 @@ public static class PortableProjects {
         "Umpire.Vsa.Presenters",
     ];
 
-    public static readonly string[] Analyzers = ["Umpire.Kernels.Analyzers", "Umpire.Vsa.Analyzers"];
-
     public static readonly string[] OtherNetstandard20Projects = [
-        "Umpire.Markers", "Umpire.CheckModel.Analyzer", "Umpire.Engine",
+        "Umpire.Markers", "Umpire.Engine",
     ];
 }

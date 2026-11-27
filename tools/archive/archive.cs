@@ -33,7 +33,7 @@ File.Delete(archive);
 var work = Directory.CreateTempSubdirectory("umpire-archive-").FullName;
 try {
     var tree = Path.Combine(work, "tree");
-    var analyzers = Archive.FromPackage(options, "Umpire.Vsa.Analyzers", "analyzers/dotnet/cs/",
+    var analyzers = Archive.FromPackage(options, "Umpire.Engine", "analyzers/dotnet/cs/",
         Path.Combine(tree, AnalyzerFolder));
     var engine = Archive.FromPackage(options, "Umpire.Engine", EnginePackageFolder, Path.Combine(tree, EngineFolder));
     var publish = Path.Combine(work, "publish");
@@ -45,8 +45,7 @@ try {
         .. Archive.Entries(tree, AnalyzerFolder, analyzers),
         .. Archive.Entries(tree, EngineFolder, engine),
     ];
-    var embedded = Archive.PackageText(options, "Umpire.Vsa.Analyzers", Notices);
-    File.WriteAllText(Path.Combine(tree, Notices), Archive.Notices(files, Path.Combine(publish, "packages"), embedded));
+    File.WriteAllText(Path.Combine(tree, Notices), Archive.Notices(files, Path.Combine(publish, "packages")));
     var manifest = new JsonObject {
         ["version"] = options.Version,
         ["commit"] = options.Commit ?? Archive.Run(repo, "git", "rev-parse", "HEAD").Trim(),
@@ -136,14 +135,7 @@ static class Archive {
         return names;
     }
 
-    public static string PackageText(Options options, string package, string file) {
-        using var zip = ZipFile.OpenRead(Package(options, package));
-        var entry = zip.GetEntry(file) ?? throw new InvalidOperationException($"{package} has no {file}.");
-        using var reader = new StreamReader(entry.Open());
-        return reader.ReadToEnd();
-    }
-
-    public static string Notices(IReadOnlyList<FileEntry> files, string packages, string embedded) {
+    public static string Notices(IReadOnlyList<FileEntry> files, string packages) {
         var text = new StringBuilder();
         text.AppendLine("The archive holds the third-party packages below. Each one keeps its own license.");
         text.AppendLine();
@@ -155,9 +147,6 @@ static class Archive {
         foreach (var package in thirdParty) {
             text.AppendLine($"{package.Id} {package.Version}: {License(packages, package)}");
         }
-        text.AppendLine();
-        text.AppendLine("-------------------------------------------------------------------------------");
-        text.Append(embedded);
         return text.ToString();
     }
 

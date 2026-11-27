@@ -1,7 +1,7 @@
 namespace CheckModel.Tests;
 
 using Umpire.CheckModel;
-using Umpire.CheckModel.Analyzer;
+using UmpireEngine;
 
 public sealed class FactTests {
     const string Source = """
