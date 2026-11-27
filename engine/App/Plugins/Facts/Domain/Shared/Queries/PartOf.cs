@@ -36,7 +36,7 @@ sealed class PartOf {
     }
 
     void Place(TypeFacts type, List<Binding> bound, List<UnmappedType> unmapped) {
-        if (LoadedTypes.IsCompilerGenerated(type.Name)) {
+        if (CompilerNames.IsGenerated(type.Name)) {
             return;
         }
         var external = resolved.ExternalPart(type.Assembly, type.FullName);

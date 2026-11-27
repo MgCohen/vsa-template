@@ -164,7 +164,7 @@ sealed class SymbolReader : IDisposable {
     }
 
     bool IsCompilerGenerated(TypeDefinitionHandle handle) =>
-        LoadedTypes.IsCompilerGenerated(metadata.GetString(metadata.GetTypeDefinition(handle).Name));
+        CompilerNames.IsGenerated(metadata.GetString(metadata.GetTypeDefinition(handle).Name));
 
     Source? Own(TypeDefinitionHandle handle) {
         var points = metadata.GetTypeDefinition(handle).GetMethods()

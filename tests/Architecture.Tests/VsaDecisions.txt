@@ -45,6 +45,7 @@ App -> Core/KernelParts.Scan [any] Allow Public
 App -> Core/KernelParts.Factories [any] Allow Public
 App -> Core/KernelParts.Services [any] Allow Public
 App -> Core/KernelParts.Utility [any] Allow Public
+App -> Core/KernelParts.Paths [any] Allow Public
 App -> Core/KernelParts.Analyzers [any] Allow Public
 App -> Views [any] Deny
 App -> Kernel [any] Deny
@@ -110,6 +111,7 @@ App/MessagesComponent -> Core/KernelParts.Scan [any] Deny
 App/MessagesComponent -> Core/KernelParts.Factories [any] Deny
 App/MessagesComponent -> Core/KernelParts.Services [any] Deny
 App/MessagesComponent -> Core/KernelParts.Utility [any] Deny
+App/MessagesComponent -> Core/KernelParts.Paths [any] Deny
 App/MessagesComponent -> Core/KernelParts.Analyzers [any] Deny
 App/MessagesComponent -> Views [any] Deny
 App/MessagesComponent -> Kernel [any] Deny
@@ -175,6 +177,7 @@ App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Scan [any] Den
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Factories [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Services [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Utility [any] Deny
+App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Paths [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Analyzers [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Views [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Kernel [any] Deny
@@ -240,6 +243,7 @@ App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Scan [any] Deny
 App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Factories [any] Deny
 App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Services [any] Deny
 App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Utility [any] Deny
+App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Paths [any] Deny
 App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Analyzers [any] Deny
 App/MessagesComponent/MessagesParts.Handlers -> Views [any] Deny
 App/MessagesComponent/MessagesParts.Handlers -> Kernel [any] Deny
@@ -305,6 +309,7 @@ App/Host -> Core/KernelParts.Scan [any] Allow Public
 App/Host -> Core/KernelParts.Factories [any] Allow Public
 App/Host -> Core/KernelParts.Services [any] Allow Public
 App/Host -> Core/KernelParts.Utility [any] Allow Public
+App/Host -> Core/KernelParts.Paths [any] Allow Public
 App/Host -> Core/KernelParts.Analyzers [any] Allow Public
 App/Host -> Views [any] Deny
 App/Host -> Kernel [any] Deny
@@ -371,6 +376,7 @@ App/Pack -> Core/KernelParts.Scan [any] Deny
 App/Pack -> Core/KernelParts.Factories [any] Deny
 App/Pack -> Core/KernelParts.Services [any] Deny
 App/Pack -> Core/KernelParts.Utility [any] Deny
+App/Pack -> Core/KernelParts.Paths [any] Deny
 App/Pack -> Core/KernelParts.Analyzers [any] Deny
 App/Pack -> Views [any] Deny
 App/Pack -> Kernel [any] Deny
@@ -437,6 +443,7 @@ App/Plugin -> Core/KernelParts.Scan [any] Allow Public
 App/Plugin -> Core/KernelParts.Factories [any] Allow Public
 App/Plugin -> Core/KernelParts.Services [any] Allow Public
 App/Plugin -> Core/KernelParts.Utility [any] Allow Public
+App/Plugin -> Core/KernelParts.Paths [any] Allow Public
 App/Plugin -> Core/KernelParts.Analyzers [any] Allow Public
 App/Plugin -> Views [any] Deny
 App/Plugin -> Kernel [any] Allow Public
@@ -503,6 +510,7 @@ App/Plugin/Domain -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Services [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Domain -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Domain -> Views [any] Deny
 App/Plugin/Domain -> Kernel [any] Deny
@@ -569,6 +577,7 @@ App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Services [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Domain/Domain.Shared -> Views [any] Deny
 App/Plugin/Domain/Domain.Shared -> Kernel [any] Deny
@@ -635,6 +644,7 @@ App/Plugin/Infrastructure -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Services [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Infrastructure -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Infrastructure -> Views [any] Deny
 App/Plugin/Infrastructure -> Kernel [any] Deny
@@ -701,6 +711,7 @@ App/Plugin/Presenters -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Services [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Presenters -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Presenters -> Views [any] Deny
 App/Plugin/Presenters -> Kernel [any] Deny
@@ -767,6 +778,7 @@ App/Plugin/Contracts -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Services [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Contracts -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Contracts -> Views [any] Deny
 App/Plugin/Contracts -> Kernel [any] Deny
@@ -833,6 +845,7 @@ App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Services [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Views [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Kernel [any] Deny
@@ -899,6 +912,7 @@ App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Services [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Views [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Kernel [any] Deny
@@ -965,6 +979,7 @@ App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Services [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Views [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Kernel [any] Deny
@@ -1031,6 +1046,7 @@ App/Plugin/Handlers -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Services [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Handlers -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Handlers -> Views [any] Deny
 App/Plugin/Handlers -> Kernel [any] Deny
@@ -1097,6 +1113,7 @@ App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Services [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Views [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Kernel [any] Deny
@@ -1163,6 +1180,7 @@ App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Services [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Views [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Kernel [any] Deny
@@ -1229,6 +1247,7 @@ App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Sc
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Services [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Views [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Kernel [any] Deny
@@ -1295,6 +1314,7 @@ App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Services [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Views [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Kernel [any] Deny
@@ -1361,6 +1381,7 @@ App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelPart
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Factories [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Services [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Utility [any] Deny
+App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Paths [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Analyzers [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Views [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Kernel [any] Deny
@@ -1461,6 +1482,7 @@ App/Feature -> Core/KernelParts.Scan [any] Allow Public
 App/Feature -> Core/KernelParts.Factories [any] Allow Public
 App/Feature -> Core/KernelParts.Services [any] Allow Public
 App/Feature -> Core/KernelParts.Utility [any] Allow Public
+App/Feature -> Core/KernelParts.Paths [any] Allow Public
 App/Feature -> Core/KernelParts.Analyzers [any] Allow Public
 App/Feature -> Views [any] Deny
 App/Feature -> Kernel [any] Allow Public
@@ -1527,6 +1549,7 @@ App/Feature/Domain -> Core/KernelParts.Scan [any] Deny
 App/Feature/Domain -> Core/KernelParts.Factories [any] Deny
 App/Feature/Domain -> Core/KernelParts.Services [any] Deny
 App/Feature/Domain -> Core/KernelParts.Utility [any] Deny
+App/Feature/Domain -> Core/KernelParts.Paths [any] Deny
 App/Feature/Domain -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Domain -> Views [any] Deny
 App/Feature/Domain -> Kernel [any] Deny
@@ -1593,6 +1616,7 @@ App/Feature/Domain/Domain.Shared -> Core/KernelParts.Scan [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Factories [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Services [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Utility [any] Deny
+App/Feature/Domain/Domain.Shared -> Core/KernelParts.Paths [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Domain/Domain.Shared -> Views [any] Deny
 App/Feature/Domain/Domain.Shared -> Kernel [any] Deny
@@ -1660,6 +1684,7 @@ App/Feature/Infrastructure -> Core/KernelParts.Scan [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Factories [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Services [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Utility [any] Deny
+App/Feature/Infrastructure -> Core/KernelParts.Paths [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Infrastructure -> Views [any] Deny
 App/Feature/Infrastructure -> Kernel [any] Deny
@@ -1733,6 +1758,7 @@ App/Feature/Presenters -> Core/KernelParts.Scan [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Factories [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Services [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Utility [any] Deny
+App/Feature/Presenters -> Core/KernelParts.Paths [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Presenters -> Views [any] Deny
 App/Feature/Presenters -> Kernel [any] Deny
@@ -1799,6 +1825,7 @@ App/Feature/Slice.Shared -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice.Shared -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice.Shared -> Views [any] Deny
 App/Feature/Slice.Shared -> Kernel [any] Deny
@@ -1866,6 +1893,7 @@ App/Feature/Slice -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice -> Views [any] Deny
 App/Feature/Slice -> Kernel [any] Deny
@@ -1933,6 +1961,7 @@ App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Contracts.Requests -> Views [any] Deny
 App/Feature/Slice/Contracts.Requests -> Kernel [any] Deny
@@ -2000,6 +2029,7 @@ App/Feature/Slice/Contracts.Events -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Contracts.Events -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Contracts.Events -> Views [any] Deny
 App/Feature/Slice/Contracts.Events -> Kernel [any] Deny
@@ -2067,6 +2097,7 @@ App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Contracts.Commands -> Views [any] Deny
 App/Feature/Slice/Contracts.Commands -> Kernel [any] Deny
@@ -2140,6 +2171,7 @@ App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Handlers.Requests -> Views [any] Deny
 App/Feature/Slice/Handlers.Requests -> Kernel [any] Deny
@@ -2210,6 +2242,7 @@ App/Feature/Slice/Handlers.Events -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Handlers.Events -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Handlers.Events -> Views [any] Deny
 App/Feature/Slice/Handlers.Events -> Kernel [any] Deny
@@ -2280,6 +2313,7 @@ App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Handlers.Commands -> Views [any] Deny
 App/Feature/Slice/Handlers.Commands -> Kernel [any] Deny
@@ -2353,6 +2387,7 @@ App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Views [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Kernel [any] Deny
@@ -2426,6 +2461,7 @@ App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Views [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Kernel [any] Deny
@@ -2503,6 +2539,7 @@ App/Feature/Slice/Slice.Validators -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Factories [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Services [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Utility [any] Deny
+App/Feature/Slice/Slice.Validators -> Core/KernelParts.Paths [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Analyzers [any] Deny
 App/Feature/Slice/Slice.Validators -> Views [any] Deny
 App/Feature/Slice/Slice.Validators -> Kernel [any] Deny
@@ -2568,6 +2605,7 @@ Definition -> Core/KernelParts.Scan [any] Allow Public
 Definition -> Core/KernelParts.Factories [any] Allow Public
 Definition -> Core/KernelParts.Services [any] Allow Public
 Definition -> Core/KernelParts.Utility [any] Allow Public
+Definition -> Core/KernelParts.Paths [any] Allow Public
 Definition -> Core/KernelParts.Analyzers [any] Allow Public
 Definition -> Views [any] Deny
 Definition -> Kernel [any] Deny
@@ -2633,6 +2671,7 @@ Core -> Core/KernelParts.Scan [any] Allow Public
 Core -> Core/KernelParts.Factories [any] Allow Public
 Core -> Core/KernelParts.Services [any] Allow Public
 Core -> Core/KernelParts.Utility [any] Allow Public
+Core -> Core/KernelParts.Paths [any] Allow Public
 Core -> Core/KernelParts.Analyzers [any] Allow Public
 Core -> Views [any] Deny
 Core -> Kernel [any] Allow Public
@@ -2698,6 +2737,7 @@ Core/KernelParts.App -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.App -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.App -> Views [any] Deny
 Core/KernelParts.App -> Kernel [any] Allow Public
@@ -2763,6 +2803,7 @@ Core/KernelParts.Kernels -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Kernels -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Kernels -> Views [any] Deny
 Core/KernelParts.Kernels -> Kernel [any] Allow Public
@@ -2828,6 +2869,7 @@ Core/Hosts -> Core/KernelParts.Scan [any] Allow Public
 Core/Hosts -> Core/KernelParts.Factories [any] Allow Public
 Core/Hosts -> Core/KernelParts.Services [any] Allow Public
 Core/Hosts -> Core/KernelParts.Utility [any] Allow Public
+Core/Hosts -> Core/KernelParts.Paths [any] Allow Public
 Core/Hosts -> Core/KernelParts.Analyzers [any] Allow Public
 Core/Hosts -> Views [any] Deny
 Core/Hosts -> Kernel [any] Allow Public
@@ -2893,6 +2935,7 @@ Core/KernelParts.Operations -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Operations -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Operations -> Views [any] Deny
 Core/KernelParts.Operations -> Kernel [any] Allow Public
@@ -2958,6 +3001,7 @@ Core/KernelParts.Modules -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Modules -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Modules -> Views [any] Deny
 Core/KernelParts.Modules -> Kernel [any] Allow Public
@@ -3023,6 +3067,7 @@ Core/KernelParts.Scan -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Scan -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Scan -> Views [any] Deny
 Core/KernelParts.Scan -> Kernel [any] Allow Public
@@ -3088,6 +3133,7 @@ Core/KernelParts.Factories -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Factories -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Factories -> Views [any] Deny
 Core/KernelParts.Factories -> Kernel [any] Allow Public
@@ -3153,6 +3199,7 @@ Core/KernelParts.Services -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Services -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Services -> Views [any] Deny
 Core/KernelParts.Services -> Kernel [any] Allow Public
@@ -3218,6 +3265,7 @@ Core/KernelParts.Utility -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Services [any] Allow Public
+Core/KernelParts.Utility -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Analyzers [any] Allow Public
 Core/KernelParts.Utility -> Views [any] Deny
 Core/KernelParts.Utility -> Kernel [any] Allow Public
@@ -3236,6 +3284,72 @@ Core/KernelParts.Utility -> Kernel/Handlers/Handlers.Commands [any] Allow Public
 Core/KernelParts.Utility -> Kernel/Views [any] Allow Public
 Core/KernelParts.Utility -> Kernel/Composition [any] Allow Public
 Core/KernelParts.Utility -> UmpireLibraries [any] Deny
+Core/KernelParts.Paths -> App [any] Deny
+Core/KernelParts.Paths -> App/MessagesComponent [any] Deny
+Core/KernelParts.Paths -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
+Core/KernelParts.Paths -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
+Core/KernelParts.Paths -> App/Host [any] Deny
+Core/KernelParts.Paths -> App/Pack [any] Deny
+Core/KernelParts.Paths -> App/Plugin [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Domain [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Domain/Domain.Shared [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Infrastructure [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Presenters [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Contracts [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Contracts/Contracts.Requests [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Contracts/Contracts.Events [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Contracts/Contracts.Commands [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Handlers [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Handlers/Handlers.Requests [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Handlers/Handlers.Events [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Handlers/Handlers.Commands [any] Deny
+Core/KernelParts.Paths -> App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
+Core/KernelParts.Paths -> App/Feature [any] Deny
+Core/KernelParts.Paths -> App/Feature/Domain [any] Deny
+Core/KernelParts.Paths -> App/Feature/Domain/Domain.Shared [any] Deny
+Core/KernelParts.Paths -> App/Feature/Infrastructure [any] Deny
+Core/KernelParts.Paths -> App/Feature/Presenters [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice.Shared [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Contracts.Requests [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Contracts.Events [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Contracts.Commands [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Handlers.Requests [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Handlers.Events [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Handlers.Commands [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Handlers.Events.Hooks [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Core/KernelParts.Paths -> App/Feature/Slice/Slice.Validators [any] Deny
+Core/KernelParts.Paths -> Definition [any] Deny
+Core/KernelParts.Paths -> Core [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.App [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Kernels [any] Allow Public
+Core/KernelParts.Paths -> Core/Hosts [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Modules [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Scan [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Factories [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Services [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Analyzers [any] Allow Public
+Core/KernelParts.Paths -> Views [any] Deny
+Core/KernelParts.Paths -> Kernel [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Domain [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Infrastructure [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Presenters [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Contracts [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Contracts/Contracts.Requests [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Contracts/Contracts.Events [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Contracts/Contracts.Commands [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Handlers [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Handlers/Handlers.Requests [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Handlers/Handlers.Events [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Handlers/Handlers.Commands [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Views [any] Allow Public
+Core/KernelParts.Paths -> Kernel/Composition [any] Allow Public
+Core/KernelParts.Paths -> UmpireLibraries [any] Deny
 Core/KernelParts.Analyzers -> App [any] Deny
 Core/KernelParts.Analyzers -> App/MessagesComponent [any] Deny
 Core/KernelParts.Analyzers -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
@@ -3284,6 +3398,7 @@ Core/KernelParts.Analyzers -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Services [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Analyzers -> Core/KernelParts.Paths [any] Allow Public
 Core/KernelParts.Analyzers -> Views [any] Deny
 Core/KernelParts.Analyzers -> Kernel [any] Allow Public
 Core/KernelParts.Analyzers -> Kernel/Domain [any] Allow Public
@@ -3349,6 +3464,7 @@ Views -> Core/KernelParts.Scan [any] Deny
 Views -> Core/KernelParts.Factories [any] Deny
 Views -> Core/KernelParts.Services [any] Deny
 Views -> Core/KernelParts.Utility [any] Deny
+Views -> Core/KernelParts.Paths [any] Deny
 Views -> Core/KernelParts.Analyzers [any] Deny
 Views -> Kernel [any] Deny
 Views -> Kernel/Domain [any] Deny
@@ -3414,6 +3530,7 @@ Kernel -> Core/KernelParts.Scan [any] Allow Public
 Kernel -> Core/KernelParts.Factories [any] Allow Public
 Kernel -> Core/KernelParts.Services [any] Allow Public
 Kernel -> Core/KernelParts.Utility [any] Allow Public
+Kernel -> Core/KernelParts.Paths [any] Allow Public
 Kernel -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel -> Views [any] Deny
 Kernel -> Kernel/Domain [any] Allow Public
@@ -3479,6 +3596,7 @@ Kernel/Domain -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Services [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Domain -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Domain -> Views [any] Deny
 Kernel/Domain -> Kernel [any] Allow Public
@@ -3544,6 +3662,7 @@ Kernel/Infrastructure -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Services [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Infrastructure -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Infrastructure -> Views [any] Deny
 Kernel/Infrastructure -> Kernel [any] Allow Public
@@ -3609,6 +3728,7 @@ Kernel/Presenters -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Services [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Presenters -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Presenters -> Views [any] Deny
 Kernel/Presenters -> Kernel [any] Allow Public
@@ -3674,6 +3794,7 @@ Kernel/Contracts -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Services [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Contracts -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts -> Views [any] Deny
 Kernel/Contracts -> Kernel [any] Allow Public
@@ -3739,6 +3860,7 @@ Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Services [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Views [any] Deny
 Kernel/Contracts/Contracts.Requests -> Kernel [any] Allow Public
@@ -3804,6 +3926,7 @@ Kernel/Contracts/Contracts.Events -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Services [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Contracts/Contracts.Events -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Views [any] Deny
 Kernel/Contracts/Contracts.Events -> Kernel [any] Allow Public
@@ -3869,6 +3992,7 @@ Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelPart
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Services [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Views [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Kernel [any] Allow Public
@@ -3934,6 +4058,7 @@ Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Services [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Views [any] Deny
 Kernel/Contracts/Contracts.Commands -> Kernel [any] Allow Public
@@ -3999,6 +4124,7 @@ Kernel/Handlers -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Services [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Handlers -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers -> Views [any] Deny
 Kernel/Handlers -> Kernel [any] Allow Public
@@ -4064,6 +4190,7 @@ Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Services [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Views [any] Deny
 Kernel/Handlers/Handlers.Requests -> Kernel [any] Allow Public
@@ -4129,6 +4256,7 @@ Kernel/Handlers/Handlers.Events -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Services [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Handlers/Handlers.Events -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Views [any] Deny
 Kernel/Handlers/Handlers.Events -> Kernel [any] Allow Public
@@ -4194,6 +4322,7 @@ Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Services [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Views [any] Deny
 Kernel/Handlers/Handlers.Commands -> Kernel [any] Allow Public
@@ -4259,6 +4388,7 @@ Kernel/Views -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Views -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Views -> Core/KernelParts.Services [any] Allow Public
 Kernel/Views -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Views -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Views -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Views -> Views [any] Allow Public
 Kernel/Views -> Kernel [any] Allow Public
@@ -4324,6 +4454,7 @@ Kernel/Composition -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Factories [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Services [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Utility [any] Allow Public
+Kernel/Composition -> Core/KernelParts.Paths [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Analyzers [any] Allow Public
 Kernel/Composition -> Views [any] Deny
 Kernel/Composition -> Kernel [any] Allow Public

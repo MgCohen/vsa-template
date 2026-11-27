@@ -91,7 +91,7 @@ ArchitectureTest<T> (a test of a definition, packs/Vsa/Tests/Unit)
 
 The queries (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) take plain facts (`TypeFacts` of the definition API: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. They use only the definition API and `Umpire.Utility`, so the definition test base (`packs/Vsa/Tests/Unit/` and the package `Umpire.Testing`) compiles a copy of them. A test project thus gets no engine module. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
 
-The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` and the path helpers `RelativePath` and `BuildOutput` are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`). The runtime, the engine and the version check use them from there. The definition API is portable and reads no DLL.
+The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` are in `framework/Kernel/Utility/` (the part `KernelParts.Utility`). The pure path and name helpers `RelativePath`, `BuildOutput` and `CompilerNames` are in `framework/Kernel/Paths/` (the part `KernelParts.Paths`). Both folders use the namespace `Umpire.Utility`. The runtime, the engine and the version check use them from there. In the engine definition, `Domain` (and so `Domain.Shared`) can use only `KernelParts.Paths`, and `Infrastructure` can use both parts. The definition API is portable and reads no DLL.
 
 ## Two kinds of type
 

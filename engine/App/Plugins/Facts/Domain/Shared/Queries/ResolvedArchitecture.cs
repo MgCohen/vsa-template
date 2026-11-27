@@ -58,8 +58,10 @@ public sealed class ResolvedArchitecture {
     public IReadOnlyList<BlockPlace> CoveredBlocks(string blockFolder, IReadOnlyList<string> innerBlocks) =>
         BlockPlaces.Covered(this, blockFolder, innerBlocks);
 
-    public IReadOnlyList<BlockPlace> EmptyPlaces(string blockFolder, IReadOnlyList<string> innerBlocks) =>
-        BlockPlaces.Empty(this, blockFolder, innerBlocks);
+    public IReadOnlyList<string> BlockPlaceFolders() => BlockPlaces.Patterns(this);
+
+    public IReadOnlyList<BlockPlace> EmptyPlaces(string blockFolder, IReadOnlyList<string> innerBlocks, BlockFolders folders) =>
+        BlockPlaces.Empty(this, blockFolder, innerBlocks, folders);
 
     public Decision DecisionFor(Binding from, Binding to) => DecisionFor(from.Part, from.Values, to.Part, to.Values);
 

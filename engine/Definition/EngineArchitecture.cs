@@ -13,7 +13,8 @@ public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
         rules.For<Contracts.Commands>().And<Handlers.Commands>().And<Infrastructure>().And<Domain.Shared>()
             .Uses<EngineLibraries>().And<VersionLibraries>().And<ConfigLibraries>();
-        rules.For<Infrastructure>().And<Domain>().Uses<KernelParts.Utility>();
+        rules.For<Infrastructure>().Uses<KernelParts.Utility>().And<KernelParts.Paths>();
+        rules.For<Domain>().Uses<KernelParts.Paths>();
         rules.For<Host>().And<App>(Depth.Self).Uses<EngineLibraries>().And<VersionLibraries>();
         rules.For<Host>().Uses<Contracts.Requests>().And<Domain.Shared>().And<Infrastructure>().Under<Plugin>();
         rules.For<DefinitionRoot>().Uses<EngineLibraries>();
