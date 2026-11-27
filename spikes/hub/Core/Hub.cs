@@ -21,8 +21,8 @@ public interface IHub {
 public sealed class Hub(IEnumerable<IHubStep> steps, IEnumerable<IPipeline> pipelines) {
     readonly IHubStep[] hubSteps = [.. steps];
     readonly Dictionary<Type, IPipeline> byMessage = pipelines
-        .SelectMany(p => p.Messages.Select(m => new KeyValuePair<Type, IPipeline>(m, p)))
-        .ToDictionary(e => e.Key, e => e.Value);
+        .SelectMany(p => p.Messages.Select(m => KeyValuePair.Create(m, p)))
+        .ToDictionary();
 
     internal Task<MessageResult> Send(object message, IServiceProvider scope, CancellationToken ct) {
         if (!byMessage.TryGetValue(message.GetType(), out var pipeline)) {

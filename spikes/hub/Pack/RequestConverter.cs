@@ -20,7 +20,7 @@ sealed class RequestConverter(IReadOnlyDictionary<string, Type> requests) : IOpe
             }
             try {
                 arguments[i] = System.Convert.ChangeType(text, parameters[i].ParameterType, CultureInfo.InvariantCulture);
-            } catch (FormatException) {
+            } catch (Exception e) when (e is FormatException or OverflowException) {
                 return MessageResult.Fail($"{operation.Name}: '{text}' is not a valid {parameters[i].ParameterType.Name}.");
             }
         }

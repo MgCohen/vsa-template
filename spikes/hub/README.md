@@ -15,6 +15,6 @@ dotnet artifacts~/bin/Umpire.Entry/debug/umpire.dll ping 5
 | `Core/App.cs` | `App.Run(hosts)` composes and returns `AppInstance`. The instance converts operations, sends messages and stops |
 | `Core/Hub.cs` | The hub: hub steps, then the pipeline of the message type |
 | `Core/Pipeline.cs` | Steps and validators by type, then the handler |
-| `Core/Operation.cs` | `Operation`, `IOperationConverter`, `IRequest` |
-| `Pack/` | VSA: the request handler base, the converter and the kernel |
-| `Ping/` | The app: one slice, and a plugin with a hub step and a request step |
+| `Core/Operation.cs` | `Operation` and `IOperationConverter` |
+| `Pack/` | VSA: `IRequest`, the request handler base, `Plugin`, the converter and the kernel |
+| `Ping/` | The app: one slice, and a plugin (`Plugin`) with a hub step and a request step |

@@ -20,6 +20,6 @@ public sealed class PingValidator : Validator<PingRequest> {
 }
 
 public sealed class PongModule : Module {
-    protected override void Configure(IServiceCollection services) =>
+    public override void Configure(IServiceCollection services) =>
         services.AddValidator<PingValidator, PingRequest>();
 }
