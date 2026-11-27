@@ -7,7 +7,7 @@ using System.Xml.Linq;
 public sealed class Workspace : IDisposable {
     Workspace(string root) {
         Root = root;
-        Env = new Dictionary<string, string> { ["NUGET_PACKAGES"] = Path.Combine(root, "nuget") };
+        Env = new Dictionary<string, string> { ["NUGET_PACKAGES"] = LocalFeed.NuGetCache };
     }
 
     public string Root { get; }

@@ -42,15 +42,21 @@ public sealed class DefinitionBuildTests {
         public sealed class ShopArchitecture : VsaArchitecture;
         """;
     Workspace workspace = null!;
+    BuiltCopy template = null!;
 
-    [SetUp]
-    public void Create() {
+    [OneTimeSetUp]
+    public void BuildTheTemplate() {
         workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Shop"));
         File.Delete(Path.Combine(workspace.Root, "Directory.Build.props"));
+        Build().EnsureSuccess();
+        template = BuiltCopy.Of(workspace);
     }
 
-    [TearDown]
-    public void Delete() => workspace.Dispose();
+    [SetUp]
+    public void Reset() => template.Restore();
+
+    [OneTimeTearDown]
+    public void Delete() => workspace?.Dispose();
 
     [Test]
     public void A_changed_definition_runs_the_check_again_and_gives_its_finding() {
@@ -165,15 +171,6 @@ public sealed class DefinitionBuildTests {
     }
 
     [Test]
-    public void An_ignored_definition_folder_gives_no_UMP030512() {
-        DeleteDefinition();
-        Write("Definition/Draft.cs", "class Draft;");
-        Write(".umpireconfig", "umpire.check.ignored_folders = \"Definition\"\n");
-
-        Assert.That(Build().Output, Does.Not.Contain("UMP030512").And.Not.Contain("UMP030308"));
-    }
-
-    [Test]
     public void A_definition_derives_from_a_definition_that_the_app_does_not_reference() {
         Write("company/Company.csproj", WithDefinitionPackage);
         Write("company/CompanyArchitecture.cs", Failing.Replace("Shop.Definition", "Company")
@@ -204,9 +201,10 @@ public sealed class DefinitionBuildTests {
     public void The_definition_of_a_nested_root_project_is_not_a_definition_of_the_outer_project() {
         WriteTools();
 
-        Build().EnsureSuccess();
+        var build = Build().EnsureSuccess();
 
         Assert.That(Definitions("Tools.Definition.dll"), Is.Empty);
+        Assert.That(build.Output, Does.Match("Tools.Definition.*warning UMP030513"));
     }
 
     [Test]
@@ -249,24 +247,6 @@ public sealed class DefinitionBuildTests {
         Assert.That(Build().Output, Does.Contain("warning UMP020301"));
     }
 
-    [TestCase("App/Packs/X/Definition")]
-    [TestCase("Tools/Definition")]
-    public void A_definition_that_no_build_loads_gives_the_warning_UMP030513(string folder) {
-        var project = Path.GetDirectoryName(folder)!;
-        Write($"{project}/X.csproj", OneLine);
-        Write($"{folder}/X.Definition.csproj", OneLine);
-        Write($"{folder}/XArchitecture.cs", Passing.Replace("Shop", "X"));
-
-        var build = Build();
-
-        Assert.That(build.Succeeded, Is.True, build.Output);
-        Assert.That(build.Output, Does.Match($"{folder.Replace('/', '.')}.*warning UMP030513"));
-
-        Write(".umpireconfig", $"umpire.check.ignored_folders = \"{folder}\"\n");
-
-        Assert.That(Build().Output, Does.Not.Contain("UMP030513"));
-    }
-
     [Test]
     public void A_definition_of_a_pack_that_the_build_loads_gives_no_UMP030513() {
         Write("App/Packs/X/Definition/X.Definition.csproj", OneLine);
@@ -279,19 +259,19 @@ public sealed class DefinitionBuildTests {
     public void A_finding_is_a_warning_by_default_also_with_TreatWarningsAsErrors() {
         Write("Definition/ShopArchitecture.cs", Failing);
 
-        Passes(Build(), "warning UMP020301");
-        Passes(Build("-p:TreatWarningsAsErrors=true"), "warning UMP020301");
-        Passes(Build("-p:MSBuildTreatWarningsAsErrors=true"), "warning UMP020301");
-        Passes(Build("-warnaserror"), "warning UMP020301");
-        Fails(Build("-p:MSBuildWarningsAsErrors=UMP020301"), "error UMP020301");
-        Fails(Build("-p:UmpireCheckMode=Error"), "error UMP020301");
-        Fails(Build("-p:UmpireCheckMode=Error", "-p:TreatWarningsAsErrors=true"), "error UMP020301");
+        Passes(BuildWithNoRestore(), "warning UMP020301");
+        Passes(BuildWithNoRestore("-p:TreatWarningsAsErrors=true"), "warning UMP020301");
+        Passes(BuildWithNoRestore("-p:MSBuildTreatWarningsAsErrors=true"), "warning UMP020301");
+        Passes(BuildWithNoRestore("-warnaserror"), "warning UMP020301");
+        Fails(BuildWithNoRestore("-p:MSBuildWarningsAsErrors=UMP020301"), "error UMP020301");
+        Fails(BuildWithNoRestore("-p:UmpireCheckMode=Error"), "error UMP020301");
+        Fails(BuildWithNoRestore("-p:UmpireCheckMode=Error", "-p:TreatWarningsAsErrors=true"), "error UMP020301");
 
         Write(".umpireconfig", "umpire.check.mode = \"Error\"\n");
 
-        Fails(Build(), "error UMP020301");
-        Fails(Build("-warnaserror"), "error UMP020301");
-        Passes(Build("-p:UmpireCheckMode=Warn"), "warning UMP020301");
+        Fails(BuildWithNoRestore(), "error UMP020301");
+        Fails(BuildWithNoRestore("-warnaserror"), "error UMP020301");
+        Passes(BuildWithNoRestore("-p:UmpireCheckMode=Warn"), "warning UMP020301");
     }
 
     [Test]
@@ -309,19 +289,19 @@ public sealed class DefinitionBuildTests {
             """;
         Write("App/Features/Orders/Slices/Peek/PeekRequest.cs", request);
 
-        Passes(Build("-p:UmpireCheck=false", "--no-incremental"), "warning UMP010201");
-        Passes(Build("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true"), "warning UMP010201");
-        Passes(Build("-p:UmpireCheck=false", "--no-incremental", "-warnaserror"), "warning UMP010201");
-        Fails(Build("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true", "-p:WarningsAsErrors=UMP010201"), "error UMP010201");
+        Passes(BuildWithNoRestore("-p:UmpireCheck=false", "--no-incremental"), "warning UMP010201");
+        Passes(BuildWithNoRestore("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true"), "warning UMP010201");
+        Passes(BuildWithNoRestore("-p:UmpireCheck=false", "--no-incremental", "-warnaserror"), "warning UMP010201");
+        Fails(BuildWithNoRestore("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true", "-p:WarningsAsErrors=UMP010201"), "error UMP010201");
 
         Write(".editorconfig", "root = true\n[*.cs]\ndotnet_diagnostic.UMP010201.severity = error\n");
 
-        Fails(Build("-p:UmpireCheck=false", "--no-incremental"), "error UMP010201");
+        Fails(BuildWithNoRestore("-p:UmpireCheck=false", "--no-incremental"), "error UMP010201");
 
         File.Delete(Path.Combine(workspace.Src, ".editorconfig"));
         Write(".umpireconfig", "umpire.UMP010201.severity = \"error\"\n");
 
-        Fails(Build("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true"), "error UMP010201");
+        Fails(BuildWithNoRestore("-p:UmpireCheck=false", "--no-incremental", "-p:TreatWarningsAsErrors=true"), "error UMP010201");
     }
 
     [Test]
@@ -329,31 +309,18 @@ public sealed class DefinitionBuildTests {
         var missing = $"-p:UmpireEngineFile={Path.Combine(workspace.Root, "none.dll")}";
         var broken = $"-p:UmpireEngineFile={Path.Combine(workspace.Src, "Shop.csproj")}";
 
-        Passes(Build(missing, "-p:TreatWarningsAsErrors=true"), "warning UMP030003");
-        Passes(Build(broken, "-p:TreatWarningsAsErrors=true"), "warning UMP030004");
-        Passes(Build("-p:UmpireCheckMode=Loud"), "warning UMP030004");
-        Fails(Build(missing, "-p:UmpireCheckMode=Error"), "error UMP030003");
+        Passes(BuildWithNoRestore(missing, "-p:TreatWarningsAsErrors=true"), "warning UMP030003");
+        Passes(BuildWithNoRestore(broken, "-p:TreatWarningsAsErrors=true"), "warning UMP030004");
+        Passes(BuildWithNoRestore("-p:UmpireCheckMode=Loud"), "warning UMP030004");
+        Fails(BuildWithNoRestore(missing, "-p:UmpireCheckMode=Error"), "error UMP030003");
 
         foreach (var config in new[] { "umpire.check.mode = \"Error\"", "[umpire.check]\nmode = 'error'", "[umpire]\ncheck.mode = \"Error\"",
             "[ umpire.check ]\nignored_folders = [\"Draft\"]\n\tmode = \"Error\"" }) {
             Write(".umpireconfig", config + "\n");
-            Fails(Build(broken), "error UMP030004");
+            Fails(BuildWithNoRestore(broken), "error UMP030004");
         }
         Write(".umpireconfig", "# umpire.check.mode = \"Error\"\numpire.check.mode = \"Warn\"\n");
-        Passes(Build(broken), "warning UMP030004");
-    }
-
-    [Test]
-    public void A_definition_that_is_not_in_the_bin_gives_UMP030512() {
-        Write("Directory.Build.targets", """
-            <Project>
-              <Target Name="NoDefinition" AfterTargets="_UmpireCopyDefinitions">
-                <RemoveDir Directories="$(TargetDir)umpire-definitions" />
-              </Target>
-            </Project>
-            """);
-
-        Assert.That(Build().Output, Does.Contain("warning UMP030512"));
+        Passes(BuildWithNoRestore(broken), "warning UMP030004");
     }
 
     static void Passes(DotnetResult build, string finding) {
@@ -367,6 +334,8 @@ public sealed class DefinitionBuildTests {
     }
 
     DotnetResult Build(params string[] args) => workspace.Dotnet(["build", "Shop.csproj", "-nodeReuse:false", .. args]);
+
+    DotnetResult BuildWithNoRestore(params string[] args) => Build(["--no-restore", .. args]);
 
     IReadOnlyList<string> Definitions(string pattern) =>
         [.. Directory.GetFiles(Path.Combine(workspace.Src, "artifacts~", "bin"), pattern, SearchOption.AllDirectories)

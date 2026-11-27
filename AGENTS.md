@@ -77,8 +77,8 @@ There are two test sets. Times are from a 4-core machine with the shared compile
 
 | Set | When | Commands | Time |
 |---|---|---|---|
-| Inner loop | After each change | `dotnet build Umpire.slnx`, then `dotnet test --solution Umpire.slnx --no-build --filter "TestCategory!=Package&TestCategory!=Parity" --ignore-exit-code 8` | About 15 s build (warm), 31 s tests |
-| Full set | One time before a merge | `dotnet build Umpire.slnx`, then `dotnet test --solution Umpire.slnx --no-build` | About 42 s build (cold), 6.5 min tests |
+| Inner loop | After each change | `dotnet build Umpire.slnx`, then `dotnet test --solution Umpire.slnx --no-build --filter "TestCategory!=Package&TestCategory!=Parity" --ignore-exit-code 8` | About 15 s build (warm), 35 s tests |
+| Full set | One time before a merge | `dotnet build Umpire.slnx`, then `dotnet test --solution Umpire.slnx --no-build` | About 42 s build (cold), 3.7 min tests (4.2 min if the feed is new) |
 
 - `[Category("Package")]` marks a test class that packs the framework (`LocalFeed`) or builds a `Workspace`. `[Category("Parity")]` marks the parity tests of the check model (`tests/CheckModel.Tests/Parity/`). Put the category on each new class of these kinds.
 - With the filter, some projects run no test. `--ignore-exit-code 8` accepts this result.
@@ -127,16 +127,16 @@ A new test project goes in `tests/<Name>.Tests/`, then run `dotnet run solution.
 
 A consumer tests its own definition with `ArchitectureTest<TArchitecture>` (`VsaArchitectureTest` for a VSA app): "this type in this folder binds to this part" and "this use is allowed". See "Tests of a definition" in `docs/architecture-engine.md`.
 
-`LocalFeed` packs all framework packages one time for each test process, with version `0.0.0-test`. A `Workspace` restores from that feed with its own NuGet cache, in a short temporary folder.
+`LocalFeed` packs all framework packages, with version `0.0.0-test`, one time for each hash of its inputs. The inputs are the files at the repository root and under `architecture/`, `framework/`, `packs/`, `engine/` and `tools/`, the pack arguments and the SDK version. The files are the files that git lists: tracked, untracked, and ignored outside the folders `artifacts~`, `bin`, `obj` and `node_modules`. If a file changes while the pack runs, the next run does not use that pack. The feed is in `<temp>/umpire/f-<hash>/feed/`, with its NuGet cache in `<temp>/umpire/f-<hash>/nuget/`. All test processes use the same feed. A lock file (`f-<hash>.lock`) makes parallel test processes wait for one pack. A `Workspace` and the Cli tests restore from that feed with the NuGet cache of the feed, and the workspace itself is in a short temporary folder. On each first use, `LocalFeed` deletes the folders in `<temp>/umpire/` that no test used for two hours. If you add a packed input outside these folders, add it to the hash (`tests/Shared/FeedInputs.cs`).
 
 The public surface of `tests/Shared` (namespace `Tests.Shared`). Other test projects use it, so keep these names stable:
 
 | Member | Use |
 |--------|-----|
 | `Repo.Root`, `Repo.Path(params string[])` | The repository root, and a path in it |
-| `LocalFeed.Path`, `LocalFeed.Version`, `LocalFeed.Packages` | The feed folder (packs on first use), `0.0.0-test`, the package ids. It packs each packable project under `framework/` |
+| `LocalFeed.Path`, `LocalFeed.NuGetCache`, `LocalFeed.Version`, `LocalFeed.Packages` | The feed folder (packs on first use of a new hash), the NuGet cache of the feed, `0.0.0-test`, the package ids. It packs each packable project under `LocalFeed.PackRoots` |
 | `Workspace.Create(string copyFrom)` | Copies a folder to `Src` and writes `global.json` in `Src` (the block folder), and `nuget.config`, `Directory.Build.props` and `Directory.Packages.props` in `Root` |
-| `workspace.Root`, `.Src`, `.Env`, `.Dotnet(params string[])`, `.Start(params string[])`, `.Dispose()` | Run dotnet in `Src` with the workspace NuGet cache. `Dispose` deletes the folder |
+| `workspace.Root`, `.Src`, `.Env`, `.Dotnet(params string[])`, `.Start(params string[])`, `.Dispose()` | Run dotnet in `Src` with the NuGet cache of the feed. `Dispose` deletes the workspace folder |
 | `Dotnet.Run(workDir, env, params string[])`, `Dotnet.Start(...)` | Run the dotnet CLI without the MSBuild variables of the test host |
 | `DotnetResult(Command, ExitCode, Output)`, `.Succeeded`, `.EnsureSuccess()` | The result of a run |
 | `TempFolder.Create()`, `.Stable(name)`, `.Copy(from, to)`, `.Delete(path)` | Short temporary folders. `Stable` gives the same empty folder for the same name in each run |

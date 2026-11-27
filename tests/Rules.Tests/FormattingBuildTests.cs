@@ -9,13 +9,17 @@ public sealed class FormattingBuildTests {
     static readonly string[] styleFiles = ["Directory.Build.props", "tools/sdk/Umpire.Sdk.Dev.props"];
     static readonly string[] styleSwitches =
         ["AnalysisLevel", "EnforceCodeStyleInBuild", "GenerateDocumentationFile", "NoWarn"];
+    Workspace workspace = null!;
     DotnetResult build = null!;
 
     [OneTimeSetUp]
     public void Build() {
-        using var workspace = StyledWorkspace();
+        workspace = StyledWorkspace();
         build = workspace.Dotnet(["build", "App/Features/Styled/Styled.csproj", "-nodeReuse:false", .. RepositoryStyle()]);
     }
+
+    [OneTimeTearDown]
+    public void Delete() => workspace?.Dispose();
 
     [Test]
     public void Build_passes() => Assert.That(build.Succeeded, Is.True, build.Output);
@@ -86,7 +90,6 @@ public sealed class FormattingBuildTests {
     [Test]
     public void Test_project_may_have_underscores_in_names()
     {
-        using var workspace = StyledWorkspace();
         var result = workspace.Dotnet(["build", "Styled.Tests/Styled.Tests.csproj", "-nodeReuse:false", .. RepositoryStyle()]);
         Assert.That(result.Succeeded, Is.True, result.Output);
         Assert.That(result.Output, Does.Not.Contain("CA1707"), result.Output);
@@ -94,8 +97,8 @@ public sealed class FormattingBuildTests {
 
     [Test]
     public void Umpire_Sdk_gives_a_consumer_no_style() {
-        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
-        var result = workspace.Dotnet("build", "App/Features/Styled/Styled.csproj", "-nodeReuse:false");
+        using var plain = Workspace.Create(Repo.Path("tests", "Fixtures", "Built", "Formatting"));
+        var result = plain.Dotnet("build", "App/Features/Styled/Styled.csproj", "-nodeReuse:false");
         var style = result.Output.Split('\n').Where(line => line.Contains(" warning IDE", StringComparison.Ordinal));
         Assert.That(style, Is.Empty, result.Output);
     }
