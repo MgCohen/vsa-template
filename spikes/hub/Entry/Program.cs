@@ -1,4 +1,4 @@
-using Greeter;
+using Ping;
 using Spike.Hosts.Console;
 
-return await new GreeterApp().Run(new ConsoleHost(args));
+return await new PingApp().Run(new ConsoleHost(args));

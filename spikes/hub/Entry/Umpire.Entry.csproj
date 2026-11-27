@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <AssemblyName>umpire</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Greeter/Greeter.csproj" />
+    <ProjectReference Include="../Ping/Ping.csproj" />
     <ProjectReference Include="../Hosts.Console/Spike.Hosts.Console.csproj" />
   </ItemGroup>
 </Project>

@@ -11,19 +11,23 @@ public sealed class PackKernel : Kernel {
         foreach (var type in app.GetTypes().Where(t => !t.IsAbstract && HandlerBase(t) is not null)) {
             var service = HandlerBase(type)!;
             var arguments = service.GetGenericArguments();
-            services.AddScoped(service, type);
-            var call = (IHandlerCall)Activator.CreateInstance(typeof(RequestCall<,>).MakeGenericType(arguments))!;
             if (handlers.ContainsKey(arguments[0])) {
                 throw new InvalidOperationException($"{arguments[0].Name} has two handlers.");
             }
             if (binders.ContainsKey(NameOf(arguments[0]))) {
                 throw new InvalidOperationException($"Two requests have the name {NameOf(arguments[0])}.");
             }
+            services.AddScoped(service, type);
+            var call = (IHandlerCall)Activator.CreateInstance(typeof(RequestCall<,>).MakeGenericType(arguments))!;
             handlers[arguments[0]] = new HandlerRoute(service, call);
             binders[NameOf(arguments[0])] = new RequestBinder(arguments[0]);
         }
         services.AddSingleton<IPipeline>(provider => new Pipeline(handlers, provider.GetServices<StepEntry>(), provider.GetServices<ValidatorEntry>()));
-        services.AddSingleton<IOperationReader>(new RequestReader(binders));
+
+        services.AddSingleton(new RequestBinders(binders));
+        services.AddScoped<OperationHandler>();
+        var operations = new Dictionary<Type, HandlerRoute> { [typeof(Operation)] = new(typeof(OperationHandler), new OperationCall()) };
+        services.AddSingleton<IPipeline>(provider => new Pipeline(operations, provider.GetServices<StepEntry>(), provider.GetServices<ValidatorEntry>()));
     }
 
     static Type? HandlerBase(Type type) {

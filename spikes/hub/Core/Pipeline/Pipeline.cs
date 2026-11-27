@@ -25,7 +25,8 @@ public sealed class Pipeline : IPipeline {
                 }
             }
             var handler = scope.GetRequiredService(route.HandlerRoute.Service);
-            return MessageResult.Ok(await route.HandlerRoute.HandlerCall.Call(handler, message, ct).ConfigureAwait(false));
+            var value = await route.HandlerRoute.HandlerCall.Call(handler, message, ct).ConfigureAwait(false);
+            return value as MessageResult ?? MessageResult.Ok(value);
         };
         for (var i = route.Steps.Count - 1; i >= 0; i--) {
             var step = (IPipelineStep)scope.GetRequiredService(route.Steps[i]);

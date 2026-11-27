@@ -7,12 +7,11 @@ public abstract class App<TKernel> where TKernel : Kernel, new() {
         var services = new ServiceCollection();
         Compose(services);
         using var provider = services.BuildServiceProvider();
-        return await host.Run(provider.GetRequiredService<IOperations>()).ConfigureAwait(false);
+        return await host.Run(provider.GetRequiredService<IHub>()).ConfigureAwait(false);
     }
 
     void Compose(IServiceCollection services) {
         services.AddSingleton<IHub, Hub>();
-        services.AddSingleton<IOperations, Operations>();
         new TKernel().Install(services, GetType().Assembly);
         foreach (var module in GetType().Assembly.GetTypes()
             .Where(t => typeof(Module).IsAssignableFrom(t) && !t.IsAbstract)

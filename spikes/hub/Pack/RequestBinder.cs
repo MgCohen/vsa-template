@@ -3,7 +3,7 @@ namespace Spike.Pack;
 using System.Globalization;
 using System.Linq.Expressions;
 
-sealed class RequestBinder {
+public sealed class RequestBinder {
     readonly Func<object?[], object> create;
     readonly RequestValue[] values;
 
@@ -15,15 +15,16 @@ sealed class RequestBinder {
             Expression.Convert(Expression.ArrayIndex(input, Expression.Constant(i)), p.ParameterType));
         create = Expression.Lambda<Func<object?[], object>>(
             Expression.Convert(Expression.New(constructor, arguments), typeof(object)), input).Compile();
-        values = [.. parameters.Select(p => new RequestValue(p.Name!, p.ParameterType, p.HasDefaultValue, p.DefaultValue))];
+        values = [.. parameters.Select((p, i) => new RequestValue(p.Name!, i.ToString(CultureInfo.InvariantCulture), p.ParameterType, p.HasDefaultValue, p.DefaultValue))];
     }
 
     public object Bind(IReadOnlyDictionary<string, string> input) =>
         create([.. values.Select(v => v.Read(input))]);
 
-    sealed record RequestValue(string Name, Type Type, bool HasDefault, object? Default) {
+    sealed record RequestValue(string Name, string Position, Type Type, bool HasDefault, object? Default) {
         public object? Read(IReadOnlyDictionary<string, string> input) =>
-            input.TryGetValue(Name, out var text) ? Convert.ChangeType(text, Type, CultureInfo.InvariantCulture)
+            input.TryGetValue(Name, out var text) || input.TryGetValue(Position, out text)
+                ? Convert.ChangeType(text, Type, CultureInfo.InvariantCulture)
             : HasDefault ? Default
             : throw new ArgumentException($"The value '{Name}' is missing.");
     }

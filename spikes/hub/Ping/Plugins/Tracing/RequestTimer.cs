@@ -1,4 +1,4 @@
-namespace Greeter.Plugins.Tracing;
+namespace Ping.Plugins.Tracing;
 
 using System.Diagnostics;
 using Spike.Core;
