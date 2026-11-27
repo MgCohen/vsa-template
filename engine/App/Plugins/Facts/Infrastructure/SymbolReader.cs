@@ -9,6 +9,7 @@ using Umpire.Utility;
 
 sealed class SymbolReader : IDisposable {
     static readonly Guid TypeDefinitionDocuments = new("932E74BC-DBA9-4478-8D46-0F32A7BAB3D3");
+    static readonly Guid Sha256 = new("8829D00F-11B8-4213-878B-770E8597AC16");
     const string EmbeddedAttribute = "Microsoft.CodeAnalysis.EmbeddedAttribute";
     const int OutputFolders = 2;
     const int GeneratorFolders = 2;
@@ -55,6 +56,36 @@ sealed class SymbolReader : IDisposable {
         [.. metadata.AssemblyReferences.Select(r => metadata.GetString(metadata.GetAssemblyReference(r).Name))];
 
     public IReadOnlyList<string> Documents() => HasSymbols ? [.. pdb.Documents.Select(DocumentName)] : [];
+
+    public MetadataReader Metadata => metadata;
+
+    public bool MatchesImage {
+        get {
+            if (!HasSymbols) {
+                return false;
+            }
+            var codeView = image.ReadDebugDirectory().Where(e => e.Type == DebugDirectoryEntryType.CodeView).ToList();
+            if (codeView.Count == 0 || pdb.DebugMetadataHeader is not { Id.Length: >= 16 } header) {
+                return true;
+            }
+            var guid = new Guid([.. header.Id.Take(16)]);
+            return codeView.Any(entry => image.ReadCodeViewDebugDirectoryData(entry).Guid == guid);
+        }
+    }
+
+    public IReadOnlyList<SourceDocument> SourceDocuments() => HasSymbols
+        ? [.. pdb.Documents.Select(handle => new SourceDocument(DocumentName(handle), HashOf(pdb.GetDocument(handle))))]
+        : [];
+
+    public IReadOnlyList<SourcePoint> PointsOf(MethodDefinitionHandle method) => HasSymbols
+        ? [.. SequencePoints(method).Where(p => !p.IsHidden)
+            .Select(p => new SourcePoint(p.Offset, DocumentName(p.Document), p.StartLine, p.StartColumn))]
+        : [];
+
+    public MethodBodyBlock? BodyOf(MethodDefinitionHandle method) {
+        var rva = metadata.GetMethodDefinition(method).RelativeVirtualAddress;
+        return rva == 0 ? null : image.GetMethodBody(rva);
+    }
 
     public IEnumerable<TypeSource> TypeSources() {
         if (!HasSymbols) {
@@ -165,6 +196,11 @@ sealed class SymbolReader : IDisposable {
         }
         return null;
     }
+
+    string HashOf(Document document) =>
+        document.HashAlgorithm.IsNil || pdb.GetGuid(document.HashAlgorithm) != Sha256 || document.Hash.IsNil
+            ? ""
+            : BitConverter.ToString(pdb.GetBlobBytes(document.Hash)).Replace("-", "").ToLowerInvariant();
 
     static bool IsRooted(string document) =>
         Path.IsPathRooted(document)

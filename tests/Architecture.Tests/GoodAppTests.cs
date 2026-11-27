@@ -1,12 +1,10 @@
 namespace EngineCore.Tests;
 
 using Kit;
-using Umpire.Architecture;
-using Facts.Infrastructure;
-using Rules.Slices.CheckRules;
+using Umpire.CheckModel;
 
 public sealed class GoodAppTests {
-    static ArchitectureCheck Map => FixtureApps.Good;
+    static CheckedApp Map => FixtureApps.Good;
 
     [Test]
     public void The_good_app_has_no_findings() {
@@ -15,7 +13,7 @@ public sealed class GoodAppTests {
 
     [Test]
     public void Each_type_of_the_good_app_is_in_a_part() {
-        Assert.That(Map.Bindings.Unmapped.Select(u => u.Type.FullName), Is.Empty);
+        Assert.That(Map.Unmapped.Select(u => u.Name.FullName), Is.Empty);
     }
 
     [TestCase("CreateInvoiceHandler", "Handlers.Requests", "Features/Billing/Slices/CreateInvoice")]
@@ -24,39 +22,39 @@ public sealed class GoodAppTests {
     [TestCase("BillingModule", "Feature", "Features/Billing")]
     [TestCase("Invoice", "Domain", "Features/Billing/Domain")]
     public void Each_type_binds_to_its_part_and_place(string type, string part, string place) {
-        var binding = Map.Bindings.All.Single(b => b.Type.Name == type && !b.External);
+        var placement = Map.Model.PlacementOf(Map.Named(type))!;
 
-        Assert.That(binding.Part.Name, Is.EqualTo(part));
-        Assert.That(binding.Path, Is.EqualTo(place));
+        Assert.That(placement.Part.Name, Is.EqualTo(part));
+        Assert.That(placement.Path, Is.EqualTo(place));
     }
 
     [Test]
     public void The_types_of_the_other_app_are_not_bound() {
-        Assert.That(Map.Bindings.AppTypes.Select(t => t.FullName), Has.None.StartsWith("BadApp."));
+        Assert.That(Map.Types.Select(t => t.Name.FullName), Has.None.StartsWith("BadApp."));
     }
 
     [Test]
     public void A_type_of_an_external_DLL_binds_by_the_DLL_name() {
-        var binding = External();
+        var placement = External();
 
-        Assert.That(binding.External, Is.True);
-        Assert.That(binding.Part.Name, Is.EqualTo("KitLayer"));
-        Assert.That(binding.Where, Is.EqualTo("KitLayer (Kit.dll)"));
+        Assert.That(placement.IsExternal, Is.True);
+        Assert.That(placement.Part.Name, Is.EqualTo("KitLayer"));
+        Assert.That(placement.Where, Is.EqualTo("KitLayer (Kit.dll)"));
     }
 
     [Test]
     public void A_type_of_an_external_DLL_is_a_rule_target() {
-        var domain = Map.Bindings.All.Single(b => b.Type.Name == "Invoice" && !b.External);
-        var handler = Map.Bindings.All.Single(b => b.Type.Name == "CreateInvoiceHandler");
+        var domain = Map.Model.PlacementOf(Map.Named("Invoice"))!;
+        var handler = Map.Model.PlacementOf(Map.Named("CreateInvoiceHandler"))!;
         var kit = External();
 
-        Assert.That(Map.Resolved.DecisionFor(domain.Part, domain.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Deny));
-        Assert.That(Map.Resolved.DecisionFor(handler.Part, handler.Values, kit.Part, kit.Values).Permission, Is.EqualTo(Permission.Allow));
+        Assert.That(Map.Model.DecisionFor(domain, kit).Permission, Is.EqualTo(Permission.Deny));
+        Assert.That(Map.Model.DecisionFor(handler, kit).Permission, Is.EqualTo(Permission.Allow));
     }
 
     [Test]
     public void A_type_of_an_external_DLL_is_not_an_app_type() {
-        Assert.That(Map.Bindings.AppTypes.Select(t => t.FullName), Has.None.EqualTo(typeof(IEntity).FullName));
+        Assert.That(Map.Types.Select(t => t.Name.FullName), Has.None.EqualTo(typeof(IEntity).FullName));
     }
 
     [Test]
@@ -68,22 +66,17 @@ public sealed class GoodAppTests {
     public void A_framework_interface_in_the_header_exposes_nothing() {
         var baseTypes = ExposuresOf("BellPresenter").Where(e => e.Member == "base type").Select(e => e.Target.Name);
 
-        Assert.That(baseTypes, Is.EqualTo(new[] { "Object" }));
+        Assert.That(baseTypes, Is.Empty);
     }
 
     [Test]
     public void A_presenter_with_a_framework_interface_in_the_header_has_no_findings() {
-        var presenter = Map.Bindings.BoundTypes.Single(t => t.Name == "BellPresenter");
-
-        var file = Map.Bindings.Of(presenter.FullName)!.Source!.File;
+        var file = Map.Named("BellPresenter").File;
 
         Assert.That(Map.Findings().Where(f => f.File == file), Is.Empty);
     }
 
-    static Binding External() => Map.Bindings.All.Single(b => b.Type.FullName == typeof(IEntity).FullName);
+    static Placement External() => Map.PlaceOf(typeof(IEntity).FullName!)!;
 
-    static IEnumerable<Exposure> ExposuresOf(string name) =>
-        Exposures.Of(
-            Map.App.Types.Single(t => t.Name == name && Map.Bindings.Of(t.FullName)?.External == false),
-            t => Map.Bindings.Of(t.FullName)?.External == true);
+    static IEnumerable<Exposure> ExposuresOf(string name) => Exposure.Of(Map.Model, Map.Named(name));
 }

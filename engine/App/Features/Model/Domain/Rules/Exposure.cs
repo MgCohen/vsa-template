@@ -35,6 +35,6 @@ sealed record Exposure(TypeName Target, Access Access, string Member) {
 
     static bool IsExternal(AppModel app, TypeName name) => app.TargetOf(name) is { Placement.IsExternal: true };
 
-    static Access AccessOf(MemberAccess access) =>
+    internal static Access AccessOf(MemberAccess access) =>
         access is MemberAccess.Public or MemberAccess.Protected or MemberAccess.ProtectedInternal ? Access.Public : Access.Internal;
 }

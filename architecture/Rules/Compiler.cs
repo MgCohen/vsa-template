@@ -154,7 +154,7 @@ internal sealed class Compiler {
         target.IsAbstract || target.GetConstructor(Type.EmptyTypes) is null
             ? throw new InvalidOperationException(
                 $"Rules: {Concept.Display(target)} is an abstract External or has no empty constructor, so it names no DLL. "
-                + "Name a sealed External record with an Assembly, for example Uses<ArchUnitLibraries>().")
+                + "Name a sealed External record with an Assembly, for example Uses<UmpireLibraries>().")
             : target;
 
     void AddRule(List<PartRule> all, Rule rule) {

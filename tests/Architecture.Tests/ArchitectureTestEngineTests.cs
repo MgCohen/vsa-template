@@ -3,50 +3,50 @@ namespace EngineCore.Tests;
 extern alias testing;
 
 using System.Reflection;
-using Rules.Slices.CheckRules;
-using Umpire.Architecture;
+using Umpire.CheckModel;
 using Umpire.Vsa.Definition;
 using testing::Umpire.Architecture;
 
 public sealed class ArchitectureTestEngineTests : ArchitectureTest<VsaArchitecture> {
     static readonly string Block = FixtureApps.Block("VsaApp");
 
-    static readonly Lazy<ArchitectureCheck> Check =
+    static readonly Lazy<CheckedApp> Check =
         new(() => FixtureApps.Load(new VsaArchitecture(), AppContext.BaseDirectory, Block));
 
     static readonly Assembly App = Assembly.Load("VsaApp");
 
     [Test]
     public void The_base_binds_each_type_of_the_VSA_fixture_to_the_part_of_the_engine() {
-        var bindings = Check.Value.Bindings.All.Where(b => !b.External && b.Type.Assembly == "VsaApp").ToList();
+        var placed = Check.Value.Types.Where(t => t.Project == "VsaApp" && !t.IsUnmapped)
+            .Select(t => new Placed(t, Check.Value.Model.PlacementOf(t)!)).ToList();
 
-        var differences = bindings
-            .Select(b => new Difference(b.Type.FullName, b.Part.Name, BasePart(b)))
+        var differences = placed
+            .Select(p => new Difference(p.Type.Name.FullName, p.Placement.Part.Name, BasePart(p.Type)))
             .Where(d => d.Engine != d.Base);
 
-        Assert.That(bindings.Where(b => b.FollowsUser), Is.Not.Empty);
+        Assert.That(placed.Where(p => p.Placement.FollowsUser), Is.Not.Empty);
         Assert.That(differences, Is.Empty);
     }
 
     [Test]
     public void The_base_does_not_map_each_type_that_the_engine_does_not_map() {
-        var unmapped = Check.Value.Bindings.Unmapped;
+        var unmapped = Check.Value.Unmapped;
 
         var mapped = unmapped
-            .Where(u => BasePlace(u.Type.FullName, FolderOf(u.Source)).IsMapped)
-            .Select(u => u.Type.FullName);
+            .Where(u => BasePlace(u.Name.FullName, FolderOf(u.File)).IsMapped)
+            .Select(u => u.Name.FullName);
 
         Assert.That(unmapped, Is.Not.Empty);
         Assert.That(mapped, Is.Empty);
     }
 
-    static string FolderOf(Source source) =>
-        Path.GetRelativePath(Block, Path.GetDirectoryName(source.File)!).Replace('\\', '/');
+    static string FolderOf(string file) =>
+        Path.GetRelativePath(Block, Path.GetDirectoryName(file)!).Replace('\\', '/');
 
     static IEnumerable<string> TypesIn(string folder) =>
-        Check.Value.Bindings.AppTypes.Where(t => t.Source is { } s && FolderOf(s) == folder).Select(t => t.FullName);
+        Check.Value.Types.Where(t => FolderOf(t.File) == folder).Select(t => t.Name.FullName);
 
-    string BasePart(Binding binding) => BasePlace(binding.Type.FullName, FolderOf(binding.Source!)).Part;
+    string BasePart(AppType type) => BasePlace(type.Name.FullName, FolderOf(type.File)).Part;
 
     Place BasePlace(string fullName, string folder) {
         var neighbors = TypesIn(folder)
@@ -55,6 +55,8 @@ public sealed class ArchitectureTestEngineTests : ArchitectureTest<VsaArchitectu
             .ToArray();
         return At(App.GetType(fullName, true)!, folder, neighbors);
     }
+
+    sealed record Placed(AppType Type, Placement Placement);
 
     sealed record Difference(string Type, string Engine, string Base);
 }
