@@ -37,7 +37,7 @@ public sealed class FreshDataTests {
 
         build.State.Save(Samples.Layers with { Name = "Other" });
 
-        var report = CheckJob.Run(build.State);
+        var report = ModelCheck.Run(build.State);
         Assert.That(report.HasErrors, Is.False);
         Assert.That(report.Findings.Select(f => f.Code), Has.Member(DataCodes.OldSnapshot));
     }
@@ -97,7 +97,7 @@ public sealed class FreshDataTests {
         build.Write("Ui/Screen.cs", Screen);
         build.Analyze(build.Compile("Sample", "Ui/Screen.cs"));
 
-        var report = CheckJob.Run(build.State);
+        var report = ModelCheck.Run(build.State);
 
         Assert.That(report.Succeeded, Is.True);
         Assert.That(report.Findings.Single().Text, Does.Contain("matches First and Second"));
@@ -112,7 +112,7 @@ public sealed class FreshDataTests {
 
         build.Save(Samples.Layers, Samples.Settings("Ui", "Data") with { OtherStates = [BlockPath.Of(build.State.Folder, other.State.Folder)] });
 
-        Assert.That(CheckJob.Run(build.State).Findings.Select(f => f.Code), Has.Member(DataCodes.NoSnapshot));
+        Assert.That(ModelCheck.Run(build.State).Findings.Select(f => f.Code), Has.Member(DataCodes.NoSnapshot));
     }
 
     [Test]
@@ -140,6 +140,6 @@ public sealed class FreshDataTests {
         return build;
     }
 
-    static IEnumerable<Severity> Severities(SampleBuild build) => CheckJob.Run(build.State).Findings
+    static IEnumerable<Severity> Severities(SampleBuild build) => ModelCheck.Run(build.State).Findings
         .Where(f => RuleCodes.All.Contains(f.Code)).Select(f => f.Severity);
 }

@@ -1,6 +1,6 @@
 namespace Umpire.CheckModel;
 
-public static class CheckJob {
+public static class ModelCheck {
     public static Report Run(StateFolder state, CheckMode? mode = null) {
         var report = new Report();
         report.Describe("state", state.Folder);

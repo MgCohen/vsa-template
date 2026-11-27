@@ -2,7 +2,7 @@ namespace CheckModel.Tests;
 
 using Umpire.CheckModel;
 
-public sealed class OperationTests {
+public sealed class RuleTests {
     [Test]
     public void A_use_that_no_rule_allows_is_a_finding_at_the_line_of_the_use() {
         using var temp = new TempState();

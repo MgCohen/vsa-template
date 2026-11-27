@@ -8,7 +8,8 @@ public sealed class DefinitionExport {
 
     DefinitionExport(Api.ResolvedArchitecture resolved) {
         this.resolved = resolved;
-        positions = resolved.Root.Walk().Skip(1).Select((part, i) => KeyValuePair.Create(part, i)).ToDictionary();
+        positions = resolved.Root.Walk().Skip(1).Select((part, i) => new KeyValuePair<Api.Part, int>(part, i))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
     }
 
     public static Definition Of(Api.ResolvedArchitecture resolved) => new DefinitionExport(resolved).Make();
@@ -17,7 +18,7 @@ public sealed class DefinitionExport {
 
     static TypeName? NameOrNull(Type? type) => type is null ? null : Name(type);
 
-    static TOut Same<TOut>(Enum value) where TOut : struct, Enum => Enum.Parse<TOut>(value.ToString());
+    static TOut Same<TOut>(Enum value) where TOut : struct, Enum => (TOut)Enum.Parse(typeof(TOut), value.ToString());
 
     static TOut? SameOrNull<TOut>(Enum? value) where TOut : struct, Enum => value is null ? null : Same<TOut>(value);
 

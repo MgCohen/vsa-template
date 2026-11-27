@@ -151,7 +151,7 @@ public sealed class ReferenceTrustTests {
         var ui = build.Saved("Ui");
         build.State.Save(ui with { References = [.. ui.References, new ProjectReference("Data", "old")] });
 
-        Assert.That(CheckJob.Run(build.State).Succeeded, Is.True);
+        Assert.That(ModelCheck.Run(build.State).Succeeded, Is.True);
         Assert.That(WrongType(build), Is.EqualTo(Severity.Warning));
     }
 
@@ -164,7 +164,7 @@ public sealed class ReferenceTrustTests {
 
         build.Write("Packs/New/.umpireconfig", "");
 
-        Assert.That(CheckJob.Run(build.State).Findings.Single(f => f.Code == RuleCodes.EmptyBlockPlace).Severity, Is.EqualTo(Severity.Warning));
+        Assert.That(ModelCheck.Run(build.State).Findings.Single(f => f.Code == RuleCodes.EmptyBlockPlace).Severity, Is.EqualTo(Severity.Warning));
     }
 
     [Test]
@@ -212,5 +212,5 @@ public sealed class ReferenceTrustTests {
     }
 
     static Severity WrongType(SampleBuild build) =>
-        CheckJob.Run(build.State).Findings.Single(f => f.Code == RuleCodes.WrongType).Severity;
+        ModelCheck.Run(build.State).Findings.Single(f => f.Code == RuleCodes.WrongType).Severity;
 }

@@ -9,6 +9,7 @@ using Jobs;
 using Jobs.Slices.BuildJob;
 using Jobs.Slices.CheckJob;
 using LoadApp;
+using Model;
 using Microsoft.Extensions.DependencyInjection;
 using Operations;
 using Operations.Contracts.Requests;
@@ -35,7 +36,7 @@ public sealed class RunEngineTests {
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Facts", "Operations", "Blocks", "Build", "Changes", "Jobs", "LoadApp", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Facts", "Operations", "Blocks", "Build", "Changes", "Jobs", "LoadApp", "Model", "Rules", "Versions" }));
     }
 
     [Test]
@@ -312,7 +313,7 @@ public sealed class RunEngineTests {
 
     internal static Module[] EngineModules() => [
         new OperationsPlugin(), new FactsPlugin(), new JobsModule(), new BuildModule(), new ChangesModule(), new BlocksModule(),
-        new VersionsModule(), new LoadAppModule(), new RulesModule(),
+        new VersionsModule(), new LoadAppModule(), new RulesModule(), new ModelModule(),
     ];
 
     internal static async Task<ConsoleOutput> Run(
