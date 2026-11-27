@@ -14,7 +14,7 @@ sealed class CountRun {
         var type = rule.Counted.Type?.Name.Split('`')[0];
         Counts = rule.IsRequired ? $"{part} types with base {type}" : rule.Counts;
         text = rule.IsRequired
-            ? $"{part} requires {type} in each {subjects.FirstOrDefault()?.Name ?? "app"}"
+            ? $"{part} requires {type} in each {(subjects.Count > 0 ? subjects[0].Name : null) ?? "app"}"
             : rule.ToString();
     }
 

@@ -109,7 +109,7 @@ sealed partial class ModelRun : IDisposable {
         var result = Dotnet.Run(Path.GetDirectoryName(project)!, null,
             "build", project, "-t:Compile", "--no-restore", "-nologo", "-p:BuildProjectReferences=false", "-p:UmpireCheck=false",
             $"-p:IntermediateOutputPath={output}/obj/", "-p:ProduceReferenceAssembly=false",
-            $"-p:CustomAfterMicrosoftCommonTargets={Repo.Path("tests", "CheckModel.Tests", "Parity", "Inject.targets")}",
+            $"-p:CustomAfterMicrosoftCommonTargets={Repo.Path("tests", "Engine.Tests", "Model", "Parity", "Inject.targets")}",
             $"-p:UmpireCheckState={state.Folder}",
             $"-p:UmpireModelAnalyzers={Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory)}/");
         TempFolder.Delete(output);

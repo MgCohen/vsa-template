@@ -9,11 +9,12 @@ using Operations.Infrastructure;
 using Tests.Shared;
 using Umpire.Engine.Versions;
 using Versions.Slices.CheckVersions;
+using Model.Slices.CheckModel;
+using Model.Slices.ExportModel;
 
 namespace Engine.Tests;
 
 public sealed class CodeTests {
-    const string CheckModelGroup = "0308";
     static readonly Assembly Engine = typeof(CheckRulesCommand).Assembly;
 
     static IEnumerable<Type> EngineTypes => Engine.GetTypes().Where(t => !t.IsAbstract && !t.IsInterface);
@@ -34,6 +35,9 @@ public sealed class CodeTests {
             Assert.That(CheckVersionsCommand.Group, Is.EqualTo(4));
             Assert.That(LoadAppCommand.Group, Is.EqualTo(5));
             Assert.That(CheckRulesCommand.Group, Is.EqualTo(6));
+            Assert.That(ExportModelCommand.Group, Is.EqualTo(7));
+            Assert.That(CheckModelCommand.Group, Is.EqualTo(8));
+            Assert.That(OperationCode.Of<CheckModelCommand>(1), Is.EqualTo(Umpire.CheckModel.DataCodes.NoModel));
         });
     }
 
@@ -85,13 +89,14 @@ public sealed class CodeTests {
 
     [Test]
     public void The_code_list_of_the_SDK_has_each_engine_code_and_no_other() {
-        var steps = Engine.GetTypes().Where(t => t.Name.EndsWith("Codes", StringComparison.Ordinal))
+        var steps = Engine.GetTypes()
+            .Where(t => t.Name.EndsWith("Codes", StringComparison.Ordinal) && t != typeof(Umpire.CheckModel.RuleCodes))
             .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static))
             .Where(f => f.FieldType == typeof(string))
             .Select(f => (string)f.GetValue(null)!);
         var rules = ArchitectureRule.All.Select(rule => rule.Code);
 
-        var listed = SdkCodes.All.Where(code => code[3..5] is "02" or "03" && code[3..7] != CheckModelGroup);
+        var listed = SdkCodes.All.Where(code => code[3..5] is "02" or "03");
 
         Assert.That(listed, Is.EquivalentTo(steps.Concat(rules).Append(VersionCheck.Code)));
     }

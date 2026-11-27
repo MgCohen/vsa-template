@@ -26,7 +26,7 @@ public sealed class AnalyzerTests {
         build.Write("Data/Store.cs", Store);
 
         var diagnostic = build.Analyze(build.Compile("Sample", "Ui/Screen.cs", "Data/Store.cs")).Single();
-        var finding = CheckJob.Run(build.State).Findings.Single();
+        var finding = ModelCheck.Run(build.State).Findings.Single();
 
         Assert.That(finding.Text, Is.EqualTo(diagnostic.GetMessage()));
         Assert.That(finding.Line, Is.EqualTo(diagnostic.Location.GetLineSpan().StartLinePosition.Line + 1));
@@ -137,12 +137,12 @@ public sealed class AnalyzerTests {
         File.Delete(Path.Combine(build.Block, "Ui", "Screen.cs"));
         build.Write("Data/Screen.cs", Screen);
         build.Analyze(build.Compile("Ui", "Data/Screen.cs"));
-        Assert.That(CheckJob.Run(build.State).Findings, Is.Empty);
+        Assert.That(ModelCheck.Run(build.State).Findings, Is.Empty);
         File.Delete(Path.Combine(build.Block, "Data", "Screen.cs"));
         build.Write("Ui/Screen.cs", Screen);
         build.Analyze(build.Compile("Ui", "Ui/Screen.cs"));
 
-        var finding = CheckJob.Run(build.State).Findings.Single();
+        var finding = ModelCheck.Run(build.State).Findings.Single();
         Assert.That((finding.Code, finding.Severity), Is.EqualTo((RuleCodes.DeniedUse, Severity.Error)));
     }
 

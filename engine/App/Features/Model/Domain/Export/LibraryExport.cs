@@ -16,6 +16,6 @@ public static class LibraryExport {
 
     static string? DeclaringType(TypeName name) {
         var plus = name.FullName.LastIndexOf('+');
-        return plus < 0 ? null : name.FullName[..plus];
+        return plus < 0 ? null : name.FullName.Substring(0, plus);
     }
 }

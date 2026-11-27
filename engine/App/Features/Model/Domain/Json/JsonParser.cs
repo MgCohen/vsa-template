@@ -108,7 +108,7 @@ sealed class JsonParser {
         return (char)code;
     }
 
-    object Number() {
+    long Number() {
         var start = at;
         while (at < text.Length && (char.IsDigit(text[at]) || text[at] == '-')) {
             at++;
