@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class MemberOrderRule : KernelRule {
+sealed class MemberOrderRule : KernelRule {
     public const string KindOrderKey = "kind_order";
     public const string AccessOrderKey = "access_order";
     public const string StaticFirstKey = "static_first";

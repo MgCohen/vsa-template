@@ -26,12 +26,16 @@ static class BlockPlaces {
         return covered;
     }
 
-    public static IReadOnlyList<BlockPlace> Empty(ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {
+    public static IReadOnlyList<string> Patterns(ResolvedArchitecture resolved) =>
+        [.. resolved.Parts.Where(p => p.IsBlockPlace).Select(p => p.Path)];
+
+    public static IReadOnlyList<BlockPlace> Empty(
+        ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks, BlockFolders folders) {
         var inner = new HashSet<string>(Relative(blockFolder, innerBlocks), StringComparer.OrdinalIgnoreCase);
         return [.. resolved.Parts.Where(p => p.IsBlockPlace)
-            .SelectMany(place => Folders(blockFolder, place.Path.Split('/'))
-                .Where(folder => !inner.Contains(folder) && (Directory.Exists(Full(blockFolder, folder)) || !HasDllForm(place)))
-                .Select(folder => new BlockPlace(place, Full(blockFolder, folder), folder)))];
+            .SelectMany(place => folders.Folders.Where(f => f.Pattern == place.Path)
+                .Where(f => !inner.Contains(f.Folder) && (f.Exists || !HasDllForm(place)))
+                .Select(f => new BlockPlace(place, Full(blockFolder, f.Folder), f.Folder)))];
     }
 
     static bool HasDllForm(Part place) => !place.IsGroup && place.Concept is Blocks.Block && place.Children.Count > 0;
@@ -46,34 +50,9 @@ static class BlockPlaces {
     static bool Fits(string pattern, string folder) =>
         pattern.StartsWith("{", StringComparison.Ordinal) || string.Equals(pattern, folder, StringComparison.OrdinalIgnoreCase);
 
-    static IEnumerable<string> Folders(string blockFolder, string[] pattern) {
-        IEnumerable<string> found = [""];
-        foreach (var segment in pattern) {
-            found = segment.StartsWith("{", StringComparison.Ordinal)
-                ? found.SelectMany(folder => Subfolders(blockFolder, folder))
-                : found.Select(folder => Join(folder, segment));
-        }
-        return found;
-    }
-
-    static IEnumerable<string> Subfolders(string blockFolder, string folder) {
-        var full = Full(blockFolder, folder);
-        if (!Directory.Exists(full)) {
-            return [];
-        }
-        return Directory.GetDirectories(full)
-            .Select(Path.GetFileName)
-            .OfType<string>()
-            .Where(name => !BuildOutput.IsIgnored(name))
-            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-            .Select(name => Join(folder, name));
-    }
-
     static IEnumerable<string> Relative(string blockFolder, IReadOnlyList<string> innerBlocks) =>
         innerBlocks.Select(folder => RelativePath.Of(blockFolder, folder).Replace('\\', '/').TrimEnd('/'))
             .Where(folder => folder != "." && !folder.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(folder));
-
-    static string Join(string folder, string segment) => folder.Length == 0 ? segment : $"{folder}/{segment}";
 
     static string Full(string blockFolder, string folder) => Path.GetFullPath(Path.Combine(blockFolder, folder));
 }

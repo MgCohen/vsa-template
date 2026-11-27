@@ -1,6 +1,5 @@
 namespace CodeCheck.Slices.CheckCode;
 
-using CodeCheck.Infrastructure;
 using Facts.Domain.Shared.Compile;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;

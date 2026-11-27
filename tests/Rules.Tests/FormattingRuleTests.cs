@@ -320,7 +320,7 @@ public sealed class RuleOptionTests {
             Analyzer.Diagnostic(Rule, 0, 24, 20));
 }
 
-public sealed class NoDefaultRule : KernelRule {
+sealed class NoDefaultRule : KernelRule {
     public const string Key = "size";
 
     public static CodeFile File { get; } = new("Abc.cs", [13], [], [], [], [], []);
