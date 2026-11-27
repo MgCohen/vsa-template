@@ -111,6 +111,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #396, the shared feed: the hash includes each root file, so an edit of `AGENTS.md` or `README.md` makes a new pack. A feed with no use for two hours is deleted. The in-process tests of `UMP030512` and `UMP030513` delete a DLL from a copy of the bin, where the old cases used a real SDK build. The lock was not tested on Windows.
 - #393, `LocalHost`:
   - `LocalHost` is not sealed, and `Send` exists for each host that derives from `LocalHost`, so a custom or test host also gets it.
   - The typed `Send` (VSA) and the untyped `Send` (core) have the same name. The caller gets the typed one only when it imports both namespaces.
@@ -125,7 +126,8 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 ## Test speed
 
 - Done: `CS8032` fixed, the shared compiler is on again, the categories `Package` and `Parity`, and the two test sets in `AGENTS.md` (PR #395). A full run passes 1963 tests, with no `CS8032`.
-- In work: one feed for each content hash, fewer workspaces in `DefinitionBuildTests`, and the merge of duplicate build tests (`claude/test-speed-2`).
+- Done: one feed for each content hash, 13 workspaces in place of 42, and the merge of duplicate build tests (PR #396). The full set takes about 3.7 min, and the inner loop about 34 s plus the build.
+- Next: CheckModel `Parity` (about 2:40) is now the longest project after Rules.Tests.
 
 ## Later
 
