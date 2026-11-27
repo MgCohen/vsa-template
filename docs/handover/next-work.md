@@ -63,7 +63,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Done: `EngineApp<THost>`, the build job and the check job, the operations, the plugins Operations and Facts (PR #401). In work: the engine library on `netstandard2.0`, `Entries/Console/`, `check/` and `architecture/Queries/` into the engine (3b part 1). Next: the analyzers and `Entries/Analyzer/` (3b part 2) | P1, entry design |
+| Done: `EngineApp<THost>`, the build job and the check job, the operations, the plugins Operations and Facts (PR #401). Done: the engine library on `netstandard2.0`, `Entries/Console/`, `check/` and `architecture/Queries/` in the engine (PR #403, #404). In work: the analyzers and `Entries/Analyzer/` with the compile job (3b part 2) | P1, entry design |
 | Jobs are requests in `App/Features/Jobs/`: compile job, build job, check job | P3, P9 |
 | Operations are feature modules: export, setup check, architecture check, code check, format, tests | P3, P4 |
 | Each job returns the same report type. The operations fill it | P4 |
@@ -111,6 +111,13 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #403 and #404, the engine core and the check model:
+  - The queries keep the namespace `Umpire.Architecture`, and the model keeps `Umpire.CheckModel`, as an exception to the namespace rule (written in `AGENTS.md`).
+  - `ArchitectureTest` needs the queries, so `Umpire.Vsa.Testing.Unit` and the `Umpire.Testing` bundle compile a copy of the query files: two copies of one source. `Umpire.Definition` gives its internals to `Umpire.Engine` and `Umpire.Testing`.
+  - `AppLoader` stays in the console entry, because `AssemblyLoadContext` has no `netstandard2.0` API.
+  - `engine/Polyfills~/` holds own copies of some .NET APIs for `netstandard2.0` (for example `FolderSearch`).
+  - `umpire-check` is now `jobs check --model true`. Its exit code is the engine report code: 1 only for an error (before: 1 also for warnings, 2 for a broken check, 3 for bad flags). With `--model true`, the job still needs `--project` and `--bin`.
+  - No job sends the export operation yet.
 - #401, the engine as jobs and operations:
   - The plugin from `Steps` is named `Operations`, not `Jobs`: a feature `Jobs` and a plugin `Jobs` give two module classes with one name.
   - Each job has its own report type (`BuildJobReport`, `CheckJobReport`, subtypes of `JobReport`), because `UMP020302` needs the response in the slice of its handler.
