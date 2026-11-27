@@ -63,7 +63,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| `EngineApp<THost>` on `netstandard2.0`. `Entries/Console/` holds `Program.cs`, and `Entries/Analyzer/` holds the analyzer | P1, entry design |
+| Done: `EngineApp<THost>`, the build job and the check job, the operations, the plugins Operations and Facts (PR #401). In work: the engine library on `netstandard2.0`, `Entries/Console/`, `check/` and `architecture/Queries/` into the engine (3b part 1). Next: the analyzers and `Entries/Analyzer/` (3b part 2) | P1, entry design |
 | Jobs are requests in `App/Features/Jobs/`: compile job, build job, check job | P3, P9 |
 | Operations are feature modules: export, setup check, architecture check, code check, format, tests | P3, P4 |
 | Each job returns the same report type. The operations fill it | P4 |
@@ -111,6 +111,14 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #401, the engine as jobs and operations:
+  - The plugin from `Steps` is named `Operations`, not `Jobs`: a feature `Jobs` and a plugin `Jobs` give two module classes with one name.
+  - Each job has its own report type (`BuildJobReport`, `CheckJobReport`, subtypes of `JobReport`), because `UMP020302` needs the response in the slice of its handler.
+  - The two job handlers repeat the same check sequence (about 50 lines), because `Slices/Shared/` cannot send the commands of other modules (`UMP020101`).
+  - The console entry is `EngineApp<EngineConsoleHost>`: `ConsoleHost` gives no output for a result.
+  - `--stage Build` (a build with no check) is removed. A call with no job word gives `UMP030401` with the fix; a new hook with an old engine still gives `UMP030004`. vsa-unity may call the engine with the old form.
+  - New engine rule line: `rules.For<Host>().Uses<Contracts.Requests>().And<Domain.Shared>().Under<Plugin>()`, and the Host may use `Infrastructure` of a plugin (`CheckMode`).
+  - `IFactSource<TQuery, TFacts>` has two type parameters. Some file reads stay outside Facts (`TargetRuntime`, `DefinitionFolder`, the Changes hashes, `EntryFiles`).
 - #400, the lowest targets: `Umpire.Web` is `net9.0`, not the `net8.0` of P7, because `Views.Map` calls `MapStaticAssets` (ASP.NET Core 9); support for .NET 8 and 9 ended on 2026-11-10, so "lowest supported" may now mean `net10.0`. `Umpire.Console` stays `net8.0`: on .NET 10 on Linux, SIGTERM did not raise `ProcessExit`. `Umpire.Testing` keeps an ASP.NET Core framework reference only for `AddLogging`. `App.Services` is `protected internal` and is no longer in `IApp`.
 - #399, `Configuration` and `Logging`: `HostArguments` keeps the old internal name. `WebHost` gives only the command-line arguments to `HostArguments`, not the full ASP.NET configuration. `OpenDescriptors` no longer closes open descriptors of `Microsoft.Extensions.*` assemblies. `Compose` now stops with an error if a service registers an `ILoggerProvider` and no `ILoggerFactory`. Parent keys such as `Probe` (of `Probe:Value`) are gone. Also: a race between test processes on the Notes fixture is fixed with `FixtureLock`.
 - #398, the removal of the SDK:
