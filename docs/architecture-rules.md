@@ -329,7 +329,7 @@ flowchart LR
     C --> S[Services of the app]
 ```
 
-The app of a test is `UnitTestApp<VsaKernel>`, an `App<VsaKernel, UnitTestHost>`, and `UnitTestHost` is a `LocalHost`. The class has an open kernel, so the rule engine does not count it as a check entry of `Umpire.Testing`. Before each test, the base makes new test services with the default fakes and calls `Configure`. At the first `Handle`, `Send`, `Provider`, `Events` or `Repository` call, the base starts the app. The composition installs the core, the kernel and the modules, then the test services. A test service replaces each service of the app with the same service type. An open generic test service, for example `IRepository<,>`, also replaces each closed form of it. After each test, the base stops the app.
+The app of a test is `UnitTestApp<VsaKernel>`, an `App<VsaKernel, UnitTestHost>`, and `UnitTestHost` is a `LocalHost`. The class has an open kernel, so the rule engine does not count it as a check entry of `Umpire.Testing`. Before each test, the base makes new test services with the default fakes and calls `Configure`. At the first `Handle`, `Send`, `Provider`, `Events` or `Repository` call, the base starts the app. The composition installs the core, the kernel and the modules, then the test services. A test service replaces each service of the app with the same service type. An open generic test service, for example `IRepository<,>`, also replaces each closed form of it. After each test, the base stops the app. `LocalHost` makes one scope for each request, so a test reads a singleton from `Provider`, not a scoped service of the request.
 
 `Modules` gives the modules of the app. The default is `ScannedModules`: the modules in the DLLs of the test output, with no test assembly. A test class that must use other modules overrides it, for example `new FixedModules(new GoodModule())`.
 
@@ -352,7 +352,7 @@ public sealed class CreateNotePublisherTests : VsaUnitTest {
 |---|---|---|
 | `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Repository<T, TId>().With(...)` |
 | `IIntegrationEventPublisher` | `RecordingEventPublisher` (`Events`) | `Mock<IIntegrationEventPublisher>()` |
-| `ILogger<T>` | The null logger of the composition | A logger factory in `Configure` |
+| `ILogger<T>` | Logging with no output | `services.AddLogging(...)` (the test base has ASP.NET Core) |
 | `ICommandSender` | None | `Mock<ICommandSender>()` |
 | Other services | None | `Mock<T>()` |
 

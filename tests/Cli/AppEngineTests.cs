@@ -42,6 +42,16 @@ public sealed class AppEngineTests {
             Throws.TypeOf<UmpireException>().With.Message.Contain("The rule engine /no/umpire-engine.dll does not exist"));
 
     [Test]
+    public void ARootProjectWithManyTargetsStops() =>
+        Assert.That(() => AppEngine.FromProperties("/app", Properties(AnyFile, "", "", "")),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Give the root project one TargetFramework"));
+
+    [Test]
+    public void OutputThatIsNotJsonStops() =>
+        Assert.That(() => AppEngine.FromProperties("/app", "warn {NU1603} restore"),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("MSBuild gave no properties"));
+
+    [Test]
     public void NoPropertiesStop() =>
         Assert.That(() => AppEngine.FromProperties("/app", "error MSB1009: Project file does not exist."),
             Throws.TypeOf<UmpireException>().With.Message.Contain("MSBuild gave no properties"));

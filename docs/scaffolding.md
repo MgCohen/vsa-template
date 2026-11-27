@@ -16,7 +16,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | `add plugin <Name>` | Plugin root (inherits `Plugin`), `Contracts/Commands/` with the base command `<Name>Step<TResult>` | None |
 | `add pack <Name>` | In `App/Packs/<Name>/`: the kernel project `Kernel/` (`<Name>Kernel`) and the definition project `Definition/` (`<Name>Architecture`). See `pack-variants.md` | None |
 | `test [-c <configuration>]` | None | None. It runs `dotnet run --project` for each project of the app whose name ends with `.Tests`, so it needs no `test` entry in `global.json` |
-| `check [-c <configuration>] [--mode <Warn\|Error>]` | None | None. It builds the app and runs the check job with the rule engine of the app. See "The check of an app" |
+| `check [-c <Debug\|Release>] [--mode <Warn\|Error>]` | None | None. It builds the app and runs the check job with the rule engine of the app. See "The check of an app" |
 | `doctor` | None | None |
 | `update [--version <version>]` | None | The Umpire versions in the project files and `Directory.*.props` |
 
@@ -56,7 +56,7 @@ flowchart LR
     O -->|ToolLine| R[CommandList.Run]
 ```
 
-The command words and the options stay in the form of the tool, for example `add request <Name> -m <Module>`. The host gives only the words of the command to `ConsoleHost`, for example `add request`, and the operation reads the full command line from `ToolLine`. An unknown command selects `help`, and `help` gives the error with the usage. The operation changes an `UmpireException` into the error `umpire: <message>` with exit code 1. The tool uses no module and no module settings (`FixedModules`, no settings provider).
+The command words and the options stay in the form of the tool, for example `add request <Name> -m <Module>`. The host gives only the words of the command to `ConsoleHost`, for example `add request`, and the operation reads the full command line from `ToolLine`. An unknown command selects `help`, and `help` gives the error with the usage. The operation changes an `UmpireException` into the error `umpire: <message>` with exit code 1. Another exception gives `umpire: ` and the full exception text, with exit code 1. The tool uses no module and no module settings (`FixedModules`, no settings provider).
 
 The tool is not a VSA app, and the build does not check it as a block.
 
@@ -69,7 +69,7 @@ The tool is not a VSA app, and the build does not check it as a block.
 3. It runs `dotnet exec --roll-forward <UmpireEngineRollForward> <UmpireEngineFile> jobs check --project <app> --bin <TargetDir> --block <UmpireBlock>`, with `--mode` if you give it.
 4. The engine builds the app, checks it and writes the report. The exit code of the tool is the exit code of the engine.
 
-If the app has no `Umpire.Engine`, or the engine file does not exist, the tool stops with the fix.
+If the app has no `Umpire.Engine`, the engine file does not exist, or the root project has more than one target framework, the tool stops with the fix. `-c` takes only `Debug` and `Release`, because the engine finds the configuration in the output folder.
 
 ## Add a command
 
@@ -81,7 +81,7 @@ ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(
 ├─ InitCommand                   umpire init [--source <feed>] [--check true]
 └─ AppCommand                    finds the app folder, then Run(root, CommandInput)
    ├─ TestCommand                umpire test [-c <configuration>]
-   ├─ CheckCommand               umpire check [-c <configuration>] [--mode <Warn|Error>]
+   ├─ CheckCommand               umpire check [-c <Debug|Release>] [--mode <Warn|Error>]
    ├─ DoctorCommand              umpire doctor
    ├─ UpdateCommand              umpire update [--version <version>]
    └─ AddCommand                 checks the name, writes the template files of one TemplateGroup

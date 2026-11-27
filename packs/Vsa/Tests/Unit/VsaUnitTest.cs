@@ -30,6 +30,7 @@ public abstract class VsaUnitTest {
     [SetUp]
     public void CreateServices() {
         services = [];
+        services.AddLogging();
         services.AddSingleton(typeof(IRepository<,>), typeof(InMemoryRepository<,>));
         services.AddSingleton<RecordingEventPublisher>();
         services.AddSingleton<IIntegrationEventPublisher>(s => s.GetRequiredService<RecordingEventPublisher>());
@@ -38,8 +39,9 @@ public abstract class VsaUnitTest {
 
     [TearDown]
     public void DisposeServices() {
-        app?.Stop();
+        var stopping = app;
         app = null;
+        stopping?.Stop();
     }
 
     protected virtual void Configure(IServiceCollection services) { }

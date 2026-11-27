@@ -88,6 +88,11 @@ public sealed class CommandTests {
         Assert.That(() => RunOutsideAnApp(["check"]),
             Throws.TypeOf<UmpireException>().With.Message.Contain("not in an Umpire app"));
 
+    [Test]
+    public void CheckTakesOnlyTheConfigurationsThatTheEngineKnows() =>
+        Assert.That(() => RunInAnApp(["check", "-c", "Staging"]),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Give -c Debug or -c Release, not -c Staging."));
+
     [TestCase("module", "module")]
     [TestCase("plugin", "plugin module")]
     [TestCase("pack", "pack")]

@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The base of the unit tests: the test starts the app on a LocalHost and sends a request with app.Send, or runs a command with its handler in that app, with default fakes for the framework services and NSubstitute mocks for other services. ArchitectureTest and VsaArchitectureTest: the bases of the tests of a definition. They ask the answers of the rules, so the project compiles the query files of the engine (engine/App/Plugins/Facts/Domain/Shared/Queries/), as the bundle Umpire.Testing does. It does not reference the engine, so a test bin gets no engine module. -->
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../../../../architecture/Umpire.Architecture.csproj" />
     <ProjectReference Include="../../Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="../../Kernel/Composition/Umpire.Vsa.Composition.csproj" />

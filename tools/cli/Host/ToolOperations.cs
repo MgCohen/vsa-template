@@ -26,6 +26,8 @@ static class ToolOperations {
             return new OperationResult(null, null, run(services.GetRequiredService<ToolLine>()));
         } catch (UmpireException e) {
             return new OperationResult(null, new Error(ErrorCode, e.Message), 1);
+        } catch (Exception e) when (e is not OperationCanceledException) {
+            return new OperationResult(null, new Error(ErrorCode, e.ToString()), 1);
         }
     }
 
