@@ -777,7 +777,12 @@ public static CompileJobReport Send(CompileJobRequest request) {
 | `CheckCodeCommand` | `App/Features/CodeCheck/Slices/CheckCode/` | The code rules (`CodeRule`, `UMP01xxxx`) |
 | `CheckTypesCommand` | `App/Features/Model/Slices/CheckTypes/` | The type checks of the check model, type scope only |
 | Compile facts | `App/Plugins/Facts/Domain/Shared/Compile/` | Plain records: `CompileProject`, `CodeFile`, `CodeType` |
-| `PackSource`, `ModelSource` | `engine/Entries/Analyzer/` | The fact sources of the compilation |
+| Snapshot facts | `App/Plugins/Facts/Domain/Shared/Snapshot/` | The records of a snapshot (`Snapshot`, `TypeFacts`, `TypeContent`, `MemberFact` and the others), `TypeName`, `BlockPath`, `Surface` and the JSON writer. The fact readers of the entry make them. They keep the namespace `Umpire.CheckModel` |
+| `PackSource`, `ModelSource` | `engine/Entries/Analyzer/` | The fact sources of the compilation (`PackQuery`, `ModelQuery` and `IModelFacts` are in `App/Plugins/Facts/Infrastructure/`) |
+
+The entry gets the codes of its descriptors from the engine. When the compiler loads the analyzer, the entry sends the compile job with the stage `Load` and the project `CompileProject.None`. The CodeCheck and CheckTypes operations then give their codes (`FindingCode`), and they check nothing. The entry adds only its own codes: `UMP010003` (a library does not load) and `UMP030001` (an operation did not run). If the engine does not load, the entry has only these two descriptors.
+
+The analyzer entry passes the VSA rules of the engine definition. As a host, it may use the module classes (`Depth.Self`), the requests and their responses of each module, the VSA composition (`LocalRequests`), the message contracts (`Result`, `Error`), and the published domain and the infrastructure of a plugin. `BlockStampTests` checks the bin of `Engine.Tests`, which has the analyzer DLL.
 
 The rules with app scope (counts of a block, block places, the setup findings) run only in the build job and in the check job. In the compile job, the check model checks each type of its project: the place, the content and the uses of the type. A `nameof`, a constant and an enum value of a type are a use of that type. `CompileHost` has a fixed module list and no module settings, and `CompileHost.Modules()` names each module of the engine assembly (`RunEngineTests`).
 

@@ -27,7 +27,7 @@ public sealed class ReferenceFolderJobTests {
 
             var report = await Run(copy);
 
-            var model = AppModel.Load(StateFolder.At(copy.State));
+            var model = AppModels.Load(StateFolder.At(copy.State));
             Assert.Multiple(() => {
                 Assert.That(report.Findings.Select(f => f.Code), Has.None.EqualTo(DataCodes.NoSnapshot).And.None.EqualTo(DataCodes.NoModel));
                 Assert.That(File.Exists(StateFolder.At(copy.State).SnapshotFile(App)), Is.True);
@@ -47,7 +47,7 @@ public sealed class ReferenceFolderJobTests {
             var copy = Copy(root);
 
             await Run(copy);
-            var model = AppModel.Load(StateFolder.At(copy.State));
+            var model = AppModels.Load(StateFolder.At(copy.State));
             var handler = model.TypesOf(App).First(t => t.Name.Name == "CreateNoteHandler");
 
             Assert.That(handler.References.Select(r => r.Fact.Target.Name), Has.Some.EqualTo("Note"));

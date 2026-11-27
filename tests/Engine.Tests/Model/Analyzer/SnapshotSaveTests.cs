@@ -14,7 +14,7 @@ public sealed class SnapshotSaveTests {
 
         var diagnostics = build.Analyze(build.Compile("Data", [build.Compile("Ui", "Ui/Screen.cs")], "Data/Store.cs"));
 
-        var saved = Snapshot.Read(File.ReadAllText(file));
+        var saved = SnapshotText.Read(File.ReadAllText(file));
         Assert.Multiple(() => {
             Assert.That(diagnostics.Select(d => d.Id), Has.None.EqualTo(RuleCodes.DeniedUse));
             Assert.That(saved.Root, Is.EqualTo(Path.Combine(build.Block, "Data")));
@@ -52,7 +52,7 @@ public sealed class SnapshotSaveTests {
             Snapshots = [new SnapshotPlace("Data", first, "net8.0"), new SnapshotPlace("Data", second, "net10.0")],
         });
 
-        var report = ModelCheck.Run(build.State);
+        var report = StateCheck.Run(build.State);
 
         Assert.Multiple(() => {
             Assert.That(report.Findings.Where(f => f.Code == RuleCodes.DeniedUse), Has.Exactly(1).Items);

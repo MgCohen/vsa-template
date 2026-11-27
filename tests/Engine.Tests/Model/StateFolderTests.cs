@@ -56,6 +56,6 @@ public sealed class StateFolderTests {
 
         var file = temp.State.SnapshotFile("Sample");
         Assert.That(Directory.GetFiles(Path.GetDirectoryName(file)!), Has.Length.EqualTo(1));
-        Assert.That(Snapshot.Read(File.ReadAllText(file)).Files, Has.Count.EqualTo(1));
+        Assert.That(SnapshotText.Read(File.ReadAllText(file)).Files, Has.Count.EqualTo(1));
     }
 }
