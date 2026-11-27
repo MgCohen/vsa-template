@@ -81,7 +81,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Done (PR #406): the package build runs the compile job on the source of each bundle (`UmpireLibraryPass`), and `Umpire.Engine` ships `tools/net8.0/libraries/<assembly>.json`. The check reads no PDB for the type facts | Q8 |
 | Done (PR #406): the build runs the build job on the model path. The same findings and codes on the fixtures. Only the place of some findings changes (the line of the use, the line of the type name) | Queue item 3 of the hand-over |
 | Done (PR #406): the state files are in the intermediate output path (`obj/.../umpire/`), also the run stamp. The block stamps stay in `artifacts~/umpire-checks/` of the block, because each app that uses the block reads them | P7 |
-| Done (PR #PRNUM): no ArchUnitNET, no `TypeFactSource` and no Rules operation. ExportModel reads the DLLs of a reference folder (`umpire.check.references`, Unity) with `DllSource` (`MetadataLoadContext`, IL and PDB), and CheckModel checks their types. `tests/Architecture.Tests` and the parity tests run on the model path. `SymbolReader` stays for the Blocks operation and for the DLL facts | K1, Q8, reference folders C |
+| Done (PR #412): no ArchUnitNET, no `TypeFactSource` and no Rules operation. ExportModel reads the DLLs of a reference folder (`umpire.check.references`, Unity) with `DllSource` (`MetadataLoadContext`, IL and PDB), and CheckModel checks their types. `tests/Architecture.Tests` and the parity tests run on the model path. `SymbolReader` stays for the Blocks operation and for the DLL facts | K1, Q8, reference folders C |
 | Done (PR #406): `block.json` stays. The compile needs the projects of the block, the place of each snapshot, the mode, the severities and the marks, and the definition does not hold them | P6 |
 | Done (PR #406): brief D item 6 does not apply with no SDK. A multi-target root builds with no `<TargetFramework />`, and the package test has no workaround. Each inner build checks its own target | P7 |
 
@@ -138,7 +138,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - Each compile in a build writes a snapshot, also of the framework projects and the test projects of this repository.
   - `state.txt` next to a snapshot names the state of the last root build that checked the project. Two roots that share a project write over it.
   - With no `--state`, no key and no `bin` folder in `--bin`, the state folder is `artifacts~/umpire` in the block (a `~` folder, so Unity does not import it).
-- PR #PRNUM, the switch without ArchUnitNET:
+- PR #412, the switch without ArchUnitNET:
   - ExportModel reads the facts of an app DLL only if the DLL has no snapshot and `deps.json` does not list it as a project. A project with no snapshot still gives `UMP030802`.
   - The DLL facts follow the IL. A `nameof`, a constant or an enum value is not a use, and a type of compiler output is a use. See "Compile facts and DLL facts" in `check-model.md`.
   - If a reference DLL does not resolve (for example `UnityEngine.dll` is not in a reference folder), a type keeps only the name of its direct base. A rule that names a deeper base type cannot see it. vsa-unity can add the folder of the Unity DLLs to `umpire.check.references`.
