@@ -37,14 +37,14 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Work | Decision |
 |---|---|
 | Done: the test failures of `main` (#383, PR #384) | Clean base |
-| Take over draft PR #382: no default interface methods, one handler call for each kind | DIM decision |
+| Done: no default interface methods, one handler call for each kind (PR #382) | DIM decision |
 | Done: the API sites that `netstandard2.0` does not have (PR #386) | P2 |
-| Move the portable layer to `netstandard2.0`, after #382. Also change the conditions on `'netstandard2.1'` (polyfills, packages, `Umpire.Sdk.Core.targets`) | P2, entry design |
+| Done: the portable layer and the bundles target `netstandard2.0` (PR #392) | P2, entry design |
 | If an app class still has a generic parameter after the app and host split, fix `AppClass.KernelsOf`: refuse only an open kernel | Spike, assumption 4 |
 | The analyzer entry gets a fixed module list and its own `.umpireconfig` path | Spike finding |
 | Split the app, the composition and the host: `App` is the lifecycle with one start method and gets the host as a value, `Composition` only installs (core, kernel, modules, the self-install of the host), `AppHost` is only the transport | App and host split |
 | One operation flow for all transports. Each transport only converts its input (arguments, a request, a payload) and its output. `IRequest` is a basic type | App and host split |
-| `LocalHost` and `Send`, through the same operation flow | Entry design, App and host split |
+| Done: `LocalHost` and `Send`, through the `Operation` path, with a typed `Send` in the VSA kernel (PR #393). The engine accepts an app class with an open host | Entry design |
 | Done: `LoadedTypes` and `ClosedBase` in `framework/Kernel/Utility/`, namespace `Umpire.Utility` (PR #387). Still to move: the file writer and the version check, with phase 2 | Q1, P8 |
 | Done: our own TOML reader, no Tomlyn (PR #388) | K4 Q4 |
 | Done: `App.Services` is `protected internal`, and `IApp` has no `Services`. The tests read it through `InternalsVisibleTo`. The consumer repos do not read it. A Unity bridge gets the provider in `UnityHost.Start(services, stop)` | Entry design |
@@ -53,11 +53,11 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Split the runtime and the definition: `Umpire.dll` ships no definition code | K4 Q1, Q2 |
-| Split core and VSA into two DLLs | K4 Q6 |
-| Done (#247): the core has no `Microsoft.Extensions.Configuration` and no `Logging`. It uses `HostArguments` and the null logger. Update the consumer repos: `Configuration(args)` is `Arguments(args)`, `Compose` takes `HostArguments`, and a non-web module reads `HostArguments` in place of `IConfiguration` | K4 Q5 |
-| Remove the SDK: the packages bring their own `build/` props and targets. This repository keeps `UseArtifactsOutput` | P7 |
-| Done: each package targets the lowest framework that its code needs. `Umpire.Web` is `net9.0` (`MapStaticAssets`), `Umpire.Console`, `Umpire.Testing` and `umpire` are `net8.0`. See "Runtime targets" in `requirements.md` | P7 |
+| Done: `Umpire.dll` ships no definition code. New packages `Umpire.Definition` and `Umpire.Vsa.Definition` (PR #391) | K4 Q1, Q2 |
+| Done: the core `Umpire` and `Umpire.Vsa` are two packages and two DLLs (PR #394) | K4 Q6 |
+| Done (PR #399): the core has no `Microsoft.Extensions.Configuration` and no `Logging`. It uses `HostArguments` and the null logger. Update the consumer repos: `Configuration(args)` is `Arguments(args)`, `Compose` takes `HostArguments`, and a non-web module reads `HostArguments` in place of `IConfiguration` | K4 Q5 |
+| Done: no SDK. A consumer project uses `Microsoft.NET.Sdk` and package references; the build logic is in the `build/` files of `Umpire`; the engine ships in the new package `Umpire.Engine` (PR #398) | P7 |
+| Done (PR #400): each package targets the lowest framework that its code needs. `Umpire.Web` is `net9.0` (`MapStaticAssets`), `Umpire.Console`, `Umpire.Testing` and `umpire` are `net8.0`. See "Runtime targets" in `requirements.md` | P7 |
 
 ## Phase 3: engine
 
@@ -92,6 +92,52 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | The tooling is a separate app, and `ConsoleHost` runs it | P7 |
 | `umpire check` starts the engine version of the app | Q2 (watch) |
 
+## End review
+
+Uncertain points of this work. The user reviews them at the end of the plan, not during the work.
+
+- Unify with the sibling design talk ("Design: host-agnostic app and entry points", draft spike #381, page https://claude.ai/artifact/F6jvJV9kdCe34Y2Jto2obD). Its "App and host split" (the app names only its kernel, the entry gives the host as a value, one fixed composition, an untyped `LocalHost.Invoke` in the core) differs from the "Entry design" of this plan (`EngineApp<THost>`). This plan continues with its own entry design until the unification pass.
+- #387: two rule lines follow the move of the type helpers: the part `KernelParts.Utility` in `Core`, and `For<Infrastructure>().Uses<KernelParts.Utility>()` in the engine definition.
+- #388: a reader error now comes for two keys that differ only in case, and for TOML forms that the reader does not support.
+- #391, the definition packages:
+  - In package mode, the check gets the pack definition from the engine folder of the SDK package (`tools/net8.0/`), not from a NuGet restore. This keeps the definition DLLs out of the `deps.json` of the app. The other choice is a `PackageReference` with no assets.
+  - Definition code in an app project (not a definition project) now fails to compile with CS0246. Before, the engine gave a guided finding (`UMP030511` or `UMP030308`). Is a guided finding necessary again?
+  - `Testing/` (`ArchitectureTest`) stays in `Umpire.Definition`. The markers stay in `Umpire`.
+  - The archive has a separate part, `definition/netstandard2.1/`.
+  - The example check entry of the engine (`BlockSearch.cs`) and `docs/architecture-engine.md` name the assembly `Umpire.Vsa`, which is correct only in source mode. This is older than #391.
+- #394, the split of the core and `Umpire.Vsa`:
+  - Requirement W12 in `docs/requirements.md` now says "the core `Umpire.dll`, one DLL for each pack". It follows the K4 Q6 answer, but the subagent wrote the words.
+  - The views and the VSA test bases stay in `Umpire.Web` and `Umpire.Testing`, so a web app with another pack still gets `Umpire.Vsa.dll`. A VSA web package is a later change.
+  - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
+  - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
+  - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #400, the lowest targets: `Umpire.Web` is `net9.0`, not the `net8.0` of P7, because `Views.Map` calls `MapStaticAssets` (ASP.NET Core 9); support for .NET 8 and 9 ended on 2026-11-10, so "lowest supported" may now mean `net10.0`. `Umpire.Console` stays `net8.0`: on .NET 10 on Linux, SIGTERM did not raise `ProcessExit`. `Umpire.Testing` keeps an ASP.NET Core framework reference only for `AddLogging`. `App.Services` is `protected internal` and is no longer in `IApp`.
+- #399, `Configuration` and `Logging`: `HostArguments` keeps the old internal name. `WebHost` gives only the command-line arguments to `HostArguments`, not the full ASP.NET configuration. `OpenDescriptors` no longer closes open descriptors of `Microsoft.Extensions.*` assemblies. `Compose` now stops with an error if a service registers an `ILoggerProvider` and no `ILoggerFactory`. Parent keys such as `Probe` (of `Probe:Value`) are gone. Also: a race between test processes on the Notes fixture is fixed with `FixtureLock`.
+- #398, the removal of the SDK:
+  - A pack kernel with its own packages needs a manual `ProjectReference` in the root project; a package cannot add it to the restore.
+  - The target `_UmpireRestoreAddedReferences` runs a restore inside the build, an unusual pattern for IDEs.
+  - The source mode is selected by a regular expression on the text of the project file.
+  - The root project references `Umpire.Engine` itself (else `UMP030003`); it is not a dependency of `Umpire`.
+  - The engine state files did not move to the intermediate output path yet (phase 3).
+  - `init` does nothing if `Directory.Build.props` exists. The fixtures `Built/NoPack` and `Built/PackGraph` seem unused.
+- #396, the shared feed: the hash includes each root file, so an edit of `AGENTS.md` or `README.md` makes a new pack. A feed with no use for two hours is deleted. The in-process tests of `UMP030512` and `UMP030513` delete a DLL from a copy of the bin, where the old cases used a real SDK build. The lock was not tested on Windows.
+- #393, `LocalHost`:
+  - `LocalHost` is not sealed, and `Send` exists for each host that derives from `LocalHost`, so a custom or test host also gets it.
+  - The typed `Send` (VSA) and the untyped `Send` (core) have the same name. The caller gets the typed one only when it imports both namespaces.
+  - The sync `Send` blocks on the task, so it can deadlock on a thread with a `SynchronizationContext` (for example the Unity main thread). The docs say to use `SendAsync` there. The sibling spike found the same point.
+  - The operation lookup walks base classes only, not interfaces.
+- #392, the move to `netstandard2.0`:
+  - The archive folders are now `runtime/netstandard2.0/` and `definition/netstandard2.0/`. `docs/consumers.md` said that these names stay the same. vsa-unity must change its paths, and it may need to skip more DLLs that Unity already ships (`System.Memory` and others).
+  - The SDK now gives `IsExternalInit` to a consumer `netstandard2.0` project too, with the opt-out `UmpireIsExternalInitPolyfill=false`.
+  - The archive test compiles a `netstandard2.1` app against the `netstandard2.0` DLLs, as a model of Unity.
+  - Not tested: the .NET Framework compiler of Visual Studio, and the archive tests that need a .NET 8 SDK.
+
+## Test speed
+
+- Done: `CS8032` fixed, the shared compiler is on again, the categories `Package` and `Parity`, and the two test sets in `AGENTS.md` (PR #395). A full run passes 1963 tests, with no `CS8032`.
+- Done: one feed for each content hash, 13 workspaces in place of 42, and the merge of duplicate build tests (PR #396). The full set takes about 3.7 min, and the inner loop about 34 s plus the build.
+- Next: CheckModel `Parity` (about 2:40) is now the longest project after Rules.Tests.
+
 ## Later
 
 - K5 (#344), with P11 (the scope of a rule).
@@ -101,6 +147,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 - A check at start that each handler has a call, and a call that names its own handler base (#382 review).
 - The Visual Studio test of the spike (needs the computer of the user).
 - A full cleanup and review of the tests, at the end of this phase. It includes the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
+- vsa-unity, before a Unity release: the pipeline closes each handler call at run time with `MakeGenericType` and `Activator.CreateInstance` (#382). A call with a struct type argument, for example `CommandHandlerCall<X, int>`, can fail on an IL2CPP player if no code for that type exists at build time. Test a player with an `ICommand<int>` command.
 - vsa-unity, at the next consumer update: `Get<T>` of `UmpireConfig` binds module settings with reflection (#388). Under IL2CPP stripping, a removed setter is skipped with no error. A Unity host keeps the setters (`link.xml`, `[Preserve]`) or adds its own `ISettingsProvider`.
 
 ## Limits
