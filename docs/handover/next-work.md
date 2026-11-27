@@ -89,16 +89,16 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Done (PR #PRNUM): `Umpire.Testing`: `VsaUnitTest` starts the app of the test on a `LocalHost` and sends each request with `app.Send`. The definition test base keeps the queries of the engine: a job needs a built block, a bin and the definition loader of the console entry, and a definition test has only a type and a folder | P7, Q7 |
-| Done (PR #PRNUM): the tool is an app, `UmpireTool : App<ToolKernel, ToolHost>`, and `ToolHost` is a `ConsoleHost`. The command words, the options and the messages stay the same | P7 |
-| Done (PR #PRNUM): `umpire check` runs the check job with the `Umpire.Engine` of the app (`UmpireEngineFile` after a restore) | Q2 (watch) |
+| Done (PR #407): `Umpire.Testing`: `VsaUnitTest` starts the app of the test on a `LocalHost` and sends each request with `app.Send`. The definition test base keeps the queries of the engine: a job needs a built block, a bin and the definition loader of the console entry, and a definition test has only a type and a folder | P7, Q7 |
+| Done (PR #407): the tool is an app, `UmpireTool : App<ToolKernel, ToolHost>`, and `ToolHost` is a `ConsoleHost`. The command words, the options and the messages stay the same | P7 |
+| Done (PR #407): `umpire check` runs the check job with the `Umpire.Engine` of the app (`UmpireEngineFile` after a restore) | Q2 (watch) |
 
 ## End review
 
 Uncertain points of this work. The user reviews them at the end of the plan, not during the work.
 
 - Unify with the sibling design talk ("Design: host-agnostic app and entry points", draft spike #381, page https://claude.ai/artifact/F6jvJV9kdCe34Y2Jto2obD). Its "App and host split" (the app names only its kernel, the entry gives the host as a value, one fixed composition, an untyped `LocalHost.Invoke` in the core) differs from the "Entry design" of this plan (`EngineApp<THost>`). This plan continues with its own entry design until the unification pass.
-- PR #PRNUM, the consumers of the engine:
+- PR #407, the consumers of the engine:
   - The tool is not a VSA app. `ToolKernel` is a core `Kernel` that gives one `Operation` for each command, and the build does not check the tool as a block. A VSA tool (requests, handlers, modules, a checked block in `tooling/`, P10) is a larger move.
   - The tool operations read the command line from the service `ToolLine`, not from `HostArguments`. `ConsoleHost` only selects the operation by its words. The binding of `ConsoleHost` has no positional name, no short option and no option with many values.
   - On Ctrl+C or SIGTERM, `ConsoleHost` requests the stop with exit code 0, and the first request wins. So `umpire test` and `umpire check` can give exit code 0 after a signal, also if the child process fails. The engine console has the same behavior.
