@@ -3,12 +3,12 @@ namespace Spike.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 sealed class Hub : IHub {
-    readonly IHubStep[] hubSteps;
+    readonly IHubStep[] reversedSteps;
     readonly Dictionary<Type, IPipeline> byMessage = [];
     readonly IServiceScopeFactory scopes;
 
     public Hub(IEnumerable<IHubStep> steps, IEnumerable<IPipeline> pipelines, IServiceScopeFactory scopes) {
-        hubSteps = [.. steps];
+        reversedSteps = [.. steps.Reverse()];
         this.scopes = scopes;
         foreach (var pipeline in pipelines) {
             foreach (var message in pipeline.Messages) {
@@ -25,13 +25,17 @@ sealed class Hub : IHub {
             return MessageResult.Fail($"No pipeline runs {message.GetType().Name}.");
         }
         using var scope = scopes.CreateScope();
-        MessageNext run = () => pipeline.Run(message, scope.ServiceProvider, ct);
-        foreach (var step in hubSteps.Reverse()) {
+        MessageNext run = () => Guarded(pipeline, message, scope.ServiceProvider, ct);
+        foreach (var step in reversedSteps) {
             var next = run;
             run = () => step.Run(message, next);
         }
+        return await run().ConfigureAwait(false);
+    }
+
+    static async Task<MessageResult> Guarded(IPipeline pipeline, object message, IServiceProvider scope, CancellationToken ct) {
         try {
-            return await run().ConfigureAwait(false);
+            return await pipeline.Run(message, scope, ct).ConfigureAwait(false);
         } catch (Exception e) when (e is not OperationCanceledException) {
             return MessageResult.Fail($"{message.GetType().Name} failed: {e.Message}");
         }

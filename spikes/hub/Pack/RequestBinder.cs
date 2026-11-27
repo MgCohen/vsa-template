@@ -2,6 +2,7 @@ namespace Spike.Pack;
 
 using System.Globalization;
 using System.Linq.Expressions;
+using Spike.Core;
 
 sealed class RequestBinder {
     readonly Func<object?[], object> create;
@@ -15,17 +16,38 @@ sealed class RequestBinder {
             Expression.Convert(Expression.ArrayIndex(input, Expression.Constant(i)), p.ParameterType));
         create = Expression.Lambda<Func<object?[], object>>(
             Expression.Convert(Expression.New(constructor, arguments), typeof(object)), input).Compile();
-        values = [.. parameters.Select((p, i) => new RequestValue(p.Name!, i.ToString(CultureInfo.InvariantCulture), p.ParameterType, p.HasDefaultValue, p.DefaultValue))];
+        values = [.. parameters.Select((p, i) => new RequestValue(
+            p.Name!, i.ToString(CultureInfo.InvariantCulture), p.ParameterType, p.HasDefaultValue, DefaultOf(p)))];
     }
 
-    public object Bind(IReadOnlyDictionary<string, string> input) =>
-        create([.. values.Select(v => v.Read(input))]);
+    public MessageResult Bind(Operation operation) {
+        var arguments = new object?[values.Length];
+        for (var i = 0; i < values.Length; i++) {
+            if (values[i].Read(operation.Values, out var value) is { } error) {
+                return MessageResult.Fail($"{operation.Name}: {error}");
+            }
+            arguments[i] = value;
+        }
+        return MessageResult.Ok(create(arguments));
+    }
+
+    static object? DefaultOf(System.Reflection.ParameterInfo parameter) =>
+        parameter.HasDefaultValue && parameter.DefaultValue is not null ? parameter.DefaultValue
+        : parameter.ParameterType.IsValueType ? Activator.CreateInstance(parameter.ParameterType)
+        : null;
 
     sealed record RequestValue(string Name, string Position, Type Type, bool HasDefault, object? Default) {
-        public object? Read(IReadOnlyDictionary<string, string> input) =>
-            input.TryGetValue(Name, out var text) || input.TryGetValue(Position, out text)
-                ? Convert.ChangeType(text, Type, CultureInfo.InvariantCulture)
-            : HasDefault ? Default
-            : throw new ArgumentException($"The value '{Name}' is missing.");
+        public string? Read(IReadOnlyDictionary<string, string> input, out object? value) {
+            value = Default;
+            if (!input.TryGetValue(Name, out var text) && !input.TryGetValue(Position, out text)) {
+                return HasDefault ? null : $"the value '{Name}' is missing.";
+            }
+            try {
+                value = System.Convert.ChangeType(text, Type, CultureInfo.InvariantCulture);
+                return null;
+            } catch (Exception e) when (e is FormatException or InvalidCastException or OverflowException) {
+                return $"the value '{Name}' is not a valid {Type.Name}: '{text}'.";
+            }
+        }
     }
 }
