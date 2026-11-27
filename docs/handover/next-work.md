@@ -77,13 +77,13 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| Done (PR-SWITCH): the build job sends ExportModel, then CheckModel. Each compile saves one snapshot for each project and target in its intermediate output path, with no definition. A finding that two targets give is in the report one time, and ExportModel deletes the snapshot of a removed target | P6, brief D items 1 and 2 |
-| Done (PR-SWITCH): the package build runs the compile job on the source of each bundle (`UmpireLibraryPass`), and `Umpire.Engine` ships `tools/net8.0/libraries/<assembly>.json`. The check reads no PDB for the type facts | Q8 |
-| Done (PR-SWITCH): the build runs the build job on the model path. The same findings and codes on the fixtures. Only the place of some findings changes (the line of the use, the line of the type name) | Queue item 3 of the hand-over |
-| Done (PR-SWITCH): the state files are in the intermediate output path (`obj/.../umpire/`), also the run stamp. The block stamps stay in `artifacts~/umpire-checks/` of the block, because each app that uses the block reads them | P7 |
+| Done (PR #406): the build job sends ExportModel, then CheckModel. Each compile saves one snapshot for each project and target in its intermediate output path, with no definition. A finding that two targets give is in the report one time, and ExportModel deletes the snapshot of a removed target | P6, brief D items 1 and 2 |
+| Done (PR #406): the package build runs the compile job on the source of each bundle (`UmpireLibraryPass`), and `Umpire.Engine` ships `tools/net8.0/libraries/<assembly>.json`. The check reads no PDB for the type facts | Q8 |
+| Done (PR #406): the build runs the build job on the model path. The same findings and codes on the fixtures. Only the place of some findings changes (the line of the use, the line of the type name) | Queue item 3 of the hand-over |
+| Done (PR #406): the state files are in the intermediate output path (`obj/.../umpire/`), also the run stamp. The block stamps stay in `artifacts~/umpire-checks/` of the block, because each app that uses the block reads them | P7 |
 | Remove `TypeFactSource`, the Rules operation and ArchUnitNET; convert `tests/Architecture.Tests` and the parity tests to the model. `SymbolReader` stays for the Blocks operation (the check entries and the DLLs of a block) until the snapshots give these facts | K1, Q8 |
-| Done (PR-SWITCH): `block.json` stays. The compile needs the projects of the block, the place of each snapshot, the mode, the severities and the marks, and the definition does not hold them | P6 |
-| Done (PR-SWITCH): brief D item 6 does not apply with no SDK. A multi-target root builds with no `<TargetFramework />`, and the package test has no workaround. Each inner build checks its own target | P7 |
+| Done (PR #406): `block.json` stays. The compile needs the projects of the block, the place of each snapshot, the mode, the severities and the marks, and the definition does not hold them | P6 |
+| Done (PR #406): brief D item 6 does not apply with no SDK. A multi-target root builds with no `<TargetFramework />`, and the package test has no workaround. Each inner build checks its own target | P7 |
 
 ## Phase 5: consumers of the engine
 
@@ -121,7 +121,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The root project references `Umpire.Engine` itself (else `UMP030003`); it is not a dependency of `Umpire`.
   - The engine state files did not move to the intermediate output path yet (phase 3).
   - `init` does nothing if `Directory.Build.props` exists. The fixtures `Built/NoPack` and `Built/PackGraph` seem unused.
-- PR-SWITCH, the switch to the model path:
+- PR #406, the switch to the model path:
   - The analyzer of a build compile saves only and reports no type finding; the build job reports all. An editor compile checks types with the state of the last build (`state.txt`).
   - "Selected by hash" of brief D item 1 is read as: one snapshot file for each target (the intermediate path has the target), and the check selects the snapshot of each target.
   - A multi-target root checks in each inner build, so a finding of two targets is in the build output one time for each inner build. One check in the outer build needs `buildMultiTargeting/` files in each Umpire package.
