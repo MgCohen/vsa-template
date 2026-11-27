@@ -73,6 +73,24 @@ The Umpire SDK package holds the engine (`tools/net8.0/umpire-engine.dll`, prope
 
 Run all tests with `dotnet test --solution Umpire.slnx`. Run one project with `dotnet test --project tests/Framework.Tests`. The tests use NUnit on Microsoft.Testing.Platform (set in `global.json`). NUnit also runs in Unity (Unity Test Framework), and xUnit does not.
 
+There are two test sets. Times are from a 4-core machine with the shared compiler on.
+
+| Set | When | Commands | Time |
+|---|---|---|---|
+| Inner loop | After each change | `dotnet build Umpire.slnx`, then `dotnet test --solution Umpire.slnx --no-build --filter "TestCategory!=Package&TestCategory!=Parity" --ignore-exit-code 8` | About 15 s build (warm), 31 s tests |
+| Full set | One time before a merge | `dotnet build Umpire.slnx`, then `dotnet test --solution Umpire.slnx --no-build` | About 42 s build (cold), 6.5 min tests |
+
+- `[Category("Package")]` marks a test class that packs the framework (`LocalFeed`) or builds a `Workspace`. `[Category("Parity")]` marks the parity tests of the check model (`tests/CheckModel.Tests/Parity/`). Put the category on each new class of these kinds.
+- With the filter, some projects run no test. `--ignore-exit-code 8` accepts this result.
+- Filter one project in the same way, for example `dotnet test --project tests/Rules.Tests --no-build --filter "TestCategory!=Package"`.
+
+If more than one agent works in this repository (for example in worktrees), obey these rules:
+
+1. Set `MSBUILDDISABLENODEREUSE=1` in each shell. Without it, `dotnet test --no-build` ran the DLLs of another worktree in one measurement. The probable cause is a reused MSBuild node of another session.
+2. Keep the shared compiler server on. Do not set `UseSharedCompilation=false`, and do not run `dotnet build-server shutdown`, because it also stops the servers of other sessions.
+3. To isolate your builds from other sessions, set your own `SharedCompilationId`, for example `SharedCompilationId=umpire-<task>`.
+4. Stop only your own processes, by PID.
+
 | Path                     | Put here                                                                  |
 |--------------------------|---------------------------------------------------------------------------|
 | `tests/Framework.Tests/` | Tests of one framework layer. One folder for each area, for example `Settings/`, `Host/` |

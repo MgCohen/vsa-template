@@ -7,6 +7,7 @@ using Umpire.Vsa.Definition;
 using Data = Umpire.CheckModel;
 
 [NonParallelizable]
+[Category("Parity")]
 public sealed class ParityTests {
     static readonly string configuration =
         Path.GetFileName(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));

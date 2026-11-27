@@ -4,6 +4,7 @@ using Tests.Shared;
 namespace Rules.Tests;
 
 [NonParallelizable]
+[Category("Package")]
 public sealed class FormattingBuildTests {
     static readonly string[] styleFiles = ["Directory.Build.props", "tools/sdk/Umpire.Sdk.Dev.props"];
     static readonly string[] styleSwitches =

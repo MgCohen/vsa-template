@@ -122,6 +122,11 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The archive test compiles a `netstandard2.1` app against the `netstandard2.0` DLLs, as a model of Unity.
   - Not tested: the .NET Framework compiler of Visual Studio, and the archive tests that need a .NET 8 SDK.
 
+## Test speed
+
+- Done: `CS8032` fixed, the shared compiler is on again, the categories `Package` and `Parity`, and the two test sets in `AGENTS.md` (PR #395). A full run passes 1963 tests, with no `CS8032`.
+- In work: one feed for each content hash, fewer workspaces in `DefinitionBuildTests`, and the merge of duplicate build tests (`claude/test-speed-2`).
+
 ## Later
 
 - K5 (#344), with P11 (the scope of a rule).
@@ -130,7 +135,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 - #380: a handler returns `Task<T>`.
 - A check at start that each handler has a call, and a call that names its own handler base (#382 review).
 - The Visual Studio test of the spike (needs the computer of the user).
-- A full cleanup and review of the tests, at the end of this phase. It includes: the intermittent `CS8032` of `Rules.Tests` with the shared compiler server (seen three times), and the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
+- A full cleanup and review of the tests, at the end of this phase. It includes the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
 - vsa-unity, before a Unity release: the pipeline closes each handler call at run time with `MakeGenericType` and `Activator.CreateInstance` (#382). A call with a struct type argument, for example `CommandHandlerCall<X, int>`, can fail on an IL2CPP player if no code for that type exists at build time. Test a player with an `ICommand<int>` command.
 - vsa-unity, at the next consumer update: `Get<T>` of `UmpireConfig` binds module settings with reflection (#388). Under IL2CPP stripping, a removed setter is skipped with no error. A Unity host keeps the setters (`link.xml`, `[Preserve]`) or adds its own `ISettingsProvider`.
 

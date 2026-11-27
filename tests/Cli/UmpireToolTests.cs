@@ -6,6 +6,7 @@ using Tests.Shared;
 
 namespace Cli.Tests;
 
+[Category("Package")]
 public sealed class UmpireToolTests {
     string root = "";
     Dictionary<string, string> env = [];

@@ -7,6 +7,7 @@ using Tests.Shared;
 namespace Consumer.Tests;
 
 [NonParallelizable]
+[Category("Package")]
 public sealed class PackageGraphTests {
     DotnetResult build = null!;
     string assets = "";

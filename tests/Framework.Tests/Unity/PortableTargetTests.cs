@@ -12,9 +12,9 @@ public sealed class PortableTargetTests {
 
     [TestCaseSource(typeof(PortableProjects), nameof(PortableProjects.Names))]
     public void A_portable_project_has_no_other_library(string project) =>
-        Assert.That(Directory.GetDirectories(ProjectOutput(project), BuiltAssembly.Configuration + "_*"), Is.Empty,
+        Assert.That(EvaluatedFrameworks().GetValueOrDefault(project), Is.EqualTo("netstandard2.0"),
             "A portable project has one build, netstandard2.0, so an app, the engine and the compiler see one shape of each type. "
-            + "If the folder is from an old build, delete artifacts~.");
+            + "If the project is missing, add it to the PortableProject items of Framework.Tests.csproj.");
 
     [Test]
     public void Each_project_with_a_netstandard2_0_library_is_in_the_portable_list() {
@@ -34,11 +34,14 @@ public sealed class PortableTargetTests {
         Assert.That(BuiltAssembly.OfSingleTarget("Umpire.Markers").TargetFramework, Is.EqualTo(Netstandard20));
     }
 
-    static string ProjectOutput(string project) {
-        var output = Path.Combine(BuiltAssembly.BinFolder, project);
-        Assert.That(Directory.Exists(output), Is.True, $"{project} has no build output. Build the project first.");
+    static Dictionary<string, string> EvaluatedFrameworks() {
+        var file = Path.Combine(AppContext.BaseDirectory, "portable-frameworks.txt");
+        Assert.That(file, Does.Exist, "Build Framework.Tests: its build writes the target frameworks of the portable projects.");
 
-        return output;
+        return File.ReadAllLines(file)
+            .Select(line => line.Split('=', 2))
+            .GroupBy(parts => parts[0], StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => string.Join(";", group.Select(parts => parts[1])), StringComparer.Ordinal);
     }
 
     static bool IsNetstandard20(string project) {

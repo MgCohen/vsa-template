@@ -4,6 +4,7 @@ using Tests.Shared;
 namespace Rules.Tests;
 
 [NonParallelizable]
+[Category("Package")]
 public sealed class DesignTimeBuildTests {
     DotnetResult build = null!;
     JsonElement result;

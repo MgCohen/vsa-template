@@ -7,6 +7,7 @@ using Tests.Shared;
 
 namespace Consumer.Tests;
 
+[Category("Package")]
 public sealed partial class NotesConsumerTests {
     [Test]
     [CancelAfter(10 * 60 * 1000)]
