@@ -23,6 +23,10 @@ Open questions from #412:
 1. A project DLL in `deps.json` with no snapshot gives `UMP030802`, and the engine does not read it. A: keep it (now). B: read the DLL facts as a fallback, with a warning. Opinion: A.
 2. Base type chains in Unity. A: vsa-unity adds the Unity DLL folder to `umpire.check.references`. B: the engine finds the Unity DLLs. Opinion: A.
 
+Done (#413): the `umpire` tool is a VSA app in `tooling/` and a checked block; after a signal, `umpire test` and `umpire check` give the exit code of the child. Its Q2 (exit code 130 for a partial `umpire test`) is accepted as a technical choice.
+
+Bug from #413: the check skipped the in-block types of each assembly `Umpire.*`, so the engine core was not checked. Fix with option A (an in-block type is never placed on an External by assembly name) in session `session_01Y7UMGY6CxBT2EeraWoDZbc`, branch `claude/place-in-block-types`.
+
 Watch: two full runs had 5 failures in `UmpireToolTests` while another session used the machine. The class passed alone and in the third full run.
 
 The user reviews the "End review" list below at the end.
