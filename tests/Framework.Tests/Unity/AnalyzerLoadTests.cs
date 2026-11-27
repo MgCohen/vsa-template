@@ -21,12 +21,11 @@ public sealed class AnalyzerLoadTests {
         var folder = TempFolder.Create();
         File.WriteAllText(Path.Combine(folder, "Probe.cs"), LongLine);
         File.WriteAllText(Path.Combine(folder, ".umpireconfig"), Config);
-        var analyzers = PortableProjects.Analyzers.Select(analyzer => {
-            var copy = Path.Combine(folder, $"{analyzer}.dll");
-            var built = Path.Combine(BuiltAssembly.BinFolder, analyzer, BuiltAssembly.Configuration, $"{analyzer}.dll");
-            File.Copy(built, copy);
+        var analyzers = BuiltAssembly.AnalyzerFiles().Select(file => {
+            var copy = Path.Combine(folder, file);
+            File.Copy(Path.Combine(BuiltAssembly.AnalyzerFolder, file), copy);
             return copy;
-        });
+        }).ToList();
         output = compiler.Compile(folder, [
             "-noconfig", "-nologo", "-target:library", $"-out:{Path.Combine(folder, "Probe.dll")}",
             .. compiler.References.Select(reference => $"-reference:{reference}"),

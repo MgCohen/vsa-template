@@ -27,14 +27,15 @@ public sealed class DesignTimeBuildTests {
     public void Umpire_Sdk_gives_the_editor_no_style_file() =>
         Assert.That(Arguments("/analyzerconfig:").Select(Path.GetFileName), Has.No.Member("Umpire.globalconfig").And.No.Member("Umpire.Tests.globalconfig"), build.Output);
 
-    [TestCase("Umpire.Kernels.Analyzers.dll")]
-    [TestCase("Umpire.Vsa.Analyzers.dll")]
+    [TestCase("Umpire.Engine.Analyzer.dll")]
+    [TestCase("Umpire.Engine.dll")]
+    [TestCase("Umpire.dll")]
     public void The_editor_runs_the_analyzer(string file) =>
         Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.Member(file), build.Output);
 
-    [TestCase("Umpire.Config.dll")]
+    [TestCase("Microsoft.CodeAnalysis.dll")]
     [TestCase("System.Collections.Immutable.dll")]
-    public void The_editor_gets_no_config_reader_file_as_an_analyzer(string file) =>
+    public void The_editor_gets_no_file_of_the_compiler_as_an_analyzer(string file) =>
         Assert.That(Arguments("/analyzer:").Select(Path.GetFileName), Has.No.Member(file), build.Output);
 
     [TestCase("RunAnalyzersDuringLiveAnalysis")]

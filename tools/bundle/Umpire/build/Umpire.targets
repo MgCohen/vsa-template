@@ -1,14 +1,4 @@
 <Project>
-  <!-- The package Umpire brings the kernel analyzer package, and the analyzer package of a pack holds a copy of the kernel
-       analyzer next to its own analyzer (pinned choice W24). The .NET SDK keeps two analyzers with one file name, so each kernel
-       finding would come two times. If a pack package gives a copy, the compilation does not get the copy of the kernel
-       analyzer package, and KernelAnalyzer runs one time. -->
-  <Target Name="_UmpireOneKernelAnalyzer" AfterTargets="ResolveLockFileAnalyzers">
-    <ItemGroup>
-      <_UmpireKernelAnalyzer Include="@(Analyzer)" Condition="'%(Filename)%(Extension)' == 'Umpire.Kernels.Analyzers.dll'" />
-      <_UmpireKernelAnalyzerOfPack Include="@(_UmpireKernelAnalyzer)" Condition="'%(_UmpireKernelAnalyzer.NuGetPackageId)' != 'Umpire.Kernels.Analyzers'" />
-      <_UmpireKernelAnalyzerOfCore Include="@(_UmpireKernelAnalyzer)" Condition="'%(_UmpireKernelAnalyzer.NuGetPackageId)' == 'Umpire.Kernels.Analyzers'" />
-      <Analyzer Remove="@(_UmpireKernelAnalyzerOfCore)" Condition="'@(_UmpireKernelAnalyzerOfPack)' != ''" />
-    </ItemGroup>
-  </Target>
+  <!-- NuGet needs a targets file with the name of the package in build/ and buildTransitive/. The build files of the package are
+       Umpire.props and Umpire.After.targets, which Umpire.props imports after the targets of the .NET SDK. -->
 </Project>

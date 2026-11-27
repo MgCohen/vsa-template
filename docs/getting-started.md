@@ -111,12 +111,10 @@ The root project references two Umpire packages, and the other packages come as 
 | Package | From | Contains |
 |---|---|---|
 | `Umpire.Web` | The root project | The web host and the presenter views |
-| `Umpire.Engine` | The root project | The rule engine. The build of the root project runs it |
+| `Umpire.Engine` | The root project, and `Umpire` (a dependency) | The rule engine: the analyzer of each project, and the check after the build of the root project |
 | `Umpire.Vsa` | `Umpire.Web` (a dependency) | One `Umpire.Vsa.dll`: the VSA kernel with the base of each layer. It holds no definition code |
 | `Umpire` | `Umpire.Vsa` (a dependency) | One `Umpire.dll`: the app start and the markers, and the build files of each Umpire project. It holds no pack and no definition code |
 | `Umpire.Definition`, `Umpire.Vsa.Definition` | A project in `Definition/`, and `Umpire.Testing` | The definition API and the VSA definition. The root project does not compile against them: it copies them from `Umpire.Engine` to `umpire-definitions/` for the check |
-| `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
-| `Umpire.Kernels.Analyzers` | `Umpire` (a dependency) | The kernel analyzer. A VSA app compiles with the copy in `Umpire.Vsa.Analyzers` only |
 | `Umpire.Testing` | `App/Tests/App.Tests.csproj` | The test bases |
 
 Each Umpire package reference has the same version. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.

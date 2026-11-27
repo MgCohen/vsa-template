@@ -3,7 +3,8 @@
        projects stay for development: their references enforce the layers. The bundles are the packages. Each file comes
        from the folder of its runtime project, so a new file is in the bundle with no change here (BundleSourceTests).
        The shipped assemblies embed their PDB, with the source paths under /_/, so that the rule engine finds the block
-       of each type (decision d47). -->
+       of each type (decision d47). The bundles get no analyzer: the analyzer entry of the engine builds on them, and the
+       runtime projects check the same files. -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <UmpireRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</UmpireRoot>
@@ -11,5 +12,6 @@
     <_UmpireNotBundled>$(UmpireRoot)**/artifacts~/**;$(UmpireRoot)**/bin/**;$(UmpireRoot)**/obj/**</_UmpireNotBundled>
     <DebugType>embedded</DebugType>
     <PathMap>$(UmpireRoot)=/_/</PathMap>
+    <UmpireNoAnalyzer>true</UmpireNoAnalyzer>
   </PropertyGroup>
 </Project>

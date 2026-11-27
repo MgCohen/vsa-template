@@ -30,7 +30,20 @@
   <!-- The engine core is one netstandard2.0 library (decision P2): the console entry runs it, and the compiler can load it.
        It is not a portable layer, because Unity does not load it, so it adds the polyfills that it needs. -->
   <PropertyGroup>
-    <UmpireEngineCore Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions'">true</UmpireEngineCore>
+    <UmpireEngineCore Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Engine.Analyzer'">true</UmpireEngineCore>
+  </PropertyGroup>
+
+  <!-- The analyzer of each project is the analyzer entry of the engine (engine/Entries/Analyzer/). Each project references the entry
+       with UmpireAnalyzerBuild=true (tools/bundle/SourceMode/Umpire.EngineAnalyzer.targets). That build is the analyzer build: the
+       entry and the engine core build on the bundles, as the package Umpire.Engine holds them, in their own output folder, and
+       with no analyzer and no check. So the analyzer does not depend on the projects that it checks. The restore does not see
+       the reference to the entry (MSBuildIsRestoring), so the analyzer build uses the restore of the normal build, and it takes
+       no project reference from that restore (DisableTransitiveProjectReferences). -->
+  <PropertyGroup Condition="'$(UmpireAnalyzerBuild)' == 'true'">
+    <_UmpireUseBundle>true</_UmpireUseBundle>
+    <UmpireCheck>false</UmpireCheck>
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+    <ArtifactsPivots>$([MSBuild]::ValueOrDefault('$(Configuration)', 'Debug').ToLowerInvariant())-analyzer</ArtifactsPivots>
   </PropertyGroup>
 
   <!-- Each package targets the lowest framework that its code needs (decision P7). Umpire.Testing needs NUnit 4, which has no

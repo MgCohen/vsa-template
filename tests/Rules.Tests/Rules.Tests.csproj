@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the formatting build of the Umpire packages and the unit test base.
+  <!-- Tests of the checks: the analyzer entry of the engine with the Roslyn analyzer test library, the formatting build of the Umpire packages and the unit test base.
        The architecture engine has its own tests in tests/Architecture.Tests. NUnit comes from tests/Directory.Build.props. -->
   <PropertyGroup>
     <!-- NoDefaultAnalyzer is a test analyzer: it runs only in the test library, not in a compiler. -->
@@ -7,14 +7,13 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
-    <!-- The test library asks for old versions. These are the versions that Umpire.Vsa.Analyzers uses, and a version with no known vulnerability. -->
+    <!-- The test library asks for old versions. These are the versions that the analyzer entry of the engine uses, and a version with no known vulnerability. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
-    <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" />
-    <ProjectReference Include="$(RepoRoot)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" />
+    <ProjectReference Include="$(RepoRoot)engine/Entries/Analyzer/Engine.Analyzer.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" />
     <!-- The analyzer tests compile code against these assemblies. -->
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Handlers/Events/Umpire.Vsa.Handlers.Events.csproj" />

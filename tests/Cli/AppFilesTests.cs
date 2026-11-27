@@ -61,7 +61,7 @@ public sealed class AppFilesTests {
 
     [Test]
     public void APackageWithNoVersionAndNoCentralVersionFailsTheCheck() {
-        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" /><PackageReference Update="Umpire.Vsa.Analyzers" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" /><PackageReference Update="Umpire.Engine" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
 

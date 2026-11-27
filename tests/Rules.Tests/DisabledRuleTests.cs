@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Tests.Shared;
-using Umpire.Kernels;
-using Umpire.Vsa.Analyzers;
+using UmpireEngine;
 
 namespace Rules.Tests;
 
@@ -14,7 +13,7 @@ public sealed partial class DisabledRuleTests {
 
     [Test]
     public void Each_disabled_rule_still_has_its_analyzer() {
-        var ids = new KernelAnalyzer().SupportedDiagnostics.Concat(new VsaAnalyzer().SupportedDiagnostics).Select(d => d.Id);
+        var ids = new EngineAnalyzer().SupportedDiagnostics.Select(d => d.Id);
 
         Assert.That(ids, Is.SupersetOf(Disabled()));
     }

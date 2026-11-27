@@ -22,7 +22,8 @@ flowchart LR
 | Export | `engine/App/Features/Model/Domain/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export` |
 | ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files. No job sends it |
 | CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state (`jobs check --model true`) |
-| Umpire.CheckModel.Analyzer | `check/Analyzer/` | The facts from symbols, the checks in a compile. It references the engine core |
+| CheckTypes operation | `engine/App/Features/Model/Slices/CheckTypes/` | The checks of each type in a compile (the compile job) |
+| Analyzer entry | `engine/Entries/Analyzer/` | The facts from symbols (`Facts/`, `ProjectFacts`). It sends the compile job |
 
 The model domain is generic: no part of it knows a slice or a feature. The domain uses no Roslyn and no package, so the compiler can load the engine core for the analyzer. No part is a package.
 
@@ -95,9 +96,11 @@ A `block.json` with no mark of the definition is not current. Thus the compile o
 
 ## Analyzer
 
-1. At the start it makes the declarations of its project and loads the app model with them.
-2. For each type it reads the references and runs the three operations.
-3. At the end it saves the snapshot of its project.
+The analyzer entry of the engine sends the compile job, and the CheckTypes operation does the work:
+
+1. At the start the engine finds the state folder and asks the entry for the declarations of its project (`ModelSource`). It loads the app model with them.
+2. For each type the entry gives the name, and the engine runs the three checks with the references of that type.
+3. At the end the engine saves the snapshot of the project.
 
 It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `DesignTimeBuild` or a compile error. `UmpireSaveSnapshot` selects another answer for one run. It checks only the projects in `block.json`, and it does nothing in a block with no `definition.json`.
 
@@ -147,7 +150,6 @@ A check that does not come to its end gives `UMP030801`: a warning in the mode `
 ## Limits
 
 - `[field: X]` on an event with no accessors is not a fact: the compiler API does not give the field.
-- The analyzer imports the namespace `Umpire.Vsa.Analyzers`, because the kernel analyzers use it.
 - A file that another process adds between the start of a build and the start of the compile is not a new file until the next compile.
 - A snapshot lists the source files of its project folder that the compile does not read. A new excluded file lowers findings until that project compiles. A folder with its own project and no snapshot is not examined.
 - A definition helper outside the definition folder has no mark.

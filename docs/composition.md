@@ -438,7 +438,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `CommandLine` (Hosts.Console) | `GetConstructors`, `Invoke` | Binds the command-line values to the constructor of the request |
 | `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `MakeGenericType` | Finds the handler of a request or a command |
 | `AppLoader` (engine console entry) | `AssemblyLoadContext`, `Activator`, `GetProperty` | Creates the one definition type: the app class (then reads its architecture) or the architecture |
-| `RuleAnalyzer` (Kernels.Analyzers) | `GetTypes`, `Activator` | Finds the rule classes in its own assembly, in the compiler |
+| `CodeRule` (engine core, CodeCheck) | `GetTypes`, `Activator`, `GetMethod` | Finds the code rule classes in the engine assembly, also in the compiler |
 
 The table does not list the uses that only read metadata, for example `IsAssignableFrom`, `GetInterfaces` and `GetGenericArguments`.
 

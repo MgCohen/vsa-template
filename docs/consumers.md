@@ -43,10 +43,10 @@ Each release tag `v<version>` has a GitHub release with one archive, `umpire-<ve
 ```text
 umpire-<version>.zip
 ├── manifest.json            version, commit, Roslyn version, engine runtime, one entry for each file
-├── THIRD-PARTY-NOTICES.txt  the license of each third-party package, and the notices of the analyzer package
+├── THIRD-PARTY-NOTICES.txt  the license of each third-party package
 ├── runtime/netstandard2.0/  Umpire.dll, Umpire.Vsa.dll and their full third-party closure
 ├── definition/netstandard2.0/  Umpire.Definition.dll, Umpire.Vsa.Definition.dll (check-time code, not for the runtime)
-├── analyzers/dotnet/cs/     Umpire.Kernels.Analyzers.dll, Umpire.Vsa.Analyzers.dll
+├── analyzers/dotnet/cs/     Umpire.Engine.Analyzer.dll and each DLL that it loads
 └── engine/net8.0/           umpire-engine.dll, its runtimeconfig, its deps.json and its DLLs
 ```
 
@@ -60,7 +60,7 @@ umpire-<version>.zip
 | `engine.frameworks` | Each shared framework that the engine needs, with its `name` and `version` |
 | `files[].path` | The path in the archive |
 | `files[].assemblyVersion` | The assembly version of a DLL. `null` for a file that is not a DLL |
-| `files[].package`, `files[].packageVersion` | The NuGet package that gives the bytes. The analyzer files are `Umpire.Vsa.Analyzers`, and the Umpire engine files are `Umpire.Engine` |
+| `files[].package`, `files[].packageVersion` | The NuGet package that gives the bytes. The Umpire analyzer files and the Umpire engine files are `Umpire.Engine` |
 | `files[].asset` | The path of the file in that package, for example `lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll` |
 | `files[].sha256` | The SHA-256 hash of the file |
 
@@ -133,8 +133,8 @@ An app project is a normal .NET project: `<Project Sdk="Microsoft.NET.Sdk">`, or
 
 | Package | Holds | Depends on |
 |---|---|---|
-| `Umpire` | The core of the runtime (the markers, the config reader, the kernel, the messages) and the build files of each Umpire project | `Umpire.Kernels.Analyzers` |
-| `Umpire.Vsa` | The VSA kernel: each layer base, `VsaKernel`, `Plugin` and the composition. Its build props name the VSA definition for the check | `Umpire`, `Umpire.Vsa.Analyzers` |
+| `Umpire` | The core of the runtime (the markers, the config reader, the kernel, the messages) and the build files of each Umpire project | `Umpire.Engine` (for its analyzer) |
+| `Umpire.Vsa` | The VSA kernel: each layer base, `VsaKernel`, `Plugin` and the composition. Its build props name the VSA definition for the check | `Umpire` |
 | `Umpire.Web` | The web host and the views | `Umpire.Vsa` |
 | `Umpire.Console` | The console host | `Umpire` |
 | `Umpire.Definition` | The definition API (`Umpire.Architecture`) and the definitions of the framework blocks (`Umpire.Kernels.Definition`) | `Umpire` |
@@ -144,7 +144,7 @@ An app project is a normal .NET project: `<Project Sdk="Microsoft.NET.Sdk">`, or
 
 Each dependency between the Umpire packages has no excluded assets, so the build files and the analyzers flow to each project that gets a package through another package. `Umpire.dll` holds the kernel and no pack. `Umpire.Vsa.dll` holds the VSA kernel with each layer base. The two DLLs hold no definition code.
 
-An app project does not compile against the definition packages. The architecture check still needs the definition of the pack, so the root project copies `Umpire.Definition.dll` and `Umpire.Vsa.Definition.dll` from the engine folder of `Umpire.Engine` (`tools/net8.0/`, the same build) to its folder `umpire-definitions/`. The package of the pack names its definition: `build/Umpire.Vsa.props` adds the item `_UmpirePackDefinition`. A publish does not copy that folder. A project with definition code outside a folder `Definition/` references the definition package with `PrivateAssets="all"`, so the package does not flow to the root project. Or it sets the property `UmpireDefinitionProject` to `true`. The code selects the pack: the app class names its kernel (`App<VsaKernel, ...>`). A package only makes a pack available. Another pack is a normal `PackageReference`. A project that references only `Umpire` gets no VSA analyzer and no VSA definition. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to a type in the namespace of the pack. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). A VSA app thus gets two copies of the kernel analyzer. The target `_UmpireOneKernelAnalyzer` of the package `Umpire` removes the copy of `Umpire.Kernels.Analyzers` from the compilation, so each kernel finding comes one time. To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
+An app project does not compile against the definition packages. The architecture check still needs the definition of the pack, so the root project copies `Umpire.Definition.dll` and `Umpire.Vsa.Definition.dll` from the engine folder of `Umpire.Engine` (`tools/net8.0/`, the same build) to its folder `umpire-definitions/`. The package of the pack names its definition: `build/Umpire.Vsa.props` adds the item `_UmpirePackDefinition`. A publish does not copy that folder. A project with definition code outside a folder `Definition/` references the definition package with `PrivateAssets="all"`, so the package does not flow to the root project. Or it sets the property `UmpireDefinitionProject` to `true`. The code selects the pack: the app class names its kernel (`App<VsaKernel, ...>`). A package only makes a pack available. Another pack is a normal `PackageReference`. A project that references only `Umpire` gets no VSA analyzer and no VSA definition. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to a type in the namespace of the pack. The package `Umpire.Engine` holds the one analyzer, the analyzer entry of the engine, and each DLL that it loads in one folder, so each finding comes one time. To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
 
 The build files of the package `Umpire` (`build/Umpire.props`, and `build/Umpire.After.targets`, which the .NET SDK imports after its own targets through `AfterMicrosoftNETSdkTargets`) do these things:
 

@@ -9,10 +9,10 @@ The framework obeys the limits that Unity 6 gives, and a test checks each limit 
 | Target of the portable projects | `netstandard2.0` only (one build for Unity, .NET apps, the engine and the compiler) | `Directory.Build.props` (`UmpirePortableLayer`) | `PortableTargetTests` |
 | APIs of the portable projects | `netstandard2.0` only | The compiler, on the `netstandard2.0` target | The build |
 | `Microsoft.Extensions` on `netstandard2.0` | 8.0 | `Directory.Packages.props` | `PortableReferenceTests` |
-| Roslyn of the analyzers | 4.10 at most | The two analyzer project files | `AnalyzerRoslynTests` |
-| Target of the analyzers | `netstandard2.0` | The two analyzer project files | `AnalyzerRoslynTests` |
-| Compiler assemblies of the analyzers | SCI and `System.Reflection.Metadata` 8.0 at most, no other reference | The two analyzer project files, `Umpire.ConfigBundle.targets` | `AnalyzerRoslynTests` |
-| The analyzers load and read `.umpireconfig` in the Unity compiler | .NET 8, Roslyn 4.10, SCI 8.0 | `Umpire.ConfigBundle.targets` | `AnalyzerLoadTests` |
+| Roslyn of the analyzer entry | 4.10 at most | `engine/Entries/Analyzer/Engine.Analyzer.csproj` | `AnalyzerRoslynTests` |
+| Target of the analyzer items | `netstandard2.0` | `Directory.Build.props` (`UmpireEngineCore`) | `AnalyzerRoslynTests` |
+| Compiler assemblies of the analyzer items | SCI and `System.Reflection.Metadata` 8.0 at most, other references in the analyzer folder | `Directory.Packages.props` | `AnalyzerRoslynTests` |
+| The analyzer entry loads and reads `.umpireconfig` in the Unity compiler | .NET 8, Roslyn 4.10, SCI 8.0 | The analyzer items | `AnalyzerLoadTests` |
 | The engine runs on the .NET 8 of a Unity 6000.6 Editor | `net8.0`, `RollForward` `Major` | `Directory.Build.props` (`UmpireEngineLayer`) | `Net8EngineTests` (`UMPIRE_NET8_DOTNET_ROOT`) |
 | Target of `Umpire.Markers` | `netstandard2.0` | `architecture/Markers/Umpire.Markers.csproj` | `PortableTargetTests` |
 
@@ -50,7 +50,7 @@ The Umpire packages have no Unity build steps. The UPM package `vsa-unity` gives
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. The package `Umpire` brings the package `Umpire.Kernels.Analyzers`, and the package `Umpire` keeps only the copy in `Umpire.Vsa.Analyzers` (`_UmpireOneKernelAnalyzer`), so `KernelAnalyzer` runs one time. A Unity host that vendors the archive gets one copy.
+The analyzer entry of the engine needs the engine core, the bundles and the third-party DLLs of the engine. The compiler loads a dependency of an analyzer only if that file is an analyzer item. Roslyn finds a dependency first in the folder of the analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Engine` holds each DLL of the entry in `analyzers/dotnet/cs/`, and a host that loads the analyzer itself gives each DLL of that folder as an analyzer item. If a DLL does not load, the build gives `UMP010003`. A Unity host that vendors the archive gets the folder `analyzers/dotnet/cs/`.
 
 ## Build output
 

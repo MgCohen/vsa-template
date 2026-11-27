@@ -6,13 +6,15 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using Umpire.CheckModel;
-using Umpire.CheckModel.Analyzer;
+using UmpireEngine;
 
 sealed class SampleBuild : IDisposable {
     static readonly ImmutableArray<MetadataReference> runtime = [..
         ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
             .Where(f => Path.GetFileName(f).StartsWith("System.", StringComparison.Ordinal) || Path.GetFileName(f) is "netstandard.dll")
             .Select(f => MetadataReference.CreateFromFile(f))];
+
+    const string CodeFindings = "UMP01";
 
     readonly TempState temp = new();
 
@@ -46,10 +48,10 @@ sealed class SampleBuild : IDisposable {
 
     public IReadOnlyList<Diagnostic> Analyze(Compilation compilation) {
         var options = new AnalyzerOptions([], new SampleOptions(Options));
-        var run = compilation.WithAnalyzers([new CheckAnalyzer()], options);
+        var run = compilation.WithAnalyzers([new EngineAnalyzer()], options);
         var diagnostics = run.GetAnalyzerDiagnosticsAsync().GetAwaiter().GetResult();
         Assert.That(diagnostics.Where(d => d.Id == "AD0001"), Is.Empty);
-        return diagnostics;
+        return [.. diagnostics.Where(d => !d.Id.StartsWith(CodeFindings, StringComparison.Ordinal))];
     }
 
     public Snapshot Saved(string project = "Sample") => Snapshot.Read(File.ReadAllText(State.SnapshotFile(project)));

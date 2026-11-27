@@ -3,7 +3,7 @@ namespace CheckModel.Tests;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Umpire.CheckModel;
-using Umpire.CheckModel.Analyzer;
+using UmpireEngine;
 
 public sealed class GeneratedFileTests {
     [TestCase("Generator/Assembly/Hint.g.cs")]

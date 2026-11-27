@@ -3,7 +3,7 @@
        the source projects of that package. The restore does not see the PackageReference. _UmpireUseBundle=true
        references the bundle projects (tools/bundle/) in place of the runtime projects, as a consumer gets them: the
        package Umpire.Engine builds its rule engine so (Umpire.Engine.csproj). A project reference does not bring analyzers,
-       so this file adds the analyzer projects of each package too. -->
+       so this file adds the analyzer entry of the engine too, as the package Umpire.Engine gives it. -->
 
   <!-- The units of the Umpire packages. A package holds the units of its dependencies too, as NuGet gives them.
        The package Umpire.Engine has no unit: source mode runs the engine of the source build (Umpire.After.targets). -->
@@ -30,14 +30,13 @@
     <_UmpirePackageUnit Include="Umpire.Engine" Unit="None" />
   </ItemGroup>
   <!-- The source projects of each unit. Source is the runtime project, and Bundle is the bundle project that ships it.
-       Kind Analyzer is a Roslyn analyzer. Kind PackDefinition is the check-time definition of a pack (_UmpirePackDefinition). -->
+       Kind Analyzer is the analyzer entry of the engine. Kind PackDefinition is the check-time definition of a pack (_UmpirePackDefinition). -->
   <ItemGroup>
     <_UmpireUnitPart Include="Core" Kind="Library" Source="framework/Kernel/Umpire.Kernels.csproj" Bundle="tools/bundle/Umpire/Umpire.csproj" />
     <_UmpireUnitPart Include="Core" Kind="Library" Source="architecture/Markers/Umpire.Markers.csproj" Bundle="tools/bundle/Umpire/Umpire.csproj" />
-    <_UmpireUnitPart Include="Core" Kind="Analyzer" Source="framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" />
+    <_UmpireUnitPart Include="Core" Kind="Analyzer" Source="engine/Entries/Analyzer/Engine.Analyzer.csproj" />
     <_UmpireUnitPart Include="Vsa" Kind="Library" Source="packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" Bundle="tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" />
     <_UmpireUnitPart Include="Vsa" Kind="Library" Source="packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" Bundle="tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" />
-    <_UmpireUnitPart Include="Vsa" Kind="Analyzer" Source="packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" />
     <_UmpireUnitPart Include="Vsa" Kind="PackDefinition" PackName="Umpire.Vsa" Package="Umpire.Vsa.Definition" Source="packs/Vsa/Definition/Umpire.Vsa.csproj" Bundle="tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
     <_UmpireUnitPart Include="Web" Kind="Library" Source="framework/Kernel/Hosts/Web/Umpire.Hosts.Web.csproj" Bundle="tools/bundle/Web/Umpire.Web.csproj" />
     <_UmpireUnitPart Include="Web" Kind="Library" Source="packs/Vsa/Kernel/Views/Umpire.Vsa.Views.csproj" Bundle="tools/bundle/Web/Umpire.Web.csproj" />
@@ -63,12 +62,16 @@
     <ProjectReference Include="@(_UmpireUsedPart->WithMetadataValue('Kind', 'Library')->'$(UmpireFrameworkSourceDir)%(Source)'->Distinct())" />
   </ItemGroup>
   <ItemGroup Condition="'$(_UmpireUseBundle)' == 'true'">
-    <ProjectReference Include="@(_UmpireUsedPart->WithMetadataValue('Kind', 'Library')->'$(UmpireFrameworkSourceDir)%(Bundle)'->Distinct())" />
+    <ProjectReference Include="@(_UmpireUsedPart->WithMetadataValue('Kind', 'Library')->'$(UmpireFrameworkSourceDir)%(Bundle)'->Distinct())"
+                      GlobalPropertiesToRemove="UmpireAnalyzerBuild" />
   </ItemGroup>
-  <ItemGroup>
+  <!-- The analyzer build (UmpireAnalyzerBuild) and a build on the bundles get no analyzer: the analyzer builds on them. -->
+  <ItemGroup Condition="'$(UmpireAnalyzerBuild)' != 'true' and '$(_UmpireUseBundle)' != 'true' and '$(UmpireNoAnalyzer)' != 'true' and '$(MSBuildIsRestoring)' != 'true'">
     <ProjectReference Include="@(_UmpireUsedPart->WithMetadataValue('Kind', 'Analyzer')->'$(UmpireFrameworkSourceDir)%(Source)'->Distinct())"
-                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+                      OutputItemType="_UmpireEngineAnalyzer" ReferenceOutputAssembly="false" PrivateAssets="all"
+                      AdditionalProperties="UmpireAnalyzerBuild=true" />
   </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)Umpire.EngineAnalyzer.targets" />
 
   <!-- The definition of a pack is check-time code (Umpire.After.targets). Source mode builds its project first, with no
        reference to its assembly. A project with its own reference to that project keeps it. -->
@@ -80,32 +83,7 @@
     <_UmpirePackDefinitionProject Remove="@(ProjectReference)" />
     <ProjectReference Include="@(_UmpirePackDefinitionProject->Distinct())" ReferenceOutputAssembly="false" Private="false"
                       OutputItemType="_UmpirePackDefinitionOutput" SkipGetTargetFrameworkProperties="true"
-                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
+                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath;UmpireAnalyzerBuild" />
   </ItemGroup>
 
-  <!-- Source mode gives the kernel analyzer from the folder of the pack analyzer, as the package of the pack does (pinned choice W24).
-       Roslyn finds a dependency of an analyzer in the folder of that analyzer only if that file is an analyzer item. Else the
-       compiler server takes the first registered path with the same name and version, in text order, and does not check that
-       the file exists. Then a deleted test workspace or another worktree can win, and the pack rules do not load (CS8032).
-       The target changes only the analyzer items of the Umpire analyzer projects of this file. It uses
-       a copy only if it is the one copy and it exists, so a design-time build with no output keeps the kernel analyzer from its own folder. -->
-  <Target Name="_UmpireKernelAnalyzerBesidePackAnalyzer" AfterTargets="ResolveProjectReferences">
-    <PropertyGroup>
-      <_UmpireKernelAnalyzerProject>$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'framework', 'Kernel', 'Analyzers', 'Umpire.Kernels.Analyzers.csproj'))</_UmpireKernelAnalyzerProject>
-    </PropertyGroup>
-    <ItemGroup>
-      <_UmpireAnalyzerProject Include="@(_UmpireUsedPart->WithMetadataValue('Kind', 'Analyzer')->'$(UmpireFrameworkSourceDir)%(Source)')" />
-      <_UmpireAnalyzerProject Remove="$(_UmpireKernelAnalyzerProject)" />
-      <_UmpireOwnKernelAnalyzer Include="@(Analyzer)" Condition="'%(Analyzer.MSBuildSourceProjectFile)' == '$(_UmpireKernelAnalyzerProject)'" />
-      <_UmpireAnalyzerOfProject Include="%(Analyzer.MSBuildSourceProjectFile)" Analyzer="%(Analyzer.FullPath)" Condition="'%(Analyzer.MSBuildSourceProjectFile)' != ''" />
-      <_UmpireAnalyzerOfOtherProject Include="@(_UmpireAnalyzerOfProject)" Exclude="@(_UmpireAnalyzerProject)" />
-      <_UmpireAnalyzerOfProject Remove="@(_UmpireAnalyzerOfOtherProject)" />
-      <_UmpireKernelAnalyzerOfPack Include="@(_UmpireAnalyzerOfProject->'%(Analyzer)'->'%(RootDir)%(Directory)Umpire.Kernels.Analyzers.dll'->Distinct())" />
-      <_UmpireKernelAnalyzerOfPack Remove="@(_UmpireKernelAnalyzerOfPack)" Condition="!Exists('%(FullPath)')" />
-    </ItemGroup>
-    <ItemGroup Condition="'@(_UmpireOwnKernelAnalyzer->Count())' == '1' and '@(_UmpireKernelAnalyzerOfPack->Count())' == '1'">
-      <Analyzer Remove="@(_UmpireOwnKernelAnalyzer)" />
-      <Analyzer Include="@(_UmpireKernelAnalyzerOfPack)" />
-    </ItemGroup>
-  </Target>
 </Project>

@@ -1,10 +1,11 @@
 using Tests.Shared;
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
+using Facts.Domain.Shared.Compile;
 
 namespace Rules.Tests;
 
 public sealed class LineLengthRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new LineLengthRule().Rule;
+    static readonly CodeRule Rule = new LineLengthRule();
 
     [Test]
     public Task Line_at_the_limit_passes() => Analyzer.VerifyFormatting(Rule, """
@@ -26,7 +27,7 @@ public sealed class LineLengthRuleTests {
 }
 
 public sealed class MethodLengthRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new MethodLengthRule().Rule;
+    static readonly CodeRule Rule = new MethodLengthRule();
 
     const string Method = """
         class A {
@@ -61,7 +62,7 @@ public sealed class MethodLengthRuleTests {
 }
 
 public sealed class FileLengthRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new FileLengthRule().Rule;
+    static readonly CodeRule Rule = new FileLengthRule();
 
     [Test]
     public Task File_at_the_limit_passes() => Analyzer.VerifyFormatting(Rule, """
@@ -80,7 +81,7 @@ public sealed class FileLengthRuleTests {
 }
 
 public sealed class OneTypePerFileRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new OneTypePerFileRule().Rule;
+    static readonly CodeRule Rule = new OneTypePerFileRule();
 
     [Test]
     public Task One_type_with_nested_types_passes() => Analyzer.VerifyFormatting(Rule, """
@@ -118,7 +119,7 @@ public sealed class OneTypePerFileRuleTests {
 }
 
 public sealed class MemberOrderRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new MemberOrderRule().Rule;
+    static readonly CodeRule Rule = new MemberOrderRule();
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Diagnostic(string name, string group, string previous,
         string order = "static before instance") =>
@@ -194,7 +195,7 @@ public sealed class MemberOrderRuleTests {
 }
 
 public sealed class CommentRuleTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new CommentRule().Rule;
+    static readonly CodeRule Rule = new CommentRule();
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Comment(int location) => Analyzer.Diagnostic(Rule, location);
 
@@ -270,12 +271,13 @@ public sealed class CommentRuleTests {
 }
 
 public sealed class RuleOptionTests {
-    static readonly Microsoft.CodeAnalysis.DiagnosticDescriptor Rule = new LineLengthRule().Rule;
+    static readonly CodeRule Rule = new LineLengthRule();
 
     const string LongLine = "class Abc { int value; }";
 
     static Microsoft.CodeAnalysis.Testing.DiagnosticResult Option(string rule, string key, string kind, string value) =>
-        new Microsoft.CodeAnalysis.Testing.DiagnosticResult(VsaAnalyzer.OptionDescriptor).WithArguments(rule, key, kind, value);
+        new Microsoft.CodeAnalysis.Testing.DiagnosticResult(CodeRule.OptionNotice.Id, Microsoft.CodeAnalysis.DiagnosticSeverity.Warning)
+            .WithMessage(CodeRule.OptionNotice.Text(rule, key, kind, value));
 
     [Test]
     public Task Missing_option_takes_the_default_of_the_rule() =>
@@ -283,27 +285,29 @@ public sealed class RuleOptionTests {
             Analyzer.Diagnostic(Rule, 0, 121, 120));
 
     [Test]
-    public Task Option_with_no_default_and_no_value_fails_and_the_rule_does_not_run() =>
-        new NoDefaultTest {
-            TestCode = "class Abc { }",
-            ExpectedDiagnostics = { Option("UMP010199", NoDefaultRule.Key, "a whole number more than 0", "missing") },
-        }.RunAsync(TestContext.CurrentContext.CancellationToken);
+    public void Option_with_no_default_and_no_value_fails_and_the_rule_does_not_run() {
+        var run = NoDefaultRule.Run("");
+
+        Assert.That(run.Notices.Select(n => n.Message), Is.EqualTo(new[] {
+            CodeRule.OptionNotice.Text("UMP010199", NoDefaultRule.Key, "a whole number more than 0", "missing") }));
+        Assert.That(run.Check(NoDefaultRule.File), Is.Empty);
+    }
 
     [Test]
-    public Task Option_with_no_default_runs_with_a_value_from_the_config() =>
-        new NoDefaultTest {
-            TestCode = "{|#0:class Abc { }|}",
-            TestState = { AdditionalFiles = { ("/.umpireconfig", "umpire.UMP010199.size = 2") } },
-            ExpectedDiagnostics = { new Microsoft.CodeAnalysis.Testing.DiagnosticResult(new NoDefaultRule().Rule).WithLocation(0).WithArguments(2) },
-        }.RunAsync(TestContext.CurrentContext.CancellationToken);
+    public void Option_with_no_default_runs_with_a_value_from_the_config() {
+        var run = NoDefaultRule.Run("umpire.UMP010199.size = 2");
+
+        Assert.That(run.Notices, Is.Empty);
+        Assert.That(run.Check(NoDefaultRule.File).Select(f => (f.Code, f.Message)), Is.EqualTo(new[] { ("UMP010199", "The size is 2.") }));
+    }
 
     [Test]
     public void Option_with_no_default_and_no_value_is_not_valid() =>
-        Assert.That(UmpireOption.Int(LimitRule.MaxKey).IsValid(null), Is.False);
+        Assert.That(RuleOption.Number(LimitRule.MaxKey).IsValid(null), Is.False);
 
     [Test]
     public void Option_with_a_default_and_no_value_is_valid() =>
-        Assert.That(UmpireOption.Int(LimitRule.MaxKey, 5).IsValid(null), Is.True);
+        Assert.That(RuleOption.Number(LimitRule.MaxKey, 5).IsValid(null), Is.True);
 
     [Test]
     public Task Option_that_is_not_valid_fails() =>
@@ -316,29 +320,23 @@ public sealed class RuleOptionTests {
             Analyzer.Diagnostic(Rule, 0, 24, 20));
 }
 
-sealed class NoDefaultTest
-    : Microsoft.CodeAnalysis.CSharp.Testing.CSharpAnalyzerTest<NoDefaultAnalyzer, Microsoft.CodeAnalysis.Testing.DefaultVerifier> {
-    public NoDefaultTest() => ReferenceAssemblies = Microsoft.CodeAnalysis.Testing.ReferenceAssemblies.Net.Net80;
-}
-
-[Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer(Microsoft.CodeAnalysis.LanguageNames.CSharp)]
-public sealed class NoDefaultAnalyzer : RuleAnalyzer;
-
 public sealed class NoDefaultRule : KernelRule {
     public const string Key = "size";
 
+    public static CodeFile File { get; } = new("Abc.cs", [13], [], [], [], [], []);
+
     public override int Number => 99;
 
-    public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Int(Key)];
+    public override IReadOnlyList<RuleOption> Options { get; } = [RuleOption.Number(Key)];
 
-    protected override string Title => "A test rule with an option that has no default";
+    public override string Title => "A test rule with an option that has no default";
 
-    protected override string Message => "The size is {0}.";
+    public override string Message => "The size is {0}.";
 
-    protected override void Register(Microsoft.CodeAnalysis.Diagnostics.CompilationStartAnalysisContext start) =>
-        start.RegisterSyntaxTreeAction(context => {
-            if (Values(context.Options).Int(Key) is { } size) {
-                context.ReportDiagnostic(Create(context.Tree.GetRoot().GetLocation(), size));
-            }
-        });
+    public static CodeRun Run(string config) => CodeRun.Start(
+        new CompileProject("Abc", "", config, false, [], [], new ModelSettings(null, null, null, [], false)),
+        (_, _) => true, [new NoDefaultRule()]);
+
+    public override IEnumerable<CodeFinding> Check(CodeFile file, RuleOptions options) =>
+        options.Number(Key) is { } size ? [Found(new CodePlace(file.Path, 1, 1, file.Lines[0]), size)] : [];
 }

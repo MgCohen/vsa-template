@@ -18,10 +18,25 @@ public sealed record BuiltAssembly(string Path, string TargetFramework, IReadOnl
 
     public static string BinFolder => Repo.Path("artifacts~", "bin");
 
+    public static string AnalyzerEntry => "Umpire.Engine.Analyzer.dll";
+
+    public static string AnalyzerFolder => Repo.Path("engine", "artifacts~", "bin", "Engine.Analyzer", $"{Configuration}-analyzer");
+
     public static BuiltAssembly OfSingleTarget(string project) =>
         Read(System.IO.Path.Combine(BinFolder, project, Configuration, $"{AssemblyOfProject.GetValueOrDefault(project, project)}.dll"));
 
     public static BuiltAssembly OfPortable(string project) => OfSingleTarget(project);
+
+    public static BuiltAssembly OfAnalyzer(string file) => Read(System.IO.Path.Combine(AnalyzerFolder, file));
+
+    public static IEnumerable<string> AnalyzerFiles() => Directory.GetFiles(AnalyzerFolder, "*.dll")
+        .Select(System.IO.Path.GetFileName).OfType<string>()
+        .Where(file => !file.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal))
+        .Where(file => !file.StartsWith("System.", StringComparison.Ordinal) || file == "System.Reflection.MetadataLoadContext.dll")
+        .Order(StringComparer.Ordinal);
+
+    public static IEnumerable<string> UmpireAnalyzerFiles() =>
+        AnalyzerFiles().Where(file => file.StartsWith("Umpire.", StringComparison.Ordinal));
 
     static BuiltAssembly Read(string path) {
         using var stream = File.OpenRead(path);
