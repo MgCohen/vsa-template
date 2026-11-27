@@ -39,26 +39,28 @@ Rules for all commands:
 
 ## The tool is an app
 
-The tool is an Umpire app with a console host. `Program.cs` is only `return new UmpireTool().Run(args);`.
+The tool is a VSA app with a console host, in `tooling/`. `App/Program.cs` is only `return new UmpireTool<ToolHost>().Run(args);`. The build checks `tooling/` as a block (`UmpireBlock`), with the definition `tooling/Definition/` (`ToolArchitecture`). The assembly name is `umpire-cli`: the check binds an assembly `Umpire.*` to the External `UmpireLibraries` and does not check its types. The package id stays `Umpire.Cli`.
 
 | Part | Type | Job |
 |---|---|---|
-| App class | `UmpireTool : App<ToolKernel, ToolHost>` | The lifecycle |
-| Kernel | `ToolKernel : Kernel` | One `Operation` for each command, and `help` and `version` |
-| Host | `ToolHost : ConsoleHost` | Converts the command line into the words of one operation |
-| Input | `ToolLine` | The command line, a service of the app |
+| App class | `UmpireTool<THost> : App<VsaKernel, THost>` | The lifecycle. The tests close it with a `LocalHost` |
+| Host | `ToolHost : ConsoleHost` | Converts the command line into the request of one command |
+| Commands | `ToolCommands` (`App/Host/`) | The forms of the requests, the selection and the conversion |
+| Plugin | `App/Plugins/Commands/` | `IToolRequest<TSelf>`, `IChildProcessRequest`, `ToolResponse`, `ToolHandler<,>`, `CommandForm`, `CommandOption`, `CommandInput`, `UmpireException`, `Dotnet`, `ChildProcess` |
+| Modules | `App/Features/` | `Tool` (help, version), `Scaffold` (new app, init, add), `Checks` (test, check), `Versions` (doctor, update) |
 
 ```mermaid
 flowchart LR
     A[Command line] --> H[ToolHost]
-    H -->|words| C[ConsoleHost selects the operation]
-    C --> O[Operation of the command]
-    O -->|ToolLine| R[CommandList.Run]
+    H -->|form| C[ConsoleHost selects the operation]
+    C --> O[Operation of the request]
+    O -->|IToolRequest.From| R[Request]
+    R --> X[Handler]
 ```
 
-The command words and the options stay in the form of the tool, for example `add request <Name> -m <Module>`. The host gives only the words of the command to `ConsoleHost`, for example `add request`, and the operation reads the full command line from `ToolLine`. An unknown command selects `help`, and `help` gives the error with the usage. The operation changes an `UmpireException` into the error `umpire: <message>` with exit code 1. Another exception gives `umpire: ` and the full exception text, with exit code 1. The tool uses no module and no module settings (`FixedModules`, no settings provider).
+Each request declares its `CommandForm` (the words, the summary, the place in the usage, the name and the options) and a static `From(ToolCall)`. The host wraps the operation of each request: the operation gets the group and the name of the form, and it makes the request from the command line when it runs. A form selects the command line that starts with its words. The form of `version` selects only `--version`. A command line that no form selects goes to `help`, and `help` gives the error with the usage. The base handler `ToolHandler<,>` changes an `UmpireException` into the error `umpire: <message>` with exit code 1. Another exception gives `umpire: ` and the full exception text, with exit code 1. An error of the command line (for example no name) gives the same form. The tool uses no module settings (no settings provider).
 
-The tool is not a VSA app, and the build does not check it as a block.
+After Ctrl+C or SIGTERM, `umpire test` and `umpire check` give the exit code of their child process (`IChildProcessRequest`, `ConsoleHost.CancelsOnSignal`). The signal cancels the operation. The tool waits for the child up to 10 seconds (`Dotnet.StopTime`), then it kills the child and its process tree. `umpire test` starts no new test project after a signal. Each other console app keeps exit code 0 after a signal.
 
 ## The check of an app
 
@@ -73,47 +75,28 @@ If the app has no `Umpire.Engine`, the engine file does not exist, or the root p
 
 ## Add a command
 
-Each command of the tool is one class in `tools/cli/Commands/`. It inherits one base from `Commands/Bases/`, and it has one entry in `CommandList.All`. The help text comes from that list.
+Each command of the tool is one slice in a feature module of `tooling/App/Features/`. The help text comes from the forms of the requests.
 
-```
-ToolCommand                      Words, Summary, TakesName, Options, Usage, Run(CommandInput)
-├─ NewAppCommand                 umpire new app <Name> [--source <feed>]
-├─ InitCommand                   umpire init [--source <feed>] [--check true]
-└─ AppCommand                    finds the app folder, then Run(root, CommandInput)
-   ├─ TestCommand                umpire test [-c <configuration>]
-   ├─ CheckCommand               umpire check [-c <Debug|Release>] [--mode <Warn|Error>]
-   ├─ DoctorCommand              umpire doctor
-   ├─ UpdateCommand              umpire update [--version <version>]
-   └─ AddCommand                 checks the name, writes the template files of one TemplateGroup
-      ├─ AddModuleCommand        umpire add module <Name>
-      ├─ AddPluginCommand        umpire add plugin <Name>
-      ├─ AddPackCommand          umpire add pack <Name>
-      └─ AddSliceCommand         one class, one instance for each SliceKind:
-                                   SliceKind.Request  umpire add request <Name> -m <Module>
-                                   SliceKind.Command  umpire add command <Name> -m <Module>
-```
-
-| You want | Inherit | You write |
-|---|---|---|
-| A command outside an app | `ToolCommand` | `Words`, `Summary`, `Run` |
-| A command in an app | `AppCommand` | `Words`, `Summary`, `Run(root, input)` |
-| A command that writes the template files of one `TemplateGroup` | No class | A new `AddKind` value in `AddKind.All`: `Noun`, `Shown`, `Template`, `SampleName`, `Summary`. Optional: `Folder`, `IsModule`, `Suffixes`, `BaseNames`, `NextStep` |
+| File | Content |
+|---|---|
+| `<Name>Request.cs` | `sealed record <Name>Request(...) : IRequest<<Name>Response>, IToolRequest<<Name>Request>`, with `static CommandForm Form` and `static <Name>Request From(ToolCall call)`. Add `IChildProcessRequest` if the command runs a child process |
+| `<Name>Response.cs` | `sealed record <Name>Response(int ExitCode) : ToolResponse(ExitCode)` |
+| `<Name>Handler.cs` | `sealed class <Name>Handler : ToolHandler<<Name>Request, <Name>Response>`, with `Run(request, ct)` |
 
 To add a command:
 
-1. Write the class in `Commands/`. Inherit the base from the table.
-2. Give its options as `CommandOption` values. `Required` makes the option necessary. `Many` accepts more than one value.
-3. Read the input with `input.Name`, `input.Single(option)` or `input.All(option)`.
-4. For an error for the user, throw `UmpireException`. The tool shows the message and stops with exit code 1.
-5. Add the command to `CommandList.All`. `ToolKernel` then gives it its operation.
-6. Add a test in `tests/Cli`. `CommandTests` makes sure that each command inherits one base and is in the list. `ToolAppTests` makes sure that the words of each command select only its own operation.
+1. Add the slice. Give the options as `CommandOption` values. `Required` shows the option as necessary, and the handler checks it (`form.Missing(option)`). `Many` accepts more than one value.
+2. In `From`, read the input with `call.Input(Form)`, then `input.Name`, `input.Value(option)` or `input.All(option)`.
+3. In the handler, for an error for the user, throw `UmpireException`. The tool shows the message and stops with exit code 1. A command in an app finds the app folder with `RootProject.AppOfCurrentFolder()`.
+4. A new module goes in `ToolModules.All()` (`App/Host/`).
+5. Add a test in `tests/Cli`. `CommandTests` makes sure that each request has a form with its own words and its own place. `ToolAppTests` makes sure that the host selects the request of each command line.
 
-An `AppCommand` checks the input in this order: the name, then the app folder, then the required options. `AddCommand.Run` makes the template names in one place. An `AddKind` with a `Folder` is a module kind or a pack: `AddKind.EnsureFree` stops on the app name, a base name, its own folder and the folder of each other module kind. An `AddKind` with no `Folder` is a slice kind: it takes `-m <Module>`.
+A command in an app checks the input in this order: the name, then the app folder, then the required options. `AddFiles.Run` makes the template names in one place. An `AddKind` with a `Folder` is a module kind or a pack: `AddKind.EnsureFree` stops on the app name, a base name, its own folder and the folder of each other module kind. An `AddKind` with no `Folder` is a slice kind: it takes `-m <Module>`.
 
 ## Template format A
 
 ```
-tools/cli/Templates/
+tooling/Templates/
 ├─ AGENTS.md.template                 new app (the tool removes ".template")
 ├─ SampleApp.csproj                   new app (the root project, becomes <Name>.csproj)
 ├─ SampleApp.slnx.template           new app (becomes <Name>.slnx)
@@ -177,7 +160,7 @@ An engine run checks the architecture of the host (see [architecture-engine.md](
 
 ## Setup tasks
 
-`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` plans its app files, then runs the same setup tasks on the planned files only: it reads no file on disk, so each task gives the full template. Then one check (`TextFile.WriteAllOrNone`) stops if a file of the plan exists. The tasks are the list `SetupTasks.Default` in `tools/cli/Scaffolding/Setup/`, with one class for each task in `Tasks/`.
+`umpire init` adds the Umpire setup to an existing app, in the current folder. `umpire new app` plans its app files, then runs the same setup tasks on the planned files only: it reads no file on disk, so each task gives the full template. Then one check (`TextFile.WriteAllOrNone`) stops if a file of the plan exists. The tasks are the list `SetupTasks.Default` in `tooling/App/Features/Scaffold/Domain/Setup/`, with one class for each task in `Tasks/`.
 
 ```
 umpire init                          umpire new app <Name>
@@ -204,7 +187,7 @@ Rules of a task:
 1. A task only plans. The tool writes all changes after all tasks.
 2. A task adds. It does not remove, reorder or change a value of the app.
 3. A conflict is a by-hand task, with the fix in its message.
-4. The tool writes each file with `TextFile` (`tools/Files/`). A new file is LF with no byte order mark. A changed file keeps its byte order mark and gets its dominant line ending: CRLF if the file has more CRLF lines than LF lines, else LF.
+4. The tool writes each file with `TextFile` (`tooling/Files/`). A new file is LF with no byte order mark. A changed file keeps its byte order mark and gets its dominant line ending: CRLF if the file has more CRLF lines than LF lines, else LF.
 5. A new XML element gets the indent of the first child element of the file.
 6. A changed JSON file keeps its indent, but the tool writes all of the JSON again in the indented form. So a JSON file with comments is a by-hand task.
 7. Two tasks can change one file. A task plans on the planned content of the tasks before it.

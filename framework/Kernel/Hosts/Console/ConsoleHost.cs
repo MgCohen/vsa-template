@@ -6,6 +6,7 @@ using Umpire.Kernels;
 
 public class ConsoleHost : AppHost {
     readonly CancellationTokenSource stopping = new();
+    readonly CancellationTokenSource signalled = new();
     Operation? operation;
     AppSignals? signals;
     PosixSignalRegistration? terminate;
@@ -13,18 +14,20 @@ public class ConsoleHost : AppHost {
 
     public override IServiceProvider Build(string[] args, App app) {
         var services = base.Build(args, app);
-        operation = CommandLine.Select(services.GetServices<Operation>().ToList(), args);
+        operation = Select(services.GetServices<Operation>().ToList(), args);
         return services;
     }
 
     public override void Start(IServiceProvider services, AppStop stop) {
-        signals = AppSignals.Listen(stop);
+        var selected = operation!;
+        Action onSignal = CancelsOnSignal(selected) ? signalled.Cancel : () => stop.Request();
+        signals = AppSignals.Listen(onSignal);
         terminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, context => {
             context.Cancel = true;
-            stop.Request();
+            onSignal();
         });
-        work = HostWork.Run(() => CommandLine.Run(
-            services, operation!, services.GetRequiredService<HostArguments>(), stop, stopping.Token));
+        var arguments = services.GetRequiredService<HostArguments>();
+        work = HostWork.Run(() => Run(services, selected, arguments, stop));
     }
 
     public override void Dispose() {
@@ -38,9 +41,24 @@ public class ConsoleHost : AppHost {
         } catch (OperationCanceledException) {
         }
         stopping.Dispose();
+        signalled.Dispose();
         base.Dispose();
     }
 
+    protected virtual Operation Select(IReadOnlyList<Operation> operations, string[] args) =>
+        CommandLine.Select(operations, args);
+
+    protected virtual bool CancelsOnSignal(Operation operation) => false;
+
     protected override HostArguments Arguments(string[] args) =>
         base.Arguments(CommandLine.Options(args));
+
+    async Task Run(IServiceProvider services, Operation selected, HostArguments arguments, AppStop stop) {
+        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token, signalled.Token);
+        try {
+            await CommandLine.Run(services, selected, arguments, stop, cancel.Token).ConfigureAwait(false);
+        } catch (OperationCanceledException) when (signalled.IsCancellationRequested && !stopping.IsCancellationRequested) {
+            stop.Request();
+        }
+    }
 }

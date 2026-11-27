@@ -1,8 +1,8 @@
 using Tests.Shared;
-using Umpire.Cli;
-using Umpire.Cli.Commands;
-using Umpire.Cli.Scaffolding;
-using Umpire.Cli.Scaffolding.Setup;
+using Umpire.Cli.Features.Scaffold.Domain;
+using Umpire.Cli.Features.Scaffold.Domain.Setup;
+using Umpire.Cli.Features.Scaffold.Slices.NewApp;
+using Umpire.Cli.Plugins.Commands.Domain.Shared;
 
 namespace Cli.Tests;
 
@@ -340,7 +340,7 @@ public sealed class SetupTests {
 
     [Test]
     public void ANewAppPlanHasNoByHandTaskAndPlansEachSetupFile() {
-        var plan = NewAppCommand.Plan("Shop", [], V);
+        var plan = NewAppHandler.Plan("Shop", [], V);
 
         Assert.That(plan.ByHand, Is.Empty);
         Assert.That(plan.Files.Select(file => file.Path),
@@ -429,7 +429,7 @@ public sealed class SetupTests {
         var current = Environment.CurrentDirectory;
         try {
             Environment.CurrentDirectory = folder;
-            return CommandList.Run(args);
+            return Tool.Run(args);
         } finally {
             Environment.CurrentDirectory = current;
         }

@@ -5,7 +5,7 @@ public static class LocalFeed {
 
     internal const string FeedPrefix = "f-";
 
-    public static readonly IReadOnlyList<string> PackRoots = ["architecture", "framework", "packs", "engine", "tools"];
+    public static readonly IReadOnlyList<string> PackRoots = ["architecture", "framework", "packs", "engine", "tools", "tooling"];
 
     static readonly TimeSpan UnusedFeedLife = TimeSpan.FromHours(2);
 

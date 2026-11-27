@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The one text file writer of the umpire tool: a new file is LF with no BOM, a changed file keeps its BOM and
+       its dominant line ending. The tool bundles the DLL. It is a library with no pack, so it references only the package Umpire. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire" Version="$(UmpireVersion)" />
+  </ItemGroup>
+  <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Kernels.ComponentArchitecture, Umpire.Kernels.Definition" />
+  </ItemGroup>
+</Project>
