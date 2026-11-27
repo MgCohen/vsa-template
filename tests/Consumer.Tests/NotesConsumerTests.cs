@@ -16,7 +16,7 @@ public sealed partial class NotesConsumerTests {
 
         workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
         var runtimeDependencies = File.ReadAllText(Path.Combine(workspace.Src, "artifacts~", "bin", "Notes", "release", "Notes.deps.json"));
-        Assert.That(runtimeDependencies, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Web/").And.Not.Contain("Umpire.Vsa").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
+        Assert.That(runtimeDependencies, Does.Contain("\"Umpire/").And.Contain("\"Umpire.Vsa/").And.Contain("\"Umpire.Web/").And.Not.Contain("Umpire.Vsa.Definition").And.Not.Contain("ArchUnitNET").And.Not.Contain("Mono.Cecil"));
 
         var url = $"http://127.0.0.1:{FreePort()}";
         using var app = workspace.Start("run", "--project", "Notes.csproj", "-c", "Release", "--no-build", "--no-launch-profile", "--urls", url);

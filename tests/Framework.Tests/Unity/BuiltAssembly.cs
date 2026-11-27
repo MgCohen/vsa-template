@@ -12,10 +12,14 @@ public sealed record BuiltAssembly(string Path, string TargetFramework, IReadOnl
     public static string Configuration { get; } =
         typeof(BuiltAssembly).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration.ToLowerInvariant();
 
+    static readonly Dictionary<string, string> AssemblyOfProject = new(StringComparer.Ordinal) {
+        ["Umpire.Vsa.Kernel"] = "Umpire.Vsa",
+    };
+
     public static string BinFolder => Repo.Path("artifacts~", "bin");
 
     public static BuiltAssembly OfSingleTarget(string project) =>
-        Read(System.IO.Path.Combine(BinFolder, project, Configuration, $"{project}.dll"));
+        Read(System.IO.Path.Combine(BinFolder, project, Configuration, $"{AssemblyOfProject.GetValueOrDefault(project, project)}.dll"));
 
     public static BuiltAssembly OfPortable(string project) => OfSingleTarget(project);
 

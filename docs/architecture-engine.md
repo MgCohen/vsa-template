@@ -160,7 +160,7 @@ The kernel is three blocks: the root `Core`, `MessagesComponent` and the kernel 
 
 | Check | Kernel form | Binding | Rules |
 |---|---|---|---|
-| An app | A DLL: the project DLLs, or `Umpire.dll` in a package | By the PDB path of each type | The rules of the app toward the kernel |
+| An app | A DLL: the project DLLs, or `Umpire.dll` and `Umpire.Vsa.dll` in a package | By the PDB path of each type | The rules of the app toward the kernel |
 | The pack | Source: the folder `Kernel/` of the pack | By folder | The rules of the architecture under `Kernel` |
 
 For the pack check, the engine reads the definition in `Definition/` of the pack (`BlockEntry.Packed`) and creates `new PackArchitecture(architecture)`. `PackArchitecture` gets the kernel body of the packed architecture into its own `kernel` part. The type requirements of the layer concepts (`OfTypes`) do not apply inside the kernel of a pack, because the kernel holds the bases themselves. `rules.For<Kernel>().Uses<Kernel>()` allows each use between two kernel layers: the check covers the shape of the kernel.
@@ -679,8 +679,8 @@ A block is a folder tree of code with one check entry. The check entry names the
 | App class | `NotesApp : App<VsaKernel, WebHost>` | The project folder of its assembly |
 | Definition of a kernel | `VsaArchitecture` in `packs/Vsa/Definition/` | The folder around `Definition/` |
 | Typed base | `public class ToolsBlock : Block<ToolsArchitecture>` | The folder of the source file of each concrete subclass |
-| `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
-| `.umpireconfig` | `umpire.architecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa"` | The folder of the file |
+| `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa.Definition" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
+| `.umpireconfig` | `umpire.architecture = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa.Definition"` | The folder of the file |
 
 - The engine reads the entries from the DLLs of the host output (with `MetadataLoadContext`, with no instance) and from the `.umpireconfig` files. The search for `.umpireconfig` skips `bin/`, `obj/` and each folder whose name ends with `~`.
 - A `.umpireconfig` file is a check entry only if it has the key `umpire.architecture` at the top level. With no key, it is only the root of the build output, of the rule values and of the module settings. The file is TOML. `UmpireConfig` (Umpire.Config) is its one reader, in the engine, the kernel and the `umpire` tool. A string needs quotes. A file-pattern section, for example `[*.cs]`, is not valid TOML.

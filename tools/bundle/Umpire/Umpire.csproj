@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Umpire.dll: the markers, the config reader, the kernel, the messages and the VSA kernel with its layer bases.
-       An app gets the Umpire runtime from this one package. It holds no definition code: the packages Umpire.Definition
-       and Umpire.Vsa.Definition hold it. -->
+  <!-- Umpire.dll: the core of the runtime: the markers, the config reader, the kernel and the messages. It holds no pack:
+       the package Umpire.Vsa holds the VSA kernel. It holds no definition code: the packages Umpire.Definition and
+       Umpire.Vsa.Definition hold it. -->
   <PropertyGroup>
-    <Description>The Umpire runtime: the kernel, the messages and the VSA kernel with its layer bases.</Description>
+    <Description>The Umpire runtime core: the kernel and the messages.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(UmpireRoot)architecture/Markers/**/*.cs" Exclude="$(_UmpireNotBundled)" />
@@ -11,7 +11,6 @@
     <Compile Include="$(UmpireRoot)framework/Components/Messages/**/*.cs" Exclude="$(_UmpireNotBundled)" />
     <Compile Include="$(UmpireRoot)framework/Kernel/**/*.cs"
              Exclude="$(_UmpireNotBundled);$(UmpireRoot)framework/Kernel/Analyzers/**;$(UmpireRoot)framework/Kernel/Definition/**;$(UmpireRoot)framework/Kernel/Hosts/Web/**;$(UmpireRoot)framework/Kernel/Hosts/Console/**" />
-    <Compile Include="$(UmpireRoot)packs/Vsa/Kernel/**/*.cs" Exclude="$(_UmpireNotBundled);$(UmpireRoot)packs/Vsa/Kernel/Views/**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" />
@@ -23,19 +22,25 @@
     <PackageReference Include="System.Reflection.Metadata" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Umpire.Vsa" />
     <InternalsVisibleTo Include="Umpire.Web" />
     <InternalsVisibleTo Include="Umpire.Console" />
   </ItemGroup>
-  <!-- The package depends on the VSA analyzers and their rule values, so each app that references it gets them. The analyzers
-       run only in a compilation that selects the VSA pack (RuleAnalyzer.PackNamespace). The reference is only for the pack:
-       a build does not copy the analyzer DLL, and source mode adds the analyzers in Umpire.Sdk.Core.targets. -->
+  <ItemGroup>
+    <None Remove="build/**" />
+    <None Include="build/Umpire.targets" Pack="true" PackagePath="build;buildTransitive" />
+  </ItemGroup>
+  <!-- The package depends on the kernel analyzer (the rules about any code) and its rule values, so each app that references
+       it gets them. The reference is only for the pack: a build does not copy the analyzer DLL, and source mode adds the
+       analyzer in Umpire.Sdk.Core.targets. The package of a pack analyzer holds the kernel analyzer DLL too (Umpire.KernelBundle.targets),
+       so build/Umpire.targets removes the copy of the kernel analyzer package from a compilation that has a copy of a pack. -->
   <ItemGroup Condition="'$(_IsPacking)' == 'true'">
-    <ProjectReference Include="$(UmpireRoot)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" Private="false" PrivateAssets="none" ExcludeAssets="compile" />
+    <ProjectReference Include="$(UmpireRoot)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" Private="false" PrivateAssets="none" ExcludeAssets="compile" />
   </ItemGroup>
   <!-- NuGet takes the dependencies from the restore. A restore with no _IsPacking (dotnet pack with its no-restore switch)
-       has no analyzer reference, so the package would have no analyzers. -->
+       has no analyzer reference, so the package would have no analyzer. -->
   <Target Name="_UmpireCheckAnalyzerDependency" BeforeTargets="GenerateNuspec">
-    <Error Condition="!$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Umpire.Vsa.Analyzers'))"
-           Text="The restore of Umpire has no reference to Umpire.Vsa.Analyzers, so the package would have no analyzers. Run dotnet pack with its own restore, or restore with -p:_IsPacking=true first." />
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Umpire.Kernels.Analyzers'))"
+           Text="The restore of Umpire has no reference to Umpire.Kernels.Analyzers, so the package would have no analyzer. Run dotnet pack with its own restore, or restore with -p:_IsPacking=true first." />
   </Target>
 </Project>

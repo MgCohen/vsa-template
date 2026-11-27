@@ -95,9 +95,11 @@ The root project gets its packages from two places:
 
 | Package | From | Contains |
 |---|---|---|
-| `Umpire` | Umpire.Sdk | One `Umpire.dll`: the app start, the markers and the VSA kernel with the base of each layer. It holds no definition code |
+| `Umpire` | Umpire.Sdk | One `Umpire.dll`: the app start and the markers. It holds no pack and no definition code |
+| `Umpire.Vsa` | Umpire.Sdk, with the default pack | One `Umpire.Vsa.dll`: the VSA kernel with the base of each layer. It holds no definition code |
 | `Umpire.Definition`, `Umpire.Vsa.Definition` | Umpire.Sdk, in `Definition/`, and `Umpire.Testing` | The definition API and the VSA definition. The root project does not compile against them: it copies them to `umpire-definitions/` for the check |
-| `Umpire.Vsa.Analyzers` | `Umpire` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
+| `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
+| `Umpire.Kernels.Analyzers` | `Umpire` (a dependency) | The kernel analyzer. A VSA app compiles with the copy in `Umpire.Vsa.Analyzers` only |
 | `Umpire.Web` | Umpire.Sdk.Web | The web host and the presenter views |
 | `Umpire.Testing` | Umpire.Sdk, in `App/Tests/` | The test bases |
 

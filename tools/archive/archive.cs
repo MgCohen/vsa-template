@@ -72,6 +72,7 @@ static string Here([CallerFilePath] string path = "") {
 
 static class Archive {
     const string ArchiveProject = "UmpireArchive";
+    static readonly string[] RuntimePackages = ["Umpire", "Umpire.Vsa"];
     static readonly string[] DefinitionPackages = ["Umpire.Definition", "Umpire.Vsa.Definition"];
 
     public static IReadOnlyDictionary<string, PackageName> Runtime(
@@ -82,7 +83,7 @@ static class Archive {
         var downloads = engine.Where(package => !package.Project && package.Id != "Umpire.Sdk")
             .Select(package => $"""    <PackageDownload Include="{package.Id}" Version="[{package.Version}]" />""")
             .Distinct();
-        var definitions = DefinitionPackages
+        var packages = RuntimePackages.Concat(DefinitionPackages)
             .Select(package => $"""    <PackageReference Include="{package}" Version="[{options.Version}]" />""");
         File.WriteAllText(Path.Combine(project, $"{ArchiveProject}.csproj"), $"""
             <Project Sdk="Microsoft.NET.Sdk">
@@ -92,8 +93,7 @@ static class Archive {
                 <RestorePackagesPath>{Path.Combine(publish, "packages")}</RestorePackagesPath>
               </PropertyGroup>
               <ItemGroup>
-                <PackageReference Include="Umpire" Version="[{options.Version}]" />
-            {string.Join("\n", definitions)}
+            {string.Join("\n", packages)}
             {string.Join("\n", downloads)}
               </ItemGroup>
             </Project>

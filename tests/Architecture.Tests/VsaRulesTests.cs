@@ -196,9 +196,9 @@ public sealed class VsaRulesTests {
     }
 
     [Test]
-    public void A_domain_use_of_a_request_sender_in_the_one_runtime_DLL_is_denied() {
+    public void A_domain_use_of_a_request_sender_in_the_VSA_runtime_DLL_is_denied() {
         var block = Path.GetFullPath("Demo");
-        var sender = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire",
+        var sender = new TypeFacts("Umpire.Vsa.Contracts.Requests.IRequestSender", "IRequestSender", "Umpire.Vsa",
             new Source("/_/packs/Vsa/Kernel/Contracts/Requests/IRequestSender.cs", 1), [], [], [], []);
         var order = AppType(block, "Demo.Features.Shop.Domain.Order", "App/Features/Shop/Domain/Order.cs") with { Mentions = [sender.FullName] };
 

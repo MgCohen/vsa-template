@@ -9,7 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../Umpire/Umpire.csproj" />
+    <ProjectReference Include="../Vsa/Umpire.Vsa.Kernel.csproj" />
     <ProjectReference Include="../Definition/Umpire.Definition.csproj" />
     <ProjectReference Include="../VsaDefinition/Umpire.Vsa.Definition.csproj" />
     <PackageReference Include="NSubstitute" />
