@@ -91,6 +91,7 @@ definition + one snapshot for each project -> app model (not saved) -> jobs -> o
 - The user decides each merge of a PR about rules, analyzers or the public API.
 - CI is off. Run only the affected test projects on your computer, and the full suite (with `Consumer.Tests` and `tests/Cli`) before a large merge.
 - Let one subagent that did not write the code review each diff.
+- Do heavy work (a PR with builds and the full test set) in a separate remote session, with its own container. A subagent in this session is only for very small, quick work. The user, 2026-11-27: "let's always do a separate session. We shouldn't be sharing unless very small, quick work together."
 - Publishing is free until 1.0. Breaking changes are permitted before 0.1.0.
 - Comment each DLL or target framework change on #247.
 - Open an issue only for research, bugs and future problems.
