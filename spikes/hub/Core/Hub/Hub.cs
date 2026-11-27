@@ -1,16 +1,27 @@
 namespace Spike.Core;
 
-using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 
-sealed class Hub(IEnumerable<IHubStep> steps, IEnumerable<IPipeline> pipelines, IServiceScopeFactory scopes) : IHub {
-    readonly IHubStep[] hubSteps = [.. steps];
-    readonly IPipeline[] all = [.. pipelines];
-    readonly ConcurrentDictionary<Type, IPipeline?> chosen = new();
+sealed class Hub : IHub {
+    readonly IHubStep[] hubSteps;
+    readonly Dictionary<Type, IPipeline> byMessage = [];
+    readonly IServiceScopeFactory scopes;
+
+    public Hub(IEnumerable<IHubStep> steps, IEnumerable<IPipeline> pipelines, IServiceScopeFactory scopes) {
+        hubSteps = [.. steps];
+        this.scopes = scopes;
+        foreach (var pipeline in pipelines) {
+            foreach (var message in pipeline.Messages) {
+                if (byMessage.ContainsKey(message)) {
+                    throw new InvalidOperationException($"Two pipelines run {message.Name}.");
+                }
+                byMessage[message] = pipeline;
+            }
+        }
+    }
 
     public async Task<MessageResult> Send(object message, CancellationToken ct = default) {
-        var pipeline = chosen.GetOrAdd(message.GetType(), type => all.SingleOrDefault(p => p.Runs(type)));
-        if (pipeline is null) {
+        if (!byMessage.TryGetValue(message.GetType(), out var pipeline)) {
             return MessageResult.Fail($"No pipeline runs {message.GetType().Name}.");
         }
         using var scope = scopes.CreateScope();

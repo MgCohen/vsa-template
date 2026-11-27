@@ -1,7 +1,7 @@
 namespace Spike.Core;
 
 public interface IPipeline {
-    bool Runs(Type message);
+    IReadOnlyCollection<Type> Messages { get; }
 
     Task<MessageResult> Run(object message, IServiceProvider scope, CancellationToken ct);
 }

@@ -1,27 +1,30 @@
 namespace Spike.Pack;
 
 using System.Globalization;
-using System.Reflection;
+using System.Linq.Expressions;
 
 sealed class RequestBinder {
-    readonly ConstructorInfo constructor;
-    readonly ParameterInfo[] parameters;
+    readonly Func<object?[], object> create;
+    readonly RequestValue[] values;
 
     public RequestBinder(Type request) {
-        constructor = request.GetConstructors().OrderByDescending(c => c.GetParameters().Length).First();
-        parameters = constructor.GetParameters();
+        var constructor = request.GetConstructors().OrderByDescending(c => c.GetParameters().Length).First();
+        var parameters = constructor.GetParameters();
+        var input = Expression.Parameter(typeof(object?[]));
+        var arguments = parameters.Select((p, i) =>
+            Expression.Convert(Expression.ArrayIndex(input, Expression.Constant(i)), p.ParameterType));
+        create = Expression.Lambda<Func<object?[], object>>(
+            Expression.Convert(Expression.New(constructor, arguments), typeof(object)), input).Compile();
+        values = [.. parameters.Select(p => new RequestValue(p.Name!, p.ParameterType, p.HasDefaultValue, p.DefaultValue))];
     }
 
-    public object Bind(IReadOnlyDictionary<string, string> values) =>
-        constructor.Invoke([.. parameters.Select(p => Value(p, values))]);
+    public object Bind(IReadOnlyDictionary<string, string> input) =>
+        create([.. values.Select(v => v.Read(input))]);
 
-    static object? Value(ParameterInfo parameter, IReadOnlyDictionary<string, string> values) {
-        var text = values.FirstOrDefault(v => string.Equals(v.Key, parameter.Name, StringComparison.OrdinalIgnoreCase)).Value;
-        if (text is null) {
-            return parameter.HasDefaultValue
-                ? parameter.DefaultValue
-                : throw new ArgumentException($"The value '{parameter.Name}' is missing.");
-        }
-        return Convert.ChangeType(text, parameter.ParameterType, CultureInfo.InvariantCulture);
+    sealed record RequestValue(string Name, Type Type, bool HasDefault, object? Default) {
+        public object? Read(IReadOnlyDictionary<string, string> input) =>
+            input.TryGetValue(Name, out var text) ? Convert.ChangeType(text, Type, CultureInfo.InvariantCulture)
+            : HasDefault ? Default
+            : throw new ArgumentException($"The value '{Name}' is missing.");
     }
 }

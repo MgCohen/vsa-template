@@ -13,10 +13,16 @@ public sealed class PackKernel : Kernel {
             var arguments = service.GetGenericArguments();
             services.AddScoped(service, type);
             var call = (IHandlerCall)Activator.CreateInstance(typeof(RequestCall<,>).MakeGenericType(arguments))!;
+            if (handlers.ContainsKey(arguments[0])) {
+                throw new InvalidOperationException($"{arguments[0].Name} has two handlers.");
+            }
+            if (binders.ContainsKey(NameOf(arguments[0]))) {
+                throw new InvalidOperationException($"Two requests have the name {NameOf(arguments[0])}.");
+            }
             handlers[arguments[0]] = new HandlerRoute(service, call);
             binders[NameOf(arguments[0])] = new RequestBinder(arguments[0]);
         }
-        services.AddSingleton<IPipeline>(new Pipeline(typeof(IRequest), handlers));
+        services.AddSingleton<IPipeline>(provider => new Pipeline(handlers, provider.GetServices<StepEntry>(), provider.GetServices<ValidatorEntry>()));
         services.AddSingleton<IOperationReader>(new RequestReader(binders));
     }
 

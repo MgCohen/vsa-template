@@ -1,25 +1,34 @@
 namespace Spike.Core;
 
-using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class Pipeline(Type messageBase, IReadOnlyDictionary<Type, HandlerRoute> handlers) : IPipeline {
-    readonly ConcurrentDictionary<Type, MessageRoute> routes = new();
+public sealed class Pipeline : IPipeline {
+    readonly Dictionary<Type, MessageRoute> routes;
 
-    public bool Runs(Type message) => messageBase.IsAssignableFrom(message) && handlers.ContainsKey(message);
+    public Pipeline(IReadOnlyDictionary<Type, HandlerRoute> handlers, IEnumerable<StepEntry> steps, IEnumerable<ValidatorEntry> validators) {
+        StepEntry[] allSteps = [.. steps];
+        ValidatorEntry[] allValidators = [.. validators];
+        routes = handlers.ToDictionary(h => h.Key, h => new MessageRoute(
+            h.Value,
+            [.. allSteps.Where(s => s.Message.IsAssignableFrom(h.Key)).Select(s => s.Step)],
+            [.. allValidators.Where(v => v.Message.IsAssignableFrom(h.Key)).Select(v => v.Validator)]));
+    }
+
+    public IReadOnlyCollection<Type> Messages => routes.Keys;
 
     public async Task<MessageResult> Run(object message, IServiceProvider scope, CancellationToken ct) {
-        var route = routes.GetOrAdd(message.GetType(), type => MessageRoute.For(type, handlers[type], scope));
+        var route = routes[message.GetType()];
         MessageNext run = async () => {
-            foreach (var validator in route.Validators(scope)) {
-                if (validator.Check(message) is { } error) {
+            foreach (var type in route.Validators) {
+                if (((IValidator)scope.GetRequiredService(type)).Check(message) is { } error) {
                     return MessageResult.Fail(error);
                 }
             }
-            var handler = scope.GetRequiredService(route.Handler.Service);
-            return MessageResult.Ok(await route.Handler.Call.Call(handler, message, ct).ConfigureAwait(false));
+            var handler = scope.GetRequiredService(route.HandlerRoute.Service);
+            return MessageResult.Ok(await route.HandlerRoute.HandlerCall.Call(handler, message, ct).ConfigureAwait(false));
         };
-        foreach (var step in route.Steps(scope).Reverse()) {
+        for (var i = route.Steps.Count - 1; i >= 0; i--) {
+            var step = (IPipelineStep)scope.GetRequiredService(route.Steps[i]);
             var next = run;
             run = () => step.Run(message, next);
         }
