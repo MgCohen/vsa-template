@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using System.Globalization;
 
-public sealed class RuleOption {
+sealed class RuleOption {
     readonly Func<string, bool> isValid;
 
     RuleOption(string key, string kind, string? defaultValue, Func<string, bool> isValid) {

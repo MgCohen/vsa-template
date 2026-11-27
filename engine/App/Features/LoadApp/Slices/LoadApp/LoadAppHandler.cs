@@ -5,7 +5,6 @@ using LoadApp.Domain.Shared;
 using Operations.Domain.Shared;
 using Operations.Infrastructure;
 using Umpire.Architecture;
-using Umpire.Utility;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
@@ -50,15 +49,8 @@ sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, IDe
             + "a nested project, reference the nested project from the root project. If the files are not a definition of this app, add the folder to "
             + "umpire.check.ignored_folders.", folder))];
 
-    bool IsSkipped(string? source, string root) {
-        if (source is null) {
-            return false;
-        }
-        var relative = RelativePath.Of(root, source);
-        return ReadOptions.IsIgnored(relative, options.IgnoredFolders)
-            || (!relative.StartsWith("..", StringComparison.Ordinal)
-                && relative.Split(Path.DirectorySeparatorChar).Contains(DefinitionFolder.Tests, StringComparer.OrdinalIgnoreCase));
-    }
+    bool IsSkipped(string? source, string root) =>
+        source is not null && DefinitionFolder.IsSkippedSource(root, source, options.IgnoredFolders);
 
     internal static Result<Architecture> Definition(
         BlockTree blocks, IReadOnlyList<BinDll> app, IReadOnlyList<DefinitionType> definitions, IDefinitionLoader loader,

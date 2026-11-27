@@ -39,8 +39,8 @@ sealed class PartOf {
         if (LoadedTypes.IsCompilerGenerated(type.Name)) {
             return;
         }
-        var external = resolved.ExternalPart(type.Assembly, IsInBlock(type) ? "" : type.FullName);
-        if (type.Source is not { } source || (external is not null && IsInBlock(type))) {
+        var external = IsInBlock(type) ? null : resolved.ExternalPart(type.Assembly, type.FullName);
+        if (type.Source is not { } source) {
             if (external is not null) {
                 bound.Add(ExternalBinding(type, external));
             }
@@ -55,7 +55,7 @@ sealed class PartOf {
             return;
         }
         var paths = PathsInBlock(relative);
-        if (paths.Count == 0 || BuildOutput.Contains(relative)) {
+        if (paths.Count == 0 || FoldersOf(relative).Any(BuildOutput.IsIgnored)) {
             return;
         }
         var located = source with { File = file };

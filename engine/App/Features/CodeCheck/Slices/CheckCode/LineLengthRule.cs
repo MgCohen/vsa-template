@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class LineLengthRule : LimitRule {
+sealed class LineLengthRule : LimitRule {
     public override int Number => 1;
 
     public override string Title => "A line has at most the maximum number of characters";

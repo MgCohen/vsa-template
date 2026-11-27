@@ -3,7 +3,7 @@ namespace CodeCheck.Slices.CheckCode;
 using System.Globalization;
 using Operations.Domain.Shared;
 
-public sealed class CodeNotice(string id, string title, string message) {
+sealed class CodeNotice(string id, string title, string message) {
     public string Id { get; } = id;
 
     public string Title { get; } = title;

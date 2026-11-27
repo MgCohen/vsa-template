@@ -4,7 +4,7 @@ using Umpire.Cli.Plugins.Commands.Domain.Shared;
 namespace Cli.Tests;
 
 public sealed class ToolAppTests {
-    static readonly string ToolFile = Path.Combine(AppContext.BaseDirectory, "umpire-cli.dll");
+    static readonly string ToolFile = Path.Combine(AppContext.BaseDirectory, "Umpire.Cli.dll");
 
     static IEnumerable<string[]> HelpForms() => [[], ["help"], ["-h"], ["--help"]];
 

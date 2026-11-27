@@ -26,10 +26,10 @@ sealed class Places {
         if (type.Name.Name.StartsWith("<", StringComparison.Ordinal) || paths.IsIgnored(type.File)) {
             return;
         }
-        var isInBlock = paths.IsInBlock(type.File);
-        var external = ExternalOf(type.Name.Assembly, isInBlock ? "" : type.Name.Namespace);
-        if (external is not null) {
-            type.Placement = isInBlock ? Of(external, type) : InPlacedBlock(type) ?? Of(external, type);
+        if (!paths.IsInBlock(type.File)) {
+            if (ExternalOf(type.Name.Assembly, type.Name.Namespace) is { } external) {
+                type.Placement = InPlacedBlock(type) ?? Of(external, type);
+            }
             return;
         }
         var inBlock = paths.Of(type.File);

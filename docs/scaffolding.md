@@ -39,7 +39,7 @@ Rules for all commands:
 
 ## The tool is an app
 
-The tool is a VSA app with a console host, in `tooling/`. `App/Program.cs` is only `return new UmpireTool<ToolHost>().Run(args);`. The build checks `tooling/` as a block (`UmpireBlock`), with the definition `tooling/Definition/` (`ToolArchitecture`). The assembly name is `umpire-cli`: the check binds an assembly `Umpire.*` to the External `UmpireLibraries` and does not check its types. The package id stays `Umpire.Cli`.
+The tool is a VSA app with a console host, in `tooling/`. `App/Program.cs` is only `return new UmpireTool<ToolHost>().Run(args);`. The build checks `tooling/` as a block (`UmpireBlock`), with the definition `tooling/Definition/` (`ToolArchitecture`). The assembly name and the package id are `Umpire.Cli`.
 
 | Part | Type | Job |
 |---|---|---|

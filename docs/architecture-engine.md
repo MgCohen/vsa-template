@@ -275,7 +275,7 @@ rules.For<Feature>().Uses<Domain.Shared>().InOther<Feature>();
 
 An `External` part is an opaque DLL with no body, for example `Microsoft.Extensions`. It binds the types of a DLL by its name, not by its folder. A type also matches by its namespace. The longest matching name wins. A rule that names an `External` gives it its part: `rules.For<Infrastructure>().Uses<ConfigLibraries>()`. The types of an external DLL are rule targets only: a rule can allow or deny them, and an `External` is never the subject of a rule.
 
-The Umpire DLLs are DLLs with structure. A type in a kernel body (the root `Core`, `MessagesComponent` and the kernel root `Kernel`) binds to that body by its PDB path (see "Binding"). Each other Umpire type, for example a marker, `UmpireConfig` or `VsaArchitecture`, binds to the External `UmpireLibraries` (`Assembly => "Umpire"`, in `VsaArchitecture`). The module classes, `Host`, the `App` root and the `Definition` root can use `UmpireLibraries`, so the app class can name the pack. Other parts cannot.
+The Umpire DLLs are DLLs with structure. A type in a kernel body (the root `Core`, `MessagesComponent` and the kernel root `Kernel`) binds to that body by its PDB path (see "Binding"). Each other Umpire type, for example a marker, `UmpireConfig` or `VsaArchitecture`, binds to the External `UmpireLibraries` (`Assembly => "Umpire"`, in `VsaArchitecture`). This applies only to a type with its source outside the block folder: a package DLL, or a library file in `tools/net8.0/libraries/`. A type with its source in the block binds by its folder, also if its assembly name starts with `Umpire`. The module classes, `Host`, the `App` root and the `Definition` root can use `UmpireLibraries`, so the app class can name the pack. Other parts cannot.
 
 The engine binds a DLL type by its PDB path only if an `External` names its assembly. Thus a placed block in a DLL whose name does not start with `Umpire` needs a rule that names an `External` for its assembly. Without it, the types of that DLL have no part, and their uses are allowed. This gate stops a false part for a library with the same folder names, for example `../Shared/Messages/Contracts/`.
 
@@ -462,7 +462,8 @@ rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure 
 | In a DLL that no `External` part names | No part. Its uses are allowed. The engine does not read its PDB path |
 | Source file at the top of a block folder | The block part, for example the module class → `Feature` |
 | Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
-| Source file only in `obj/` or `bin/` | Not checked |
+| Source file in the block folder, in a DLL that an `External` part names | Its part by its folder, as each other source file in the block. The name of the assembly does not select an `External` for a type with its source in the block. Thus an assembly of the block with a name `Umpire.*`, for example the engine core `Umpire.Engine` or the tool `Umpire.Cli`, is checked |
+| Source file only in `obj/` or `bin/`, or in a folder whose name starts with `.` or ends with `~` (for example `Polyfills~/`) | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
 | Helper type with no user in a `InParentFolder` folder | The part of its nearest base type in the same folder ("follows base"). For example, a rule class that the engine finds by reflection follows its base class |
 | Source file in no part folder | None: `UMP020202` |

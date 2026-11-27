@@ -19,7 +19,7 @@ flowchart LR
 | Part | Folder | Contains |
 |---|---|---|
 | Model domain | `engine/App/Features/Model/Domain/` | Data, app model, state files, report, model rules (`Rules/`, run by `ModelCheck`). Namespace `Umpire.CheckModel` |
-| Export | `engine/App/Features/Model/Domain/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export` |
+| Export | `engine/App/Features/Model/Domain/Export/` and `engine/App/Features/Model/Infrastructure/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export`. The code that reads the definition API (`DefinitionExport`, `DefinitionSources`, `TraitExport`) is in `Infrastructure/`, because only `Infrastructure` can use `Umpire.Architecture` |
 | ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files in the build job and the check job |
 | CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state, after ExportModel or with `jobs check --model true` |
 | CheckTypes operation | `engine/App/Features/Model/Slices/CheckTypes/` | The checks of each type in a compile (the compile job) |

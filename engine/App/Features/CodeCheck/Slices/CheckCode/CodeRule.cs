@@ -5,7 +5,7 @@ using System.Reflection;
 using Facts.Domain.Shared.Compile;
 using Operations.Domain.Shared;
 
-public abstract class CodeRule {
+abstract class CodeRule {
     const string Area = "01";
 
     static readonly IReadOnlyList<CodeRule> Rules = [.. TypesOf(typeof(CodeRule).Assembly)

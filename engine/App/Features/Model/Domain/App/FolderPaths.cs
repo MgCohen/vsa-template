@@ -12,7 +12,7 @@ sealed class FolderPaths(string block, IReadOnlyList<FolderAlias> aliases, IRead
 
     public IReadOnlyList<string> Of(string file) {
         var relative = BlockPath.Of(block, file);
-        if (!IsInBlock(file) || BlockPath.IsInOutput(relative)) {
+        if (!IsInBlock(file) || BlockPath.IsInIgnoredFolder(relative)) {
             return [];
         }
         return aliases.Count == 0 ? [relative] : [.. aliases.Select(alias => Aliased(alias, relative)).OfType<string>()];

@@ -130,7 +130,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The engine state files did not move to the intermediate output path yet (phase 3).
   - `init` does nothing if `Directory.Build.props` exists. The fixtures `Built/NoPack` and `Built/PackGraph` seem unused.
 - The tool as a VSA app (`tooling/`, options B and C):
-  - The check binds each in-block type of an assembly `Umpire.*` to the External `UmpireLibraries` (`Places.Place`), so it does not check these types. The tool assembly is now `umpire-cli` for this reason. The engine core `Umpire.Engine` has the same gap: the engine block check reads only the types of `umpire-engine` and `Engine.Definition`. The engine is not changed here.
+  - Fixed later (the in-block types): the check bound each in-block type of an assembly `Umpire.*` to the External `UmpireLibraries` (`Places.Place`), so it did not check these types. The tool assembly was `umpire-cli` for this reason. It is `Umpire.Cli` again.
   - `UmpireTool<THost>` has an open host, so the tests run the tool in the test process on a `LocalHost`.
   - `ToolHost` wraps the operation of each request: the input type of the operation is `ToolInput`, and the request comes from `IToolRequest<TSelf>.From` when the operation runs. `ConsoleHost` got two extension points: `Select` and `CancelsOnSignal`.
   - The command line types (`CommandForm`, `CommandOption`, `CommandInput`, `ToolCall`) are in `Domain/Shared/` of the plugin, because `Contracts.Requests` holds only requests and responses. The host uses them by a rule of `ToolArchitecture`.
@@ -189,3 +189,9 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 
 - Do not change the VSA rule lines before K5.
 - Measure only, do not change: the size of a snapshot (about 7 KB for each type).
+- The in-block types of an assembly `Umpire.*` (`Places.Place`, `PartOf`):
+  - An `External` binds only a type with its source outside the block folder. A type with its source in the block binds by its folder. The External `UmpireLibraries` binds the Umpire DLLs of a consumer (package DLLs and the library files). The kernel bodies of `Umpire.dll` and `Umpire.Vsa.dll` still bind by their PDB path.
+  - The placement does not count a folder whose name starts with `.` or ends with `~` (for example `engine/Polyfills~/`), as the source folder scan already does.
+  - The engine core is now checked. The fixes: the rule types of the code check (`CodeRule`, `CodeRun` and the other helpers of `Slices/CheckCode/`) are internal, so they do not expose a published domain type in public; `CodeRuns` moved into that slice; `DefinitionExport`, `DefinitionSources` and `TraitExport` moved to `Model/Infrastructure/Export/`; `LoadAppHandler` calls `DefinitionFolder.IsSkippedSource`; `SharedAssemblies` names `Umpire.Kernels` by `LoadedTypes`.
+  - Open question: the engine definition now lets `Domain` (and so `Domain.Shared`) use `KernelParts.Utility` (`RelativePath`, `BuildOutput`, `LoadedTypes`). The queries of the Facts plugin need it. Another choice: a pure `Paths` part for `Domain`, and the folder walk of `BlockPlaces` behind a fact source.
+  - Open question: the analyzer entry (`engine/Entries/Analyzer`, assembly `Umpire.Engine.Analyzer`) gives about 70 `UMP020101` findings when a check reads its DLL. The build of `engine/` does not read it, because the bin of the console entry has no analyzer DLL. `BlockStampTests` skips it (`Skip`). A follow-up: refactor the analyzer entry (the snapshot types in a published domain, the rule list behind a request) or add rules for `Entries`.

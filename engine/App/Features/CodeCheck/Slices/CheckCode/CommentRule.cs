@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class CommentRule : KernelRule {
+sealed class CommentRule : KernelRule {
     static readonly string[] Kinds = [
         "SingleLineCommentTrivia", "MultiLineCommentTrivia", "SingleLineDocumentationCommentTrivia", "MultiLineDocumentationCommentTrivia",
     ];
