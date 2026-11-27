@@ -26,11 +26,14 @@ sealed class CompileJobHandler(ICommandSender commands, OperationLog log)
         return new CompileJobReport(ReportMode.Warn, [.. log.Findings], inModel, checksTypes || inModel);
     }
 
-    async Task<CompileJobReport> CodesOf(CompileJobRequest job, CancellationToken ct) {
+    async Task<Result<CompileJobReport>> CodesOf(CompileJobRequest job, CancellationToken ct) {
         var code = await commands.SendAsync(new CheckCodeCommand(job.Project, job.Stage), ct);
         var types = await commands.SendAsync(new CheckTypesCommand(job.Project, job.Stage), ct);
+        if (!code.IsSuccess || !types.IsSuccess) {
+            return (code.Error ?? types.Error)!;
+        }
         return new CompileJobReport(ReportMode.Warn, [.. log.Findings], false, false) {
-            Codes = [.. code.IsSuccess ? code.Value.Codes : [], .. types.IsSuccess ? types.Value.Codes : []],
+            Codes = [.. code.Value.Codes, .. types.Value.Codes],
         };
     }
 }

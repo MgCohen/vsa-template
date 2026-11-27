@@ -16,6 +16,6 @@ public static class AppModels {
 
     static AppModel Of(
         Definition definition, BlockSettings settings, StateFolder state, CurrentProject? current, bool isDefinitionOfBlock, string? target) =>
-        new(definition, settings, state.BlockOf(settings), SnapshotLoad.Of(state, settings, current?.Snapshot, target), current,
-            isDefinitionOfBlock, DiskState.Instance);
+        new(definition, settings, state.BlockOf(settings), SnapshotLoad.Of(state, settings, current?.Snapshot, DiskState.Instance, target),
+            current, isDefinitionOfBlock, DiskState.Instance);
 }

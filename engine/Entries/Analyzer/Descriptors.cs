@@ -3,7 +3,6 @@ namespace UmpireEngine;
 using System.Collections.Immutable;
 using System.Globalization;
 using Microsoft.CodeAnalysis;
-using Operations.Domain.Shared;
 using Operations.Infrastructure;
 
 static class Descriptors {
@@ -31,10 +30,10 @@ static class Descriptors {
         Diagnostic.Create(Codes.Value.ByCode[RunCodes.CouldNotRun], location ?? Location.None, reason);
 
     static Known Read() {
-        IReadOnlyList<FindingCode> codes;
+        IReadOnlyList<KnownCode> codes;
         try {
-            codes = CompileApp.Codes();
-        } catch (Exception e) when (CompileApp.IsFailure(e)) {
+            codes = EngineCodes.Read();
+        } catch (Exception e) when (e is not OperationCanceledException) {
             codes = [];
         }
         var byCode = codes.Select(code => Of(code.Code, code.Title, code.AtEnd))

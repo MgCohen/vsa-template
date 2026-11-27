@@ -1,7 +1,5 @@
 namespace Umpire.CheckModel;
 
-using Facts.Infrastructure;
-
 sealed class SnapshotLoad {
     readonly List<LoadedSnapshot> own = [];
     readonly List<LoadedSnapshot> others = [];
@@ -9,13 +7,15 @@ sealed class SnapshotLoad {
     readonly List<SnapshotProblem> problems = [];
     readonly HashSet<string> projects = new(StringComparer.OrdinalIgnoreCase);
     readonly string? target;
+    readonly IFileState files;
 
-    SnapshotLoad(string? target) {
+    SnapshotLoad(string? target, IFileState files) {
         this.target = target;
+        this.files = files;
     }
 
-    public static SnapshotSet Of(StateFolder state, BlockSettings settings, Snapshot? current, string? target = null) {
-        var load = new SnapshotLoad(target ?? current?.Target);
+    public static SnapshotSet Of(StateFolder state, BlockSettings settings, Snapshot? current, IFileState files, string? target = null) {
+        var load = new SnapshotLoad(target ?? current?.Target, files);
         var root = state.BlockOf(settings);
         if (current is not null) {
             load.projects.Add(current.Project);
@@ -36,7 +36,7 @@ sealed class SnapshotLoad {
     void AddOther(StateFolder other) {
         try {
             var settings = BlockSettings.Read(StateFile.Read(other.BlockFile));
-            if (settings.Inputs.Any(mark => !DiskFiles.IsCurrent(mark, other.BlockOf(settings)))) {
+            if (settings.Inputs.Any(mark => !files.IsCurrent(mark, other.BlockOf(settings)))) {
                 problems.Add(new SnapshotProblem(other.Folder, other.BlockFile, "The block file is old.", IsState: true));
             }
             foreach (var project in settings.Projects.Where(projects.Add)) {
