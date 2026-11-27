@@ -42,7 +42,7 @@ The reasons for the limits:
 
 ## Vendored DLLs
 
-Unity cannot restore NuGet packages. Each release has the archive `umpire-<version>.zip` on its GitHub release, with the `netstandard2.0` runtime, the two analyzer DLLs and the engine (see "Release archive" in `docs/consumers.md`). vsa-unity copies the DLLs from it into its package. The Umpire part is one `Umpire.dll`; the other DLLs are its third-party dependencies.
+Unity cannot restore NuGet packages. Each release has the archive `umpire-<version>.zip` on its GitHub release, with the `netstandard2.0` runtime, the two analyzer DLLs and the engine (see "Release archive" in `docs/consumers.md`). vsa-unity copies the DLLs from it into its package. The Umpire part is `Umpire.dll` (the core) and `Umpire.Vsa.dll` (the VSA kernel); the other DLLs are their third-party dependencies.
 
 ## Unity app build
 
@@ -50,7 +50,7 @@ Umpire.Sdk has no Unity build steps. The UPM package `vsa-unity` gives the Unity
 
 Each Umpire analyzer rule has the defaults of its values on its class, and a disabled rule is off on its class. The analyzers read the values of the block from `.umpireconfig`, which the compiler gets as an additional file. The Unity package must give that file to the Unity compiler as an additional file. Else the analyzers use the defaults. If a value is not valid, the analyzer reports `UMP010001`.
 
-The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. Umpire.Sdk does not add the Umpire.Kernels.Analyzers package in package mode, so `KernelAnalyzer` runs one time.
+The VSA analyzer DLL needs the kernel analyzer DLL: its rules inherit the base types of `Umpire.Kernels.Analyzers`. Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered path with the same name and version, also a deleted one. So `Umpire.Vsa.Analyzers` holds both DLLs in `analyzers/dotnet/cs/` (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). The kernel analyzer DLL embeds Umpire.Config. So a host that loads the analyzers itself puts the two DLLs in one folder. If the embedded config reader does not load, the build gives `UMP010003`. The package `Umpire` brings the package `Umpire.Kernels.Analyzers`, and the package `Umpire` keeps only the copy in `Umpire.Vsa.Analyzers` (`_UmpireOneKernelAnalyzer`), so `KernelAnalyzer` runs one time. A Unity host that vendors the archive gets one copy.
 
 ## Build output
 
@@ -79,8 +79,9 @@ The .NET SDK reads these two properties only before its own props: from the Umpi
 | Contracts, requests | `Umpire.Vsa.Contracts.Requests` | Yes. The operation members (`Group`, `Name`, `Effect`) are not on `netstandard2.0` |
 | Handlers, requests | `Umpire.Vsa.Handlers.Requests` | Yes |
 | Presenters | `Umpire.Vsa.Presenters` | Yes |
-| Architecture definition | `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` | `Umpire.Architecture`: yes, for the type scan. The others: no, no runtime type names them. The package `Umpire` has all in one DLL |
-| All the parts above, in one DLL | `Umpire` (`tools/bundle/`) | Yes. Unity vendors this DLL, not the projects above |
+| Architecture definition | `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` | Only for a definition: no runtime type names them. The packages `Umpire.Definition` and `Umpire.Vsa.Definition` hold them |
+| The core: the kernel, the config reader and the messages, in one DLL | `Umpire` (`tools/bundle/Umpire/`) | Yes. Unity vendors this DLL, not the projects above |
+| The VSA kernel: each VSA layer above except the views, in one DLL | `Umpire.Vsa` (`tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`) | Yes. Unity vendors this DLL, not the projects above |
 | Host; Views | ASP.NET Core packages | No: ASP.NET Core |
 
 ## Rules for the netstandard2.0 target

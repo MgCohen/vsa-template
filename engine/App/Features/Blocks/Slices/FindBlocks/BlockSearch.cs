@@ -8,7 +8,7 @@ using Steps.Domain.Shared;
 using Umpire.Messages.Contracts;
 
 static class BlockSearch {
-    public const string Example = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa";
+    public const string Example = "Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa.Definition";
 
     const int ShownTypes = 5;
 

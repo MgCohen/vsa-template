@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Umpire.Vsa.dll: the VSA kernel with its layer bases, VsaKernel, Plugin and the composition. Umpire.Sdk adds it with the
+       default pack (UmpireDefaultPack). The views are in Umpire.Web. It holds no definition code: the package
+       Umpire.Vsa.Definition holds it. The source project of the VSA definition has the name Umpire.Vsa, and a solution
+       cannot hold two projects with one name, so this project has the name Umpire.Vsa.Kernel. -->
+  <PropertyGroup>
+    <AssemblyName>Umpire.Vsa</AssemblyName>
+    <PackageId>Umpire.Vsa</PackageId>
+    <Description>The Umpire VSA kernel: VsaKernel and the VSA layer bases.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(UmpireRoot)packs/Vsa/Kernel/**/*.cs" Exclude="$(_UmpireNotBundled);$(UmpireRoot)packs/Vsa/Kernel/Views/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Umpire/Umpire.csproj" />
+  </ItemGroup>
+  <!-- The package depends on the VSA analyzers and their rule values, so each app with the VSA pack gets them. The analyzers
+       run only in a compilation that selects the VSA pack (RuleAnalyzer.PackNamespace). The reference is only for the pack:
+       a build does not copy the analyzer DLL, and source mode adds the analyzers in Umpire.Sdk.Core.targets. -->
+  <ItemGroup Condition="'$(_IsPacking)' == 'true'">
+    <ProjectReference Include="$(UmpireRoot)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" Private="false" PrivateAssets="none" ExcludeAssets="compile" />
+  </ItemGroup>
+  <!-- NuGet takes the dependencies from the restore. A restore with no _IsPacking (dotnet pack with its no-restore switch)
+       has no analyzer reference, so the package would have no analyzers. -->
+  <Target Name="_UmpireCheckAnalyzerDependency" BeforeTargets="GenerateNuspec">
+    <Error Condition="!$([System.IO.File]::ReadAllText('$(ProjectAssetsFile)').Contains('Umpire.Vsa.Analyzers'))"
+           Text="The restore of Umpire.Vsa has no reference to Umpire.Vsa.Analyzers, so the package would have no analyzers. Run dotnet pack with its own restore, or restore with -p:_IsPacking=true first." />
+  </Target>
+</Project>

@@ -21,6 +21,7 @@ public static class PortableProjects {
         "Umpire.Vsa.Handlers.Events",
         "Umpire.Vsa.Handlers.Requests",
         "Umpire.Vsa.Infrastructure",
+        "Umpire.Vsa.Kernel",
         "Umpire.Vsa.Presenters",
     ];
 

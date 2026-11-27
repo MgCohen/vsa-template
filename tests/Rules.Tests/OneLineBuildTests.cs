@@ -258,10 +258,16 @@ public sealed class OneLineBuildTests {
     }
 
     [Test]
-    public void The_web_root_project_gets_the_runtime_and_the_web_bundles() {
+    public void The_web_root_project_gets_the_core_the_VSA_and_the_web_bundles() {
         var references = Evaluate("OneLine.csproj", "-getItem:PackageReference");
-        Assert.That(references.Output, Does.Contain("\"Umpire\"").And.Contain("\"Umpire.Web\"").And.Not.Contain("\"Umpire.Vsa"),
-            references.Output);
+        Assert.That(references.Output, Does.Contain("\"Umpire\"").And.Contain("\"Umpire.Vsa\"").And.Contain("\"Umpire.Web\"")
+            .And.Not.Contain("\"Umpire.Vsa.Definition\""), references.Output);
+    }
+
+    [Test]
+    public void A_project_with_no_default_pack_gets_only_the_core_bundle() {
+        var references = Evaluate("OneLine.csproj", "-getItem:PackageReference", "-p:UmpireDefaultPack=false", "-p:UmpireWeb=false");
+        Assert.That(references.Output, Does.Contain("\"Umpire\"").And.Not.Contain("\"Umpire.Vsa"), references.Output);
     }
 
     [Test]

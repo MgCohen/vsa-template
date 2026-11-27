@@ -34,6 +34,7 @@ public sealed class ArchiveTests {
     [TestCase("manifest.json")]
     [TestCase(Notices)]
     [TestCase("runtime/netstandard2.0/Umpire.dll")]
+    [TestCase("runtime/netstandard2.0/Umpire.Vsa.dll")]
     [TestCase("definition/netstandard2.0/Umpire.Definition.dll")]
     [TestCase("definition/netstandard2.0/Umpire.Vsa.Definition.dll")]
     [TestCase("analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll")]
@@ -207,6 +208,7 @@ public sealed class ArchiveTests {
     string AppOnTheRuntime(bool withStray) {
         var app = Path.Combine(folder, withStray ? "stray-app" : "concept-app");
         var umpire = Path.Combine(tree, "runtime", "netstandard2.0", "Umpire.dll");
+        var vsa = Path.Combine(tree, "runtime", "netstandard2.0", "Umpire.Vsa.dll");
         var definition = Path.Combine(tree, "definition", "netstandard2.0", "Umpire.Definition.dll");
         var vsaDefinition = Path.Combine(tree, "definition", "netstandard2.0", "Umpire.Vsa.Definition.dll");
         Directory.CreateDirectory(Path.Combine(app, "App", "Host"));
@@ -220,6 +222,7 @@ public sealed class ArchiveTests {
               </PropertyGroup>
               <ItemGroup>
                 <Reference Include="Umpire" HintPath="{umpire}" />
+                <Reference Include="Umpire.Vsa" HintPath="{vsa}" />
                 <Reference Include="Umpire.Definition" HintPath="{definition}" />
                 <Reference Include="Umpire.Vsa.Definition" HintPath="{vsaDefinition}" />
               </ItemGroup>
