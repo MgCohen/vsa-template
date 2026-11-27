@@ -1,45 +1,70 @@
+using Tests.Shared;
+
 namespace EngineCore.Tests;
 
 using System.Runtime.CompilerServices;
-using Umpire.Architecture;
-using Blocks.Domain.Shared;
 using Facts.Domain.Shared;
 using Facts.Infrastructure;
-using LoadApp.Domain.Shared;
-using Rules.Domain;
-using Rules.Slices.CheckRules;
+using Model.Infrastructure;
+using Model.Slices.CheckModel;
+using Model.Slices.ExportModel;
 using Operations.Domain.Shared;
+using Umpire.Architecture;
+using Umpire.CheckModel;
+using Umpire.CheckModel.Export;
+using Umpire.Config;
+using Model = Umpire.CheckModel;
+using Finding = Operations.Domain.Shared.Finding;
+using FolderAlias = Umpire.Architecture.FolderAlias;
 
 static class FixtureApps {
     public static readonly string Root = FixtureRoot();
 
-    static readonly Lazy<ArchitectureCheck> GoodMap = new(() => Load(new GoodArchitecture(), AppContext.BaseDirectory, Block("GoodApp")));
-    static readonly Lazy<ArchitectureCheck> BadMap = new(() => Load(new BadArchitecture(), AppContext.BaseDirectory, Block("BadApp")));
+    static readonly Lazy<CheckedApp> GoodMap = new(() => Load(new GoodArchitecture(), AppContext.BaseDirectory, Block("GoodApp")));
+    static readonly Lazy<CheckedApp> BadMap = new(() => Load(new BadArchitecture(), AppContext.BaseDirectory, Block("BadApp")));
 
-    public static ArchitectureCheck Good => GoodMap.Value;
+    public static CheckedApp Good => GoodMap.Value;
 
-    public static ArchitectureCheck Bad => BadMap.Value;
+    public static CheckedApp Bad => BadMap.Value;
 
     public static string Block(string app) => Path.Combine(Root, app);
 
-    public static ArchitectureCheck Load(
-        Architecture definition, string bin, string blockFolder, ReadOptions? options = null, IReadOnlyList<FolderAlias>? aliases = null) {
-        var externals = new ResolvedArchitecture(definition).Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
+    public static CheckedApp Load(
+        Architecture definition, string bin, string blockFolder, ReadOptions? options = null, IReadOnlyList<FolderAlias>? aliases = null,
+        IEnumerable<KeyValuePair<string, string>>? config = null) {
+        var resolved = new ResolvedArchitecture(definition);
+        var externals = resolved.Parts.Where(p => p.IsExternal).Select(p => p.Assembly!).Distinct().ToList();
         using var reader = new BinReader(bin, options);
         var index = reader.Index();
         var app = index.AppDlls(blockFolder, []);
-        var dlls = app.Concat(index.ExternalDlls(externals)).Concat(index.ReferencedDlls(app, [])).Distinct().ToList();
-        var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
-        return ArchitectureCheck.Load(
-            new TypeFactSource(), definition, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls), blocks, RuleConfig.Empty,
-            options?.IgnoredFolders, options?.References, aliases is null ? null : new FolderAliasConfig(aliases, []));
-    }
-
-    public static AppInput Input(Architecture definition, string bin, string blockFolder, ReadOptions options) {
-        using var reader = new BinReader(bin, options);
-        var dlls = reader.Index().AppDlls(blockFolder, []);
-        var blocks = new BlockTree(new BlockEntry(blockFolder, EntryForm.App, null, blockFolder), []);
-        return new AppInput(definition, blocks, [.. dlls.Select(d => d.Path)], BinIndex.Sources(dlls));
+        var named = index.ExternalDlls(externals).Except(app).ToList();
+        var all = app.Concat(named).Concat(index.ReferencedDlls(app, [])).Distinct().ToList();
+        var source = new DllSource();
+        var resolve = index.Dlls.Select(d => d.Path).ToList();
+        var facts = source.Read(new DllQuery([.. app.Select(d => d.Path)], resolve, options?.SourceRoot));
+        var state = StateFolder.At(TempFolder.Create());
+        foreach (var snapshot in DllSnapshots.Of(facts, blockFolder)) {
+            state.Save(snapshot);
+        }
+        var libraries = source.Read(new DllQuery([.. named.Select(d => d.Path)], resolve, options?.SourceRoot))
+            .Select(dll => LibraryExport.Of(DllSnapshots.Of([dll], blockFolder)[0], FileMark.Of(blockFolder, dll.Path))).ToList();
+        foreach (var library in libraries) {
+            state.SaveLibrary(library);
+        }
+        var file = UmpireConfig.Find(blockFolder);
+        var configured = FolderAliasConfig.Of(file, blockFolder);
+        var input = new BlockInput(blockFolder, [.. app.Select(d => d.Name)]) {
+            Libraries = [.. libraries.Select(l => l.Project)],
+            IgnoredFolders = options?.IgnoredFolders ?? [],
+            FolderAliases = [.. configured.Aliases.Concat(aliases ?? []).Select(a => new Model.FolderAlias(a.Folder, a.As))],
+            DefinitionSources = DefinitionSources.Of(resolved, blockFolder, BinIndex.Sources(all).ToDictionary(s => s.Key, s => s.Value.File)),
+            InputFiles = [.. file.FilePath is { } path ? new[] { path } : []],
+            Config = config ?? file.Values(),
+        };
+        var settings = BlockExport.Of(state, input) with { Mode = Model.CheckMode.Error };
+        state.Save(DefinitionExport.Of(resolved), settings);
+        var setup = ExportModelHandler.Setup(options?.References ?? [], settings, configured.BadKeys).ToList();
+        return new CheckedApp(state, facts, setup);
     }
 
     public static string Line(Finding finding) {

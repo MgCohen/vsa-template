@@ -1,7 +1,8 @@
 namespace EngineCore.Tests;
 
-using ArchUnitNET.Domain;
 using Operations.Domain.Shared;
+using Umpire.CheckModel;
+using Finding = Operations.Domain.Shared.Finding;
 
 public sealed class BadAppTests {
     const string Billing = "BadApp/Features/Billing";
@@ -72,17 +73,15 @@ public sealed class BadAppTests {
     [TestCase("InLocalFunction")]
     [TestCase("InIterator")]
     public void The_loader_gives_a_use_inside_compiler_generated_code_to_the_declaring_method(string method) {
-        var handler = FixtureApps.Bad.App.Types.Single(t => t.Name == "ArchiveInvoiceHandler");
-        var uses = handler.Members.OfType<MethodMember>()
-            .Single(m => m.Name.StartsWith(method + "(", StringComparison.Ordinal))
-            .MemberDependencies.Select(d => d.Target.Name);
+        var handler = FixtureApps.Bad.Named("ArchiveInvoiceHandler");
+        var uses = handler.References.Where(r => r.Fact.Member == method).Select(r => r.Fact.Target.Name);
 
         Assert.That(uses, Does.Contain("Invoice"));
     }
 
     [Test]
     public void The_loader_gives_no_compiler_generated_type() {
-        Assert.That(FixtureApps.Bad.App.Types.Select(t => t.FullName), Has.None.Contains("<"));
+        Assert.That(FixtureApps.Bad.Types.Select(t => t.Name.FullName), Has.None.Contains("<"));
     }
 
     [Test]
@@ -185,16 +184,16 @@ public sealed class BadAppTests {
 
     [Test]
     public void The_type_facts_give_the_traits_and_the_member_attributes() {
-        var billing = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Commands.Billing");
-        var paid = FixtureApps.Bad.App.Facts.Single(f => f.FullName == "BadApp.Billing.Domain.Paid");
+        var billing = FixtureApps.Bad.Type("BadApp.Billing.Commands.Billing").Content;
+        var paid = FixtureApps.Bad.Type("BadApp.Billing.Domain.Paid").Content;
 
         Assert.Multiple(() => {
             Assert.That(billing.IsStatic, Is.True);
             Assert.That(billing.IsSealed, Is.False);
-            Assert.That(paid.IsDelegate, Is.True);
-            Assert.That(paid.IsSealed, Is.False);
+            Assert.That(paid.Kind, Is.EqualTo(TypeKind.Delegate));
+            Assert.That(paid.IsSealed && paid.Kind == TypeKind.Class, Is.False);
             Assert.That(billing.IsAbstract, Is.False);
-            Assert.That(billing.Attributes, Has.Member("Kit.CommandAttribute"));
+            Assert.That(billing.Attributes.Select(a => a.Type.FullName), Has.Member("Kit.CommandAttribute"));
         });
     }
 

@@ -1,13 +1,12 @@
 namespace EngineCore.Tests;
 
-using Rules.Slices.CheckRules;
 using Umpire.Vsa.Definition;
 
 public sealed class VsaAppTests {
     const string Notebook = "VsaApp/App/Features/Notebook/";
     const string Shop = "VsaApp/App/Features/Shop/";
 
-    static readonly Lazy<ArchitectureCheck> VsaMap =
+    static readonly Lazy<CheckedApp> VsaMap =
         new(() => FixtureApps.Load(new VsaArchitecture(), AppContext.BaseDirectory, FixtureApps.Block("VsaApp")));
 
     static readonly string[] Known = [
@@ -18,7 +17,7 @@ public sealed class VsaAppTests {
         Notebook + "Slices/Count/CountResponse.cs(5): error UMP020301",
         Notebook + "Slices/Draft/DraftNote.cs(3): error UMP020301",
         Notebook + "Slices/LooseRecord.cs(3): error UMP020202",
-        Notebook + "Slices/Peek/PeekRequest.cs(6): error UMP020101",
+        Notebook + "Slices/Peek/PeekRequest.cs(8): error UMP020101",
         Notebook + "Slices/Ping/PingRequest.cs(6): error UMP020301",
         Notebook + "Slices/Pong/PongHandler.cs(9): error UMP020302",
         Notebook + "Slices/Pong/PongHandler.cs(9): error UMP020302",
@@ -30,11 +29,11 @@ public sealed class VsaAppTests {
         Shop + "Domain/Shared/Slot.cs(3): error UMP020303",
         Shop + "Presenters/LazyPresenter.cs(8): error UMP020101",
         Shop + "Presenters/PipelinePresenter.cs(7): error UMP020101",
-        Shop + "Presenters/PublishPresenter.cs(8): error UMP020101",
+        Shop + "Presenters/PublishPresenter.cs(9): error UMP020101",
         Shop + "Slices/LogSale/LazySellHandler.cs(8): error UMP020101",
-        Shop + "Slices/LogSale/ResellHandler.cs(8): error UMP020101",
-        Shop + "Slices/LogSale/ResellHandler.cs(8): error UMP020101",
-        Shop + "Slices/LogSale/ResellHandler.cs(8): error UMP020101",
+        Shop + "Slices/LogSale/ResellHandler.cs(10): error UMP020101",
+        Shop + "Slices/LogSale/ResellHandler.cs(10): error UMP020101",
+        Shop + "Slices/LogSale/ResellHandler.cs(10): error UMP020101",
         Shop + "Slices/Sell/SellRequest.cs(7): error UMP020303",
         Shop + "Slices/Sell/SellResponse.cs(1): error UMP020303",
         "VsaApp/App/Features/Twin/TwinExtraModule.cs(1): error UMP020301",
@@ -103,15 +102,15 @@ public sealed class VsaAppTests {
     [TestCase("TitleCheck", "Handlers.Requests")]
     [TestCase("ShortTitleCheck", "Handlers.Requests")]
     public void A_type_in_a_slice_binds_to_its_part(string type, string part) {
-        var binding = VsaMap.Value.Bindings.All.Single(b => b.Type.Name == type);
+        var placement = VsaMap.Value.Model.PlacementOf(VsaMap.Value.Named(type))!;
 
-        Assert.That(binding.Part.Name, Is.EqualTo(part));
+        Assert.That(placement.Part.Name, Is.EqualTo(part));
     }
 
     [Test]
     public void A_settings_module_with_a_nested_type_and_a_lambda_gives_no_count_finding() {
         Assert.Multiple(() => {
-            Assert.That(VsaMap.Value.Bindings.Of("VsaApp.Features.Settled.SettledModule")?.Part.Name, Is.EqualTo("Feature"));
+            Assert.That(VsaMap.Value.PlaceOf("VsaApp.Features.Settled.SettledModule")?.Part.Name, Is.EqualTo("Feature"));
             Assert.That(Findings, Has.None.Contains("Features/Settled/"));
         });
     }

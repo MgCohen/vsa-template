@@ -2,9 +2,7 @@ namespace EngineCore.Tests;
 
 using Facts.Domain.Shared;
 using Facts.Infrastructure;
-using Rules.Slices.CheckRules;
 using Operations.Domain.Shared;
-using Operations.Infrastructure;
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
@@ -64,7 +62,7 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), project.Root);
 
-        Assert.That(check.Bindings.Of("Root.RootModule"), Is.Null);
+        Assert.That(check.PlaceOf("Root.RootModule"), Is.Null);
     }
 
     [Test]
@@ -93,7 +91,7 @@ public sealed class FolderAliasConfigTests {
 
         var check = Check(new VsaArchitecture(), project.Root);
 
-        Assert.That(check.Bindings.Unmapped.Select(u => u.Type.FullName), Does.Contain("Game.Views.Board"));
+        Assert.That(check.Unmapped.Select(u => u.Name.FullName), Does.Contain("Game.Views.Board"));
     }
 
     [Test]
@@ -113,12 +111,11 @@ public sealed class FolderAliasConfigTests {
     public void A_folder_of_an_alias_is_normalized(string folder, string normal) =>
         Assert.That(FolderAliasConfig.Normal(folder), Is.EqualTo(normal));
 
-    ArchitectureCheck Check(Architecture definition, string block) =>
-        CheckRulesHandler.Load(FixtureApps.Input(definition, project.Output, block, ReadOptions.None), new RunOptions(), new TypeFactSource());
+    CheckedApp Check(Architecture definition, string block) => FixtureApps.Load(definition, project.Output, block, ReadOptions.None);
 
-    static string Part(string type, ArchitectureCheck check) {
-        var part = check.Bindings.Of(type)!.Part;
-        return part.Parent is { Parent: not null } parent ? $"{parent.Name}/{part.Name}" : part.Name;
+    static string Part(string type, CheckedApp check) {
+        var part = check.PlaceOf(type)!.Part;
+        return part.Parent is { } parent ? $"{parent.Name}/{part.Name}" : part.Name;
     }
 
     sealed class SourceAliasArchitecture : VsaArchitecture {

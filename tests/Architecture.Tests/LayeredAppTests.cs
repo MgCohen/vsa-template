@@ -2,7 +2,6 @@ namespace EngineCore.Tests;
 
 using LayeredApp.Ui;
 using Umpire.Architecture;
-using Rules.Slices.CheckRules;
 
 public record Ui : Concept;
 
@@ -28,7 +27,7 @@ public sealed class LayeredArchitecture : Architecture {
 }
 
 public sealed class LayeredAppTests {
-    static readonly Lazy<ArchitectureCheck> LayeredMap =
+    static readonly Lazy<CheckedApp> LayeredMap =
         new(() => FixtureApps.Load(new LayeredArchitecture(), AppContext.BaseDirectory, FixtureApps.Block("LayeredApp")));
 
     [Test]
@@ -41,7 +40,7 @@ public sealed class LayeredAppTests {
 
     [Test]
     public void Each_type_of_the_layered_app_is_in_a_part() {
-        Assert.That(LayeredMap.Value.Bindings.Unmapped.Select(u => u.Type.FullName), Is.Empty);
+        Assert.That(LayeredMap.Value.Unmapped.Select(u => u.Name.FullName), Is.Empty);
     }
 
     [Test]

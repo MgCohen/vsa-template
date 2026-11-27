@@ -77,11 +77,10 @@ This table is a guideline. **Not enforced in 0.1.0.**
 ## Where the rule answers are
 
 ```
-engine Rules operation (engine/App/Features/Rules)
-├─ Facts plugin: DLL and PDB facts               ArchUnitNET (the only place)
-├─ ResolvedArchitecture.Place(facts)              Facts plugin, Queries: PartOf
-├─ ResolvedArchitecture.DecisionFor(a, b)         Facts plugin, Queries: ResolvedArchitecture
-└─ ResolvedArchitecture.Counts, Matches(bindings) Facts plugin, Queries: CountCheck, MatchCheck
+engine CheckModel operation (engine/App/Features/Model)
+├─ snapshots of the compile                       analyzer entry: ProjectFacts
+├─ facts of a DLL with no snapshot                Facts plugin: DllSource (MetadataLoadContext)
+└─ model rules on the app model                   Model domain: Rules/
 
 ArchitectureTest<T> (a test of a definition, packs/Vsa/Tests/Unit)
 ├─ reflection: the base types of one type        TypeFactsOf
@@ -90,7 +89,7 @@ ArchitectureTest<T> (a test of a definition, packs/Vsa/Tests/Unit)
 
 The queries (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) take plain facts (`TypeFacts` of the definition API: file, assembly, base types, the type arguments of the base types, uses), so a tool with no DLL reader can ask the same questions. They use only the definition API and `Umpire.Utility`, so the definition test base (`packs/Vsa/Tests/Unit/` and the package `Umpire.Testing`) compiles a copy of them. A test project thus gets no engine module. `engine/Versions` (`Umpire.Engine.Versions`) has no pack reference. The engine app and the `umpire` tool bundle it for the version check.
 
-The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` and the path helpers `RelativePath` and `BuildOutput` are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`). The runtime, the engine and the version check use them from there. The definition API is portable and has no ArchUnitNET.
+The runtime references no definition code. The type helpers `LoadedTypes` and `ClosedBase` and the path helpers `RelativePath` and `BuildOutput` are in `framework/Kernel/Utility/` (namespace `Umpire.Utility`). The runtime, the engine and the version check use them from there. The definition API is portable and reads no DLL.
 
 ## Two kinds of type
 

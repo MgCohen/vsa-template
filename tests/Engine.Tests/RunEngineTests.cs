@@ -16,7 +16,6 @@ using Operations;
 using Operations.Contracts.Requests;
 using Operations.Domain.Shared;
 using Operations.Infrastructure;
-using Rules;
 using Versions;
 using Tests.Shared;
 using Umpire.Engine.Versions;
@@ -39,7 +38,7 @@ public sealed class RunEngineTests {
             .Select(module => module.Name);
 
         Assert.That(modules, Is.EqualTo(new[] {
-            "Facts", "Operations", "Blocks", "Build", "Changes", "CodeCheck", "Jobs", "LoadApp", "Model", "Rules", "Versions" }));
+            "Facts", "Operations", "Blocks", "Build", "Changes", "CodeCheck", "Jobs", "LoadApp", "Model", "Versions" }));
     }
 
     [Test]
@@ -325,7 +324,7 @@ public sealed class RunEngineTests {
 
     internal static Module[] EngineModules() => [
         new OperationsPlugin(), new FactsPlugin(), new JobsModule(), new BuildModule(), new ChangesModule(), new BlocksModule(),
-        new VersionsModule(), new LoadAppModule(), new RulesModule(), new ModelModule(), new CodeCheckModule(),
+        new VersionsModule(), new LoadAppModule(), new ModelModule(), new CodeCheckModule(),
     ];
 
     internal static string StateOf(string bin) =>

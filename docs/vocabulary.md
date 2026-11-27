@@ -68,7 +68,7 @@ Each block kind has a record on the base `Block`. `Umpire.Architecture.Blocks` h
 | Module class | The one class at the top of a module folder that inherits `Umpire.Kernels.Module`. It binds to the module part | `HasTypes<Umpire.Kernels.Module>().Exactly(1)` |
 | System assembly | A .NET assembly that the engine does not load from the app: `System.*`, `Microsoft.*`, `netstandard`, `mscorlib` | `IsSystemAssembly` |
 | Rule | Who may use whom | `rules.For<A>().Uses<B>()` |
-| Architecture rule | One class of the engine that gives the findings of one code. It sets its number; the group base sets the group | `DeniedUseRule : UseRule` |
+| Model rule | One check of the check model that gives the findings of some codes (`RuleCodes`) | `ReferenceCheck` |
 | Queries | The answers of the rules on plain facts (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) | `PartOf` (which part), `DecisionFor` (allow or deny), `Counts`, `Matches` |
 | Count | A rule statement that counts the types of a concept in each instance of a group, the types that take each type of a part, or the types that inherit a runtime type | `Has<T>()`, `HasTypes<T>()` |
 | Match | A rule statement that a type takes a type argument of a concept, in the same instance of a group | `Takes<T>().InSame<G>()` |
