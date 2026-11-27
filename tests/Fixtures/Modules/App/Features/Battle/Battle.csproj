@@ -1,9 +1,10 @@
-<Project>
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- A separate assembly for each module, so a test can load a part of the app. The modules send commands to each other. -->
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Cards/Cards.csproj" />
     <ProjectReference Include="../Resources/Resources.csproj" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

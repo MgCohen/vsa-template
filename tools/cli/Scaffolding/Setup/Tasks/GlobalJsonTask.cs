@@ -15,13 +15,13 @@ sealed class GlobalJsonTask : SetupTask {
         }
         if (JsonText.Parse(text) is not JsonObject json) {
             return new SetupResult.ByHand($"{FileName} has comments or is not valid JSON. "
-                + $"Make sure that it has no \"{SdksKey}\" entry for {VersionSlots.Sdk}.");
+                + $"Make sure that it has no \"{SdksKey}\" entry for {VersionSlots.RemovedSdk}.");
         }
-        return json[SdksKey]?[VersionSlots.Sdk] is null
+        return json[SdksKey] is not JsonObject sdks || !sdks.Any(pair => VersionSlots.IsRemovedSdk(pair.Key))
             ? new SetupResult.Done()
-            : new SetupResult.ByHand($"{FileName} pins {VersionSlots.Sdk} in \"{SdksKey}\". "
-                + "The version of the Umpire SDK is "
-                + "on the first line of each project, for example "
-                + $"<Project Sdk=\"{VersionSlots.Sdk}/{context.Version}\">. Remove the entry.");
+            : new SetupResult.ByHand($"{FileName} pins {VersionSlots.RemovedSdk} in \"{SdksKey}\". "
+                + "The Umpire SDK does not exist any more: the Umpire packages bring their own build files. "
+                + $"Remove the entry, and give the version of each Umpire package in its PackageReference, for example "
+                + $"<PackageReference Include=\"Umpire.Web\" Version=\"{context.Version}\" />.");
     }
 }

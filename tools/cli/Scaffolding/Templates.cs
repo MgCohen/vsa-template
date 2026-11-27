@@ -1,7 +1,6 @@
 namespace Umpire.Cli.Scaffolding;
 
 using System.Text.RegularExpressions;
-using Umpire.Engine.Versions;
 using Umpire.Files;
 
 static partial class Templates {
@@ -14,11 +13,13 @@ static partial class Templates {
     public const string VersionToken = "{{UmpireVersion}}";
     const string ResourcePrefix = "Templates/";
     const string InactiveSuffix = ".template";
-    const string DevProps = "  <Import Project=\"$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))\" />\n";
-    const string DevTargets = "  <Import Project=\"$(UmpireSdkDir)Sdk.targets\" />\n";
+    const string SourceVersion = "$(UmpireVersion)";
+    const string SourceNUnitVersion = "$(UmpireNUnitVersion)";
+    const string SourceNUnitAdapterVersion = "$(UmpireNUnitAdapterVersion)";
     static readonly string[] SetupTemplates = [
         ".gitignore.template",
         ".umpireconfig",
+        "Directory.Build.props.template",
         "nuget.config.template",
     ];
 
@@ -45,6 +46,13 @@ static partial class Templates {
         return files;
     }
 
+    public static IReadOnlyList<TextFile> WithCentralVersions(IReadOnlyList<TextFile> files, bool central) =>
+        central
+            ? [.. files.Select(file => file.Path.EndsWith(".csproj", StringComparison.Ordinal)
+                ? file with { Content = CentralVersions.Overrides(file.Content) }
+                : file)]
+            : files;
+
     public static string SetupFile(string path, string version) =>
         Files(TemplateGroup.Setup, new Dictionary<string, string>(), version).Single(file => file.Path == path).Content;
 
@@ -63,14 +71,10 @@ static partial class Templates {
     public static IEnumerable<string> All() => Resources().Select(PathOf);
 
     internal static string ToPackageMode(string content, string version, string path) {
-        if (content.Contains(DevProps, StringComparison.Ordinal)) {
-            var sdk = content.StartsWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">", StringComparison.Ordinal)
-                ? $"{VersionSlots.WebSdk}/{version}"
-                : $"{VersionSlots.Sdk}/{version}";
-            content = $"<Project Sdk=\"{sdk}\">" + content[(content.IndexOf('>') + 1)..];
-            content = content.Replace(DevProps, "").Replace(DevTargets, "");
-            content = Empty().Replace(content, $"<Project Sdk=\"{sdk}\" />");
-        }
+        content = content
+            .Replace(SourceVersion, version, StringComparison.Ordinal)
+            .Replace(SourceNUnitVersion, ToolVersion.NUnit, StringComparison.Ordinal)
+            .Replace(SourceNUnitAdapterVersion, ToolVersion.NUnitAdapter, StringComparison.Ordinal);
         content = SourceReference().Replace(
             content,
             m => $"<PackageReference Include=\"{m.Groups[1].Value}\" Version=\"{version}\" />");
@@ -96,9 +100,6 @@ static partial class Templates {
         }
         return text;
     }
-
-    [GeneratedRegex(@"^<Project Sdk=""Umpire\.Sdk[^""]*"">\s*</Project>")]
-    private static partial Regex Empty();
 
     [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex SourceReference();

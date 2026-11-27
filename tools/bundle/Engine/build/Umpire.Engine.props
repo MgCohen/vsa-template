@@ -1,0 +1,9 @@
+<Project>
+  <!-- The rule engine of this package. The architecture check of the package Umpire (Umpire.After.targets) runs
+       UmpireEngineFile after the build of the root project, and copies the pack definitions from UmpireEngineDir.
+       A value that a Directory.Build.props file or the command line gives wins. -->
+  <PropertyGroup>
+    <UmpireEngineDir Condition="'$(UmpireEngineDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools', 'net8.0'))</UmpireEngineDir>
+    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$(UmpireEngineDir)umpire-engine.dll</UmpireEngineFile>
+  </PropertyGroup>
+</Project>

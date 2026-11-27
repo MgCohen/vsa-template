@@ -1,0 +1,36 @@
+<Project>
+  <!-- Source mode: the apps of this repository (the engine, the fixtures and the templates) build against the framework
+       source. A Directory.Build.props file of the app imports this file. The project files have the consumer form: the
+       .NET SDK and PackageReference items to the Umpire packages, with Version="$(UmpireVersion)".
+       Umpire.SourceMode.targets changes each Umpire package to the source projects of that package. The package build files
+       come from source by path, so a project gets the same build as a consumer. Only a project file with a PackageReference
+       to an Umpire package uses source mode (UmpireSourceMode). Another project of the folder, for example a fixture of the
+       engine core, stays a plain .NET project. -->
+  <PropertyGroup Condition="'$(UmpireSourceMode)' == '' and Exists('$(MSBuildProjectFullPath)')">
+    <UmpireSourceMode>$([System.Text.RegularExpressions.Regex]::IsMatch($([System.IO.File]::ReadAllText('$(MSBuildProjectFullPath)')), '&lt;PackageReference\s+Include\s*=\s*[\x22\x27]Umpire([.][^\x22\x27]*)?[\x22\x27]'))</UmpireSourceMode>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UmpireSourceMode)' == 'True'">
+    <UmpireFrameworkSourceDir Condition="'$(UmpireFrameworkSourceDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..'))</UmpireFrameworkSourceDir>
+    <UmpireVersion Condition="'$(UmpireVersion)' == ''">$(Version)</UmpireVersion>
+    <!-- The apps of this repository also check the recommended .NET rules. The framework projects use the default analysis level. -->
+    <AnalysisLevel Condition="'$(AnalysisLevel)' == ''">latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../Umpire/build/Umpire.props" Condition="'$(UmpireSourceMode)' == 'True'" />
+  <PropertyGroup Condition="'$(UmpireSourceMode)' == 'True'">
+    <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)Umpire.SourceMode.targets</AfterMicrosoftNETSdkTargets>
+  </PropertyGroup>
+
+  <!-- A template has no central package versions, so its test project gives the NUnit versions as $(UmpireNUnitVersion) and
+       $(UmpireNUnitAdapterVersion). The tool writes the versions of this repository in their place (Umpire.Cli.csproj). -->
+  <PropertyGroup Condition="'$(UmpireSourceMode)' == 'True'">
+    <_UmpireRepoPackages>$([System.IO.File]::ReadAllText('$(UmpireFrameworkSourceDir)Directory.Packages.props'))</_UmpireRepoPackages>
+    <UmpireNUnitVersion Condition="'$(UmpireNUnitVersion)' == ''">$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireRepoPackages)', '(?s).*Include=&quot;NUnit&quot; Version=&quot;([^&quot;]+)&quot;.*', '$1'))</UmpireNUnitVersion>
+    <UmpireNUnitAdapterVersion Condition="'$(UmpireNUnitAdapterVersion)' == ''">$([System.Text.RegularExpressions.Regex]::Replace('$(_UmpireRepoPackages)', '(?s).*Include=&quot;NUnit3TestAdapter&quot; Version=&quot;([^&quot;]+)&quot;.*', '$1'))</UmpireNUnitAdapterVersion>
+    <_UmpireRepoNUnitFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(UmpireNUnitVersion)', '^[0-9A-Za-z.+-]+$'))</_UmpireRepoNUnitFound>
+    <_UmpireRepoNUnitAdapterFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(UmpireNUnitAdapterVersion)', '^[0-9A-Za-z.+-]+$'))</_UmpireRepoNUnitAdapterFound>
+  </PropertyGroup>
+  <Target Name="_UmpireCheckRepoNUnitVersions" BeforeTargets="CollectPackageReferences;_GenerateRestoreProjectSpec" Condition="'$(UmpireSourceMode)' == 'True'">
+    <Error Condition="'$(_UmpireRepoNUnitFound)' != 'True' or '$(_UmpireRepoNUnitAdapterFound)' != 'True'"
+           Text="Umpire.SourceMode.props did not find the versions of NUnit and NUnit3TestAdapter in Directory.Packages.props of this repository. Add the two lines in the form &lt;PackageVersion Include=&quot;NUnit&quot; Version=&quot;x.y.z&quot; /&gt;, or set UmpireNUnitVersion and UmpireNUnitAdapterVersion." />
+  </Target>
+</Project>

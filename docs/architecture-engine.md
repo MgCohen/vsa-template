@@ -19,9 +19,9 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `App/Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the Umpire SDK packages hold the engine in `tools/net8.0/` |
+| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `App/Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the package `Umpire.Engine` holds the engine in `tools/net8.0/` |
 
-The runtime of an app does not reference `Umpire.Architecture`: `Umpire.Architecture` references `Umpire.Kernels` for `Umpire.Utility` (`LoadedTypes`, `ClosedBase`). Umpire.Sdk gives a definition project the packages `Umpire.Definition` (with `Umpire.Architecture`) and `Umpire.Vsa.Definition` (with `Umpire.Vsa`), and each project the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
+The runtime of an app does not reference `Umpire.Architecture`: `Umpire.Architecture` references `Umpire.Kernels` for `Umpire.Utility` (`LoadedTypes`, `ClosedBase`). A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -554,7 +554,7 @@ C:/app/App/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: Read
 
 ## The checks of an app
 
-An engine run does the checks of an app. The Umpire SDK package holds the engine in `tools/net8.0/` (property `UmpireEngineFile`). The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It needs only `Microsoft.NETCore.App`: `AppLoader` loads the ASP.NET Core types of a web app from the shared folder of the runtime. It loads the definition of the app, so the SDK hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
+An engine run does the checks of an app. The package `Umpire.Engine` holds the engine in `tools/net8.0/` (property `UmpireEngineFile`, set by its `build/Umpire.Engine.props`). The root project of the app references it with `PrivateAssets="all"`. The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It needs only `Microsoft.NETCore.App`: `AppLoader` loads the ASP.NET Core types of a web app from the shared folder of the runtime. It loads the definition of the app, so the hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
 
 ```text
 umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Error]
@@ -569,7 +569,7 @@ umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Che
 └─ 7 Report        in each run
 
 dotnet build <root project>
-└─ UmpireCheck (Umpire.Sdk.Core.targets, AfterTargets="Build")
+└─ UmpireCheck (Umpire.After.targets of the package Umpire, AfterTargets="Build")
    └─ umpire-engine --stage Check --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
 ```
 
@@ -584,9 +584,9 @@ Each step declares its stages with `IStepStage` (`public static Stage Stages => 
 
 In the mode `Warn`, each error is a warning, also the codes of the group `00` and of the groups `02` to `05`. The findings of the Build step (compiler errors and `UMP030101`) stay errors. A mode value that is not valid and a `.umpireconfig` that is not valid TOML give the default mode. An error line fails the build, and a warning line does not.
 
-`tools/sdk/Sdk/Umpire.Codes.props` is the one list of the Umpire codes. The SDK adds it to `WarningsNotAsErrors` and `MSBuildWarningsNotAsErrors`, so `TreatWarningsAsErrors` and `-warnaserror` do not make a warning an error. A code in `WarningsAsErrors` of the project stays an error. This repository uses the mode `Error` (`UmpireCheckMode` in the root `Directory.Build.props`).
+`tools/bundle/Umpire/build/Umpire.Codes.props` is the one list of the Umpire codes. The package `Umpire` adds it to `WarningsNotAsErrors` and `MSBuildWarningsNotAsErrors`, so `TreatWarningsAsErrors` and `-warnaserror` do not make a warning an error. A code in `WarningsAsErrors` of the project stays an error. This repository uses the mode `Error` (`UmpireCheckMode` in the root `Directory.Build.props`).
 
-The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
+The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, for example because the root project has no `Umpire.Engine`, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
 
 The Changes step makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
@@ -621,7 +621,7 @@ The app class names its kernel and its host, and the definition names its kernel
 - The app class is the one most derived closed class that implements `IAppEntry<TKernel>` (`App<TKernel, THost>` does). A launcher, for example a Unity shell with a private app class, is an app class too.
 - If no definition names the kernel of the app, the engine searches the base classes of that kernel, the nearest first.
 - The definition of steps 1 and 2 must name the kernel of the app, or the kernel that step 3 finds. Else the engine gives `UMP030507`.
-- A definition is in its own check-time DLL. The Umpire SDK builds each nested project `Definition/*.csproj` before the project around it, with no reference to its assembly. It copies the DLL, the PDB and each DLL that only the definition uses (not the `System.*`, `Microsoft.Extensions.*` and `Microsoft.AspNetCore.*` DLLs) to the folder `umpire-definitions/` of the output. The engine reads that folder as a part of the bin, and `dotnet publish` does not copy it.
+- A definition is in its own check-time DLL. The package `Umpire` builds each nested project `Definition/*.csproj` before the project around it, with no reference to its assembly. In package mode, it restores that project first (`_UmpireRestoreAddedReferences`), because the first restore of the project around it does not import the package files. It copies the DLL, the PDB and each DLL that only the definition uses (not the `System.*`, `Microsoft.Extensions.*` and `Microsoft.AspNetCore.*` DLLs) to the folder `umpire-definitions/` of the output. The engine reads that folder as a part of the bin, and `dotnet publish` does not copy it.
 - A definition can derive from a definition in another DLL, for example of the company. Only the definition project references that DLL.
 - The definitions below a nested project belong to that project. A project that references it gets them in its output too.
 - The folder name `Definition` ignores the case.
@@ -650,7 +650,7 @@ The table gives the severity in the mode `Error`.
 | `UMP030302` | 03 Blocks | Error | A check entry names a type that does not load or that is not an `Architecture` |
 | `UMP030303` | 03 Blocks | Error | No check entry is at or above the project, and no `--block` is given. The run stops |
 | `UMP030304` | 03 Blocks | Warning | A folder has a check entry in code and the key `umpire.architecture` in its `.umpireconfig`. The entry in code wins |
-| `UMP030305` | 03 Blocks | Warning | A project of the block has no Umpire main SDK (see "Projects of a block") |
+| `UMP030305` | 03 Blocks | Warning | A project of the block has no Umpire package (see "Projects of a block") |
 | `UMP030306` | 03 Blocks | Warning | The block has more than one project and no `.umpireconfig` file |
 | `UMP030307` | 03 Blocks | Error | A DLL of the host output targets a newer .NET than the runtime of the engine, so the engine cannot load the app. Install that .NET, or run the engine with `dotnet exec --roll-forward LatestMajor`. The run stops |
 | `UMP030308` | 03 Blocks | Warning | `Definition/` of an app has source files and no project, so the definition is not in its own check-time DLL. `umpire.check.project_checks = false` stops it, for example in Unity |
@@ -708,7 +708,7 @@ After it finds the block, the step `FindBlocks` reads the `.csproj` files of the
 
 | Check | Code | Pass |
 |---|---|---|
-| Each project has an Umpire main SDK | `UMP030305` | The `Sdk` attribute of `<Project>` names `Umpire.Sdk` or `Umpire.Sdk.Web`, with or without a version, or the project imports `Umpire.Sdk.Dev.props` (the source form of this repository) |
+| Each project has an Umpire package | `UMP030305` | The project file has a `PackageReference` to `Umpire` or to an `Umpire.*` package, with or without a version, so it gets the build files of the package `Umpire` |
 | A block with more than one project has a `.umpireconfig` file | `UMP030306` | The file is in the block folder |
 
 `PackArchitecture` (Umpire.Kernels.Definition) is the shape of a pack: the folders `Definition/` (at least one `Architecture` class), `Kernel/` and `Tests/`. A file in another folder is unmapped (`UMP020202`). `Definition/` uses `Kernel/`, and `Tests/` uses both. `Kernel/` uses no other part of the pack. In the check of a pack, `Kernel/` has the kernel body of that architecture, and it has at most one `Kernel` class.
@@ -717,14 +717,14 @@ After it finds the block, the step `FindBlocks` reads the `.csproj` files of the
 
 ## One version
 
-The engine, the Umpire SDKs, the `umpire` tool and the `Umpire.*` packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030401` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
+The engine, the `umpire` tool and the Umpire packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030401` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|
-| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire.Sdk` and `Umpire.Sdk.Web` pin and each `Umpire.*` package |
+| Each `.csproj` and `Directory.*.props` of the block folder | Each `Umpire` and `Umpire.*` package |
 | `*.deps.json` of the host output (engine only) | Each `Umpire.*` package library |
 
-A file that does not exist gives no slot. `global.json` and a tool manifest give no slot: the version of the Umpire SDK is on the first line of each project. The `*.deps.json` files can have comments and trailing commas, as dotnet reads them.
+A file that does not exist gives no slot. `global.json` and a tool manifest give no slot: the version is on each package reference. The `*.deps.json` files can have comments and trailing commas, as dotnet reads them.
 
 | Value | Result |
 |---|---|
@@ -734,7 +734,7 @@ A file that does not exist gives no slot. `global.json` and a tool manifest give
 
 `umpire update` changes only the version text. A project file keeps its BOM and its line endings.
 
-To change the VSA rules, add the project `Definition/<Name>.Definition.csproj` (`<Project Sdk="Umpire.Sdk/<version>" />`), derive a definition from `VsaArchitecture` there and override `Rules`. The app class does not name it. Do not call `base.Rules`: the engine calls the `Rules` of each class in the chain, from the base down, so a later rule wins (`UMP010107`).
+To change the VSA rules, add the project `Definition/<Name>.Definition.csproj` (a `Microsoft.NET.Sdk` project with `<PackageReference Include="Umpire.Vsa.Definition" Version="<version>" PrivateAssets="all" />`), derive a definition from `VsaArchitecture` there and override `Rules`. The app class does not name it. Do not call `base.Rules`: the engine calls the `Rules` of each class in the chain, from the base down, so a later rule wins (`UMP010107`).
 
 ```csharp
 public sealed class MyArchitecture : VsaArchitecture {

@@ -136,7 +136,7 @@ public sealed class CommandTests {
         var current = Environment.CurrentDirectory;
         try {
             if (app is not null) {
-                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), $"<Project Sdk=\"Umpire.Sdk/{ToolVersion.Current}\" />");
+                File.WriteAllText(Path.Combine(folder, $"{app}.csproj"), $"<Project Sdk=\"Microsoft.NET.Sdk\"><ItemGroup><PackageReference Include=\"Umpire.Vsa\" Version=\"{ToolVersion.Current}\" /></ItemGroup></Project>");
             }
             prepare?.Invoke(folder);
             Environment.CurrentDirectory = folder;

@@ -1,8 +1,10 @@
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- A block with three inner blocks: two packs in App/Packs/, the App/Tools/ folder with umpire.json, and the library App/Lib/. -->
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
+    <PackageReference Include="Umpire.Engine" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="App/Lib/App/Host/Lib.csproj" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

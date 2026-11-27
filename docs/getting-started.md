@@ -77,7 +77,8 @@ The setup tasks are in [scaffolding.md](scaffolding.md) ("Setup tasks").
 
 ```text
 Hello/
-├─ Hello.csproj            the one root project: <Project Sdk="Umpire.Sdk.Web/<version>">, it compiles each file in its folder tree
+├─ Hello.csproj            the one root project: Microsoft.NET.Sdk.Web with Umpire.Web and Umpire.Engine, it compiles each file in its folder tree
+├─ Directory.Build.props   the artifacts output: all build output goes to artifacts~/
 ├─ Hello.slnx              the root project and App/Tests/
 ├─ appsettings.json        the settings of the web host
 ├─ Properties/             launchSettings.json: the start settings
@@ -91,19 +92,34 @@ Hello/
 └─ .gitignore              the build folders and the local files
 ```
 
-The root project gets its packages from two places:
+The root project references two Umpire packages, and the other packages come as their dependencies:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Web" Version="<version>" />
+    <PackageReference Include="Umpire.Engine" Version="<version>" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
+```
 
 | Package | From | Contains |
 |---|---|---|
-| `Umpire` | Umpire.Sdk | One `Umpire.dll`: the app start and the markers. It holds no pack and no definition code |
-| `Umpire.Vsa` | Umpire.Sdk, with the default pack | One `Umpire.Vsa.dll`: the VSA kernel with the base of each layer. It holds no definition code |
-| `Umpire.Definition`, `Umpire.Vsa.Definition` | Umpire.Sdk, in `Definition/`, and `Umpire.Testing` | The definition API and the VSA definition. The root project does not compile against them: it copies them to `umpire-definitions/` for the check |
+| `Umpire.Web` | The root project | The web host and the presenter views |
+| `Umpire.Engine` | The root project | The rule engine. The build of the root project runs it |
+| `Umpire.Vsa` | `Umpire.Web` (a dependency) | One `Umpire.Vsa.dll`: the VSA kernel with the base of each layer. It holds no definition code |
+| `Umpire` | `Umpire.Vsa` (a dependency) | One `Umpire.dll`: the app start and the markers, and the build files of each Umpire project. It holds no pack and no definition code |
+| `Umpire.Definition`, `Umpire.Vsa.Definition` | A project in `Definition/`, and `Umpire.Testing` | The definition API and the VSA definition. The root project does not compile against them: it copies them from `Umpire.Engine` to `umpire-definitions/` for the check |
 | `Umpire.Vsa.Analyzers` | `Umpire.Vsa` (a dependency) | The VSA and kernel analyzers, with the reader of `.umpireconfig` |
 | `Umpire.Kernels.Analyzers` | `Umpire` (a dependency) | The kernel analyzer. A VSA app compiles with the copy in `Umpire.Vsa.Analyzers` only |
-| `Umpire.Web` | Umpire.Sdk.Web | The web host and the presenter views |
-| `Umpire.Testing` | Umpire.Sdk, in `App/Tests/` | The test bases |
+| `Umpire.Testing` | `App/Tests/App.Tests.csproj` | The test bases |
 
-Each Umpire package has the version of the Umpire SDK on the first line of the project. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
+Each Umpire package reference has the same version. The rule engine checks it on each run (`UMP030401`), and the `doctor` command of the tool does the same check.
 
 ## Build the app
 

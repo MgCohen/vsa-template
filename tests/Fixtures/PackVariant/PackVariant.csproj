@@ -1,5 +1,7 @@
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- An app with its own pack in Packs/Ecs/: a VSA variant with the new module kind EcsFeature. -->
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
+    <PackageReference Include="Umpire.Engine" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

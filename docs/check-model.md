@@ -108,7 +108,7 @@ It saves only in a compiler process (`csc`, `VBCSCompiler`), and not with `Desig
 | `UMP030804` | The snapshot is not saved |
 | `UMP030805` | The check is not complete |
 
-The Umpire SDK puts these codes and all rule codes in `WarningsNotAsErrors` (`tools/sdk/Sdk/Umpire.Codes.props`), so `TreatWarningsAsErrors` makes no error of a warning.
+The package `Umpire` puts these codes and all rule codes in `WarningsNotAsErrors` (`tools/bundle/Umpire/build/Umpire.Codes.props`), so `TreatWarningsAsErrors` makes no error of a warning.
 
 ## Command
 

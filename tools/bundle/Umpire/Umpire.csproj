@@ -26,13 +26,17 @@
     <InternalsVisibleTo Include="Umpire.Web" />
     <InternalsVisibleTo Include="Umpire.Console" />
   </ItemGroup>
+  <!-- The build files of each project that gets the package: Umpire.props, Umpire.After.targets (the source folders, the
+       definitions, the rule values, the polyfills and the architecture check) and Umpire.targets. They are also in
+       buildTransitive/, so a project that gets Umpire through another Umpire package gets them too. -->
   <ItemGroup>
     <None Remove="build/**" />
-    <None Include="build/Umpire.targets" Pack="true" PackagePath="build;buildTransitive" />
+    <None Include="build/*" Pack="true" PackagePath="build;buildTransitive" />
+    <None Include="build/Polyfills~/*" Pack="true" PackagePath="build/Polyfills~;buildTransitive/Polyfills~" />
   </ItemGroup>
   <!-- The package depends on the kernel analyzer (the rules about any code) and its rule values, so each app that references
        it gets them. The reference is only for the pack: a build does not copy the analyzer DLL, and source mode adds the
-       analyzer in Umpire.Sdk.Core.targets. The package of a pack analyzer holds the kernel analyzer DLL too (Umpire.KernelBundle.targets),
+       analyzer in Umpire.SourceMode.targets. The package of a pack analyzer holds the kernel analyzer DLL too (Umpire.KernelBundle.targets),
        so build/Umpire.targets removes the copy of the kernel analyzer package from a compilation that has a copy of a pack. -->
   <ItemGroup Condition="'$(_IsPacking)' == 'true'">
     <ProjectReference Include="$(UmpireRoot)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" Private="false" PrivateAssets="none" ExcludeAssets="compile" />

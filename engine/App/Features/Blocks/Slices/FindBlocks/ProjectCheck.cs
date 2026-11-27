@@ -7,7 +7,7 @@ using Steps.Domain.Shared;
 static class ProjectCheck {
     public static IReadOnlyList<Finding> Findings(
         string folder, IReadOnlyList<BlockProject> projects, bool hasConfigFile) {
-        var findings = projects.Where(project => !project.HasUmpireSdk).Select(NoUmpireSdk).ToList();
+        var findings = projects.Where(project => !project.HasUmpirePackage).Select(NoUmpirePackage).ToList();
         if (projects.Count > 1 && !hasConfigFile) {
             findings.Add(new Finding(BlocksCodes.NoConfigFile, FindingSeverity.Warning,
                 $"The block {folder} has {projects.Count} projects and no {EntryFiles.Name} file. "
@@ -23,10 +23,11 @@ static class ProjectCheck {
             + "its own check-time DLL. Add a project to the folder, for example <Name>.Definition.csproj.",
             folder);
 
-    static Finding NoUmpireSdk(BlockProject project) =>
-        new(BlocksCodes.NoUmpireSdk, FindingSeverity.Warning,
-            $"The project {project.File} has no Umpire main SDK. Make its first line "
-            + "<Project Sdk=\"Umpire.Sdk/<version>\">, "
-            + "or <Project Sdk=\"Umpire.Sdk.Web/<version>\"> for a web project.",
+    static Finding NoUmpirePackage(BlockProject project) =>
+        new(BlocksCodes.NoUmpirePackage, FindingSeverity.Warning,
+            $"The project {project.File} has no Umpire package, so it does not get the Umpire build. Add a "
+            + "PackageReference to an Umpire package, for example "
+            + "<PackageReference Include=\"Umpire.Vsa\" Version=\"<version>\" />, "
+            + "or Umpire.Web for a web project.",
             project.File);
 }

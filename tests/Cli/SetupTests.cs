@@ -8,8 +8,11 @@ namespace Cli.Tests;
 
 public sealed class SetupTests {
     const string Project = "Shop.csproj";
+    const string BuildProps = "Directory.Build.props";
     const string WebProject = "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n  </PropertyGroup>\n</Project>\n";
     static readonly string V = ToolVersion.Current;
+    static string WebReferences => $"  <ItemGroup>\n    <PackageReference Include=\"Umpire.Web\" Version=\"{V}\" />\n"
+        + $"    <PackageReference Include=\"Umpire.Engine\" Version=\"{V}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n";
     string parent = "";
     string block = "";
 
@@ -33,8 +36,8 @@ public sealed class SetupTests {
         var changed = plan.Tasks.Where(task => task.Id is not "umpire-config" and not "global-json");
         Assert.That(changed.Select(task => task.Result),
             Has.All.TypeOf<SetupResult.Change>());
-        Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] { "nuget.config", ".gitignore", Project }));
-        foreach (var path in new[] { "nuget.config", ".gitignore" }) {
+        Assert.That(plan.Files.Select(file => file.Path), Is.EquivalentTo(new[] { "nuget.config", ".gitignore", BuildProps, Project }));
+        foreach (var path in new[] { "nuget.config", ".gitignore", BuildProps }) {
             Assert.That(plan.Files.Single(file => file.Path == path).Content, Is.EqualTo(Templates.SetupFile(path, V)), path);
         }
     }
@@ -119,82 +122,113 @@ public sealed class SetupTests {
     }
 
     [Test]
-    public void APlainWebProjectGetsTheUmpireWebSdkWithTheVersion() =>
-        Assert.That(Written(Project), Is.EqualTo(WebProject.Replace("Microsoft.NET.Sdk.Web", $"Umpire.Sdk.Web/{V}")));
+    public void APlainWebProjectGetsTheWebPackageAndTheEngineWithTheVersion() =>
+        Assert.That(Written(Project), Is.EqualTo(WebProject.Replace("</Project>\n", WebReferences + "</Project>\n")));
 
     [Test]
-    public void AnUmpireProjectWithNoVersionGetsTheVersion() {
-        Write(Project, "<Project Sdk=\"Umpire.Sdk\" />\n");
+    public void APlainProjectGetsTheVsaPackageAndTheEngine() {
+        Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk\" />\n");
 
-        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk=\"Umpire.Sdk/{V}\" />\n"));
+        Assert.That(Written(Project), Is.EqualTo("<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n"
+            + $"    <PackageReference Include=\"Umpire.Vsa\" Version=\"{V}\" />\n"
+            + $"    <PackageReference Include=\"Umpire.Engine\" Version=\"{V}\" PrivateAssets=\"all\" />\n  </ItemGroup>\n</Project>\n"));
     }
 
     [Test]
-    public void AnUmpireProjectWithTheVersionIsDone() {
-        Write(Project, $"<Project Sdk=\"Umpire.Sdk.Web/{V}\" />\n");
+    public void AProjectWithTheUmpirePackagesIsDone() {
+        Write(Project, WebProject.Replace("</Project>\n", WebReferences + "</Project>\n"));
 
-        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.Done>());
+        Assert.That(Result("umpire-packages"), Is.TypeOf<SetupResult.Done>());
     }
 
     [Test]
-    public void AProjectPinOfAnotherVersionIsByHand() {
-        Write(Project, "<Project Sdk=\"Umpire.Sdk/0.0.1\" />\n");
+    public void AConsoleProjectGetsTheVsaPackageAndTheEngine() {
+        Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Console\" Version=\"0.0.1\" />\n  </ItemGroup>\n</Project>\n");
 
-        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("umpire update"));
+        var written = Written(Project);
+
+        Assert.That(written, Does.Contain("Include=\"Umpire.Engine\"").And.Contain("Include=\"Umpire.Vsa\"").And.Not.Contain("Include=\"Umpire.Web\""));
+        Assert.That(written, Does.Contain("Include=\"Umpire.Console\" Version=\"0.0.1\""));
+    }
+
+    [Test]
+    public void AProjectWithCentralVersionsGetsVersionOverride() {
+        Write("Directory.Packages.props", "<Project>\n  <PropertyGroup>\n    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>\n  </PropertyGroup>\n</Project>\n");
+
+        Assert.That(Written(Project), Does.Contain($"<PackageReference Include=\"Umpire.Web\" VersionOverride=\"{V}\" />"));
+    }
+
+    [Test]
+    public void TheRemovedUmpireWebSdkBecomesTheWebSdkWithTheWebPackageAndTheGeneralSettings() {
+        Write(Project, "<Project Sdk=\"Umpire.Sdk.Web/0.0.1\" />\n");
+
+        var written = Written(Project);
+
+        Assert.That(written, Does.StartWith("<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n"
+            + "    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n"));
+        Assert.That(written, Does.Contain($"<PackageReference Include=\"Umpire.Web\" Version=\"{V}\" />"));
+    }
+
+    [Test]
+    public void TheRemovedUmpireSdkAfterAnotherSdkBecomesTheNetSdk() {
+        Write(Project, "<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk\" />\n");
+
+        Assert.That(Written(Project), Does.StartWith("<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Microsoft.NET.Sdk\">\n"));
     }
 
     [Test]
     public void AnUmpireSdkElementIsByHand() {
         Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n  <Sdk Name=\"Umpire.Sdk\" />\n</Project>\n");
 
-        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("main SDK"));
+        Assert.That(Result("umpire-packages"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("Remove the <Sdk> element"));
     }
 
     [Test]
-    public void AnotherMainSdkIsByHand() {
-        Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk.Razor\" />\n");
+    public void AProjectWithSingleQuotesKeepsItsSdk() {
+        Write(Project, "<Project Sdk='Umpire.Sdk'>\n</Project>\n");
 
-        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("Microsoft.NET.Sdk.Razor"));
+        Assert.That(Written(Project), Does.StartWith("<Project Sdk='Microsoft.NET.Sdk'>\n"));
     }
 
     [Test]
-    public void AProjectWithSingleQuotesGetsTheUmpireSdk() {
-        Write(Project, "<Project Sdk='Microsoft.NET.Sdk'>\n</Project>\n");
+    public void AProjectWithSpacesAroundTheSdkAttributeGetsTheNetSdk() {
+        Write(Project, "<Project Sdk = \"Umpire.Sdk.Web\" />\n");
 
-        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk='Umpire.Sdk/{V}'>\n</Project>\n"));
-    }
-
-    [Test]
-    public void AProjectWithSpacesAroundTheSdkAttributeGetsTheUmpireSdk() {
-        Write(Project, "<Project Sdk = \"Microsoft.NET.Sdk.Web\" />\n");
-
-        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk = \"Umpire.Sdk.Web/{V}\" />\n"));
-    }
-
-    [Test]
-    public void AnUmpireSdkAfterAnotherSdkWithTheVersionIsDone() {
-        Write(Project, $"<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/{V}\" />\n");
-
-        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.Done>());
-    }
-
-    [Test]
-    public void AnUmpireSdkAfterAnotherSdkWithNoVersionGetsTheVersion() {
-        Write(Project, "<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk\" />\n");
-
-        Assert.That(Written(Project), Is.EqualTo($"<Project Sdk=\"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/{V}\" />\n"));
+        Assert.That(Written(Project), Does.StartWith("<Project Sdk = \"Microsoft.NET.Sdk.Web\">\n"));
     }
 
     [Test]
     public void AProjectWithNoSdkAttributeIsByHand() {
         Write(Project, "<Project>\n</Project>\n");
 
-        Assert.That(Result("umpire-sdk"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("has no Sdk attribute"));
+        Assert.That(Result("umpire-packages"), Is.TypeOf<SetupResult.ByHand>().With.Property("Message").Contain("has no Sdk attribute"));
+    }
+
+    [Test]
+    public void AProjectWithCentralVersionsInAParentFolderGetsVersionOverride() {
+        File.WriteAllText(Path.Combine(parent, "Directory.Build.props"), "<Project><PropertyGroup><ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally></PropertyGroup></Project>\n");
+
+        Assert.That(Written(Project), Does.Contain($"<PackageReference Include=\"Umpire.Engine\" VersionOverride=\"{V}\" PrivateAssets=\"all\" />"));
+    }
+
+    [Test]
+    public void AnExistingBuildPropsIsDone() {
+        Write(BuildProps, "<Project />\n");
+
+        Assert.That(Result("build-props"), Is.TypeOf<SetupResult.Done>());
+    }
+
+    [Test]
+    public void ANewBuildPropsImportsTheParentBuildPropsIfOneExists() {
+        var written = Written(BuildProps);
+
+        Assert.That(written, Does.Contain("GetPathOfFileAbove('Directory.Build.props'"));
+        Assert.That(written, Does.Contain("<UseArtifactsOutput>true</UseArtifactsOutput>"));
     }
 
     [Test]
     public void ABlockWithASecondProjectGetsAnUmpireconfigFile() {
-        Write("Tests/Shop.Tests.csproj", "<Project Sdk=\"Umpire.Sdk\" />\n");
+        Write("Tests/Shop.Tests.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />\n");
 
         Assert.That(Written(".umpireconfig"), Is.EqualTo(Templates.SetupFile(".umpireconfig", V)));
     }
@@ -226,7 +260,9 @@ public sealed class SetupTests {
         Write(Project, "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n</Project>\n");
 
         Assert.That(Written(Project), Is.EqualTo(
-            $"<Project Sdk=\"Umpire.Sdk/{V}\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n</Project>\n"));
+            "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t</PropertyGroup>\n"
+            + $"\t<ItemGroup>\n\t\t<PackageReference Include=\"Umpire.Vsa\" Version=\"{V}\" />\n"
+            + $"\t\t<PackageReference Include=\"Umpire.Engine\" Version=\"{V}\" PrivateAssets=\"all\" />\n\t</ItemGroup>\n</Project>\n"));
     }
 
     [Test]
@@ -308,7 +344,7 @@ public sealed class SetupTests {
 
         Assert.That(plan.ByHand, Is.Empty);
         Assert.That(plan.Files.Select(file => file.Path),
-            Is.SupersetOf(new[] { "nuget.config", ".gitignore", ".umpireconfig", Project }).And.None.EqualTo("global.json"));
+            Is.SupersetOf(new[] { "nuget.config", ".gitignore", ".umpireconfig", BuildProps, Project }).And.None.EqualTo("global.json"));
     }
 
     [Test]

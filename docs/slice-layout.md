@@ -77,20 +77,28 @@ tests/Fixtures/Notes/
 └─ Views/
 ```
 
-| Umpire.Sdk rule | Effect |
+| Rule of the package `Umpire` | Effect |
 |---|---|
 | Nested project | The parent project does not compile its folder |
 | `bin/`, `obj/` | Not source folders, at each depth |
 | `UmpireExcludedFolders` | Not source folders. Compile scope only: the definition and the engine do not read it. Default: `node_modules` |
 | Framework references | Each project gets the base of each layer |
 
-A web root project uses Umpire.Sdk.Web, with the version. The SDK adds the web host and the views (`Umpire.Web`):
+A web root project uses the .NET web SDK and references the web host and the views (`Umpire.Web`) and the rule engine (`Umpire.Engine`):
 
 ```xml
-<Project Sdk="Umpire.Sdk.Web/0.2.0" />
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Web" Version="0.2.0" />
+    <PackageReference Include="Umpire.Engine" Version="0.2.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
 ```
 
-A `Umpire.*` package that Umpire.Sdk does not add, for example `Umpire.Console`, gives its version: `Version`, or a `PackageVersion` with central package management. Use the version of Umpire.Sdk: the rule engine checks it (`UMP030401`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
+Each `Umpire.*` package, for example `Umpire.Console`, gives its version: `Version`, or a `PackageVersion` with central package management. Give each Umpire package the same version: the rule engine checks it (`UMP030401`). The references do not enforce the layers: the rule engine checks each use after the build (see `architecture-engine.md`).
 
 A module in its own assembly (for example the fixture modules in `tests/Fixtures/Modules/`) has its own project in the module folder. It then references the other modules that it uses.
 

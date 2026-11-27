@@ -19,7 +19,7 @@ public sealed class NestedProjectTests {
     }
 
     static void WriteApp(string root, int files) {
-        var targets = Repo.Path("tools", "sdk", "Sdk", "Umpire.Sdk.Core.targets");
+        var targets = Repo.Path("tools", "bundle", "Umpire", "build", "Umpire.After.targets");
         File.WriteAllText(Path.Combine(root, "Root.csproj"), $"""
             <Project>
               <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />

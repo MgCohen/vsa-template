@@ -10,7 +10,7 @@ public static class AppFolder {
     }
 
     static bool HasUmpireProject(string folder) =>
-        Directory.EnumerateFiles(folder, "*.csproj").Any(VersionSlots.UsesUmpireSdk);
+        Directory.EnumerateFiles(folder, "*.csproj").Any(file => VersionSlots.UsesUmpire(file) || VersionSlots.UsesRemovedSdk(file));
 
     static IEnumerable<string> Above(string start) {
         for (var folder = new DirectoryInfo(Path.GetFullPath(start)); folder is not null; folder = folder.Parent) {

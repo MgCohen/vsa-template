@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The umpire tool. It ships as a .NET tool with the same version as Umpire.Sdk and the Umpire.* packages. -->
+  <!-- The umpire tool. It ships as a .NET tool with the same version as the Umpire packages. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Umpire.Cli</RootNamespace>
@@ -11,6 +11,11 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Cli.Tests" />
+  </ItemGroup>
+  <!-- The test project of a new app gives the NUnit versions of this repository. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="UmpireNUnitVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit')->'%(Version)')" />
+    <AssemblyMetadata Include="UmpireNUnitAdapterVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit3TestAdapter')->'%(Version)')" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../engine/Versions/Umpire.Engine.Versions.csproj" />

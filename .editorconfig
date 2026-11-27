@@ -1,5 +1,5 @@
 # The style of this repository: the built-in .NET rules (the editor and code style rules).
-# Umpire.Sdk ships no style: each consumer app has its own .editorconfig. The values and the disabled severities of the
+# The Umpire packages ship no style: each consumer app has its own .editorconfig. The values and the disabled severities of the
 # Umpire rules (UMP01xxxx) are in the globalconfig file of each analyzer package. The MSBuild switches of the style
 # (EnforceCodeStyleInBuild, AnalysisLevel, GenerateDocumentationFile, WarningsNotAsErrors) are in Directory.Build.props.
 # Set a severity with the standard key, for example: dotnet_diagnostic.CA1822.severity = none

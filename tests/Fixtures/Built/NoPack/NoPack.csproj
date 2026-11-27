@@ -1,5 +1,5 @@
-<Project Sdk="Umpire.Sdk">
-  <PropertyGroup>
-    <UmpireDefaultPack>false</UmpireDefaultPack>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Umpire" />
+  </ItemGroup>
 </Project>

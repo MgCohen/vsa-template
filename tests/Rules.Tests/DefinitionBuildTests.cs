@@ -5,20 +5,28 @@ namespace Rules.Tests;
 [NonParallelizable]
 [Category("Package")]
 public sealed class DefinitionBuildTests {
-    const string OneLine = "<Project Sdk=\"Umpire.Sdk\" />";
+    const string Library = """
+        <Project Sdk="Microsoft.NET.Sdk">
+          <ItemGroup>
+            <PackageReference Include="Umpire.Vsa" />
+          </ItemGroup>
+        </Project>
+        """;
     const string WithDefinitionPackage = """
-        <Project Sdk="Umpire.Sdk">
+        <Project Sdk="Microsoft.NET.Sdk">
           <ItemGroup>
             <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
           </ItemGroup>
         </Project>
         """;
     const string RootWithDefinitionPackage = """
-        <Project Sdk="Umpire.Sdk">
+        <Project Sdk="Microsoft.NET.Sdk">
           <PropertyGroup>
             <OutputType>Exe</OutputType>
           </PropertyGroup>
           <ItemGroup>
+            <PackageReference Include="Umpire.Vsa" />
+            <PackageReference Include="Umpire.Engine" PrivateAssets="all" />
             <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
           </ItemGroup>
         </Project>
@@ -97,7 +105,8 @@ public sealed class DefinitionBuildTests {
     public void A_definition_with_an_embedded_pdb_leaves_no_stale_pdb() {
         Build().EnsureSuccess();
         Write("Definition/Shop.Definition.csproj",
-            "<Project Sdk=\"Umpire.Sdk\"><PropertyGroup><DebugType>embedded</DebugType></PropertyGroup></Project>");
+            "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><DebugType>embedded</DebugType></PropertyGroup>"
+            + "<ItemGroup><PackageReference Include=\"Umpire.Vsa.Definition\" PrivateAssets=\"all\" /></ItemGroup></Project>");
 
         Build().EnsureSuccess();
 
@@ -129,13 +138,15 @@ public sealed class DefinitionBuildTests {
     public void A_build_with_one_output_folder_keeps_the_definition_of_each_project() {
         var folder = Path.Combine(workspace.Root, "out");
         WriteTools();
-        Write("Plain/Plain.csproj", OneLine);
+        Write("Plain/Plain.csproj", Library);
         Write("Shop.csproj", """
-            <Project Sdk="Umpire.Sdk">
+            <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
               </PropertyGroup>
               <ItemGroup>
+                <PackageReference Include="Umpire.Vsa" />
+                <PackageReference Include="Umpire.Engine" PrivateAssets="all" />
                 <ProjectReference Include="Tools/Tools.csproj" />
                 <ProjectReference Include="Plain/Plain.csproj" />
               </ItemGroup>
@@ -161,8 +172,8 @@ public sealed class DefinitionBuildTests {
 
     [Test]
     public void The_definition_below_a_nested_test_project_is_a_definition_of_the_outer_project() {
-        Write("App/Packs/X/X.Tests.csproj", OneLine);
-        Write("App/Packs/X/Definition/X.Definition.csproj", OneLine);
+        Write("App/Packs/X/X.Tests.csproj", Library);
+        Write("App/Packs/X/Definition/X.Definition.csproj", WithDefinitionPackage);
         Write("App/Packs/X/Definition/XArchitecture.cs", Passing.Replace("Shop", "X"));
 
         workspace.Dotnet("build", "Shop.csproj", "-nodeReuse:false", "-p:UmpireCheck=false").EnsureSuccess();
@@ -176,8 +187,9 @@ public sealed class DefinitionBuildTests {
         Write("company/CompanyArchitecture.cs", Failing.Replace("Shop.Definition", "Company")
             .Replace("sealed class ShopArchitecture", "class CompanyArchitecture"));
         Write("Definition/Shop.Definition.csproj", """
-            <Project Sdk="Umpire.Sdk">
+            <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
+                <PackageReference Include="Umpire.Vsa.Definition" PrivateAssets="all" />
                 <ProjectReference Include="../company/Company.csproj" />
               </ItemGroup>
             </Project>
@@ -211,11 +223,13 @@ public sealed class DefinitionBuildTests {
     public void The_definitions_of_a_referenced_project_are_in_the_output() {
         WriteTools();
         Write("Shop.csproj", """
-            <Project Sdk="Umpire.Sdk">
+            <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
               </PropertyGroup>
               <ItemGroup>
+                <PackageReference Include="Umpire.Vsa" />
+                <PackageReference Include="Umpire.Engine" PrivateAssets="all" />
                 <ProjectReference Include="Tools/Tools.csproj" />
               </ItemGroup>
             </Project>
@@ -241,7 +255,7 @@ public sealed class DefinitionBuildTests {
     [Test]
     public void A_definition_in_a_lower_case_folder_is_not_ignored() {
         DeleteDefinition();
-        Write("definition/Shop.Definition.csproj", OneLine);
+        Write("definition/Shop.Definition.csproj", WithDefinitionPackage);
         Write("definition/ShopArchitecture.cs", Failing);
 
         Assert.That(Build().Output, Does.Contain("warning UMP020301"));
@@ -249,7 +263,7 @@ public sealed class DefinitionBuildTests {
 
     [Test]
     public void A_definition_of_a_pack_that_the_build_loads_gives_no_UMP030513() {
-        Write("App/Packs/X/Definition/X.Definition.csproj", OneLine);
+        Write("App/Packs/X/Definition/X.Definition.csproj", WithDefinitionPackage);
         Write("App/Packs/X/Definition/XArchitecture.cs", Passing.Replace("Shop", "X"));
 
         Assert.That(Build().Output, Does.Not.Contain("UMP030513"));
@@ -344,11 +358,13 @@ public sealed class DefinitionBuildTests {
     void DeleteDefinition() => Directory.Delete(Path.Combine(workspace.Src, "Definition"), recursive: true);
 
     void WriteRoot(string properties) =>
-        Write("Shop.csproj", $"<Project Sdk=\"Umpire.Sdk\"><PropertyGroup>{properties}</PropertyGroup></Project>");
+        Write("Shop.csproj", $"<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup>{properties}</PropertyGroup><ItemGroup>"
+            + "<PackageReference Include=\"Umpire.Vsa\" /><PackageReference Include=\"Umpire.Engine\" PrivateAssets=\"all\" />"
+            + "</ItemGroup></Project>");
 
     void WriteTools() {
-        Write("Tools/Tools.csproj", OneLine);
-        Write("Tools/Definition/Tools.Definition.csproj", OneLine);
+        Write("Tools/Tools.csproj", Library);
+        Write("Tools/Definition/Tools.Definition.csproj", WithDefinitionPackage);
         Write("Tools/Definition/ToolsArchitecture.cs", Passing.Replace("Shop", "Tools"));
     }
 

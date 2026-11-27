@@ -1,0 +1,33 @@
+<Project>
+  <!-- The props of the package Umpire. NuGet imports this file before the project body, in each project that gets the
+       package Umpire directly or through another Umpire package (buildTransitive/). Source mode in this repository imports it
+       by path (tools/bundle/SourceMode/Umpire.SourceMode.props). The targets are in Umpire.After.targets: the .NET SDK imports
+       that file after its own targets (AfterMicrosoftNETSdkTargets), so the item changes see the default items of the SDK. -->
+  <PropertyGroup>
+    <UsingUmpireBuild>true</UsingUmpireBuild>
+    <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)Umpire.After.targets</AfterMicrosoftNETSdkTargets>
+  </PropertyGroup>
+
+  <!-- The block root is the folder of the nearest .umpireconfig file at or above the project. With no .umpireconfig file,
+       it is the project folder. -->
+  <PropertyGroup>
+    <UmpireConfigFile Condition="'$(UmpireConfigFile)' == ''">$([MSBuild]::GetPathOfFileAbove('.umpireconfig', '$(MSBuildProjectDirectory)'))</UmpireConfigFile>
+    <_UmpireBlockRoot Condition="'$(UmpireConfigFile)' != ''">$([System.IO.Path]::GetDirectoryName('$(UmpireConfigFile)'))</_UmpireBlockRoot>
+    <_UmpireBlockRoot Condition="'$(_UmpireBlockRoot)' == ''">$(MSBuildProjectDirectory)</_UmpireBlockRoot>
+  </PropertyGroup>
+
+  <!-- A project in a folder Definition/ is a definition project (UmpireDefinitionProject). It references the definition
+       packages itself. It copies the DLLs of its packages to its output, so the root project can give them to the check. -->
+  <PropertyGroup Condition="'$([System.IO.Path]::GetFileName($(MSBuildProjectDirectory)))' == 'definition'">
+    <UmpireDefinitionProject Condition="'$(UmpireDefinitionProject)' == ''">true</UmpireDefinitionProject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UmpireDefinitionProject)' == 'true'">
+    <CopyLocalLockFileAssemblies Condition="'$(CopyLocalLockFileAssemblies)' == ''">true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- A project whose name ends with ".Tests" is a test project (UmpireTestProject). It does not run the check and does not
+       copy the definitions. It sets its test runner itself, for example OutputType Exe and EnableNUnitRunner. -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <UmpireTestProject Condition="'$(UmpireTestProject)' == ''">true</UmpireTestProject>
+  </PropertyGroup>
+</Project>

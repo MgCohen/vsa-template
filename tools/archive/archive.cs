@@ -35,7 +35,7 @@ try {
     var tree = Path.Combine(work, "tree");
     var analyzers = Archive.FromPackage(options, "Umpire.Vsa.Analyzers", "analyzers/dotnet/cs/",
         Path.Combine(tree, AnalyzerFolder));
-    var engine = Archive.FromPackage(options, "Umpire.Sdk", EnginePackageFolder, Path.Combine(tree, EngineFolder));
+    var engine = Archive.FromPackage(options, "Umpire.Engine", EnginePackageFolder, Path.Combine(tree, EngineFolder));
     var publish = Path.Combine(work, "publish");
     var runtime = Archive.Runtime(options, repo, publish, engine.Values, Path.Combine(tree, RuntimeFolder),
         Path.Combine(tree, DefinitionFolder));
@@ -80,7 +80,7 @@ static class Archive {
         var project = Path.Combine(publish, "project");
         Directory.CreateDirectory(project);
         File.Copy(Path.Combine(repo, "global.json"), Path.Combine(project, "global.json"));
-        var downloads = engine.Where(package => !package.Project && package.Id != "Umpire.Sdk")
+        var downloads = engine.Where(package => !package.Project && package.Id != "Umpire.Engine")
             .Select(package => $"""    <PackageDownload Include="{package.Id}" Version="[{package.Version}]" />""")
             .Distinct();
         var packages = RuntimePackages.Concat(DefinitionPackages)
