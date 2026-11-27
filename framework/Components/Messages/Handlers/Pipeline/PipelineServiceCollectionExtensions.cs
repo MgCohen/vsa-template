@@ -22,8 +22,11 @@ public static class PipelineServiceCollectionExtensions {
         return services;
     }
 
-    public static IServiceCollection AddHubStep<TStep>(this IServiceCollection services) where TStep : HubStep {
-        services.AddSingleton(new HubStepEntry(typeof(TStep)));
+    public static IServiceCollection AddHubStep<TStep>(this IServiceCollection services, int priority = 0) where TStep : HubStep {
+        if (services.Any(d => d.ImplementationInstance is HubStepEntry entry && entry.Step == typeof(TStep))) {
+            throw new InvalidOperationException($"{typeof(TStep).FullName} is already a hub step. Add each hub step one time.");
+        }
+        services.AddSingleton(new HubStepEntry(typeof(TStep), priority));
         AddHub(services);
         return services;
     }

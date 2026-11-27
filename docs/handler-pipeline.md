@@ -78,7 +78,7 @@ A validator base is an open generic type with one type parameter, the message, a
 
 ## Hub steps: each message of the app
 
-The hub is the central point of the messages. Each send and each publish goes through it before it goes to the pipeline of its message, also a send from inside a handler. A hub step runs for each message of the app, whatever pipeline runs it. A pipeline step runs only in its own pipeline.
+The hub is the central point of the messages. Each send of a sender (`ICommandSender`, `IRequestSender`, `IIntegrationEventPublisher`) and of `IMessageHub` goes through it before it goes to the pipeline of its message, also a send from inside a handler. A pipeline that a caller builds and calls directly (`PipelineBuilder.Build`, then `Pipeline.SendAsync`, for example in the unit test of one command handler) does not run the hub steps. A hub step runs for each message of the app, whatever pipeline runs it. A pipeline step runs only in its own pipeline.
 
 ```text
 SendAsync ──▶ hub steps (before, in registration order) ──▶ the pipeline of the message ──▶ hub steps (after, in reverse order)
@@ -86,7 +86,7 @@ SendAsync ──▶ hub steps (before, in registration order) ──▶ the pipe
 
 ```csharp
 sealed class MaintenanceStep(MaintenanceMode mode) : HubStep {
-    public override Task<Error?> BeforeAsync(object message, IServiceProvider services) =>
+    public override Task<Error?> BeforeAsync(object message, IServiceProvider services, CancellationToken ct) =>
         Task.FromResult(mode.IsOn ? new Error("app.maintenance", "The app is in maintenance.") : null);
 }
 
@@ -95,13 +95,15 @@ services.AddHubStep<MaintenanceStep>();
 
 | Rule | Detail |
 |---|---|
-| Who adds one | The kernel and plugin modules only. A feature module adds steps to its own pipeline |
+| Who adds one | Only the kernel and plugin modules. A feature module adds steps to its own pipeline. No rule checks this yet |
+| Order | `AddHubStep<T>(priority)`: the lowest priority first, then the order of registration. Each step is added one time |
 | Before | It returns `null` to go on, or an `Error`: then the message does not run, the sender gets the error, and the later hub steps do not run |
-| After | It runs for each hub step whose before part ran, in reverse order, also after a reject or a throw. The result is `null` after a throw |
+| After | It runs for each hub step whose before part ran, in reverse order, also after a reject or a throw. The result is `null` after a throw. A throw in one after part does not stop the others: the first exception goes to the sender |
+| Cancellation | Each part gets the token of the send. The hub does not stop a cancelled send by itself: the pipeline and its runner decide, as before |
 | An event | The hub steps run one time for each publish, also when more than one pipeline runs the event |
 | Services | The step comes from the scope of the sender, so it can use scoped services |
 
-`IMessageHub.SendAsync(object message)` sends a message by its type, with no sender of its kind. It finds the one pipeline with a handler for the type (a broadcast goes to `PublishAsync`), and it gives an `IMessageResult`. A host uses it to send the message of an operation.
+`IMessageHub.SendAsync(object message)` sends a message by its type, with no sender of its kind. It finds the one pipeline with a handler for the type (a broadcast goes to `PublishAsync`), and it gives an `IMessageResult`, with no value on an error. If no pipeline or more than one pipeline has a handler for the type, it throws: then use the sender of its kind. It is the way in for a caller that has a message but not its kind, for example the conversion of an operation.
 
 ## Steps and hooks
 

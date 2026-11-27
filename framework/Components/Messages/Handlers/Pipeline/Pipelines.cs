@@ -9,6 +9,7 @@ public sealed class Pipelines {
     readonly HubSteps hubSteps;
     readonly ConcurrentDictionary<PipelineDefinition, Pipeline> built = new();
     readonly ConcurrentDictionary<Type, IReadOnlyList<Pipeline>> broadcasts = new();
+    readonly ConcurrentDictionary<Type, Pipeline> byType = new();
 
     internal Pipelines(IServiceProvider root, IEnumerable<PipelineDefinition> definitions, IEnumerable<HubStepEntry> hubSteps) {
         this.root = root;
@@ -21,7 +22,7 @@ public sealed class Pipelines {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
-        return hubSteps.RunAsync(message, services,
+        return hubSteps.RunAsync(message, services, ct,
             async () => EnvelopeResults.Of<TResult>(await For(handlerBase, message.GetType()).RunAsync(message, services, ct)),
             error => (Result<TResult>)error);
     }
@@ -31,7 +32,7 @@ public sealed class Pipelines {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
-        return hubSteps.RunAsync(message, services, () => RunBroadcastAsync(message, services, ct), error => (Result<Unit>)error);
+        return hubSteps.RunAsync(message, services, ct, () => RunBroadcastAsync(message, services, ct), error => (Result<Unit>)error);
     }
 
     internal async Task<IMessageResult> SendAsync(object message, IServiceProvider services, CancellationToken ct) {
@@ -41,8 +42,8 @@ public sealed class Pipelines {
         if (message is IBroadcastMessage broadcast) {
             return await PublishAsync(broadcast, services, ct);
         }
-        return await hubSteps.RunAsync(message, services,
-            async () => EnvelopeResults.Untyped(await For(message.GetType()).RunAsync(message, services, ct)),
+        return await hubSteps.RunAsync(message, services, ct,
+            async () => EnvelopeResults.Untyped(await byType.GetOrAdd(message.GetType(), For).RunAsync(message, services, ct)),
             error => (IMessageResult)(Result<Unit>)error);
     }
 
@@ -84,9 +85,11 @@ public sealed class Pipelines {
         var nearest = MessageTypes.Narrowest(candidates, p => p.Definition.Message);
         return nearest.Count switch {
             1 => nearest[0],
-            0 => throw new InvalidOperationException($"No pipeline has a handler for {message.Name}."),
+            0 => throw new InvalidOperationException(
+                $"No pipeline has a handler for {message.Name}. Add a handler for it, or send it through the sender of its kind."),
             _ => throw new InvalidOperationException(
-                $"Two pipelines have a handler for {message.Name}. Send it through the sender of its kind."),
+                $"{nearest.Count} pipelines have a handler for {message.Name}, so the hub cannot select one. "
+                + "Send it through the sender of its kind."),
         };
     }
 
