@@ -19,7 +19,10 @@
     <AssemblyMetadata Include="UmpireNUnitVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit')->'%(Version)')" />
     <AssemblyMetadata Include="UmpireNUnitAdapterVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit3TestAdapter')->'%(Version)')" />
   </ItemGroup>
+  <!-- The tool is an app: UmpireTool is App<ToolKernel, ToolHost>, and ToolHost is a ConsoleHost. The kernel gives one
+       operation for each command, and the host converts the command line of the tool into the words of that operation. -->
   <ItemGroup>
+    <ProjectReference Include="../../framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" />
     <ProjectReference Include="../../engine/Versions/Umpire.Engine.Versions.csproj" />
     <ProjectReference Include="../Files/Umpire.Files.csproj" />
   </ItemGroup>

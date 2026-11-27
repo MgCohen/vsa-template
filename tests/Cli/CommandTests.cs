@@ -83,6 +83,11 @@ public sealed class CommandTests {
         Assert.That(() => RunOutsideAnApp(["add", "request", "CreateInvoice"]),
             Throws.TypeOf<UmpireException>().With.Message.Contain("not in an Umpire app"));
 
+    [Test]
+    public void CheckOutsideAnAppStopsAtTheBlockFolder() =>
+        Assert.That(() => RunOutsideAnApp(["check"]),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("not in an Umpire app"));
+
     [TestCase("module", "module")]
     [TestCase("plugin", "plugin module")]
     [TestCase("pack", "pack")]

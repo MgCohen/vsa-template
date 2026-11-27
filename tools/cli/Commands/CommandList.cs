@@ -11,6 +11,7 @@ static class CommandList {
         new InitCommand(),
         .. AddKind.All.Select(kind => new AddCommand(kind)),
         new TestCommand(),
+        new CheckCommand(),
         new DoctorCommand(),
         new UpdateCommand(),
     ];
@@ -29,8 +30,10 @@ static class CommandList {
             args.Count >= command.Words.Count && command.Words.SequenceEqual(args.Take(command.Words.Count)));
 
     public static int Run(string[] args) {
-        var command = Find(args) ?? throw new UmpireException(
-            $"Unknown command: {string.Join(' ', args)}{Environment.NewLine}{Environment.NewLine}{Usage}");
+        var command = Find(args) ?? throw Unknown(args);
         return command.Run(CommandInput.Parse(command, args[command.Words.Count..]));
     }
+
+    public static UmpireException Unknown(IReadOnlyList<string> args) =>
+        new($"Unknown command: {string.Join(' ', args)}{Environment.NewLine}{Environment.NewLine}{Usage}");
 }

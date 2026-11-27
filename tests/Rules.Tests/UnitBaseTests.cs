@@ -1,12 +1,16 @@
 namespace Rules.Tests;
 
+using Good;
 using Good.Slices.GetItem;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Umpire.Kernels;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Testing.Unit;
 
 public sealed class UnitBaseTests : VsaUnitTest {
+    protected override IModuleProvider Modules => new FixedModules(new GoodModule());
+
     [Test]
     public async Task Handle_runs_the_handler_of_the_request() {
         var id = Guid.NewGuid();
@@ -28,6 +32,8 @@ public sealed class UnitBaseTests : VsaUnitTest {
 public sealed class UnitBaseConfigureTests : VsaUnitTest {
     IClock clock = null!;
     IIntegrationEventPublisher publisher = null!;
+
+    protected override IModuleProvider Modules => new FixedModules(new GoodModule());
 
     protected override void Configure(IServiceCollection services) {
         clock = Mock<IClock>();

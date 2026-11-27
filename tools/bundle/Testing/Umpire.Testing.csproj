@@ -11,7 +11,6 @@
     <Compile Include="$(UmpireRoot)engine/App/Plugins/Facts/Domain/Shared/Queries/**/*.cs" Exclude="$(_UmpireNotBundled)" />
   </ItemGroup>
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../Vsa/Umpire.Vsa.Kernel.csproj" PrivateAssets="none" />
     <ProjectReference Include="../Definition/Umpire.Definition.csproj" PrivateAssets="none" />
     <ProjectReference Include="../VsaDefinition/Umpire.Vsa.Definition.csproj" PrivateAssets="none" />
