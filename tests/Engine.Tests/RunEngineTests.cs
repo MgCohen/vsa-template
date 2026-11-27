@@ -26,7 +26,6 @@ namespace Engine.Tests;
 public sealed class RunEngineTests {
     const string RulesSkipped =
         "umpire-engine: UMP030002: CheckRules skipped, because an earlier step failed.";
-    const string PinnedSdk = "global.json: Umpire.Sdk 0.0.1";
     static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
 
     [Test]
@@ -86,12 +85,12 @@ public sealed class RunEngineTests {
     public async Task An_Umpire_version_that_is_not_the_engine_version_gives_UMP030401_and_skips_the_load() {
         var root = TempFolder.Create();
         try {
-            File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Umpire.Sdk/0.0.1" />""");
+            File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Vsa" Version="0.0.1" /></ItemGroup></Project>""");
 
             var result = await Run(block: root);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.Lines, Has.One.Contains("error UMP030401").And.Contains("Old.csproj: Umpire.Sdk 0.0.1"));
+            Assert.That(result.Lines, Has.One.Contains("error UMP030401").And.Contains("Old.csproj: Umpire.Vsa 0.0.1"));
             Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier step failed."));
         } finally {
             TempFolder.Delete(root);
@@ -106,7 +105,7 @@ public sealed class RunEngineTests {
         var root = TempFolder.Create();
         try {
             File.WriteAllText(Path.Combine(root, ".umpireconfig"), config);
-            File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Umpire.Sdk/0.0.1" />""");
+            File.WriteAllText(Path.Combine(root, "Old.csproj"), """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Vsa" Version="0.0.1" /></ItemGroup></Project>""");
 
             var result = await Run(block: root, mode: mode);
 

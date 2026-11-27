@@ -7,7 +7,8 @@ static class SetupTasks {
         new GlobalJsonTask(),
         new NugetConfigTask(),
         new GitIgnoreTask(),
-        new UmpireSdkTask(),
+        new BuildPropsTask(),
+        new UmpirePackagesTask(),
         new UmpireConfigTask(),
     ];
 

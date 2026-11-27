@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <!-- Packs Sdk/ as an MSBuild SDK. The package has no DLL. -->
-  <ItemGroup>
-    <None Include="Sdk/**" Pack="true" PackagePath="Sdk" />
-  </ItemGroup>
-  <Import Project="Umpire.Sdk.Package.targets" />
-</Project>

@@ -1,5 +1,6 @@
 <Project>
-  <!-- The templates build against the framework source in this repository (Umpire.Sdk source mode). The tool does not copy this file. -->
+  <!-- The templates build against the framework source in this repository (source mode, Umpire.SourceMode.props).
+       The tool does not copy this file. A new app gets Directory.Build.props.template. -->
   <Import Project="$(MSBuildThisFileDirectory)../../../Directory.Build.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -7,7 +8,8 @@
     <!-- The templates are one app. A new app has its own .umpireconfig file, so it does not set this. -->
     <UmpireBlock>$(MSBuildThisFileDirectory)</UmpireBlock>
     <ArtifactsPath>$(UmpireBlock)artifacts~</ArtifactsPath>
-    <!-- A new app has no central package versions, so the SDK sets the version of each package that it adds. -->
+    <!-- A new app has no central package versions, so each PackageReference of a template gives its version. -->
     <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
   </PropertyGroup>
+  <Import Project="$(UmpireFrameworkSourceDir)tools/bundle/SourceMode/Umpire.SourceMode.props" />
 </Project>

@@ -1,5 +1,6 @@
 <Project>
-  <!-- The Umpire part of Umpire.Sdk and Umpire.Sdk.Web, after the targets of the platform SDK. -->
+  <!-- The targets of the package Umpire, after the targets of the .NET SDK (Umpire.props adds this file to
+       AfterMicrosoftNETSdkTargets). -->
   <Import Project="$(MSBuildThisFileDirectory)Umpire.Codes.props" />
 
   <!-- An app has one root project in the app root. It compiles each file in its folder tree. A nested project is optional,
@@ -41,10 +42,28 @@
     <_UmpireNestedOwner Include="@(_UmpireNestedProject)" Exclude="**/*.Tests.csproj" />
     <_UmpireDefinitionProject Include="**/Definition/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource);@(_UmpireNestedOwner->'%(RelativeDir)**/Definition/*.csproj')" />
     <ProjectReference Include="@(_UmpireDefinitionProject)" ReferenceOutputAssembly="false" Private="false"
-                      OutputItemType="_UmpireDefinition" SkipGetTargetFrameworkProperties="true"
+                      OutputItemType="_UmpireDefinition" SkipGetTargetFrameworkProperties="true" UmpireAdded="true"
                       GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
-    <ProjectReference Include="App/Packs/*/Kernel/*.csproj" GlobalPropertiesToRemove="OutputPath;OutDir;_CommandLineDefinedOutputPath" />
+    <_UmpirePackKernel Include="App/Packs/*/Kernel/*.csproj" Exclude="@(ProjectReference)" />
+    <ProjectReference Include="@(_UmpirePackKernel)" UmpireAdded="true" GlobalPropertiesToRemove="OutputPath;OutDir;_CommandLineDefinedOutputPath" />
   </ItemGroup>
+  <!-- A restore does not import the package files, so it does not see the project references above, and does not restore
+       their projects. Package mode restores them before the build uses them. A restore of a project that is up to date does
+       no work. The restore of this project also does not get the packages of a pack kernel, so a kernel with its own
+       PackageReference items needs a ProjectReference in the root project, which this file then does not add again.
+       Source mode imports this file from Directory.Build.props, so its restore sees the references. -->
+  <Target Name="_UmpireRestoreAddedReferences" BeforeTargets="ResolveProjectReferences;_GetProjectReferenceTargetFrameworkProperties"
+          Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(DesignTimeBuild)' != 'true' and '$(_UmpireAddedReferencesRestored)' != 'true'">
+    <ItemGroup>
+      <_UmpireAddedReference Include="@(ProjectReference)" Condition="'%(ProjectReference.UmpireAdded)' == 'true'" />
+    </ItemGroup>
+    <MSBuild Projects="@(_UmpireAddedReference)" Targets="Restore" Condition="'@(_UmpireAddedReference)' != ''"
+             Properties="MSBuildRestoreSessionId=$([System.Guid]::NewGuid());_UmpireAddedReferencesRestored=true"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
+    <PropertyGroup>
+      <_UmpireAddedReferencesRestored>true</_UmpireAddedReferencesRestored>
+    </PropertyGroup>
+  </Target>
   <!-- The architecture check reads the definitions from the folder umpire-definitions of the output, and a publish does not
        copy that folder. It gets each definition DLL, each DLL that only a definition uses, and the definitions of the
        referenced projects. The runtime gives the System, Microsoft.Extensions
@@ -56,7 +75,7 @@
       <_UmpireDefinitionList>$(IntermediateOutputPath)umpire-definitions.$([MSBuild]::StableStringHash('$(_UmpireDefinitionsDir)').ToString('x8')).list</_UmpireDefinitionList>
       <_UmpireReferencedDefinitions>@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)umpire-definitions/*')</_UmpireReferencedDefinitions>
       <_UmpirePackDefinitionSources Condition="'$(UmpireFrameworkSourceDir)' != ''">@(_UmpirePackDefinitionOutput->'%(RootDir)%(Directory)*.dll;%(RootDir)%(Directory)*.pdb')</_UmpirePackDefinitionSources>
-      <_UmpirePackDefinitionSources Condition="'$(UmpireFrameworkSourceDir)' == '' and '@(_UmpirePackDefinition)' != ''">$(_UmpireSdkEngineDir)Umpire.Definition.dll;@(_UmpirePackDefinition->'$(_UmpireSdkEngineDir)%(Package).dll')</_UmpirePackDefinitionSources>
+      <_UmpirePackDefinitionSources Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngineDir)' != '' and '@(_UmpirePackDefinition)' != ''">$(UmpireEngineDir)Umpire.Definition.dll;@(_UmpirePackDefinition->'$(UmpireEngineDir)%(Package).dll')</_UmpirePackDefinitionSources>
     </PropertyGroup>
     <!-- Many projects can have one output folder (-o), so a project deletes only the files that it copied to this folder before. -->
     <ReadLinesFromFile File="$(_UmpireDefinitionList)" Condition="Exists('$(_UmpireDefinitionList)')">
@@ -86,128 +105,18 @@
     </ItemGroup>
   </Target>
 
-  <!-- The general parts that each app needs, with no layer, and the default pack.
-       Path is the project folder under the repository root in source mode. Package is the bundle package that ships the project
-       in package mode, and Bundle is its bundle project (tools/bundle/): many projects share one package. An Analyzer item is a Roslyn analyzer, not a library.
-       Only a definition project (UmpireDefinitionProject) gets the definition packages, as private assets, so they do not
-       flow to the runtime. A test project gets the definition API also with no default pack. -->
-  <ItemDefinitionGroup>
-    <_UmpireFramework>
-      <Analyzer>false</Analyzer>
-    </_UmpireFramework>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <_UmpireFramework Include="Umpire.Kernels" Path="framework/Kernel" Package="Umpire" Bundle="tools/bundle/Umpire/Umpire.csproj" />
-    <_UmpireFramework Include="Umpire.Markers" Path="architecture/Markers" Package="Umpire" Bundle="tools/bundle/Umpire/Umpire.csproj" />
-    <_UmpireFramework Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire.Definition" Bundle="tools/bundle/Definition/Umpire.Definition.csproj"
-                      PrivateAssets="all" Condition="'$(UmpireDefinitionProject)' == 'true'" />
-    <_UmpireTestBase Include="Umpire.Kernels.Definition" Path="framework/Kernel/Definition" Package="Umpire.Definition" Bundle="tools/bundle/Definition/Umpire.Definition.csproj" />
-    <!-- In package mode, the package Umpire depends on the kernel analyzer package. Pinned choice (W24): the analyzer package
-         of the pack holds the kernel analyzer too (Umpire.KernelBundle.targets), and the target _UmpireOneKernelAnalyzer of the package
-         Umpire (tools/bundle/Umpire/build/Umpire.targets) keeps only that copy. -->
-    <_UmpireFramework Include="Umpire.Kernels.Analyzers" Path="framework/Kernel/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
-  </ItemGroup>
-  <!-- The kernel of the app selects its pack (App<VsaKernel, ...>). A package only makes a pack available. The SDK adds the default pack,
-       VSA, and its test bases for a test project. UmpireDefaultPack=false leaves them out: then the app references the package
-       of its pack and of its test bases itself. A pack package brings its analyzers. Source mode adds them here, because a
-       project reference does not bring analyzers. -->
-  <PropertyGroup>
-    <UmpireDefaultPack Condition="'$(UmpireDefaultPack)' == ''">true</UmpireDefaultPack>
-    <!-- A web project (Umpire.Sdk.Web) gets the web host and, with the default pack, its views. UmpireWeb=false leaves them out. -->
-    <UmpireWeb Condition="'$(UmpireWeb)' == ''">$(UsingMicrosoftNETSdkWeb)</UmpireWeb>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(UmpireDefaultPack)' == 'true'">
-    <_UmpireFramework Include="Umpire.Vsa.Composition" Path="packs/Vsa/Kernel/Composition" Package="Umpire.Vsa" Bundle="tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" />
-    <_UmpireFramework Include="Umpire.Vsa.Infrastructure" Path="packs/Vsa/Kernel/Infrastructure" Package="Umpire.Vsa" Bundle="tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" />
-    <_UmpireFramework Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" PrivateAssets="all" Condition="'$(UmpireDefinitionProject)' == 'true'" />
-    <_UmpirePackDefinition Include="Umpire.Vsa" Path="packs/Vsa/Definition" Package="Umpire.Vsa.Definition" Bundle="tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" Condition="'$(UmpireDefinitionProject)' != 'true' and '$(UmpireTestProject)' != 'true'" />
-    <_UmpireFramework Include="Umpire.Vsa.Analyzers" Path="packs/Vsa/Tests/Analyzers" Analyzer="true" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
-    <_UmpireTestBase Include="Umpire.Vsa.Testing.Unit" Path="packs/Vsa/Tests/Unit" Package="Umpire.Testing" Bundle="tools/bundle/Testing/Umpire.Testing.csproj" />
-    <_UmpireFramework Include="Umpire.Vsa.Views" Path="packs/Vsa/Kernel/Views" Package="Umpire.Web" Bundle="tools/bundle/Web/Umpire.Web.csproj" Condition="'$(UmpireWeb)' == 'true'" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(UmpireWeb)' == 'true'">
-    <_UmpireFramework Include="Umpire.Hosts.Web" Path="framework/Kernel/Hosts/Web" Package="Umpire.Web" Bundle="tools/bundle/Web/Umpire.Web.csproj" />
-  </ItemGroup>
-
-  <!-- Source mode (this repository): project references into the framework source, when UmpireFrameworkSourceDir is set.
-       _UmpireUseBundle=true references the bundle projects (Bundle) in place of the runtime projects, as a consumer gets them.
-       The SDK package builds its rule engine so, because the engine must load the definition of an app from the same Umpire.dll.
-       It is private: in this repository, the framework blocks have their check entries in the runtime DLLs, so a build of a
-       repository app with it gives UMP030001 for each framework block. -->
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(_UmpireUseBundle)' != 'true'">
-    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(_UmpireUseBundle)' == 'true'">
-    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'$(UmpireFrameworkSourceDir)%(Bundle)'->Distinct())" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
-    <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
-                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
-  </ItemGroup>
-  <!-- Source mode gives the kernel analyzer from the folder of the pack analyzer, as the package of the pack does (pinned choice W24).
-       Roslyn finds a dependency of an analyzer in the folder of that analyzer only if that file is an analyzer item. Else the
-       compiler server takes the first registered path with the same name and version, in text order, and does not check that
-       the file exists. Then a deleted test workspace or another worktree can win, and the pack rules do not load (CS8032).
-       The target changes only the analyzer items of the Umpire analyzer projects (_UmpireFramework with Analyzer="true"). It uses
-       a copy only if it is the one copy and it exists, so a design-time build with no output keeps the kernel analyzer from its own folder. -->
-  <Target Name="_UmpireKernelAnalyzerBesidePackAnalyzer" AfterTargets="ResolveProjectReferences" Condition="'$(UmpireFrameworkSourceDir)' != ''">
-    <PropertyGroup>
-      <_UmpireKernelAnalyzerProject>$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'framework', 'Kernel', 'Analyzers', 'Umpire.Kernels.Analyzers.csproj'))</_UmpireKernelAnalyzerProject>
-    </PropertyGroup>
-    <ItemGroup>
-      <_UmpireAnalyzerProject Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
-      <_UmpireAnalyzerProject Remove="$(_UmpireKernelAnalyzerProject)" />
-      <_UmpireOwnKernelAnalyzer Include="@(Analyzer)" Condition="'%(Analyzer.MSBuildSourceProjectFile)' == '$(_UmpireKernelAnalyzerProject)'" />
-      <_UmpireAnalyzerOfProject Include="%(Analyzer.MSBuildSourceProjectFile)" Analyzer="%(Analyzer.FullPath)" Condition="'%(Analyzer.MSBuildSourceProjectFile)' != ''" />
-      <_UmpireAnalyzerOfOtherProject Include="@(_UmpireAnalyzerOfProject)" Exclude="@(_UmpireAnalyzerProject)" />
-      <_UmpireAnalyzerOfProject Remove="@(_UmpireAnalyzerOfOtherProject)" />
-      <_UmpireKernelAnalyzerOfPack Include="@(_UmpireAnalyzerOfProject->'%(Analyzer)'->'%(RootDir)%(Directory)Umpire.Kernels.Analyzers.dll'->Distinct())" />
-      <_UmpireKernelAnalyzerOfPack Remove="@(_UmpireKernelAnalyzerOfPack)" Condition="!Exists('%(FullPath)')" />
-    </ItemGroup>
-    <ItemGroup Condition="'@(_UmpireOwnKernelAnalyzer->Count())' == '1' and '@(_UmpireKernelAnalyzerOfPack->Count())' == '1'">
-      <Analyzer Remove="@(_UmpireOwnKernelAnalyzer)" />
-      <Analyzer Include="@(_UmpireKernelAnalyzerOfPack)" />
-    </ItemGroup>
-  </Target>
-
   <!-- The definition of the pack is check-time code: a project that is not a definition project and not a test project does
        not compile against it. The architecture check of the app still needs it, so _UmpireCopyDefinitions copies it to the
-       folder umpire-definitions. Source mode builds the definition project of the pack first, with no reference to its
-       assembly. Package mode takes the DLLs from the engine folder of this SDK package (tools/net8.0/), the same build as the
-       definition packages (Package). A project with its own reference to that project keeps it. -->
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
-    <_UmpirePackDefinitionProject Include="@(_UmpirePackDefinition->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" Condition="'$(_UmpireUseBundle)' != 'true'" />
-    <_UmpirePackDefinitionProject Include="@(_UmpirePackDefinition->'$(UmpireFrameworkSourceDir)%(Bundle)')" Condition="'$(_UmpireUseBundle)' == 'true'" />
-    <_UmpirePackDefinitionProject Remove="@(ProjectReference)" />
-    <ProjectReference Include="@(_UmpirePackDefinitionProject)" ReferenceOutputAssembly="false" Private="false"
-                      OutputItemType="_UmpirePackDefinitionOutput" SkipGetTargetFrameworkProperties="true"
-                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained;OutputPath;OutDir;_CommandLineDefinedOutputPath" />
-  </ItemGroup>
-  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <_UmpireSdkEngineDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools', 'net8.0'))</_UmpireSdkEngineDir>
-  </PropertyGroup>
-
-  <!-- Package mode (consumers): package references with the version of this SDK.
-       With central package management, a PackageReference cannot set Version, so it gets VersionOverride.
-       A Umpire.* package that the project adds itself, for example a web host of the pack, gives its own version. The rule engine checks it (UMP030401). -->
-  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <_UmpireV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireVersion)</_UmpireV>
-    <_UmpireVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireVersion)</_UmpireVO>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'false')->'%(Package)'->Distinct())" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
-    <PackageReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true'))" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" PrivateAssets="all" />
-  </ItemGroup>
-
+       folder umpire-definitions. The package of a pack names its definition with an item _UmpirePackDefinition in its own
+       build props. Package mode takes the DLLs from the engine folder of the package Umpire.Engine (UmpireEngineDir),
+       the same build as the definition packages. Source mode builds the definition project of the pack first
+       (Umpire.SourceMode.targets). -->
   <!-- The root project of the app runs the rule engine: the executable in the block root that is not a test project. A
        nested console project of the same block does not check the block again. UmpireEngine=false turns it off. The engine
-       is in this package, in tools/net8.0/ (Umpire.Sdk.Package.targets). -->
+       is in the package Umpire.Engine, in tools/net8.0/: its props set UmpireEngineFile and UmpireEngineDir. -->
   <PropertyGroup Condition="'$(UmpireEngine)' == ''">
     <UmpireEngine>false</UmpireEngine>
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' == ''">
-    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'tools', 'net8.0', 'umpire-engine.dll'))</UmpireEngineFile>
   </PropertyGroup>
 
   <!-- Source mode (this repository): the engine is the output of engine/Engine.csproj. The engine checks itself with its own
@@ -252,7 +161,8 @@
     <PropertyGroup>
       <_UmpireEngineFound Condition="Exists('$(UmpireEngineFile)')">true</_UmpireEngineFound>
       <_UmpireNoEngine>The rule engine $(UmpireEngineFile) does not exist, so the architecture check did not run.</_UmpireNoEngine>
-      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' == ''">$(_UmpireNoEngine) Restore the project again, so the Umpire SDK package is complete.</_UmpireNoEngine>
+      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngineFile)' == ''">The rule engine is not in the project, so the architecture check did not run. Add the package Umpire.Engine to the root project: &lt;PackageReference Include=&quot;Umpire.Engine&quot; Version=&quot;&lt;version&gt;&quot; PrivateAssets=&quot;all&quot; /&gt;.</_UmpireNoEngine>
+      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngineFile)' != ''">$(_UmpireNoEngine) Restore the project again, so the package Umpire.Engine is complete.</_UmpireNoEngine>
       <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' != ''">$(_UmpireNoEngine) Build engine/Engine.csproj with the same configuration, or give UmpireEngineFile.</_UmpireNoEngine>
     </PropertyGroup>
     <Error Condition="'$(_UmpireEngineFound)' != 'true' and '$(_UmpireHookMode)' == 'Error'" Code="UMP030003" Text="$(_UmpireNoEngine)" />
@@ -279,30 +189,7 @@
     <Warning Condition="'$(_UmpireCrash)' != '' and '$(_UmpireHookMode)' != 'Error'" Code="UMP030004" Text="$(_UmpireCrash)" />
   </Target>
 
-  <!-- A test project (UmpireTestProject, Umpire.Sdk.Core.props) gets NUnit and the test bases of the pack.
-       It references the projects that it tests itself. -->
-  <PropertyGroup Condition="'$(UmpireTestProject)' == 'true'">
-    <_UmpireNUnitV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireNUnitVersion)</_UmpireNUnitV>
-    <_UmpireNUnitVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireNUnitVersion)</_UmpireNUnitVO>
-    <_UmpireNUnitAdapterV Condition="'$(ManagePackageVersionsCentrally)' != 'true'">$(UmpireNUnitAdapterVersion)</_UmpireNUnitAdapterV>
-    <_UmpireNUnitAdapterVO Condition="'$(ManagePackageVersionsCentrally)' == 'true'">$(UmpireNUnitAdapterVersion)</_UmpireNUnitAdapterVO>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(UmpireTestProject)' == 'true'">
-    <Using Include="NUnit.Framework" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' == ''">
-    <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
-    <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
-    <PackageReference Include="@(_UmpireTestBase->'%(Package)'->Distinct())" Version="$(_UmpireV)" VersionOverride="$(_UmpireVO)" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(UmpireTestProject)' == 'true' and '$(UmpireFrameworkSourceDir)' != ''">
-    <PackageReference Include="NUnit" Version="$(_UmpireNUnitV)" VersionOverride="$(_UmpireNUnitVO)" />
-    <PackageReference Include="NUnit3TestAdapter" Version="$(_UmpireNUnitAdapterV)" VersionOverride="$(_UmpireNUnitAdapterVO)" />
-    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" Condition="'$(_UmpireUseBundle)' != 'true'" />
-    <ProjectReference Include="@(_UmpireTestBase->'$(UmpireFrameworkSourceDir)%(Bundle)')" Condition="'$(_UmpireUseBundle)' == 'true'" />
-  </ItemGroup>
-
-  <!-- The rule values of the block are in the .umpireconfig file in the block root (UmpireConfigFile, Umpire.Sdk.Output.props).
+  <!-- The rule values of the block are in the .umpireconfig file in the block root (UmpireConfigFile, Umpire.props).
        The Umpire analyzers read that file with Umpire.Config, so the compiler gets it as an additional file. The defaults
        of each rule are on its class. -->
   <ItemGroup Condition="'$(UmpireConfigFile)' != '' and Exists('$(UmpireConfigFile)')">
@@ -320,8 +207,8 @@
        with ~, so the engine does not count the file as a source of the block. A project with its own IsExternalInit sets
        UmpireIsExternalInitPolyfill to false. -->
   <ItemGroup Condition="('$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1') and '$(UmpireIsExternalInitPolyfill)' != 'false'">
-    <Compile Remove="$(UmpireFrameworkSourceDir)tools/sdk/Polyfills~/*.cs" Condition="'$(UmpireFrameworkSourceDir)' != ''" />
-    <Compile Include="$(MSBuildThisFileDirectory)../Polyfills~/*.cs" Visible="false" />
+    <Compile Remove="$(MSBuildThisFileDirectory)Polyfills~/*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Polyfills~/*.cs" Visible="false" />
   </ItemGroup>
 
   <!-- EF Core writes the files in Infrastructure/Migrations/, so they are generated code: the style rules do not check them.

@@ -1,6 +1,6 @@
 # Repository layout: architecture, framework, packs, engine and tools
 
-Umpire has five groups of code, and each group has one top folder. The definition API references only the markers and the kernel, for the shared helpers in `Umpire.Utility` (its build gets the polyfill of Umpire.Sdk and the rule values of the kernel analyzers, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
+Umpire has five groups of code, and each group has one top folder. The definition API references only the markers and the kernel, for the shared helpers in `Umpire.Utility` (its build gets the polyfill of the package `Umpire` and the rule values of the kernel analyzers, as each framework project does), and the kernel and the components know no layer, so a second architecture uses them with no VSA package. Apps use VSA. The framework uses layers of projects.
 
 To make a first app and fix a first rule error, see [getting-started.md](getting-started.md).
 
@@ -11,8 +11,8 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 | Architecture | `architecture/` | The definition API and the rule answers | Each pack and the engine |
 | Framework | `framework/` | The kernel and the components | Kernel: always; components: the pack |
 | Packs | `packs/<Name>/` | One full architecture: definition, bases, rules | The app: one for each app |
-| Engine | `engine/` | The rule engine app | No package: `tools/net8.0/` of Umpire.Sdk and Umpire.Sdk.Web |
-| Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`), the bundle packages (`tools/bundle/`) and Umpire.Sdk | The developer |
+| Engine | `engine/` | The rule engine app | `tools/net8.0/` of the package `Umpire.Engine` |
+| Tools | `tools/` | The `umpire` tool, its file writer (`tools/Files/`), the bundle packages (`tools/bundle/`), with the build files of the packages, `Umpire.Engine` and the source mode | The developer |
 
 ```mermaid
 flowchart BT
@@ -44,11 +44,11 @@ The projects of the groups are for development: their references enforce the lay
 
 The core `Umpire` holds no pack and no definition code. The VSA kernel is in `Umpire.Vsa`, so an app with another pack and no web host gets no VSA code and no VSA analyzer. The definition code is check-time code, so it is in the two definition packages. The views and the VSA test bases stay in `Umpire.Web` and `Umpire.Testing`, so these two packages depend on `Umpire.Vsa`.
 
-The VSA kernel uses internal members of the kernel and of the messages, as the runtime projects do (`InternalsVisibleTo` of `Umpire.Kernels` to `Umpire.Vsa.Composition`, and of `Umpire.Messages.Handlers` to the VSA handler projects). Thus `Umpire.dll` gives its internals to `Umpire.Vsa`. The source project of the VSA definition has the name `Umpire.Vsa`, and a solution cannot hold two projects with one name. Thus the bundle project of `Umpire.Vsa` is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, and it sets `AssemblyName` and `PackageId` to `Umpire.Vsa`. The `Bundle` metadata of an item in `Umpire.Sdk.Core.targets` is the path of its bundle project.
+The VSA kernel uses internal members of the kernel and of the messages, as the runtime projects do (`InternalsVisibleTo` of `Umpire.Kernels` to `Umpire.Vsa.Composition`, and of `Umpire.Messages.Handlers` to the VSA handler projects). Thus `Umpire.dll` gives its internals to `Umpire.Vsa`. The source project of the VSA definition has the name `Umpire.Vsa`, and a solution cannot hold two projects with one name. Thus the bundle project of `Umpire.Vsa` is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, and it sets `AssemblyName` and `PackageId` to `Umpire.Vsa`. The `Bundle` metadata of an item in `tools/bundle/SourceMode/Umpire.SourceMode.targets` is the path of its bundle project.
 
 The package `Umpire` depends on `Umpire.Kernels.Analyzers`, and the package `Umpire.Vsa` depends on `Umpire.Vsa.Analyzers`. `Umpire.Vsa.Analyzers` also holds a copy of the kernel analyzer (pinned choice W24). The .NET SDK keeps two analyzers with one file name, so the target `_UmpireOneKernelAnalyzer` of the package `Umpire` (`tools/bundle/Umpire/build/Umpire.targets`) removes the copy of `Umpire.Kernels.Analyzers` when a pack gives its copy. The VSA analyzer selects its pack by namespace (`RuleAnalyzer.PackNamespace`, `PackSelection`): with no code entry, a reference to the assembly `Umpire.Vsa` selects VSA.
 
-`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `_UmpireUseBundle=true` (private) makes Umpire.Sdk reference the bundle projects in source mode. Only the SDK pack sets it: a repository app built with it gives `UMP030001` for each framework block, because the check entries of those blocks are in the runtime DLLs. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.Definition.dll` as the definition of the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
+`BundleSourceTests` makes sure that each bundle compiles the same files as its source projects. `_UmpireUseBundle=true` (private) makes the source mode (`tools/bundle/SourceMode/`) reference the bundle projects. Only the pack of `Umpire.Engine` sets it: a repository app built with it gives `UMP030001` for each framework block, because the check entries of those blocks are in the runtime DLLs. The SDK package builds its rule engine so, because the engine loads the definition of an app and its `Architecture` type must come from the same `Umpire.Definition.dll` as the definition of the app. The source build of the engine stays on the runtime projects, so it reads the fixtures of this repository. In one assembly, a `protected internal` member cannot be overridden as `protected`, so the bases of `Architecture` and `Concept` use `protected` members and internal call methods.
 
 ## Kinds of block
 

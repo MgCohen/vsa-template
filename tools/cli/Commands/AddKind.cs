@@ -45,7 +45,9 @@ sealed record AddKind(
         Folder: "App/Packs",
         BaseNames: ["Vsa"],
         NextStep: name => $"Change the app class to App<{name}Kernel, WebHost>, then add parts and rules to "
-            + $"{name}Architecture. See docs/pack-variants.md.");
+            + $"{name}Architecture. If the kernel gets its own PackageReference items, add "
+            + $"<ProjectReference Include=\"App/Packs/{name}/Kernel/{name}.Kernel.csproj\" /> to the root project. "
+            + "See docs/pack-variants.md.");
 
     public static readonly AddKind Request = new(
         "request",

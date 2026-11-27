@@ -1,7 +1,7 @@
 <Project>
   <!-- Adds the analyzer of the check model to the compile of one fixture project. A finding on data that can be old is a warning,
        also in a project with TreatWarningsAsErrors. -->
-  <Import Project="$(MSBuildThisFileDirectory)../../../tools/sdk/Sdk/Umpire.Codes.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../../../tools/bundle/Umpire/build/Umpire.Codes.props" />
   <ItemGroup>
     <CompilerVisibleProperty Include="UmpireCheckState;UmpireCheckMode;ProjectDir;DesignTimeBuild" />
     <Analyzer Include="$(UmpireModelAnalyzers)Umpire.CheckModel.Analyzer.dll" />

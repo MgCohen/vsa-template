@@ -16,22 +16,22 @@ public sealed class AppFolderTests {
     [Test]
     public void The_tool_finds_the_nearest_folder_with_an_umpireconfig_file() {
         File.WriteAllText(Path.Combine(root, UmpireConfig.FileName), "");
-        Write("Tests/App.Tests.csproj", """<Project Sdk="Umpire.Sdk/0.0.1" />""");
+        Write("Tests/App.Tests.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Testing" Version="0.0.1" /></ItemGroup></Project>""");
 
         Assert.That(AppFolder.Find(Path.Combine(root, "Tests")), Is.EqualTo(Path.GetFullPath(root)));
     }
 
     [Test]
-    public void With_no_umpireconfig_file_the_tool_finds_the_nearest_project_with_an_Umpire_SDK() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.1" />""");
+    public void With_no_umpireconfig_file_the_tool_finds_the_nearest_project_with_an_Umpire_package() {
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" /></ItemGroup></Project>""");
         Write("Inner/Other.csproj", """<Project Sdk="Microsoft.NET.Sdk" />""");
 
         Assert.That(AppFolder.Find(Path.Combine(root, "Inner")), Is.EqualTo(Path.GetFullPath(root)));
     }
 
     [Test]
-    public void A_project_with_an_Umpire_SDK_and_no_version_marks_the_app_so_doctor_can_report_it() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk" />""");
+    public void A_project_with_an_Umpire_package_and_no_version_marks_the_app_so_doctor_can_report_it() {
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire" /></ItemGroup></Project>""");
 
         Assert.That(AppFolder.Find(root), Is.EqualTo(Path.GetFullPath(root)));
     }

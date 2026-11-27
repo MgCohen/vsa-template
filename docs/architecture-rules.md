@@ -7,7 +7,7 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 | Group | Level | Package | IDs |
 |---|---|---|---|
 | Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernels.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
-| Build of the host | Architecture | The rule engine in the Umpire SDK package (ArchUnitNET) | `UMP02xxxx` |
+| Build of the host | Architecture | The rule engine in the package `Umpire.Engine` (ArchUnitNET) | `UMP02xxxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
 
@@ -132,7 +132,7 @@ The app part `Host` is the folder `App/Host/` of the app, for custom host code o
 | The `App` root (`Depth.Self`) uses `Host`, `Definition`, `Composition`, `Core`, `UmpireLibraries` and `Pack` | `UMP020101` |
 | `Views` uses the `Hosts` part of the kernel (`ViewsRoot` is in `Umpire.Hosts.Web`) | `UMP020101` |
 
-The project references do not enforce the layers. Umpire.Sdk gives each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
+The project references do not enforce the layers. The Umpire packages give each project the base of each layer, and the rule engine checks each use after the build (see `architecture-engine.md`).
 
 The host finds the module classes from the types, with no build records:
 
@@ -188,7 +188,7 @@ A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consum
 | `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings, and the Umpire codes that are errors (`WarningsAsErrors`) |
 | `framework/Kernel/Analyzers/Umpire.ConfigBundle.targets` | Embeds Umpire.Config in the kernel analyzer DLL |
 
-`Umpire.Sdk.Core.targets` gives `.umpireconfig` to the compiler as an additional file. `RuleAnalyzer` reads it with Umpire.Config (`ConfigFile`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The definition holds no analyzer value.
+`Umpire.After.targets` of the package `Umpire` gives `.umpireconfig` to the compiler as an additional file. `RuleAnalyzer` reads it with Umpire.Config (`ConfigFile`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The definition holds no analyzer value.
 
 ### The config reader in the compiler
 
@@ -213,7 +213,7 @@ compiler (Roslyn 4.10, SCI 8.0)
 - `AnalyzerLoadTests` compiles a file with a real .NET 8 compiler (Roslyn 4.10, SCI 8.0), for example the one of a Unity 6 install, with the analyzer DLLs and a `.umpireconfig`. If the computer has no .NET 8 compiler, the test is ignored. `UMPIRE_NET8_DOTNET_ROOT` selects a dotnet folder.
 - The analyzer packages hold `THIRD-PARTY-NOTICES.txt`. It says that the analyzer embeds no third-party library.
 
-Umpire.Sdk ships no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/sdk/Umpire.Sdk.Dev.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
+The Umpire packages ship no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/bundle/SourceMode/Umpire.SourceMode.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
 
 Each analyzer rule is one class on a group base: `KernelRule` (group `01`) or `VsaRule` (group `02`). The rule sets only its `Number`, its `Title`, its `Message` and the defaults of its options. The base makes the ID (`UMP01` + group + number) and the descriptor. Roslyn release tracking reads only a constant ID, so `AnalyzerReleases.Unshipped.md` lists only `UMP010001`, `UMP010002` and `UMP010003`; `CodeTests` checks that the rules table of this file lists each rule ID. Tests and other code find a rule by its type, for example `new LineLengthRule().Rule`.
 
@@ -267,17 +267,17 @@ A rule key wins over a global key, for example `umpire.UMP010201.check_responses
 | Test | Checks |
 |---|---|
 | `FormattingRuleTests` | Each VSA rule and its options, on small sources |
-| `FormattingBuildTests` | The Umpire.Sdk setup, on the built fixture `tests/Fixtures/Built/Formatting`: each rule gives a warning, the build passes, and the migrations give no warning |
+| `FormattingBuildTests` | The build of the Umpire packages, on the built fixture `tests/Fixtures/Built/Formatting`: each rule gives a warning, the build passes, and the migrations give no warning |
 | `RuleOptionTests` | `UMP010001` |
 | `RuleValueOwnerTests` | Each option of each rule has a valid default. The package files have no option value. Each key has a rule. The general files have no `UMP` key. No key is a definition option |
 
 The analyzer tests read both analyzer package files, without the severity lines. A test config overrides a value, because each package file has `global_level = -1`.
 
-EF Core writes the files in `Infrastructure/Migrations/`. Umpire.Sdk marks them as generated code (`Umpire.Migrations.globalconfig` in `obj/`), so no rule checks them.
+EF Core writes the files in `Infrastructure/Migrations/`. The package `Umpire` marks them as generated code (`Umpire.Migrations.globalconfig` in `obj/`), so no rule checks them.
 
 ## Architecture: the rule engine
 
-The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020204`, `UMP020301` to `UMP020304` and the warnings `UMP020205` and `UMP020206`. The Umpire SDK runs it after each build of the host project. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the key `umpire.<code>.severity`, the same key as for the analyzers.
+The rule engine binds each type of the app to a part of the VSA definition. Its checks give `UMP020101`, `UMP020102`, `UMP020201`, `UMP020202`, `UMP020204`, `UMP020301` to `UMP020304` and the warnings `UMP020205` and `UMP020206`. The package `Umpire` runs it (from the package `Umpire.Engine`) after each build of the host project. A test project does not check the architecture. See `architecture-engine.md` for the definition API, the binding and app rules. A consumer changes the severity of a `UMP02xxxx` code in the `.umpireconfig` file of its block, with the key `umpire.<code>.severity`, the same key as for the analyzers.
 
 ### Counts and matches
 
@@ -334,7 +334,7 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 
 ## Add a rule
 
-1. If a built-in .NET rule does the check, set its severity in the root `.editorconfig`. This is the style of this repository only: Umpire.Sdk ships no native style, and a consumer sets its own.
+1. If a built-in .NET rule does the check, set its severity in the root `.editorconfig`. This is the style of this repository only: the Umpire packages ship no native style, and a consumer sets its own.
 2. If one file shows the problem, write a rule class on `KernelRule` or `VsaRule`. Set the next free `Number` of its group, and the defaults of its options.
 3. Else change the rules of the VSA definition (`packs/Vsa/Definition/VsaArchitecture.cs`).
 4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.

@@ -10,8 +10,8 @@ public sealed class FeedTests {
     }
 
     [Test]
-    public void The_feed_has_the_tool_and_the_sdk_packages_with_no_engine_package() {
-        Assert.That(LocalFeed.Packages, Is.SupersetOf(new[] { "Umpire.Cli", "Umpire.Sdk", "Umpire.Sdk.Web" }));
-        Assert.That(LocalFeed.Packages, Has.No.Member("Umpire.Engine.Build"));
+    public void The_feed_has_the_tool_and_the_engine_package_and_no_sdk_package() {
+        Assert.That(LocalFeed.Packages, Is.SupersetOf(new[] { "Umpire.Cli", "Umpire", "Umpire.Engine" }));
+        Assert.That(LocalFeed.Packages, Has.No.Member("Umpire.Sdk").And.No.Member("Umpire.Sdk.Web").And.No.Member("Umpire.Engine.Build"));
     }
 }

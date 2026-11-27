@@ -1,1 +1,5 @@
-<Project Sdk="Umpire.Sdk" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" />
+  </ItemGroup>
+</Project>

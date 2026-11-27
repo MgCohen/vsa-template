@@ -96,24 +96,11 @@ public sealed partial class NotesConsumerTests {
         Build().EnsureSuccess();
     }
 
-    const string WebProject = "<Project Sdk=\"Microsoft.NET.Sdk.Web\">";
-
     internal static void UsePackages(string root) {
         foreach (var file in Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)) {
-            var text = File.ReadAllText(file);
-            if (text.Contains("Umpire.Sdk.Dev.props") && text.StartsWith(WebProject, StringComparison.Ordinal)) {
-                text = DevImport().Replace(text, "");
-                text = "<Project Sdk=\"Umpire.Sdk.Web\">" + text[WebProject.Length..];
-            } else if (text.Contains("Umpire.Sdk.Dev.props") && !text.StartsWith("<Project>", StringComparison.Ordinal)) {
-                text = DevImport().Replace(text, "");
-                text = text.Insert(text.IndexOf('>') + 1, "\n  <Sdk Name=\"Umpire.Sdk\" />");
-            } else if (text.Contains("Umpire.Sdk.Dev.props")) {
-                text = DevImport().Replace(text, "");
-                text = text.Replace("<Project>", "<Project Sdk=\"Umpire.Sdk\">");
-                text = EmptyProject().Replace(text, "<Project Sdk=\"Umpire.Sdk\" />");
-            }
+            var text = SourceVersion().Replace(File.ReadAllText(file), "");
             text = FrameworkReference().Replace(text, "<PackageReference Include=\"$1\" />");
-            Assert.That(text, Does.Not.Contain("UmpireFrameworkSourceDir").And.Not.Contain("UmpireSdkDir"));
+            Assert.That(text, Does.Not.Contain("UmpireFrameworkSourceDir").And.Not.Contain("$(Umpire"));
             File.WriteAllText(file, text);
         }
     }
@@ -145,11 +132,8 @@ public sealed partial class NotesConsumerTests {
         return ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 
-    [GeneratedRegex(@"\s*<Import Project=""[^""]*(Umpire\.Sdk\.Dev\.props|Sdk\.targets)[^""]*"" />")]
-    private static partial Regex DevImport();
-
-    [GeneratedRegex(@"<Project Sdk=""Umpire\.Sdk"">\s*</Project>")]
-    private static partial Regex EmptyProject();
+    [GeneratedRegex(@" Version=""\$\(UmpireVersion\)""")]
+    private static partial Regex SourceVersion();
 
     [GeneratedRegex(@"<ProjectReference Include=""\$\(UmpireFrameworkSourceDir\)[^""]*/(Umpire\.[\w.]+)\.csproj"" />")]
     private static partial Regex FrameworkReference();

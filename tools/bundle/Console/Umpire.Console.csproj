@@ -7,6 +7,6 @@
     <Compile Include="$(UmpireRoot)framework/Kernel/Hosts/Console/**/*.cs" Exclude="$(_UmpireNotBundled)" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Umpire/Umpire.csproj" />
+    <ProjectReference Include="../Umpire/Umpire.csproj" PrivateAssets="none" />
   </ItemGroup>
 </Project>

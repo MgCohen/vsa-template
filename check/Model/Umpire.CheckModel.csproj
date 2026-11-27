@@ -6,7 +6,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../tools/sdk/Polyfills~/IsExternalInit.cs" LinkBase="Polyfills" />
+    <Compile Include="../../tools/bundle/Umpire/build/Polyfills~/IsExternalInit.cs" LinkBase="Polyfills" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CheckModel.Tests" />

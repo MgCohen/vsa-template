@@ -1,5 +1,6 @@
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- The definition of the engine. The engine project builds it first and does not reference it. -->
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa.Definition" Version="$(UmpireVersion)" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

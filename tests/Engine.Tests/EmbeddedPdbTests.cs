@@ -43,7 +43,7 @@ public sealed class EmbeddedPdbTests {
     [Test]
     public void The_shipped_VSA_assembly_holds_only_the_VSA_kernel() {
         var files = BinReader.Sources([VsaBundle]).Values.Select(source => source.File)
-            .Where(file => !file.StartsWith("/_/tools/sdk/Polyfills~/", StringComparison.Ordinal)).ToList();
+            .Where(file => !file.StartsWith("/_/tools/bundle/Umpire/build/Polyfills~/", StringComparison.Ordinal)).ToList();
 
         Assert.That(files, Is.Not.Empty.And.All.StartsWith("/_/packs/Vsa/Kernel/"));
         Assert.That(files, Has.None.StartsWith("/_/packs/Vsa/Kernel/Views/"));

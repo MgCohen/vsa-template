@@ -1,7 +1,18 @@
-<Project>
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Umpire.Sdk.Dev.props'))" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Testing" Version="$(UmpireVersion)" />
+    <PackageReference Include="NUnit" Version="$(UmpireNUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="$(UmpireNUnitAdapterVersion)" />
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../SampleApp.csproj" />
   </ItemGroup>
-  <Import Project="$(UmpireSdkDir)Sdk.targets" />
 </Project>

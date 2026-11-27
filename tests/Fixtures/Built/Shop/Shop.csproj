@@ -1,5 +1,9 @@
-<Project Sdk="Umpire.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umpire.Vsa" />
+    <PackageReference Include="Umpire.Engine" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

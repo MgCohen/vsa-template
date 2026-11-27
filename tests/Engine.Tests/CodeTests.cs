@@ -90,7 +90,7 @@ public sealed class CodeTests {
             Assert.That(BlocksCodes.BadArchitecture, Is.EqualTo("UMP030302"));
             Assert.That(BlocksCodes.NoBlock, Is.EqualTo("UMP030303"));
             Assert.That(BlocksCodes.CodeWins, Is.EqualTo("UMP030304"));
-            Assert.That(BlocksCodes.NoUmpireSdk, Is.EqualTo("UMP030305"));
+            Assert.That(BlocksCodes.NoUmpirePackage, Is.EqualTo("UMP030305"));
             Assert.That(BlocksCodes.NoConfigFile, Is.EqualTo("UMP030306"));
             Assert.That(BlocksCodes.NewerRuntime, Is.EqualTo("UMP030307"));
             Assert.That(BuildCodes.Failed, Is.EqualTo("UMP030101"));
@@ -121,7 +121,7 @@ public sealed class CodeTests {
         string[] codes = [
             VersionCheck.Code, RunCodes.CouldNotRun, RunCodes.Skipped, RunCodes.NoEngine, RunCodes.EngineCrash, BuildCodes.Failed, ChangesCodes.Same,
             BlocksCodes.TwoEntries, BlocksCodes.BadArchitecture, BlocksCodes.NoBlock,
-            BlocksCodes.CodeWins, BlocksCodes.NoUmpireSdk, BlocksCodes.NoConfigFile,
+            BlocksCodes.CodeWins, BlocksCodes.NoUmpirePackage, BlocksCodes.NoConfigFile,
             LoadAppCodes.NoAppAssembly, LoadAppCodes.NoAppClass, LoadAppCodes.ManyAppClasses,
             LoadAppCodes.NoPackedConstructor, LoadAppCodes.ManyKernels,
             LoadAppCodes.OtherKernel, LoadAppCodes.ManyDefinitions, LoadAppCodes.NoDefinition, LoadAppCodes.MissingAssembly, LoadAppCodes.IgnoredDefinition, LoadAppCodes.EmptyDefinitionFolder, LoadAppCodes.UnloadedDefinition,

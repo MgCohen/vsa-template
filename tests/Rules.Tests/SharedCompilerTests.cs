@@ -93,12 +93,14 @@ public sealed class SharedCompilerTests {
                 <UmpireBlock>$(MSBuildThisFileDirectory)</UmpireBlock>
                 <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
               </PropertyGroup>
+              <Import Project="{Repo.Path("tools", "bundle", "SourceMode", "Umpire.SourceMode.props")}" />
             </Project>
             """);
-        File.WriteAllText(Path.Combine(folder, "Probe.csproj"), $"""
+        File.WriteAllText(Path.Combine(folder, "Probe.csproj"), """
             <Project Sdk="Microsoft.NET.Sdk">
-              <Import Project="{Repo.Path("tools", "sdk", "Umpire.Sdk.Dev.props")}" />
-              <Import Project="$(UmpireSdkDir)Sdk.targets" />
+              <ItemGroup>
+                <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
+              </ItemGroup>
             </Project>
             """);
         File.WriteAllText(Path.Combine(folder, "Part.cs"), "namespace Probe;\n\ninternal static class Part;\n");

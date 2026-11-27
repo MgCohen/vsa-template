@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the formatting build of Umpire.Sdk and the unit test base.
+  <!-- Tests of the checks: the analyzers with the Roslyn analyzer test library, the formatting build of the Umpire packages and the unit test base.
        The architecture engine has its own tests in tests/Architecture.Tests. NUnit comes from tests/Directory.Build.props. -->
   <PropertyGroup>
     <!-- NoDefaultAnalyzer is a test analyzer: it runs only in the test library, not in a compiler. -->

@@ -40,19 +40,18 @@ public sealed class AppFilesTests {
     }
 
     [Test]
-    public void DoctorReadsTheSdkPinsInProjectFiles() {
-        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/0.2.0" />""");
-        Write("Features/B/B.csproj", """<Project><Sdk Name="Umpire.Sdk" Version="0.3.0" /></Project>""");
-        Write("Features/C/C.csproj", """<Project Sdk="Umpire.Sdk" />""");
+    public void AnSdkIsNotASlot() {
+        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0" />""");
+        Write("Features/B/B.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire" Version="0.3.0" /></ItemGroup></Project>""");
 
-        var pins = Slots().Where(slot => slot.StartsWith("Features/", StringComparison.Ordinal));
+        var slots = Slots().Where(slot => slot.StartsWith("Features/", StringComparison.Ordinal));
 
-        Assert.That(pins, Is.EqualTo(new[] { "Features/A/A.csproj Umpire.Sdk 0.2.0", "Features/B/B.csproj Umpire.Sdk 0.3.0" }));
+        Assert.That(slots, Is.EqualTo(new[] { "Features/B/B.csproj Umpire 0.3.0" }));
     }
 
     [Test]
     public void APackageReferenceIsASlot() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
 
@@ -62,7 +61,7 @@ public sealed class AppFilesTests {
 
     [Test]
     public void APackageWithNoVersionAndNoCentralVersionFailsTheCheck() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" /><PackageReference Update="Umpire.Vsa.Analyzers" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" /><PackageReference Update="Umpire.Vsa.Analyzers" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
 
@@ -74,7 +73,7 @@ public sealed class AppFilesTests {
     public void APackageUsesTheCentralVersionAboveTheBlockFolder() {
         var app = Path.Combine(root, "src");
         Write("Directory.Packages.props", $"""<Project><ItemGroup><PackageVersion Include="Umpire.Web" Version="{V}" /></ItemGroup></Project>""");
-        Write("src/App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("src/App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var slots = VersionSlots.InApp(app).SelectMany(file => file.Slots).ToList();
 
@@ -83,7 +82,7 @@ public sealed class AppFilesTests {
 
     [Test]
     public void AVersionWithAPropertyIsNotCheckedAndNotWritten() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="$(UmpireVersion)" /></ItemGroup></Project>""");
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="$(UmpireVersion)" /></ItemGroup></Project>""");
 
         var slot = DoctorCommand.Slots(root).Single(slot => slot.Package == "Umpire.Web");
 
@@ -94,7 +93,7 @@ public sealed class AppFilesTests {
 
     [Test]
     public void AnExactRangeCountsAsItsVersion() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="[0.0.1]" /></ItemGroup></Project>""");
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="[0.0.1]" /></ItemGroup></Project>""");
 
         Assert.That(Slots(), Does.Contain("App.csproj Umpire.Web 0.0.1"));
         UpdateCommand.SetVersion(root, V);
@@ -102,42 +101,38 @@ public sealed class AppFilesTests {
     }
 
     [Test]
-    public void DoctorReadsTheWebSdkPinAndNotGlobalJson() {
+    public void DoctorStopsOnTheRemovedUmpireSdk() {
         Write("global.json", """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.2" />""");
+        Write("App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.1" />""");
+        Write("Lib/Lib.csproj", """<Project><Sdk Name="Umpire.Sdk" /></Project>""");
+        Write("Ok/Ok.csproj", $"""<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Vsa" Version="{V}" /></ItemGroup></Project>""");
 
-        Assert.That(Slots(), Is.EqualTo(new[] { $"this tool Umpire.Cli {V}", "App.csproj Umpire.Sdk.Web 0.0.2" }));
-    }
+        var removed = VersionSlots.RemovedSdks(root);
 
-    [Test]
-    public void DoctorStopsOnAGlobalJsonPinAndAnUmpireSdkWithNoVersion() {
-        Write("global.json", """{ "msbuild-sdks": { "Umpire.Sdk": "0.0.1" } }""");
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk" />""");
-        Write("Lib/Lib.csproj", $"""<Project Sdk="Umpire.Sdk/{V}" />""");
-
-        var unpinned = VersionSlots.UnpinnedSdks(root);
-
-        Assert.That(unpinned, Has.Count.EqualTo(2));
-        Assert.That(unpinned[0], Does.Contain("global.json").And.Contain("Remove the entry"));
-        Assert.That(unpinned[1], Does.StartWith("App.csproj: an Umpire SDK with no version"));
+        Assert.That(removed, Has.Count.EqualTo(3));
+        Assert.That(removed[0], Does.Contain("global.json").And.Contain("Remove the entry"));
+        Assert.That(removed[1], Does.StartWith("App.csproj: the Umpire SDK").And.Contain("umpire init"));
+        Assert.That(removed[2], Does.StartWith("Lib/Lib.csproj: the Umpire SDK"));
         Assert.That(() => InFolder(() => CommandList.Run(["doctor"])),
+            Throws.TypeOf<UmpireException>().With.Message.Contain("Change these by hand"));
+        Assert.That(() => InFolder(() => CommandList.Run(["update"])),
             Throws.TypeOf<UmpireException>().With.Message.Contain("Change these by hand"));
     }
 
     [Test]
     public void UpdateWithNoVersionWritesTheVersionOfTheTool() {
-        Write("App.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.1" />""");
+        Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" /></ItemGroup></Project>""");
 
         var exitCode = InFolder(() => CommandList.Run(["update"]));
 
         Assert.That(exitCode, Is.Zero);
-        Assert.That(File.ReadAllText(Path.Combine(root, "App.csproj")), Does.Contain($"Umpire.Sdk.Web/{V}"));
+        Assert.That(File.ReadAllText(Path.Combine(root, "App.csproj")), Does.Contain($"Version=\"{V}\""));
     }
 
     [Test]
     public void UpdateKeepsTheLfLineEndingsOfAProjectFile() {
         Write("App.csproj",
-            "<Project Sdk=\"Umpire.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Web\" Version=\"0.0.1\" />\n  </ItemGroup>\n</Project>\n");
+            "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Web\" Version=\"0.0.1\" />\n  </ItemGroup>\n</Project>\n");
 
         UpdateCommand.SetVersion(root, V);
 
@@ -164,10 +159,10 @@ public sealed class AppFilesTests {
     public void UpdateWritesTheVersionToEachPlaceThatDoctorReads() {
         Write("Directory.Packages.props", """<Project><ItemGroup><PackageVersion Include="Umpire.Web" Version="0.0.1" /><PackageVersion Include="NUnit" Version="4.0.0" /></ItemGroup></Project>""");
         Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Web" /><PackageReference Include="Umpire.Testing" VersionOverride="0.0.2" /><PackageReference Include="Umpire.Console" Version="0.0.3" PrivateAssets="all" /></ItemGroup></Project>""");
-        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/0.0.5" />""");
-        Write("Features/B/B.csproj", """<Project><Sdk Name="Umpire.Sdk" Version="0.0.6" /></Project>""");
-        Write("Features/C/C.csproj", """<Project Sdk="Umpire.Sdk" />""");
-        Write("Features/W/W.csproj", """<Project Sdk="Umpire.Sdk.Web/0.0.4" />""");
+        Write("Features/A/A.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire" Version="0.0.5" /></ItemGroup></Project>""");
+        Write("Features/B/B.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Vsa.Definition" Version="[0.0.6]" PrivateAssets="all" /></ItemGroup></Project>""");
+        Write("Features/C/C.csproj", """<Project Sdk="Microsoft.NET.Sdk" />""");
+        Write("Features/W/W.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Engine" Version="0.0.4" PrivateAssets="all" /></ItemGroup></Project>""");
 
         var changed = UpdateCommand.SetVersion(root, V);
 
@@ -175,8 +170,8 @@ public sealed class AppFilesTests {
             "App/Host/App.Host.csproj", "Directory.Packages.props", "Features/A/A.csproj", "Features/B/B.csproj", "Features/W/W.csproj" }));
         Assert.That(DoctorCommand.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
         Assert.That(File.ReadAllText(Path.Combine(root, "Directory.Packages.props")), Does.Contain("""<PackageVersion Include="NUnit" Version="4.0.0" />"""));
-        Assert.That(File.ReadAllText(Path.Combine(root, "Features/A/A.csproj")), Does.Contain($"Microsoft.Build.NoTargets/3.7.0;Umpire.Sdk/{V}"));
-        Assert.That(File.ReadAllText(Path.Combine(root, "Features/W/W.csproj")), Does.Contain($"Umpire.Sdk.Web/{V}"));
+        Assert.That(File.ReadAllText(Path.Combine(root, "Features/B/B.csproj")), Does.Contain($"Version=\"[{V}]\""));
+        Assert.That(File.ReadAllText(Path.Combine(root, "Features/W/W.csproj")), Does.Contain($"Include=\"Umpire.Engine\" Version=\"{V}\""));
         Assert.That(UpdateCommand.SetVersion(root, V), Is.Empty);
     }
 

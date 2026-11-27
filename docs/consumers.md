@@ -60,7 +60,7 @@ umpire-<version>.zip
 | `engine.frameworks` | Each shared framework that the engine needs, with its `name` and `version` |
 | `files[].path` | The path in the archive |
 | `files[].assemblyVersion` | The assembly version of a DLL. `null` for a file that is not a DLL |
-| `files[].package`, `files[].packageVersion` | The NuGet package that gives the bytes. The analyzer files are `Umpire.Vsa.Analyzers`, and the Umpire engine files are `Umpire.Sdk` |
+| `files[].package`, `files[].packageVersion` | The NuGet package that gives the bytes. The analyzer files are `Umpire.Vsa.Analyzers`, and the Umpire engine files are `Umpire.Engine` |
 | `files[].asset` | The path of the file in that package, for example `lib/netstandard2.0/Microsoft.Extensions.Logging.dll` |
 | `files[].sha256` | The SHA-256 hash of the file |
 
@@ -105,49 +105,88 @@ dotnet tool exec Umpire.Cli@<version> -y -- init --check true   # show the missi
 dotnet tool exec Umpire.Cli@<version> -y -- init                # add it
 ```
 
-It adds the missing parts of `nuget.config` and `.gitignore`, and it checks that a `global.json` does not pin `Umpire.Sdk`. It makes the Umpire SDK the main SDK of the root project, with the version (`Umpire.Sdk.Web` for a web project), and it writes `.umpireconfig` if the app has more than one project. It shows each step that it cannot do, for example with central package versions. Then write the app class (`UMP030502`) and run `dotnet build`. See "Setup pipeline" in [scaffolding.md](scaffolding.md).
+It does these steps:
+
+1. It adds the missing parts of `nuget.config` and `.gitignore`.
+2. It writes `Directory.Build.props` with the artifacts output (`UseArtifactsOutput`, `ArtifactsPath`), if the app folder has no such file. The new file imports the `Directory.Build.props` of a parent folder, if one exists.
+3. It adds the Umpire packages to the root project: `Umpire.Web` for a web project, else `Umpire.Vsa`, and `Umpire.Engine`. A project that references `Umpire` itself (another pack) gets no VSA package. With central package versions, it writes `VersionOverride`.
+4. It changes the removed Umpire SDK of the root project to the .NET SDK: `Umpire.Sdk` becomes `Microsoft.NET.Sdk`, and `Umpire.Sdk.Web` becomes `Microsoft.NET.Sdk.Web`. If the project has no `TargetFramework`, it adds `TargetFramework` `net10.0`, `Nullable` and `ImplicitUsings`, which the removed SDK gave. Change each other project of the app by hand: `umpire doctor` and `umpire update` list them.
+5. It writes `.umpireconfig` if the app has more than one project.
+
+It shows each step that it cannot do, for example a `global.json` that pins `Umpire.Sdk`. Then write the app class (`UMP030502`) and run `dotnet build`. See "Setup pipeline" in [scaffolding.md](scaffolding.md).
 
 ## The architecture check of a new app
 
-The Umpire SDK package holds the rule engine, so an app has no engine package. After each build of the root project, the SDK runs the engine check, and each finding is a build warning. `umpire.check.mode = "Error"` in `.umpireconfig` makes each error finding a build error, and `-p:UmpireCheckMode=Error` does it for one build. `TreatWarningsAsErrors` does not change an Umpire warning. The mode does not change the analyzer findings: `umpire.<ID>.severity = "error"` makes one an error. `-p:UmpireCheck=false` stops the check for one build. The check also covers each block that the app uses: each inner block (for example `App/Packs/<Name>/`) and each block with a check entry in a project reference. A block in a package is not checked again. Each block has a check stamp in `artifacts~/umpire-checks/`, so a block that did not change is not checked again. A manual engine run builds the root project, then checks it, and gives one report with the build findings and the architecture findings. The engine has the version of the SDK package, so `umpire doctor` and `umpire update` need no other slot.
+The package `Umpire.Engine` holds the rule engine. The root project references it with `PrivateAssets="all"`. After each build of the root project, the build files of the package `Umpire` run the engine check, and each finding is a build warning. If the root project has no `Umpire.Engine`, the build gives the warning `UMP030003`. `umpire.check.mode = "Error"` in `.umpireconfig` makes each error finding a build error, and `-p:UmpireCheckMode=Error` does it for one build. `TreatWarningsAsErrors` does not change an Umpire warning. The mode does not change the analyzer findings: `umpire.<ID>.severity = "error"` makes one an error. `-p:UmpireCheck=false` stops the check for one build. The check also covers each block that the app uses: each inner block (for example `App/Packs/<Name>/`) and each block with a check entry in a project reference. A block in a package is not checked again. Each block has a check stamp in `artifacts~/umpire-checks/`, so a block that did not change is not checked again. A manual engine run builds the root project, then checks it, and gives one report with the build findings and the architecture findings. `Umpire.Engine` has the version of the other Umpire packages, and `umpire doctor` and `umpire update` read it as one more package.
 
 ## Packages of an app
 
-`<Project Sdk="Umpire.Sdk" />` gives the core package `Umpire` and, with the default pack, the package `Umpire.Vsa`, with its own version. `Umpire.dll` holds the kernel and no pack. `Umpire.Vsa.dll` holds the VSA kernel with each layer base. The two DLLs hold no definition code. `<Project Sdk="Umpire.Sdk.Web" />` also gives `Umpire.Web` (the web host and the views), and a test project gets `Umpire.Testing`.
+An app project is a normal .NET project: `<Project Sdk="Microsoft.NET.Sdk">`, or `<Project Sdk="Microsoft.NET.Sdk.Web">` for a web root project, with a `PackageReference` to each Umpire package that it uses. Each Umpire package brings its own build files in `build/` and `buildTransitive/`, and NuGet imports them. There is no Umpire SDK.
 
-| Package | Holds | Who gets it |
+| Project | File |
+|---|---|
+| Web root project | `<PackageReference Include="Umpire.Web" Version="0.2.0" />` and `<PackageReference Include="Umpire.Engine" Version="0.2.0" PrivateAssets="all" />` |
+| Console root project | `Umpire.Vsa`, `Umpire.Console` and `Umpire.Engine` (`PrivateAssets="all"`) |
+| Definition project (`Definition/`) | `<PackageReference Include="Umpire.Vsa.Definition" Version="0.2.0" PrivateAssets="all" />` |
+| Test project (`*.Tests`) | `Umpire.Testing`, `NUnit` and `NUnit3TestAdapter`, with `OutputType` `Exe` and `EnableNUnitRunner` `true` |
+| Kernel of a pack variant, or a module library | `<PackageReference Include="Umpire.Vsa" Version="0.2.0" />` |
+
+| Package | Holds | Depends on |
 |---|---|---|
-| `Umpire` | The core of the runtime: the markers, the config reader, the kernel, the messages | Each project |
-| `Umpire.Vsa` | The VSA kernel: each layer base, `VsaKernel`, `Plugin` and the composition | Each project with the default pack (`UmpireDefaultPack`), and each project with `Umpire.Web` or `Umpire.Testing` |
-| `Umpire.Definition` | The definition API (`Umpire.Architecture`) and the definitions of the framework blocks (`Umpire.Kernels.Definition`) | A definition project (a project in a folder `Definition/`), and a test project through `Umpire.Testing` |
-| `Umpire.Vsa.Definition` | The VSA definition (`VsaArchitecture`, the layers, `Feature`, `Plugin`) | A definition project with the default pack, and a test project through `Umpire.Testing` |
-| `Umpire.Testing` | The test bases `VsaUnitTest` and `VsaArchitectureTest` | A test project (`*.Tests`) |
+| `Umpire` | The core of the runtime (the markers, the config reader, the kernel, the messages) and the build files of each Umpire project | `Umpire.Kernels.Analyzers` |
+| `Umpire.Vsa` | The VSA kernel: each layer base, `VsaKernel`, `Plugin` and the composition. Its build props name the VSA definition for the check | `Umpire`, `Umpire.Vsa.Analyzers` |
+| `Umpire.Web` | The web host and the views | `Umpire.Vsa` |
+| `Umpire.Console` | The console host | `Umpire` |
+| `Umpire.Definition` | The definition API (`Umpire.Architecture`) and the definitions of the framework blocks (`Umpire.Kernels.Definition`) | `Umpire` |
+| `Umpire.Vsa.Definition` | The VSA definition (`VsaArchitecture`, the layers, `Feature`, `Plugin`) | `Umpire.Definition`, `Umpire.Vsa` |
+| `Umpire.Testing` | The test bases `VsaUnitTest` and `VsaArchitectureTest` | `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`, `NUnit` |
+| `Umpire.Engine` | The rule engine in `tools/net8.0/`, and `build/Umpire.Engine.props` with its path (`UmpireEngineFile`, `UmpireEngineDir`) | None |
 
-An app project does not compile against the definition packages. The architecture check still needs the definition of the pack, so the root project copies `Umpire.Definition.dll` and `Umpire.Vsa.Definition.dll` from the engine folder of the SDK package (`tools/net8.0/`, the same build) to its folder `umpire-definitions/`. A publish does not copy that folder. A project with definition code outside a folder `Definition/` adds the package itself, for example `<PackageReference Include="Umpire.Vsa.Definition" Version="<version of Umpire.Sdk>" PrivateAssets="all" />`, so the package does not flow to the root project. Or it sets the property `UmpireDefinitionProject` to `true`. A console app adds `Umpire.Console`. The code selects the pack: the app class names its kernel (`App<VsaKernel, ...>`). A package only makes a pack available. Another pack is a normal `PackageReference`, and `-p:UmpireDefaultPack=false` (or the property in the project) leaves out the VSA test bases and views. `Umpire` depends on `Umpire.Kernels.Analyzers`, and `Umpire.Vsa` depends on `Umpire.Vsa.Analyzers`, so the analyzers and their rule values flow to each project that gets the package, also through another project. A project with `UmpireDefaultPack=false` and no web host gets no VSA analyzer. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to a type in the namespace of the pack. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). A VSA app thus gets two copies of the kernel analyzer. The target `_UmpireOneKernelAnalyzer` of the package `Umpire` removes the copy of `Umpire.Kernels.Analyzers` from the compilation, so each kernel finding comes one time. To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
+Each dependency between the Umpire packages has no excluded assets, so the build files and the analyzers flow to each project that gets a package through another package. `Umpire.dll` holds the kernel and no pack. `Umpire.Vsa.dll` holds the VSA kernel with each layer base. The two DLLs hold no definition code.
 
-There are two Umpire SDKs, one for each platform SDK of .NET:
+An app project does not compile against the definition packages. The architecture check still needs the definition of the pack, so the root project copies `Umpire.Definition.dll` and `Umpire.Vsa.Definition.dll` from the engine folder of `Umpire.Engine` (`tools/net8.0/`, the same build) to its folder `umpire-definitions/`. The package of the pack names its definition: `build/Umpire.Vsa.props` adds the item `_UmpirePackDefinition`. A publish does not copy that folder. A project with definition code outside a folder `Definition/` references the definition package with `PrivateAssets="all"`, so the package does not flow to the root project. Or it sets the property `UmpireDefinitionProject` to `true`. The code selects the pack: the app class names its kernel (`App<VsaKernel, ...>`). A package only makes a pack available. Another pack is a normal `PackageReference`. A project that references only `Umpire` gets no VSA analyzer and no VSA definition. The analyzers of a pack run only in a compilation that selects that pack: an app class of the pack, a `Block<T>` or an `AssemblyMetadata` entry that names its architecture, the `umpire.architecture` key, or, with no entry, a reference to a type in the namespace of the pack. `Umpire.Vsa.Analyzers` holds the VSA analyzer and the kernel analyzer in one folder, with the rule values of both (pinned choice, `framework/Kernel/Analyzers/Umpire.KernelBundle.targets`). A VSA app thus gets two copies of the kernel analyzer. The target `_UmpireOneKernelAnalyzer` of the package `Umpire` removes the copy of `Umpire.Kernels.Analyzers` from the compilation, so each kernel finding comes one time. To change a rule value or a severity, set the key in the `.umpireconfig` file of the block.
 
-| SDK | Platform SDK | Root project |
-|---|---|---|
-| `Umpire.Sdk` | `Microsoft.NET.Sdk` | `<Project Sdk="Umpire.Sdk/0.2.0" />` |
-| `Umpire.Sdk.Web` | `Microsoft.NET.Sdk.Web` | `<Project Sdk="Umpire.Sdk.Web/0.2.0" />` |
-
-An Umpire SDK must be the main SDK of the project, because it sets the output folder before the platform SDK does. It also does these things:
+The build files of the package `Umpire` (`build/Umpire.props`, and `build/Umpire.After.targets`, which the .NET SDK imports after its own targets through `AfterMicrosoftNETSdkTargets`) do these things:
 
 - **Block root.** The block root is the folder of the nearest `.umpireconfig` file at or above the project. With no `.umpireconfig` file, it is the project folder. A block with more than one project needs a `.umpireconfig` file, also an empty one.
-- **Output.** Each project writes to one `artifacts~` folder in the block root, in the .NET artifacts layout (`artifacts~/bin/<Project>/`, `artifacts~/obj/<Project>/`). No `bin/` or `obj/` folder is next to the code. A `Directory.Build.props` file that sets `ArtifactsPath` wins.
-- **Rule values.** `.umpireconfig` is TOML, and it holds only Umpire values (`umpire.<ID>.<key>`, `umpire.<ID>.severity`). The SDK gives the file to the compiler as an additional file, and the Umpire analyzers read it with Umpire.Config. A value there wins over the default on the rule class. A file-pattern section, for example `[*.cs]`, is not valid TOML: the build gives `UMP010002`, and the engine run stops with the line of the error. The severities of the .NET rules stay in the `.editorconfig` of the app.
-- **Module settings.** The SDK copies `.umpireconfig` to the output folder of each project. A module reads the table with its name (`docs/composition.md`).
-- **Rule engine.** The root project of the app (an executable that is not a test project) runs the engine of the SDK package after its build. `-p:UmpireEngine=false` turns it off.
-- **Test project.** A project whose name ends with `.Tests` gets NUnit on Microsoft.Testing.Platform, `using NUnit.Framework` and the test bases of the pack. It references the projects that it tests itself. To make such a project a normal project, set `UmpireTestProject=false` in a `Directory.Build.props` file: the project body is too late, because the platform SDK reads `OutputType` first. A `*.Tests` project never gets the rule engine.
+- **Source folders.** The root project compiles each file in its folder tree, except the folders of the nested projects, `bin/`, `obj/` and the folders in `UmpireExcludedFolders` (default `node_modules`).
+- **Definitions.** The project builds each nested project in a folder `Definition/` first, with no reference to its assembly, and copies the definitions to `umpire-definitions/`. It also references each pack variant kernel in `App/Packs/<Name>/Kernel/`.
+- **Rule values.** `.umpireconfig` is TOML, and it holds only Umpire values (`umpire.<ID>.<key>`, `umpire.<ID>.severity`). The package gives the file to the compiler as an additional file, and the Umpire analyzers read it with Umpire.Config. A value there wins over the default on the rule class. A file-pattern section, for example `[*.cs]`, is not valid TOML: the build gives `UMP010002`, and the engine run stops with the line of the error. The severities of the .NET rules stay in the `.editorconfig` of the app.
+- **Module settings.** The package copies `.umpireconfig` to the output folder of each executable project. A module reads the table with its name (`docs/composition.md`).
+- **Codes.** `Umpire.Codes.props` lists each Umpire code in `WarningsNotAsErrors`, so `TreatWarningsAsErrors` does not make an Umpire finding an error.
+- **Polyfills.** A `netstandard2.0` or `netstandard2.1` project gets `IsExternalInit`. A project with its own type sets `UmpireIsExternalInitPolyfill` to `false`.
+- **Rule engine.** The root project of the app (an executable in the block root that is not a test project) runs the engine of `Umpire.Engine` after its build. `-p:UmpireEngine=false` turns it off. A `*.Tests` project never runs the engine.
 
-Umpire.Sdk ships no native .NET style. The app sets its own style in its `.editorconfig`.
+The packages do not set the output folder. The .NET SDK reads `UseArtifactsOutput` and `ArtifactsPath` before the project body and before the props of a package, so they go in `Directory.Build.props`. `umpire new app` and `umpire init` write this file:
+
+```xml
+<Project>
+  <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
+  </PropertyGroup>
+</Project>
+```
+
+Each project then writes to `artifacts~/bin/<Project>/` and `artifacts~/obj/<Project>/`, and no `bin/` or `obj/` folder is next to the code. The engine writes its stamp `.umpire-check` to the output folder of the root project, and the check stamps of the blocks to `artifacts~/umpire-checks/` of each block.
+
+These settings must be in place before NuGet imports the package files, so a package cannot give them:
+
+| Setting | Why a package cannot give it | Place |
+|---|---|---|
+| `UseArtifactsOutput`, `ArtifactsPath` | The .NET SDK sets the output folders in its props, before the package props | `Directory.Build.props` of the app (`umpire init`) |
+| `TargetFramework` | The restore reads it, and NuGet imports the package props only after the restore | The project file |
+| `OutputType`, `EnableNUnitRunner` of a test project | The test runner packages read them in their own build files | The test project file |
+| The package references | The restore reads them | The project file |
+| The project references to `Definition/` and `App/Packs/<Name>/Kernel/` | The first restore of the root project does not import the package files, so it does not see these references | `Umpire.After.targets` adds them, and the target `_UmpireRestoreAddedReferences` restores their projects before the build uses them |
+
+The packages ship no native .NET style. The app sets its own style in its `.editorconfig`.
 
 ## Consumer repos
 
 | Repo | Contains | Gets VSA | Check |
 |---|---|---|---|
-| [vsa-consumer-dotnet](https://github.com/MgCohen/vsa-consumer-dotnet) | `umpire new app`, one module | `<Project Sdk="Umpire.Sdk" />` | CI: build and test |
+| [vsa-consumer-dotnet](https://github.com/MgCohen/vsa-consumer-dotnet) | `umpire new app`, one module | `PackageReference` items to `Umpire.Web` and `Umpire.Engine` | CI: build and test |
 | [vsa-consumer-unity](https://github.com/MgCohen/vsa-consumer-unity) | Unity 6 project, one module | DLLs in `Assets/Plugins/VSA` | Unity Test Framework, batch mode |
 
 ## Unity
