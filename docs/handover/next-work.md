@@ -13,15 +13,11 @@ Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides e
 | 2 Packages | Done: `Umpire`, `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`, `Umpire.Engine`; no SDK; only DependencyInjection as a third-party runtime DLL; lowest targets |
 | Test speed | Done: `CS8032` fixed, two test sets, shared feed. Full set about 4 min, inner loop about 35 s plus the build |
 | 3 Engine | Done: `EngineApp<THost>`, jobs and operations, engine library on `netstandard2.0`, the check model and all analyzers inside the engine |
-| 4 Switch | Part 1 done (#406): the build checks on the model path from the snapshots of the compile, and no PDB is read for type facts. Part 2 open: remove ArchUnitNET (question below) |
+| 4 Switch | Part 1 done (#406): the build checks on the model path from the snapshots of the compile, and no PDB is read for type facts. Part 2 in work: reference folders with `MetadataLoadContext`, remove ArchUnitNET |
 | 5 Consumers of the engine | Done (#407): the `umpire` tool is an app on `ConsoleHost`, `umpire check` runs the engine of the app, `VsaUnitTest` sends requests through `LocalHost`. The definition test base keeps the engine queries |
 | 6 Release | Not started: needs the computer of the user |
 
-Open question for the user: the DLLs of a reference folder (`umpire.check.references`, Unity `ScriptAssemblies`) have no snapshot. Only the old ArchUnitNET path reads their types. A: keep the old path only for these DLLs until vsa-unity saves snapshots. B: vsa-unity must save snapshots first, and ArchUnitNET goes after that. C: read these DLLs with `MetadataLoadContext` into the model, with no ArchUnitNET. My opinion: C, because the engine then has one path and no wait on vsa-unity.
-
-Open questions from #407:
-1. Is the `umpire` tool a VSA app? A: a core-kernel app (now). B: a VSA app with modules, checked as a block in `tooling/` (P10). My opinion: A now, B with the `tooling/` move.
-2. The exit code of `ConsoleHost` after Ctrl+C or SIGTERM is 0, so `umpire test` and `umpire check` can give 0 after a signal. A: keep 0. B: 130 for SIGINT, 143 for SIGTERM (each console app, also the engine). C: the tool gives the exit code of its child. My opinion: B.
+Answers of 2026-11-27 (see `open-questions.md`): reference folders C (read with `MetadataLoadContext`, ArchUnitNET goes), the tool B (a VSA app in `tooling/`), exit code C (the tool gives the exit code of its child).
 
 Watch: two full runs had 5 failures in `UmpireToolTests` while another session used the machine. The class passed alone and in the third full run.
 
