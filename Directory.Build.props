@@ -19,12 +19,18 @@
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
   </PropertyGroup>
 
-  <!-- The rule engine and its own projects target net8.0, so the engine runs on the .NET 8 of a Unity 6000.6 Editor and,
+  <!-- The console entry of the rule engine and its net8.0 projects target net8.0, so the engine runs on the .NET 8 of a Unity 6000.6 Editor and,
        with RollForward Major, on each newer runtime. The portable libraries (Umpire.dll) have one build, netstandard2.0, for
        Unity, for .NET apps, for the engine and for the compiler. The engine loads the definition of an app, and a record of a net8.0
        build and of a netstandard2.0 build have different methods, so one build keeps one shape (see docs/unity.md). -->
   <PropertyGroup>
-    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Engine.Definition' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
+    <UmpireEngineLayer Condition="'$(MSBuildProjectName)' == 'Engine.Console' or '$(MSBuildProjectName)' == 'Engine.Definition' or '$(MSBuildProjectName)' == 'Umpire.Hosts.Console' or '$(MSBuildProjectName)' == 'Umpire.Console'">true</UmpireEngineLayer>
+  </PropertyGroup>
+
+  <!-- The engine core is one netstandard2.0 library (decision P2): the console entry runs it, and the compiler can load it.
+       It is not a portable layer, because Unity does not load it, so it adds the polyfills that it needs. -->
+  <PropertyGroup>
+    <UmpireEngineCore Condition="'$(MSBuildProjectName)' == 'Engine' or '$(MSBuildProjectName)' == 'Umpire.Engine.Versions'">true</UmpireEngineCore>
   </PropertyGroup>
 
   <!-- Each package targets the lowest framework that its code needs (decision P7). Umpire.Testing needs NUnit 4, which has no
@@ -40,7 +46,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <TargetFramework Condition="'$(UmpireNet9Package)' == 'true'">net9.0</TargetFramework>
     <TargetFramework Condition="'$(UmpireEngineLayer)' == 'true' or '$(UmpireNet8Package)' == 'true'">net8.0</TargetFramework>
-    <TargetFramework Condition="'$(UmpirePortableLayer)' == 'true'">netstandard2.0</TargetFramework>
+    <TargetFramework Condition="'$(UmpirePortableLayer)' == 'true' or '$(UmpireEngineCore)' == 'true'">netstandard2.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
@@ -86,7 +92,7 @@
 
   <!-- netstandard2.0 does not have some types that the compiler needs. The analyzer and check model projects also target
        netstandard2.0, but they are not portable layers, so they add the polyfills that they need. -->
-  <ItemGroup Condition="'$(UmpirePortableLayer)' == 'true'">
+  <ItemGroup Condition="'$(UmpirePortableLayer)' == 'true' or '$(UmpireEngineCore)' == 'true'">
     <Compile Include="$(MSBuildThisFileDirectory)tools/bundle/Umpire/build/Polyfills~/*.cs" />
   </ItemGroup>
 </Project>

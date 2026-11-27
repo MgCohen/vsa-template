@@ -1,12 +1,12 @@
-namespace Facts.Infrastructure;
+namespace UmpireEngine;
 
 using System.Reflection;
 using System.Runtime.Loader;
 using Facts.Domain.Shared;
+using Facts.Infrastructure;
 using Umpire.Architecture;
 
-public sealed class AppLoader : AssemblyLoadContext {
-    public static readonly IReadOnlySet<string> Shared = SharedClosure(typeof(Architecture).Assembly);
+public sealed class AppLoader : AssemblyLoadContext, IDefinitionLoader {
     readonly IReadOnlyList<string> folders;
     readonly AssemblyDependencyResolver? resolver;
 
@@ -31,20 +31,12 @@ public sealed class AppLoader : AssemblyLoadContext {
     }
 
     protected override Assembly? Load(AssemblyName assemblyName) {
-        if (Shared.Contains(assemblyName.Name!)) {
+        if (SharedAssemblies.Contains(assemblyName.Name!)) {
             return null;
         }
         var path = resolver?.ResolveAssemblyToPath(assemblyName)
             ?? folders.Select(folder => Path.Combine(folder, assemblyName.Name + ".dll")).FirstOrDefault(File.Exists);
         return path is null ? null : LoadFromAssemblyPath(path);
-    }
-
-    static HashSet<string> SharedClosure(Assembly root) {
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { root.GetName().Name! };
-        foreach (var reference in root.GetReferencedAssemblies().Where(r => !BinDll.IsSystem(r.Name!))) {
-            names.UnionWith(SharedClosure(Assembly.Load(reference)));
-        }
-        return names;
     }
 
     static ConstructorInfo? PackedConstructor(Type type) => type.GetConstructor([typeof(Architecture)]);

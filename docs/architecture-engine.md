@@ -1,6 +1,6 @@
 # Architecture engine
 
-The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `new ResolvedArchitecture(definition)` compiles the definition one time: the block, the options of each part, the use rules, the counts and the matches. If the definition has an error, the constructor throws. `architecture/Queries/` gives the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`ResolvedArchitecture.DecisionFor`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
+The rule engine checks each type of the app against one architecture definition. The definition gives the parts of the app and the rules between them. `new ResolvedArchitecture(definition)` compiles the definition one time: the block, the options of each part, the use rules, the counts and the matches. If the definition has an error, the constructor throws. The queries of the engine (`engine/App/Plugins/Facts/Domain/Shared/Queries/`) give the answers on plain facts: the part of each type (`PartOf`), the decision for each use (`ResolvedArchitecture.DecisionFor`), and the counts and the matches (`ResolvedArchitecture.Counts`, `Matches`). The engine app (`engine/`) reads the built app, asks these questions and writes each problem as a `Finding`, after each build of the host.
 
 ```mermaid
 flowchart LR
@@ -16,12 +16,13 @@ flowchart LR
 
 | Project | Path | Contains |
 |---|---|---|
-| `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
+| `Umpire.Architecture` | `architecture/` | The definition API and the plain data of its compiled form. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The jobs (`App/Features/Jobs/`: the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp and Rules. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `DefinitionSource` (`AppLoader`) for the one definition type, and `TypeFactSource` (ArchUnitNET) for the type facts. Its root project `engine/Engine.csproj` is not a package: the package `Umpire.Engine` holds the engine in `tools/net8.0/` |
+| Engine core | `engine/` | One `netstandard2.0` library (`Umpire.Engine`). The queries (`App/Plugins/Facts/Domain/Shared/Queries/`), the jobs (`App/Features/Jobs/`: the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp and Rules. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `TypeFactSource` (ArchUnitNET) for the type facts, and the interface `IDefinitionLoader` for the one definition type. Its root project `engine/Engine.csproj` is not a package |
+| Console entry | `engine/Entries/Console/` | `net8.0` executable `umpire-engine`: `EngineConsoleHost`, `ConsoleReport`, `HookMismatch` and `DefinitionSource` (`AppLoader`, an `AssemblyLoadContext`). The package `Umpire.Engine` holds it in `tools/net8.0/` |
 
-The runtime of an app does not reference `Umpire.Architecture`: `Umpire.Architecture` references `Umpire.Kernels` for `Umpire.Utility` (`LoadedTypes`, `ClosedBase`). A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
+The runtime of an app does not reference `Umpire.Architecture`, and `Umpire.Architecture` references no runtime project. A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
 
 ## Definition API
 
@@ -641,7 +642,7 @@ The table gives the severity in the mode `Error`.
 |---|---|---|---|
 | `UMP030001` | 00 Run | Error | An operation throws an exception. The job continues |
 | `UMP030002` | 00 Run | Info | An operation is skipped, because an earlier operation failed |
-| `UMP030003` | 00 Run | Error | The hook does not find the engine file. Restore the project again. In source mode, build `engine/Engine.csproj` |
+| `UMP030003` | 00 Run | Error | The hook does not find the engine file. Restore the project again. In source mode, build `engine/Entries/Console/Engine.Console.csproj` |
 | `UMP030202` | 02 Changes | Info | The block did not change since its last clean check, so its check did not run |
 | `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and does not report its findings, for example after a crash |
 | `UMP030101` | 01 Build | Error | The build of the root project fails. The check job does not run its other operations |
@@ -752,7 +753,7 @@ The console report (`ConsoleReport`) sorts the findings: the findings with no fi
 
 ## Tests of a definition
 
-A consumer tests its own definition with the base `ArchitectureTest<TArchitecture>` (`architecture/Testing/`, in `Umpire.Architecture`). A test names a type and a folder of the block. The base binds the type to a part, and it gives the decision of a use. A VSA app uses `VsaArchitectureTest` (`Umpire.Vsa.Testing.Unit`), with the folder helpers `Feature`, `Slice` and `Plugin`.
+A consumer tests its own definition with the base `ArchitectureTest<TArchitecture>` (`packs/Vsa/Tests/Unit/`, in `Umpire.Testing`). It asks the queries of the engine core, so its project and the package `Umpire.Testing` compile a copy of the query files, and the definition package does not depend on the engine. A test names a type and a folder of the block. The base binds the type to a part, and it gives the decision of a use. A VSA app uses `VsaArchitectureTest` (`Umpire.Vsa.Testing.Unit`), with the folder helpers `Feature`, `Slice` and `Plugin`.
 
 ```csharp
 public sealed class NotesArchitectureTests : VsaArchitectureTest {

@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Tests of the rule answers (architecture/Queries) and the Rules step of the engine on the fixture apps in tests/Fixtures/Architecture,
+  <!-- Tests of the rule answers (the queries of the engine, engine/App/Plugins/Facts/Domain/Shared/Queries) and the Rules step of the engine on the fixture apps in tests/Fixtures/Architecture,
        with a small test definition, and the pack variant of tests/Fixtures/PackVariant. -->
   <PropertyGroup>
     <RootNamespace>EngineCore.Tests</RootNamespace>
@@ -12,6 +12,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" Aliases="testing" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />

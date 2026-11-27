@@ -37,7 +37,7 @@ public sealed class Net8EngineTests {
 
     static string EngineBin() {
         var configuration = Path.GetFileName(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        return Repo.Path("engine", "artifacts~", "bin", "Engine", configuration);
+        return Repo.Path("engine", "artifacts~", "bin", "Engine.Console", configuration);
     }
 
     sealed record Net8Dotnet(string Executable) {

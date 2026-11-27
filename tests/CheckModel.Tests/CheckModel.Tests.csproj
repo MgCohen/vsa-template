@@ -16,6 +16,7 @@
     <Compile Include="$(RepoRoot)tests/Architecture.Tests/FixtureArchitecture.cs" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)engine/Entries/Console/Engine.Console.csproj" />
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Definition/Umpire.Vsa.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Architecture/*/*.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/PackVariant.csproj" />

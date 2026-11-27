@@ -39,7 +39,8 @@ static class Exposures {
 
     static Dictionary<string, GenericArgument> ArgumentsByParameter(
         IType type, IReadOnlyList<GenericArgument> arguments) =>
-        type.GenericParameters.Zip(arguments).ToDictionary(pair => pair.First.Name, pair => pair.Second);
+        type.GenericParameters.Zip(arguments, (parameter, argument) => new KeyValuePair<string, GenericArgument>(parameter.Name, argument))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
 
     static bool Implements(IMember member, ImplementedInterface implemented) =>
         Signature(member, NoArguments) is { } signature
@@ -48,7 +49,7 @@ static class Exposures {
 
     static string ShortName(IMember member) {
         var name = member.Name.Split('(')[0];
-        return name[(name.LastIndexOf('.') + 1)..];
+        return name.Substring(name.LastIndexOf('.') + 1);
     }
 
     static string? Signature(IMember member, IReadOnlyDictionary<string, GenericArgument> arguments) => member switch {

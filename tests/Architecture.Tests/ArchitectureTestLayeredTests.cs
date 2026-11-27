@@ -1,6 +1,9 @@
 namespace EngineCore.Tests;
 
+extern alias testing;
+
 using Umpire.Architecture;
+using testing::Umpire.Architecture;
 
 public sealed class ArchitectureTestLayeredTests : ArchitectureTest<LayeredArchitecture> {
     [TestCase("Ui", "Logic", Permission.Allow)]

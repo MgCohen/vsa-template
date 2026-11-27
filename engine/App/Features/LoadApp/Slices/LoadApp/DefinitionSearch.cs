@@ -99,7 +99,7 @@ static class DefinitionSearch {
                 $"The definition {named.FullName} names no kernel, and the app class {app.Type.FullName} names "
                 + $"{app.Kernels[0].FullName}. Inherit Architecture<TKernel> or the architecture of the pack.");
         }
-        var expected = OfKernels(app, definitions) is [var first, ..] ? first.Kernel : null;
+        var expected = OfKernels(app, definitions) is { Count: > 0 } matches ? matches[0].Kernel : null;
         return kernel == expected || kernel == app.Kernels[0]
             ? null
             : new Error(LoadAppCodes.OtherKernel,
@@ -132,7 +132,7 @@ static class DefinitionSearch {
             + "Keep one, or make one inherit the other.");
 
     static Error? AppClassError(IReadOnlyList<AppClass> classes) =>
-        classes.Where(c => c.HasManyKernels).ToList() is [_, ..] many
+        classes.Where(c => c.HasManyKernels).ToList() is { Count: > 0 } many
             ? new Error(LoadAppCodes.ManyKernels,
                 $"The app class {Names(many)} implements IAppEntry<TKernel> for more than one kernel: "
                 + $"{string.Join(", ", many.SelectMany(c => c.Kernels).Select(k => k.FullName))}. Implement it for one kernel only.")

@@ -14,15 +14,13 @@ public static class DotnetBuild {
         };
         string[] build = configuration is null ? [] : ["-c", configuration];
         string[] arguments = ["build", project, "-nologo", "-nodeReuse:false", "-p:UmpireCheck=false", .. build];
-        foreach (var argument in arguments) {
-            info.ArgumentList.Add(argument);
-        }
+        info.Arguments = PlatformPolyfills.CommandLine(arguments);
         foreach (var key in info.Environment.Keys.Where(IsMSBuildValue).ToList()) {
             info.Environment.Remove(key);
         }
         using var process = Process.Start(info) ?? throw new InvalidOperationException("dotnet did not start.");
-        var output = process.StandardOutput.ReadToEndAsync(cancellation);
-        var errors = process.StandardError.ReadToEndAsync(cancellation);
+        var output = process.StandardOutput.ReadToEndAsync();
+        var errors = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync(cancellation);
         var lines = (await output + await errors).Split('\n').Select(line => line.TrimEnd('\r')).ToList();
         return new BuildOutput(process.ExitCode, lines);

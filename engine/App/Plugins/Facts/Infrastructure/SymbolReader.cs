@@ -169,7 +169,7 @@ sealed class SymbolReader : IDisposable {
     static bool IsRooted(string document) =>
         Path.IsPathRooted(document)
         || document.StartsWith(@"\\", StringComparison.Ordinal)
-        || document is [var drive, ':', '\\' or '/', ..] && char.IsAsciiLetter(drive);
+        || (document.Length >= 3 && document[1] == ':' && document[2] is '\\' or '/' && PlatformPolyfills.IsAsciiLetter(document[0]));
 
     string DocumentName(DocumentHandle handle) {
         if (!documentNames.TryGetValue(handle, out var name)) {
@@ -187,8 +187,8 @@ sealed class SymbolReader : IDisposable {
         }
         var segments = source.File.Split(Separators);
         var output = Array.FindIndex(segments, BuildOutput.IsFolder);
-        var project = ArtifactsProjectFolder(segments[output + 1]) ?? string.Join("/", segments[..output]);
-        var hint = HintPath(segments[(output + 1)..]);
+        var project = ArtifactsProjectFolder(segments[output + 1]) ?? string.Join("/", Until(segments, output));
+        var hint = HintPath(From(segments, output + 1));
         var path = hint.Length == 1 ? WithSourceFolders(project, hint[0]) : hint;
         return new Source($"{project}/{string.Join("/", path)}", 1);
     }
@@ -199,15 +199,15 @@ sealed class SymbolReader : IDisposable {
         }
         if (!flatHints.TryGetValue(project, out var hints)) {
             hints = sourceFiles.Value
-                .Select(file => Path.GetRelativePath(project, file).Replace('\\', '/'))
+                .Select(file => RelativePath.Of(project, file).Replace('\\', '/'))
                 .ToLookup(FlatHint, StringComparer.Ordinal);
             flatHints[project] = hints;
         }
-        if (hints[hint].Distinct(StringComparer.Ordinal).ToList() is not [var source]) {
+        if (hints[hint].Distinct(StringComparer.Ordinal).ToList() is not { Count: 1 } sources) {
             return [hint];
         }
-        var folders = source.Split('/');
-        return [.. folders[..^1], FlatHint(folders[^1])];
+        var folders = sources[0].Split('/');
+        return [.. Until(folders, folders.Length - 1), FlatHint(folders[folders.Length - 1])];
     }
 
     static string FlatHint(string relativePath) =>
@@ -223,13 +223,17 @@ sealed class SymbolReader : IDisposable {
             .OrderByDescending(folder => folder.Length)];
 
     static IEnumerable<string> Parents(string? folder) {
-        for (; !string.IsNullOrEmpty(folder); folder = Path.GetDirectoryName(folder)) {
+        for (; folder is { Length: > 0 }; folder = Path.GetDirectoryName(folder)) {
             yield return folder;
         }
     }
 
     static string[] HintPath(string[] underOutput) {
-        var generated = underOutput.Length > OutputFolders ? underOutput[OutputFolders..] : underOutput[^1..];
-        return generated.Length > GeneratorFolders + 1 ? generated[GeneratorFolders..] : generated[^1..];
+        var generated = underOutput.Length > OutputFolders ? From(underOutput, OutputFolders) : From(underOutput, underOutput.Length - 1);
+        return generated.Length > GeneratorFolders + 1 ? From(generated, GeneratorFolders) : From(generated, generated.Length - 1);
     }
+
+    static string[] From(string[] segments, int start) => [.. segments.Skip(start)];
+
+    static string[] Until(string[] segments, int end) => [.. segments.Take(end)];
 }

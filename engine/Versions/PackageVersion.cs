@@ -11,7 +11,7 @@ public static class PackageVersion {
     public static string Of(string dll) => WithoutBuildHash(FileVersionInfo.GetVersionInfo(dll).ProductVersion ?? "");
 
     static string WithoutBuildHash(string version) {
-        var plus = version.IndexOf('+', StringComparison.Ordinal);
-        return plus < 0 ? version : version[..plus];
+        var plus = version.IndexOf('+');
+        return plus < 0 ? version : version.Substring(0, plus);
     }
 }

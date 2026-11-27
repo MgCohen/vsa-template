@@ -81,7 +81,7 @@ public sealed class ParityTests {
     static string Fixture(string fixture, string block) =>
         Path.TrimEndingDirectorySeparator(Repo.Path("tests", "Fixtures", fixture, block));
 
-    static string EngineBin() => Repo.Path("engine", "artifacts~", "bin", "Engine", configuration);
+    static string EngineBin() => Repo.Path("engine", "artifacts~", "bin", "Engine.Console", configuration);
 
     static string Bin(string fixture, string project) =>
         Repo.Path("tests", "Fixtures", fixture, "artifacts~", "bin", project, configuration);

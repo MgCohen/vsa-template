@@ -1,11 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Umpire.Testing.dll: the unit test base and the base of the tests of a VSA definition. A test project references it.
-       The definition test base needs the definition packages, so the package depends on them. -->
+       The definition test base needs the definition packages, so the package depends on them. It asks the answers of the
+       rules, so the DLL also holds the source files of the queries of the engine (engine/App/Plugins/Facts/Domain/Shared/Queries/):
+       they use only the definition API, and a test project does not get the engine. -->
   <PropertyGroup>
     <Description>The Umpire test bases: VsaUnitTest and VsaArchitectureTest.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(UmpireRoot)packs/Vsa/Tests/Unit/**/*.cs" Exclude="$(_UmpireNotBundled)" />
+    <Compile Include="$(UmpireRoot)engine/App/Plugins/Facts/Domain/Shared/Queries/**/*.cs" Exclude="$(_UmpireNotBundled)" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

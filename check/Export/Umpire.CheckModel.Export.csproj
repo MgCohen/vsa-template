@@ -7,5 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="../Model/Umpire.CheckModel.csproj" />
     <ProjectReference Include="../../architecture/Umpire.Architecture.csproj" />
+    <ProjectReference Include="../../engine/Engine.csproj" />
   </ItemGroup>
 </Project>

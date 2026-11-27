@@ -7,6 +7,7 @@ using Operations.Infrastructure;
 using Tests.Shared;
 using Umpire.Architecture;
 using Umpire.Messages.Contracts;
+using UmpireEngine;
 
 namespace Engine.Tests;
 

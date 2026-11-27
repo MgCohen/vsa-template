@@ -8,8 +8,12 @@
   <ItemGroup>
     <PackageReference Include="Umpire" Version="$(UmpireVersion)" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" Condition="'$(_UmpireUseBundle)' != 'true'" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)architecture/Umpire.Architecture.csproj" Condition="'$(_UmpireUseBundle)' != 'true'" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Definition/Umpire.Definition.csproj" Condition="'$(_UmpireUseBundle)' == 'true'" />
+  </ItemGroup>
+  <!-- The engine core targets netstandard2.0, so the JSON reader comes from its package. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" />
+    <Compile Include="$(UmpireFrameworkSourceDir)engine/Polyfills~/*.cs" LinkBase="Polyfills~" />
+    <Using Include="Umpire.Engine.Polyfills" />
   </ItemGroup>
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
   <ItemGroup>

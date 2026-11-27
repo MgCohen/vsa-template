@@ -28,7 +28,7 @@ static class BlockSearch {
             .ToList();
         var scoped = found.Except(shadowed).ToList();
         var own = scoped.Where(e => Same(e.Folder, folder)).ToList();
-        if (Problems(own) is [var stop, ..]) {
+        if (Problems(own) is { Count: > 0 } problems && problems[0] is var stop) {
             return new Error(stop.Code, stop.Message);
         }
         var inner = scoped.Except(own).ToList();
@@ -118,5 +118,5 @@ static class BlockSearch {
 
     static string Full(string path) => DiskPath.Of(path);
 
-    static string Capital(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+    static string Capital(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1);
 }

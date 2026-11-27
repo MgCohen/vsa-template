@@ -1,4 +1,4 @@
-namespace Umpire.Architecture;
+namespace Umpire.Utility;
 
 public static class BuildOutput {
     static readonly string[] Folders = ["obj", "bin"];

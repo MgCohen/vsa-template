@@ -42,7 +42,7 @@ public static class TargetRuntime {
             value.ReadUInt16();
             var name = value.ReadSerializedString();
             return name is not null && name.StartsWith(CoreApp, StringComparison.Ordinal)
-                && Version.TryParse(name[CoreApp.Length..], out var version) ? version : null;
+                && Version.TryParse(name.Substring(CoreApp.Length), out var version) ? version : null;
         }
         return null;
     }

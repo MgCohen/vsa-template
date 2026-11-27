@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The console entry of the rule engine: new EngineApp<EngineConsoleHost>().Run(args). It closes the host, reads the job
+       word and writes the report as build lines. The assembly name is umpire-engine, so the package Umpire.Engine and the
+       hook find tools/net8.0/umpire-engine.dll. It is the executable of the engine block, so the hook runs the engine
+       check after its build (UmpireEngine). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>umpire-engine</AssemblyName>
+    <RootNamespace>UmpireEngine</RootNamespace>
+    <RollForward>Major</RollForward>
+    <UmpireEngine Condition="'$(UmpireEngine)' == ''">true</UmpireEngine>
+  </PropertyGroup>
+  <!-- No ASP.NET Core framework reference: the .NET of a Unity Editor can have only Microsoft.NETCore.App. AppLoader loads
+       the ASP.NET Core types of a web app definition from the shared folder of the runtime (SharedFrameworks). -->
+  <ItemGroup>
+    <PackageReference Include="Umpire.Console" Version="$(UmpireVersion)" />
+    <ProjectReference Include="../../Engine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Engine.Tests" />
+  </ItemGroup>
+</Project>

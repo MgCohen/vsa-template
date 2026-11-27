@@ -241,6 +241,8 @@ _pkginfo.txt
 ClientBin/
 ~$*
 *~
+# The polyfill folders end with ~, so the engine does not check them as source folders. Git keeps them.
+!Polyfills~/
 *.dbmdl
 *.dbproj.schemaview
 *.jfm

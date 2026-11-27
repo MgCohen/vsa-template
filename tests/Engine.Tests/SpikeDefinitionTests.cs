@@ -1,3 +1,5 @@
+extern alias testing;
+
 using Spike.Alpha.Definition;
 using Spike.Bravo.Definition;
 using Spike.Charlie.Definition;
@@ -104,7 +106,8 @@ public sealed class SpikeDefinitionTests {
         protected override void Define(Part root, Part kernel) => root.Add<BravoArchitecture.B1>();
     }
 
-    sealed class SpikeView<TArchitecture> : ArchitectureTest<TArchitecture> where TArchitecture : Architecture, new() {
+    sealed class SpikeView<TArchitecture> : testing::Umpire.Architecture.ArchitectureTest<TArchitecture>
+        where TArchitecture : Architecture, new() {
         public Permission Decide(string from, string to) => MayUse(At(from), At(to)).Permission;
 
         public string Decision(SpikeUse use) => $"{use.From} -> {use.To}: {Decide(use.From, use.To)}";
