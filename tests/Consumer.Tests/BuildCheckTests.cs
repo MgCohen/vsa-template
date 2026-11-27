@@ -2,6 +2,7 @@ using Tests.Shared;
 
 namespace Consumer.Tests;
 
+[Category("Package")]
 public sealed class BuildCheckTests {
     const string Summary = "umpire-engine: ";
 

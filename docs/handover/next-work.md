@@ -100,7 +100,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 - #380: a handler returns `Task<T>`.
 - A check at start that each handler has a call, and a call that names its own handler base (#382 review).
 - The Visual Studio test of the spike (needs the computer of the user).
-- A full cleanup and review of the tests, at the end of this phase. It includes: the intermittent `CS8032` of `Rules.Tests` with the shared compiler server (seen three times), and the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
+- A full cleanup and review of the tests, at the end of this phase. It includes the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
 - vsa-unity, at the next consumer update: `Get<T>` of `UmpireConfig` binds module settings with reflection (#388). Under IL2CPP stripping, a removed setter is skipped with no error. A Unity host keeps the setters (`link.xml`, `[Preserve]`) or adds its own `ISettingsProvider`.
 
 ## Limits

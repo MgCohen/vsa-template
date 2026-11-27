@@ -3,6 +3,7 @@ using Tests.Shared;
 namespace Rules.Tests;
 
 [NonParallelizable]
+[Category("Package")]
 public sealed class DefinitionBuildTests {
     const string OneLine = "<Project Sdk=\"Umpire.Sdk\" />";
     const string WithDefinitionPackage = """

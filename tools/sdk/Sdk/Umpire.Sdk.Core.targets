@@ -144,6 +144,31 @@
     <ProjectReference Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
+  <!-- Source mode gives the kernel analyzer from the folder of the pack analyzer, as the package of the pack does (pinned choice W24).
+       Roslyn finds a dependency of an analyzer in the folder of that analyzer only if that file is an analyzer item. Else the
+       compiler server takes the first registered path with the same name and version, in text order, and does not check that
+       the file exists. Then a deleted test workspace or another worktree can win, and the pack rules do not load (CS8032).
+       The target changes only the analyzer items of the Umpire analyzer projects (_UmpireFramework with Analyzer="true"). It uses
+       a copy only if it is the one copy and it exists, so a design-time build with no output keeps the kernel analyzer from its own folder. -->
+  <Target Name="_UmpireKernelAnalyzerBesidePackAnalyzer" AfterTargets="ResolveProjectReferences" Condition="'$(UmpireFrameworkSourceDir)' != ''">
+    <PropertyGroup>
+      <_UmpireKernelAnalyzerProject>$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'framework', 'Kernel', 'Analyzers', 'Umpire.Kernels.Analyzers.csproj'))</_UmpireKernelAnalyzerProject>
+    </PropertyGroup>
+    <ItemGroup>
+      <_UmpireAnalyzerProject Include="@(_UmpireFramework->WithMetadataValue('Analyzer', 'true')->'$(UmpireFrameworkSourceDir)%(Path)/%(Identity).csproj')" />
+      <_UmpireAnalyzerProject Remove="$(_UmpireKernelAnalyzerProject)" />
+      <_UmpireOwnKernelAnalyzer Include="@(Analyzer)" Condition="'%(Analyzer.MSBuildSourceProjectFile)' == '$(_UmpireKernelAnalyzerProject)'" />
+      <_UmpireAnalyzerOfProject Include="%(Analyzer.MSBuildSourceProjectFile)" Analyzer="%(Analyzer.FullPath)" Condition="'%(Analyzer.MSBuildSourceProjectFile)' != ''" />
+      <_UmpireAnalyzerOfOtherProject Include="@(_UmpireAnalyzerOfProject)" Exclude="@(_UmpireAnalyzerProject)" />
+      <_UmpireAnalyzerOfProject Remove="@(_UmpireAnalyzerOfOtherProject)" />
+      <_UmpireKernelAnalyzerOfPack Include="@(_UmpireAnalyzerOfProject->'%(Analyzer)'->'%(RootDir)%(Directory)Umpire.Kernels.Analyzers.dll'->Distinct())" />
+      <_UmpireKernelAnalyzerOfPack Remove="@(_UmpireKernelAnalyzerOfPack)" Condition="!Exists('%(FullPath)')" />
+    </ItemGroup>
+    <ItemGroup Condition="'@(_UmpireOwnKernelAnalyzer->Count())' == '1' and '@(_UmpireKernelAnalyzerOfPack->Count())' == '1'">
+      <Analyzer Remove="@(_UmpireOwnKernelAnalyzer)" />
+      <Analyzer Include="@(_UmpireKernelAnalyzerOfPack)" />
+    </ItemGroup>
+  </Target>
 
   <!-- The definition of the pack is check-time code: a project that is not a definition project and not a test project does
        not compile against it. The architecture check of the app still needs it, so _UmpireCopyDefinitions copies it to the
