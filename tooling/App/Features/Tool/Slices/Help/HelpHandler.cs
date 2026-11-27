@@ -1,6 +1,5 @@
 namespace Umpire.Cli.Features.Tool.Slices.Help;
 
-using Umpire.Cli.Plugins.Commands.Contracts.Requests;
 using Umpire.Cli.Plugins.Commands.Domain.Shared;
 using Umpire.Cli.Plugins.Commands.Handlers.Requests;
 

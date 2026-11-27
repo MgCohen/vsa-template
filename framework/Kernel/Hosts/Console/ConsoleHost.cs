@@ -20,7 +20,7 @@ public class ConsoleHost : AppHost {
 
     public override void Start(IServiceProvider services, AppStop stop) {
         var selected = operation!;
-        Action onSignal = CancelsOnSignal(selected) ? signalled.Cancel : () => stop.Request();
+        Action onSignal = CancelsOnSignal(selected) ? CancelOperation : () => stop.Request();
         signals = AppSignals.Listen(onSignal);
         terminate = PosixSignalRegistration.Create(PosixSignal.SIGTERM, context => {
             context.Cancel = true;
@@ -52,6 +52,13 @@ public class ConsoleHost : AppHost {
 
     protected override HostArguments Arguments(string[] args) =>
         base.Arguments(CommandLine.Options(args));
+
+    void CancelOperation() {
+        try {
+            signalled.Cancel();
+        } catch (ObjectDisposedException) {
+        }
+    }
 
     async Task Run(IServiceProvider services, Operation selected, HostArguments arguments, AppStop stop) {
         using var cancel = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token, signalled.Token);

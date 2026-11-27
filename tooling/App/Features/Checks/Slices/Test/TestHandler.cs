@@ -33,14 +33,15 @@ sealed class TestHandler : ToolHandler<TestRequest, TestResponse> {
     }
 
     static int Report(int projects, IReadOnlyList<TestRun> runs, bool stopped) {
-        var failed = runs.Where(run => run.ExitCode != 0).ToList();
         if (stopped) {
             Console.WriteLine($"Stopped by a stop signal: the tests of {runs.Count} of {projects} project(s) ran.");
         }
+        if (stopped && runs.Count < projects) {
+            return runs is [.., { ExitCode: not 0 and var last }] ? last : ChildProcess.StoppedExitCode;
+        }
+        var failed = runs.Where(run => run.ExitCode != 0).ToList();
         if (failed is []) {
-            if (!stopped) {
-                Console.WriteLine($"OK: the tests of {projects} project(s) passed.");
-            }
+            Console.WriteLine($"OK: the tests of {projects} project(s) passed.");
             return 0;
         }
         var names = failed.Select(run => $"{run.Project} (exit code {run.ExitCode})");
