@@ -11,6 +11,6 @@ sealed class ApiArchitecture : Architecture {
     protected override void Define(Part root, Part kernel) {
         root.Add<Root>().InParentFolder().OfType<object>();
         root.Add<ApiParts.Concepts>().And<ApiParts.Markers>().And<ApiParts.Options>().And<ApiParts.Parts>()
-            .And<ApiParts.Queries>().And<ApiParts.Rules>().And<ApiParts.Testing>();
+            .And<ApiParts.Rules>();
     }
 }

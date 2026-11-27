@@ -1,6 +1,6 @@
 namespace EngineCore.Tests;
 
-using Umpire.Architecture;
+using Umpire.Utility;
 
 public sealed class RelativePathTests {
     [TestCase("/a/b", "/a/b/c.cs")]

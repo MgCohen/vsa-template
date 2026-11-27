@@ -75,6 +75,7 @@ public sealed class ResolvedArchitecture {
     public IReadOnlyList<MatchResult> Matches(Bindings bindings) =>
         [.. matches.SelectMany(statement => MatchCheck.Failures(statement, bindings))];
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822", Justification = "Each answer of the rules is a member of the resolved definition.")]
     public IReadOnlyList<ContentResult> Names(Bindings bindings) => ContentCheck.Names(bindings);
 
     public IReadOnlyList<ContentResult> Traits(Bindings bindings) => ContentCheck.Traits(traits, bindings);

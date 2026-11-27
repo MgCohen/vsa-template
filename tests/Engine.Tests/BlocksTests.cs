@@ -235,9 +235,9 @@ public sealed class BlocksTests {
 
     [Test]
     public void One_app_class_check_finds_the_engine_app_class_with_its_bases() {
-        var app = Index.Dlls.Single(d => d.Name == "umpire-engine").AppClasses.Single();
+        var app = Index.Dlls.Single(d => d.Name == "Umpire.Engine").AppClasses.Single();
 
-        Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp<>).FullName!, "umpire-engine")));
+        Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp<>).FullName!, "Umpire.Engine")));
         Assert.That(app.Bases, Does.Contain("Umpire.Kernels.App"));
         Assert.That(app.Kernels.Select(k => k.FullName), Is.EqualTo(new[] { "Umpire.Vsa.Composition.VsaKernel" }));
         Assert.That(app.KernelBases.Select(k => k.FullName), Does.Contain("Umpire.Kernels.Kernel"));

@@ -1,5 +1,7 @@
 namespace Umpire.Architecture;
 
+using Umpire.Utility;
+
 static class BlockPlaces {
     public static IReadOnlyList<BlockPlace> Covered(
         ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks) {

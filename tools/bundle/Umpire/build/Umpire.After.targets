@@ -119,13 +119,13 @@
     <UmpireEngine Condition="'$(OutputType)' == 'Exe' and '$(UmpireTestProject)' != 'true' and !$(MSBuildProjectName.EndsWith('.Tests')) and '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory)))' == '$([MSBuild]::NormalizeDirectory($(_UmpireBlockRoot)))'">true</UmpireEngine>
   </PropertyGroup>
 
-  <!-- Source mode (this repository): the engine is the output of engine/Engine.csproj. The engine checks itself with its own
+  <!-- Source mode (this repository): the engine is the output of its console entry, engine/Entries/Console/Engine.Console.csproj. The engine checks itself with its own
        new output. Each other root project builds the engine first, with no reference to its assembly, so the engine files
        do not go into its bin. -->
   <PropertyGroup Condition="'$(UmpireFrameworkSourceDir)' != ''">
-    <_UmpireEngineProject>$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'engine', 'Engine.csproj'))</_UmpireEngineProject>
+    <_UmpireEngineProject>$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'engine', 'Entries', 'Console', 'Engine.Console.csproj'))</_UmpireEngineProject>
     <_UmpireIsEngine Condition="'$(MSBuildProjectFullPath)' == '$(_UmpireEngineProject)'">true</_UmpireIsEngine>
-    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == '' and '$(_UmpireIsEngine)' != 'true'">$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'engine', 'artifacts~', 'bin', 'Engine', '$(Configuration.ToLowerInvariant())', 'umpire-engine.dll'))</UmpireEngineFile>
+    <UmpireEngineFile Condition="'$(UmpireEngineFile)' == '' and '$(_UmpireIsEngine)' != 'true'">$([MSBuild]::NormalizePath('$(UmpireFrameworkSourceDir)', 'engine', 'artifacts~', 'bin', 'Engine.Console', '$(Configuration.ToLowerInvariant())', 'umpire-engine.dll'))</UmpireEngineFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(UmpireFrameworkSourceDir)' != '' and '$(UmpireEngine)' == 'true' and '$(UmpireCheck)' != 'false' and '$(_UmpireIsEngine)' != 'true'">
     <ProjectReference Include="$(_UmpireEngineProject)" ReferenceOutputAssembly="false" Private="false"
@@ -163,7 +163,7 @@
       <_UmpireNoEngine>The rule engine $(UmpireEngineFile) does not exist, so the architecture check did not run.</_UmpireNoEngine>
       <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngineFile)' == ''">The rule engine is not in the project, so the architecture check did not run. Add the package Umpire.Engine to the root project: &lt;PackageReference Include=&quot;Umpire.Engine&quot; Version=&quot;&lt;version&gt;&quot; PrivateAssets=&quot;all&quot; /&gt;.</_UmpireNoEngine>
       <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' == '' and '$(UmpireEngineFile)' != ''">$(_UmpireNoEngine) Restore the project again, so the package Umpire.Engine is complete.</_UmpireNoEngine>
-      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' != ''">$(_UmpireNoEngine) Build engine/Engine.csproj with the same configuration, or give UmpireEngineFile.</_UmpireNoEngine>
+      <_UmpireNoEngine Condition="'$(UmpireFrameworkSourceDir)' != ''">$(_UmpireNoEngine) Build engine/Entries/Console/Engine.Console.csproj with the same configuration, or give UmpireEngineFile.</_UmpireNoEngine>
     </PropertyGroup>
     <Error Condition="'$(_UmpireEngineFound)' != 'true' and '$(_UmpireHookMode)' == 'Error'" Code="UMP030003" Text="$(_UmpireNoEngine)" />
     <Warning Condition="'$(_UmpireEngineFound)' != 'true'" Code="UMP030003" Text="$(_UmpireNoEngine)" />

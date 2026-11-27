@@ -1,7 +1,10 @@
 namespace EngineCore.Tests;
 
+extern alias testing;
+
 using Umpire.Architecture;
 using static EngineCore.Tests.ContentTests;
+using testing::Umpire.Architecture;
 
 public sealed class ContentPlaceTests : ArchitectureTest<ContentPlaceTests.MarkOwnerArchitecture> {
     [Test]

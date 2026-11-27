@@ -1,14 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The root project of the rule engine app. It compiles the app, its modules and its plugins.
-       It is not a package: the package Umpire.Engine holds the engine in tools/net8.0/ (tools/bundle/Engine/Umpire.Engine.csproj). -->
+  <!-- The rule engine: EngineApp<THost>, the jobs, the operations and the plugins, as one netstandard2.0 library (decision P2).
+       It does no console work: each entry closes the host and converts the report. The console entry is Entries/Console/.
+       It is not a package: the package Umpire.Engine holds the console entry in tools/net8.0/ (tools/bundle/Engine/Umpire.Engine.csproj). -->
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <AssemblyName>umpire-engine</AssemblyName>
+    <AssemblyName>Umpire.Engine</AssemblyName>
     <RootNamespace>UmpireEngine</RootNamespace>
-    <RollForward>Major</RollForward>
   </PropertyGroup>
-  <!-- No ASP.NET Core framework reference: the .NET of a Unity Editor can have only Microsoft.NETCore.App. AppLoader loads
-       the ASP.NET Core types of a web app definition from the shared folder of the runtime (SharedFrameworks). -->
   <ItemGroup>
     <PackageReference Include="Umpire.Vsa" Version="$(UmpireVersion)" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)engine/Versions/Umpire.Engine.Versions.csproj" />
@@ -18,19 +15,25 @@
   <ItemGroup Condition="'$(_UmpireUseBundle)' != 'true'">
     <ProjectReference Include="$(UmpireFrameworkSourceDir)architecture/Umpire.Architecture.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)packs/Vsa/Definition/Umpire.Vsa.csproj" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Kernel/Hosts/Console/Umpire.Hosts.Console.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(_UmpireUseBundle)' == 'true'">
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Console/Umpire.Console.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Definition/Umpire.Definition.csproj" />
     <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
   </ItemGroup>
+  <!-- The polyfills of the netstandard2.0 build: extension methods with the names of the newer .NET APIs. Their folder name
+       ends with ~, so the engine does not check it as a source folder. -->
+  <ItemGroup>
+    <Using Include="Umpire.Engine.Polyfills" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Reflection.MetadataLoadContext" />
+    <PackageReference Include="System.Text.Json" />
     <PackageReference Include="TngTech.ArchUnitNET" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="umpire-engine" />
+    <InternalsVisibleTo Include="Umpire.CheckModel.Export" />
     <InternalsVisibleTo Include="Architecture.Tests" />
     <InternalsVisibleTo Include="Engine.Tests" />
     <InternalsVisibleTo Include="CheckModel.Tests" />

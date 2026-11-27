@@ -1,15 +1,12 @@
 namespace Framework.Tests.Host;
 
 using System.Reflection;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Architecture;
 using Umpire.Hosts.Web;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 using Umpire.Vsa.Definition;
-using Concepts = Umpire.Vsa.Definition;
 
 public sealed class AppTests {
     [Test]
@@ -125,15 +122,6 @@ public sealed class AppTests {
         Assert.That(new WebApp().Kernel, Is.TypeOf<VsaKernel>());
     }
 
-    [Test]
-    public void A_derived_architecture_has_its_rules_after_the_VSA_rules() {
-        var app = Rules(new RulesArchitecture());
-        var vsa = Rules(new VsaArchitecture());
-
-        Assert.That(app.Take(vsa.Count), Is.EqualTo(vsa));
-        Assert.That(app.Skip(vsa.Count), Does.Contain(new Rule("Presenters", "Contracts.Events", Permission.Deny)));
-    }
-
     [TestCase("ArchUnitNET")]
     [TestCase("Mono.Cecil")]
     [TestCase("nunit.framework")]
@@ -154,18 +142,10 @@ public sealed class AppTests {
     }
 
     [Test]
-    public void The_definition_api_uses_only_the_utility_of_the_kernel() {
-        using var image = new PEReader(File.OpenRead(typeof(Architecture).Assembly.Location));
-        var metadata = image.GetMetadataReader();
+    public void The_definition_api_does_not_reference_the_kernel() {
+        var references = typeof(Architecture).Assembly.GetReferencedAssemblies().Select(reference => reference.Name);
 
-        var namespaces = metadata.TypeReferences.Select(metadata.GetTypeReference)
-            .Where(type => type.ResolutionScope.Kind == HandleKind.AssemblyReference
-                && metadata.GetString(metadata.GetAssemblyReference((AssemblyReferenceHandle)type.ResolutionScope).Name)
-                    == "Umpire.Kernels")
-            .Select(type => metadata.GetString(type.Namespace))
-            .Distinct();
-
-        Assert.That(namespaces, Is.EquivalentTo(new[] { "Umpire.Utility" }));
+        Assert.That(references, Does.Not.Contain("Umpire.Kernels"));
     }
 
     static async Task<int> RunUntilStop(LifecycleApp app) {
@@ -179,9 +159,6 @@ public sealed class AppTests {
         Assert.That(app.State == AppState.Running, Is.False);
         return await run;
     }
-
-    static List<Rule> Rules(Architecture definition) =>
-        [.. new ResolvedArchitecture(definition).UseRules.Select(p => new Rule(p.From.Name, p.To.Name, p.Permission))];
 
     static HashSet<string> RuntimeReferences(Assembly start) {
         var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -197,15 +174,7 @@ public sealed class AppTests {
         return found;
     }
 
-    sealed record Rule(string From, string To, Permission Permission);
-
     sealed class WebApp : App<VsaKernel, WebHost>;
-
-    sealed class RulesArchitecture : VsaArchitecture {
-        protected override void Rules(RuleBook rules) {
-            rules.For<Concepts.Presenters>().Denies<Concepts.Contracts.Events>();
-        }
-    }
 
     sealed class LifecycleApp() : VsaTestApp(() => new AppHost { ModuleProvider = new FixedModules() }) {
         public bool StopOnStart { get; init; }

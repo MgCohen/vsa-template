@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The architecture definition API: concepts, parts and rules, and Queries/: the answers of the rules on plain data. It has no test framework and no ArchUnitNET reference. -->
+  <!-- The architecture definition API: concepts, parts and rules. It has no test framework and no ArchUnitNET reference.
+       The answers of the rules (the queries) are in the engine (engine/App/Plugins/Facts/Domain/Shared/Queries/), and they
+       read the compiled form of a definition, so the engine and the definition test base see the internals. -->
   <ItemGroup>
     <Compile Remove="Markers/**" />
     <None Remove="Markers/**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Markers/Umpire.Markers.csproj" />
-    <ProjectReference Include="../framework/Kernel/Umpire.Kernels.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Umpire.Kernels.Definition" />
+    <InternalsVisibleTo Include="Umpire.Engine" />
+    <InternalsVisibleTo Include="Umpire.Vsa.Testing.Unit" />
     <InternalsVisibleTo Include="Umpire.CheckModel.Export" />
     <InternalsVisibleTo Include="CheckModel.Tests" />
     <InternalsVisibleTo Include="Architecture.Tests" />

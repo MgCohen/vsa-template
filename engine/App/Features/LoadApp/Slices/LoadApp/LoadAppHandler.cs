@@ -5,12 +5,13 @@ using LoadApp.Domain.Shared;
 using Operations.Domain.Shared;
 using Operations.Infrastructure;
 using Umpire.Architecture;
+using Umpire.Utility;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
 
 namespace LoadApp.Slices.LoadApp;
 
-sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, AppLoader> definitions)
+sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, IDefinitionLoader> definitions)
     : CommandHandler<LoadAppCommand, AppInput> {
     public override Task<Result<AppInput>> HandleAsync(IEnvelope<LoadAppCommand> envelope) =>
         Task.FromResult(Load(envelope.Message));
@@ -52,14 +53,14 @@ sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, App
         if (source is null) {
             return false;
         }
-        var relative = Path.GetRelativePath(root, source);
+        var relative = RelativePath.Of(root, source);
         return ReadOptions.IsIgnored(relative, options.IgnoredFolders)
             || (!relative.StartsWith("..", StringComparison.Ordinal)
                 && relative.Split(Path.DirectorySeparatorChar).Contains(DefinitionFolder.Tests, StringComparer.OrdinalIgnoreCase));
     }
 
     internal static Result<Architecture> Definition(
-        BlockTree blocks, IReadOnlyList<BinDll> app, IReadOnlyList<DefinitionType> definitions, AppLoader loader,
+        BlockTree blocks, IReadOnlyList<BinDll> app, IReadOnlyList<DefinitionType> definitions, IDefinitionLoader loader,
         bool hasDefinitionSource = false) {
         var entry = blocks.Current;
         var found = DefinitionSearch.Find(entry, app, definitions, blocks.Inner, hasDefinitionSource);
@@ -75,5 +76,5 @@ sealed class LoadAppHandler(RunOptions options, IFactSource<DefinitionQuery, App
             : loader.CreateArchitecture(found.Value, packed);
     }
 
-    static string[] Names(string list) => list.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    static string[] Names(string list) => [.. list.Split(',').Select(name => name.Trim()).Where(name => name.Length > 0)];
 }

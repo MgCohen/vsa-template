@@ -18,6 +18,6 @@ public sealed record BinDll(
             .Where(System.IO.Path.IsPathRooted)
             .Select(System.IO.Path.GetFullPath)
             .Any(file => file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                && !ReadOptions.IsIgnored(file[prefix.Length..], ignoredFolders ?? []));
+                && !ReadOptions.IsIgnored(file.Substring(prefix.Length), ignoredFolders ?? []));
     }
 }

@@ -11,6 +11,7 @@ using Rules.Slices.CheckRules;
 using Operations.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.Config;
+using UmpireEngine;
 
 sealed class EngineRun {
     EngineRun(

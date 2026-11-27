@@ -2,7 +2,7 @@ namespace Blocks.Infrastructure;
 
 using Facts.Domain.Shared;
 using Facts.Infrastructure;
-using Umpire.Architecture;
+using Umpire.Utility;
 using Umpire.Config;
 
 public static class EntryFiles {

@@ -14,7 +14,7 @@ public sealed record ReadOptions(
     static string Normal(string folder) {
         var path = folder.Replace('\\', '/');
         while (path.StartsWith(CurrentFolder, StringComparison.Ordinal)) {
-            path = path[CurrentFolder.Length..];
+            path = path.Substring(CurrentFolder.Length);
         }
         return path.Trim('/');
     }

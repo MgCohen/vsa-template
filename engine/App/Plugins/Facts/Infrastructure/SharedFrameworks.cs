@@ -9,7 +9,7 @@ public static class SharedFrameworks {
         Web() is { } web ? [Runtime(), web] : [Runtime()];
 
     public static string? Web() {
-        var shared = Path.GetDirectoryName(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Runtime())));
+        var shared = Path.GetDirectoryName(Path.GetDirectoryName(PlatformPolyfills.TrimEndingDirectorySeparator(Runtime())));
         var web = shared is null ? null : Path.Combine(shared, AspNetCore);
         return web is not null && Directory.Exists(web)
             ? Directory.GetDirectories(web).OrderByDescending(VersionOf).FirstOrDefault()

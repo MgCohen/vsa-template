@@ -17,7 +17,7 @@
        in its own output folder, and with no self-check: the source build of the engine checks it. It loads the definition of
        an app, so its Architecture type must come from the same Umpire.Definition.dll as the app. -->
   <PropertyGroup>
-    <_UmpireEngineProject>$(UmpireRoot)engine/Engine.csproj</_UmpireEngineProject>
+    <_UmpireEngineProject>$(UmpireRoot)engine/Entries/Console/Engine.Console.csproj</_UmpireEngineProject>
     <_UmpireEngineProperties>_UmpireUseBundle=true;UmpireCheck=false;ArtifactsPath=$(ArtifactsPath)/engine-bundle</_UmpireEngineProperties>
   </PropertyGroup>
   <Target Name="_UmpireEngineInPackage" BeforeTargets="_GetPackageFiles">

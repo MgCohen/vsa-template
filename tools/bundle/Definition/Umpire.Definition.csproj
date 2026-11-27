@@ -12,4 +12,10 @@
   <ItemGroup>
     <ProjectReference Include="../Umpire/Umpire.csproj" PrivateAssets="none" />
   </ItemGroup>
+  <!-- The answers of the rules read the compiled form of a definition: the engine and the copy of the answers in
+       Umpire.Testing.dll (the definition test base). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umpire.Engine" />
+    <InternalsVisibleTo Include="Umpire.Testing" />
+  </ItemGroup>
 </Project>

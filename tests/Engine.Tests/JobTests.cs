@@ -114,7 +114,7 @@ public sealed class JobTests {
     public void The_engine_reports_UMP030401_for_a_call_of_the_old_hook_and_runs_no_job() {
         var configuration = Path.GetFileName(
             AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        var engine = Repo.Path("engine", "artifacts~", "bin", "Engine", configuration, "umpire-engine.dll");
+        var engine = Repo.Path("engine", "artifacts~", "bin", "Engine.Console", configuration, "umpire-engine.dll");
 
         var run = Dotnet.Run(root, null, "exec", engine, "--stage", "Check", "--project", root, "--bin", root,
             "--mode", "Error");

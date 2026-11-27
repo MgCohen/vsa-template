@@ -20,7 +20,7 @@ public static class BlockStamp {
         try {
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
             File.WriteAllText(temporary, hash + Environment.NewLine);
-            File.Move(temporary, file, overwrite: true);
+            PlatformPolyfills.MoveOver(temporary, file);
         } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
             Remove(temporary);
         }

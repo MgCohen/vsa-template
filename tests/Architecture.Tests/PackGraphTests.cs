@@ -3,7 +3,7 @@ using Tests.Shared;
 using Umpire.Architecture;
 using Umpire.Vsa.Definition;
 
-namespace Framework.Tests.Pack;
+namespace EngineCore.Tests;
 
 public sealed class PackGraphTests {
     static readonly string[] Transports = ["Umpire.Hosts", "Umpire.Vsa.Views"];

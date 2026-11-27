@@ -35,7 +35,7 @@ public sealed record CheckSettings(
         [.. List(list).Select(folder => Path.GetFullPath(Path.Combine(root, folder)))];
 
     static string[] List(string? list) =>
-        list?.Split(ListSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
+        list is null ? [] : [.. list.Split(ListSeparators).Select(item => item.Trim()).Where(item => item.Length > 0)];
 
     static UmpireConfig Config(string folder) {
         try {

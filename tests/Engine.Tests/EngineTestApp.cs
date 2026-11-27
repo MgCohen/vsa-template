@@ -6,7 +6,7 @@ using Umpire.Vsa.Composition;
 sealed class EngineTestApp(params Module[] modules) : App {
     public override Kernel Kernel { get; } = new VsaKernel();
 
-    public override AppHost CreateHost() => new() { ModuleProvider = new FixedModules(modules) };
+    public override AppHost CreateHost() => new EngineTestHost { ModuleProvider = new FixedModules(modules) };
 
     public EngineBuild Build() {
         var host = CreateHost();

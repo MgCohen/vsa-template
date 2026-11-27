@@ -1,5 +1,6 @@
 namespace UmpireEngine;
 
+using Facts.Infrastructure;
 using Operations.Contracts.Requests;
 using Operations.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,7 @@ public sealed class EngineConsoleHost : ConsoleHost {
 
     protected override void Configure(IServiceCollection services, AppTypes types) {
         base.Configure(services, types);
+        services.AddSingleton<IFactSource<DefinitionQuery, IDefinitionLoader>, DefinitionSource>();
         var operations = services
             .Where(d => d.ServiceType == typeof(Operation) && d.ImplementationInstance is Operation)
             .ToList();

@@ -3,6 +3,7 @@ namespace Facts.Infrastructure;
 using System.Reflection;
 using Facts.Domain.Shared;
 using Umpire.Architecture;
+using Umpire.Utility;
 
 public sealed class BinReader : IDisposable {
     public const string ArchitectureKey = "Umpire.Architecture";
@@ -17,7 +18,7 @@ public sealed class BinReader : IDisposable {
 
     readonly string bin;
     readonly string[] dlls;
-    readonly IReadOnlySet<string> projects;
+    readonly ISet<string> projects;
     readonly MetadataLoadContext context;
     readonly ReadOptions options;
 
@@ -59,7 +60,7 @@ public sealed class BinReader : IDisposable {
         if (CommonFolder(files) is not { } all) {
             return null;
         }
-        return CommonFolder([.. files.Where(file => !IsGenerated(Path.GetRelativePath(all, file)))]) ?? all;
+        return CommonFolder([.. files.Where(file => !IsGenerated(RelativePath.Of(all, file)))]) ?? all;
     }
 
     public BinIndex Index() {
@@ -111,9 +112,9 @@ public sealed class BinReader : IDisposable {
                 continue;
             }
             try {
-                if (AppClass.KernelsOf(type) is [var kernel, ..] and var kernels) {
+                if (AppClass.KernelsOf(type) is { Count: > 0 } kernels) {
                     found.Add(new AppClass(Name(type), Path.GetFullPath(source.File), [.. kernels.Select(Name)],
-                        [.. Bases(kernel).Select(Name)], BaseNames(type)) { IsOpen = type.ContainsGenericParameters });
+                        [.. Bases(kernels[0]).Select(Name)], BaseNames(type)) { IsOpen = type.ContainsGenericParameters });
                 }
             } catch (Exception e) when (e is FileNotFoundException or FileLoadException or TypeLoadException) {
                 unloaded.Add(new MissingTypes(context).Of(type, Path.GetFullPath(source.File), e));
@@ -194,14 +195,15 @@ public sealed class BinReader : IDisposable {
         var folder = values.TryGetValue(RootKey, out var root) ? Path.GetFullPath(Path.Combine(project, root)) : project;
         var file = Directory.EnumerateFiles(project, "*.csproj").FirstOrDefault() ?? project;
         var type = TypeName.Parse(architecture);
-        var entry = new BlockEntry(Path.TrimEndingDirectorySeparator(folder), EntryForm.Metadata, type, file);
+        var entry = new BlockEntry(PlatformPolyfills.TrimEndingDirectorySeparator(folder), EntryForm.Metadata, type, file);
         yield return type is null ? entry.Names(architecture, TypeName.NoAssembly) : entry;
     }
 
     static Dictionary<string, string> Metadata(Assembly assembly) {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var attribute in assembly.GetCustomAttributesData().Where(IsMetadata)) {
-            if (attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }]) {
+            if (attribute.ConstructorArguments is { Count: 2 } arguments
+                && arguments[0].Value is string key && arguments[1].Value is string value) {
                 values.TryAdd(key, value);
             }
         }
@@ -258,11 +260,13 @@ public sealed class BinReader : IDisposable {
         var common = Enumerable.Range(0, folders.Min(f => f.Length))
             .TakeWhile(i => folders.All(f => string.Equals(f[i], folders[0][i], StringComparison.OrdinalIgnoreCase)))
             .Count();
-        return common == 0 ? null : string.Join(Path.DirectorySeparatorChar, folders[0][..common]);
+        return common == 0 ? null : string.Join(Path.DirectorySeparatorChar.ToString(), folders[0].Take(common));
     }
 
     static bool IsGenerated(string relative) =>
-        relative.Split('/', '\\')[..^1].Any(BuildOutput.IsIgnored);
+        Folders(relative.Split('/', '\\')).Any(BuildOutput.IsIgnored);
+
+    static IEnumerable<string> Folders(string[] segments) => segments.Take(segments.Length - 1);
 
     static string ProjectFolder(string start) {
         for (var folder = new DirectoryInfo(start); folder is not null; folder = folder.Parent) {
@@ -282,7 +286,7 @@ public sealed class BinReader : IDisposable {
         }
         using (symbols) {
             var name = Path.GetFileNameWithoutExtension(dll);
-            var plain = new BinDll(dll, name, AppLoader.Shared.Contains(name), symbols.References(), [], [], [], projects.Contains(name));
+            var plain = new BinDll(dll, name, SharedAssemblies.Contains(name), symbols.References(), [], [], [], projects.Contains(name));
             if (!symbols.HasSymbols) {
                 return new DllRead(WithDefinitions(plain), []);
             }

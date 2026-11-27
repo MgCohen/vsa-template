@@ -1,8 +1,8 @@
-namespace Umpire.Architecture;
+namespace Umpire.Utility;
 
 using System.Runtime.InteropServices;
 
-static class RelativePath {
+public static class RelativePath {
     static readonly char[] Separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
     static readonly OSPlatform[] CaseInsensitivePlatforms = [
@@ -14,7 +14,7 @@ static class RelativePath {
         ? StringComparison.OrdinalIgnoreCase
         : StringComparison.Ordinal;
 
-    internal static string Of(string relativeTo, string path) {
+    public static string Of(string relativeTo, string path) {
         var from = Path.GetFullPath(relativeTo);
         var to = Path.GetFullPath(path);
         if (!string.Equals(Path.GetPathRoot(from), Path.GetPathRoot(to), Comparison)) {

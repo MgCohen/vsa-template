@@ -40,7 +40,7 @@ public sealed class CodeTests {
     [Test]
     public void Each_operation_has_a_different_group() {
         var groups = EngineTypes.Where(t => typeof(IOperationGroup).IsAssignableFrom(t))
-            .Select(t => (int)t.GetProperty(nameof(IOperationGroup.Group), BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!)
+            .Select(OperationCode.GroupOf)
             .ToList();
 
         Assert.That(groups, Is.Unique.And.None.EqualTo(OperationCode.RunGroup));

@@ -80,7 +80,7 @@ sealed partial class ModelRun : IDisposable {
     }
 
     static string ProjectOf(string block, string name) {
-        if (Directory.GetFiles(block, $"{name}.csproj", SearchOption.AllDirectories) is [var own, ..]) {
+        if (Directory.GetFiles(block, "*.csproj", SearchOption.AllDirectories).FirstOrDefault(file => Builds(file, name)) is { } own) {
             return own;
         }
         var folder = block;
@@ -89,6 +89,10 @@ sealed partial class ModelRun : IDisposable {
         }
         return Directory.GetFiles(folder, "*.csproj")[0];
     }
+
+    static bool Builds(string project, string name) =>
+        Path.GetFileNameWithoutExtension(project) == name
+        || File.ReadAllText(project).Contains($"<AssemblyName>{name}</AssemblyName>", StringComparison.Ordinal);
 
     [GeneratedRegex(@"^\s*(?<file>[^(\r\n]+)\((?<line>\d+),(?<column>\d+)\): (?<severity>error|warning) (?<code>UMP02\d+): (?<text>.*) \[[^\]]+\]\s*$",
         RegexOptions.Multiline)]

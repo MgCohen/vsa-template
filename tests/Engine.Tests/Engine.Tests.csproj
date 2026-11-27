@@ -7,6 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)tests/Shared/Tests.Shared.csproj" />
     <ProjectReference Include="$(RepoRoot)engine/Engine.csproj" />
+    <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Unit/Umpire.Vsa.Testing.Unit.csproj" Aliases="testing" />
+    <ProjectReference Include="$(RepoRoot)engine/Entries/Console/Engine.Console.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Notes/Notes.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/TwoApps/TwoApps.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Blocks/Blocks.csproj" />

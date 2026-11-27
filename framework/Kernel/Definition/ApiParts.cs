@@ -11,9 +11,5 @@ static class ApiParts {
 
     public sealed record Parts : Concept;
 
-    public sealed record Queries : Concept;
-
     public sealed record Rules : Concept;
-
-    public sealed record Testing : Concept;
 }

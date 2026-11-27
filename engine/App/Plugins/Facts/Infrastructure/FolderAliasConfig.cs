@@ -2,6 +2,7 @@ namespace Facts.Infrastructure;
 
 using Facts.Domain.Shared;
 using Umpire.Architecture;
+using Umpire.Utility;
 using Umpire.Config;
 
 public sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IReadOnlyList<string> BadKeys) {
@@ -30,14 +31,14 @@ public sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IRead
     public static string Normal(string folder) {
         var path = folder.Replace('\\', '/');
         while (path.StartsWith(CurrentFolder, StringComparison.Ordinal)) {
-            path = path[CurrentFolder.Length..];
+            path = path.Substring(CurrentFolder.Length);
         }
         path = path.Trim('/');
         return path == BlockRoot ? "" : path;
     }
 
     public string DefinitionBlock(string blockFolder, string folder) {
-        var relative = Normal(Path.GetRelativePath(blockFolder, folder));
+        var relative = Normal(RelativePath.Of(blockFolder, folder));
         var definition = relative.Length == 0 ? DefinitionType.FolderName : $"{relative}/{DefinitionType.FolderName}";
         return Aliases.Any(a => IsAlias(a, relative, "") || IsAlias(a, definition, DefinitionType.FolderName)
             || (DefinitionType.IsFolderName(a.As) && (relative + "/").StartsWith(a.Folder + "/", StringComparison.OrdinalIgnoreCase)))
@@ -46,7 +47,7 @@ public sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IRead
     }
 
     public string? BlockOfAliasedSource(string blockFolder, string source) {
-        var relative = Normal(Path.GetRelativePath(blockFolder, source));
+        var relative = Normal(RelativePath.Of(blockFolder, source));
         return Aliases.Any(a => DefinitionType.IsFolderName(a.As) && relative.StartsWith(a.Folder + "/", StringComparison.OrdinalIgnoreCase))
             ? blockFolder
             : null;
@@ -62,7 +63,7 @@ public sealed record FolderAliasConfig(IReadOnlyList<FolderAlias> Aliases, IRead
 
     static bool IsBlockFolder(string configFolder, string blockFolder) =>
         string.Equals(
-            Path.TrimEndingDirectorySeparator(Path.GetFullPath(configFolder)),
-            Path.TrimEndingDirectorySeparator(Path.GetFullPath(blockFolder)),
+            PlatformPolyfills.TrimEndingDirectorySeparator(Path.GetFullPath(configFolder)),
+            PlatformPolyfills.TrimEndingDirectorySeparator(Path.GetFullPath(blockFolder)),
             StringComparison.OrdinalIgnoreCase);
 }
