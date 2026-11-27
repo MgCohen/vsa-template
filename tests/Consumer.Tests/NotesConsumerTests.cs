@@ -14,7 +14,7 @@ public sealed partial class NotesConsumerTests {
     [Test]
     [CancelAfter(20 * 60 * 1000)]
     public async Task NotesBuildsFromThePackagesRunsAndChecksItsArchitecture(CancellationToken ct) {
-        using var workspace = Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
+        using var workspace = CopyOfNotes();
         UsePackages(workspace.Src);
 
         var clean = workspace.Dotnet("build", "Notes.csproj", "-c", "Release", "-nodeReuse:false").EnsureSuccess();
@@ -124,6 +124,11 @@ public sealed partial class NotesConsumerTests {
             await Task.Delay(500, ct);
         }
         Assert.Fail($"The app did not start in three minutes. The last GET /api/notebook/list-notes gave {last}.\n{output}");
+    }
+
+    static Workspace CopyOfNotes() {
+        using var notes = FixtureLock.Take("Notes");
+        return Workspace.Create(Repo.Path("tests", "Fixtures", "Notes"));
     }
 
     static int FreePort() {

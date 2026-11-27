@@ -141,6 +141,7 @@ The public surface of `tests/Shared` (namespace `Tests.Shared`). Other test proj
 | `Dotnet.Run(workDir, env, params string[])`, `Dotnet.Start(...)` | Run the dotnet CLI without the MSBuild variables of the test host |
 | `DotnetResult(Command, ExitCode, Output)`, `.Succeeded`, `.EnsureSuccess()` | The result of a run |
 | `TempFolder.Create()`, `.Stable(name)`, `.Copy(from, to)`, `.Delete(path)` | Short temporary folders. `Stable` gives the same empty folder for the same name in each run |
+| `FixtureLock.Take(fixture)` | A lock across test processes for one folder of `tests/Fixtures/`. Take it in a test that changes a file of the fixture, and in a test that reads the files of the fixture while another test process can change them (for example the parity test and the copy of Notes) |
 
 ## Core principles
 
