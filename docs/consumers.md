@@ -61,7 +61,7 @@ umpire-<version>.zip
 | `files[].path` | The path in the archive |
 | `files[].assemblyVersion` | The assembly version of a DLL. `null` for a file that is not a DLL |
 | `files[].package`, `files[].packageVersion` | The NuGet package that gives the bytes. The analyzer files are `Umpire.Vsa.Analyzers`, and the Umpire engine files are `Umpire.Engine` |
-| `files[].asset` | The path of the file in that package, for example `lib/netstandard2.0/Microsoft.Extensions.Logging.dll` |
+| `files[].asset` | The path of the file in that package, for example `lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll` |
 | `files[].sha256` | The SHA-256 hash of the file |
 
 - The folder names and the file names stay the same in each release.

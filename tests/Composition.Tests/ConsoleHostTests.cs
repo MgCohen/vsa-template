@@ -13,6 +13,10 @@ public sealed class ConsoleHostTests {
         Assert.That(Run("--name", "Ann", "--code", "3"), Is.EqualTo(3));
 
     [Test]
+    public void A_parameter_takes_an_option_with_an_equals_sign_in_any_case() =>
+        Assert.That(Run("--NAME=Ann", "--Code=3"), Is.EqualTo(3));
+
+    [Test]
     public void A_parameter_with_a_default_value_is_optional() =>
         Assert.That(Run("--name", "Ann"), Is.EqualTo(0));
 

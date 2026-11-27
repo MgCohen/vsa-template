@@ -32,7 +32,7 @@ public sealed class ComposeOrderTests {
     public void A_pack_variant_kernel_installs_the_layers_of_its_parent_first() {
         var services = new ServiceCollection();
         using var host = new TestHost();
-        host.Compose(services, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(),
+        host.Compose(services, HostArguments.Empty,
             new VariantKernel(), new AppTypes(new FixedModules(), typeof(ComposeOrderTests).Assembly));
 
         var requests = services.ToList().FindIndex(service => service.ServiceType.Name == "IRequestSender");

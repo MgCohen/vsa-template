@@ -1,13 +1,11 @@
 namespace Umpire.Kernels;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-sealed class Core(IConfiguration configuration) : Kernel {
+sealed class Core(HostArguments arguments) : Kernel {
     protected override void Configure(IServiceCollection services, AppTypes types) {
-        services.TryAddSingleton(configuration);
-        services.AddLogging();
+        services.TryAddSingleton(arguments);
         services.AddSingleton(types);
         services.TryAddSingleton<AppStop>();
         AutoRegistration.Add(services, types);
