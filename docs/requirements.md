@@ -39,7 +39,7 @@ An idea that breaks no Must is not rejected. It is ranked down, and it stays on 
 | W4b | Complete feedback: all errors in one run | An agent fixes all findings together, and does not run again for each one |
 | W7 | All checks share one API shape and pattern; their parameters can differ | A new check is small, and all checks read the same way |
 | W11 | Tool data is easy to parse, with a fixed shape for each input and output | Agents and tools read the data |
-| W12 | Few shipped files: one `Umpire.dll` and one to five app outputs | Few files are easier to vendor, mainly in Unity |
+| W12 | Few shipped files: the core `Umpire.dll`, one DLL for each pack (`Umpire.Vsa.dll`) and one to five app outputs | Few files are easier to vendor, mainly in Unity |
 | W19 | A Unity user sees the findings in the Unity Console | Code rules show natively in the Unity compiler. Architecture findings reach the Console through the vsa-unity runner. |
 | W20 | A rule can check any property of the code that an architecture needs | Folder, path, folder structure, namespace, symbols, type names, file data, project or assembly. Each architecture chooses, and it can mix them: VSA checks folders, another architecture can check projects. |
 

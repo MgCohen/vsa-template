@@ -49,7 +49,7 @@ public sealed class BuildCheckTests {
         var layer = workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false", "-p:UmpireCheckMode=Error");
         Assert.That(layer.Succeeded, Is.False, layer.Output);
         Assert.That(layer.Output, Does.Contain($"{domainProbe}(").And.Contain("error UMP020101: SenderProbe in Domain"),
-            "A use of a layer in Umpire.dll is a finding.");
+            "A use of a layer in Umpire.Vsa.dll is a finding.");
 
         File.Delete(domainProbe);
         workspace.Dotnet("build", "Notes.csproj", "--no-restore", "-nodeReuse:false").EnsureSuccess();

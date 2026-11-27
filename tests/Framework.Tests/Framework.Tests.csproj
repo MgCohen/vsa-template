@@ -45,6 +45,7 @@
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj" />
     <PortableProject Include="$(RepoRoot)packs/Vsa/Kernel/Presenters/Umpire.Vsa.Presenters.csproj" />
     <PortableProject Include="$(RepoRoot)tools/bundle/Umpire/Umpire.csproj" />
+    <PortableProject Include="$(RepoRoot)tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" />
     <PortableProject Include="$(RepoRoot)tools/bundle/Definition/Umpire.Definition.csproj" />
     <PortableProject Include="$(RepoRoot)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
     <ProjectReference Include="@(PortableProject)" Exclude="@(ProjectReference)" ReferenceOutputAssembly="false" />

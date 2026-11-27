@@ -19,6 +19,7 @@
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/PackVariant/App/Packs/Ecs/Definition/Ecs.Definition.csproj" />
     <ProjectReference Include="$(RepoRoot)tests/Fixtures/Spike/Charlie/Spike.Charlie.csproj" />
     <ProjectReference Include="$(RepoRoot)tools/bundle/Umpire/Umpire.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(RepoRoot)tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)tools/bundle/Definition/Umpire.Definition.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

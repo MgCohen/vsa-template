@@ -10,6 +10,9 @@ public sealed class BundleSourceTests {
         "framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj",
         "framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj",
         "framework/Kernel/Umpire.Kernels.csproj",
+    ];
+
+    static readonly string[] VsaProjects = [
         "packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj",
         "packs/Vsa/Kernel/Domain/Umpire.Vsa.Domain.csproj",
         "packs/Vsa/Kernel/Infrastructure/Umpire.Vsa.Infrastructure.csproj",
@@ -34,6 +37,7 @@ public sealed class BundleSourceTests {
 
     static IEnumerable<TestCaseData> Bundles() {
         yield return new TestCaseData("tools/bundle/Umpire/Umpire.csproj", RuntimeProjects).SetArgDisplayNames("Umpire");
+        yield return new TestCaseData("tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj", VsaProjects).SetArgDisplayNames("Umpire.Vsa");
         yield return new TestCaseData("tools/bundle/Definition/Umpire.Definition.csproj", DefinitionProjects)
             .SetArgDisplayNames("Umpire.Definition");
         yield return new TestCaseData("tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj",

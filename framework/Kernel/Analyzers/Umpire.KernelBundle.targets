@@ -2,7 +2,8 @@
   <!-- Pinned choice (W24): the analyzer package of a pack holds the kernel analyzer DLL, next to its own.
        Roslyn finds a dependency of an analyzer first in the folder of that analyzer. In another folder, it takes the first registered
        path with the same name and version, also a deleted one, so the VSA rules did not load on Linux (CS8032).
-       Umpire.Sdk adds the Umpire.Kernels.Analyzers package only in source mode (Sdk.targets), so KernelAnalyzer runs one time.
+       The package Umpire brings the Umpire.Kernels.Analyzers package too, and the package Umpire keeps only the copy of this package
+       (_UmpireOneKernelAnalyzer in tools/bundle/Umpire/build/Umpire.targets), so KernelAnalyzer runs one time.
        A pack analyzer project imports this file. A second pack that also bundles the kernel analyzer gives each kernel finding
        two times in an app that gets both packs. -->
   <PropertyGroup>

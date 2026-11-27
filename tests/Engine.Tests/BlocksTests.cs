@@ -447,7 +447,7 @@ public sealed class BlocksTests {
         var result = BlockSearch.Find("C:/a", Path.GetFullPath("C:/a"), [Entry("C:/a", EntryForm.App), bad], NoBin);
 
         Assert.That(result.Value.Findings.Single().Code, Is.EqualTo("UMP030302"));
-        Assert.That(result.Value.Findings.Single().Message, Does.Contain("for example \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa\""));
+        Assert.That(result.Value.Findings.Single().Message, Does.Contain("for example \"Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa.Definition\""));
     }
 
     [Test]

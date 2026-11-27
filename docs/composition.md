@@ -245,7 +245,7 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 | `Name` | The type name with no `Request` suffix, kebab case | Route segment | Second word, optional |
 | `Effect` | `Write` | `Read` GET, `Write` POST, `Delete` DELETE | Not used |
 
-A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestOperations` reads them by reflection, so the same request works on each target. `Umpire.dll` has one build, `netstandard2.0`, so `IRequest` has no `static virtual` members.
+A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestOperations` reads them by reflection, so the same request works on each target. `Umpire.Vsa.dll` has one build, `netstandard2.0`, so `IRequest` has no `static virtual` members.
 
 - `Effect` is in `Umpire.Messages.Contracts` (#199).
 - `RequestOperations` reads the metadata with no generic call, and it makes the generic call only when a host invokes the operation. A host with no transport (for example Unity) never invokes one, so IL2CPP needs no generic instance at compose.
