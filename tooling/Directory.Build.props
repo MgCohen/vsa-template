@@ -1,0 +1,12 @@
+<Project>
+  <!-- The umpire tool is a VSA app. It builds against the framework source in this repository (source mode).
+       This repository has one global.json, so this folder sets the block folder of the tool projects.
+       Templates/ is its own block: its Directory.Build.props imports the root file and not this file. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <UmpireFrameworkSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</UmpireFrameworkSourceDir>
+    <UmpireBlock>$(MSBuildThisFileDirectory)</UmpireBlock>
+    <ArtifactsPath>$(UmpireBlock)artifacts~</ArtifactsPath>
+  </PropertyGroup>
+  <Import Project="$(UmpireFrameworkSourceDir)tools/bundle/SourceMode/Umpire.SourceMode.props" />
+</Project>

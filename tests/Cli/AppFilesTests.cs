@@ -1,9 +1,10 @@
-using System.Text;
 using Tests.Shared;
+using Umpire.Cli.Features.Checks.Slices.Test;
+using Umpire.Cli.Features.Scaffold.Domain;
+using Umpire.Cli.Features.Versions.Slices.Doctor;
+using Umpire.Cli.Features.Versions.Slices.Update;
+using Umpire.Cli.Plugins.Commands.Domain.Shared;
 using Umpire.Engine.Versions;
-using Umpire.Cli;
-using Umpire.Cli.Commands;
-using Umpire.Cli.Scaffolding;
 
 namespace Cli.Tests;
 
@@ -23,7 +24,7 @@ public sealed class AppFilesTests {
         Write("App/Host/App.Host.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Web" /></ItemGroup></Project>""");
 
         Assert.That(Slots(), Does.Contain($"App/Host/App.Host.csproj Umpire.Web {V}"));
-        Assert.That(DoctorCommand.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
+        Assert.That(DoctorHandler.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
     }
 
     [Test]
@@ -35,7 +36,7 @@ public sealed class AppFilesTests {
         Write("artifacts~/obj/Old.Tests.csproj", "<Project />");
         Write("Tests/bin/Copy.Tests.csproj", "<Project />");
 
-        Assert.That(TestCommand.TestProjects(root),
+        Assert.That(TestHandler.TestProjects(root),
             Is.EqualTo(new[] { "Packs/Ecs/Tests/Ecs.Tests.csproj", "Tests/App.Tests.csproj" }));
     }
 
@@ -53,7 +54,7 @@ public sealed class AppFilesTests {
     public void APackageReferenceIsASlot() {
         Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" PrivateAssets="all" /></ItemGroup></Project>""");
 
-        var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
+        var mismatches = VersionCheck.Mismatches(DoctorHandler.Slots(root), V);
 
         Assert.That(mismatches.Select(slot => $"{slot.File} {slot.Package} {slot.Version} {slot.Line}"), Is.EqualTo(new[] { "App.csproj Umpire.Web 0.0.1 1" }));
         Assert.That(VersionCheck.Message(mismatches, V), Does.Contain("App.csproj: Umpire.Web 0.0.1"));
@@ -63,7 +64,7 @@ public sealed class AppFilesTests {
     public void APackageWithNoVersionAndNoCentralVersionFailsTheCheck() {
         Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" /><PackageReference Update="Umpire.Engine" PrivateAssets="all" /></ItemGroup></Project>""");
 
-        var mismatches = VersionCheck.Mismatches(DoctorCommand.Slots(root), V);
+        var mismatches = VersionCheck.Mismatches(DoctorHandler.Slots(root), V);
 
         Assert.That(mismatches.Select(slot => slot.Package), Is.EqualTo(new[] { "Umpire.Web" }));
         Assert.That(VersionCheck.Message(mismatches, V), Does.Contain("App.csproj: Umpire.Web has no version; add Version or a central PackageVersion"));
@@ -84,11 +85,11 @@ public sealed class AppFilesTests {
     public void AVersionWithAPropertyIsNotCheckedAndNotWritten() {
         Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="$(UmpireVersion)" /></ItemGroup></Project>""");
 
-        var slot = DoctorCommand.Slots(root).Single(slot => slot.Package == "Umpire.Web");
+        var slot = DoctorHandler.Slots(root).Single(slot => slot.Package == "Umpire.Web");
 
         Assert.That(VersionCheck.Mismatches([slot], V), Is.Empty);
         Assert.That(VersionCheck.Shown(slot), Is.EqualTo("(not checked: $(UmpireVersion))"));
-        Assert.That(UpdateCommand.SetVersion(root, V), Is.Empty);
+        Assert.That(UpdateHandler.SetVersion(root, V), Is.Empty);
     }
 
     [Test]
@@ -96,7 +97,7 @@ public sealed class AppFilesTests {
         Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><PackageReference Include="Umpire.Web" Version="[0.0.1]" /></ItemGroup></Project>""");
 
         Assert.That(Slots(), Does.Contain("App.csproj Umpire.Web 0.0.1"));
-        UpdateCommand.SetVersion(root, V);
+        UpdateHandler.SetVersion(root, V);
         Assert.That(File.ReadAllText(Path.Combine(root, "App.csproj")), Does.Contain($"Version=\"[{V}]\""));
     }
 
@@ -113,9 +114,9 @@ public sealed class AppFilesTests {
         Assert.That(removed[0], Does.Contain("global.json").And.Contain("Remove the entry"));
         Assert.That(removed[1], Does.StartWith("App.csproj: the Umpire SDK").And.Contain("umpire init"));
         Assert.That(removed[2], Does.StartWith("Lib/Lib.csproj: the Umpire SDK"));
-        Assert.That(() => InFolder(() => CommandList.Run(["doctor"])),
+        Assert.That(() => InFolder(() => Tool.Run(["doctor"])),
             Throws.TypeOf<UmpireException>().With.Message.Contain("Change these by hand"));
-        Assert.That(() => InFolder(() => CommandList.Run(["update"])),
+        Assert.That(() => InFolder(() => Tool.Run(["update"])),
             Throws.TypeOf<UmpireException>().With.Message.Contain("Change these by hand"));
     }
 
@@ -123,7 +124,7 @@ public sealed class AppFilesTests {
     public void UpdateWithNoVersionWritesTheVersionOfTheTool() {
         Write("App.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Web" Version="0.0.1" /></ItemGroup></Project>""");
 
-        var exitCode = InFolder(() => CommandList.Run(["update"]));
+        var exitCode = InFolder(() => Tool.Run(["update"]));
 
         Assert.That(exitCode, Is.Zero);
         Assert.That(File.ReadAllText(Path.Combine(root, "App.csproj")), Does.Contain($"Version=\"{V}\""));
@@ -134,7 +135,7 @@ public sealed class AppFilesTests {
         Write("App.csproj",
             "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <ItemGroup>\n    <PackageReference Include=\"Umpire.Web\" Version=\"0.0.1\" />\n  </ItemGroup>\n</Project>\n");
 
-        UpdateCommand.SetVersion(root, V);
+        UpdateHandler.SetVersion(root, V);
 
         var text = File.ReadAllText(Path.Combine(root, "App.csproj"));
         Assert.That(text, Does.Contain($"Version=\"{V}\"").And.Not.Contain("\r\n"));
@@ -164,15 +165,15 @@ public sealed class AppFilesTests {
         Write("Features/C/C.csproj", """<Project Sdk="Microsoft.NET.Sdk" />""");
         Write("Features/W/W.csproj", """<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Umpire.Engine" Version="0.0.4" PrivateAssets="all" /></ItemGroup></Project>""");
 
-        var changed = UpdateCommand.SetVersion(root, V);
+        var changed = UpdateHandler.SetVersion(root, V);
 
         Assert.That(changed, Is.EqualTo(new[] {
             "App/Host/App.Host.csproj", "Directory.Packages.props", "Features/A/A.csproj", "Features/B/B.csproj", "Features/W/W.csproj" }));
-        Assert.That(DoctorCommand.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
+        Assert.That(DoctorHandler.Slots(root).Select(slot => slot.Version).Distinct(), Is.EqualTo(new[] { V }));
         Assert.That(File.ReadAllText(Path.Combine(root, "Directory.Packages.props")), Does.Contain("""<PackageVersion Include="NUnit" Version="4.0.0" />"""));
         Assert.That(File.ReadAllText(Path.Combine(root, "Features/B/B.csproj")), Does.Contain($"Version=\"[{V}]\""));
         Assert.That(File.ReadAllText(Path.Combine(root, "Features/W/W.csproj")), Does.Contain($"Include=\"Umpire.Engine\" Version=\"{V}\""));
-        Assert.That(UpdateCommand.SetVersion(root, V), Is.Empty);
+        Assert.That(UpdateHandler.SetVersion(root, V), Is.Empty);
     }
 
     [Test]
@@ -193,7 +194,7 @@ public sealed class AppFilesTests {
         }
     }
 
-    string[] Slots() => [.. DoctorCommand.Slots(root).Select(slot => $"{slot.File} {slot.Package} {slot.Version}")];
+    string[] Slots() => [.. DoctorHandler.Slots(root).Select(slot => $"{slot.File} {slot.Package} {slot.Version}")];
 
     void Write(string path, string content) {
         var file = Path.Combine(root, path);
