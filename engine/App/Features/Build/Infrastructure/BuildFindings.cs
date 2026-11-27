@@ -2,7 +2,7 @@ namespace Build.Infrastructure;
 
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 public static partial class BuildFindings {
     const string Kind = @"(?<severity>error|warning) (?<code>[A-Za-z]+\d+): (?<text>.*?)(?: \[[^\]]*\])?$";

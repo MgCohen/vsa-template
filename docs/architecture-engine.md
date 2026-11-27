@@ -4,7 +4,7 @@ The rule engine checks each type of the app against one architecture definition.
 
 ```mermaid
 flowchart LR
-    L["AppReader (BuiltApp plugin)"] --> A["TypeFacts"]
+    L["TypeFactSource (Facts plugin)"] --> A["TypeFacts"]
     A --> B["PartOf (Queries)"]
     D[Definition: Umpire.Architecture] --> B
     B --> S[Bindings]
@@ -19,7 +19,7 @@ flowchart LR
 | `Umpire.Architecture` | `architecture/` | The definition API and `Queries/`. No ArchUnitNET |
 | `Umpire.Vsa` | `packs/Vsa/Definition/` | `VsaArchitecture` and the VSA layers (`Concepts/`). No ArchUnitNET |
 | `Umpire.Engine.Versions` | `engine/Versions/` | The version check (`UMP030401`). The engine app and the `umpire` tool bundle it |
-| Engine app | `engine/` | The runner: Blocks, Versions, LoadApp, Rules, Report. `App/Plugins/BuiltApp` reads the DLL and PDB files: `BinReader` (`MetadataLoadContext`) one time for each run, `AppLoader` for the one definition type, and ArchUnitNET for the type facts. Its root project `engine/Engine.csproj` is not a package: the package `Umpire.Engine` holds the engine in `tools/net8.0/` |
+| Engine app | `engine/` | The jobs (`App/Features/Jobs/`: the build job and the check job) and the operations Build, Changes, Blocks, Versions, LoadApp and Rules. `App/Plugins/Facts` reads the DLL and PDB files, each reader behind a fact source (`IFactSource<TQuery, TFacts>`): `BinSource` (`BinReader`, `MetadataLoadContext`) one time for each block, `DefinitionSource` (`AppLoader`) for the one definition type, and `TypeFactSource` (ArchUnitNET) for the type facts. Its root project `engine/Engine.csproj` is not a package: the package `Umpire.Engine` holds the engine in `tools/net8.0/` |
 
 The runtime of an app does not reference `Umpire.Architecture`: `Umpire.Architecture` references `Umpire.Kernels` for `Umpire.Utility` (`LoadedTypes`, `ClosedBase`). A definition project references `Umpire.Vsa.Definition` (with `Umpire.Vsa`), which depends on `Umpire.Definition` (with `Umpire.Architecture`). Each other project gets the runtime package `Umpire`, which holds no definition code. So `Umpire.Architecture` and `Umpire.Vsa` use only the BCL, the kernel and the VSA contracts. They also target `netstandard2.0`, for Unity and for the compiler. The runtime does not get ArchUnitNET.
 
@@ -481,7 +481,7 @@ A folder alias (`FolderAlias(Folder, As)`) reads the source files of one folder 
 
 | Source | Gives the aliases |
 |---|---|
-| `umpire.check.folder_aliases` in the `.umpireconfig` of the block folder | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). The Rules step reads the table for each block (`FolderAliasConfig`) |
+| `umpire.check.folder_aliases` in the `.umpireconfig` of the block folder | Each key is a folder of the block, and each item of its list is the folder that it binds as (`""` is the block root). The Rules operation reads the table for each block (`FolderAliasConfig`) |
 | `config.FolderAliases` in `Architecture.Configure` | A definition adds aliases in code. The engine uses the aliases of the code and of the config file together |
 
 Rules:
@@ -510,11 +510,11 @@ The engine knows no host build system. A host that compiles the app in its own w
 | A DLL name in `--bin` and in a reference folder | The engine reads the `--bin` DLL only |
 | A type in two DLLs | The engine loads it once. The copy in a reference folder wins |
 
-`CheckSettings` (`engine/App/Features/Engine/Infrastructure`) reads the settings, and `RunOptions` (`engine/App/Plugins/Steps`) gives them to the steps.
+`CheckSettings` (`engine/App/Plugins/Operations/Infrastructure`) reads the settings, and `RunOptions` (same folder) gives them to the operations.
 
-## The checks of the Rules step
+## The checks of the Rules operation
 
-Each architecture rule is one class in `engine/App/Features/Rules/Slices/CheckRules/` on a group base. The rule sets only its `Number` and, if it is not an error, its `Severity`. The group base sets the group, and `ArchitectureRule` makes the code: `UMP02` + group + number. `ArchitectureCheck.Findings()` (the Rules step) runs `ArchitectureRule.All`, so the engine knows no code. Other code finds a rule by its type: `ArchitectureRule.Of<DeniedUseRule>()`.
+Each architecture rule is one class in `engine/App/Features/Rules/Slices/CheckRules/` on a group base. The rule sets only its `Number` and, if it is not an error, its `Severity`. The group base sets the group, and `ArchitectureRule` makes the code: `UMP02` + group + number. `ArchitectureCheck.Findings()` (the Rules operation) runs `ArchitectureRule.All`, so the engine knows no code. Other code finds a rule by its type: `ArchitectureRule.Of<DeniedUseRule>()`.
 
 ```csharp
 sealed class DeniedUseRule : UseRule {
@@ -540,13 +540,13 @@ sealed class DeniedUseRule : UseRule {
 | `UMP020401` | `CoveredBlockRule` | `BlockPlaceRule` (04) | Error | A part of the definition covers the folder of another block (see "Blocks and check entries") |
 | `UMP020402` | `EmptyBlockPlaceRule` | `BlockPlaceRule` (04) | Error | A block place folder (`AddBlock<T>()`, `AddBlockGroup<T>()`) holds no check entry. A place with no folder is the DLL form |
 
-The Rules step reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` table as a dotted key, with no case (`RuleKeys` in the Steps plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
+The Rules operation reads the values of the nearest `.umpireconfig` file at or above the block folder: each one-line scalar of the `umpire` table as a dotted key, with no case (`RuleKeys` in the Operations plugin). The base gives each rule its values (`RuleValues`): `umpire.<code>.<key>`, then `umpire.<key>`, then the default on the class. The severity key is the same as for the analyzers:
 
 ```toml
 umpire.UMP020101.severity = "warning"   # error, warning, suggestion, or none (the rule does not run)
 ```
 
-Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Steps plugin. `File` is the full path. The engine app writes one line for each finding:
+Each finding is a `Finding(Code, Severity, Message, File, Line)` of the Operations plugin. `File` is the full path. The engine app writes one line for each finding:
 
 ```text
 C:/app/App/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: ReadHandler in Handlers.Requests (App/Features/Notes/Slices/Read) uses Invoice in Domain (App/Features/Billing/Domain): no rule allows it (DefaultPermission = Deny). Remove the use, or change the rule in Rules.
@@ -557,23 +557,23 @@ C:/app/App/Features/Notes/Slices/Read/ReadHandler.cs(6,1): error UMP020101: Read
 An engine run does the checks of an app. The package `Umpire.Engine` holds the engine in `tools/net8.0/` (property `UmpireEngineFile`, set by its `build/Umpire.Engine.props`). The root project of the app references it with `PrivateAssets="all"`. The engine targets `net8.0` with `RollForward` `Major`, so one build runs on .NET 8 and on each newer runtime. It needs only `Microsoft.NETCore.App`: `AppLoader` loads the ASP.NET Core types of a web app from the shared folder of the runtime. It loads the definition of the app, so the hook runs it with `--roll-forward LatestMajor` (property `UmpireEngineRollForward`): a `net10.0` app does not load on .NET 8. See "The rule engine" in `AGENTS.md`.
 
 ```text
-umpire-engine --project <root> --block <block> --bin <output> [--stage Build,Check] [--mode Error]
-├─ Build stage
-│  └─ 1 Build      dotnet build <root> -p:UmpireCheck=false → each build line becomes a finding
-├─ Check stage
-│  ├─ 2 Changes    same input hash as the stamp in --bin → the check stops (UMP030201)
-│  ├─ 3 Blocks
-│  ├─ 4 Versions
-│  ├─ 5 LoadApp
-│  └─ 6 Rules
-└─ 7 Report        in each run
+umpire-engine jobs check --project <root> --block <block> --bin <output> [--mode Error]
+├─ 1 Build      dotnet build <root> -p:UmpireCheck=false → each build line becomes a finding
+└─ the operations of the build job
+
+umpire-engine jobs build --project <root> --block <block> --bin <output> [--mode Error]
+├─ 2 Changes    same input hash as the stamp in --bin → the check stops (UMP030201)
+├─ 3 Blocks
+├─ 4 Versions
+├─ 5 LoadApp
+└─ 6 Rules
 
 dotnet build <root project>
 └─ UmpireCheck (Umpire.After.targets of the package Umpire, AfterTargets="Build")
-   └─ umpire-engine --stage Check --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
+   └─ umpire-engine jobs build --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
 ```
 
-Each step declares its stages with `IStepStage` (`public static Stage Stages => Stage.Check;`). With no `--stage`, all stages run. The Report step runs in each run. A step that is not in the stage gives no finding.
+A job is one call of the engine: one request, one input and one report. The words `jobs build` and `jobs check` select the job. A call with no job word comes from a hook of another Umpire version, for example the old form `--stage Check`. The engine then runs no job and gives `UMP030401`: give `Umpire` and `Umpire.Engine` the same version, or run `umpire update`. Each job handler names its operations in order. The operations fill the report (`JobReport`: the mode and the findings), and the caller converts it. The console entry (`EngineConsoleHost`, `ConsoleReport`) writes the `file(line,col): error CODE: text` lines and gives the exit code.
 
 | Value | Source | Scope |
 |---|---|---|
@@ -582,18 +582,18 @@ Each step declares its stages with `IStepStage` (`public static Stage Stages => 
 | Mode `Warn` | The default | Each run with no other source |
 | Check on or off | `-p:UmpireCheck=false` | One build |
 
-In the mode `Warn`, each error is a warning, also the codes of the group `00` and of the groups `02` to `05`. The findings of the Build step (compiler errors and `UMP030101`) stay errors. A mode value that is not valid and a `.umpireconfig` that is not valid TOML give the default mode. An error line fails the build, and a warning line does not.
+In the mode `Warn`, each error is a warning, also the codes of the group `00` and of the groups `02` to `05`. The findings of the Build operation (compiler errors and `UMP030101`) stay errors. A mode value that is not valid and a `.umpireconfig` that is not valid TOML give the default mode. An error line fails the build, and a warning line does not.
 
 `tools/bundle/Umpire/build/Umpire.Codes.props` is the one list of the Umpire codes. The package `Umpire` adds it to `WarningsNotAsErrors` and `MSBuildWarningsNotAsErrors`, so `TreatWarningsAsErrors` and `-warnaserror` do not make a warning an error. A code in `WarningsAsErrors` of the project stays an error. This repository uses the mode `Error` (`UmpireCheckMode` in the root `Directory.Build.props`).
 
-The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no step runs before the compile. The Build step of the engine builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build step fails, the run skips the Check stage. If the engine file does not exist, for example because the root project has no `Umpire.Engine`, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
+The analyzers read `.umpireconfig` themselves (see "Rule files" in `architecture-rules.md`), so no operation runs before the compile. The Build operation of the check job builds with `-p:UmpireCheck=false`, so a manual run checks one time. If the Build operation fails, the check job skips the other operations. If the engine file does not exist, for example because the root project has no `Umpire.Engine`, the hook gives `UMP030003`. If the engine crashes, the hook gives `UMP030004`: the exit code is not 0, and it is not 1 with a finding line. The two codes are warnings, and errors in the mode `Error`. Only the executable project in the block root runs the hook. In source mode (this repository), the hook runs the engine of the source build: the engine checks itself with its own `TargetPath`, and each other root project gets a `ProjectReference` to `engine/Engine.csproj` with no assembly, so the engine builds first. `tests/Fixtures/` sets `UmpireCheck=false`.
 
-The Changes step makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
+The Changes operation makes a hash of the inputs of the check: the DLL, PDB and EXE files of `--bin`, each `.umpireconfig` and project file of the block, the engine build and the run options. The stamp is `.umpire-check` in `--bin`. The engine writes it only after a check with no error and no warning, so a skip hides no finding.
 
 One definition applies to one block: the folder tree of code that the definition checks. The definition applies to its block folder, not to the repository. `Architecture.Configure` places the roots in the block folder, and each part path is relative to it. A source file outside the block folder is not checked.
 
 ```text
-umpire-engine.dll --project <host project folder> [--block <block folder>] --bin <host output>
+umpire-engine.dll jobs build --project <host project folder> [--block <block folder>] --bin <host output>
 ```
 
 The hook gives `--project`. It gives `--block` only if the MSBuild property `UmpireBlock` is set.
@@ -633,18 +633,18 @@ The app class names its kernel and its host, and the definition names its kernel
 
 ### Engine codes
 
-Each engine code is `UMP03`, the group and the case. Group `00` is the engine run. Each step has the next group, in the order of `RunEngineHandler`. A step command gives its group with `IStepGroup` (`public static int Group => 2;`) and its stages with `IStepStage`, and `StepCode.Of<TStep>(n)` makes its codes. Each step module holds its codes in one class, for example `LoadAppCodes`.
+Each engine code is `UMP03`, the group and the case. Group `00` is the job run. Each operation has the next group, in the order of the check job. An operation command gives its group with `IOperationGroup` (`public static int Group => 2;`), and `OperationCode.Of<TOperation>(n)` makes its codes. Each operation module holds its codes in one class, for example `LoadAppCodes`.
 
 The table gives the severity in the mode `Error`.
 
 | ID | Group | Severity | Problem |
 |---|---|---|---|
-| `UMP030001` | 00 Run | Error | A step throws an exception. The run continues |
-| `UMP030002` | 00 Run | Info | A step is skipped, because an earlier step failed |
+| `UMP030001` | 00 Run | Error | An operation throws an exception. The job continues |
+| `UMP030002` | 00 Run | Info | An operation is skipped, because an earlier operation failed |
 | `UMP030003` | 00 Run | Error | The hook does not find the engine file. Restore the project again. In source mode, build `engine/Engine.csproj` |
 | `UMP030202` | 02 Changes | Info | The block did not change since its last clean check, so its check did not run |
 | `UMP030004` | 00 Run | Error | The engine stops with an exit code that is not 0 and does not report its findings, for example after a crash |
-| `UMP030101` | 01 Build | Error | The build of the root project fails. The Check stage does not run |
+| `UMP030101` | 01 Build | Error | The build of the root project fails. The check job does not run its other operations |
 | `UMP030201` | 02 Changes | Info | No input changed since the last clean check, so the check did not run |
 | `UMP030301` | 03 Blocks | Error | A block has more than one check entry |
 | `UMP030302` | 03 Blocks | Error | A check entry names a type that does not load or that is not an `Architecture` |
@@ -668,11 +668,11 @@ The table gives the severity in the mode `Error`.
 | `UMP030510` | 05 LoadApp | Error | No app class or no definition of the app loads, because an assembly is not in the bin or the reference folders. The message names each class, the type that did not load and its assembly (at most five) |
 | `UMP030505` | 05 LoadApp | Error | A pack names an architecture, but the block architecture has no constructor that takes it (an old Umpire version) |
 
-A TOML error in `.umpireconfig` throws in the Blocks step, and the run gives `UMP030001` with the file, the line and the column. The Rules step (group `06`) gives the rule findings of area `02`. The Report step (group `07`) has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
+A TOML error in `.umpireconfig` throws in the Blocks operation, and the job gives `UMP030001` with the file, the line and the column. The Rules operation (group `06`) gives the rule findings of area `02`. The console report has no code. If `UMP030301` or `UMP030302` is about the block of the project, the run stops. If it is about an inner block, the run continues.
 
 ### Blocks and check entries
 
-A block is a folder tree of code with one check entry. The check entry names the architecture of the block. The step `FindBlocks` (`engine/App/Features/Blocks/`) reads the entries before all other steps. The kinds of block and their entries are in `blocks.md`.
+A block is a folder tree of code with one check entry. The check entry names the architecture of the block. The operation `FindBlocks` (`engine/App/Features/Blocks/`) reads the entries before all other operations of the check. The kinds of block and their entries are in `blocks.md`.
 
 | Form | Example | Block folder |
 |---|---|---|
@@ -698,13 +698,13 @@ A block is a folder tree of code with one check entry. The check entry names the
 - The outer definition does not check the types of an inner block. If a place (`AddBlock<T>()`, `AddBlockGroup<T>()`) marks the folder, the types bind to the place part, so outer rules can name the inner block as one part. The place gets the body of its record, and an overlay (`For<T>().Add<TPart>()` or `For<T>().ExtendedBy<TBlock>()`) can add parts to it. The outer definition adds no other part to a place. The engine does not check their uses: the inner block checks them. With no place, the outer definition does not see the types.
 - An outer part whose folder is at, above or below the folder of an inner block gives `UMP020401`, unless a place marks that folder. One finding names the deepest part at or above the folder of the inner block, else the nearest part below it. A block in another inner block is a problem of that inner block. A place folder with no check entry gives `UMP020402`. A place of a block with a body and no folder is the DLL form: its types bind by their PDB path (see "Binding"). A place with no body and no folder gives `UMP020402`.
 - The rule check also reads the DLLs of the host output that the app DLLs reference, so a base type chain is complete. The check of the block does not check the types of these DLLs.
-- After the check of the block, the run checks each used block with its own definition, the same bin and the same steps (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
+- After the check of the block, the run checks each used block with its own definition, the same bin and the same operations (FindBlocks, Versions, LoadApp, Rules). A used block is an inner block, or a block with a check entry in a DLL that the block references through a project reference (`deps.json` type `project`, transitive). A DLL of a package is the block of another repository, so the run skips it. With no `deps.json` (Unity), only the inner blocks are used. The run does not check the projects of a used block (`UMP0303xx`), and it does not look for the blocks that a used block uses: the reference walk is already transitive.
 - Each block has its own check stamp in `artifacts~/umpire-checks/` of the block folder. A run reads the stamp before the check of the block, and writes it after a check with no error and no warning. The key has the name of the definition, the content of the block DLLs, of the DLLs that they reference, of the DLL that holds the definition type, of for an app block each DLL with a definition of a kernel, and of each DLL that the engine shares with the app (`AppLoader.Shared`), the project and config files of the block and above it, the engine and the run options. So a change in the body of a definition makes a new key. The name of the stamp file has the DLL names, not their content: two hosts with the same DLL names and other content use one file, and each run of one host writes over the stamp of the other. The stamp is written to a temporary file and then moved, and a stamp that cannot be read counts as no stamp. The key does not have the path of the bin, so two apps that use one block share its stamp, and a run at a lower level skips a block that a run at a top level checked (`UMP030202`). Delete `umpire-checks/` to check the block again. The run stamp (`.umpire-check` in the bin) still skips the full run when no input of the run changed (`UMP030201`).
 - Known gap of a used block: the bin has only the DLLs of the block that the host references, so the check sees only that part (for example, the engine bin has no `Umpire.Vsa.Analyzers`). Each set of DLLs gets its own stamp.
 
 ### Projects of a block
 
-After it finds the block, the step `FindBlocks` reads the `.csproj` files of the block folder. It skips the folders of the inner blocks and the folders that the search for `.umpireconfig` skips. Both checks are warnings.
+After it finds the block, the operation `FindBlocks` reads the `.csproj` files of the block folder. It skips the folders of the inner blocks and the folders that the search for `.umpireconfig` skips. Both checks are warnings.
 
 | Check | Code | Pass |
 |---|---|---|
@@ -717,7 +717,7 @@ After it finds the block, the step `FindBlocks` reads the `.csproj` files of the
 
 ## One version
 
-The engine, the `umpire` tool and the Umpire packages have one version. The step `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030401` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
+The engine, the `umpire` tool and the Umpire packages have one version. The operation `CheckVersions` compares each version slot with the version of the engine. If one slot is different, it gives one `UMP030401` error with each different slot, and the engine skips the load and the rule checks (`UMP030002`). `umpire doctor` runs the same check (`VersionCheck` of `Umpire.Engine.Versions`) with the version of the tool, without the host output.
 
 | Slot | Item |
 |---|---|
@@ -744,7 +744,7 @@ public sealed class MyArchitecture : VsaArchitecture {
 }
 ```
 
-The Report step sorts the findings: the findings with no file first, then by path, line, code and message (ordinal). Each run gives the same order.
+The console report (`ConsoleReport`) sorts the findings: the findings with no file first, then by path, line, code and message (ordinal). Each run gives the same order.
 
 ## Tests of the engine
 
@@ -776,7 +776,7 @@ public sealed class NotesArchitectureTests : VsaArchitectureTest {
 | `Place.Path`, `Place.Values` | The path of the part instance and the group values, for example `Feature` = `Notebook` |
 | `Place.IsMapped` | `false` if the engine does not bind the type: `UMP020202`, a folder outside the block, a build output folder, or an inner block folder with no block place |
 
-The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules step. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
+The base reads the base types and the member types of each type by reflection, and it binds with `ResolvedArchitecture.Place`, the code of the Rules operation. A helper type follows its user (`FollowsUser`) only if the user is in `neighbors`. `FollowsUser` is also true for a type with no user that follows its base type in the same folder. `ArchitectureTestEngineTests` checks that the base and the engine bind each type of `VsaApp` to the same part, and that the base does not map a type that the engine does not map. Reflection does not see the types that a method body uses, so a helper that only a method body uses does not follow its user.
 
 The folder is the path in the block with no folder alias. For an app with the alias `"src/Game" = [""]`, write `App/Features/Notebook`, not `src/Game/App/Features/Notebook`.
 

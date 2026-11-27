@@ -3,7 +3,7 @@ using Tests.Shared;
 namespace CheckModel.Tests;
 
 using System.Text.RegularExpressions;
-using BuiltApp.Domain.Shared;
+using Facts.Domain.Shared;
 using Umpire.Architecture;
 using Umpire.CheckModel.Export;
 using Data = Umpire.CheckModel;

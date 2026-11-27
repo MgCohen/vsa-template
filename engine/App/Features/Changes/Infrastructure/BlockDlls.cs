@@ -1,6 +1,6 @@
 namespace Changes.Infrastructure;
 
-using BuiltApp.Domain.Shared;
+using Facts.Domain.Shared;
 
 public static class BlockDlls {
     public static IReadOnlyList<string> Of(BlockEntry block, BinIndex bin) {

@@ -1,9 +1,9 @@
 using Blocks.Domain;
 using Blocks.Infrastructure;
 using Blocks.Slices.FindBlocks;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
-using Steps.Domain.Shared;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
+using Operations.Domain.Shared;
 using Tests.Shared;
 using UmpireEngine;
 
@@ -237,7 +237,7 @@ public sealed class BlocksTests {
     public void One_app_class_check_finds_the_engine_app_class_with_its_bases() {
         var app = Index.Dlls.Single(d => d.Name == "umpire-engine").AppClasses.Single();
 
-        Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp).FullName!, "umpire-engine")));
+        Assert.That(app.Type, Is.EqualTo(new TypeName(typeof(EngineApp<>).FullName!, "umpire-engine")));
         Assert.That(app.Bases, Does.Contain("Umpire.Kernels.App"));
         Assert.That(app.Kernels.Select(k => k.FullName), Is.EqualTo(new[] { "Umpire.Vsa.Composition.VsaKernel" }));
         Assert.That(app.KernelBases.Select(k => k.FullName), Does.Contain("Umpire.Kernels.Kernel"));

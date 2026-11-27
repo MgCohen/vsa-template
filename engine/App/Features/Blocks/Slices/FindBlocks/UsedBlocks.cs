@@ -1,6 +1,6 @@
 namespace Blocks.Slices.FindBlocks;
 
-using BuiltApp.Domain.Shared;
+using Facts.Domain.Shared;
 
 static class UsedBlocks {
     public static IReadOnlyList<string> Of(

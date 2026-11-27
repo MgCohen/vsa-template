@@ -2,21 +2,21 @@ using Blocks;
 using Build;
 using Changes;
 using Changes.Infrastructure;
+using Facts;
+using Facts.Domain.Shared;
+using Facts.Infrastructure;
+using Jobs;
+using Jobs.Slices.BuildJob;
+using Jobs.Slices.CheckJob;
 using LoadApp;
-using BuiltApp.Domain.Shared;
-using BuiltApp.Infrastructure;
-using Engine.Slices.RunEngine;
 using Microsoft.Extensions.DependencyInjection;
-using Report;
-using Report.Domain.Shared;
-using Report.Slices.WriteReport;
+using Operations;
+using Operations.Contracts.Requests;
+using Operations.Domain.Shared;
 using Rules;
-using Steps;
-using Steps.Domain.Shared;
 using Versions;
 using Tests.Shared;
 using Umpire.Engine.Versions;
-using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Kernels;
 using UmpireEngine;
@@ -25,17 +25,17 @@ namespace Engine.Tests;
 
 public sealed class RunEngineTests {
     const string RulesSkipped =
-        "umpire-engine: UMP030002: CheckRules skipped, because an earlier step failed.";
+        "umpire-engine: UMP030002: CheckRules skipped, because an earlier operation failed.";
     static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
 
     [Test]
     public void The_scan_finds_each_module_of_the_one_engine_assembly() {
-        var engine = typeof(StepsPlugin).Assembly;
+        var engine = typeof(OperationsPlugin).Assembly;
 
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "BuiltApp", "Steps", "Blocks", "Build", "Changes", "Engine", "LoadApp", "Report", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] { "Facts", "Operations", "Blocks", "Build", "Changes", "Jobs", "LoadApp", "Rules", "Versions" }));
     }
 
     [Test]
@@ -91,7 +91,7 @@ public sealed class RunEngineTests {
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.Lines, Has.One.Contains("error UMP030401").And.Contains("Old.csproj: Umpire.Vsa 0.0.1"));
-            Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier step failed."));
+            Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier operation failed."));
         } finally {
             TempFolder.Delete(root);
         }
@@ -310,35 +310,38 @@ public sealed class RunEngineTests {
         }
     }
 
-    [Test]
-    public async Task The_report_line_has_the_line_and_the_column_of_the_finding() {
-        using var host = new EngineTestApp(new StepsPlugin(), new ReportModule()).Build();
-        await using var scope = host.Services.CreateAsyncScope();
-        var finding = new Finding("UMP020101", FindingSeverity.Error, "Probe in Host", "Probe.cs", 4, 9);
+    internal static Module[] EngineModules() => [
+        new OperationsPlugin(), new FactsPlugin(), new JobsModule(), new BuildModule(), new ChangesModule(), new BlocksModule(),
+        new VersionsModule(), new LoadAppModule(), new RulesModule(),
+    ];
 
-        var result = await scope.ServiceProvider.GetRequiredService<ICommandSender>()
-            .SendAsync(new WriteReportCommand(ReportMode.Error, [finding]), default);
-
-        Assert.That(result.Value.Lines, Is.EqualTo(new[] { "Probe.cs(4,9): error UMP020101: Probe in Host" }));
-    }
-
-    internal static async Task<RunEngineResponse> Run(
+    internal static async Task<ConsoleOutput> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
-        Stage stage = Stage.Check, bool keepStamp = false, bool? projectChecks = null,
+        bool build = false, bool keepStamp = false, bool? projectChecks = null,
+        ReportMode? mode = ReportMode.Error, string ignoredFolders = "") =>
+        ConsoleReport.Of(await Report(block, bin, failFast, project, build, keepStamp, projectChecks, mode, ignoredFolders));
+
+    internal static async Task<JobReport> Report(
+        string? block = null, string? bin = null, bool failFast = false, string? project = null,
+        bool build = false, bool keepStamp = false, bool? projectChecks = null,
         ReportMode? mode = ReportMode.Error, string ignoredFolders = "") {
-        using var host = new EngineTestApp(
-            new StepsPlugin(), new EngineModule(), new BuildModule(), new ChangesModule(), new BlocksModule(), new VersionsModule(),
-            new LoadAppModule(), new RulesModule(), new ReportModule()).Build();
+        using var host = new EngineTestApp(EngineModules()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
         var output = bin ?? AppContext.BaseDirectory;
         if (Directory.Exists(output) && keepStamp is false) {
             StampFile.Delete(output);
         }
-        var request = new RunEngineRequest(
-            project ?? declared, output, declared, mode, FailFast: failFast, Stage: stage, IgnoredFolders: ignoredFolders,
+        var requests = scope.ServiceProvider.GetRequiredService<IRequestSender>();
+        if (build) {
+            var check = new CheckJobRequest(
+                project ?? declared, output, declared, mode, FailFast: failFast, IgnoredFolders: ignoredFolders,
+                ProjectChecks: projectChecks);
+            return (await requests.SendAsync(check, default)).Value;
+        }
+        var request = new BuildJobRequest(
+            project ?? declared, output, declared, mode, FailFast: failFast, IgnoredFolders: ignoredFolders,
             ProjectChecks: projectChecks);
-        var result = await scope.ServiceProvider.GetRequiredService<IRequestSender>().SendAsync(request, default);
-        return result.Value;
+        return (await requests.SendAsync(request, default)).Value;
     }
 }

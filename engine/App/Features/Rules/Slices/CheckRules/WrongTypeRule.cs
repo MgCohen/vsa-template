@@ -1,7 +1,7 @@
 namespace Rules.Slices.CheckRules;
 
 using Rules.Domain;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 sealed class WrongTypeRule : PlaceRule {
     public override int Number => 1;

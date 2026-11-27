@@ -1,7 +1,7 @@
 namespace Rules.Slices.CheckRules;
 
 using Rules.Domain;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 sealed class UnmappedTypeRule : PlaceRule {
     public override int Number => 2;

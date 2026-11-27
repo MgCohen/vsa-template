@@ -1,6 +1,6 @@
 namespace Blocks.Domain.Shared;
 
-using BuiltApp.Domain.Shared;
-using Steps.Domain.Shared;
+using Facts.Domain.Shared;
+using Operations.Domain.Shared;
 
-public sealed record FindBlocksResult(IReadOnlyList<Finding> Findings, BlockTree Blocks, BinIndex Bin) : IStepResult;
+public sealed record FindBlocksResult(IReadOnlyList<Finding> Findings, BlockTree Blocks, BinIndex Bin) : IOperationResult;

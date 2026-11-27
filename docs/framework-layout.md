@@ -66,15 +66,16 @@ This table is a guideline. **Not enforced in 0.1.0.**
 | A free block for two or more packs | `framework/Components/<Name>/` |
 | A new architecture | `packs/<Name>/`: `Definition/`, `Kernel/`, `Tests/` |
 | A pack variant of an app | `App/Packs/<Name>/` of the app (`pack-variants.md`) |
-| A new fact of a built app | `engine/App/Plugins/BuiltApp/` |
-| A step of the engine run | `engine/App/Features/<Step>/`: one feature module, one command |
+| A new fact of a built app | `engine/App/Plugins/Facts/`, behind a fact source (`IFactSource<TQuery, TFacts>`) |
+| An operation of the engine | `engine/App/Features/<Operation>/`: one feature module, one command |
+| A job of the engine | `engine/App/Features/Jobs/Slices/<Name>Job/`: one request and its handler |
 | A tool command | `tools/cli/Commands/`, on a base in `Commands/Bases/` |
 
 ## Where the rule answers are
 
 ```
-engine Rules step (engine/App/Features/Rules)
-├─ BuiltApp plugin: DLL and PDB facts             ArchUnitNET (the only place)
+engine Rules operation (engine/App/Features/Rules)
+├─ Facts plugin: DLL and PDB facts               ArchUnitNET (the only place)
 ├─ ResolvedArchitecture.Place(facts)              architecture/Queries: PartOf
 ├─ ResolvedArchitecture.DecisionFor(a, b)         architecture/Queries: ResolvedArchitecture
 └─ ResolvedArchitecture.Counts, Matches(bindings) architecture/Queries: CountCheck, MatchCheck

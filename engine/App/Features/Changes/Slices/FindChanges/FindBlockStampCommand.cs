@@ -1,6 +1,6 @@
 namespace Changes.Slices.FindChanges;
 
-using BuiltApp.Domain.Shared;
+using Facts.Domain.Shared;
 using Changes.Domain.Shared;
 using Umpire.Vsa.Contracts.Commands;
 

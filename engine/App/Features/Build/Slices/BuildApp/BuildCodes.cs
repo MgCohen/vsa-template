@@ -1,7 +1,7 @@
 namespace Build.Slices.BuildApp;
 
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
 public static class BuildCodes {
-    public static readonly string Failed = StepCode.Of<BuildAppCommand>(1);
+    public static readonly string Failed = OperationCode.Of<BuildAppCommand>(1);
 }

@@ -1,5 +1,5 @@
 namespace Rules.Slices.CheckRules;
 
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 
-public sealed record CheckRulesResult(IReadOnlyList<Finding> Findings) : IStepResult;
+public sealed record CheckRulesResult(IReadOnlyList<Finding> Findings) : IOperationResult;

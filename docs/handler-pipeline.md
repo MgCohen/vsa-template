@@ -203,7 +203,7 @@ The message also closes an open handler. For `MotionWait`, the pipeline reads `W
 | Runner | Behavior |
 |---|---|
 | `InlineRunner` | The default. Each send runs at once. A send from a hook or a step runs inside the run of its parent |
-| A custom `IRunner` | `RunAsync(envelope, run)` decides when `run` starts, for example in a `try` block that records a fault (the `StepRunner` of the engine) |
+| A custom `IRunner` | `RunAsync(envelope, run)` decides when `run` starts, for example in a `try` block that records a fault (the `OperationRunner` of the engine) |
 
 The runner of the pipeline of the message decides when a send runs. A `SendAsync` task completes when its own message has run. Runners that keep a message in a queue or a stack until a later start (for example one time in each frame of a game loop) belong to the `vsa-unity` package.
 

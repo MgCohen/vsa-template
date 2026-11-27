@@ -1,4 +1,4 @@
-using Engine.Infrastructure;
+using Operations.Infrastructure;
 using Tests.Shared;
 
 namespace Engine.Tests;

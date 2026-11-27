@@ -1,7 +1,7 @@
 namespace Rules.Slices.CheckRules;
 
 using Rules.Domain;
-using Steps.Domain.Shared;
+using Operations.Domain.Shared;
 using Umpire.Architecture;
 
 sealed class DeniedUseRule : UseRule {

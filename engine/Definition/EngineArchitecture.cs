@@ -13,6 +13,7 @@ public sealed class EngineArchitecture : VsaArchitecture {
         rules.For<Infrastructure>().Uses<ArchUnitLibraries>();
         rules.For<Infrastructure>().Uses<KernelParts.Utility>();
         rules.For<Host>().And<App>(Depth.Self).Uses<EngineLibraries>().And<VersionLibraries>();
+        rules.For<Host>().Uses<Contracts.Requests>().And<Domain.Shared>().And<Infrastructure>().Under<Plugin>();
         rules.For<DefinitionRoot>().Uses<EngineLibraries>();
     }
 }

@@ -1,13 +1,12 @@
 using Blocks.Domain.Shared;
-using BuiltApp.Domain.Shared;
+using Facts.Domain.Shared;
 using LoadApp.Domain.Shared;
-using Steps.Contracts.Commands;
-using Steps.Domain.Shared;
+using Operations.Contracts.Commands;
+using Operations.Domain.Shared;
 
 namespace LoadApp.Slices.LoadApp;
 
 public sealed record LoadAppCommand(BlockTree Blocks, BinIndex Bin, string Skip, bool IsUsed = false)
-    : EngineStep<AppInput>, IStepGroup, IStepStage {
+    : JobOperation<AppInput>, IOperationGroup {
     public static int Group => 5;
-    public static Stage Stages => Stage.Check;
 }
