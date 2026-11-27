@@ -1,4 +1,4 @@
-namespace Spike.Pack;
+namespace Spike.Core;
 
 public interface IRequest;
 

@@ -3,14 +3,34 @@ namespace Spike.Hosts.Console;
 using Spike.Core;
 
 public sealed class ConsoleHost(string[] args) : AppHost {
-    public override async Task<int> Run(IOperations operations) {
+    ConsoleCancelEventHandler? cancel;
+
+    public override Task Open(IOperations operations, AppStop stop) {
+        cancel = (_, e) => {
+            e.Cancel = true;
+            stop.Request(130);
+        };
+        System.Console.CancelKeyPress += cancel;
+        return Task.Run(() => RunOne(operations, stop));
+    }
+
+    public override ValueTask Close() {
+        if (cancel is not null) {
+            System.Console.CancelKeyPress -= cancel;
+            cancel = null;
+        }
+        return default;
+    }
+
+    async Task RunOne(IOperations operations, AppStop stop) {
         var result = await operations.Send(ToOperation(args)).ConfigureAwait(false);
         if (result.Error is { } error) {
             await System.Console.Error.WriteLineAsync(error).ConfigureAwait(false);
-            return 1;
+            stop.Request(1);
+            return;
         }
         await System.Console.Out.WriteLineAsync(result.Value?.ToString()).ConfigureAwait(false);
-        return 0;
+        stop.Request(0);
     }
 
     static Operation ToOperation(string[] args) {

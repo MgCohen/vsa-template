@@ -8,6 +8,8 @@ dotnet build Entry/Umpire.Entry.csproj
 dotnet artifacts~/bin/Umpire.Entry/debug/umpire.dll ping 5
 dotnet build Entry.Bare/Umpire.Bare.csproj
 dotnet artifacts~/bin/Umpire.Bare/debug/umpire-bare.dll ping 5
+dotnet build Entry.Local/Umpire.Local.csproj
+dotnet artifacts~/bin/Umpire.Local/debug/umpire-local.dll
 ```
 
 | Part | File | Owner |
@@ -24,3 +26,8 @@ dotnet artifacts~/bin/Umpire.Bare/debug/umpire-bare.dll ping 5
 | A pipeline step for every request | `Ping/Plugins/Tracing/RequestTimer.cs` | The app (a plugin module) |
 | A validator and a handler for one message | `Ping/Features/Pong/Slices/Ping/` | The app (a feature module) |
 | An app with no architecture | `Entry.Bare/Program.cs` | Shows the warning |
+| The one start method: `AppInstance Run(params AppHost[] hosts)` | `Core/App/App.cs` | The core |
+| The run: `Completion`, `Stop`, `DisposeAsync`, awaitable. It watches each host task, keeps an early stop request, drains the sends and closes the hosts in reverse order | `Core/App/AppInstance.cs` | The core |
+| The drain: refuse new sends, wait for the running sends for a grace time, then cancel them | `Core/Operations/Operations.cs` | The core |
+| A typed local call with no operation | `Hosts.Local/LocalHost.cs` | The host |
+| The stop paths: drain, early stop, failed host work, cancel after the grace time | `Entry.Local/Program.cs` | Demo |
