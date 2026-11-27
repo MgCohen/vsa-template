@@ -12,7 +12,7 @@ public abstract class PresenterWatcher : ComponentBase, IDisposable {
 
     protected void Watch(params Presenter[] presenters) {
         MakeTheScopeLive();
-        if (watched.SequenceEqual(presenters, ReferenceEqualityComparer.Instance)) {
+        if (Enumerable.SequenceEqual(watched, presenters, ReferenceEqualityComparer.Instance)) {
             return;
         }
         Unwatch();

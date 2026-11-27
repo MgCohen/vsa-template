@@ -47,7 +47,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Done: `LocalHost` and `Send`, through the `Operation` path, with a typed `Send` in the VSA kernel (PR #393). The engine accepts an app class with an open host | Entry design |
 | Done: `LoadedTypes` and `ClosedBase` in `framework/Kernel/Utility/`, namespace `Umpire.Utility` (PR #387). Still to move: the file writer and the version check, with phase 2 | Q1, P8 |
 | Done: our own TOML reader, no Tomlyn (PR #388) | K4 Q4 |
-| Make `App.Services` internal or protected, after a check of its users | Entry design |
+| Done: `App.Services` is `protected internal`, and `IApp` has no `Services`. The tests read it through `InternalsVisibleTo`. The consumer repos do not read it. A Unity bridge gets the provider in `UnityHost.Start(services, stop)` | Entry design |
 
 ## Phase 2: packages
 
@@ -57,7 +57,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Done: the core `Umpire` and `Umpire.Vsa` are two packages and two DLLs (PR #394) | K4 Q6 |
 | Done (PR #399): the core has no `Microsoft.Extensions.Configuration` and no `Logging`. It uses `HostArguments` and the null logger. Update the consumer repos: `Configuration(args)` is `Arguments(args)`, `Compose` takes `HostArguments`, and a non-web module reads `HostArguments` in place of `IConfiguration` | K4 Q5 |
 | Done: no SDK. A consumer project uses `Microsoft.NET.Sdk` and package references; the build logic is in the `build/` files of `Umpire`; the engine ships in the new package `Umpire.Engine` (PR #398) | P7 |
-| Each package targets the lowest framework that its code needs. `Umpire.Web` is `net8.0` | P7 |
+| Done (PR #400): each package targets the lowest framework that its code needs. `Umpire.Web` is `net9.0` (`MapStaticAssets`), `Umpire.Console`, `Umpire.Testing` and `umpire` are `net8.0`. See "Runtime targets" in `requirements.md` | P7 |
 
 ## Phase 3: engine
 
@@ -111,6 +111,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #400, the lowest targets: `Umpire.Web` is `net9.0`, not the `net8.0` of P7, because `Views.Map` calls `MapStaticAssets` (ASP.NET Core 9); support for .NET 8 and 9 ended on 2026-11-10, so "lowest supported" may now mean `net10.0`. `Umpire.Console` stays `net8.0`: on .NET 10 on Linux, SIGTERM did not raise `ProcessExit`. `Umpire.Testing` keeps an ASP.NET Core framework reference only for `AddLogging`. `App.Services` is `protected internal` and is no longer in `IApp`.
 - #399, `Configuration` and `Logging`: `HostArguments` keeps the old internal name. `WebHost` gives only the command-line arguments to `HostArguments`, not the full ASP.NET configuration. `OpenDescriptors` no longer closes open descriptors of `Microsoft.Extensions.*` assemblies. `Compose` now stops with an error if a service registers an `ILoggerProvider` and no `ILoggerFactory`. Parent keys such as `Probe` (of `Probe:Value`) are gone. Also: a race between test processes on the Notes fixture is fixed with `FixtureLock`.
 - #398, the removal of the SDK:
   - A pack kernel with its own packages needs a manual `ProjectReference` in the root project; a package cannot add it to the restore.
