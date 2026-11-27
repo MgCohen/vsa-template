@@ -7,6 +7,9 @@ sealed class FolderPaths(string block, IReadOnlyList<FolderAlias> aliases, IRead
 
     public bool IsInBlock(string file) => BlockPath.IsUnder(block, file);
 
+    public bool IsRead(string file) =>
+        IsInBlock(file) && (aliases.Count == 0 || aliases.Any(alias => Aliased(alias, BlockPath.Of(block, file)) is not null));
+
     public bool IsIgnored(string file) =>
         ignored.Any(folder => BlockPath.Of(block, file).StartsWith(folder + "/", StringComparison.OrdinalIgnoreCase));
 

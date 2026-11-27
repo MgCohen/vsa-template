@@ -39,7 +39,7 @@ sealed class PartOf {
         if (LoadedTypes.IsCompilerGenerated(type.Name)) {
             return;
         }
-        var external = IsInBlock(type) ? null : resolved.ExternalPart(type.Assembly, type.FullName);
+        var external = resolved.ExternalPart(type.Assembly, type.FullName);
         if (type.Source is not { } source) {
             if (external is not null) {
                 bound.Add(ExternalBinding(type, external));
@@ -48,14 +48,14 @@ sealed class PartOf {
         }
         var file = Path.GetFullPath(source.File);
         var relative = RelativePath.Of(blockFolder, file).Replace('\\', '/');
-        if (Outside(relative)) {
+        var paths = PathsInBlock(relative);
+        if (paths.Count == 0) {
             if (external is not null) {
                 bound.Add(InPlacedBlock(file, type, source with { File = file }) ?? ExternalBinding(type, external));
             }
             return;
         }
-        var paths = PathsInBlock(relative);
-        if (paths.Count == 0 || FoldersOf(relative).Any(BuildOutput.IsIgnored)) {
+        if (FoldersOf(relative).Any(BuildOutput.IsIgnored)) {
             return;
         }
         var located = source with { File = file };
@@ -78,8 +78,6 @@ sealed class PartOf {
     }
 
     static Binding ExternalBinding(TypeFacts type, Part external) => new(type, external, new Dictionary<string, string>(), null);
-
-    static bool Outside(string relative) => relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative);
 
     Binding? InPlacedBlock(string file, TypeFacts type, Source located) {
         var segments = file.Replace('\\', '/').Split('/');
@@ -123,9 +121,6 @@ sealed class PartOf {
     }
 
     sealed record PlacedRoot(Part Place, string Rest);
-
-    bool IsInBlock(TypeFacts type) =>
-        type.Source is { } source && !RelativePath.Of(blockFolder, Path.GetFullPath(source.File)).StartsWith("..", StringComparison.Ordinal);
 
     Part? TopFile(IReadOnlyList<string> paths, TypeFacts type) {
         if (!paths.Any(path => !path.Contains('/'))) {

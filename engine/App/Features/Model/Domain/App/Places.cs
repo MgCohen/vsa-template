@@ -26,7 +26,7 @@ sealed class Places {
         if (type.Name.Name.StartsWith("<", StringComparison.Ordinal) || paths.IsIgnored(type.File)) {
             return;
         }
-        if (!paths.IsInBlock(type.File)) {
+        if (!paths.IsRead(type.File)) {
             if (ExternalOf(type.Name.Assembly, type.Name.Namespace) is { } external) {
                 type.Placement = InPlacedBlock(type) ?? Of(external, type);
             }

@@ -462,13 +462,13 @@ rules.Type<HttpClient>().OnlyIn<Infrastructure>();       // only Infrastructure 
 | In a DLL that no `External` part names | No part. Its uses are allowed. The engine does not read its PDB path |
 | Source file at the top of a block folder | The block part, for example the module class → `Feature` |
 | Source file in a part folder | The deepest part that matches the folder. A group instance matches each name |
-| Source file in the block folder, in a DLL that an `External` part names | Its part by its folder, as each other source file in the block. The name of the assembly does not select an `External` for a type with its source in the block. Thus an assembly of the block with a name `Umpire.*`, for example the engine core `Umpire.Engine` or the tool `Umpire.Cli`, is checked |
+| Source file in the block folder (and in a folder alias, if the definition has aliases), in a DLL that an `External` part names | Its part by its folder, as each other source file in the block. The name of the assembly does not select an `External` for a type with its source in the block. A target type with no facts (for example, the snapshot of its project is missing) still binds by the name of its assembly, and its findings are warnings (see "Trust" in `docs/check-model.md`) Thus an assembly of the block with a name `Umpire.*`, for example the engine core `Umpire.Engine` or the tool `Umpire.Cli`, is checked |
 | Source file only in `obj/` or `bin/`, or in a folder whose name starts with `.` or ends with `~` (for example `Polyfills~/`) | Not checked |
 | Helper type in a `InParentFolder` folder | The part of the first type that uses it ("follows user") |
 | Helper type with no user in a `InParentFolder` folder | The part of its nearest base type in the same folder ("follows base"). For example, a rule class that the engine finds by reflection follows its base class |
 | Source file in no part folder | None: `UMP020202` |
 | Source file out of the block folder | Not checked |
-| Source file in no folder alias (if the definition has aliases) | Not checked |
+| Source file in no folder alias (if the definition has aliases) | Not checked. If an `External` part names its assembly, the `External` part, as for a source file out of the block folder |
 
 The check model reads the source file and the place of each type from the snapshot of its project. For a DLL of another block or of a package, it reads the library facts (`libraries/<assembly>.json`): the full name, the source path and the base types of each type. A project DLL gets its library facts from its snapshot. A package DLL gets them from the file that the package `Umpire.Engine` ships in `tools/net8.0/libraries/`, with the source paths under `/_/`. The Blocks operation reads the PDB of each DLL to find the check entries and the DLLs of a block (`BinReader`). A DLL with no snapshot gets its facts from the DLL itself (see "DLL facts").
 
