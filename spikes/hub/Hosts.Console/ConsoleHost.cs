@@ -3,8 +3,8 @@ namespace Spike.Hosts.Console;
 using Spike.Core;
 
 public sealed class ConsoleHost(string[] args) : AppHost {
-    public override async Task<int> Run(IHub hub) {
-        var result = await hub.Send(ToOperation(args)).ConfigureAwait(false);
+    public override async Task<int> Run(IOperations operations) {
+        var result = await operations.Send(ToOperation(args)).ConfigureAwait(false);
         if (result.Error is { } error) {
             await System.Console.Error.WriteLineAsync(error).ConfigureAwait(false);
             return 1;

@@ -3,7 +3,7 @@ namespace Spike.Pack;
 using System.Globalization;
 using System.Linq.Expressions;
 
-public sealed class RequestBinder {
+sealed class RequestBinder {
     readonly Func<object?[], object> create;
     readonly RequestValue[] values;
 

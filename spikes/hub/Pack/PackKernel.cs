@@ -24,10 +24,7 @@ public sealed class PackKernel : Kernel {
         }
         services.AddSingleton<IPipeline>(provider => new Pipeline(handlers, provider.GetServices<StepEntry>(), provider.GetServices<ValidatorEntry>()));
 
-        services.AddSingleton(new RequestBinders(binders));
-        services.AddScoped<OperationHandler>();
-        var operations = new Dictionary<Type, HandlerRoute> { [typeof(Operation)] = new(typeof(OperationHandler), new OperationCall()) };
-        services.AddSingleton<IPipeline>(provider => new Pipeline(operations, provider.GetServices<StepEntry>(), provider.GetServices<ValidatorEntry>()));
+        services.AddSingleton<IOperationConverter>(new RequestConverter(binders));
     }
 
     static Type? HandlerBase(Type type) {
