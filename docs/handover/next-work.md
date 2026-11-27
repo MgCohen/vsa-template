@@ -81,7 +81,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Done (PR #406): the package build runs the compile job on the source of each bundle (`UmpireLibraryPass`), and `Umpire.Engine` ships `tools/net8.0/libraries/<assembly>.json`. The check reads no PDB for the type facts | Q8 |
 | Done (PR #406): the build runs the build job on the model path. The same findings and codes on the fixtures. Only the place of some findings changes (the line of the use, the line of the type name) | Queue item 3 of the hand-over |
 | Done (PR #406): the state files are in the intermediate output path (`obj/.../umpire/`), also the run stamp. The block stamps stay in `artifacts~/umpire-checks/` of the block, because each app that uses the block reads them | P7 |
-| Remove `TypeFactSource`, the Rules operation and ArchUnitNET; convert `tests/Architecture.Tests` and the parity tests to the model. `SymbolReader` stays for the Blocks operation (the check entries and the DLLs of a block) until the snapshots give these facts | K1, Q8 |
+| Remove `TypeFactSource`, the Rules operation and ArchUnitNET. Open: `tests/Architecture.Tests` (about 500 cases) reads the bindings of the old check, and the DLLs of a reference folder (`umpire.check.references`, Unity) have no snapshot yet, so only the old check reads their types. Then convert the parity tests. `SymbolReader` stays for the Blocks operation (the check entries and the DLLs of a block) until the snapshots give these facts | K1, Q8 |
 | Done (PR #406): `block.json` stays. The compile needs the projects of the block, the place of each snapshot, the mode, the severities and the marks, and the definition does not hold them | P6 |
 | Done (PR #406): brief D item 6 does not apply with no SDK. A multi-target root builds with no `<TargetFramework />`, and the package test has no workaround. Each inner build checks its own target | P7 |
 
@@ -126,6 +126,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - "Selected by hash" of brief D item 1 is read as: one snapshot file for each target (the intermediate path has the target), and the check selects the snapshot of each target.
   - A multi-target root checks in each inner build, so a finding of two targets is in the build output one time for each inner build. One check in the outer build needs `buildMultiTargeting/` files in each Umpire package.
   - With no `--state`, the engine takes the state folder from `--bin` (the folder `bin` becomes `obj`). The in-process tests use this.
+  - A DLL of a reference folder (`umpire.check.references`, for example the Unity `ScriptAssemblies`) has no snapshot, so the build job gives `UMP030802` for it and does not check its types. The Unity compile must save the snapshots first.
   - A build with `-p:BuildProjectReferences=false` gives the snapshots of the direct references only.
   - Each compile in a build writes a snapshot, also of the framework projects and the test projects of this repository.
   - `state.txt` next to a snapshot names the state of the last root build that checked the project. Two roots that share a project write over it.
