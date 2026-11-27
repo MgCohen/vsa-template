@@ -1,15 +1,11 @@
 namespace Spike.Core;
 
-using Microsoft.Extensions.DependencyInjection;
-
-sealed class Hub : IHub {
+public sealed class MessageHub {
     readonly IHubStep[] reversedSteps;
     readonly Dictionary<Type, IPipeline> byMessage = [];
-    readonly IServiceScopeFactory scopes;
 
-    public Hub(IEnumerable<IHubStep> steps, IEnumerable<IPipeline> pipelines, IServiceScopeFactory scopes) {
+    public MessageHub(IEnumerable<IHubStep> steps, IEnumerable<IPipeline> pipelines) {
         reversedSteps = [.. steps.Reverse()];
-        this.scopes = scopes;
         foreach (var pipeline in pipelines) {
             foreach (var message in pipeline.Messages) {
                 if (byMessage.ContainsKey(message)) {
@@ -20,12 +16,11 @@ sealed class Hub : IHub {
         }
     }
 
-    public async Task<MessageResult> Send(object message, CancellationToken ct = default) {
+    internal async Task<MessageResult> Send(object message, IServiceProvider scope, CancellationToken ct) {
         if (!byMessage.TryGetValue(message.GetType(), out var pipeline)) {
             return MessageResult.Fail($"No pipeline runs {message.GetType().Name}.");
         }
-        using var scope = scopes.CreateScope();
-        MessageNext run = () => Guarded(pipeline, message, scope.ServiceProvider, ct);
+        MessageNext run = () => Guarded(pipeline, message, scope, ct);
         foreach (var step in reversedSteps) {
             var next = run;
             run = () => step.Run(message, next);

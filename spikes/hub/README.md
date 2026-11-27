@@ -13,10 +13,12 @@ dotnet artifacts~/bin/Umpire.Bare/debug/umpire-bare.dll ping 5
 | Part | File | Owner |
 |---|---|---|
 | Arguments to `Operation` | `Hosts.Console/ConsoleHost.cs` | The host |
-| `Operations`: the converter, then the hub | `Core/Operations/Operations.cs` | The core |
+| `Operations`: the converter, then one new scope and the hub | `Core/Operations/Operations.cs` | The core |
+| The output of warnings and errors (`IAppLog`, default `ConsoleAppLog`) | `Core/App/` | The core. A module can replace it |
 | The check at start: no converter is a warning, two are an error | `Core/App/App.cs` | The core |
 | `Operation` to `PingRequest`, with binders built at start | `Pack/RequestConverter.cs`, `Pack/RequestBinder.cs` | The architecture (VSA) |
-| The hub: hub steps, then the pipeline of the message type | `Core/Hub/Hub.cs` | The core |
+| How a binder makes the request (`IConstructorFactory`: `CompiledConstructors` by default, or `ReflectedConstructors`) | `Pack/` | The architecture. A module can replace it, for example for Unity IL2CPP or a source generator later |
+| The hub: hub steps, then the pipeline of the message type. One singleton (`MessageHub`) and one `IHub` for each scope, so a message runs in the scope of its sender | `Core/Hub/MessageHub.cs`, `Core/Hub/ScopedHub.cs` | The core |
 | The pipeline: steps and validators by type, then the handler | `Core/Pipeline/Pipeline.cs` | The core, set up by the architecture |
 | A hub step for every message | `Ping/Plugins/Tracing/TraceStep.cs` | The app (a plugin module) |
 | A pipeline step for every request | `Ping/Plugins/Tracing/RequestTimer.cs` | The app (a plugin module) |
