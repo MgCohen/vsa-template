@@ -59,6 +59,7 @@ Also in K4: the place of `LoadedTypes` and `ClosedBase`. Closed by P8: they are 
 - Remove `rules.For<App>(...).And<DefinitionRoot>()` and the `Host` line. Opinion: yes.
 - Permit `For<Definition>().Uses<Pack>()` for an app definition on its own pack variant. Opinion: yes.
 - The kernel rules: the strictness of `Views` and `Composition`, and the uses of `Core` and `Messages` (#364).
+- Permit `For<Host>().Uses<MessagesParts.Contracts>()`, so a custom host that calls `app.Send` can read `Result<T>`. The engine `Entries` have this rule since the analyzer entry check. Opinion: yes, in K5.
 
 ## Check system topology (page "Check System Topology")
 

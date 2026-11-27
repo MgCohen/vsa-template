@@ -108,9 +108,9 @@ sealed class ExportModelHandler(RunOptions options, IFactSource<DllQuery, IReadO
             try {
                 var place = places.FirstOrDefault(p => string.Equals(p.Project, name, StringComparison.OrdinalIgnoreCase));
                 if (place is not null && File.Exists(place.File)) {
-                    libraries.Add(LibraryExport.Of(Data.Snapshot.Read(File.ReadAllText(place.File)), FileMark.Of(block, dll)));
+                    libraries.Add(LibraryExport.Of(SnapshotText.Read(File.ReadAllText(place.File)), DiskFiles.Mark(block, dll)));
                 } else if (Shipped(name) is { } shipped) {
-                    libraries.Add(Data.Snapshot.Read(File.ReadAllText(shipped)) with { Source = FileMark.Of(block, dll) });
+                    libraries.Add(SnapshotText.Read(File.ReadAllText(shipped)) with { Source = DiskFiles.Mark(block, dll) });
                 } else if (ofProjects.Contains(name)) {
                     problems.Add(NoFacts(name, "the list of the snapshots has no snapshot of the project"));
                 }
@@ -145,7 +145,7 @@ sealed class ExportModelHandler(RunOptions options, IFactSource<DllQuery, IReadO
         foreach (var snapshot in DllSnapshots.Of([.. own.Where(read.ContainsKey).Select(dll => read[dll])], block)) {
             state.Save(snapshot);
         }
-        return [.. named.Where(read.ContainsKey).Select(dll => LibraryExport.Of(DllSnapshots.Of([read[dll]], block)[0], FileMark.Of(block, dll)))];
+        return [.. named.Where(read.ContainsKey).Select(dll => LibraryExport.Of(DllSnapshots.Of([read[dll]], block)[0], DiskFiles.Mark(block, dll)))];
     }
 
     static Finding NoFacts(string assembly, string reason) => new(DataCodes.NoSnapshot, FindingSeverity.Warning,

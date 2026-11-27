@@ -24,6 +24,7 @@ sealed class FactParity(Data.AppModel dll, Data.AppModel app) {
 
     static readonly string[] constantsOfLibraries = [
         "Blocks.Infrastructure.BlockProjects -> Umpire.Config.UmpireConfig",
+        "Facts.Domain.Shared.Compile.CompileProject -> Umpire.Config.UmpireConfig",
     ];
 
     static readonly Data.ReferenceKind[] onlyInSource =
