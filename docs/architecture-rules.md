@@ -318,7 +318,20 @@ A validator (`Validator<T>`) in a slice is the optional part `Slice.Validators`,
 
 ## Unit: `VsaUnitTest`
 
-A unit test sends a request to its handler with `Handle`, or a command to its handler with `Send`, without HTTP and without a database. Before each test, the base makes new services with the default fakes and calls `Configure`. A test class makes its mocks in `Configure`, and its tests use them through fields.
+The test starts the app on a `LocalHost`, with no HTTP and no database. `Handle` sends a request with `app.Send(request)`, so the request goes through the operation of the app, its pipeline and its validators. A host does not expose a command, so `Send` runs the command handler with the services of the started app.
+
+```mermaid
+flowchart LR
+    T[Test] -->|Handle| L[UnitTestApp on LocalHost]
+    L --> O[Operation of the request]
+    O --> H[Request handler]
+    T -->|Send| C[Command handler]
+    C --> S[Services of the app]
+```
+
+The app of a test is `UnitTestApp<VsaKernel>`, an `App<VsaKernel, UnitTestHost>`, and `UnitTestHost` is a `LocalHost`. The class has an open kernel, so the rule engine does not count it as a check entry of `Umpire.Testing`. Before each test, the base makes new test services with the default fakes and calls `Configure`. At the first `Handle`, `Send`, `Provider`, `Events` or `Repository` call, the base starts the app. The composition installs the core, the kernel and the modules, then the test services. A test service replaces each service of the app with the same service type. An open generic test service, for example `IRepository<,>`, also replaces each closed form of it. After each test, the base stops the app. `LocalHost` makes one scope for each request, so a test reads a singleton from `Provider`, not a scoped service of the request.
+
+`Modules` gives the modules of the app. The default is `ScannedModules`: the modules in the DLLs of the test output, with no test assembly. A test class that must use other modules overrides it, for example `new FixedModules(new GoodModule())`.
 
 ```csharp
 public sealed class CreateNotePublisherTests : VsaUnitTest {
@@ -343,9 +356,9 @@ public sealed class CreateNotePublisherTests : VsaUnitTest {
 | `ICommandSender` | None | `Mock<ICommandSender>()` |
 | Other services | None | `Mock<T>()` |
 
-`Send` finds the one handler in the `Handlers.Commands` project of the module of the command. If the handler sends other commands, add `Mock<ICommandSender>()` in `Configure`.
+`Handle` needs the request handler in a module of the app, else the `LocalHost` stops with "has no operation". `Send` finds the one handler in the assembly of the command. If the handler sends other commands, add `Mock<ICommandSender>()` in `Configure`.
 
-Add or replace services before the first `Handle` or `Send` call. After it, the services are read-only, and a change fails.
+Add or replace services before the app starts. After the start, the test services are read-only, and a change fails.
 
 ## Add a rule
 

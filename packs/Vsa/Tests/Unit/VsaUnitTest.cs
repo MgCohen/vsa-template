@@ -3,26 +3,29 @@ namespace Umpire.Vsa.Testing.Unit;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NUnit.Framework;
+using Umpire.Kernels;
 using Umpire.Messages.Contracts;
+using Umpire.Messages.Handlers;
+using Umpire.Utility;
+using Umpire.Vsa.Composition;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Contracts.Requests;
 using Umpire.Vsa.Domain;
-using Umpire.Messages.Handlers;
 using Umpire.Vsa.Handlers.Commands;
-using Umpire.Vsa.Handlers.Requests;
 using Umpire.Vsa.Infrastructure;
-using Umpire.Utility;
 
 public abstract class VsaUnitTest {
     ServiceCollection? services;
-    ServiceProvider? provider;
+    UnitTestApp<VsaKernel>? app;
 
     protected IServiceCollection Services => services ?? throw new InvalidOperationException("The services exist only in a test.");
 
-    protected IServiceProvider Provider => provider ??= Build();
+    protected IServiceProvider Provider => Started().Provider;
 
     protected RecordingEventPublisher Events => Provider.GetRequiredService<RecordingEventPublisher>();
+
+    protected virtual IModuleProvider Modules => new ScannedModules();
 
     [SetUp]
     public void CreateServices() {
@@ -36,8 +39,9 @@ public abstract class VsaUnitTest {
 
     [TearDown]
     public void DisposeServices() {
-        provider?.Dispose();
-        provider = null;
+        var stopping = app;
+        app = null;
+        stopping?.Stop();
     }
 
     protected virtual void Configure(IServiceCollection services) { }
@@ -55,26 +59,28 @@ public abstract class VsaUnitTest {
     protected Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
         where TResponse : IResponse {
         ArgumentNullException.ThrowIfNull(request);
-        var pipeline = new PipelineBuilder<IMessage>()
-            .Handlers(HandlerOf(typeof(RequestHandler<,>), request.GetType()))
-            .CallsRequestHandlers()
-            .Build(Provider);
-        return pipeline.SendAsync<TResponse>(request, ct);
+        return Started().SendAsync(request, ct);
     }
 
-    protected Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
+    protected async Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
         ArgumentNullException.ThrowIfNull(command);
+        using var scope = Provider.CreateScope();
         var pipeline = new PipelineBuilder<IMessage>()
             .Handlers(HandlerOf(typeof(CommandHandler<,>), command.GetType()))
             .CallsCommandHandlers()
-            .Build(Provider);
-        return pipeline.SendAsync<TResult>(command, ct);
+            .Build(scope.ServiceProvider);
+        return await pipeline.SendAsync<TResult>(command, ct).ConfigureAwait(false);
     }
 
-    ServiceProvider Build() {
+    UnitTestApp<VsaKernel> Started() {
+        if (app is not null) {
+            return app;
+        }
         var all = services ?? throw new InvalidOperationException("The services exist only in a test.");
         all.MakeReadOnly();
-        return all.BuildServiceProvider();
+        var started = new UnitTestApp<VsaKernel>(all, Modules);
+        started.Start([]);
+        return app = started;
     }
 
     static Type HandlerOf(Type handlerBase, Type message) {
