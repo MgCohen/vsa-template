@@ -13,8 +13,11 @@ Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides e
 | 2 Packages | Done: `Umpire`, `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`, `Umpire.Engine`; no SDK; only DependencyInjection as a third-party runtime DLL; lowest targets |
 | Test speed | Done: `CS8032` fixed, two test sets, shared feed. Full set about 4 min, inner loop about 35 s plus the build |
 | 3 Engine | Done: `EngineApp<THost>`, jobs and operations, engine library on `netstandard2.0`, the check model and all analyzers inside the engine |
-| 4 Switch | In work |
-| 5, 6 | Not started |
+| 4 Switch | Part 1 done (#406): the build checks on the model path from the snapshots of the compile, and no PDB is read for type facts. Part 2 open: remove ArchUnitNET (question below) |
+| 5 Consumers of the engine | In work |
+| 6 Release | Not started: needs the computer of the user |
+
+Open question for the user: the DLLs of a reference folder (`umpire.check.references`, Unity `ScriptAssemblies`) have no snapshot. Only the old ArchUnitNET path reads their types. A: keep the old path only for these DLLs until vsa-unity saves snapshots. B: vsa-unity must save snapshots first, and ArchUnitNET goes after that. C: read these DLLs with `MetadataLoadContext` into the model, with no ArchUnitNET. My opinion: C, because the engine then has one path and no wait on vsa-unity.
 
 The user reviews the "End review" list below at the end.
 
