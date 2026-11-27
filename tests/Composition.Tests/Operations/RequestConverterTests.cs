@@ -50,10 +50,41 @@ public sealed class RequestConverterTests {
     public void A_value_that_does_not_convert_is_not_valid(string key, string text) {
         var values = new Dictionary<string, string?> { ["item"] = Guid.Empty.ToString(), ["colors"] = "red", [key] = text };
 
-        var result = Converter.Convert(new Operation("shop/buy", values!));
+        var result = Converter.Convert(new Operation("shop/buy", values));
 
         Assert.That(result.Error?.Code, Is.EqualTo("request.not_valid"));
         Assert.That(result.Error?.Message, Does.Contain($"'{key}'").IgnoreCase);
+    }
+
+    [Test]
+    public void A_null_for_a_value_type_is_not_valid() {
+        var result = Converter.Convert(Op("shop/buy", ("item", null), ("colors", "red")));
+
+        Assert.That(result.Error?.Code, Is.EqualTo("request.not_valid"));
+        Assert.That(result.Error?.Message, Does.Contain("must not be null"));
+    }
+
+    [Test]
+    public void A_value_with_no_text_form_is_not_valid() {
+        var result = Converter.Convert(Op("shop/tag", ("tags", "[\"a\",\"b\"]")));
+
+        Assert.That(result.Error?.Code, Is.EqualTo("request.not_valid"));
+        Assert.That(result.Error?.Message, Does.Contain("has no conversion from text"));
+    }
+
+    [Test]
+    public void Two_requests_with_one_name_fail_only_when_a_caller_uses_that_name() {
+        var result = Converter.Convert(Op("shop/twin"));
+
+        Assert.That(result.Error?.Code, Is.EqualTo(RequestConverter.AmbiguousCode));
+        Assert.That(Converter.Convert(Op("shop/buy", ("item", Guid.Empty.ToString()))).IsSuccess, Is.True);
+    }
+
+    [Test]
+    public void A_handler_of_an_abstract_request_accepts_each_derived_request() {
+        Assert.That(Converter.Accepts(typeof(ShapeRequest)), Is.True);
+        Assert.That(Converter.Accepts(typeof(CircleRequest)), Is.True);
+        Assert.That(Converter.Names, Does.Not.Contain("shop/shape"));
     }
 
     [Test]
@@ -81,7 +112,7 @@ public sealed class RequestConverterTests {
     }
 
     static Operation Op(string name, params (string Key, string? Value)[] values) =>
-        new(name, values.ToDictionary(v => v.Key, v => v.Value!));
+        new(name, values.ToDictionary(v => v.Key, v => v.Value));
 
     public sealed class ShopModule : Module;
 
@@ -102,6 +133,40 @@ public sealed class RequestConverterTests {
     }
 
     public sealed record BuyResponse(bool Done) : IResponse;
+
+    public sealed record TagRequest(IReadOnlyList<string> Tags) : IRequest<BuyResponse>;
+
+    public sealed class TagHandler : RequestHandler<TagRequest, BuyResponse> {
+        public override Task<Result<BuyResponse>> HandleAsync(IEnvelope<TagRequest> envelope) =>
+            Task.FromResult<Result<BuyResponse>>(new BuyResponse(true));
+    }
+
+    public sealed record FirstTwinRequest : IRequest<BuyResponse> {
+        public static string Name => "twin";
+    }
+
+    public sealed record SecondTwinRequest : IRequest<BuyResponse> {
+        public static string Name => "twin";
+    }
+
+    public sealed class FirstTwinHandler : RequestHandler<FirstTwinRequest, BuyResponse> {
+        public override Task<Result<BuyResponse>> HandleAsync(IEnvelope<FirstTwinRequest> envelope) =>
+            Task.FromResult<Result<BuyResponse>>(new BuyResponse(true));
+    }
+
+    public sealed class SecondTwinHandler : RequestHandler<SecondTwinRequest, BuyResponse> {
+        public override Task<Result<BuyResponse>> HandleAsync(IEnvelope<SecondTwinRequest> envelope) =>
+            Task.FromResult<Result<BuyResponse>>(new BuyResponse(true));
+    }
+
+    public abstract record ShapeRequest : IRequest<BuyResponse>;
+
+    public sealed record CircleRequest(int Radius) : ShapeRequest;
+
+    public sealed class ShapeHandler : RequestHandler<ShapeRequest, BuyResponse> {
+        public override Task<Result<BuyResponse>> HandleAsync(IEnvelope<ShapeRequest> envelope) =>
+            Task.FromResult<Result<BuyResponse>>(new BuyResponse(true));
+    }
 
     public sealed record RestockCommand(int Count) : ICommand<int>;
 

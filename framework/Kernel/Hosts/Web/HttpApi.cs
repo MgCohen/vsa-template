@@ -15,7 +15,7 @@ static class HttpApi {
 
     static async Task<IResult> Handle(HttpContext http) {
         var name = http.Request.RouteValues.TryGetValue(NameKey, out var route) ? route?.ToString() ?? "" : "";
-        IReadOnlyDictionary<string, string> values;
+        IReadOnlyDictionary<string, string?> values;
         try {
             values = await HttpValues.Read(http.Request, http.RequestAborted);
         } catch (Exception e) when (HttpValues.IsReadError(e)) {
@@ -26,8 +26,8 @@ static class HttpApi {
     }
 
     static IResult Problem(Error error) {
-        var status = error.Code.EndsWith(".not_found", StringComparison.Ordinal)
-            ? StatusCodes.Status404NotFound
+        var status = error.Code == OperationSends.NoConverterCode ? StatusCodes.Status500InternalServerError
+            : error.Code.EndsWith(".not_found", StringComparison.Ordinal) ? StatusCodes.Status404NotFound
             : StatusCodes.Status400BadRequest;
         return Results.Problem(title: error.Code, detail: error.Message, statusCode: status);
     }

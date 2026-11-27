@@ -20,7 +20,7 @@ public sealed class ToolHost : ConsoleHost {
 
     protected override void Configure(IServiceCollection services, AppTypes types) {
         base.Configure(services, types);
-        commands = ToolCommands.Of([.. typeof(ToolHost).Assembly.GetTypes()]);
+        commands = ToolCommands.Of(types.Declared());
         services.Replace(ServiceDescriptor.Singleton<IOperationConverter>(new ToolConverter(commands)));
     }
 

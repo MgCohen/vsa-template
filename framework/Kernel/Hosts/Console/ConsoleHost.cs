@@ -1,7 +1,6 @@
 namespace Umpire.Hosts.Console;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using Umpire.Kernels;
 using Umpire.Messages.Contracts;
@@ -17,7 +16,7 @@ public class ConsoleHost : AppHost {
     public override IServiceProvider Build(string[] args, App app) {
         var services = base.Build(args, app);
         if (OperationSends.NoConverterWarning(services) is { } warning) {
-            services.GetService<ILogger<ConsoleHost>>()?.LogWarning("{Warning}", warning);
+            System.Console.Error.WriteLine($"warning: {warning}");
         }
         var names = services.GetService<IOperationConverter>()?.Names ?? [];
         operation = OperationOf(names, args, services.GetRequiredService<HostArguments>());

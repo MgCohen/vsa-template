@@ -179,6 +179,7 @@ app.Stop();
 
 - Each `Send` is an extension method on `App<TKernel, THost>` with `THost : LocalHost`. An app with another host has no `Send`: the compiler refuses the call.
 - The host stays private in `App`. The extensions use the `internal` member `App.RunningHost`, which gives the host only while `State` is `Running`.
+- Two requests with one operation name do not stop the start: only an operation with that name gives the error `operation.ambiguous`. A handler of an abstract request accepts each derived request, but an operation cannot name the abstract request.
 - `LocalHost.Start` keeps the operation converter of the services. `Send` checks that the converter accepts the type of the message (a host exposes only requests), and it sends the message through `IMessageHub` in a new service scope. The core reads only `Operation` and the converter, so it knows no VSA type.
 - A message with no operation gives `InvalidOperationException`: "<host> has no operation for <type>. A host exposes only requests". A command has no operation, because a host does not expose commands.
 - A `Send` before `Start` or after `Stop` gives `InvalidOperationException`: "<app> does not run. Call Start before Send."
@@ -453,7 +454,7 @@ The checks read the registered types. They do not find types.
 
 ## The HTTP API
 
-`WebHost` maps one catch-all route with ASP.NET Core minimal APIs (`MapMethods`), for GET, POST, PUT, PATCH and DELETE. The pattern is `RoutePattern`, by default `/api/{**name}`, and a web host can override it. The rest of the path is the name of the operation, and the values come from the query and the JSON body (a JSON object or array value stays as its JSON text). Route filters by method can come later.
+`WebHost` maps one catch-all route with ASP.NET Core minimal APIs (`MapMethods`), for GET, POST, PUT, PATCH and DELETE. The pattern is `RoutePattern`, by default `/api/{**name}`, and a web host can override it. The rest of the path is the name of the operation, and the values come from the query and the JSON body. An operation has text values, so a request binds only values with a text form (numbers, text, `Guid`, enums, dates): a list or a record in the body gives `request.not_valid`. A JSON `null` gives `null` to a reference or `Nullable<T>` value and `request.not_valid` to another value type. Route filters by method and nested values can come later. With no converter, the web host gives HTTP 500.
 
 | Step | Source |
 |---|---|

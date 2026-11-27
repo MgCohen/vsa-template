@@ -32,7 +32,7 @@ public sealed class ToolCommands {
     public bool Accepts(Type message) => all.Any(command => command.Request == message);
 
     public Operation OperationOf(IReadOnlyList<string> line) {
-        var values = new Dictionary<string, string>();
+        var values = new Dictionary<string, string?>();
         for (var i = 0; i < line.Count; i++) {
             values[i.ToString(CultureInfo.InvariantCulture)] = line[i];
         }
@@ -43,10 +43,10 @@ public sealed class ToolCommands {
         [.. operation.Values
             .Select(pair => new { Index = int.Parse(pair.Key, CultureInfo.InvariantCulture), pair.Value })
             .OrderBy(pair => pair.Index)
-            .Select(pair => pair.Value)];
+            .Select(pair => pair.Value ?? "")];
 
     static bool IsToolRequest(Type type) =>
-        type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IToolRequest<>));
+        !type.IsAbstract && !type.ContainsGenericParameters && type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IToolRequest<>));
 
     ToolCommand Find(IReadOnlyList<string> line) =>
         all.FirstOrDefault(command => command.Form.Selects(line))

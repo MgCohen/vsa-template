@@ -76,7 +76,7 @@ public sealed class JobTests {
             using var scope = services.CreateScope();
 
             var result = await scope.ServiceProvider.SendAsync(
-                new Operation("jobs/build", new Dictionary<string, string> { ["project"] = root, ["bin"] = root, ["mode"] = mode.ToString() }));
+                new Operation("jobs/build", new Dictionary<string, string?> { ["project"] = root, ["bin"] = root, ["mode"] = mode.ToString() }));
 
             Assert.That(result.Value, Is.InstanceOf<BuildJobReport>());
             Assert.That(ConsoleReport.Of((JobReport)result.Value!).ExitCode, Is.EqualTo(exitCode));

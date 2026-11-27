@@ -5,11 +5,11 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 
 static class HttpValues {
-    internal static async Task<IReadOnlyDictionary<string, string>> Read(HttpRequest request, CancellationToken ct) {
-        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    internal static async Task<IReadOnlyDictionary<string, string?>> Read(HttpRequest request, CancellationToken ct) {
+        var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         if (await Body(request, ct) is { } body) {
             foreach (var (key, node) in body) {
-                values[key] = node is null ? null! : node is JsonValue value && value.TryGetValue<string>(out var text) ? text : node.ToJsonString();
+                values[key] = node is null ? null : node is JsonValue value && value.TryGetValue<string>(out var text) ? text : node.ToJsonString();
             }
         }
         foreach (var (key, query) in request.Query) {

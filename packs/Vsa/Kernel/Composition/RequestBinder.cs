@@ -18,15 +18,16 @@ sealed class RequestBinder {
         parameters = constructor.GetParameters();
     }
 
-    public Result<object> Bind(IReadOnlyDictionary<string, string> values) {
+    public Result<object> Bind(IReadOnlyDictionary<string, string?> values) {
         var arguments = new object?[parameters.Length];
         for (var i = 0; i < parameters.Length; i++) {
             var parameter = parameters[i];
             var found = values.Where(v => string.Equals(v.Key, parameter.Name, StringComparison.OrdinalIgnoreCase)).ToList();
             if (found.Count > 0 && found[0].Value is null) {
-                arguments[i] = parameter.ParameterType.IsValueType && Nullable.GetUnderlyingType(parameter.ParameterType) is null
-                    ? Activator.CreateInstance(parameter.ParameterType)
-                    : null;
+                if (parameter.ParameterType.IsValueType && Nullable.GetUnderlyingType(parameter.ParameterType) is null) {
+                    return Invalid($"The value '{parameter.Name}' of {request.Name} must not be null.");
+                }
+                arguments[i] = null;
                 continue;
             }
             var text = found.Count > 0 ? found[0].Value : null;
@@ -55,9 +56,18 @@ sealed class RequestBinder {
 
     static object? Value(ParameterInfo parameter, string text) {
         var type = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
-        return type.IsEnum
-            ? EnumValue(type, parameter.Name!, text)
-            : TypeDescriptor.GetConverter(type).ConvertFromInvariantString(text);
+        if (type.IsEnum) {
+            return EnumValue(type, parameter.Name!, text);
+        }
+        if (type == typeof(DateTime)) {
+            return DateTime.Parse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+        }
+        var converter = TypeDescriptor.GetConverter(type);
+        if (!converter.CanConvertFrom(typeof(string))) {
+            throw new NotSupportedException(
+                $"An operation gives text values, and {type.Name} has no conversion from text. Give the request simple values.");
+        }
+        return converter.ConvertFromInvariantString(text);
     }
 
     static object EnumValue(Type type, string name, string text) {

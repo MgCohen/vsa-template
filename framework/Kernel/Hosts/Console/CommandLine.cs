@@ -15,11 +15,11 @@ static class CommandLine {
             _ => names.Where(n => n == $"{words[0]}/{words[1]}").ToList(),
         };
         if (candidates.Count == 1) {
-            return new Operation(candidates[0], arguments.All);
+            return new Operation(candidates[0], arguments.All.ToDictionary(pair => pair.Key, pair => (string?)pair.Value, StringComparer.OrdinalIgnoreCase));
         }
         var listed = string.Join(", ", names.Select(n => n.Replace('/', ' ')).OrderBy(n => n, StringComparer.Ordinal));
         throw new InvalidOperationException(names.Count == 0
-            ? "The console host found no request. Add a request and its handler."
+            ? "The console host found no request. Add a request and its handler, and give the app a kernel that registers an operation converter."
             : $"Name one request on the command line: {listed}.");
     }
 
