@@ -1,16 +1,21 @@
 namespace Rules.Tests;
 
+using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Resources;
 using Resources.Domain.Shared;
 using Resources.Slices.ChangeResource;
+using Umpire.Kernels;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Testing.Unit;
 
 public sealed class UnitBaseCommandTests : VsaUnitTest {
     ICommandSender commands = null!;
+
+    protected override IModuleProvider Modules => new FixedModules(new CardsModule(), new ResourcesModule());
 
     protected override void Configure(IServiceCollection services) {
         commands = Mock<ICommandSender>();

@@ -106,15 +106,23 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| `Umpire.Testing`: unit test helpers and a definition test base, both through `LocalHost` | P7, Q7 |
-| The tooling is a separate app, and `ConsoleHost` runs it | P7 |
-| `umpire check` starts the engine version of the app | Q2 (watch) |
+| Done (PR #407): `Umpire.Testing`: `VsaUnitTest` starts the app of the test on a `LocalHost` and sends each request with `app.Send`. The definition test base keeps the queries of the engine: a job needs a built block, a bin and the definition loader of the console entry, and a definition test has only a type and a folder | P7, Q7 |
+| Done (PR #407): the tool is an app, `UmpireTool : App<ToolKernel, ToolHost>`, and `ToolHost` is a `ConsoleHost`. The command words, the options and the messages stay the same | P7 |
+| Done (PR #407): `umpire check` runs the check job with the `Umpire.Engine` of the app (`UmpireEngineFile` after a restore) | Q2 (watch) |
 
 ## End review
 
 Uncertain points of this work. The user reviews them at the end of the plan, not during the work.
 
 - Unify with the sibling design talk ("Design: host-agnostic app and entry points", draft spike #381, page https://claude.ai/artifact/F6jvJV9kdCe34Y2Jto2obD). Its "App and host split" (the app names only its kernel, the entry gives the host as a value, one fixed composition, an untyped `LocalHost.Invoke` in the core) differs from the "Entry design" of this plan (`EngineApp<THost>`). This plan continues with its own entry design until the unification pass.
+- PR #407, the consumers of the engine:
+  - The tool is not a VSA app. `ToolKernel` is a core `Kernel` that gives one `Operation` for each command, and the build does not check the tool as a block. A VSA tool (requests, handlers, modules, a checked block in `tooling/`, P10) is a larger move.
+  - The tool operations read the command line from the service `ToolLine`, not from `HostArguments`. `ConsoleHost` only selects the operation by its words. The binding of `ConsoleHost` has no positional name, no short option and no option with many values.
+  - On Ctrl+C or SIGTERM, `ConsoleHost` requests the stop with exit code 0, and the first request wins. So `umpire test` and `umpire check` can give exit code 0 after a signal, also if the child process fails. The engine console has the same behavior.
+  - `umpire check` gives the folder of the root project as `--project`, as the build hook does. `dotnet build <folder>` stops with MSB1011 if the folder also has a solution file with another name.
+  - `umpire check -c` takes only `Debug` and `Release`, because the engine finds the configuration in the name of the output folder (`BuildConfiguration`).
+  - `VsaUnitTest` composes the full app: the default `ScannedModules` reads each DLL of the test output for each test, and each module of the test output must compose. A request handler must be in a module. A test class can give its own `Modules`. The test app is `UnitTestApp<TKernel>`, with an open kernel, so the engine does not count it as a check entry of `Umpire.Testing` (else `UMP020401` on `packs/Vsa/Tests/Unit`).
+  - A test service replaces each app service of the same service type, and an open generic test service replaces each closed form. A request runs in the scope of `LocalHost`, so a test reads only singletons after `Handle`.
 - #387: two rule lines follow the move of the type helpers: the part `KernelParts.Utility` in `Core`, and `For<Infrastructure>().Uses<KernelParts.Utility>()` in the engine definition.
 - #388: a reader error now comes for two keys that differ only in case, and for TOML forms that the reader does not support.
 - #391, the definition packages:

@@ -103,6 +103,11 @@ public sealed class UmpireToolTests {
         Assert.That(outputFoldersNextToCode, Is.Empty);
         await RunAndCall(app, ct, async (client, _) =>
             Assert.That(await client.GetStringAsync("/", ct), Does.Contain("<h1>Hello</h1>")));
+
+        var check = Tool(app, "check", "-c", "Release").EnsureSuccess();
+        var engineOfTheApp = Path.Combine(LocalFeed.NuGetCache, "umpire.engine", LocalFeed.Version, "tools", "net8.0", "umpire-engine.dll");
+        Assert.That(check.Output, Does.Contain($"with the rule engine {engineOfTheApp}:"));
+        Assert.That(check.Output, Does.Contain("umpire-engine: 0 errors"));
     }
 
     [Test]
