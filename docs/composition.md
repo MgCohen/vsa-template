@@ -483,6 +483,7 @@ framework/Kernel/                      Umpire.Kernels
   Scan/                                AppTypes, ModuleRoot, ServiceImplementation, ConstraintTypeArguments, MarkedTypes, OpenGenerics
   Factories/                           IFactory<T>, AddFactory
   Utility/                             Umpire.Utility: LoadedTypes, ClosedBase
+  Paths/                               Umpire.Utility: RelativePath, BuildOutput, CompilerNames
 architecture/                          Umpire.Architecture: Architecture
 framework/Components/Messages/
   Contracts/                           IMessage, Envelope, Result, Error, Effect

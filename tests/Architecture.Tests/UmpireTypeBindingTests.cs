@@ -25,6 +25,23 @@ public sealed class UmpireTypeBindingTests {
     }
 
     [Test]
+    public void An_in_block_type_of_an_Umpire_assembly_binds_to_its_folder_part() {
+        var note = Bind(Fact("Umpire.Tool.Features.Notes.Domain.Note", "Umpire.Tool", $"{AppFolder}/App/Features/Notes/Domain/Note.cs"));
+
+        Assert.That(note?.Part.Name, Is.EqualTo(nameof(Domain)));
+    }
+
+    [Test]
+    public void An_in_block_type_of_an_Umpire_assembly_cannot_use_the_domain_of_another_feature() {
+        var store = Bind(Fact("Umpire.Tool.Features.Notes.Domain.Store", "Umpire.Tool", $"{AppFolder}/App/Features/Notes/Domain/Store.cs"))!;
+        var user = Bind(Fact("Umpire.Tool.Features.Users.Domain.User", "Umpire.Tool", $"{AppFolder}/App/Features/Users/Domain/User.cs"))!;
+
+        var decision = Resolved.DecisionFor(store.Part, store.Values, user.Part, user.Values);
+
+        Assert.That(decision.Permission, Is.EqualTo(Permission.Deny));
+    }
+
+    [Test]
     public void An_Umpire_type_in_a_kernel_body_binds_to_its_layer() {
         var sender = Bind(Fact(
             "Umpire.Vsa.Contracts.Requests.IRequestSender", "Umpire.Vsa.Contracts.Requests",

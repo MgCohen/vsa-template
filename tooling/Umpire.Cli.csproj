@@ -2,9 +2,6 @@
   <!-- The umpire tool. It ships as a .NET tool with the same version as the Umpire packages. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <!-- The assembly name is not Umpire.*: the check binds an assembly Umpire.* to the External UmpireLibraries and does
-         not check its types (as umpire-engine of the engine block). The package id stays Umpire.Cli. -->
-    <AssemblyName>umpire-cli</AssemblyName>
     <RootNamespace>Umpire.Cli</RootNamespace>
     <PackAsTool>true</PackAsTool>
     <!-- The tool targets net8.0. If .NET 8 is not installed, it runs on the newest runtime, for example the runtime of the .NET 10 SDK. -->

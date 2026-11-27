@@ -10,6 +10,4 @@ public static class LoadedTypes {
             return e.Types.OfType<Type>();
         }
     }
-
-    public static bool IsCompilerGenerated(string typeName) => typeName.StartsWith("<", StringComparison.Ordinal);
 }

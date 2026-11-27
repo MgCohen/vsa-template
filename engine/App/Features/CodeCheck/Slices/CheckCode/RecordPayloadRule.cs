@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class RecordPayloadRule : VsaRule {
+sealed class RecordPayloadRule : VsaRule {
     public const string CheckResponsesKey = "check_responses";
 
     public override int Number => 1;

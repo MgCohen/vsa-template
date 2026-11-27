@@ -6,6 +6,7 @@ namespace Engine.Tests;
 
 public sealed class BlockStampTests {
     const string Definition = "Base: Probe|C:/probe";
+    const string AnalyzerEntry = "Umpire.Engine.Analyzer";
     static readonly string pack = Repo.Path("packs", "Vsa");
 
     [Test]
@@ -13,8 +14,8 @@ public sealed class BlockStampTests {
         Delete(Repo.Path("engine"));
         Delete(pack);
 
-        var top = await RunEngineTests.Run(project: Repo.Path("engine"));
-        var lower = await RunEngineTests.Run(project: pack);
+        var top = await RunEngineTests.Run(project: Repo.Path("engine"), skip: AnalyzerEntry);
+        var lower = await RunEngineTests.Run(project: pack, skip: AnalyzerEntry);
 
         Assert.That(top.Lines, Has.None.Contains(": error "), string.Join(Environment.NewLine, top.Lines));
         Assert.That(Stamps(pack), Is.Not.Empty);

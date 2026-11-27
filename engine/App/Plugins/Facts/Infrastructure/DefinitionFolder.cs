@@ -32,6 +32,13 @@ public sealed record DefinitionFolder(bool HasSource, bool HasProject) {
                 .Any(file => !IsSkipped(block, Path.GetDirectoryName(file)!, folder, ignoredFolders)))
             .Order(StringComparer.OrdinalIgnoreCase)];
 
+    public static bool IsSkippedSource(string block, string source, IReadOnlyList<string> ignoredFolders) {
+        var relative = RelativePath.Of(block, source);
+        return ReadOptions.IsIgnored(relative, ignoredFolders)
+            || (!relative.StartsWith("..", StringComparison.Ordinal)
+                && relative.Split(Path.DirectorySeparatorChar).Contains(Tests, StringComparer.OrdinalIgnoreCase));
+    }
+
     static IEnumerable<string> Nested(string block, string folder, IReadOnlyList<string> ignoredFolders) =>
         !Directory.Exists(folder) ? [] : OneLevel.Folders(folder, "*")
             .Where(sub => !IsSkipped(block, sub, folder, ignoredFolders) && !IsOtherRoot(sub))

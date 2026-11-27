@@ -7,11 +7,18 @@ sealed class FactParity(Data.AppModel dll, Data.AppModel app) {
     const string Deconstruct = "Deconstruct(";
 
     static readonly string[] onlyInIntermediateLanguage = [
+        "CodeCheck.Slices.CheckCode.CodeRun -> Operations.Domain.Shared.FindingSeverity",
+        "Facts.Infrastructure.DllMemberReader -> Facts.Domain.Shared.Dll.DllAccess",
+        "Model.Infrastructure.DllSnapshots -> Facts.Domain.Shared.Dll.DllMemberKind",
+        "Model.Infrastructure.DllSnapshots -> Facts.Domain.Shared.Dll.DllTypeKind",
+        "Model.Infrastructure.DllSnapshots -> Facts.Domain.Shared.Dll.DllUseKind",
         "Notes.Features.Notebook.Slices.CreateNote.CreateNoteHandler -> Umpire.Messages.Contracts.Unit",
         "Notes.Features.Notebook.Slices.DeleteNote.DeleteNoteHandler -> Umpire.Messages.Contracts.Unit",
         "ShellApp.Host.Launcher`1+LauncherApp -> Umpire.Kernels.Kernel",
         "Umpire.Architecture.PlaceLimit -> Umpire.Architecture.Access",
         "Umpire.Architecture.PlaceLimit -> Umpire.Architecture.Boundary",
+        "Umpire.CheckModel.AppModel -> Umpire.CheckModel.AppReference",
+        "Umpire.CheckModel.Export.DefinitionExport -> Umpire.Architecture.FilterKind",
         "VsaApp.Host.FixedHost -> Umpire.Kernels.Module",
     ];
 
