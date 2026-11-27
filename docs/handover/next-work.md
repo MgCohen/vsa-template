@@ -4,6 +4,37 @@ This plan replaces brief D. It follows the decisions in `open-questions.md`, sec
 
 Base: `main`. Small PRs, one reviewer subagent for each diff. The user decides each merge of a PR about rules, analyzers or the public API.
 
+## State on 2026-11-27 (short)
+
+| Phase | State |
+|---|---|
+| 0 Spike | Done. The Visual Studio test waits for the computer of the user |
+| 1 Runtime base | Done: `netstandard2.0`, `LocalHost` and `Send`, own TOML reader, no default interface methods, utility folder |
+| 2 Packages | Done: `Umpire`, `Umpire.Vsa`, `Umpire.Definition`, `Umpire.Vsa.Definition`, `Umpire.Engine`; no SDK; only DependencyInjection as a third-party runtime DLL; lowest targets |
+| Test speed | Done: `CS8032` fixed, two test sets, shared feed. Full set about 4 min, inner loop about 35 s plus the build |
+| 3 Engine | Done: `EngineApp<THost>`, jobs and operations, engine library on `netstandard2.0`, the check model and all analyzers inside the engine |
+| 4 Switch | Part 1 done (#406): the build checks on the model path from the snapshots of the compile, and no PDB is read for type facts. Part 2 done (#412): the engine reads reference folder DLLs into the model with `MetadataLoadContext`; ArchUnitNET, `TypeFactSource` and the Rules operation are gone |
+| 5 Consumers of the engine | Done (#407): the `umpire` tool is an app on `ConsoleHost`, `umpire check` runs the engine of the app, `VsaUnitTest` sends requests through `LocalHost`. The definition test base keeps the engine queries |
+| 6 Release | Not started: needs the computer of the user |
+
+Answers of 2026-11-27 (see `open-questions.md`): reference folders C (read with `MetadataLoadContext`, ArchUnitNET goes), the tool B (a VSA app in `tooling/`), exit code C (the tool gives the exit code of its child).
+
+Open questions from #412:
+1. A project DLL in `deps.json` with no snapshot gives `UMP030802`, and the engine does not read it. A: keep it (now). B: read the DLL facts as a fallback, with a warning. Opinion: A.
+2. Base type chains in Unity. A: vsa-unity adds the Unity DLL folder to `umpire.check.references`. B: the engine finds the Unity DLLs. Opinion: A.
+
+Done (#413): the `umpire` tool is a VSA app in `tooling/` and a checked block; after a signal, `umpire test` and `umpire check` give the exit code of the child. Its Q2 (exit code 130 for a partial `umpire test`) is accepted as a technical choice.
+
+Bug from #413: the check skipped the in-block types of each assembly `Umpire.*`, so the engine core was not checked. Fix with option A (an in-block type is never placed on an External by assembly name) in session `session_01Y7UMGY6CxBT2EeraWoDZbc`, branch `claude/place-in-block-types`.
+
+Done (#417): the check reads the in-block types of each assembly `Umpire.*`; the engine core is checked. Utility split into `Paths` (Domain may use it) and `Utility` (Infrastructure only); the `BlockPlaces` folder walk is a fact source. Technical choices accepted: each `External` binds only types with their source outside the block; API breaks with no obsolete shims (before 0.1.0). Follow-up (option B, `BlockPlaceCheck` and other domain I/O, a folder reader for `Umpire.Testing`) in session `session_01Y7UMGWfAHqKDkn4RXHhgf1`, branch `claude/analyzer-entry-check`.
+
+Done (#419): the analyzer entry passes the check (option B), and the engine `Domain` folders do no file I/O. Technical choices accepted: the snapshot records in the published domain of the Facts plugin; the domain port `IFileState`. Later: make `ResolvedArchitecture.EmptyPlaces` internal; merge the two `TypeName` records; a VSA `Host` rule for `MessagesParts.Contracts` waits for K5 (#344).
+
+Watch: two full runs had 5 failures in `UmpireToolTests` while another session used the machine. The class passed alone and in the third full run.
+
+The user reviews the "End review" list below at the end.
+
 ## Phases
 
 | # | Phase | Depends on | Done when |
@@ -63,7 +94,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 
 | Work | Decision |
 |---|---|
-| `EngineApp<THost>` on `netstandard2.0`. `Entries/Console/` holds `Program.cs`, and `Entries/Analyzer/` holds the analyzer | P1, entry design |
+| Done: `EngineApp<THost>`, the build job and the check job, the operations, the plugins Operations and Facts (PR #401). Done: the engine library on `netstandard2.0`, `Entries/Console/`, `check/` and `architecture/Queries/` in the engine (PR #403, #404). Done: the analyzers and `Entries/Analyzer/` with the compile job; `Umpire.Engine.Analyzer.dll` is the only Umpire analyzer; `check/` is removed (PR #405) | P1, entry design |
 | Jobs are requests in `App/Features/Jobs/`: compile job, build job, check job | P3, P9 |
 | Operations are feature modules: export, setup check, architecture check, code check, format, tests | P3, P4 |
 | Each job returns the same report type. The operations fill it | P4 |
@@ -120,6 +151,29 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #405, the analyzers in the engine:
+  - `Umpire` depends on `Umpire.Engine` with `PrivateAssets="none"`, so each project gets the analyzer entry and its DLLs. #398 had chosen `Umpire.Engine` only in the root project, so a library or a host that vendors the DLLs did not get the engine. Now each Umpire project downloads it.
+  - The analyzer items leave out the `System.*` DLLs. On the .NET Framework compiler (Visual Studio, `msbuild.exe`), `System.Text.Json`, `System.Memory` and similar DLLs may be missing. Not tested: the Visual Studio steps are in PR #405.
+  - The pack selection and the model facts are fact sources that the entry implements, with a `ConditionalWeakTable`: lazy, not plain data. `CompileJobReport` has two extra flags (`InModel`, `ChecksTypes`).
+  - The engine self-check reads only the bin of the console entry, so it does not check the analyzer DLL.
+  - `MetadataLoadContext` is pinned to 8.0.1 for `netstandard2.0`.
+  - A restore target for the entry can race in a parallel build of a fresh clone.
+  - The message of `UMP010003` still says "embeds Umpire.Config".
+- #403 and #404, the engine core and the check model:
+  - The queries keep the namespace `Umpire.Architecture`, and the model keeps `Umpire.CheckModel`, as an exception to the namespace rule (written in `AGENTS.md`).
+  - `ArchitectureTest` needs the queries, so `Umpire.Vsa.Testing.Unit` and the `Umpire.Testing` bundle compile a copy of the query files: two copies of one source. `Umpire.Definition` gives its internals to `Umpire.Engine` and `Umpire.Testing`.
+  - `AppLoader` stays in the console entry, because `AssemblyLoadContext` has no `netstandard2.0` API.
+  - `engine/Polyfills~/` holds own copies of some .NET APIs for `netstandard2.0` (for example `FolderSearch`).
+  - `umpire-check` is now `jobs check --model true`. Its exit code is the engine report code: 1 only for an error (before: 1 also for warnings, 2 for a broken check, 3 for bad flags). With `--model true`, the job still needs `--project` and `--bin`.
+  - No job sends the export operation yet.
+- #401, the engine as jobs and operations:
+  - The plugin from `Steps` is named `Operations`, not `Jobs`: a feature `Jobs` and a plugin `Jobs` give two module classes with one name.
+  - Each job has its own report type (`BuildJobReport`, `CheckJobReport`, subtypes of `JobReport`), because `UMP020302` needs the response in the slice of its handler.
+  - The two job handlers repeat the same check sequence (about 50 lines), because `Slices/Shared/` cannot send the commands of other modules (`UMP020101`).
+  - The console entry is `EngineApp<EngineConsoleHost>`: `ConsoleHost` gives no output for a result.
+  - `--stage Build` (a build with no check) is removed. A call with no job word gives `UMP030401` with the fix; a new hook with an old engine still gives `UMP030004`. vsa-unity may call the engine with the old form.
+  - New engine rule line: `rules.For<Host>().Uses<Contracts.Requests>().And<Domain.Shared>().Under<Plugin>()`, and the Host may use `Infrastructure` of a plugin (`CheckMode`).
+  - `IFactSource<TQuery, TFacts>` has two type parameters. Some file reads stay outside Facts (`TargetRuntime`, `DefinitionFolder`, the Changes hashes, `EntryFiles`).
 - #400, the lowest targets: `Umpire.Web` is `net9.0`, not the `net8.0` of P7, because `Views.Map` calls `MapStaticAssets` (ASP.NET Core 9); support for .NET 8 and 9 ended on 2026-11-10, so "lowest supported" may now mean `net10.0`. `Umpire.Console` stays `net8.0`: on .NET 10 on Linux, SIGTERM did not raise `ProcessExit`. `Umpire.Testing` keeps an ASP.NET Core framework reference only for `AddLogging`. `App.Services` is `protected internal` and is no longer in `IApp`.
 - #399, `Configuration` and `Logging`: `HostArguments` keeps the old internal name. `WebHost` gives only the command-line arguments to `HostArguments`, not the full ASP.NET configuration. `OpenDescriptors` no longer closes open descriptors of `Microsoft.Extensions.*` assemblies. `Compose` now stops with an error if a service registers an `ILoggerProvider` and no `ILoggerFactory`. Parent keys such as `Probe` (of `Probe:Value`) are gone. Also: a race between test processes on the Notes fixture is fixed with `FixtureLock`.
 - #398, the removal of the SDK:
