@@ -573,7 +573,7 @@ dotnet build <root project>
    └─ umpire-engine jobs build --project <root> --bin <output> [--block $(UmpireBlock)] [--mode $(UmpireCheckMode)]
 ```
 
-A job is one call of the engine: one request, one input and one report. The words `jobs build` and `jobs check` select the job. Each job handler names its operations in order. The operations fill the report (`JobReport`: the mode and the findings), and the caller converts it. The console entry (`EngineConsoleHost`, `ConsoleReport`) writes the `file(line,col): error CODE: text` lines and gives the exit code.
+A job is one call of the engine: one request, one input and one report. The words `jobs build` and `jobs check` select the job. A call with no job word comes from a hook of another Umpire version, for example the old form `--stage Check`. The engine then runs no job and gives `UMP030401`: give `Umpire` and `Umpire.Engine` the same version, or run `umpire update`. Each job handler names its operations in order. The operations fill the report (`JobReport`: the mode and the findings), and the caller converts it. The console entry (`EngineConsoleHost`, `ConsoleReport`) writes the `file(line,col): error CODE: text` lines and gives the exit code.
 
 | Value | Source | Scope |
 |---|---|---|

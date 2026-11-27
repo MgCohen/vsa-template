@@ -76,7 +76,9 @@ public sealed class JobTests {
             var operation = services.GetServices<Operation>().Single(o => o.Group == "jobs" && o.Name == "build");
             using var scope = services.CreateScope();
 
-            var result = await operation.Invoke(scope.ServiceProvider, new BuildJobRequest(root, root, Mode: mode), default);
+            var request = new BuildJobRequest(root, root, Mode: mode);
+
+            var result = await operation.Invoke(scope.ServiceProvider, request, default);
 
             Assert.That(result.Value, Is.InstanceOf<BuildJobReport>());
             Assert.That(result.ExitCode, Is.EqualTo(exitCode));
@@ -84,6 +86,42 @@ public sealed class JobTests {
         } finally {
             host.Dispose();
         }
+    }
+
+    [Test]
+    public void The_old_hook_form_with_no_job_word_gives_UMP030401_with_the_fix() {
+        string[] args = ["--stage", "Check", "--project", root, "--bin", root, "--mode", "Error"];
+
+        var output = ConsoleReport.Of(HookMismatch.Mode(HostArguments.Read(args)), [HookMismatch.Finding]);
+
+        Assert.That(HookMismatch.HasNoJobWord(args), Is.True);
+        Assert.That(output.ExitCode, Is.EqualTo(1));
+        Assert.That(output.Lines, Is.EqualTo(new[] { $"umpire-engine: error UMP030401: {HookMismatch.Message}" }));
+        Assert.That(HookMismatch.Message, Does.Contain("Umpire.Engine").And.Contain("umpire update"));
+    }
+
+    [Test]
+    public void In_Warn_mode_the_old_hook_form_gives_a_warning() {
+        string[] args = ["--stage", "Check", "--project", root, "--bin", root, "--mode", "Warn"];
+
+        var output = ConsoleReport.Of(HookMismatch.Mode(HostArguments.Read(args)), [HookMismatch.Finding]);
+
+        Assert.That(output.ExitCode, Is.Zero);
+        Assert.That(output.Lines, Has.One.StartsWith("umpire-engine: warning UMP030401: "));
+    }
+
+    [Test]
+    public void The_engine_reports_UMP030401_for_a_call_of_the_old_hook_and_runs_no_job() {
+        var configuration = Path.GetFileName(
+            AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var engine = Repo.Path("engine", "artifacts~", "bin", "Engine", configuration, "umpire-engine.dll");
+
+        var run = Dotnet.Run(root, null, "exec", engine, "--stage", "Check", "--project", root, "--bin", root,
+            "--mode", "Error");
+
+        Assert.That(run.ExitCode, Is.EqualTo(1), run.Output);
+        Assert.That(run.Output, Does.Contain("umpire-engine: error UMP030401: The engine got no job word")
+            .And.Not.Contain("UMP030303").And.Not.Contain("Unhandled"), run.Output);
     }
 
     [Test]

@@ -14,7 +14,7 @@ public sealed class OperationLog {
 
     public Result<TResult> Skip<TOperation, TResult>() where TOperation : IJobOperation {
         var skipped = new Error(
-            RunCodes.Skipped, $"{OperationNames.Of(typeof(TOperation))} skipped, because an earlier step failed.");
+            RunCodes.Skipped, $"{OperationNames.Of(typeof(TOperation))} skipped, because an earlier operation failed.");
         findings.Add(new Finding(skipped.Code, FindingSeverity.Info, skipped.Message));
         return skipped;
     }

@@ -9,9 +9,11 @@ public static class ConsoleReport {
     const string Umpire = "UMP";
     static readonly string BuildFailed = OperationCode.Prefix + "01";
 
-    public static ConsoleOutput Of(JobReport report) {
-        var warnOnly = report.Mode == ReportMode.Warn;
-        var findings = report.Findings.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error && !IsOfBuild(f)
+    public static ConsoleOutput Of(JobReport report) => Of(report.Mode, report.Findings);
+
+    public static ConsoleOutput Of(ReportMode mode, IReadOnlyList<Finding> reported) {
+        var warnOnly = mode == ReportMode.Warn;
+        var findings = reported.Distinct().Select(f => warnOnly && f.Severity == FindingSeverity.Error && !IsOfBuild(f)
             ? f with { Severity = FindingSeverity.Warning }
             : f)
             .OrderBy(f => f.File is not null)
@@ -26,8 +28,10 @@ public static class ConsoleReport {
         return new ConsoleOutput(errors > 0 ? 1 : 0, [.. findings.Select(Line)], errors, warnings);
     }
 
-    public static int Write(JobReport report) {
-        var output = Of(report);
+    public static int Write(JobReport report) => Write(report.Mode, report.Findings);
+
+    public static int Write(ReportMode mode, IReadOnlyList<Finding> findings) {
+        var output = Of(mode, findings);
         foreach (var line in output.Lines) {
             Console.WriteLine(line);
         }

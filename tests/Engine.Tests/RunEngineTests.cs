@@ -25,7 +25,7 @@ namespace Engine.Tests;
 
 public sealed class RunEngineTests {
     const string RulesSkipped =
-        "umpire-engine: UMP030002: CheckRules skipped, because an earlier step failed.";
+        "umpire-engine: UMP030002: CheckRules skipped, because an earlier operation failed.";
     static readonly string Notes = Repo.Path("tests", "Fixtures", "Notes");
 
     [Test]
@@ -91,7 +91,7 @@ public sealed class RunEngineTests {
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.Lines, Has.One.Contains("error UMP030401").And.Contains("Old.csproj: Umpire.Vsa 0.0.1"));
-            Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier step failed."));
+            Assert.That(result.Lines, Has.One.Contains("UMP030002: LoadApp skipped, because an earlier operation failed."));
         } finally {
             TempFolder.Delete(root);
         }
