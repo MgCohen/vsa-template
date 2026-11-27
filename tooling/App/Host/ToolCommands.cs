@@ -1,10 +1,10 @@
 namespace Umpire.Cli.Host;
 
+using System.Globalization;
 using System.Reflection;
 using Umpire.Cli.Plugins.Commands.Contracts.Requests;
 using Umpire.Cli.Plugins.Commands.Domain.Shared;
 using Umpire.Kernels;
-using Umpire.Messages.Contracts;
 
 public sealed class ToolCommands {
     public const string Help = "help";
@@ -27,18 +27,23 @@ public sealed class ToolCommands {
     public bool CancelsOnSignal(IReadOnlyList<string> line) =>
         all.Count > 0 && typeof(IChildProcessRequest).IsAssignableFrom(Find(line).Request);
 
-    public Operation? Wrap(Operation operation, Func<IReadOnlyList<string>> line) {
-        var command = all.FirstOrDefault(c => c.Request == operation.Input);
-        if (command is null) {
-            return null;
+    public IReadOnlyCollection<string> Names => [.. all.Select(command => KeyOf(command.Form))];
+
+    public bool Accepts(Type message) => all.Any(command => command.Request == message);
+
+    public Operation OperationOf(IReadOnlyList<string> line) {
+        var values = new Dictionary<string, string>();
+        for (var i = 0; i < line.Count; i++) {
+            values[i.ToString(CultureInfo.InvariantCulture)] = line[i];
         }
-        return operation with {
-            Group = command.Form.Group,
-            Name = command.Form.Name,
-            Input = typeof(ToolInput),
-            Invoke = (services, _, ct) => Invoke(operation, line(), services, ct),
-        };
+        return new Operation(KeyOf(Select(line)), values);
     }
+
+    public static IReadOnlyList<string> LineOf(Operation operation) =>
+        [.. operation.Values
+            .Select(pair => new { Index = int.Parse(pair.Key, CultureInfo.InvariantCulture), pair.Value })
+            .OrderBy(pair => pair.Index)
+            .Select(pair => pair.Value)];
 
     static bool IsToolRequest(Type type) =>
         type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IToolRequest<>));
@@ -48,16 +53,7 @@ public sealed class ToolCommands {
         ?? all.FirstOrDefault(command => command.Form.Words is [Help])
         ?? throw new InvalidOperationException("The tool has no help request.");
 
-    Task<OperationResult> Invoke(
-        Operation operation, IReadOnlyList<string> line, IServiceProvider services, CancellationToken ct) {
-        object request;
-        try {
-            request = Request(line);
-        } catch (UmpireException e) {
-            return Task.FromResult(new OperationResult(null, new Error(UmpireException.Code, e.Message), 1));
-        }
-        return operation.Invoke(services, request, ct);
-    }
+    static string KeyOf(CommandForm form) => $"{form.Group}/{form.Name}";
 
     sealed record ToolCommand(Type Request, CommandForm Form, Func<ToolCall, object> Create) {
         const BindingFlags Statics = BindingFlags.NonPublic | BindingFlags.Static;

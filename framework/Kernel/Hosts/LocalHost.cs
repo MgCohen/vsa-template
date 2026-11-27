@@ -1,17 +1,18 @@
 namespace Umpire.Kernels;
 
 using Microsoft.Extensions.DependencyInjection;
+using Umpire.Messages.Contracts;
 
 public class LocalHost : AppHost {
     readonly object gate = new();
     readonly ManualResetEventSlim noSends = new(initialState: true);
     IServiceProvider? services;
-    IReadOnlyList<Operation> operations = [];
+    IOperationConverter? converter;
     int sends;
 
     public override void Start(IServiceProvider services, AppStop stop) {
         lock (gate) {
-            operations = [.. services.GetServices<Operation>()];
+            converter = services.GetService<IOperationConverter>();
             this.services = services;
         }
     }
@@ -19,7 +20,7 @@ public class LocalHost : AppHost {
     public override void Dispose() {
         lock (gate) {
             services = null;
-            operations = [];
+            converter = null;
         }
         if (!HostWork.IsCurrent) {
             noSends.Wait();
@@ -27,27 +28,42 @@ public class LocalHost : AppHost {
         base.Dispose();
     }
 
-    internal async Task<OperationResult> SendAsync(object message, CancellationToken ct) {
+    internal async Task<IMessageResult> SendAsync(object message, CancellationToken ct) {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
-        var operation = Begin(message.GetType(), out var provider);
+        var provider = Begin(message.GetType());
         try {
             HostWork.MarkCurrentFlow();
             using var scope = provider.CreateScope();
-            return await operation.Invoke(scope.ServiceProvider, message, ct).ConfigureAwait(false);
+            return await scope.ServiceProvider.GetRequiredService<IMessageHub>().SendAsync(message, ct).ConfigureAwait(false);
         } finally {
             End();
         }
     }
 
-    Operation Begin(Type input, out IServiceProvider provider) {
+    internal async Task<IMessageResult> SendAsync(Operation operation, CancellationToken ct) {
+        var provider = Begin(null);
+        try {
+            HostWork.MarkCurrentFlow();
+            using var scope = provider.CreateScope();
+            return await scope.ServiceProvider.SendAsync(operation, ct).ConfigureAwait(false);
+        } finally {
+            End();
+        }
+    }
+
+    IServiceProvider Begin(Type? message) {
         lock (gate) {
-            provider = services ?? throw LocalHostApps.NotRunning(GetType().Name);
-            var operation = OperationOf(input);
+            var provider = services ?? throw LocalHostApps.NotRunning(GetType().Name);
+            if (message is not null && converter?.Accepts(message) != true) {
+                throw new InvalidOperationException(
+                    $"{GetType().Name} does not expose {message.FullName}. A host exposes only requests: "
+                    + "send a request that has a request handler in a module of the app.");
+            }
             sends++;
             noSends.Reset();
-            return operation;
+            return provider;
         }
     }
 
@@ -58,21 +74,5 @@ public class LocalHost : AppHost {
                 noSends.Set();
             }
         }
-    }
-
-    Operation OperationOf(Type input) {
-        for (var type = input; type is not null; type = type.BaseType) {
-            var found = operations.Where(operation => operation.Input == type).ToList();
-            if (found.Count == 1) {
-                return found[0];
-            }
-            if (found.Count > 1) {
-                throw new InvalidOperationException(
-                    $"{GetType().Name} has {found.Count} operations for {type.FullName}. Give the request one handler.");
-            }
-        }
-        throw new InvalidOperationException(
-            $"{GetType().Name} has no operation for {input.FullName}. A host exposes only requests: "
-            + "send a request that has a request handler in a module of the app.");
     }
 }

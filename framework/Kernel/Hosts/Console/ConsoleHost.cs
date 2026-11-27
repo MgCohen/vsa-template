@@ -1,8 +1,10 @@
 namespace Umpire.Hosts.Console;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using Umpire.Kernels;
+using Umpire.Messages.Contracts;
 
 public class ConsoleHost : AppHost {
     readonly CancellationTokenSource stopping = new();
@@ -14,7 +16,11 @@ public class ConsoleHost : AppHost {
 
     public override IServiceProvider Build(string[] args, App app) {
         var services = base.Build(args, app);
-        operation = Select(services.GetServices<Operation>().ToList(), args);
+        if (OperationSends.NoConverterWarning(services) is { } warning) {
+            services.GetService<ILogger<ConsoleHost>>()?.LogWarning("{Warning}", warning);
+        }
+        var names = services.GetService<IOperationConverter>()?.Names ?? [];
+        operation = OperationOf(names, args, services.GetRequiredService<HostArguments>());
         return services;
     }
 
@@ -26,8 +32,7 @@ public class ConsoleHost : AppHost {
             context.Cancel = true;
             onSignal();
         });
-        var arguments = services.GetRequiredService<HostArguments>();
-        work = HostWork.Run(() => Run(services, selected, arguments, stop));
+        work = HostWork.Run(() => Run(services, selected, stop));
     }
 
     public override void Dispose() {
@@ -45,10 +50,13 @@ public class ConsoleHost : AppHost {
         base.Dispose();
     }
 
-    protected virtual Operation Select(IReadOnlyList<Operation> operations, string[] args) =>
-        CommandLine.Select(operations, args);
+    protected virtual Operation OperationOf(IReadOnlyCollection<string> names, string[] args, HostArguments arguments) =>
+        CommandLine.OperationOf(names, args, arguments);
 
     protected virtual bool CancelsOnSignal(Operation operation) => false;
+
+    protected virtual int ExitCodeOf(IMessageResult result) =>
+        result.Error is not null ? 1 : result.Value is IExitCode code ? code.ExitCode : 0;
 
     protected override HostArguments Arguments(string[] args) =>
         base.Arguments(CommandLine.Options(args));
@@ -60,12 +68,20 @@ public class ConsoleHost : AppHost {
         }
     }
 
-    async Task Run(IServiceProvider services, Operation selected, HostArguments arguments, AppStop stop) {
+    async Task Run(IServiceProvider services, Operation selected, AppStop stop) {
         using var cancel = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token, signalled.Token);
         try {
-            await CommandLine.Run(services, selected, arguments, stop, cancel.Token).ConfigureAwait(false);
+            using var scope = services.CreateScope();
+            var result = await scope.ServiceProvider.SendAsync(selected, cancel.Token).ConfigureAwait(false);
+            if (result.Error is { } error) {
+                await System.Console.Error.WriteLineAsync($"{error.Code}: {error.Message}").ConfigureAwait(false);
+            }
+            stop.Request(ExitCodeOf(result));
         } catch (OperationCanceledException) when (signalled.IsCancellationRequested && !stopping.IsCancellationRequested) {
             stop.Request();
+        } catch (Exception e) when (e is not OperationCanceledException || !cancel.IsCancellationRequested) {
+            await System.Console.Error.WriteLineAsync($"{selected.Name.Replace('/', ' ')} failed: {e.Message}").ConfigureAwait(false);
+            stop.Request(1);
         }
     }
 }

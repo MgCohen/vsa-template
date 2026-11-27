@@ -10,7 +10,7 @@ public static class LocalRequests {
         where TKernel : Kernel, new()
         where THost : LocalHost, new()
         where TResponse : IResponse =>
-        ResultOf<TResponse>(await LocalHostApps.SendAsync(app, request, ct).ConfigureAwait(false));
+        ResultOf<TResponse>(await LocalHostApps.SendAsync(app, (object)request, ct).ConfigureAwait(false));
 
     public static Result<TResponse> Send<TKernel, THost, TResponse>(
         this App<TKernel, THost> app, IRequest<TResponse> request)
@@ -19,7 +19,7 @@ public static class LocalRequests {
         where TResponse : IResponse =>
         SendAsync(app, request).GetAwaiter().GetResult();
 
-    static Result<TResponse> ResultOf<TResponse>(OperationResult result) where TResponse : IResponse {
+    static Result<TResponse> ResultOf<TResponse>(IMessageResult result) where TResponse : IResponse {
         if (result.Error is { } error) {
             return error;
         }

@@ -6,6 +6,7 @@ using Umpire.Vsa.Definition;
 using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
 using Core = Umpire.Kernels.Blocks.Core;
 using KernelParts = Umpire.Kernels.KernelParts;
+using MessagesParts = Umpire.Kernels.MessagesParts;
 
 public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Configure(ArchitectureConfig config) => config.Roots.Add<Entries>();
@@ -20,5 +21,6 @@ public sealed class EngineArchitecture : VsaArchitecture {
         rules.For<Entries>().Uses<App>(Depth.Self).And<Core>().And<UmpireLibraries>()
             .And<EngineLibraries>().And<VersionLibraries>();
         rules.For<Entries>().Uses<Contracts.Requests>().And<Domain.Shared>().And<Infrastructure>().Under<Plugin>();
+        rules.For<Entries>().Uses<Composition>().And<MessagesParts.Contracts>();
     }
 }

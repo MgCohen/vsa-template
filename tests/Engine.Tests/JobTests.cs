@@ -73,15 +73,13 @@ public sealed class JobTests {
         try {
             string[] args = ["jobs", "build", "--project", root, "--bin", root, "--mode", mode.ToString()];
             var services = host.Build(args, new EngineApp<EngineConsoleHost>());
-            var operation = services.GetServices<Operation>().Single(o => o.Group == "jobs" && o.Name == "build");
             using var scope = services.CreateScope();
 
-            var request = new BuildJobRequest(root, root, Mode: mode);
-
-            var result = await operation.Invoke(scope.ServiceProvider, request, default);
+            var result = await scope.ServiceProvider.SendAsync(
+                new Operation("jobs/build", new Dictionary<string, string> { ["project"] = root, ["bin"] = root, ["mode"] = mode.ToString() }));
 
             Assert.That(result.Value, Is.InstanceOf<BuildJobReport>());
-            Assert.That(result.ExitCode, Is.EqualTo(exitCode));
+            Assert.That(ConsoleReport.Of((JobReport)result.Value!).ExitCode, Is.EqualTo(exitCode));
             Assert.That(ConsoleReport.Of((JobReport)result.Value!).Lines, Has.One.Contains("UMP030303"));
         } finally {
             host.Dispose();
@@ -130,9 +128,9 @@ public sealed class JobTests {
         try {
             var services = host.Build(["jobs", "check"], new EngineApp<EngineConsoleHost>());
 
-            var words = services.GetServices<Operation>().Select(o => $"{o.Group} {o.Name}");
+            var names = services.GetRequiredService<IOperationConverter>().Names;
 
-            Assert.That(words, Is.EquivalentTo(new[] { "jobs build", "jobs check" }));
+            Assert.That(names, Is.EquivalentTo(new[] { "jobs/build", "jobs/check" }));
         } finally {
             host.Dispose();
         }

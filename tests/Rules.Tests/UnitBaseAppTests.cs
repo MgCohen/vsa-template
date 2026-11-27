@@ -18,7 +18,7 @@ public sealed class UnitBaseAppTests : VsaUnitTest {
     public void A_request_with_no_handler_in_the_app_gives_the_error_of_the_local_host() {
         var error = Assert.ThrowsAsync<InvalidOperationException>(() => Handle(new UnhandledRequest()));
 
-        Assert.That(error!.Message, Does.StartWith($"UnitTestHost has no operation for {typeof(UnhandledRequest).FullName}."));
+        Assert.That(error!.Message, Does.StartWith($"UnitTestHost does not expose {typeof(UnhandledRequest).FullName}."));
     }
 
     [Test]

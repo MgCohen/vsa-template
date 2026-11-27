@@ -56,7 +56,7 @@ The app class file imports `Umpire.Kernels` (`App<TKernel, THost>`), `Umpire.Vsa
 | `AppHost` | Umpire.Kernels | The platform: `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
 | `AppState` | Umpire.Kernels | `Stopped`, `Running` or `Stopping` |
 | `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` stops the app. The first request gives the exit code |
-| `Operation` | Umpire.Kernels | A request that a host exposes: `Group`, `Name`, `Effect`, `Input`, `Invoke` |
+| `Operation` | Umpire.Kernels | The message of a host: a name (`{group}/{name}`) and string values. The kernel of the app converts it with its `IOperationConverter` |
 | `Module`, `Module<TSettings>` | Umpire.Kernels | The module class at the top of a module folder: the public `Install` and the protected `Configure`. `Order` 1 |
 | `AppTypes` | Umpire.Kernels | The one type source: the modules and their types |
 
@@ -168,21 +168,21 @@ public class ToolApp<THost> : App<VsaKernel, THost> where THost : AppHost, new()
 var app = new ToolApp<LocalHost>();
 app.Start([]);
 Result<PingResponse> typed = app.Send(new PingRequest("Ann"));
-OperationResult untyped = app.Send((object)new PingRequest("Ann"));
+IMessageResult untyped = app.Send((object)new PingRequest("Ann"));
 app.Stop();
 ```
 
 | Member | Project | Gives |
 |---|---|---|
-| `Send(object)`, `SendAsync(object, ct)` | Umpire.Kernels (`LocalHostApps`) | `OperationResult`: `Value` (the response), `Error`, `ExitCode` |
+| `Send(object)`, `SendAsync(object, ct)`, `SendAsync(Operation, ct)` | Umpire.Kernels (`LocalHostApps`) | `IMessageResult`: `Value` (the response), `Error` |
 | `Send(IRequest<T>)`, `SendAsync(IRequest<T>, ct)` | Umpire.Vsa.Composition (`LocalRequests`) | `Result<T>` |
 
 - Each `Send` is an extension method on `App<TKernel, THost>` with `THost : LocalHost`. An app with another host has no `Send`: the compiler refuses the call.
 - The host stays private in `App`. The extensions use the `internal` member `App.RunningHost`, which gives the host only while `State` is `Running`.
-- `LocalHost.Start` keeps the `Operation` list of the services. `Send` finds the operation whose `Input` is the type of the message, and invokes it in a new service scope. The core reads only `Operation`, so it knows no VSA type.
+- `LocalHost.Start` keeps the operation converter of the services. `Send` checks that the converter accepts the type of the message (a host exposes only requests), and it sends the message through `IMessageHub` in a new service scope. The core reads only `Operation` and the converter, so it knows no VSA type.
 - A message with no operation gives `InvalidOperationException`: "<host> has no operation for <type>. A host exposes only requests". A command has no operation, because a host does not expose commands.
 - A `Send` before `Start` or after `Stop` gives `InvalidOperationException`: "<app> does not run. Call Start before Send."
-- The typed `Send` is more specific than `Send(object)`, so the compiler selects it for a request when the file imports `Umpire.Vsa.Composition`. To read the value of `OperationResult`, cast `Value` to the response type when `Error` is `null`.
+- The typed `Send` is more specific than `Send(object)`, so the compiler selects it for a request when the file imports `Umpire.Vsa.Composition`. To read the value of `IMessageResult`, cast `Value` to the response type when `Error` is `null`.
 - The synchronous `Send` waits for the task. The default runner (`InlineRunner`) completes the task on the thread of the caller. If a handler waits for the `SynchronizationContext` of the caller, use `SendAsync`.
 - An app class can keep its host open (`ToolApp<THost>`), and each entry gives the host: `new ToolApp<LocalHost>()` or `new ToolApp<ConsoleHost>()`. The rule engine reads the kernel of such an app class: it refuses only an open kernel argument (`AppClass.KernelsOf`).
 
@@ -198,7 +198,7 @@ AppHost.Compose(services, arguments, kernel, types)        fixed order
 │  ├─ AddRequestHandlers                                    each kind adds its sender and calls AddPipeline
 │  ├─ AddEventHandlers, AddCommandHandlers
 │  ├─ AddPresenters
-│  └─ AddRequestOperations                                  one Operation for each request handler
+│  └─ AddRequestConverter                                   the one operation converter, for the request handlers
 ├─ settings = new ModuleSettings(Settings(types))           the providers of the host
 ├─ module.Install(services, settings)                       each module, in Order, then by name
 │  ├─ Module                                                Configure(services)
@@ -227,12 +227,12 @@ A module defines its requests, commands, events, handlers and presenters one tim
 
 ```
 Presenter → IRequestSender.SendAsync(request) → RequestHandler<,>             every host
-API client → HTTP /api/{group}/{name} → Operation → RequestHandler<,>          web host
+API client → HTTP /api/{group}/{name} → Operation → RequestConverter → hub → RequestHandler<,>          web host
 Command line → {group} {name} --arg value → Operation → RequestHandler<,>      console host
 Caller → app.Send(request) → Operation → RequestHandler<,>                     local host
 ```
 
-A request is the message that comes from outside the app. A command is the message between features, so a host does not expose commands. The VSA kernel makes one `Operation` for each request handler. `Invoke` sends the request with `IRequestSender`. The hosts read only the `Operation` list, so they know no VSA type.
+A request is the message that comes from outside the app. A command is the message between features, so a host does not expose commands. The VSA kernel registers one `RequestConverter`: it maps the name of each operation to a request type, and it binds the values with a binder that it builds one time at start. The hosts read only `Operation` and the converter, so they know no VSA type.
 
 ```csharp
 public interface IRequest : IMessage;
@@ -246,12 +246,12 @@ public sealed record ListNotesRequest : IRequest<ListNotesResponse> {
 |---|---|---|---|
 | `Group` | The module name, kebab case | Route segment | First word, optional |
 | `Name` | The type name with no `Request` suffix, kebab case | Route segment | Second word, optional |
-| `Effect` | `Write` | `Read` GET, `Write` POST, `Delete` DELETE | Not used |
+| `Effect` | `Write` | Not read now: the web host maps one catch-all route for all methods. Kept for later route filters | Not used |
 
-A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestOperations` reads them by reflection, so the same request works on each target. `Umpire.Vsa.dll` has one build, `netstandard2.0`, so `IRequest` has no `static virtual` members.
+A request declares `Group`, `Name` and `Effect` as public static properties, by convention. `RequestNames` reads `Group` and `Name` by reflection, so the same request works on each target. `Umpire.Vsa.dll` has one build, `netstandard2.0`, so `IRequest` has no `static virtual` members.
 
 - `Effect` is in `Umpire.Messages.Contracts` (#199).
-- `RequestOperations` reads the metadata with no generic call, and it makes the generic call only when a host invokes the operation. A host with no transport (for example Unity) never invokes one, so IL2CPP needs no generic instance at compose.
+- `RequestConverter` makes no generic call: it reads the metadata and the constructor of each request at start, and the hub sends the message with the existing pipelines. So IL2CPP needs no generic instance for an operation.
 - A response that implements `IExitCode` gives the exit code of the console. An error gives 1. Else the code is 0.
 - If the app has one request, the console words are optional. Else the console needs the name, or the group and the name.
 - `IResponse` is the marker of a response type. `IRequest<TResponse>`, `RequestHandler<,>` and `IRequestSender` require it. The build files of the package `Umpire` also use it to find the contract files of a slice.
@@ -434,7 +434,7 @@ Umpire uses reflection only in the places below. Each other part gets its types 
 | `Pipeline` (Messages.Handlers) | `ActivatorUtilities.CreateInstance` | Creates the runner. A runner that it cannot create stops the send, with the pipeline and runner names |
 | `PipelineRun` (Messages.Handlers) | `GetServiceOrCreateInstance` | Creates the steps and hooks from their types |
 | `Views` (Hosts.Web) | `MakeGenericMethod` | Calls `MapRazorComponents<TRoot>` for the views root |
-| `RequestOperations` (Composition) | `MakeGenericMethod` | Reads the static `Group`, `Name` and `Effect` of each request, and makes its `Operation` |
+| `RequestConverter`, `RequestNames`, `RequestBinder` (Composition) | `GetProperty`, `GetConstructors`, `ConstructorInfo.Invoke` | Reads the static `Group` and `Name` and the constructor of each request at start, and makes the request from the values of an operation |
 | `CommandLine` (Hosts.Console) | `GetConstructors`, `Invoke` | Binds the command-line values to the constructor of the request |
 | `VsaUnitTest` (Testing.Unit) | `LoadedTypes.Of`, `ClosedBase.Of` | Finds the handler of a command. A request goes through the `LocalHost` of the test app |
 | `AppLoader` (engine console entry) | `AssemblyLoadContext`, `Activator`, `GetProperty` | Creates the one definition type: the app class (then reads its architecture) or the architecture |
@@ -453,7 +453,7 @@ The checks read the registered types. They do not find types.
 
 ## The HTTP API
 
-`WebHost` maps one route for each `Operation`, with ASP.NET Core minimal APIs (`MapMethods`). The route is `Route(operation)`, by default `/api/{group}/{name}`. A web host can override `Route`.
+`WebHost` maps one catch-all route with ASP.NET Core minimal APIs (`MapMethods`), for GET, POST, PUT, PATCH and DELETE. The pattern is `RoutePattern`, by default `/api/{**name}`, and a web host can override it. The rest of the path is the name of the operation, and the values come from the query and the JSON body (a JSON object or array value stays as its JSON text). Route filters by method can come later.
 
 | Step | Source |
 |---|---|
@@ -474,7 +474,7 @@ framework/Kernel/                      Umpire.Kernels
   App/                                 App, App<TKernel, THost>, IAppEntry<TKernel>, IApp, AppStop
   Definition/                          Umpire.Kernels.Definition: Architecture<TKernel>, PackArchitecture, the records Core, Module, Pack
   Kernels/                             Kernel, the core step (AutoRegistration), OpenDescriptors
-  Operations/                          Operation, OperationInvoke, OperationResult
+  Operations/                          Operation, IOperationConverter, OperationSends
   Hosts/                               AppHost
   Hosts/Web/                           Umpire.Hosts.Web: WebHost, ViewsRoot, the HTTP API, the request binder
   Hosts/Console/                       Umpire.Hosts.Console: ConsoleHost, the command-line binder
@@ -496,7 +496,7 @@ packs/Vsa/
     Handlers/Requests/                 RequestHandler, AddRequestHandlers
     Presenters/                        AddPresenters
     Views/                             PresenterWatcher, PresenterComponent<T>
-    Composition/                       Umpire.Vsa.Composition: RequestOperations, Plugin, Plugin<TSettings>
+    Composition/                       Umpire.Vsa.Composition: RequestConverter, RequestNames, RequestBinder, Plugin, Plugin<TSettings>
 ```
 
 ```mermaid
@@ -513,7 +513,7 @@ flowchart BT
 ```
 
 - The kernel knows no layer. `VsaKernel.Configure` calls each layer registration by a direct call, in a fixed order.
-- No host knows VSA. The hosts read only `Operation`.
+- No host knows VSA. The hosts read only `Operation` and `IOperationConverter`.
 - `Umpire.Kernels` does not reference `Microsoft.Extensions.Hosting`. Only `Umpire.Hosts.Web` uses a .NET Generic Host, inside `WebApplication`.
 - `Umpire.Vsa` references `Umpire.Vsa.Composition`, because its definition counts the `Plugin` classes with `HasTypes`, and `VsaArchitecture` names `VsaKernel`. `Umpire.Vsa.Composition` does not reference `Umpire.Vsa`.
 

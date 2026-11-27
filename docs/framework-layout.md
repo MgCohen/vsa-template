@@ -130,7 +130,7 @@ See `composition.md` for each step.
 
 ## Non-goals
 
-- No VSA code in a host. Reason: the hosts read only `Operation`, so another architecture can use `WebHost` and `ConsoleHost`.
+- No VSA code in a host. Reason: the hosts read only `Operation` and `IOperationConverter`, so another architecture can use `WebHost` and `ConsoleHost` with its own converter.
 
 ## Open questions
 

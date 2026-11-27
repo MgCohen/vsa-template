@@ -13,6 +13,6 @@ public class VsaKernel : Kernel {
         services.AddEventHandlers();
         services.AddCommandHandlers(types);
         services.AddPresenters(types);
-        services.AddRequestOperations(types);
+        services.AddRequestConverter(types);
     }
 }

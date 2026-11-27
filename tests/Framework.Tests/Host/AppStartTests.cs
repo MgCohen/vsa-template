@@ -15,7 +15,7 @@ public sealed class AppStartTests {
     public async Task AppWithZeroModulesStartsAndMapsNoEndpoints() {
         using var app = await WebApps.OnTestServer().Start();
 
-        Assert.That(Endpoints(app), Is.Empty);
+        Assert.That(Endpoints(app).OfType<RouteEndpoint>().Select(e => e.RoutePattern.RawText), Is.EqualTo(new[] { "/api/{**name}" }));
         Assert.That((await app.GetTestClient().GetAsync("/api/anything")).StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
@@ -23,24 +23,19 @@ public sealed class AppStartTests {
     public async Task AppWithAModuleWithoutRequestHandlersStarts() {
         using var app = await WebApps.OnTestServer(new ShelfModule()).Start();
 
-        Assert.That(Endpoints(app), Is.Empty);
+        Assert.That(Endpoints(app).OfType<RouteEndpoint>().Select(e => e.RoutePattern.RawText), Is.EqualTo(new[] { "/api/{**name}" }));
     }
 
     [Test]
-    public async Task AppMapsTheRouteOfEachRequest() {
+    public async Task AppMapsOneRouteForAllRequests() {
         using var app = await WebApps.OnTestServer(new AnswersModule()).Start();
 
-        var routes = Endpoints(app).OfType<RouteEndpoint>().Select(Route);
+        var route = Endpoints(app).OfType<RouteEndpoint>().Single();
 
-        Assert.That(routes, Is.EquivalentTo(new[] {
-            "POST /api/answers/answer",
-            "GET /api/answers/get-item",
-            "GET /api/answers/list-all",
-        }));
+        Assert.That(route.RoutePattern.RawText, Is.EqualTo("/api/{**name}"));
+        Assert.That(route.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods,
+            Is.EquivalentTo(new[] { "GET", "POST", "PUT", "PATCH", "DELETE" }));
     }
-
-    static string Route(RouteEndpoint endpoint) =>
-        $"{endpoint.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Single()} {endpoint.RoutePattern.RawText}";
 
     static IEnumerable<Endpoint> Endpoints(WebRun app) => app.Endpoints();
 }

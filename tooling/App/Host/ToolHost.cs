@@ -1,6 +1,7 @@
 namespace Umpire.Cli.Host;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Umpire.Hosts.Console;
 using Umpire.Kernels;
 
@@ -19,22 +20,12 @@ public sealed class ToolHost : ConsoleHost {
 
     protected override void Configure(IServiceCollection services, AppTypes types) {
         base.Configure(services, types);
-        var operations = services
-            .Where(d => d.ServiceType == typeof(Operation) && d.ImplementationInstance is Operation)
-            .ToList();
-        commands = ToolCommands.Of([.. operations.Select(d => ((Operation)d.ImplementationInstance!).Input)]);
-        foreach (var descriptor in operations) {
-            if (commands.Wrap((Operation)descriptor.ImplementationInstance!, () => line) is { } wrapped) {
-                services.Remove(descriptor);
-                services.AddSingleton(wrapped);
-            }
-        }
+        commands = ToolCommands.Of([.. typeof(ToolHost).Assembly.GetTypes()]);
+        services.Replace(ServiceDescriptor.Singleton<IOperationConverter>(new ToolConverter(commands)));
     }
 
-    protected override Operation Select(IReadOnlyList<Operation> operations, string[] args) {
-        var form = commands.Select(line);
-        return base.Select(operations, [form.Group, form.Name]);
-    }
+    protected override Operation OperationOf(IReadOnlyCollection<string> names, string[] args, HostArguments arguments) =>
+        commands.OperationOf(line);
 
     protected override bool CancelsOnSignal(Operation operation) => commands.CancelsOnSignal(line);
 
