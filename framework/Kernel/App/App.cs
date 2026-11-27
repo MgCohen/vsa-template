@@ -36,7 +36,7 @@ public abstract class App : IApp {
         }
     }
 
-    public IServiceProvider? Services {
+    protected internal IServiceProvider? Services {
         get {
             lock (gate) {
                 return services;

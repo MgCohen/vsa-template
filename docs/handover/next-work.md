@@ -47,7 +47,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | `LocalHost` and `Send`, through the same operation flow | Entry design, App and host split |
 | Done: `LoadedTypes` and `ClosedBase` in `framework/Kernel/Utility/`, namespace `Umpire.Utility` (PR #387). Still to move: the file writer and the version check, with phase 2 | Q1, P8 |
 | Done: our own TOML reader, no Tomlyn (PR #388) | K4 Q4 |
-| Make `App.Services` internal or protected, after a check of its users | Entry design |
+| Done: `App.Services` is `protected internal`, and `IApp` has no `Services`. The tests read it through `InternalsVisibleTo`. The consumer repos do not read it. A Unity bridge gets the provider in `UnityHost.Start(services, stop)` | Entry design |
 
 ## Phase 2: packages
 
@@ -57,7 +57,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 | Split core and VSA into two DLLs | K4 Q6 |
 | Done (#247): the core has no `Microsoft.Extensions.Configuration` and no `Logging`. It uses `HostArguments` and the null logger. Update the consumer repos: `Configuration(args)` is `Arguments(args)`, `Compose` takes `HostArguments`, and a non-web module reads `HostArguments` in place of `IConfiguration` | K4 Q5 |
 | Remove the SDK: the packages bring their own `build/` props and targets. This repository keeps `UseArtifactsOutput` | P7 |
-| Each package targets the lowest framework that its code needs. `Umpire.Web` is `net8.0` | P7 |
+| Done: each package targets the lowest framework that its code needs. `Umpire.Web` is `net9.0` (`MapStaticAssets`), `Umpire.Console`, `Umpire.Testing` and `umpire` are `net8.0`. See "Runtime targets" in `requirements.md` | P7 |
 
 ## Phase 3: engine
 
