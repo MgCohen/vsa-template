@@ -98,3 +98,4 @@ The proposals and the questions of https://claude.ai/artifact/GQkEAJ48rdzvsDjPtX
 - **Reference folders (2026-11-27).** Option C: the engine reads the DLLs of a reference folder (`umpire.check.references`, Unity `ScriptAssemblies`) into the model with `MetadataLoadContext`. ArchUnitNET and `TypeFactSource` go. The user answered "C".
 - **The `umpire` tool (2026-11-27).** Option B: the tool is a VSA app with requests, handlers and modules, and the build checks it as a block in `tooling/` (P10). The user answered "B".
 - **Exit code after a stop signal (2026-11-27).** Option C: after Ctrl+C or SIGTERM, the tool gives the exit code of its child process. `ConsoleHost` keeps exit code 0. The user answered "C".
+- **Project DLL with no snapshot (2026-11-27, #412 Q1).** Option A: a project DLL in `deps.json` with no snapshot gives `UMP030802`, and the engine does not read it. The user answered "A".
