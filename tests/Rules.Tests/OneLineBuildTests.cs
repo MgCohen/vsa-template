@@ -3,6 +3,7 @@ using Tests.Shared;
 namespace Rules.Tests;
 
 [NonParallelizable]
+[Category("Package")]
 public sealed class OneLineBuildTests {
     Workspace workspace = null!;
     DotnetResult first = null!;

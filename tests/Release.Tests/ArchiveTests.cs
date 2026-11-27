@@ -7,6 +7,7 @@ using Tests.Shared;
 namespace Release.Tests;
 
 [NonParallelizable]
+[Category("Package")]
 public sealed class ArchiveTests {
     const string Net8Root = "UMPIRE_NET8_DOTNET_ROOT";
     const string Notices = "THIRD-PARTY-NOTICES.txt";

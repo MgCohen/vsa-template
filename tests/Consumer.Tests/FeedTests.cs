@@ -2,6 +2,7 @@ using Tests.Shared;
 
 namespace Consumer.Tests;
 
+[Category("Package")]
 public sealed class FeedTests {
     [Test]
     public void Each_package_in_the_feed_has_the_product_name() {
