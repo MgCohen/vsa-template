@@ -36,8 +36,10 @@ public sealed class ParityTests {
     [TestCase("Spike", "Alpha", "Spike.Alpha")]
     [TestCase("Spike", "Bravo", "Spike.Bravo")]
     [TestCase("Spike", "Charlie", "Spike.Charlie")]
-    public void A_fixture_block_gives_the_findings_of_the_engine(string fixture, string block, string project) =>
+    public void A_fixture_block_gives_the_findings_of_the_engine(string fixture, string block, string project) {
+        using var source = FixtureLock.Take(fixture);
         Same(EngineRun.Of(Bin(fixture, project), Fixture(fixture, block)), 0);
+    }
 
     [TestCase("engine")]
     [TestCase("packs", "Vsa")]

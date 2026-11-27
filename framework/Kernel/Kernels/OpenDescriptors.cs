@@ -17,7 +17,7 @@ sealed class OpenDescriptors {
     OpenDescriptors(IServiceCollection services, AppTypes types, HashSet<ServiceDescriptor> kernelServices) {
         this.services = services;
         this.types = types;
-        open = [.. services.Where(d => !kernelServices.Contains(d) && IsOpen(d))];
+        open = [.. services.Where(d => !kernelServices.Contains(d) && IsOpen(d) && !IsOfMicrosoftExtensions(d))];
         dispatch = DispatchClosesOf(services);
         foreach (var descriptor in services) {
             if (Pair(descriptor) is { } pair) {
@@ -64,6 +64,10 @@ sealed class OpenDescriptors {
         !descriptor.IsKeyedService
         && descriptor.ServiceType.IsGenericTypeDefinition
         && descriptor.ImplementationType is { IsGenericTypeDefinition: true };
+
+    static bool IsOfMicrosoftExtensions(ServiceDescriptor descriptor) =>
+        descriptor.ImplementationType!.Assembly.GetName().Name!
+            .StartsWith("Microsoft.Extensions.", StringComparison.Ordinal);
 
     static ServicePair? Pair(ServiceDescriptor descriptor) =>
         AutoRegistration.ImplementationOf(descriptor) is { ContainsGenericParameters: false } implementation

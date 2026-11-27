@@ -57,6 +57,7 @@ public sealed class ChangesTests {
 
     [Test]
     public void A_change_in_the_umpireconfig_file_changes_the_input_hash() {
+        using var notes = FixtureLock.Take("Notes");
         var config = Path.Combine(Notes, ".umpireconfig");
         var time = File.GetLastWriteTimeUtc(config);
         var before = InputHash.Of(Notes, Bin, "run");

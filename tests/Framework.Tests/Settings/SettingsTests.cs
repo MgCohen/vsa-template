@@ -1,6 +1,5 @@
 namespace Framework.Tests.Settings;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Bare;
 using Umpire.Config;
@@ -80,7 +79,7 @@ public sealed class SettingsTests {
     static ServiceCollection Compose(IReadOnlyList<ISettingsProvider> providers, Module module) {
         var services = new ServiceCollection();
         using var host = new SettingsHost(providers);
-        host.Compose(services, new ConfigurationBuilder().Build(), new VsaKernel(),
+        host.Compose(services, HostArguments.Empty, new VsaKernel(),
             new AppTypes(new FixedModules(module), typeof(SettingsTests).Assembly));
         return services;
     }

@@ -156,6 +156,7 @@ public sealed class RunEngineTests {
 
     [Test]
     public async Task An_unmarked_block_in_a_part_folder_gives_UMP020401() {
+        using var notes = FixtureLock.Take("Notes");
         var store = Path.Combine(Notes, "App", "Features", "Notebook", "Infrastructure", "Store");
         Directory.CreateDirectory(store);
         try {
@@ -172,6 +173,7 @@ public sealed class RunEngineTests {
 
     [Test]
     public async Task A_severity_of_none_in_the_umpireconfig_of_the_block_turns_a_rule_off() {
+        using var notes = FixtureLock.Take("Notes");
         var store = Path.Combine(Notes, "App", "Features", "Notebook", "Infrastructure", "Store");
         var config = Path.Combine(Notes, ".umpireconfig");
         var original = File.ReadAllText(config);

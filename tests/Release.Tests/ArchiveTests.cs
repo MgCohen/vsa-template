@@ -66,6 +66,20 @@ public sealed class ArchiveTests {
             .And.Not.Contain("Tomlyn.dll").And.Not.Contain("System.IO.Pipelines.dll"));
     }
 
+    [TestCase("Microsoft.Extensions.Configuration.dll")]
+    [TestCase("Microsoft.Extensions.Configuration.Abstractions.dll")]
+    [TestCase("Microsoft.Extensions.Configuration.CommandLine.dll")]
+    [TestCase("Microsoft.Extensions.Primitives.dll")]
+    [TestCase("Microsoft.Extensions.Logging.dll")]
+    [TestCase("Microsoft.Extensions.Options.dll")]
+    [TestCase("System.ComponentModel.Annotations.dll")]
+    public void The_runtime_has_no_configuration_or_logging_library(string library) =>
+        Assert.That(Runtime().Select(FileName), Does.Not.Contain(library));
+
+    [Test]
+    public void The_runtime_has_the_logging_abstractions() =>
+        Assert.That(Runtime().Select(FileName), Does.Contain("Microsoft.Extensions.Logging.Abstractions.dll"));
+
     [Test]
     public void Each_Microsoft_Extensions_file_of_the_runtime_is_version_8() {
         var extensions = Runtime()

@@ -1,6 +1,5 @@
 namespace Composition.Tests;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Till;
 using Till.Domain;
@@ -214,7 +213,7 @@ public sealed class OpenClosingTests {
     static ServiceCollection Composed(Module module) {
         var services = new ServiceCollection();
         using var host = new TestHost();
-        host.Compose(services, new ConfigurationBuilder().Build(),
+        host.Compose(services, HostArguments.Empty,
             new Kernel(), new AppTypes(new FixedModules(module)));
         return services;
     }

@@ -1,6 +1,5 @@
 namespace Umpire.Hosts.Console;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Runtime.InteropServices;
 using Umpire.Kernels;
@@ -25,7 +24,7 @@ public class ConsoleHost : AppHost {
             stop.Request();
         });
         work = HostWork.Run(() => CommandLine.Run(
-            services, operation!, services.GetRequiredService<IConfiguration>(), stop, stopping.Token));
+            services, operation!, services.GetRequiredService<HostArguments>(), stop, stopping.Token));
     }
 
     public override void Dispose() {
@@ -42,6 +41,6 @@ public class ConsoleHost : AppHost {
         base.Dispose();
     }
 
-    protected override IConfiguration Configuration(string[] args) =>
-        base.Configuration(CommandLine.Options(args));
+    protected override HostArguments Arguments(string[] args) =>
+        base.Arguments(CommandLine.Options(args));
 }
