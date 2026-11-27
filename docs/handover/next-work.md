@@ -27,6 +27,8 @@ Done (#413): the `umpire` tool is a VSA app in `tooling/` and a checked block; a
 
 Bug from #413: the check skipped the in-block types of each assembly `Umpire.*`, so the engine core was not checked. Fix with option A (an in-block type is never placed on an External by assembly name) in session `session_01Y7UMGY6CxBT2EeraWoDZbc`, branch `claude/place-in-block-types`.
 
+Done (#417): the check reads the in-block types of each assembly `Umpire.*`; the engine core is checked. Utility split into `Paths` (Domain may use it) and `Utility` (Infrastructure only); the `BlockPlaces` folder walk is a fact source. Technical choices accepted: each `External` binds only types with their source outside the block; API breaks with no obsolete shims (before 0.1.0). Follow-up (option B, `BlockPlaceCheck` and other domain I/O, a folder reader for `Umpire.Testing`) in session `session_01Y7UMGWfAHqKDkn4RXHhgf1`, branch `claude/analyzer-entry-check`.
+
 Watch: two full runs had 5 failures in `UmpireToolTests` while another session used the machine. The class passed alone and in the third full run.
 
 The user reviews the "End review" list below at the end.
