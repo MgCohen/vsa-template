@@ -36,7 +36,9 @@ public sealed class EngineConsoleHost : ConsoleHost {
             .ToList();
         foreach (var descriptor in operations) {
             services.Remove(descriptor);
-            services.AddSingleton(WithReport((Operation)descriptor.ImplementationInstance!));
+            if (descriptor.ImplementationInstance is Operation { Input: var input } operation && typeof(JobRequest).IsAssignableFrom(input)) {
+                services.AddSingleton(WithReport(operation));
+            }
         }
     }
 

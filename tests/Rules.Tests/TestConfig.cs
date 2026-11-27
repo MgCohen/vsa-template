@@ -1,12 +1,12 @@
 namespace Rules.Tests;
 
 using System.Globalization;
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
 
 static class TestConfig {
     const string UmpirePrefix = "umpire.";
 
-    public static string Default(UmpireAnalyzerRule rule, string key) =>
+    public static string Default(CodeRule rule, string key) =>
         rule.Options.Single(option => option.Key == key).Default!;
 
     public static string Native(string config) =>

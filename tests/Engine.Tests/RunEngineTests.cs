@@ -2,6 +2,7 @@ using Blocks;
 using Build;
 using Changes;
 using Changes.Infrastructure;
+using CodeCheck;
 using Facts;
 using Facts.Domain.Shared;
 using Facts.Infrastructure;
@@ -36,7 +37,17 @@ public sealed class RunEngineTests {
         var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine)
             .Select(module => module.Name);
 
-        Assert.That(modules, Is.EqualTo(new[] { "Facts", "Operations", "Blocks", "Build", "Changes", "Jobs", "LoadApp", "Model", "Rules", "Versions" }));
+        Assert.That(modules, Is.EqualTo(new[] {
+            "Facts", "Operations", "Blocks", "Build", "Changes", "CodeCheck", "Jobs", "LoadApp", "Model", "Rules", "Versions" }));
+    }
+
+    [Test]
+    public void The_analyzer_entry_gives_each_module_of_the_engine_assembly() {
+        var engine = typeof(OperationsPlugin).Assembly;
+
+        var modules = new AppTypes(null).Modules.Where(module => module.GetType().Assembly == engine).Select(module => module.Name);
+
+        Assert.That(CompileHost.Modules().Select(module => module.Name), Is.EquivalentTo(modules));
     }
 
     [Test]
@@ -313,7 +324,7 @@ public sealed class RunEngineTests {
 
     internal static Module[] EngineModules() => [
         new OperationsPlugin(), new FactsPlugin(), new JobsModule(), new BuildModule(), new ChangesModule(), new BlocksModule(),
-        new VersionsModule(), new LoadAppModule(), new RulesModule(), new ModelModule(),
+        new VersionsModule(), new LoadAppModule(), new RulesModule(), new ModelModule(), new CodeCheckModule(),
     ];
 
     internal static async Task<ConsoleOutput> Run(

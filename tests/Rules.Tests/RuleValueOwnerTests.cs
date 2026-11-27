@@ -1,18 +1,15 @@
 using System.Text.RegularExpressions;
 using Tests.Shared;
-using Umpire.Kernels;
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
 
 namespace Rules.Tests;
 
 public sealed partial class RuleValueOwnerTests {
-    static readonly RuleAnalyzer[] Analyzers = [new KernelAnalyzer(), new VsaAnalyzer()];
-
     [Test]
     public void Each_option_has_a_valid_default_on_its_rule() {
-        var missing = Analyzers.SelectMany(analyzer => analyzer.Rules.SelectMany(rule => rule.Options
+        var missing = CodeRule.All.SelectMany(rule => rule.Options
             .Where(option => !option.IsValid(null))
-            .Select(option => $"{rule.GetType().Name}: {option.Key}")));
+            .Select(option => $"{rule.GetType().Name}: {option.Key}"));
 
         Assert.That(missing, Is.Empty);
     }
@@ -57,7 +54,7 @@ public sealed partial class RuleValueOwnerTests {
             .Select(property => Plain(property.Name))
             .ToHashSet();
 
-        var clashes = Analyzers.SelectMany(analyzer => analyzer.Rules.SelectMany(rule => rule.Options))
+        var clashes = CodeRule.All.SelectMany(rule => rule.Options)
             .Where(option => definition.Contains(Plain(option.Key)));
 
         Assert.That(clashes, Is.Empty);

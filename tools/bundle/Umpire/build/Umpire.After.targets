@@ -37,8 +37,9 @@
   <!-- A definition is a nested project in a folder Definition/, in its own check-time DLL. The project builds it first and does
        not reference it. The definitions below a nested project that is not a test project belong to that project. The target, the runtime and the
        output folder of this project are not the ones of the definition. The kernel of a pack variant
-       (App/Packs/<Name>/Kernel/) is a normal reference. -->
-  <ItemGroup Condition="'$(UmpireTestProject)' != 'true'">
+       (App/Packs/<Name>/Kernel/) is a normal reference. The analyzer build of this repository (UmpireAnalyzerBuild) checks nothing,
+       so it builds no definition. -->
+  <ItemGroup Condition="'$(UmpireTestProject)' != 'true' and '$(UmpireAnalyzerBuild)' != 'true'">
     <_UmpireNestedOwner Include="@(_UmpireNestedProject)" Exclude="**/*.Tests.csproj" />
     <_UmpireDefinitionProject Include="**/Definition/*.csproj" Exclude="$(MSBuildProjectFile);$(_UmpireNotSource);@(_UmpireNestedOwner->'%(RelativeDir)**/Definition/*.csproj')" />
     <ProjectReference Include="@(_UmpireDefinitionProject)" ReferenceOutputAssembly="false" Private="false"

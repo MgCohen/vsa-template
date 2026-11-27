@@ -1,6 +1,5 @@
 using System.Reflection;
 using Tests.Shared;
-using Umpire.Vsa.Analyzers;
 
 namespace Rules.Tests;
 
@@ -9,8 +8,11 @@ public sealed class SharedCompilerTests {
     static readonly string Configuration =
         typeof(SharedCompilerTests).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
 
+    static readonly string[] EntryFiles = ["Umpire.Engine.Analyzer.dll", "Umpire.Engine.dll", "Umpire.dll", "Umpire.Vsa.dll",
+        "Microsoft.Extensions.DependencyInjection.dll"];
+
     [Test]
-    public void A_source_mode_app_gives_each_Umpire_analyzer_from_the_folder_of_the_pack_analyzer() {
+    public void A_source_mode_app_gives_each_analyzer_file_from_the_folder_of_the_analyzer_entry() {
         var probe = TempFolder.Create();
         try {
             WriteProbe(probe);
@@ -21,26 +23,26 @@ public sealed class SharedCompilerTests {
             var analyzers = result.Output.Split('\n')
                 .Where(line => line.Contains("\"Identity\"", StringComparison.Ordinal))
                 .Select(line => line.Split('"')[3])
-                .Where(path => Path.GetFileName(path).StartsWith("Umpire.", StringComparison.Ordinal))
                 .ToList();
 
-            Assert.That(analyzers.Select(Path.GetFileName), Is.EquivalentTo(new[] { "Umpire.Kernels.Analyzers.dll", "Umpire.Vsa.Analyzers.dll" }), result.Output);
-            Assert.That(analyzers.Select(Path.GetDirectoryName).Distinct(), Has.Exactly(1).Items, result.Output);
+            Assert.That(analyzers.Select(Path.GetFileName), Is.SupersetOf(EntryFiles).And.No.Member("Microsoft.CodeAnalysis.dll"), result.Output);
+            Assert.That(analyzers.Where(path => EntryFiles.Contains(Path.GetFileName(path))).Select(Path.GetDirectoryName).Distinct(),
+                Has.Exactly(1).Items, result.Output);
         } finally {
             TempFolder.Delete(probe);
         }
     }
 
     [Test]
-    public void A_deleted_copy_of_the_kernel_analyzer_on_the_compiler_server_does_not_stop_the_pack_rules() {
+    public void A_deleted_copy_of_an_analyzer_file_on_the_compiler_server_does_not_stop_the_rules() {
         var server = new Dictionary<string, string> { ["SharedCompilationId"] = "umpire-test-" + Guid.NewGuid().ToString("N") };
         var decoy = Repo.Path("artifacts~", "0-decoy-" + Guid.NewGuid().ToString("N")[..8]);
         var decoyProject = TempFolder.Create();
         var probe = TempFolder.Create();
         try {
             Directory.CreateDirectory(decoy);
-            var decoyAnalyzer = Path.Combine(decoy, "Umpire.Kernels.Analyzers.dll");
-            File.Copy(typeof(KernelAnalyzer).Assembly.Location, decoyAnalyzer);
+            var decoyAnalyzer = Path.Combine(decoy, "Umpire.Engine.dll");
+            File.Copy(typeof(UmpireEngine.EngineApp<>).Assembly.Location, decoyAnalyzer);
             WriteDecoyProject(decoyProject, decoyAnalyzer);
             Dotnet.Run(decoyProject, server, "build", "Decoy.csproj", "-nodeReuse:false").EnsureSuccess();
             TempFolder.Delete(decoy);
@@ -51,7 +53,7 @@ public sealed class SharedCompilerTests {
 
             Assert.That(new[] { "error CS8032", "warning CS8032", "error AD0001", "warning AD0001" }.Where(result.Output.Contains), Is.Empty, result.Output);
             Assert.That(result.Succeeded, Is.True, result.Output);
-            Assert.That(result.Output, Does.Contain("Umpire.Vsa.Analyzers.VsaAnalyzer (").And.Contain("Umpire.Vsa.Analyzers.KernelAnalyzer ("), result.Output);
+            Assert.That(result.Output, Does.Contain("UmpireEngine.EngineAnalyzer ("), result.Output);
         } finally {
             StopServer(probe, server);
             TempFolder.Delete(decoy);

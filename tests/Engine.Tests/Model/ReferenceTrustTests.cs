@@ -187,13 +187,13 @@ public sealed class ReferenceTrustTests {
 
     static string SurfaceOf(SampleBuild build, string type) {
         build.Write("Data/Base.cs", $"namespace Sample;\n{type}\n");
-        return Surface.Of(new Umpire.CheckModel.Analyzer.ProjectFacts(build.Compile("Data", "Data/Base.cs"), build.Block).Declared);
+        return Surface.Of(new UmpireEngine.ProjectFacts(build.Compile("Data", "Data/Base.cs"), build.Block).Declared);
     }
 
     static string Surfaces(SampleBuild build, string generated, string modifier = "") {
         build.Write("obj/Base.cs", $"namespace Sample;\n{generated}\n");
         build.Write("Data/Other.cs", $"namespace Sample;\npublic {modifier}class Other;\n");
-        return Surface.Of(new Umpire.CheckModel.Analyzer.ProjectFacts(build.Compile("Data", "Data/Other.cs", "obj/Base.cs"), build.Block).Declared);
+        return Surface.Of(new UmpireEngine.ProjectFacts(build.Compile("Data", "Data/Other.cs", "obj/Base.cs"), build.Block).Declared);
     }
 
     static SampleBuild Built() {

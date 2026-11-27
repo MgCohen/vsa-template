@@ -1,9 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The rule engine: EngineApp<THost>, the jobs, the operations and the plugins, as one netstandard2.0 library (decision P2).
        It does no console work: each entry closes the host and converts the report. The console entry is Entries/Console/.
-       It is not a package: the package Umpire.Engine holds the console entry in tools/net8.0/ (tools/bundle/Engine/Umpire.Engine.csproj). -->
+       It is not a package: the package Umpire.Engine holds the console entry in tools/net8.0/ and the analyzer entry in
+       analyzers/dotnet/cs/ (tools/bundle/Engine/Umpire.Engine.csproj). Its PackageId is not Umpire.Engine, so a restore of the
+       package build does not see two projects with one name. -->
   <PropertyGroup>
     <AssemblyName>Umpire.Engine</AssemblyName>
+    <PackageId>Umpire.Engine.Core</PackageId>
     <RootNamespace>UmpireEngine</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
@@ -18,8 +21,8 @@
     <ProjectReference Include="$(UmpireFrameworkSourceDir)framework/Components/Config/Umpire.Config.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(_UmpireUseBundle)' == 'true'">
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Definition/Umpire.Definition.csproj" />
-    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/Definition/Umpire.Definition.csproj" GlobalPropertiesToRemove="UmpireAnalyzerBuild" />
+    <ProjectReference Include="$(UmpireFrameworkSourceDir)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" GlobalPropertiesToRemove="UmpireAnalyzerBuild" />
   </ItemGroup>
   <!-- The polyfills of the netstandard2.0 build: extension methods with the names of the newer .NET APIs. Their folder name
        ends with ~, so the engine does not check it as a source folder. -->

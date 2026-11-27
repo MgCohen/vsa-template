@@ -1,15 +1,17 @@
 using Tests.Shared;
-using Umpire.Kernels;
-using Umpire.Vsa.Analyzers;
+using CodeCheck.Slices.CheckCode;
+using Microsoft.CodeAnalysis;
+using UmpireEngine;
 
 namespace Rules.Tests;
 
 public sealed class SdkCodeTests {
-    static readonly RuleAnalyzer[] Analyzers = [new KernelAnalyzer(), new VsaAnalyzer()];
+    static readonly DiagnosticDescriptor[] Codes = [.. new EngineAnalyzer().SupportedDiagnostics
+        .Where(d => d.Id.StartsWith("UMP01", StringComparison.Ordinal))];
 
     [Test]
     public void The_code_list_of_the_SDK_has_each_analyzer_code_and_no_other() {
-        var codes = Analyzers.SelectMany(a => a.SupportedDiagnostics).Select(d => d.Id).Distinct();
+        var codes = Codes.Select(d => d.Id).Distinct();
 
         Assert.That(SdkCodes.All.Where(code => code.StartsWith("UMP01", StringComparison.Ordinal)), Is.EquivalentTo(codes));
         Assert.That(SdkCodes.All, Is.Unique);
@@ -17,7 +19,7 @@ public sealed class SdkCodeTests {
 
     [Test]
     public void Each_analyzer_finding_is_a_warning_by_default() {
-        var severities = Analyzers.SelectMany(a => a.SupportedDiagnostics).Select(d => d.DefaultSeverity);
+        var severities = new EngineAnalyzer().SupportedDiagnostics.Select(d => d.DefaultSeverity);
 
         Assert.That(severities, Is.All.EqualTo(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning));
     }
@@ -27,8 +29,8 @@ public sealed class SdkCodeTests {
         var props = System.Xml.Linq.XDocument.Load(Repo.Path("Directory.Build.props"));
         var errors = props.Descendants("WarningsAsErrors").Single().Value.Split(';');
         var warnings = props.Descendants("WarningsNotAsErrors").Single().Value.Split(';');
-        var off = Analyzers.SelectMany(a => a.Rules).Where(rule => !rule.IsOnByDefault).Select(rule => rule.Id);
-        var codes = Analyzers.SelectMany(a => a.SupportedDiagnostics).Select(d => d.Id).Distinct();
+        var off = CodeRule.All.Where(rule => !rule.IsOnByDefault).Select(rule => rule.Id);
+        var codes = Codes.Select(d => d.Id).Distinct();
 
         Assert.That(codes.Except(off).Except(errors).Except(warnings), Is.Empty);
     }

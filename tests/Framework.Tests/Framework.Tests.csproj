@@ -50,8 +50,6 @@
     <PortableProject Include="$(RepoRoot)tools/bundle/VsaDefinition/Umpire.Vsa.Definition.csproj" />
     <ProjectReference Include="@(PortableProject)" Exclude="@(ProjectReference)" ReferenceOutputAssembly="false" />
     <ProjectReference Include="$(RepoRoot)architecture/Markers/Umpire.Markers.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="$(RepoRoot)framework/Kernel/Analyzers/Umpire.Kernels.Analyzers.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="$(RepoRoot)packs/Vsa/Tests/Analyzers/Umpire.Vsa.Analyzers.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <!-- The evaluated target frameworks of each portable project, for PortableTargetTests. Old build folders in artifacts~ do not change them. -->
   <Target Name="_WritePortableFrameworks" AfterTargets="ResolveProjectReferences">

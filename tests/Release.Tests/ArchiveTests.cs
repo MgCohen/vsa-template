@@ -38,8 +38,8 @@ public sealed class ArchiveTests {
     [TestCase("runtime/netstandard2.0/Umpire.Vsa.dll")]
     [TestCase("definition/netstandard2.0/Umpire.Definition.dll")]
     [TestCase("definition/netstandard2.0/Umpire.Vsa.Definition.dll")]
-    [TestCase("analyzers/dotnet/cs/Umpire.Kernels.Analyzers.dll")]
-    [TestCase("analyzers/dotnet/cs/Umpire.Vsa.Analyzers.dll")]
+    [TestCase("analyzers/dotnet/cs/Umpire.Engine.Analyzer.dll")]
+    [TestCase("analyzers/dotnet/cs/Umpire.Engine.dll")]
     [TestCase("engine/net8.0/umpire-engine.dll")]
     [TestCase("engine/net8.0/umpire-engine.runtimeconfig.json")]
     public void The_archive_has_the_file_at_its_fixed_path(string path) =>
@@ -100,9 +100,10 @@ public sealed class ArchiveTests {
         Assert.That(Runtime().Select(file => Text(file, "asset")), Is.All.StartsWith("lib/netstandard2."));
 
     [Test]
-    public void The_analyzer_files_come_from_the_analyzer_package() {
-        var analyzers = Files().Where(file => PathOf(file).StartsWith("analyzers/", StringComparison.Ordinal));
-        Assert.That(analyzers.Select(file => Text(file, "package")), Is.All.EqualTo("Umpire.Vsa.Analyzers"));
+    public void The_Umpire_analyzer_files_come_from_the_engine_package() {
+        var analyzers = Files().Where(file => PathOf(file).StartsWith("analyzers/dotnet/cs/Umpire.", StringComparison.Ordinal)).ToList();
+        Assert.That(analyzers, Is.Not.Empty);
+        Assert.That(analyzers.Select(file => Text(file, "package")), Is.All.EqualTo("Umpire.Engine"));
     }
 
     [Test]
@@ -114,8 +115,7 @@ public sealed class ArchiveTests {
     [Test]
     public void The_notices_give_the_license_of_each_third_party_package() {
         var notices = File.ReadAllText(Path.Combine(tree, Notices));
-        Assert.That(notices, Does.Not.Contain("Tomlyn").And.Contain("TngTech.ArchUnitNET")
-            .And.Contain("Umpire.Kernels.Analyzers.dll embeds"));
+        Assert.That(notices, Does.Not.Contain("Tomlyn").And.Contain("TngTech.ArchUnitNET"));
     }
 
     [Test]

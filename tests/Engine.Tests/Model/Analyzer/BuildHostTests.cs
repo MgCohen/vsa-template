@@ -1,6 +1,6 @@
 namespace CheckModel.Tests;
 
-using Umpire.CheckModel.Analyzer;
+using UmpireEngine;
 
 public sealed class BuildHostTests {
     [TestCase("csc", true)]

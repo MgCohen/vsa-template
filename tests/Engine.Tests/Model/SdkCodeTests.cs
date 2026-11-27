@@ -5,7 +5,7 @@ namespace CheckModel.Tests;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Umpire.CheckModel;
-using Umpire.CheckModel.Analyzer;
+using UmpireEngine;
 
 public sealed class SdkCodeTests {
     static IEnumerable<string> DataCodeValues => typeof(DataCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -19,7 +19,7 @@ public sealed class SdkCodeTests {
 
     [Test]
     public void Each_finding_of_the_analyzer_is_a_warning_by_default() {
-        var descriptors = new CheckAnalyzer().SupportedDiagnostics;
+        var descriptors = new EngineAnalyzer().SupportedDiagnostics;
 
         Assert.That(descriptors.Select(d => d.Id).Except(SdkCodes.All), Is.Empty);
         Assert.That(descriptors.Select(d => d.DefaultSeverity), Is.All.EqualTo(DiagnosticSeverity.Warning));

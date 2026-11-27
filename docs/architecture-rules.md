@@ -6,7 +6,7 @@ The VSA checks ship with the framework and run on the modules of the consumer. L
 
 | Group | Level | Package | IDs |
 |---|---|---|---|
-| Editor and build | Analyzers | Built-in .NET analyzers + `Umpire.Vsa.Analyzers` (`packs/Vsa/Tests/Analyzers`, with `Umpire.Kernels.Analyzers`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
+| Editor and build | Analyzers | Built-in .NET analyzers + the analyzer entry of the engine (package `Umpire.Engine`) | `CAxxxx`, `IDExxxx`, `UMP01xxxx` |
 | Build of the host | Architecture | The rule engine in the package `Umpire.Engine` (ArchUnitNET) | `UMP02xxxx` |
 | Tests | Unit | `Umpire.Vsa.Testing.Unit` (NUnit, NSubstitute) | None |
 | Tests | End-to-end | `Umpire.Vsa.Testing.EndToEnd` | Not started |
@@ -20,7 +20,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP010201` | Analyzers | Requests and responses are records. A record that is not sealed passes, so a request can derive from another request. An abstract request base is not checked. Option: `check_responses`. A team that wants sealed payloads states it in its definition with the `Sealed` and `Record` traits. |
 | `UMP010001` | Analyzers | Each option of each running rule has a valid value: from the config, or the default of its rule. |
 | `UMP010002` | Analyzers | The `.umpireconfig` file of the block is valid TOML. Else the Umpire rules do not run. |
-| `UMP010003` | Analyzers | The config reader that the kernel analyzer DLL embeds loads in a private load context. Else the Umpire rules do not run. |
+| `UMP010003` | Analyzers | The analyzer entry loads the engine and each DLL that it needs. Else the Umpire rules do not run. |
 | `UMP010101` | Analyzers | A line has at most `max` characters. Formatting, warning. |
 | `UMP010102` | Analyzers | A method, constructor, accessor or local function has at most `max` lines. Formatting, warning. |
 | `UMP010103` | Analyzers | A file has at most `max` lines. Formatting, warning. |
@@ -43,7 +43,7 @@ The editor and the build run the first group in each consumer project. The build
 | `UMP020402` | Architecture | Each block place holds a check entry. |
 | `UMP03xxxx` | Engine | The engine run: a step throws or is skipped, the check entries, the projects of a block, a version, the load of the app. One table: "Engine codes" in `architecture-engine.md`. |
 
-Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the analyzers: group `00` the base (`UMP010001`, `UMP010002`, `UMP010003`), `01` Umpire.Kernels.Analyzers, `02` Umpire.Vsa.Analyzers. Area `02` is the rule findings of the engine: `01` uses, `02` binding and names, `03` counts, matches, kinds and attribute places, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
+Each ID is `UMP` and six digits: the area (2), the group (2) and the case (2). Area `01` is the code check of the engine: group `00` the base (`UMP010001`, `UMP010002`, `UMP010003`), `01` the kernel rules (`KernelRule`), `02` the VSA rules (`VsaRule`). Area `02` is the rule findings of the engine: `01` uses, `02` binding and names, `03` counts, matches, kinds and attribute places, `04` block places. Area `03` is the engine run: group `00` the run, then one group for each step. `tests/Rules.Tests/CodeTests.cs` and `tests/Engine.Tests/CodeTests.cs` check the form.
 
 Retired analyzer IDs: `UMP010202`, `UMP010203`, `UMP010204`, `UMP010205`, `UMP010206` and `UMP010207`. Do not use a retired ID again (`CodeTests`).
 
@@ -95,7 +95,7 @@ The check of `packs/Vsa/` uses `PackArchitecture`, which permits each use betwee
 
 ## Disabled rules
 
-If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so `RuleAnalyzer` does not run it. The code and the tests of each disabled rule stay. If the user decides to remove a disabled rule, its ID becomes a retired ID. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.<code>.severity = "warning"`.
+If the design of an analyzer or a rule is not clear, it is disabled, not deleted. Each disabled rule has a row in issue #143, and the review of all rows comes before 0.1.0. Its class sets `IsOnByDefault => false`, so the code check does not run it. The code and the tests of each disabled rule stay. If the user decides to remove a disabled rule, its ID becomes a retired ID. A consumer can turn a rule on in the `.umpireconfig` file of its block, for example `umpire.<code>.severity = "warning"`.
 
 No rule is disabled now, so the table has no row.
 
@@ -146,9 +146,29 @@ One assembly can have many modules. Two module classes in one module namespace s
 
 The host configures the plugin modules first, then the other modules. In each group the order is by name. The host gets the plugin modules through the module classes, so an app with no module does not load its plugin modules.
 
-## Analyzers: `RuleAnalyzer` and `UmpireAnalyzerRule`
+## Code check: the analyzer entry and `CodeRule`
 
-`VsaAnalyzer` and `KernelAnalyzer` each find each `UmpireAnalyzerRule` of their assembly, ignore generated code, and do not run a rule with severity `none`. A rule sets its number, its text and the defaults of its options, and registers its actions. A rule option wins over a global option.
+All Umpire analyzer rules are rules of the code check operation of the engine. The only Umpire analyzer DLL is the analyzer entry of the engine (`engine/Entries/Analyzer/`, assembly `Umpire.Engine.Analyzer`). It reads the facts of the compilation, and the engine checks them.
+
+```
+compiler (Roslyn 4.10 or later)
+ └─ EngineAnalyzer: compilation start, each file, each named type, compilation end
+     └─ CompileApp: EngineApp<CompileHost>, composed one time for each compiler process (static Lazy)
+         └─ app.Send(CompileJobRequest): the compile job
+             ├─ CheckCode: the code rules (CodeRule) on the facts of one file or one type
+             └─ CheckTypes: the type checks of the check model (only with a state folder)
+```
+
+| Stage | The entry sends | The engine gives |
+|---|---|---|
+| `Start` | The project facts: the `.umpireconfig` text, the rules that the compiler turns off, the build properties | `UMP010001`, `UMP010002`, `UMP030801` (reported at the end) |
+| `File` | The facts of one source file: the lines, the comments, the types, the members, the methods, the base calls | The format findings (`UMP0101xx`) |
+| `Type` | The facts of one named type: its name, its kind, its request and response | `UMP010201` and the type findings of the check model (`UMP02xxxx`) |
+| `End` | Compile errors (only for a project of the check model) | The data findings of the check model (`UMP0308xx`) |
+
+The entry gives two facts through fact sources (`CompileHost`): the pack selection (`PackSource`, `PackSelection`) and the facts of the check model (`ModelSource`, `ProjectFacts`). The engine asks for them only when a rule needs them. The entry composes the app with a fixed module list (`FixedModules`) and with no module settings, because the compiler folder is not the folder of an app. It does no file I/O of its own: the engine reads the state of the check model.
+
+A rule is one class on a group base in `engine/App/Features/CodeCheck/Slices/CheckCode/`: `KernelRule` (group `01`, about any code) or `VsaRule` (group `02`, only in a compilation that selects the VSA pack). The engine finds each rule class in its assembly (`CodeRule.All`). A rule sets its `Number`, its `Title`, its `Message` and the defaults of its options, and it checks the facts of a file or of a type. A rule option wins over a global option.
 
 ```csharp
 public sealed class RecordPayloadRule : VsaRule {
@@ -156,16 +176,13 @@ public sealed class RecordPayloadRule : VsaRule {
 
     public override int Number => 1;
 
-    public override IReadOnlyList<UmpireOption> Options { get; } = [UmpireOption.Bool(CheckResponsesKey, true)];
+    public override IReadOnlyList<RuleOption> Options { get; } = [RuleOption.Bool(CheckResponsesKey, true)];
 
-    protected override string Title => "Requests and responses are records";
+    public override string Title => "Requests and responses are records";
 
-    protected override string Message => "{0} is {1}. Make it a record.";
+    public override string Message => "{0} is {1}. Make it a record.";
 
-    protected internal override void Register(CompilationStartAnalysisContext start) =>
-        start.RegisterSymbolAction(symbol => {
-            if (Values(symbol.Options).Bool(CheckResponsesKey) == true) { ... }
-        }, SymbolKind.NamedType);
+    public override IEnumerable<CodeFinding> Check(CodeType type, RuleOptions options) { ... }
 }
 ```
 
@@ -186,38 +203,36 @@ A `dotnet_diagnostic.UMP010201.severity` key in an `.editorconfig` of the consum
 | `.editorconfig` (repository root) | The style of this repository: the built-in .NET rules, editor and code style options, severities. A test section turns off CA1707 (underscores in test names). No `UMP` key |
 | `.umpireconfig` (block root) | The rule values and severities of the block (`umpire.<ID>.<key>`). The defaults are on the rule classes |
 | `Directory.Build.props` (repository root) | The style switches of this repository: `EnforceCodeStyleInBuild`, `GenerateDocumentationFile`, the formatting rules as warnings, and the Umpire codes that are errors (`WarningsAsErrors`) |
-| `framework/Kernel/Analyzers/Umpire.ConfigBundle.targets` | Embeds Umpire.Config in the kernel analyzer DLL |
 
-`Umpire.After.targets` of the package `Umpire` gives `.umpireconfig` to the compiler as an additional file. `RuleAnalyzer` reads it with Umpire.Config (`ConfigFile`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The definition holds no analyzer value.
+`Umpire.After.targets` of the package `Umpire` gives `.umpireconfig` to the compiler as an additional file. The analyzer entry gives its text to the compile job, and the engine reads it with Umpire.Config (`CodeConfig`). If the file is not valid TOML, the build gives `UMP010002`, and the Umpire rules do not run. The definition holds no analyzer value.
 
-### The config reader in the compiler
+### The analyzer entry in the compiler
 
-The compiler owns some assemblies, for example Roslyn and `System.Collections.Immutable` (SCI). An analyzer always gets the copy of the compiler. The oldest supported compiler is the one of Unity 6: Roslyn 4.10 with SCI 8.0. Umpire.Config has its own TOML reader and no package dependency (#247), so it needs no assembly of the compiler.
+The compiler owns some assemblies, for example Roslyn and `System.Collections.Immutable` (SCI). An analyzer always gets the copy of the compiler. The oldest supported compiler is the one of Unity 6: Roslyn 4.10 with SCI 8.0. The compiler loads a dependency of an analyzer only if that file is an analyzer item, so each DLL of the entry is an analyzer item from one folder.
 
-```
-compiler (Roslyn 4.10, SCI 8.0)
- └─ Umpire.Kernels.Analyzers.dll       built on SCI 8.0, no Umpire.Config reference
-     └─ ConfigReader: private load context, from an embedded resource
-         └─ Umpire.Config (netstandard2.0, no dependency)
-             returns KeyValuePair<string, string> only
-```
+| Analyzer item | Source |
+|---|---|
+| `Umpire.Engine.Analyzer.dll` | The entry |
+| `Umpire.Engine.dll`, `Umpire.Engine.Versions.dll` | The engine core |
+| `Umpire.dll`, `Umpire.Vsa.dll`, `Umpire.Definition.dll`, `Umpire.Vsa.Definition.dll` | The bundles |
+| `Microsoft.Extensions.*`, `Microsoft.Bcl.AsyncInterfaces.dll` | The dependency injection |
+| `ArchUnitNET.dll`, `Mono.Cecil*.dll`, `System.Reflection.MetadataLoadContext.dll` and others | The other dependencies of the engine core |
 
-- The kernel analyzer DLL embeds only the `netstandard2.0` Umpire.Config (`Umpire.ConfigBundle.targets`). The packages hold only the analyzer DLLs.
-- `ConfigReader` loads Umpire.Config into a private `AssemblyLoadContext`, so it never meets another copy of Umpire.Config in the compiler process. Only corelib types cross the boundary.
-- The embedded DLL loads one time, under a lock, so parallel compilations do not load it two times.
-- A TOML error is a `ConfigFormatException` (Umpire.Config) with the line and the column. `RuleAnalyzer` finds it by its type name, because the type is in the private context.
-- `ConfigValues` holds the flat keys, with no case. The analyzers read only `ConfigValues`.
-- If the analyzer context can unload (an IDE, the compiler server), the private context unloads with it.
-- A compiler on .NET Framework has no `AssemblyLoadContext`. There, the build gives `UMP010003` (issue #240).
-- `AnalyzerRoslynTests` checks that each analyzer DLL references only the assemblies of the Unity compiler, at the Unity version or lower.
-- `AnalyzerLoadTests` compiles a file with a real .NET 8 compiler (Roslyn 4.10, SCI 8.0), for example the one of a Unity 6 install, with the analyzer DLLs and a `.umpireconfig`. If the computer has no .NET 8 compiler, the test is ignored. `UMPIRE_NET8_DOTNET_ROOT` selects a dotnet folder.
-- The analyzer packages hold `THIRD-PARTY-NOTICES.txt`. It says that the analyzer embeds no third-party library.
+- The compiler gives `Microsoft.CodeAnalysis*` and the `System.*` libraries, so they are not analyzer items. `System.Reflection.MetadataLoadContext` is not in the runtime, so it is an analyzer item.
+- The package `Umpire.Engine` holds the items in `analyzers/dotnet/cs/`. The package `Umpire` depends on it, so each project with an Umpire package gets the analyzer.
+- In this repository, `tools/bundle/SourceMode/Umpire.EngineAnalyzer.targets` makes each DLL of the output folder of the entry an analyzer item.
+- The engine core of the analyzer targets `netstandard2.0` and uses SCI and `System.Reflection.Metadata` 8.0 (`System.Reflection.MetadataLoadContext` 8.0.1).
+- `AnalyzerRoslynTests` checks that each Umpire analyzer DLL references only the assemblies of the Unity compiler, at the Unity version or lower, the `System` libraries of .NET 8, and the other analyzer items.
+- `AnalyzerLoadTests` compiles a file with a real .NET 8 compiler (Roslyn 4.10, SCI 8.0), for example the one of a Unity 6 install, with the analyzer items and a `.umpireconfig`. If the computer has no .NET 8 compiler, the test is ignored. `UMPIRE_NET8_DOTNET_ROOT` selects a dotnet folder.
+- `SharedCompilerTests` checks that a deleted copy of an analyzer DLL on the compiler server does not stop the rules (`CS8032`).
 
-The Umpire packages ship no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/bundle/SourceMode/Umpire.SourceMode.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the kernel analyzer, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules. `Umpire.Vsa.Analyzers` cannot check itself.
+The Umpire packages ship no native style: no .NET rule severity, no `TreatWarningsAsErrors` and no `AnalysisLevel`. A consumer app sets its own style in its `.editorconfig`. The root `.editorconfig` and `Directory.Build.props` are the style of this repository only. `tools/bundle/SourceMode/Umpire.SourceMode.props` also sets `AnalysisLevel = latest-recommended` for the apps of this repository (the engine, the fixtures and the templates). `Directory.Build.targets` gives the framework projects the analyzer entry, with `UmpireFrameworkCode = true`: then only the rules about any code run (`IsModuleRule` is false), not the module rules.
 
-Each analyzer rule is one class on a group base: `KernelRule` (group `01`) or `VsaRule` (group `02`). The rule sets only its `Number`, its `Title`, its `Message` and the defaults of its options. The base makes the ID (`UMP01` + group + number) and the descriptor. Roslyn release tracking reads only a constant ID, so `AnalyzerReleases.Unshipped.md` lists only `UMP010001`, `UMP010002` and `UMP010003`; `CodeTests` checks that the rules table of this file lists each rule ID. Tests and other code find a rule by its type, for example `new LineLengthRule().Rule`.
+The analyzer of this repository is the analyzer build of the entry (`UmpireAnalyzerBuild=true`). The entry and the engine core build on the bundles, in the output folder `<config>-analyzer`, with no analyzer. The bundles get no analyzer (`UmpireNoAnalyzer`), because the analyzer builds on them, and the runtime projects check the same files. Thus each runtime project, the engine and the entry get the analyzer, and no project is a dependency of its own analyzer.
 
-A rule lists its options in `Options`, each with its default on the class. The lookup is: `umpire.<rule ID>.<key>`, then `umpire.<key>`, then the default. At the start of a compilation, `RuleAnalyzer` checks each option. If a value is not valid, or an option has no default and no value, it reports `UMP010001`, and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
+The base makes the ID (`UMP01` + group + number). The entry makes the descriptors from `CodeRule.All` and `CodeRule.Notices`, with the message format `{0}`. `CodeTests` checks that the rules table of this file lists each rule ID. Tests find a rule by its type, for example `new LineLengthRule().Id`.
+
+A rule lists its options in `Options`, each with its default on the class. The lookup is: `umpire.<rule ID>.<key>`, then `umpire.<key>`, then the default. At the start of a compilation, the code check checks each option. If a value is not valid, or an option has no default and no value, it reports `UMP010001`, and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
 
 ## Formatting rules
 
@@ -262,11 +277,11 @@ A rule with a maximum inherits `LimitRule`, which reads the option `max`. In `ki
 
 A rule key wins over a global key, for example `umpire.UMP010201.check_responses` over `umpire.check_responses`. A global key, for example `umpire.max`, applies to each rule that reads the key and has no rule key of its own, also when the rule has a default. In a config file line, a semicolon starts a comment, so a list option uses commas between its items.
 
-`RuleAnalyzer` skips each rule that is off by itself, because Roslyn skips an analyzer only when all of its IDs are off. If it cannot tell that a rule is off, the rule runs, and Roslyn drops its diagnostics.
+The code check skips each rule that the compiler turns off in each file (`RuleSuppression`), because Roslyn skips an analyzer only when all of its IDs are off. If it cannot tell that a rule is off, the rule runs, and Roslyn drops its diagnostics.
 
 | Test | Checks |
 |---|---|
-| `FormattingRuleTests` | Each VSA rule and its options, on small sources |
+| `FormattingRuleTests` | Each format rule and its options, on small sources, through the analyzer entry |
 | `FormattingBuildTests` | The build of the Umpire packages, on the built fixture `tests/Fixtures/Built/Formatting`: each rule gives a warning, the build passes, and the migrations give no warning |
 | `RuleOptionTests` | `UMP010001` |
 | `RuleValueOwnerTests` | Each option of each rule has a valid default. The package files have no option value. Each key has a rule. The general files have no `UMP` key. No key is a definition option |
@@ -335,7 +350,7 @@ Add or replace services before the first `Handle` or `Send` call. After it, the 
 ## Add a rule
 
 1. If a built-in .NET rule does the check, set its severity in the root `.editorconfig`. This is the style of this repository only: the Umpire packages ship no native style, and a consumer sets its own.
-2. If one file shows the problem, write a rule class on `KernelRule` or `VsaRule`. Set the next free `Number` of its group, and the defaults of its options.
+2. If one file or one type shows the problem, write a rule of the code check operation of the engine: a class on `KernelRule` or `VsaRule` in `engine/App/Features/CodeCheck/Slices/CheckCode/`. Set the next free `Number` of its group, and the defaults of its options. If the rule needs a fact that the compile job does not have, add the fact to `App/Plugins/Facts/Domain/Shared/Compile/` and read it in the analyzer entry (`engine/Entries/Analyzer/Facts/`).
 3. Else change the rules of the VSA definition (`packs/Vsa/Definition/VsaArchitecture.cs`).
-4. Add tests. For an analyzer, use `tests/Rules.Tests/AnalyzerTests.cs`. For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
+4. Add tests. For a code rule, use `tests/Rules.Tests/AnalyzerTests.cs` (the Roslyn analyzer test library on the analyzer entry). For the engine, add a case to `tests/Architecture.Tests` with the fixture apps in `tests/Fixtures/Architecture/`.
 5. Add the rule to the table in this file.
