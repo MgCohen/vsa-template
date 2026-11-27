@@ -32,11 +32,11 @@ The reasons for the limits:
 | The type source of the modules | `AppHost.ModuleProvider` (`IModuleProvider`, `FixedModules`, `ModuleScan.In`), `new AppTypes(provider)` | `docs/composition.md` |
 | The host | `UnityHost : AppHost` with `Configure`: `App<VsaKernel, UnityHost>` | `docs/composition.md` |
 | The lifecycle | The shell calls `app.Start(args)` and `app.Stop()`. It owns the frame loop | `docs/composition.md` |
-| The configuration | The base host reads only `--Key=Value` and `--Key value` of `args` into `IConfiguration`, and it ignores other arguments (for example `-batchmode` or the player path). `UnityHost.Configuration(args)` can add other sources | `docs/composition.md` |
-| The container | `host.Compose(services, configuration, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
+| The host arguments | The base host reads only `--Key=Value` and `--Key value` of `args` into `HostArguments`, and it ignores other arguments (for example `-batchmode` or the player path). `UnityHost.Arguments(args)` can give other values | `docs/composition.md` |
+| The container | `host.Compose(services, arguments, kernel, types)`, or a bridge that reads `App.Services` | `docs/composition.md` |
 | The presenter scopes | The shell or the page resolves `PresenterScope` in its scope | `docs/presenter-events.md` |
 | Objects that the container cannot make | `IFactory<T>`, `services.AddFactory` | `docs/composition.md` |
-| The logger providers | `AddLogging` on the given `IServiceCollection` | `docs/composition.md` |
+| The logger | An `ILoggerFactory` in `UnityHost.Configure`. The default is the null logger of `Microsoft.Extensions.Logging.Abstractions` | `docs/composition.md` |
 | The module settings | `UnityHost.Settings(types)`: a provider in front of the default, for example one with no reflection | `docs/composition.md` |
 | The source folders | `UmpireExcludedFolders`, `umpire.check.folder_aliases`, `config.FolderAliases`. `Assets/<App>/` binds as the block root | `docs/architecture-engine.md` |
 
@@ -92,7 +92,17 @@ The portable projects target `netstandard2.0`, and not `netstandard2.1`, because
 
 - The archive holds each DLL of the runtime, also a DLL that Unity ships. vsa-unity does not copy a DLL that Unity ships: a second copy is a compile error. The manifest gives the version of each DLL.
 - `netstandard2.0` does not have `IsExternalInit`. The layers compile `tools/bundle/Umpire/build/Polyfills~/` for that target (the name ends with `~`, so the engine does not count the file as a source of the block). The polyfill is internal, so each Unity assembly with a record has its own copy. The package `Umpire` also gives the polyfill to each `netstandard2.0` and `netstandard2.1` project of an app. A project with its own `IsExternalInit` sets `UmpireIsExternalInitPolyfill` to `false`.
-- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`). The Umpire DLLs reference `Microsoft.Extensions.DependencyInjection`, `Logging`, `Configuration` and `Configuration.CommandLine` 8.0, and not `Microsoft.Extensions.Hosting`. vsa-unity must copy `Microsoft.Extensions.Configuration.CommandLine.dll` if Unity does not ship it.
+- `AppTypes` finds the modules in the loaded assemblies, so a Unity app gives no modules. The Unity shell calls `app.Start(args)` and `app.Stop()`, and an app with its own container calls `host.Compose` (`docs/composition.md`).
+
+The Umpire DLLs reference only these `Microsoft.Extensions` DLLs:
+
+| DLL | Version | Why |
+|---|---|---|
+| `Microsoft.Extensions.DependencyInjection` | 8.0 | The container |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 8.0 | `IServiceCollection` and `IServiceProvider` |
+| `Microsoft.Extensions.Logging.Abstractions` | 8.0 | `ILogger`. Unity ships it |
+
+The Umpire DLLs do not reference `Microsoft.Extensions.Configuration`, `Logging`, `Options`, `Primitives` or `Hosting` (`KernelReflectionTests`, `ArchiveTests`).
 
 ## Non-goals
 

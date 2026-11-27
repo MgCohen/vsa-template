@@ -3,7 +3,6 @@ namespace Composition.Tests;
 using Cards;
 using Cards.Domain.Shared;
 using Cards.Slices.PayCost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Resources;
@@ -11,6 +10,7 @@ using Resources.Domain.Shared;
 using Signals;
 using Signals.Presenters;
 using Signals.Slices.Ring;
+using Umpire.Kernels;
 using Umpire.Vsa.Contracts.Commands;
 using Umpire.Vsa.Contracts.Events;
 using Umpire.Vsa.Presenters;
@@ -42,21 +42,30 @@ public sealed class ComposeTests {
     }
 
     [Test]
-    public async Task Compose_with_no_configuration_adds_an_empty_configuration() {
+    public async Task Compose_with_no_arguments_adds_empty_arguments() {
         await using var provider = new TestApp().Compose(new ServiceCollection()).BuildServiceProvider();
 
-        Assert.That(provider.GetRequiredService<IConfiguration>().AsEnumerable(), Is.Empty);
+        Assert.That(provider.GetRequiredService<HostArguments>().All, Is.Empty);
     }
 
     [Test]
-    public async Task Compose_keeps_the_configuration_that_the_services_have() {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["Compose:FromApp"] = "yes" }).Build();
+    public async Task Compose_keeps_the_arguments_that_the_services_have() {
+        var arguments = HostArguments.Read(["--Compose:FromApp=yes"]);
 
         await using var provider = new TestApp()
-            .Compose(new ServiceCollection().AddSingleton<IConfiguration>(configuration)).BuildServiceProvider();
+            .Compose(new ServiceCollection().AddSingleton(arguments)).BuildServiceProvider();
 
-        Assert.That(provider.GetRequiredService<IConfiguration>(), Is.SameAs(configuration));
+        Assert.That(provider.GetRequiredService<HostArguments>(), Is.SameAs(arguments));
+    }
+
+    [Test]
+    public void Compose_adds_no_service_of_the_configuration_or_options_library() {
+        var services = new TestApp().Compose(new ServiceCollection());
+
+        var namespaces = services.Select(service => service.ServiceType.Namespace).ToList();
+
+        Assert.That(namespaces, Has.None.StartsWith("Microsoft.Extensions.Configuration"));
+        Assert.That(namespaces, Has.None.StartsWith("Microsoft.Extensions.Options"));
     }
 
     [Test]

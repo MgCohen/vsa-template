@@ -9,7 +9,7 @@ App.Run(args)
 ├─ Start(args)
 │  ├─ host = CreateHost()
 │  ├─ Services = host.Build(args, this)
-│  │  └─ host.Compose(services, configuration, Kernel, types)
+│  │  └─ host.Compose(services, arguments, Kernel, types)
 │  ├─ host.Start(Services, AppStop)          the host work: operation, web, signals
 │  ├─ State = Running
 │  └─ OnStart()
@@ -51,7 +51,8 @@ The app class file imports `Umpire.Kernels` (`App<TKernel, THost>`), `Umpire.Vsa
 | `App`, `App<TKernel, THost>` | Umpire.Kernels | The lifecycle of the app, its `Kernel` and `CreateHost()`. `App<TKernel, THost>` makes one kernel, and a new host for each `Start` |
 | `IAppEntry<TKernel>` | Umpire.Kernels | The entry of an app: the engine and the analyzers read its kernel from it |
 | `Kernel` | Umpire.Kernels | The install point of an architecture: the public `Install` calls the protected `Configure` |
-| `Core` | Umpire.Kernels | The kernel of the core services: `IConfiguration`, logging, `AppTypes`, `AppStop`, `[AutoRegister]` |
+| `Core` | Umpire.Kernels | The kernel of the core services: `HostArguments`, `AppTypes`, `AppStop`, `[AutoRegister]` |
+| `HostArguments` | Umpire.Kernels | The read-only key/value list of the host arguments. A key is not case-sensitive, and the last value of a key wins |
 | `AppHost` | Umpire.Kernels | The platform: `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
 | `AppState` | Umpire.Kernels | `Stopped`, `Running` or `Stopping` |
 | `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` stops the app. The first request gives the exit code |
@@ -134,25 +135,25 @@ A host is the platform. It builds the services and starts the host work. It does
 
 | Host | Package | Use |
 |---|---|---|
-| `AppHost` | Umpire.Kernels | A `ServiceProvider` with the command-line configuration. Exposes no operation |
+| `AppHost` | Umpire.Kernels | A `ServiceProvider` with the host arguments. Exposes no operation |
 | `LocalHost` | Umpire.Kernels | Local method calls: `app.Send(request)`. Does no host work |
-| `ConsoleHost` | Umpire.Hosts.Console | Command-line configuration. Runs one request, then `AppStop.Request(exitCode)` |
+| `ConsoleHost` | Umpire.Hosts.Console | The host arguments bind the request. Runs one request, then `AppStop.Request(exitCode)` |
 | `WebHost` | Umpire.Hosts.Web | ASP.NET Core: one HTTP route for each operation, and the views |
-| `UnityHost` | `vsa-unity` | A Unity app. Its `Configure` adds the Unity log provider and the main thread `Dispatch` |
+| `UnityHost` | `vsa-unity` | A Unity app. Its `Configure` adds the Unity `ILoggerFactory` and the main thread `Dispatch` |
 
 | `AppHost` member | Kind | Default |
 |---|---|---|
-| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose` with `Configuration(args)`, `BuildServiceProvider`. Composes only |
-| `Configuration(args)` | Virtual | `AddCommandLine` with the Umpire options only: `--Key=Value` and `--Key Value`. The host ignores other arguments |
+| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose` with `Arguments(args)`, `BuildServiceProvider`. Composes only |
+| `Arguments(args)` | Virtual | `HostArguments.Read(args)`: the Umpire options only, `--Key=Value` and `--Key Value`. The host ignores other arguments |
 | `Start(services, stop)` | Virtual | Nothing. Starts the host work, and sends each stop source to `stop.Request` |
 | `Dispose()` | Virtual | Disposes the provider |
-| `Compose(services, configuration, kernel, types)` | Fixed | See "What Compose does" |
+| `Compose(services, arguments, kernel, types)` | Fixed | See "What Compose does" |
 | `Configure(services, types)` | Virtual | Nothing. The custom root services, last |
 | `Modules` | `init` property | `null`: `AppTypes` finds the modules. A test gives a list |
 
-- A host reads the arguments in `Configuration(args)`. The base host reads only `--Key=Value` and `--Key Value`, and it ignores other arguments, for example `-batchmode`, `-logFile path` or a path. So the raw arguments of a Unity player do not stop the start. `ConsoleHost` overrides it: it gives only the arguments from the first option to the base, so the words that select the request are not values.
+- A host reads the arguments in `Arguments(args)`. The base host reads only `--Key=Value` and `--Key Value`, and it ignores other arguments, for example `-batchmode`, `-logFile path` or a path. So the raw arguments of a Unity player do not stop the start. `ConsoleHost` overrides it: it gives only the arguments from the first option to the base, so the words that select the request are not values.
 - `ConsoleHost.Build` calls the base `Build`, then selects the request from the words before the first option. `ConsoleHost.Start` starts the request and listens for Ctrl+C and SIGTERM.
-- `WebHost.Build` gives `args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
+- `WebHost.Build` gives `args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It also gives `Arguments(args)` to `Compose`, so `HostArguments` has the same values on each host. ASP.NET Core registers its own `IConfiguration` (`appsettings.json`, environment, `args`), and a web module can use it. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
 - `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.
 - `AppHost` does no OS work, so a Unity app does not listen for Ctrl+C.
 - Each host has a public constructor with no parameters.
@@ -188,10 +189,9 @@ app.Stop();
 ## What Compose does
 
 ```
-AppHost.Compose(services, configuration, kernel, types)    fixed order
-├─ new Core(configuration).Install(services, types)        Umpire.Kernels
-│  ├─ IConfiguration                                        keep one that exists, else the given one
-│  ├─ AddLogging                                            no log provider
+AppHost.Compose(services, arguments, kernel, types)        fixed order
+├─ new Core(arguments).Install(services, types)            Umpire.Kernels
+│  ├─ HostArguments                                         keep one that exists, else the given one
 │  ├─ AppTypes, AppStop                                     singletons
 │  └─ auto-register                                         each [AutoRegister] type
 ├─ kernel.Install(services, types)                          calls Configure(services, types). VsaKernel:
@@ -204,10 +204,13 @@ AppHost.Compose(services, configuration, kernel, types)    fixed order
 │  ├─ Module                                                Configure(services)
 │  └─ Module<TSettings>, Plugin<TSettings>                  get the settings, then Configure(services, settings)
 ├─ CloseOpenDescriptors(services, types)                   closed descriptors for each open one (see "Open generics")
-└─ host.Configure(services, types)                         last
+├─ host.Configure(services, types)                         the custom root services
+└─ DefaultLogging                                          if no logger exists: NullLoggerFactory, ILogger<> -> Logger<>
 ```
 
-The order is inside `Compose`, so a host cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). A pack variant kernel derives from `VsaKernel`, overrides the protected `Configure` and calls `base.Configure` first. An app that owns its container calls `Compose` with its own services, configuration, kernel and `AppTypes`.
+The order is inside `Compose`, so a host cannot change it. A module replaces a default with `services.Replace<TService, TImplementation>()` (Umpire.Kernels). A pack variant kernel derives from `VsaKernel`, overrides the protected `Configure` and calls `base.Configure` first. An app that owns its container calls `Compose` with its own services, arguments, kernel and `AppTypes`.
+
+The core uses only `Microsoft.Extensions.Logging.Abstractions` for logs. It adds the null logger last, with `TryAdd`, so a logger of a module, of the host `Configure` or of ASP.NET Core wins. If an app adds a logger after `Compose`, it must replace `ILoggerFactory`. The core does not call `AddLogging`, so it registers no `IOptions<>`. If a service registers an `ILoggerProvider` and no service registers an `ILoggerFactory`, `Compose` stops with an error, because the null logger ignores each provider.
 
 ## Definitions and transports
 
@@ -368,7 +371,8 @@ AppHost.Compose
 | Lifetime | Each closed descriptor has the lifetime of its open descriptor. |
 | Known closed form | A closed form that a module registers also counts. |
 | No closed form | The open descriptor stays, and the container closes it at use. |
-| Kernel descriptors | Not changed, for example `ILogger<>` and `IOptions<>`. |
+| Kernel and host descriptors | Not changed, for example `ILogger<>` of the null logger. |
+| `Microsoft.Extensions` descriptors | Not changed: an open descriptor whose implementation is in a `Microsoft.Extensions.*` assembly stays open, for example `IOptions<>` of `AddLogging` in a module. |
 | Duplicates | A module registration of a scanned class gives one list item. |
 | Dispatch | The pipeline closes an open handler, validator or hook for a sent message with the same matcher. |
 
@@ -580,20 +584,21 @@ Modes = { easy = 1, hard = 5 }
 | Service | `WebHost` | `ConsoleHost` | `AppHost` |
 |---|---|---|---|
 | `ICommandSender`, `IRequestSender`, `IIntegrationEventPublisher` | In process | In process | In process |
-| `ILogger<T>` | Yes, ASP.NET Core providers | Yes, no providers | Yes, no providers. A host adds them in `Configure` |
-| `IConfiguration` | `appsettings.json`, environment, `args` | `args` from the first option (`--key value`) | `args` (`--key value`, `--Section:Key=Value`) |
+| `ILogger<T>` | Yes, ASP.NET Core providers | Yes, the null logger | Yes, the null logger. A host adds a logger in `Configure` |
+| `HostArguments` | `args` (`--key value`, `--Section:Key=Value`) | `args` from the first option (`--key value`) | `args` (`--key value`, `--Section:Key=Value`) |
+| `IConfiguration` | `appsettings.json`, environment, `args` (ASP.NET Core) | None | None |
 | `IHostedService` start | Yes, inside `WebApplication` | No | No |
 
 ## Portable target
 
 `Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.0` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, so they build for `net10.0` only. The limits of the `netstandard2.0` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
-A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add a log provider of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
+A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add an `ILoggerFactory` of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
 
 ```csharp
 public sealed class GameHost : AppHost {
     protected override void Configure(IServiceCollection services, AppTypes types) {
-        services.AddLogging(logging => logging.AddProvider(new GameLogProvider()));
+        services.AddSingleton<ILoggerFactory>(new GameLoggerFactory());
     }
 }
 ```
@@ -602,7 +607,7 @@ An app that owns its container calls `Compose` and builds the container itself:
 
 ```csharp
 var host = new GameHost();
-host.Compose(collection, configuration, new VsaKernel(), new AppTypes(appAssembly: typeof(GameApp).Assembly));
+host.Compose(collection, HostArguments.Read(args), new VsaKernel(), new AppTypes(appAssembly: typeof(GameApp).Assembly));
 ```
 
 A bridge to another container (fallback or side by side) reads `App.Services` after `Start`.

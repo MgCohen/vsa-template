@@ -106,11 +106,12 @@ App.Run(args)                             Umpire.Kernels
 ├─ Start(args)
 │  ├─ App.CreateHost()                    a new AppHost for each start
 │  ├─ AppHost.Build(args, app)            open: plain, console or web
-│  │  └─ Compose(services, configuration, app.Kernel, types)     fixed
+│  │  └─ Compose(services, arguments, app.Kernel, types)         fixed
 │  │     ├─ Core.Install                  the core services
 │  │     ├─ Kernel.Install                Kernel.Configure (VsaKernel: the VSA layers)
 │  │     ├─ Module.Install                each module, in Order, then by name
-│  │     └─ AppHost.Configure             open, last
+│  │     ├─ AppHost.Configure             open
+│  │     └─ DefaultLogging                the null logger, if no logger exists
 │  └─ AppHost.Start(services, stop)       open: the host work and its stop sources
 ├─ wait for a stop request
 └─ the stop                               OnStop, then AppHost.Dispose

@@ -324,7 +324,7 @@ public sealed class CreateNotePublisherTests : VsaUnitTest {
 |---|---|---|
 | `IRepository<T, TId>` | `InMemoryRepository<T, TId>` | `Repository<T, TId>().With(...)` |
 | `IIntegrationEventPublisher` | `RecordingEventPublisher` (`Events`) | `Mock<IIntegrationEventPublisher>()` |
-| `ILogger<T>` | Logging with no output | `services.AddLogging(...)` |
+| `ILogger<T>` | Logging with no output | `services.AddLogging(...)` (the test base has ASP.NET Core) |
 | `ICommandSender` | None | `Mock<ICommandSender>()` |
 | Other services | None | `Mock<T>()` |
 

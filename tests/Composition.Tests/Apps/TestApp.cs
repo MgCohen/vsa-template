@@ -1,6 +1,5 @@
 namespace Composition.Tests;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
@@ -26,9 +25,9 @@ public class TestApp<THost>(params Module[] modules) : App where THost : AppHost
         return new TestBuild(host, host.Build(args, this));
     }
 
-    public IServiceCollection Compose(IServiceCollection services, IConfiguration? configuration = null) {
+    public IServiceCollection Compose(IServiceCollection services, HostArguments? arguments = null) {
         var host = CreateHost();
-        host.Compose(services, configuration ?? new ConfigurationBuilder().Build(), Kernel,
+        host.Compose(services, arguments ?? HostArguments.Empty, Kernel,
             new AppTypes(new FixedModules([.. modules])));
         return services;
     }

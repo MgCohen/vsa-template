@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- The tests of a module and a host that bring their own logging. The core does not reference it. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)packs/Vsa/Kernel/Composition/Umpire.Vsa.Composition.csproj" />

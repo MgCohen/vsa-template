@@ -55,7 +55,7 @@ Follow-up: the default interface methods are removed in draft PR #382 (accepted 
 |---|---|
 | Done: `Umpire.dll` ships no definition code. New packages `Umpire.Definition` and `Umpire.Vsa.Definition` (PR #391) | K4 Q1, Q2 |
 | Done: the core `Umpire` and `Umpire.Vsa` are two packages and two DLLs (PR #394) | K4 Q6 |
-| Remove `Microsoft.Extensions.Configuration` and `Logging`. First list what `IConfiguration` loses in the consumer repos | K4 Q5 |
+| Done (PR #399): the core has no `Microsoft.Extensions.Configuration` and no `Logging`. It uses `HostArguments` and the null logger. Update the consumer repos: `Configuration(args)` is `Arguments(args)`, `Compose` takes `HostArguments`, and a non-web module reads `HostArguments` in place of `IConfiguration` | K4 Q5 |
 | Done: no SDK. A consumer project uses `Microsoft.NET.Sdk` and package references; the build logic is in the `build/` files of `Umpire`; the engine ships in the new package `Umpire.Engine` (PR #398) | P7 |
 | Each package targets the lowest framework that its code needs. `Umpire.Web` is `net8.0` | P7 |
 
@@ -111,6 +111,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The bundle project file is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, because the source definition project is also named `Umpire.Vsa`. In source mode the assembly `Umpire.Vsa` is the VSA definition; in package mode it is the VSA kernel.
   - The core package removes the second copy of the kernel analyzer with a target (`build/Umpire.targets`). A second pack with its own kernel copy needs a check.
   - `Umpire.dll` gives its internals to `Umpire.Vsa` (`Module.Order`, `Module.InstallWith`, `Pipelines.SendAsync`, `Pipelines.PublishAsync`, `EnvelopeResults`). The list may not be complete.
+- #399, `Configuration` and `Logging`: `HostArguments` keeps the old internal name. `WebHost` gives only the command-line arguments to `HostArguments`, not the full ASP.NET configuration. `OpenDescriptors` no longer closes open descriptors of `Microsoft.Extensions.*` assemblies. `Compose` now stops with an error if a service registers an `ILoggerProvider` and no `ILoggerFactory`. Parent keys such as `Probe` (of `Probe:Value`) are gone. Also: a race between test processes on the Notes fixture is fixed with `FixtureLock`.
 - #398, the removal of the SDK:
   - A pack kernel with its own packages needs a manual `ProjectReference` in the root project; a package cannot add it to the restore.
   - The target `_UmpireRestoreAddedReferences` runs a restore inside the build, an unusual pattern for IDEs.

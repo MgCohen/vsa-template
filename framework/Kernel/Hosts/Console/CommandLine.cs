@@ -2,7 +2,6 @@ namespace Umpire.Hosts.Console;
 
 using System.Globalization;
 using System.Reflection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernels;
 
@@ -26,10 +25,10 @@ static class CommandLine {
     }
 
     internal static async Task Run(
-        IServiceProvider services, Operation operation, IConfiguration configuration, AppStop stop,
+        IServiceProvider services, Operation operation, HostArguments arguments, AppStop stop,
         CancellationToken ct) {
         try {
-            var input = Bind(operation.Input, configuration);
+            var input = Bind(operation.Input, arguments);
             using var scope = services.CreateScope();
             var result = await operation.Invoke(scope.ServiceProvider, input, ct).ConfigureAwait(false);
             if (result.Error is { } error) {
@@ -45,14 +44,14 @@ static class CommandLine {
 
     static bool IsWord(string arg) => !arg.StartsWith('-');
 
-    static object Bind(Type input, IConfiguration configuration) {
+    static object Bind(Type input, HostArguments arguments) {
         var constructor = input.GetConstructors().OrderByDescending(c => c.GetParameters().Length).First();
-        var values = constructor.GetParameters().Select(p => Value(input, p, configuration)).ToArray();
+        var values = constructor.GetParameters().Select(p => Value(input, p, arguments)).ToArray();
         return constructor.Invoke(values);
     }
 
-    static object? Value(Type input, ParameterInfo parameter, IConfiguration configuration) {
-        var text = configuration[parameter.Name!];
+    static object? Value(Type input, ParameterInfo parameter, HostArguments arguments) {
+        var text = arguments[parameter.Name!];
         if (text is null) {
             return parameter.HasDefaultValue
                 ? parameter.DefaultValue

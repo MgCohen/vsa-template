@@ -1,6 +1,5 @@
 namespace Umpire.Kernels;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Config;
 
@@ -11,7 +10,7 @@ public class AppHost : IDisposable {
 
     public virtual IServiceProvider Build(string[] args, App app) {
         var services = new ServiceCollection();
-        Compose(services, Configuration(args), app);
+        Compose(services, Arguments(args), app);
         provider = services.BuildServiceProvider();
         return provider;
     }
@@ -25,8 +24,8 @@ public class AppHost : IDisposable {
         GC.SuppressFinalize(this);
     }
 
-    public void Compose(IServiceCollection services, IConfiguration configuration, Kernel kernel, AppTypes types) {
-        new Core(configuration).Install(services, types);
+    public void Compose(IServiceCollection services, HostArguments arguments, Kernel kernel, AppTypes types) {
+        new Core(arguments).Install(services, types);
         kernel.Install(services, types);
         var kernelServices = OpenDescriptors.Snapshot(services);
         var settings = new ModuleSettings(Settings(types));
@@ -35,13 +34,13 @@ public class AppHost : IDisposable {
         }
         CloseOpenDescriptors(services, types, kernelServices);
         Configure(services, types);
+        DefaultLogging.AddIfMissing(services);
     }
 
-    protected void Compose(IServiceCollection services, IConfiguration configuration, App app) =>
-        Compose(services, configuration, app.Kernel, TypesOf(app));
+    protected void Compose(IServiceCollection services, HostArguments arguments, App app) =>
+        Compose(services, arguments, app.Kernel, TypesOf(app));
 
-    protected virtual IConfiguration Configuration(string[] args) =>
-        new ConfigurationBuilder().AddCommandLine(HostArguments.Options(args)).Build();
+    protected virtual HostArguments Arguments(string[] args) => HostArguments.Read(args);
 
     protected virtual AppTypes TypesOf(App app) => new(ModuleProvider, app.GetType().Assembly);
 
