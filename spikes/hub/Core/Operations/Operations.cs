@@ -2,7 +2,7 @@ namespace Spike.Core;
 
 using Microsoft.Extensions.DependencyInjection;
 
-sealed class Operations(IOperationConverter? converter, IServiceScopeFactory scopes) : IOperations {
+sealed class Operations(IOperationConverter? converter, IServiceScopeFactory scopes) : IOperations, IDisposable {
     readonly object gate = new();
     readonly CancellationTokenSource stopping = new();
     TaskCompletionSource<bool>? idle;
@@ -55,4 +55,6 @@ sealed class Operations(IOperationConverter? converter, IServiceScopeFactory sco
             await Task.WhenAny(wait, Task.Delay(grace)).ConfigureAwait(false);
         }
     }
+
+    public void Dispose() => stopping.Dispose();
 }

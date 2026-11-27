@@ -44,3 +44,6 @@ try {
 } catch (InvalidOperationException e) {
     Console.WriteLine($"the long send: {e.Message}");
 }
+
+Console.WriteLine("== 6. A host that fails at once is still closed");
+Console.WriteLine($"exit code {await new PingApp().Run(new LocalHost(), new FailsAtOnceHost())}");
