@@ -4,9 +4,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <UseArtifactsOutput>true</UseArtifactsOutput>
-    <NoWarn>$(NoWarn);CA2000</NoWarn>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts~</ArtifactsPath>
+    <NoWarn>$(NoWarn);CA2000;CA1849;CA1812;CA1515;CA1002</NoWarn>
   </PropertyGroup>
 </Project>

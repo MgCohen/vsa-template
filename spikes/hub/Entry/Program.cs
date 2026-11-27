@@ -1,4 +1,4 @@
 using Ping;
-using Spike.Hosts.Console;
+using Spike.Core;
 
 return await new PingApp().Run(new ConsoleHost(args));

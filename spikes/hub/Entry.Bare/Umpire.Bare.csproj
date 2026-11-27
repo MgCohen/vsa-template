@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <AssemblyName>umpire-bare</AssemblyName>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../Hosts.Console/Spike.Hosts.Console.csproj" />
-  </ItemGroup>
-</Project>

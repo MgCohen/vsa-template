@@ -5,6 +5,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Ping/Ping.csproj" />
-    <ProjectReference Include="../Hosts.Console/Spike.Hosts.Console.csproj" />
   </ItemGroup>
 </Project>

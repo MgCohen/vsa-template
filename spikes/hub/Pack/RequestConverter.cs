@@ -1,18 +1,29 @@
 namespace Spike.Pack;
 
+using System.Globalization;
+using System.Reflection;
 using Spike.Core;
 
-sealed class RequestConverter : IOperationConverter {
-    readonly Dictionary<string, RequestBinder> binders = new(StringComparer.OrdinalIgnoreCase);
+sealed class RequestConverter(IReadOnlyDictionary<string, Type> requests) : IOperationConverter {
+    readonly Dictionary<string, ConstructorInfo> constructors = requests.ToDictionary(
+        r => r.Key, r => r.Value.GetConstructors().Single(), StringComparer.OrdinalIgnoreCase);
 
-    public RequestConverter(IReadOnlyDictionary<string, Type> requests, IConstructorFactory factory) {
-        foreach (var request in requests) {
-            binders[request.Key] = new RequestBinder(request.Value, factory);
+    public MessageResult Convert(Operation operation) {
+        if (!constructors.TryGetValue(operation.Name, out var constructor)) {
+            return MessageResult.Fail($"No request has the name '{operation.Name}'.");
         }
+        var parameters = constructor.GetParameters();
+        var arguments = new object?[parameters.Length];
+        for (var i = 0; i < parameters.Length; i++) {
+            if (!operation.Values.TryGetValue(parameters[i].Name!, out var text) && !operation.Values.TryGetValue($"{i}", out text)) {
+                return MessageResult.Fail($"{operation.Name}: the value '{parameters[i].Name}' is missing.");
+            }
+            try {
+                arguments[i] = System.Convert.ChangeType(text, parameters[i].ParameterType, CultureInfo.InvariantCulture);
+            } catch (FormatException) {
+                return MessageResult.Fail($"{operation.Name}: '{text}' is not a valid {parameters[i].ParameterType.Name}.");
+            }
+        }
+        return MessageResult.Ok(constructor.Invoke(arguments));
     }
-
-    public MessageResult Convert(Operation operation) =>
-        binders.TryGetValue(operation.Name, out var binder)
-            ? binder.Bind(operation)
-            : MessageResult.Fail($"No request has the name '{operation.Name}'.");
 }
