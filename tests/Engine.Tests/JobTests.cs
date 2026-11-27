@@ -69,10 +69,10 @@ public sealed class JobTests {
     [TestCase(ReportMode.Error, 1)]
     [TestCase(ReportMode.Warn, 0)]
     public async Task The_console_entry_converts_the_report_of_a_job_into_the_exit_code(ReportMode mode, int exitCode) {
-        var host = new EngineConsoleHost { ModuleProvider = new FixedModules(RunEngineTests.EngineModules()) };
+        string[] args = ["jobs", "build", "--project", root, "--bin", root, "--mode", mode.ToString()];
+        var host = new EngineConsoleHost(args) { ModuleProvider = new FixedModules(RunEngineTests.EngineModules()) };
         try {
-            string[] args = ["jobs", "build", "--project", root, "--bin", root, "--mode", mode.ToString()];
-            var services = host.Build(args, new EngineApp<EngineConsoleHost>());
+            var services = host.Build(new EngineApp());
             using var scope = services.CreateScope();
 
             var result = await scope.ServiceProvider.SendAsync(
@@ -124,9 +124,9 @@ public sealed class JobTests {
 
     [Test]
     public void The_console_entry_names_the_two_jobs() {
-        var host = new EngineConsoleHost { ModuleProvider = new FixedModules(RunEngineTests.EngineModules()) };
+        var host = new EngineConsoleHost(["jobs", "check"]) { ModuleProvider = new FixedModules(RunEngineTests.EngineModules()) };
         try {
-            var services = host.Build(["jobs", "check"], new EngineApp<EngineConsoleHost>());
+            var services = host.Build(new EngineApp());
 
             var names = services.GetRequiredService<IOperationConverter>().Names;
 

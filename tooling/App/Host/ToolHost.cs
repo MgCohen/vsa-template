@@ -9,13 +9,14 @@ public sealed class ToolHost : ConsoleHost {
     IReadOnlyList<string> line = [];
     ToolCommands commands = ToolCommands.Of([]);
 
-    public ToolHost() {
+    public ToolHost(string[] args) : base(args) {
         ModuleProvider = ToolModules.All();
     }
 
-    public override IServiceProvider Build(string[] args, App app) {
-        line = args;
-        return base.Build([], app);
+    public override IServiceProvider Build(App app) {
+        line = Args;
+        Args = [];
+        return base.Build(app);
     }
 
     protected override void Configure(IServiceCollection services, AppTypes types) {

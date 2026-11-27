@@ -1,3 +1,4 @@
+using Umpire.Hosts.Web;
 using SampleApp.Host;
 
-return new SampleAppApp().Run(args);
+return await new SampleAppApp().Run(new WebHost(args));

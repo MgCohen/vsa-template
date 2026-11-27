@@ -21,7 +21,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Term | Meaning | Code names |
 |---|---|---|
-| App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TKernel, THost>`, `IApp`, `NotesApp`, `EngineApp<THost>`; the root record `App` |
+| App | A block that runs. Its app class is the check entry and the lifecycle: `Run(host)` gives an `AppInstance`, and the instance stops the run | `App`, `App<TKernel>`, `IApp`, `NotesApp`, `EngineApp`; the root record `App` |
 | Host | The platform of an app. The host class builds the services and disposes them. It does not run or wait | `AppHost`, `WebHost`, `ConsoleHost`; the layer record `Host` |
 | Kernel | The install point of an architecture. `Core` installs the core services, then the kernel of the pack installs the layers | `Kernel`, `Core`, `VsaKernel` |
 | Operation | The message of a host: a name and string values. The kernel converts it to its own message | `Operation`, `IOperationConverter` |
@@ -33,7 +33,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 
 | Kind | Meaning | Example |
 |---|---|---|
-| App | The root of the app code. It runs, and its app class is the check entry | `App/`, the root record `App`, `NotesApp`, `EngineApp<THost>` |
+| App | The root of the app code. It runs, and its app class is the check entry | `App/`, the root record `App`, `NotesApp`, `EngineApp` |
 | Definition | The root of the architecture class of a block, with its records and externals | `Definition/`, the root record `Definition` |
 | Pack | A block with one architecture and its kernel | `packs/Vsa/`, the record `Pack` |
 | Core | Free base code that each app has, with no layer. It owns the hosts | `framework/Kernel/`, the root record `Core`, `Architecture<TKernel>` |
@@ -52,7 +52,7 @@ Each block kind has a record on the base `Block`. `Umpire.Architecture.Blocks` h
 | Root | The top part of a definition. Its children are the roots of `config.Roots` and the kernel root. `Define(Part root, Part kernel)` gets the `App` root and the kernel root | `ResolvedArchitecture.Root`, the name `(root)`, `Roots.Add<T>()` |
 | Independent block | A block with its own definition and check entry, for example an app or a pack | |
 | Owned block | A block that gets its shape from the definition around it, for example a feature module | |
-| Install point | The class or method that tells the host what to install from a block | `App.CreateHost()` |
+| Install point | The class or method that tells the host what to install from a block | `Kernel.Configure`, `Module.Configure`, `AppHost.Configure` |
 | Block folder | The folder where a definition applies: the folder of the nearest check entry, or `--block` | `UmpireBlock` |
 | Check entry | The pointer from a block to its architecture. Each block has one | An app class, a `Block<TArchitecture>` subclass, the `AssemblyMetadata` `Umpire.Architecture`, the key `umpire.architecture` in a `.umpireconfig` file |
 | Block place | A folder that an outer definition marks as the place of another block. The place gets the body of the record | `AddBlock<T>()`, `AddBlockGroup<T>()` |

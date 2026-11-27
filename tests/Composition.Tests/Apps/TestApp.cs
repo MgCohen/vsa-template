@@ -6,6 +6,7 @@ using Umpire.Vsa.Composition;
 
 public class TestApp<THost>(params Module[] modules) : App where THost : AppHost, ITestHost, new() {
     readonly List<Action<IServiceCollection>> configure = [];
+    volatile AppInstance? running;
 
     public override Kernel Kernel { get; } = new VsaKernel();
 
@@ -14,15 +15,23 @@ public class TestApp<THost>(params Module[] modules) : App where THost : AppHost
         return this;
     }
 
-    public override AppHost CreateHost() {
-        var host = new THost { ModuleProvider = new FixedModules([.. modules]) };
+    public THost CreateHost(params string[] args) {
+        var host = new THost { ModuleProvider = new FixedModules([.. modules]), Line = args };
         host.Actions.AddRange(configure);
         return host;
     }
 
+    public AppInstance? Running => running;
+
+    public AppInstance Start(params string[] args) => running = Run(CreateHost(args));
+
+    public int RunToEnd(params string[] args) => Start(args).Completion.GetAwaiter().GetResult();
+
+    public void Stop() => running?.Stop();
+
     public TestBuild Build(params string[] args) {
-        var host = CreateHost();
-        return new TestBuild(host, host.Build(args, this));
+        var host = CreateHost(args);
+        return new TestBuild(host, host.Build(this));
     }
 
     public IServiceCollection Compose(IServiceCollection services, HostArguments? arguments = null) {

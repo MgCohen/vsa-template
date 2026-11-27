@@ -28,7 +28,7 @@ public class LocalHost : AppHost {
         base.Dispose();
     }
 
-    internal async Task<IMessageResult> SendAsync(object message, CancellationToken ct) {
+    internal async Task<IMessageResult> SendMessageAsync(object message, CancellationToken ct) {
         if (message is null) {
             throw new ArgumentNullException(nameof(message));
         }
@@ -42,7 +42,7 @@ public class LocalHost : AppHost {
         }
     }
 
-    internal async Task<IMessageResult> SendAsync(Operation operation, CancellationToken ct) {
+    internal async Task<IMessageResult> SendOperationAsync(Operation operation, CancellationToken ct) {
         var provider = Begin(null);
         try {
             HostWork.MarkCurrentFlow();

@@ -13,8 +13,15 @@ public class ConsoleHost : AppHost {
     PosixSignalRegistration? terminate;
     Task? work;
 
-    public override IServiceProvider Build(string[] args, App app) {
-        var services = base.Build(args, app);
+    public ConsoleHost() {
+    }
+
+    public ConsoleHost(string[] args) : base(args) {
+    }
+
+    public override IServiceProvider Build(App app) {
+        var args = Args;
+        var services = base.Build(app);
         if (OperationSends.NoConverterWarning(services) is { } warning) {
             System.Console.Error.WriteLine($"warning: {warning}");
         }

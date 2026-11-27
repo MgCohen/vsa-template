@@ -5,19 +5,14 @@ using Umpire.Messages.Contracts;
 using Umpire.Vsa.Contracts.Requests;
 
 public static class LocalRequests {
-    public static async Task<Result<TResponse>> SendAsync<TKernel, THost, TResponse>(
-        this App<TKernel, THost> app, IRequest<TResponse> request, CancellationToken ct = default)
-        where TKernel : Kernel, new()
-        where THost : LocalHost, new()
+    public static async Task<Result<TResponse>> SendAsync<TResponse>(
+        this LocalHost host, IRequest<TResponse> request, CancellationToken ct = default)
         where TResponse : IResponse =>
-        ResultOf<TResponse>(await LocalHostApps.SendAsync(app, (object)request, ct).ConfigureAwait(false));
+        ResultOf<TResponse>(await LocalHostApps.SendAsync(host, (object)request, ct).ConfigureAwait(false));
 
-    public static Result<TResponse> Send<TKernel, THost, TResponse>(
-        this App<TKernel, THost> app, IRequest<TResponse> request)
-        where TKernel : Kernel, new()
-        where THost : LocalHost, new()
+    public static Result<TResponse> Send<TResponse>(this LocalHost host, IRequest<TResponse> request)
         where TResponse : IResponse =>
-        SendAsync(app, request).GetAwaiter().GetResult();
+        SendAsync(host, request).GetAwaiter().GetResult();
 
     static Result<TResponse> ResultOf<TResponse>(IMessageResult result) where TResponse : IResponse {
         if (result.Error is { } error) {

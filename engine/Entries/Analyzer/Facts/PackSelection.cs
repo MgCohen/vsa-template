@@ -8,7 +8,7 @@ public static class PackSelection {
     public const string ArchitectureKey = "umpire.architecture";
     const string MetadataKey = "Umpire.Architecture";
     const string MetadataAttribute = "System.Reflection.AssemblyMetadataAttribute";
-    const string AppType = "Umpire.Kernels.App`2";
+    const string AppType = "Umpire.Kernels.App`1";
     const string BlockType = "Umpire.Architecture.Block`1";
     const string ArchitectureType = "Umpire.Kernels.Architecture`1";
     const string KernelType = "Umpire.Kernels.Kernel";

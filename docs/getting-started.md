@@ -59,16 +59,15 @@ To add Umpire to an existing app, run `init` in the folder of its root project: 
 // App/ShopApp.cs
 namespace Shop.Host;
 
-using Umpire.Hosts.Console;
 using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 
-public class ShopApp : App<VsaKernel, ConsoleHost>;
+public class ShopApp : App<VsaKernel>;
 ```
 
 ```csharp
 // App/Program.cs
-return new Shop.Host.ShopApp().Run(args);
+return await new Shop.Host.ShopApp().Run(new Umpire.Hosts.Console.ConsoleHost(args));
 ```
 
 The setup tasks are in [scaffolding.md](scaffolding.md) ("Setup tasks").

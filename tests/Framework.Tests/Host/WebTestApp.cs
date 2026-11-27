@@ -18,13 +18,17 @@ sealed class WebTestApp : App {
     }
 
     public WebRun Build(params string[] args) {
-        var host = CreateHost();
-        var services = host.Build(args, this);
+        var host = CreateHost(args);
+        var services = host.Build(this);
         host.Start(services, services.GetRequiredService<AppStop>());
         return new WebRun(host, services);
     }
 
     public Task<WebRun> Start() => Task.FromResult(Build());
+
+    public AppInstance RunOnTestServer() => Run(CreateHost([]));
+
+    public int RunToEnd() => RunOnTestServer().Completion.GetAwaiter().GetResult();
 
     public IServiceCollection Registrations() {
         IServiceCollection? registrations = null;
@@ -33,8 +37,8 @@ sealed class WebTestApp : App {
         return registrations!;
     }
 
-    public override AppHost CreateHost() {
-        var host = new WebTestHost { ModuleProvider = new FixedModules(modules) };
+    WebTestHost CreateHost(string[] args) {
+        var host = new WebTestHost(args) { ModuleProvider = new FixedModules(modules) };
         host.Actions.AddRange(configure);
         return host;
     }

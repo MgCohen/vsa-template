@@ -13,7 +13,7 @@ public sealed class LocalHostTests {
     [SetUp]
     public void StartApp() {
         app = new LocalApp<TestLocalHost>(new PingModule());
-        app.Start([]);
+        app.Start();
     }
 
     [TearDown]
@@ -21,7 +21,7 @@ public sealed class LocalHostTests {
 
     [Test]
     public void Send_gives_the_message_result_with_the_response() {
-        var result = app.Send((object)new PingRequest("Ann"));
+        var result = app.Host.Send((object)new PingRequest("Ann"));
 
         Assert.That(result.Value, Is.EqualTo(new PingResponse("Hello Ann")));
         Assert.That(result.Error, Is.Null);
@@ -29,22 +29,22 @@ public sealed class LocalHostTests {
 
     [Test]
     public void Send_of_a_request_gives_the_typed_result() {
-        Result<PingResponse> result = app.Send(new PingRequest("Ann"));
+        Result<PingResponse> result = app.Host.Send(new PingRequest("Ann"));
 
         Assert.That(result.Value.Text, Is.EqualTo("Hello Ann"));
     }
 
     [Test]
     public async Task SendAsync_of_a_request_gives_the_typed_result() {
-        var result = await app.SendAsync(new PingRequest("Bo"));
+        var result = await app.Host.SendAsync(new PingRequest("Bo"));
 
         Assert.That(result.Value.Text, Is.EqualTo("Hello Bo"));
     }
 
     [Test]
     public void An_error_of_the_handler_is_the_error_of_the_result() {
-        var typed = app.Send(new PingRequest(""));
-        var untyped = app.Send((object)new PingRequest(""));
+        var typed = app.Host.Send(new PingRequest(""));
+        var untyped = app.Host.Send((object)new PingRequest(""));
 
         Assert.That(typed.IsSuccess, Is.False);
         Assert.That(untyped.Error, Is.Not.Null);
@@ -52,7 +52,7 @@ public sealed class LocalHostTests {
 
     [Test]
     public void A_message_with_no_operation_gives_a_clear_error() {
-        var error = Assert.Throws<InvalidOperationException>(() => app.Send(new NotARequest()));
+        var error = Assert.Throws<InvalidOperationException>(() => app.Host.Send(new NotARequest()));
 
         Assert.That(error!.Message, Does.StartWith(
             $"TestLocalHost does not expose {typeof(NotARequest).FullName}. A host exposes only requests"));
@@ -62,9 +62,9 @@ public sealed class LocalHostTests {
     public void Send_before_Start_gives_a_clear_error() {
         var stopped = new LocalApp<TestLocalHost>(new PingModule());
 
-        var error = Assert.Throws<InvalidOperationException>(() => stopped.Send(new PingRequest("Ann")));
+        var error = Assert.Throws<InvalidOperationException>(() => stopped.Host.Send(new PingRequest("Ann")));
 
-        Assert.That(error!.Message, Is.EqualTo("LocalApp does not run. Call Start before Send."));
+        Assert.That(error!.Message, Is.EqualTo("TestLocalHost does not run. Give it to App.Run before Send."));
     }
 
     [Test]
@@ -76,22 +76,22 @@ public sealed class LocalHostTests {
         app.Stop();
 
         Assert.That(app.State, Is.EqualTo(AppState.Stopped));
-        Assert.Throws<InvalidOperationException>(() => app.Send(new PingRequest("Ann")));
+        Assert.Throws<InvalidOperationException>(() => app.Host.Send(new PingRequest("Ann")));
 
-        app.Start([]);
+        app.Start();
 
-        Assert.That(app.Send(new PingRequest("Cy")).Value.Text, Is.EqualTo("Hello Cy"));
+        Assert.That(app.Host.Send(new PingRequest("Cy")).Value.Text, Is.EqualTo("Hello Cy"));
     }
 
     [Test]
     public void A_request_that_derives_from_a_handled_request_goes_to_that_handler() =>
-        Assert.That(app.Send((object)new LoudPingRequest("Di")).Value, Is.EqualTo(new PingResponse("Hello Di")));
+        Assert.That(app.Host.Send((object)new LoudPingRequest("Di")).Value, Is.EqualTo(new PingResponse("Hello Di")));
 
     [Test]
     public async Task Stop_waits_for_a_send_in_progress() {
         SlowHandler.Entered.Reset();
         SlowHandler.Release.Reset();
-        var send = Task.Run(() => app.SendAsync(new SlowRequest()));
+        var send = Task.Run(() => app.Host.SendAsync(new SlowRequest()));
         Assert.That(SlowHandler.Entered.Wait(TimeSpan.FromSeconds(5)), Is.True);
 
         var stop = Task.Run(app.Stop);
@@ -103,11 +103,11 @@ public sealed class LocalHostTests {
     }
 
     [Test]
-    public void Send_exists_only_for_an_app_with_a_LocalHost() {
+    public void Send_exists_only_on_a_LocalHost() {
         var hosts = new[] { typeof(LocalHostApps), typeof(LocalRequests) }
             .SelectMany(type => type.GetMethods())
             .Where(method => method.Name is "Send" or "SendAsync")
-            .Select(method => method.GetGenericArguments()[1].GetGenericParameterConstraints().Single())
+            .Select(method => method.GetParameters()[0].ParameterType)
             .ToList();
 
         Assert.That(hosts, Has.Count.EqualTo(5).And.All.EqualTo(typeof(LocalHost)));

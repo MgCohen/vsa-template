@@ -1,6 +1,7 @@
 using Facts.Domain.Shared.Compile;
 using Jobs.Slices.CompileJob;
 using Microsoft.CodeAnalysis.CSharp;
+using Umpire.Kernels;
 using Umpire.Vsa.Composition;
 using UmpireEngine;
 
@@ -8,16 +9,20 @@ namespace Engine.Tests;
 
 [NonParallelizable]
 public sealed class CompileJobTests {
-    EngineApp<CompileHost> app = null!;
+    CompileHost app = null!;
+    AppInstance running = null!;
 
     [OneTimeSetUp]
     public void Start() {
-        app = new EngineApp<CompileHost>();
-        app.Start([]);
+        app = new CompileHost();
+        running = new EngineApp().Run(app);
     }
 
     [OneTimeTearDown]
-    public void Stop() => app.Stop();
+    public void Stop() {
+        running.Stop();
+        app.Dispose();
+    }
 
     [Test]
     public void The_compile_job_checks_the_code_of_one_file() {

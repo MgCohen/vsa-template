@@ -6,11 +6,20 @@ using Umpire.Config;
 public class AppHost : IDisposable {
     ServiceProvider? provider;
 
+    public AppHost() : this([]) {
+    }
+
+    public AppHost(string[] args) {
+        Args = args ?? throw new ArgumentNullException(nameof(args));
+    }
+
     public IModuleProvider ModuleProvider { get; init; } = new ScannedModules();
 
-    public virtual IServiceProvider Build(string[] args, App app) {
+    protected string[] Args { get; set; }
+
+    public virtual IServiceProvider Build(App app) {
         var services = new ServiceCollection();
-        Compose(services, Arguments(args), app);
+        Compose(services, Arguments(Args), app);
         provider = services.BuildServiceProvider();
         return provider;
     }

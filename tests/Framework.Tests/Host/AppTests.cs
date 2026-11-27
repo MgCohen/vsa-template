@@ -13,7 +13,7 @@ public sealed class AppTests {
     public void Start_builds_the_services_and_calls_OnStart_with_them() {
         var app = new LifecycleApp();
 
-        app.Start([]);
+        app.Start();
         app.Stop();
 
         Assert.That(app.TypesOnStart, Is.Not.Null);
@@ -31,8 +31,8 @@ public sealed class AppTests {
     public void Stop_in_OnStart_makes_Run_return_and_the_app_can_run_again() {
         var app = new LifecycleApp { StopOnStart = true };
 
-        var first = app.Run([]);
-        var second = app.Run([]);
+        var first = app.RunToEnd();
+        var second = app.RunToEnd();
 
         Assert.That(first, Is.Zero);
         Assert.That(second, Is.Zero);
@@ -43,7 +43,7 @@ public sealed class AppTests {
     [Test]
     public void Start_returns_and_Stop_stops_the_app() {
         var app = new LifecycleApp();
-        app.Start([]);
+        app.Start();
         var runningAfterStart = app.State == AppState.Running;
         app.Stop();
 
@@ -63,7 +63,7 @@ public sealed class AppTests {
     [Test]
     public void OnStop_runs_when_the_app_stops() {
         var app = new LifecycleApp();
-        app.Start([]);
+        app.Start();
 
         app.Stop();
 
@@ -73,10 +73,10 @@ public sealed class AppTests {
     [Test]
     public void Start_after_Stop_starts_the_app_again() {
         var app = new LifecycleApp();
-        app.Start([]);
+        app.Start();
         app.Stop();
 
-        app.Start([]);
+        app.Start();
         var running = app.State == AppState.Running;
         app.Stop();
 
@@ -87,11 +87,11 @@ public sealed class AppTests {
     [Test]
     public void Start_of_a_running_app_is_an_error() {
         var app = new LifecycleApp();
-        app.Start([]);
+        app.Start();
         try {
-            var error = Assert.Throws<InvalidOperationException>(() => app.Start([]));
+            var error = Assert.Throws<InvalidOperationException>(() => app.Start());
 
-            Assert.That(error!.Message, Is.EqualTo("LifecycleApp is already running. Call Stop() before Start or Run."));
+            Assert.That(error!.Message, Is.EqualTo("LifecycleApp is already running. Stop its AppInstance before the next Run."));
         } finally {
             app.Stop();
         }
@@ -108,13 +108,32 @@ public sealed class AppTests {
     }
 
     [Test]
-    public void The_app_gives_a_new_host_of_its_host_type_on_each_call() {
-        var app = new WebApp();
+    public async Task The_instance_completes_with_the_exit_code_of_its_stop() {
+        var app = new LifecycleApp();
 
-        var first = app.CreateHost();
+        var running = app.Start();
+        running.Stop(3);
 
-        Assert.That(first, Is.TypeOf<WebHost>());
-        Assert.That(app.CreateHost(), Is.Not.SameAs(first));
+        Assert.That(await running, Is.EqualTo(3));
+        Assert.That(running.State, Is.EqualTo(AppState.Stopped));
+    }
+
+    [Test]
+    public void An_old_instance_does_not_stop_the_next_run() {
+        var app = new LifecycleApp();
+        var first = app.Start();
+        first.Stop();
+        var second = app.Start();
+
+        first.Stop();
+
+        Assert.That(second.State, Is.EqualTo(AppState.Running));
+        second.Stop();
+    }
+
+    [Test]
+    public void Run_with_no_host_is_an_error() {
+        Assert.Throws<ArgumentNullException>(() => new LifecycleApp().Run(null!));
     }
 
     [Test]
@@ -149,7 +168,7 @@ public sealed class AppTests {
     }
 
     static async Task<int> RunUntilStop(LifecycleApp app) {
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (app.State != AppState.Running && !run.IsCompleted && DateTime.UtcNow < deadline) {
             await Task.Delay(10);
@@ -174,7 +193,7 @@ public sealed class AppTests {
         return found;
     }
 
-    sealed class WebApp : App<VsaKernel, WebHost>;
+    sealed class WebApp : App<VsaKernel>;
 
     sealed class LifecycleApp() : VsaTestApp(() => new AppHost { ModuleProvider = new FixedModules() }) {
         public bool StopOnStart { get; init; }
@@ -186,7 +205,7 @@ public sealed class AppTests {
         protected override void OnStart() {
             TypesOnStart = Services!.GetRequiredService<AppTypes>();
             if (StopOnStart) {
-                Stop();
+                Services!.GetRequiredService<AppStop>().Request(0);
             }
         }
 

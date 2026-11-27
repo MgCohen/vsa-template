@@ -7,6 +7,11 @@ using Umpire.Kernels;
 public sealed class SignalConsoleHost : ConsoleHost, ITestHost {
     public List<Action<IServiceCollection>> Actions { get; } = [];
 
+    public string[] Line {
+        get => Args;
+        set => Args = value;
+    }
+
     protected override AppTypes TypesOf(App app) => new(ModuleProvider);
 
     protected override void Configure(IServiceCollection services, AppTypes types) {

@@ -107,10 +107,9 @@ The runtime references no definition code. The type helpers `LoadedTypes` and `C
 ## How the kernel starts an app
 
 ```
-App.Run(args)                             Umpire.Kernels
-├─ Start(args)
-│  ├─ App.CreateHost()                    a new AppHost for each start
-│  ├─ AppHost.Build(args, app)            open: plain, console or web
+App.Run(host)                             Umpire.Kernels: the entry gives a new host with its arguments
+├─ start
+│  ├─ AppHost.Build(app)                  open: plain, console or web
 │  │  └─ Compose(services, arguments, app.Kernel, types)         fixed
 │  │     ├─ Core.Install                  the core services
 │  │     ├─ Kernel.Install                Kernel.Configure (VsaKernel: the VSA layers)
@@ -118,8 +117,8 @@ App.Run(args)                             Umpire.Kernels
 │  │     ├─ AppHost.Configure             open
 │  │     └─ DefaultLogging                the null logger, if no logger exists
 │  └─ AppHost.Start(services, stop)       open: the host work and its stop sources
-├─ wait for a stop request
-└─ the stop                               OnStop, then AppHost.Dispose
+├─ return the AppInstance
+└─ the stop                               OnStop, then AppHost.Dispose, then AppInstance.Completion
 ```
 
 See `composition.md` for each step.

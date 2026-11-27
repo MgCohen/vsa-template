@@ -13,7 +13,7 @@ Each guideline has one of two marks:
 
 ```
 Block                    core meaning                                   example
- ├─ App                  the code root of an app                        App/ (MyApp : App<TKernel, THost>)
+ ├─ App                  the code root of an app                        App/ (MyApp : App<TKernel>)
  ├─ Definition           the root of the architecture class             Definition/
  ├─ Pack                 an architecture with its kernel                packs/Vsa (VsaArchitecture, VsaKernel)
  ├─ Kernel               installs an architecture; owns the hosts       Core (framework/Kernel), the kernel root (packs/Vsa/Kernel)
@@ -47,7 +47,7 @@ A block can have two entries. They answer two different questions.
 | Check entry | Which architecture checks this block? | Only an independent block |
 | Install point | What does the host install from this block? | Each kind, except a library |
 
-For an app, the app class is the check entry: a closed class that implements `IAppEntry<TKernel>`, for example `MyApp : App<TKernel, THost>` or a Unity shell. It names the kernel, and the engine finds the definition (see "Find the definition" in `architecture-engine.md`). Its install point is the custom host, if the app has one.
+For an app, the app class is the check entry: a closed class that implements `IAppEntry<TKernel>`, for example `MyApp : App<TKernel>` or a Unity shell. It names the kernel, and the engine finds the definition (see "Find the definition" in `architecture-engine.md`). Its install point is the custom host, if the app has one.
 
 ## Entries of each kind
 
@@ -64,7 +64,7 @@ The check entry has five forms. The kinds above give the default form. Each form
 
 | Form | Example |
 |---|---|
-| App class | `NotesApp : App<VsaKernel, WebHost>` |
+| App class | `NotesApp : App<VsaKernel>` |
 | Definition of a kernel | `VsaArchitecture` in `packs/Vsa/Definition/` |
 | Typed base | `public class ToolsBlock : Block<ToolsArchitecture>`. The project needs the definition package (see "Packages of an app" in `consumers.md`) |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="<type>, <assembly>" />` |

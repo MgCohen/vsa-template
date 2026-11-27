@@ -73,7 +73,7 @@ public sealed class ModuleProviderTests {
     public void BuildComposesTheModulesOfTheProviderOfTheHost() {
         using var host = new AppHost { ModuleProvider = new OneAssembly(typeof(ShelfModule).Assembly) };
 
-        var services = host.Build([], new ProbeApp());
+        var services = host.Build(new ProbeApp());
 
         Assert.That(services.GetRequiredService<AppTypes>().Modules.Select(module => module.Name),
             Is.EqualTo(new[] { "Shelf" }));

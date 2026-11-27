@@ -25,18 +25,18 @@ public sealed class PackSelectionTests {
 
     [Test]
     public Task An_app_class_of_the_pack_runs_its_rules() => Analyzer.Verify(Request + """
-        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Composition.VsaKernel, Umpire.Kernels.AppHost>;
+        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Composition.VsaKernel>;
         """, Found());
 
     [Test]
     public Task A_derived_kernel_runs_the_rules_of_its_base_pack() => Analyzer.Verify(Request + """
         public sealed class EcsKernel : Umpire.Vsa.Composition.VsaKernel;
-        public sealed class ShopApp : Umpire.Kernels.App<EcsKernel, Umpire.Kernels.AppHost>;
+        public sealed class ShopApp : Umpire.Kernels.App<EcsKernel>;
         """, Found());
 
     [Test]
     public Task An_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherKernel + """
-        public sealed class ShopApp : Umpire.Kernels.App<OtherKernel, Umpire.Kernels.AppHost>;
+        public sealed class ShopApp : Umpire.Kernels.App<OtherKernel>;
         """);
 
     [Test]
@@ -81,25 +81,25 @@ public sealed class PackSelectionTests {
 
     [Test]
     public Task An_entry_in_code_wins_over_the_umpireconfig_key() => Analyzer.Verify(Request + """
-        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Composition.VsaKernel, Umpire.Kernels.AppHost>;
+        public sealed class ShopApp : Umpire.Kernels.App<Umpire.Vsa.Composition.VsaKernel>;
         """, OtherArchitecture, Found());
 
     [Test]
     public Task A_nested_app_class_of_another_pack_runs_no_rule_of_this_pack() => Analyzer.Verify(QuietRequest + OtherKernel + """
         public static class Hosts {
-            public sealed class ShopApp : Umpire.Kernels.App<OtherKernel, Umpire.Kernels.AppHost>;
+            public sealed class ShopApp : Umpire.Kernels.App<OtherKernel>;
         }
         """);
 
     [Test]
     public Task An_open_generic_app_base_is_no_entry() => Analyzer.Verify(Request + """
-        public abstract class GameApp<TKernel> : Umpire.Kernels.App<TKernel, Umpire.Kernels.AppHost> where TKernel : Umpire.Kernels.Kernel, new();
+        public abstract class GameApp<TKernel> : Umpire.Kernels.App<TKernel> where TKernel : Umpire.Kernels.Kernel, new();
         """, Found());
 
     [Test]
     public Task An_app_class_on_an_open_generic_base_selects_the_pack_of_its_argument() =>
         Analyzer.Verify(QuietRequest + OtherKernel + """
-        public abstract class GameApp<TKernel> : Umpire.Kernels.App<TKernel, Umpire.Kernels.AppHost> where TKernel : Umpire.Kernels.Kernel, new();
+        public abstract class GameApp<TKernel> : Umpire.Kernels.App<TKernel> where TKernel : Umpire.Kernels.Kernel, new();
         public sealed class ShopApp : GameApp<OtherKernel>;
         """);
 

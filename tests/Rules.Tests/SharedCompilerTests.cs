@@ -42,7 +42,7 @@ public sealed class SharedCompilerTests {
         try {
             Directory.CreateDirectory(decoy);
             var decoyAnalyzer = Path.Combine(decoy, "Umpire.Engine.dll");
-            File.Copy(typeof(UmpireEngine.EngineApp<>).Assembly.Location, decoyAnalyzer);
+            File.Copy(typeof(UmpireEngine.EngineApp).Assembly.Location, decoyAnalyzer);
             WriteDecoyProject(decoyProject, decoyAnalyzer);
             Dotnet.Run(decoyProject, server, "build", "Decoy.csproj", "-nodeReuse:false").EnsureSuccess();
             TempFolder.Delete(decoy);

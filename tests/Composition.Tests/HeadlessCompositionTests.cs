@@ -114,7 +114,7 @@ public sealed class HeadlessCompositionTests {
     public async Task Run_waits_until_the_app_stops() {
         var app = App();
 
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         while (app.State != AppState.Running && !run.IsCompleted) {
             await Task.Delay(10);
         }
@@ -129,7 +129,7 @@ public sealed class HeadlessCompositionTests {
     public async Task A_stop_request_from_a_service_ends_the_run_with_its_exit_code() {
         var app = App();
 
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         while (app.Services is null && !run.IsCompleted) {
             await Task.Delay(10);
         }

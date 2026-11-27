@@ -39,11 +39,11 @@ Rules for all commands:
 
 ## The tool is an app
 
-The tool is a VSA app with a console host, in `tooling/`. `App/Program.cs` is only `return new UmpireTool<ToolHost>().Run(args);`. The build checks `tooling/` as a block (`UmpireBlock`), with the definition `tooling/Definition/` (`ToolArchitecture`). The assembly name is `umpire-cli`: the check binds an assembly `Umpire.*` to the External `UmpireLibraries` and does not check its types. The package id stays `Umpire.Cli`.
+The tool is a VSA app with a console host, in `tooling/`. `App/Program.cs` is only `return await new UmpireTool().Run(new ToolHost(args));`. The build checks `tooling/` as a block (`UmpireBlock`), with the definition `tooling/Definition/` (`ToolArchitecture`). The assembly name is `umpire-cli`: the check binds an assembly `Umpire.*` to the External `UmpireLibraries` and does not check its types. The package id stays `Umpire.Cli`.
 
 | Part | Type | Job |
 |---|---|---|
-| App class | `UmpireTool<THost> : App<VsaKernel, THost>` | The lifecycle. The tests close it with a `LocalHost` |
+| App class | `UmpireTool : App<VsaKernel>` | The lifecycle. The tests run it on a `LocalHost` |
 | Host | `ToolHost : ConsoleHost` | Converts the command line into the request of one command |
 | Commands | `ToolCommands`, `ToolConverter` (`App/Host/`) | The forms of the requests, the selection, and the operation converter of the tool |
 | Plugin | `App/Plugins/Commands/` | `IToolRequest<TSelf>`, `IChildProcessRequest`, `ToolResponse`, `ToolHandler<,>`, `CommandForm`, `CommandOption`, `CommandInput`, `UmpireException`, `Dotnet`, `ChildProcess` |

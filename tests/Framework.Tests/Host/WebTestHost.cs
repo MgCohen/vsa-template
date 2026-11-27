@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umpire.Hosts.Web;
 using Umpire.Kernels;
 
-sealed class WebTestHost : WebHost {
+sealed class WebTestHost(string[] args) : WebHost(args) {
     public List<Action<IServiceCollection>> Actions { get; } = [];
 
     protected override AppTypes TypesOf(App app) => new(ModuleProvider);

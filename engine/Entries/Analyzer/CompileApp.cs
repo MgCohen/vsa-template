@@ -4,7 +4,7 @@ using Jobs.Slices.CompileJob;
 using Umpire.Vsa.Composition;
 
 static class CompileApp {
-    static readonly Lazy<EngineApp<CompileHost>> Running = new(Start, LazyThreadSafetyMode.ExecutionAndPublication);
+    static readonly Lazy<CompileHost> Running = new(Start, LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static CompileJobReport Send(CompileJobRequest request, CancellationToken cancellation) {
         var result = Running.Value.SendAsync(request, cancellation).GetAwaiter().GetResult();
@@ -22,9 +22,9 @@ static class CompileApp {
     public static string Reason(Exception e) =>
         e is TypeInitializationException { InnerException: { } inner } ? Reason(inner) : e.Message;
 
-    static EngineApp<CompileHost> Start() {
-        var app = new EngineApp<CompileHost>();
-        app.Start([]);
-        return app;
+    static CompileHost Start() {
+        var host = new CompileHost();
+        new EngineApp().Run(host);
+        return host;
     }
 }

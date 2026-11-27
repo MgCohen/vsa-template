@@ -10,13 +10,13 @@ static class Tool {
     public static ToolCommands Commands { get; } = ToolCommands.Of([.. typeof(ToolHost).Assembly.GetTypes()]);
 
     public static int Run(params string[] args) {
-        var app = new UmpireTool<TestToolHost>();
-        app.Start([]);
+        var host = new TestToolHost();
+        var running = new UmpireTool().Run(host);
         try {
-            var result = app.Send(Commands.Request(args));
+            var result = host.Send(Commands.Request(args));
             return result.Error is { } error ? throw new UmpireException(error.Message) : result.Value is IExitCode code ? code.ExitCode : 0;
         } finally {
-            app.Stop();
+            running.Stop();
         }
     }
 

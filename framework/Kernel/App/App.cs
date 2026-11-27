@@ -18,13 +18,12 @@ public abstract class App : IApp {
     bool starting;
     int startThread = NoThread;
     int stopThread = NoThread;
-    int runThread = NoThread;
     SynchronizationContext? appThread;
     bool stopRequested;
     int exitCode;
     Exception? stopError;
-    ManualResetEventSlim stopRequest = new();
     ManualResetEventSlim stopped = new(initialState: true);
+    TaskCompletionSource<int> completion = new();
 
     public abstract Kernel Kernel { get; }
 
@@ -44,75 +43,22 @@ public abstract class App : IApp {
         }
     }
 
-    internal AppHost? RunningHost {
-        get {
-            lock (gate) {
-                return state == AppState.Running ? host : null;
-            }
+    public AppInstance Run(AppHost host) {
+        if (host is null) {
+            throw new ArgumentNullException(nameof(host));
         }
-    }
-
-    public abstract AppHost CreateHost();
-
-    public void Start(string[] args) => Start(args, ownedByRun: false);
-
-    public int Run(string[] args) {
-        Start(args, ownedByRun: true);
-        ManualResetEventSlim request;
-        lock (gate) {
-            request = stopRequest;
-        }
-        request.Wait();
-        return StopNow();
-    }
-
-    public void Stop() {
-        var thread = Environment.CurrentManagedThreadId;
-        int from;
-        bool inline;
-        bool deferred;
+        var current = Begin();
         ManualResetEventSlim done;
+        Task<int> completed;
         lock (gate) {
-            if ((state == AppState.Stopped && !starting) || stopThread == thread) {
-                return;
-            }
-            from = generation;
             done = stopped;
-            inline = !starting && state == AppState.Running && OnAppThread(thread);
-            deferred = (starting && startThread == thread) || HostWork.IsCurrent;
+            completed = completion.Task;
         }
-        if (inline) {
-            StopNow();
-            return;
-        }
-        OnRequest(from, 0);
-        if (deferred) {
-            return;
-        }
-        done.Wait();
-        Exception? error;
-        lock (gate) {
-            error = from == generation ? stopError : null;
-        }
-        if (error is not null) {
-            ExceptionDispatchInfo.Capture(error).Throw();
-        }
-    }
-
-    protected virtual void OnStart() {
-    }
-
-    protected virtual void OnStop() {
-    }
-
-    void Start(string[] args, bool ownedByRun) {
-        var (current, done) = Begin(ownedByRun);
-        var started = CreateHost();
         try {
-            Launch(started, args, current);
+            Launch(host, current);
         } catch {
             try {
-                started.Dispose();
+                host.Dispose();
             } finally {
                 EndFailedStart(done);
             }
@@ -127,29 +73,75 @@ public abstract class App : IApp {
         if (requested) {
             Dispatch(current);
         }
+        return new AppInstance(this, current, completed);
     }
 
-    (int Generation, ManualResetEventSlim Stopped) Begin(bool ownedByRun) {
+    internal AppState StateOf(int run) {
         lock (gate) {
-            if (state != AppState.Stopped || starting) {
-                throw new InvalidOperationException(
-                    $"{GetType().Name} is already running. Call Stop() before Start or Run.");
-            }
-            starting = true;
-            startThread = Environment.CurrentManagedThreadId;
-            runThread = ownedByRun ? startThread : NoThread;
-            appThread = ownedByRun ? null : SynchronizationContext.Current;
-            stopRequested = false;
-            exitCode = 0;
-            stopError = null;
-            stopRequest = new ManualResetEventSlim();
-            stopped = new ManualResetEventSlim();
-            return (++generation, stopped);
+            return run == generation ? state : AppState.Stopped;
         }
     }
 
-    void Launch(AppHost started, string[] args, int current) {
-        var provider = started.Build(args, this);
+    internal void Stop(int run, int code) {
+        var thread = Environment.CurrentManagedThreadId;
+        bool inline;
+        bool deferred;
+        ManualResetEventSlim done;
+        lock (gate) {
+            if (run != generation || (state == AppState.Stopped && !starting) || stopThread == thread) {
+                return;
+            }
+            done = stopped;
+            inline = !starting && state == AppState.Running && OnAppThread();
+            deferred = (starting && startThread == thread) || HostWork.IsCurrent;
+            if (inline && !stopRequested) {
+                exitCode = code;
+            }
+        }
+        if (inline) {
+            StopNow();
+            return;
+        }
+        OnRequest(run, code);
+        if (deferred) {
+            return;
+        }
+        done.Wait();
+        Exception? error;
+        lock (gate) {
+            error = run == generation ? stopError : null;
+        }
+        if (error is not null) {
+            ExceptionDispatchInfo.Capture(error).Throw();
+        }
+    }
+
+    protected virtual void OnStart() {
+    }
+
+    protected virtual void OnStop() {
+    }
+
+    int Begin() {
+        lock (gate) {
+            if (state != AppState.Stopped || starting) {
+                throw new InvalidOperationException(
+                    $"{GetType().Name} is already running. Stop its AppInstance before the next Run.");
+            }
+            starting = true;
+            startThread = Environment.CurrentManagedThreadId;
+            appThread = SynchronizationContext.Current;
+            stopRequested = false;
+            exitCode = 0;
+            stopError = null;
+            stopped = new ManualResetEventSlim();
+            completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            return ++generation;
+        }
+    }
+
+    void Launch(AppHost started, int current) {
+        var provider = started.Build(this);
         var stop = provider.GetRequiredService<AppStop>();
         lock (gate) {
             host = started;
@@ -171,7 +163,6 @@ public abstract class App : IApp {
             state = AppState.Stopped;
             starting = false;
             startThread = NoThread;
-            runThread = NoThread;
         }
         done.Set();
     }
@@ -191,20 +182,12 @@ public abstract class App : IApp {
     }
 
     void Dispatch(int from) {
-        ManualResetEventSlim request;
         SynchronizationContext? context;
-        bool ownedByRun;
         lock (gate) {
             if (from != generation) {
                 return;
             }
-            request = stopRequest;
             context = appThread;
-            ownedByRun = runThread != NoThread;
-        }
-        if (ownedByRun) {
-            request.Set();
-            return;
         }
         var target = context ?? threadPoolWhenNoAppThread;
         target.Post(_ => StopPosted(from, onThreadPool: context is null), null);
@@ -225,10 +208,12 @@ public abstract class App : IApp {
     int StopNow(bool logErrors = false) {
         AppHost? stopping;
         ManualResetEventSlim done;
+        TaskCompletionSource<int> completed;
         lock (gate) {
             if (state != AppState.Running || starting) {
                 return exitCode;
             }
+            completed = completion;
             state = AppState.Stopping;
             stopRequested = true;
             stopThread = Environment.CurrentManagedThreadId;
@@ -242,15 +227,16 @@ public abstract class App : IApp {
             services = null;
             state = AppState.Stopped;
             stopThread = NoThread;
-            runThread = NoThread;
             stopError = error;
             code = exitCode;
             log = null;
         }
         done.Set();
         if (error is not null) {
+            completed.TrySetException(error);
             ExceptionDispatchInfo.Capture(error).Throw();
         }
+        completed.TrySetResult(code);
         return code;
     }
 
@@ -282,8 +268,5 @@ public abstract class App : IApp {
         }
     }
 
-    bool OnAppThread(int thread) =>
-        runThread != NoThread
-            ? thread == runThread
-            : appThread is not null && SynchronizationContext.Current == appThread;
+    bool OnAppThread() => appThread is not null && SynchronizationContext.Current == appThread;
 }
