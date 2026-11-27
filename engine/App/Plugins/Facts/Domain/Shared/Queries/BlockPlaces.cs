@@ -32,11 +32,10 @@ static class BlockPlaces {
     public static IReadOnlyList<BlockPlace> Empty(
         ResolvedArchitecture resolved, string blockFolder, IReadOnlyList<string> innerBlocks, BlockFolders folders) {
         var inner = new HashSet<string>(Relative(blockFolder, innerBlocks), StringComparer.OrdinalIgnoreCase);
-        var existing = new HashSet<string>(folders.Existing, StringComparer.OrdinalIgnoreCase);
         return [.. resolved.Parts.Where(p => p.IsBlockPlace)
-            .SelectMany(place => Candidates(place, folders)
-                .Where(folder => !inner.Contains(folder) && (existing.Contains(folder) || !HasDllForm(place)))
-                .Select(folder => new BlockPlace(place, Full(blockFolder, folder), folder)))];
+            .SelectMany(place => folders.Folders.Where(f => f.Pattern == place.Path)
+                .Where(f => !inner.Contains(f.Folder) && (f.Exists || !HasDllForm(place)))
+                .Select(f => new BlockPlace(place, Full(blockFolder, f.Folder), f.Folder)))];
     }
 
     static bool HasDllForm(Part place) => !place.IsGroup && place.Concept is Blocks.Block && place.Children.Count > 0;
@@ -49,16 +48,7 @@ static class BlockPlaces {
     static bool Contains(string outer, string inner) => inner.StartsWith(outer + "/", StringComparison.OrdinalIgnoreCase);
 
     static bool Fits(string pattern, string folder) =>
-        IsGroupSegment(pattern) || string.Equals(pattern, folder, StringComparison.OrdinalIgnoreCase);
-
-    static IEnumerable<string> Candidates(Part place, BlockFolders folders) {
-        var pattern = place.Path.Split('/');
-        return pattern.Any(IsGroupSegment)
-            ? folders.Existing.Where(folder => Same(pattern, folder.Split('/')))
-            : [place.Path];
-    }
-
-    static bool IsGroupSegment(string segment) => segment.StartsWith("{", StringComparison.Ordinal);
+        pattern.StartsWith("{", StringComparison.Ordinal) || string.Equals(pattern, folder, StringComparison.OrdinalIgnoreCase);
 
     static IEnumerable<string> Relative(string blockFolder, IReadOnlyList<string> innerBlocks) =>
         innerBlocks.Select(folder => RelativePath.Of(blockFolder, folder).Replace('\\', '/').TrimEnd('/'))

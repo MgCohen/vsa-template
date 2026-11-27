@@ -39,7 +39,7 @@ The projects of the groups are for development: their references enforce the lay
 
 | Package | DLL | Source projects | Depends on |
 |---|---|---|---|
-| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Config, Kernels (with `Utility/`), Messages (contracts and handlers): the core | `Umpire.Engine` (for its analyzer) |
+| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Config, Kernels (with `Utility/` and `Paths/`), Messages (contracts and handlers): the core | `Umpire.Engine` (for its analyzer) |
 | `Umpire.Vsa` | `Umpire.Vsa.dll` (`netstandard2.0`) | Each VSA layer base, `VsaKernel`, `Plugin` and the composition (`packs/Vsa/Kernel/`, with no views): the VSA kernel | `Umpire` |
 | `Umpire.Definition` | `Umpire.Definition.dll` (`netstandard2.0`) | Architecture (with no markers), Kernels.Definition | `Umpire` |
 | `Umpire.Vsa.Definition` | `Umpire.Vsa.Definition.dll` (`netstandard2.0`) | Umpire.Vsa (`packs/Vsa/Definition/`) | `Umpire.Definition`, `Umpire.Vsa` |

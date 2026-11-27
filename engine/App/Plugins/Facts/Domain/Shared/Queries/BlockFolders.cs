@@ -1,3 +1,3 @@
 namespace Umpire.Architecture;
 
-public sealed record BlockFolders(IReadOnlyList<string> Existing);
+public sealed record BlockFolders(IReadOnlyList<PlaceFolder> Folders);

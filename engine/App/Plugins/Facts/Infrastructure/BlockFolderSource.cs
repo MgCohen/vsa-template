@@ -4,8 +4,9 @@ using Umpire.Architecture;
 using Umpire.Utility;
 
 public sealed class BlockFolderSource : IFactSource<BlockFolderQuery, BlockFolders> {
-    public BlockFolders Read(BlockFolderQuery query) =>
-        new([.. query.Patterns.SelectMany(pattern => Folders(query.Block, pattern.Split('/'))).Distinct(StringComparer.OrdinalIgnoreCase)]);
+    public BlockFolders Read(BlockFolderQuery query) => new([.. query.Patterns.Distinct(StringComparer.Ordinal)
+        .SelectMany(pattern => Folders(query.Block, pattern.Split('/'))
+            .Select(folder => new PlaceFolder(pattern, folder, Directory.Exists(Full(query.Block, folder)))))]);
 
     static IEnumerable<string> Folders(string block, string[] pattern) {
         IEnumerable<string> found = [""];
@@ -14,7 +15,7 @@ public sealed class BlockFolderSource : IFactSource<BlockFolderQuery, BlockFolde
                 ? found.SelectMany(folder => Subfolders(block, folder))
                 : found.Select(folder => Join(folder, segment));
         }
-        return found.Where(folder => Directory.Exists(Full(block, folder)));
+        return found;
     }
 
     static IEnumerable<string> Subfolders(string block, string folder) {
