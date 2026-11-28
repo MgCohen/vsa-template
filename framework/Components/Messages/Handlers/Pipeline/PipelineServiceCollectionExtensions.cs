@@ -18,7 +18,22 @@ public static class PipelineServiceCollectionExtensions {
                 + "with its handler base, so give a module pipeline a narrower message base.");
         }
         services.AddSingleton(definition);
-        services.TryAddSingleton(provider => new Pipelines(provider, provider.GetServices<PipelineDefinition>()));
+        AddHub(services);
         return services;
+    }
+
+    public static IServiceCollection AddHubStep<TStep>(this IServiceCollection services, int priority = 0) where TStep : HubStep {
+        if (services.Any(d => d.ImplementationInstance is HubStepEntry entry && entry.Step == typeof(TStep))) {
+            throw new InvalidOperationException($"{typeof(TStep).FullName} is already a hub step. Add each hub step one time.");
+        }
+        services.AddSingleton(new HubStepEntry(typeof(TStep), priority));
+        AddHub(services);
+        return services;
+    }
+
+    static void AddHub(IServiceCollection services) {
+        services.TryAddSingleton(provider => new Pipelines(
+            provider, provider.GetServices<PipelineDefinition>(), provider.GetServices<HubStepEntry>()));
+        services.TryAddScoped<IMessageHub, MessageHub>();
     }
 }
