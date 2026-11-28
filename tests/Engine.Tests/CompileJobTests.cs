@@ -1,6 +1,8 @@
+using CodeCheck.Slices.CheckCode;
 using Facts.Domain.Shared.Compile;
 using Jobs.Slices.CompileJob;
 using Microsoft.CodeAnalysis.CSharp;
+using Umpire.CheckModel;
 using Umpire.Vsa.Composition;
 using UmpireEngine;
 
@@ -28,6 +30,18 @@ public sealed class CompileJobTests {
 
         Assert.That(report.Value.Findings.Select(f => (f.Code, f.File, f.Line, f.Column, f.Length)),
             Is.EqualTo(new[] { ("UMP010101", (string?)"A.cs", (int?)1, (int?)11, (int?)2) }));
+    }
+
+    [Test]
+    public void The_load_stage_gives_the_codes_of_the_compile_job_and_checks_nothing() {
+        var report = app.Send(new CompileJobRequest(CompileProject.None, CompileStage.Load));
+
+        var codes = report.Value.Codes.Select(c => c.Code).ToList();
+        Assert.That(report.Value.Findings, Is.Empty);
+        Assert.That(codes, Is.Unique);
+        Assert.That(codes, Does.Contain(new LineLengthRule().Id).And.Contain("UMP010001").And.Contain(RuleCodes.EmptyBlockPlace)
+            .And.Contain(DataCodes.OldSnapshot));
+        Assert.That(report.Value.Codes.Where(c => c.IsCodeRule).Select(c => c.Code), Is.EquivalentTo(CodeRule.All.Select(r => r.Id)));
     }
 
     [Test]

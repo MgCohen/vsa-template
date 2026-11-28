@@ -4,7 +4,7 @@ using Facts.Domain.Shared.Compile;
 using Operations.Domain.Shared;
 using Umpire.Config;
 
-public sealed class CodeRun {
+sealed class CodeRun {
     const string ArchitectureKey = "umpire.architecture";
 
     readonly IReadOnlyList<RunningRule> rules;

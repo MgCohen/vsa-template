@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class FileLengthRule : LimitRule {
+sealed class FileLengthRule : LimitRule {
     public override int Number => 3;
 
     public override string Title => "A file has at most the maximum number of lines";

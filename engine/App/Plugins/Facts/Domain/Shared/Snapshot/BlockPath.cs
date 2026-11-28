@@ -23,6 +23,11 @@ public static class BlockPath {
         return segments.Take(segments.Length - 1).Any(IsOutput);
     }
 
+    public static bool IsInIgnoredFolder(string path) {
+        var segments = path.Split(Separators);
+        return segments.Take(segments.Length - 1).Any(IsIgnored);
+    }
+
     public static bool IsIgnored(string folderName) => IsOutput(folderName)
         || folderName.StartsWith(".", StringComparison.Ordinal) || folderName.EndsWith("~", StringComparison.Ordinal);
 

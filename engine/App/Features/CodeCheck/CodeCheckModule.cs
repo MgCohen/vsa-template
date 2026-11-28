@@ -1,6 +1,6 @@
 namespace CodeCheck;
 
-using CodeCheck.Infrastructure;
+using CodeCheck.Slices.CheckCode;
 using Microsoft.Extensions.DependencyInjection;
 using Umpire.Kernels;
 

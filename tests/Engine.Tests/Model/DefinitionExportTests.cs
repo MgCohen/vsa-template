@@ -1,5 +1,6 @@
 namespace CheckModel.Tests;
 
+using Facts.Infrastructure;
 using Umpire.Architecture;
 using Umpire.CheckModel.Export;
 using Data = Umpire.CheckModel;
@@ -110,8 +111,8 @@ public sealed class DefinitionExportTests {
 
         Assert.Multiple(() => {
             Assert.That(marks.Select(m => m.Path), Is.SupersetOf(new[] { "EveryForm.cs", "Helper.cs" }));
-            Assert.That(marks.All(m => m.IsCurrent(temp.Block)), Is.True);
-            Assert.That(late.Single(m => m.Path == "Helper.cs").IsCurrent(temp.Block), Is.False);
+            Assert.That(marks.All(m => DiskFiles.IsCurrent(m, temp.Block)), Is.True);
+            Assert.That(DiskFiles.IsCurrent(late.Single(m => m.Path == "Helper.cs"), temp.Block), Is.False);
         });
     }
 

@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class BaseLevelCallRule : KernelRule {
+sealed class BaseLevelCallRule : KernelRule {
     static readonly string[] Levels = ["Configure", "Define", "Rules"];
 
     static readonly string[] DefinitionBases = ["Umpire.Architecture.Architecture", "Umpire.Architecture.Blocks.Block", "Umpire.Architecture.Concept"];

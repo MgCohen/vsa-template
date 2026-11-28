@@ -1,15 +1,22 @@
 namespace Umpire.CheckModel;
 
+using BlockFolders = Umpire.Architecture.BlockFolders;
+
 public static class BlockPlaceCheck {
-    public static void Run(AppModel app, Report report) {
-        var inner = app.InnerBlocks.Where(folder => BlockPath.IsUnder(app.Block, folder))
-            .Select(folder => BlockPath.Of(app.Block, folder)).ToList();
+    public static IReadOnlyList<string> Patterns(AppModel app) =>
+        [.. app.Parts.Where(p => !p.IsExternal && p.IsBlockPlace).Select(p => p.Path).Concat(Inner(app)).Distinct(StringComparer.Ordinal)];
+
+    public static void Run(AppModel app, BlockFolders folders, Report report) {
+        var inner = Inner(app);
         var parts = app.Parts.Where(p => !p.IsExternal && (p.HasFolder || p.IsGroup)).ToList();
-        Covered(app, parts, inner, report);
-        Empty(app, parts, inner, report);
+        Covered(app, parts, inner, folders, report);
+        Empty(app, parts, inner, folders, report);
     }
 
-    static void Covered(AppModel app, IReadOnlyList<Part> parts, IReadOnlyList<string> inner, Report report) {
+    static IReadOnlyList<string> Inner(AppModel app) => [.. app.InnerBlocks.Where(folder => BlockPath.IsUnder(app.Block, folder))
+        .Select(folder => BlockPath.Of(app.Block, folder))];
+
+    static void Covered(AppModel app, IReadOnlyList<Part> parts, IReadOnlyList<string> inner, BlockFolders folders, Report report) {
         foreach (var folder in inner.Where(f => !inner.Any(o => f.StartsWith(o + "/", StringComparison.OrdinalIgnoreCase)))) {
             var segments = folder.Split('/');
             if (CoveringPart(parts, segments) is { } part) {
@@ -18,16 +25,17 @@ public static class BlockPlaceCheck {
                     + $"but a check entry makes {folder} another block. Mark the folder with AddBlock<T>() "
                     + "or AddBlockGroup<T>() in Define, or remove the check entry of the inner block.",
                     BlockPath.In(app.Block, folder), 1, 1,
-                    app.Trust.IsAllSure && Directory.Exists(BlockPath.In(app.Block, folder)));
+                    app.Trust.IsAllSure && Exists(folders, folder, folder));
             }
         }
     }
 
-    static void Empty(AppModel app, IReadOnlyList<Part> parts, IReadOnlyList<string> inner, Report report) {
+    static void Empty(AppModel app, IReadOnlyList<Part> parts, IReadOnlyList<string> inner, BlockFolders folders, Report report) {
         foreach (var place in parts.Where(p => p.IsBlockPlace)) {
             var hasDllForm = !place.IsGroup && place.IsBlock && place.Children.Count > 0;
-            foreach (var folder in Folders(app.Block, place.Path.Split('/')).Where(f => !inner.Contains(f, StringComparer.OrdinalIgnoreCase))) {
-                if (hasDllForm && !Directory.Exists(BlockPath.In(app.Block, folder))) {
+            var found = folders.Folders.Where(f => f.Pattern == place.Path && !inner.Contains(f.Folder, StringComparer.OrdinalIgnoreCase));
+            foreach (var folder in found.Select(f => f.Folder)) {
+                if (hasDllForm && !Exists(folders, place.Path, folder)) {
                     continue;
                 }
                 Rules.Add(app, report, RuleCodes.EmptyBlockPlace,
@@ -51,23 +59,6 @@ public static class BlockPlaceCheck {
     static bool Overlaps(Part part, string[] inner) =>
         part.Path.Split('/').Zip(inner, FolderMatch.Fits).All(fits => fits);
 
-    static IEnumerable<string> Folders(string block, string[] pattern) {
-        IEnumerable<string> found = [""];
-        foreach (var segment in pattern) {
-            found = segment.StartsWith("{", StringComparison.Ordinal)
-                ? found.SelectMany(folder => Subfolders(block, folder))
-                : found.Select(folder => Join(folder, segment));
-        }
-        return found;
-    }
-
-    static IEnumerable<string> Subfolders(string block, string folder) {
-        var full = BlockPath.In(block, folder);
-        return Directory.Exists(full)
-            ? Directory.GetDirectories(full).Select(Path.GetFileName).Where(name => !BlockPath.IsIgnored(name))
-                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase).Select(name => Join(folder, name))
-            : [];
-    }
-
-    static string Join(string folder, string segment) => folder.Length == 0 ? segment : $"{folder}/{segment}";
+    static bool Exists(BlockFolders folders, string pattern, string folder) =>
+        folders.Folders.Any(f => f.Pattern == pattern && string.Equals(f.Folder, folder, StringComparison.OrdinalIgnoreCase) && f.Exists);
 }

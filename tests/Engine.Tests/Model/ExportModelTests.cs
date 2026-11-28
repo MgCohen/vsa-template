@@ -37,7 +37,7 @@ public sealed class ExportModelTests {
             Assert.That(temp.State.ReadBlock().SnapshotOf("Sample", null), Is.Not.Null);
             Assert.That(File.Exists(temp.State.LibraryFile("Library")), Is.True);
             Assert.That(StatePointer.Read(own.File)?.Folder, Is.EqualTo(temp.State.Folder));
-            Assert.That(Snapshot.Read(File.ReadAllText(own.File)).References[0].Surface, Is.Empty);
+            Assert.That(SnapshotText.Read(File.ReadAllText(own.File)).References[0].Surface, Is.Empty);
         });
     }
 
@@ -60,8 +60,8 @@ public sealed class ExportModelTests {
         await Send(new ExportModelCommand(app, new BinIndex(temp.Block, [], []), temp.State.Folder, list, ReportMode.Warn));
 
         Assert.Multiple(() => {
-            Assert.That(Snapshot.Read(File.ReadAllText(user.File)).References[0].Surface,
-                Is.EqualTo(Surface.Of(Snapshot.Read(File.ReadAllText(used.File)))));
+            Assert.That(SnapshotText.Read(File.ReadAllText(user.File)).References[0].Surface,
+                Is.EqualTo(Surface.Of(SnapshotText.Read(File.ReadAllText(used.File)))));
             Assert.That(File.Exists(old.File), Is.False);
             Assert.That(temp.State.ReadBlock().Snapshots.Select(s => s.Target), Is.EqualTo(new[] { "net8.0", "net8.0" }));
         });

@@ -33,7 +33,7 @@ sealed class DllRun : IDisposable {
         Aliases = [.. FolderAliasConfig.Of(Config, blocks.Current.Folder).Aliases, .. aliases];
         var source = new DllSource();
         Libraries = [.. source.Read(new DllQuery([.. Others.Where(dll => dll.Types.Count > 0).Select(dll => dll.Path)], resolve))
-            .Select(dll => LibraryExport.Of(DllSnapshots.Of([dll], Block)[0], Data.FileMark.Of(Block, dll.Path)))];
+            .Select(dll => LibraryExport.Of(DllSnapshots.Of([dll], Block)[0], DiskFiles.Mark(Block, dll.Path)))];
         State = Data.StateFolder.At(TempFolder.Create());
         foreach (var snapshot in DllSnapshots.Of(source.Read(new DllQuery([.. app.Select(dll => dll.Path)], resolve)), Block)) {
             State.Save(snapshot);
@@ -43,7 +43,7 @@ sealed class DllRun : IDisposable {
         }
         State.Save(DefinitionExport.Of(new ResolvedArchitecture(definition)), BlockExport.Of(State, Input([.. app.Select(dll => dll.Name)]))
             with { Mode = Data.CheckMode.Error });
-        model = new(() => Data.AppModel.Load(State));
+        model = new(() => Data.AppModels.Load(State));
     }
 
     public Architecture Definition { get; }
@@ -74,7 +74,7 @@ sealed class DllRun : IDisposable {
         return Of(bin, tree, (app, loader) => LoadAppHandler.Definition(tree, app, index.Definitions, loader, hasSource).Value, [], []);
     }
 
-    public IReadOnlyList<Finding> Findings() => [.. Data.ModelCheck.Run(State).Findings.Select(CheckModelHandler.Converted)];
+    public IReadOnlyList<Finding> Findings() => [.. Data.StateCheck.Run(State).Findings.Select(CheckModelHandler.Converted)];
 
     public BlockInput Input(IReadOnlyList<string> projects) {
         var resolved = new ResolvedArchitecture(Definition);

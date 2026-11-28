@@ -4,6 +4,22 @@ using Umpire.CheckModel;
 
 public sealed class RuleTests {
     [Test]
+    public void The_block_place_check_takes_its_folders_from_the_given_data_and_reads_no_folder() {
+        using var temp = new TempState();
+        var report = new Report();
+        var place = Samples.Part(Samples.Concept("Pack"), "Packs") with { IsGroup = true, IsBlockPlace = true };
+        var app = temp.Load(Samples.Layers with { Parts = [.. Samples.Layers.Parts, place] });
+        var pattern = BlockPlaceCheck.Patterns(app).Single();
+        var folders = new Umpire.Architecture.BlockFolders([new Umpire.Architecture.PlaceFolder(pattern, "Packs/Ghost", true)]);
+
+        BlockPlaceCheck.Run(app, folders, report);
+
+        Assert.That(Directory.Exists(Path.Combine(temp.Block, "Packs")), Is.False);
+        Assert.That(report.Findings.Select(f => (f.Code, f.File)),
+            Is.EqualTo(new[] { (RuleCodes.EmptyBlockPlace, (string?)Path.Combine(temp.Block, "Packs", "Ghost")) }));
+    }
+
+    [Test]
     public void A_use_that_no_rule_allows_is_a_finding_at_the_line_of_the_use() {
         using var temp = new TempState();
         var report = new Report();
@@ -52,7 +68,7 @@ public sealed class RuleTests {
             Severities = new Dictionary<string, string> { ["UMP020202"] = "warning" },
         });
         temp.State.Save(Snapshot.Of("Sample", [Samples.File("Tools/Clock.cs", Samples.Type("Clock"))]));
-        var app = AppModel.Load(Samples.Layers, temp.State);
+        var app = AppModels.Load(Samples.Layers, temp.State);
 
         LocationCheck.Run(app, app.Types, report);
 

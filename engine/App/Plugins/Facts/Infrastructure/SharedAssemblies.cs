@@ -3,10 +3,11 @@ namespace Facts.Infrastructure;
 using System.Reflection;
 using Facts.Domain.Shared;
 using Umpire.Architecture;
+using Umpire.Utility;
 
 public static class SharedAssemblies {
     static readonly HashSet<string> Names = new(
-        Closure(typeof(Architecture).Assembly).Concat(Closure(typeof(Umpire.Kernels.Module).Assembly)),
+        Closure(typeof(Architecture).Assembly).Concat(Closure(typeof(LoadedTypes).Assembly)),
         StringComparer.OrdinalIgnoreCase);
 
     public static bool Contains(string name) => Names.Contains(name);
