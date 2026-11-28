@@ -20,7 +20,7 @@ Umpire: a framework and a rule engine that check the architecture of an app. Its
 | `tooling/Files/` | Umpire.Files: the one text file writer of the tool (`TextFile.Write`, `TextFile.WriteAllOrNone`). A new file is LF with no BOM. A changed file keeps its BOM and gets its dominant line ending. A library block: the tool bundles the DLL |
 | `tools/bundle/` | The bundle packages `Umpire`, `Umpire.Vsa` (`Vsa/`, project `Umpire.Vsa.Kernel.csproj`), `Umpire.Definition` (`Definition/`), `Umpire.Vsa.Definition` (`VsaDefinition/`), `Umpire.Web`, `Umpire.Console` and `Umpire.Testing`: each one compiles the source files of its source projects into one DLL. They are the shipped runtime and the shipped definition code. `Umpire/build/` holds the build files of each Umpire project (`Umpire.props`, `Umpire.After.targets`, `Umpire.targets`, `Umpire.Codes.props` and the compiler polyfills in `Polyfills~/`: the name ends with `~`, so the engine does not count it as a source folder). `Vsa/build/Umpire.Vsa.props` names the VSA definition for the check. `Engine/` is the package `Umpire.Engine` (the console entry in `tools/net8.0/`, the analyzer entry in `analyzers/dotnet/cs/`). `SourceMode/` is the source mode of this repository, with `Umpire.EngineAnalyzer.targets` (the analyzer items of the entry) |
 | `tests/` | Tests of the framework itself, with fixtures. Does not ship |
-| `docs/` | Architecture decisions, conventions, and guides. The first app is in `docs/getting-started.md`, the terms are in `docs/vocabulary.md`, the kinds of block in `docs/blocks.md`, and the requirements that each design decision about the check system obeys in `docs/requirements.md` |
+| `docs/` | Architecture decisions, conventions, and guides. The first app is in `docs/getting-started.md`, the terms are in `docs/vocabulary.md`, the kinds of block in `docs/blocks.md`, the requirements that each design decision about the check system obeys in `docs/requirements.md`, and the call sites of the public API in `docs/public-api.md` |
 
 The framework groups and their references are in `docs/framework-layout.md`.
 
@@ -185,6 +185,7 @@ The levels, rules and base classes are in `docs/architecture-rules.md`. Use a li
 - Both namespace forms are allowed (block and file-scoped).
 - Add or update tests with every behavior change.
 - Document notable architecture decisions in `docs/`.
+- Before you add or change a public API, compare it with `docs/public-api.md`. If a call site changes, update that file in the same change.
 - Keep this file current when conventions change.
 
 <!-- TODO: stack, build/test commands, slice anatomy, naming rules — fill in as specs land. -->
