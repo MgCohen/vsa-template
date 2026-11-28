@@ -14,12 +14,15 @@ public sealed class EngineConsoleHost : ConsoleHost {
     static readonly string[] JobWords = ["jobs", "build"];
     ReportMode? mismatch;
 
-    public override IServiceProvider Build(string[] args, App app) {
-        if (!HookMismatch.HasNoJobWord(args)) {
-            return base.Build(args, app);
+    public EngineConsoleHost(string[] args) : base(args) {
+    }
+
+    public override IServiceProvider Build(App app) {
+        if (HookMismatch.HasNoJobWord(Args)) {
+            mismatch = HookMismatch.Mode(HostArguments.Read(Args));
+            Args = [.. JobWords];
         }
-        mismatch = HookMismatch.Mode(HostArguments.Read(args));
-        return base.Build([.. JobWords], app);
+        return base.Build(app);
     }
 
     public override void Start(IServiceProvider services, AppStop stop) {

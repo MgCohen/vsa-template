@@ -1,59 +1,59 @@
 # Composition: the app, the pack, the kernel and the hosts
 
-An app starts with one call on all hosts: `new MyApp().Run(args)`. The app class selects one pack. The pack joins the architecture (for the rule engine), the kernel (the install of the architecture) and the host (the platform). All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
+An app starts with one call on all hosts: `await new MyApp().Run(host)`. The app class selects one pack. The entry (`Program.cs`, a Unity shell, a test) selects the host and gives it the arguments. The pack joins the architecture (for the rule engine), the kernel (the install of the architecture) and the host (the platform). All registrations go to `IServiceCollection`, so module code does not know which container the app uses.
 
 ## Startup shape
 
 ```
-App.Run(args)
-├─ Start(args)
-│  ├─ host = CreateHost()
-│  ├─ Services = host.Build(args, this)
-│  │  └─ host.Compose(services, arguments, Kernel, types)
-│  ├─ host.Start(Services, AppStop)          the host work: operation, web, signals
-│  ├─ State = Running
-│  └─ OnStart()
-├─ wait for a stop request
-└─ the stop
-   ├─ State = Stopping
-   ├─ OnStop()
-   ├─ host.Dispose()
-   └─ State = Stopped
+App.Run(host)                                returns an AppInstance
+├─ Services = host.Build(this)
+│  └─ host.Compose(services, arguments, Kernel, types)
+├─ host.Start(Services, AppStop)            the host work: operation, web, signals
+├─ State = Running
+└─ OnStart()
+
+the stop (AppInstance.Stop or AppStop.Request)
+├─ State = Stopping
+├─ OnStop()
+├─ host.Dispose()
+├─ State = Stopped
+└─ AppInstance.Completion gives the exit code
 ```
 
 The calls go one way. The app calls `Build`, `Start` and `Dispose` on the host. The host calls only `Compose` and `AppStop.Request`.
 
 ```csharp
 // App/Program.cs
-return new ShopApp().Run(args);
+return await new ShopApp().Run(new WebHost(args));
 
-// App/ShopApp.cs: the VSA kernel and the web host
-public class ShopApp : App<VsaKernel, WebHost>;
+// App/ShopApp.cs: the VSA kernel
+public class ShopApp : App<VsaKernel>;
 
 // The console host
-public class ToolApp : App<VsaKernel, ConsoleHost>;
+return await new ToolApp().Run(new ConsoleHost(args));
 
 // Custom root services: one host class
-public sealed class ShopHost : WebHost {
+public sealed class ShopHost(string[] args) : WebHost(args) {
     protected override void Configure(IServiceCollection services, AppTypes types) =>
         services.AddSingleton<ShopClock>();
 }
-public class ShopApp : App<VsaKernel, ShopHost>;
+return await new ShopApp().Run(new ShopHost(args));
 ```
 
-The app class file imports `Umpire.Kernels` (`App<TKernel, THost>`), `Umpire.Vsa.Composition` (`VsaKernel`) and the namespace of the host (`Umpire.Hosts.Web` or `Umpire.Hosts.Console`). The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
+The app class file imports `Umpire.Kernels` (`App<TKernel>`) and `Umpire.Vsa.Composition` (`VsaKernel`). `Program.cs` imports the namespace of the host (`Umpire.Hosts.Web` or `Umpire.Hosts.Console`). The concept record `App` is in `Umpire.Architecture.Blocks`, and the app class file does not import that namespace. So `App` in the app class file is the class `Umpire.Kernels.App`.
 
 ## The kernel types
 
 | Type | Package | Job |
 |---|---|---|
-| `IApp` | Umpire.Kernels | `State`, `Services`, `Start`, `Stop`, `Run`. A shell makes the app class through it |
-| `App`, `App<TKernel, THost>` | Umpire.Kernels | The lifecycle of the app, its `Kernel` and `CreateHost()`. `App<TKernel, THost>` makes one kernel, and a new host for each `Start` |
+| `IApp` | Umpire.Kernels | `State` and `Run(host)`. A shell makes the app class through it |
+| `App`, `App<TKernel>` | Umpire.Kernels | The lifecycle of the app and its `Kernel`. `App<TKernel>` makes one kernel |
+| `AppInstance` | Umpire.Kernels | One run of the app: `Completion` (the exit code), `State`, `Stop(exitCode)`, `DisposeAsync()`. `await` gives the exit code |
 | `IAppEntry<TKernel>` | Umpire.Kernels | The entry of an app: the engine and the analyzers read its kernel from it |
 | `Kernel` | Umpire.Kernels | The install point of an architecture: the public `Install` calls the protected `Configure` |
 | `Core` | Umpire.Kernels | The kernel of the core services: `HostArguments`, `AppTypes`, `AppStop`, `[AutoRegister]` |
 | `HostArguments` | Umpire.Kernels | The read-only key/value list of the host arguments. A key is not case-sensitive, and the last value of a key wins |
-| `AppHost` | Umpire.Kernels | The platform: `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
+| `AppHost` | Umpire.Kernels | The platform: its arguments, `Build`, `Start`, `Dispose`, `Compose` (fixed), `Configure` |
 | `AppState` | Umpire.Kernels | `Stopped`, `Running` or `Stopping` |
 | `AppStop` | Umpire.Kernels | A singleton service. `Request(exitCode)` stops the app. The first request gives the exit code |
 | `Operation` | Umpire.Kernels | The message of a host: a name (`{group}/{name}`) and string values. The kernel of the app converts it with its `IOperationConverter` |
@@ -64,7 +64,7 @@ The VSA pack adds `VsaKernel` (`packs/Vsa/Kernel/VsaKernel.cs`), `Plugin` and `P
 
 ## The app class
 
-`umpire new app <Name>` writes `App/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its kernel from the metadata (see "Find the definition" in `architecture-engine.md`). It names no definition. The app class has the lifecycle only. It has no install point.
+`umpire new app <Name>` writes `App/<Name>App.cs`. The app class is the one entry of the app: the runtime starts it, and the rule engine reads its kernel from the metadata (see "Find the definition" in `architecture-engine.md`). It names no definition and no host. The app class has the lifecycle only. It has no install point.
 
 | Member | Default | Override to |
 |---|---|---|
@@ -75,44 +75,44 @@ To add app rules, derive an architecture from `VsaArchitecture`, override `Rules
 
 | Lifecycle member | Use |
 |---|---|
-| `Start(string[] args)` | Builds a new host, starts the host work, calls `OnStart`. Returns |
-| `Stop()` | Stops the app and returns when `State` is `Stopped` |
-| `Run(string[] args)` | `Start`, then waits until `State` is `Stopped`. Gives the exit code |
-| `State` | `Running` from the start of the host work until the stop |
+| `App.Run(AppHost host)` | Builds the services of the host, starts the host work, calls `OnStart`. Returns an `AppInstance` |
+| `AppInstance.Completion` | A `Task<int>` that ends with the exit code when the app stops. `await instance` gives the same value |
+| `AppInstance.Stop(exitCode)` | Stops the app and returns when the run is stopped |
+| `AppInstance.DisposeAsync()` | `Stop()`, then waits for `Completion` |
+| `State` | `Running` from the start of the host work until the stop. `AppInstance.State` is `Stopped` after its own run |
 | `Services` | The services of the running app, else `null` |
 
-A second `Start` or `Run` while the app runs is an error. If the app does not run, `Stop` does nothing. Each `Start` makes a new host, so `Start` after `Stop` starts the app again in the same process.
+A second `Run` while the app runs is an error. A host is for one run: a second `Run` with the same host is an error. A stopped instance does nothing: its `Stop` does not stop the next run. One host is for one run: give a new host to each `Run`, so the app can run again in the same process.
 
 ### One stop path
 
-The app has two stop entries. `App.Stop()` is for the code that owns the app: a Unity shell, `Program.cs`, a test. `AppStop.Request(code)` is for the code inside the app: a module, a handler, a service. Both entries go to the same stop.
+The app has two stop entries. `AppInstance.Stop()` is for the code that owns the run: a Unity shell, `Program.cs`, a test. `AppStop.Request(code)` is for the code inside the app: a module, a handler, a service. Both entries go to the same stop.
 
 ```text
 any source ──► AppStop.Request(code)
                  └─► App posts the stop to the app thread
-                       └─► OnStop ─► host.Dispose ─► State = Stopped
-App.Stop() on the app thread ──► the stop runs inline: no post, no wait
-App.Stop() on another thread ──► request, then wait until Stopped
-Run ──► the stop runs on the thread of Run, after the wait
+                       └─► OnStop ─► host.Dispose ─► State = Stopped ─► Completion
+AppInstance.Stop() on the app thread ──► the stop runs inline: no post, no wait
+AppInstance.Stop() on another thread ──► request, then wait until Stopped
 ```
 
 | App thread | Where the stop runs |
 |---|---|
-| `Start` on a thread with a `SynchronizationContext` | That context. `Start` keeps `SynchronizationContext.Current` |
-| `Start` on a thread with no context | The thread pool |
-| `Run` | The thread of `Run` |
+| `Run` on a thread with a `SynchronizationContext` | That context. `Run` keeps `SynchronizationContext.Current` |
+| `Run` on a thread with no context | The thread pool |
 
+- Do not block a thread with a `SynchronizationContext` on `Completion` (`.Wait()`, `.GetAwaiter().GetResult()`): the stop is posted to that thread, so the wait does not end. Use `await`. `Program.cs` has no context, so `return await` is safe.
 - The inline rule prevents a deadlock. `Stop()` on the Unity main thread does not wait for work that it posted to the main thread.
-- A stop request during `Start`, for example in `OnStart`, runs after `Start` ends.
-- The first request gives the exit code. The app ignores a request of an earlier start.
+- A stop request during `Run`, for example in `OnStart`, runs after `Run` returns.
+- The first request gives the exit code. The app ignores a request of an earlier run.
 - `Stop()` in host work only requests the stop, and returns. The stop waits for the host work, so a wait in `Stop()` is a deadlock. Host work is the console operation and each HTTP request of `WebHost`. Code inside the app uses `AppStop.Request`.
 - `ConsoleHost` runs the operation on the thread pool, so the operation does not continue on the app thread.
-- If `OnStop` or `host.Dispose` throws, `Stop()` gives the error to its caller. A stop on the thread pool also writes the error to the app log. A stop on an app thread gives the error to its `SynchronizationContext`.
+- If `OnStop` or `host.Dispose` throws, `Stop()` gives the error to its caller, and `Completion` ends with the error. A stop on the thread pool also writes the error to the app log. A stop on an app thread gives the error to its `SynchronizationContext`.
 - If the console operation cancels itself, the exit code is 1. A cancel from the stop is not an error.
 
-| Stop source | Exit code of `Run` |
+| Stop source | Exit code of `Completion` |
 |---|---|
-| `App.Stop()` | 0 |
+| `AppInstance.Stop(code)` | `code` (default 0) |
 | `AppStop.Request(code)`, from app code | `code` |
 | The end of the console operation | The exit code of the response |
 | Ctrl+C, or SIGTERM (console and web hosts) | 0 |
@@ -131,45 +131,46 @@ sealed class QuitHandler(AppStop stop) : CommandHandler<QuitCommand, Done> {
 
 ## The hosts
 
-A host is the platform. It builds the services and starts the host work. It does not wait. A host class is also the one place for the custom root services of an app (`Configure`).
+A host is the platform. It keeps its arguments, builds the services and starts the host work. It does not wait. A host class is also the one place for the custom root services of an app (`Configure`).
 
 | Host | Package | Use |
 |---|---|---|
 | `AppHost` | Umpire.Kernels | A `ServiceProvider` with the host arguments. Exposes no operation |
-| `LocalHost` | Umpire.Kernels | Local method calls: `app.Send(request)`. Does no host work |
+| `LocalHost` | Umpire.Kernels | Local method calls: `host.Send(request)`. Does no host work |
 | `ConsoleHost` | Umpire.Hosts.Console | The host arguments bind the request. Runs one request, then `AppStop.Request(exitCode)` |
 | `WebHost` | Umpire.Hosts.Web | ASP.NET Core: one HTTP route for each operation, and the views |
 | `UnityHost` | `vsa-unity` | A Unity app. Its `Configure` adds the Unity `ILoggerFactory` and the main thread `Dispatch` |
 
 | `AppHost` member | Kind | Default |
 |---|---|---|
-| `Build(args, app)` | Virtual | `ServiceCollection`, `Compose` with `Arguments(args)`, `BuildServiceProvider`. Composes only |
+| `AppHost()`, `AppHost(string[] args)` | Constructors | No arguments, or the arguments of the entry. A derived host keeps them in the protected `Args` |
+| `Build(app)` | Virtual | `ServiceCollection`, `Compose` with `Arguments(Args)`, `BuildServiceProvider`. Composes only |
 | `Arguments(args)` | Virtual | `HostArguments.Read(args)`: the Umpire options only, `--Key=Value` and `--Key Value`. The host ignores other arguments |
 | `Start(services, stop)` | Virtual | Nothing. Starts the host work, and sends each stop source to `stop.Request` |
 | `Dispose()` | Virtual | Disposes the provider |
 | `Compose(services, arguments, kernel, types)` | Fixed | See "What Compose does" |
 | `Configure(services, types)` | Virtual | Nothing. The custom root services, last |
-| `Modules` | `init` property | `null`: `AppTypes` finds the modules. A test gives a list |
+| `ModuleProvider` | `init` property | `ScannedModules`: `AppTypes` finds the modules. A test gives a list |
 
 - A host reads the arguments in `Arguments(args)`. The base host reads only `--Key=Value` and `--Key Value`, and it ignores other arguments, for example `-batchmode`, `-logFile path` or a path. So the raw arguments of a Unity player do not stop the start. `ConsoleHost` overrides it: it gives only the arguments from the first option to the base, so the words that select the request are not values.
 - `ConsoleHost.Build` calls the base `Build`, then selects the request from the words before the first option. `ConsoleHost.Start` starts the request and listens for Ctrl+C and SIGTERM.
-- `WebHost.Build` gives `args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It also gives `Arguments(args)` to `Compose`, so `HostArguments` has the same values on each host. ASP.NET Core registers its own `IConfiguration` (`appsettings.json`, environment, `args`), and a web module can use it. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
+- `WebHost.Build` gives `Args` to `WebApplication.CreateBuilder`, and ASP.NET Core reads them. It also gives `Arguments(Args)` to `Compose`, so `HostArguments` has the same values on each host. ASP.NET Core registers its own `IConfiguration` (`appsettings.json`, environment, `args`), and a web module can use it. It builds the `WebApplication` and maps the operations and the views. `WebHost.Start` calls `StartAsync`, connects `ApplicationStopping` to `AppStop`, and listens for Ctrl+C and SIGTERM. `WebHost.Dispose` calls `StopAsync`.
 - `WebHost` turns off the native console lifetime, so only the stop path of the app reacts to Ctrl+C.
 - `AppHost` does no OS work, so a Unity app does not listen for Ctrl+C.
-- Each host has a public constructor with no parameters.
+- Each platform host has a public constructor with no parameters and one with the arguments.
 
 ## LocalHost: local method calls
 
-`LocalHost` is the transport of local method calls. The caller starts the app, then sends requests. `Start` returns when the app is ready to send.
+`LocalHost` is the transport of local method calls. The caller runs the app on the host, then sends requests to the host. `Run` returns when the host is ready to send.
 
 ```csharp
-public class ToolApp<THost> : App<VsaKernel, THost> where THost : AppHost, new();
+public class ToolApp : App<VsaKernel>;
 
-var app = new ToolApp<LocalHost>();
-app.Start([]);
-Result<PingResponse> typed = app.Send(new PingRequest("Ann"));
-IMessageResult untyped = app.Send((object)new PingRequest("Ann"));
-app.Stop();
+var host = new LocalHost();
+var running = new ToolApp().Run(host);
+Result<PingResponse> typed = host.Send(new PingRequest("Ann"));
+IMessageResult untyped = host.Send((object)new PingRequest("Ann"));
+await running.DisposeAsync();
 ```
 
 | Member | Project | Gives |
@@ -177,15 +178,15 @@ app.Stop();
 | `Send(object)`, `SendAsync(object, ct)`, `SendAsync(Operation, ct)` | Umpire.Kernels (`LocalHostApps`) | `IMessageResult`: `Value` (the response), `Error` |
 | `Send(IRequest<T>)`, `SendAsync(IRequest<T>, ct)` | Umpire.Vsa.Composition (`LocalRequests`) | `Result<T>` |
 
-- Each `Send` is an extension method on `App<TKernel, THost>` with `THost : LocalHost`. An app with another host has no `Send`: the compiler refuses the call.
-- The host stays private in `App`. The extensions use the `internal` member `App.RunningHost`, which gives the host only while `State` is `Running`.
+- Each `Send` is an extension method on `LocalHost`. Another host has no `Send`: the compiler refuses the call.
+- The caller keeps the host that it gave to `Run`. The app keeps no public host member.
 - Two requests with one operation name do not stop the start: only an operation with that name gives the error `operation.ambiguous`. A handler of an abstract request accepts each derived request, but an operation cannot name the abstract request.
 - `LocalHost.Start` keeps the operation converter of the services. `Send` checks that the converter accepts the type of the message (a host exposes only requests), and it sends the message through `IMessageHub` in a new service scope. The core reads only `Operation` and the converter, so it knows no VSA type.
-- A message with no operation gives `InvalidOperationException`: "<host> has no operation for <type>. A host exposes only requests". A command has no operation, because a host does not expose commands.
-- A `Send` before `Start` or after `Stop` gives `InvalidOperationException`: "<app> does not run. Call Start before Send."
+- A message with no operation gives `InvalidOperationException`: "<host> does not expose <type>. A host exposes only requests". A command has no operation, because a host does not expose commands.
+- A `Send` before `Run` or after the stop gives `InvalidOperationException`: "<host> does not run. Give it to App.Run before Send."
 - The typed `Send` is more specific than `Send(object)`, so the compiler selects it for a request when the file imports `Umpire.Vsa.Composition`. To read the value of `IMessageResult`, cast `Value` to the response type when `Error` is `null`.
 - The synchronous `Send` waits for the task. The default runner (`InlineRunner`) completes the task on the thread of the caller. If a handler waits for the `SynchronizationContext` of the caller, use `SendAsync`.
-- An app class can keep its host open (`ToolApp<THost>`), and each entry gives the host: `new ToolApp<LocalHost>()` or `new ToolApp<ConsoleHost>()`. The rule engine reads the kernel of such an app class: it refuses only an open kernel argument (`AppClass.KernelsOf`).
+- The app class names no host, so each entry gives its own host to the same app class: `new ToolApp().Run(new LocalHost())` in a test, `new ToolApp().Run(new ConsoleHost(args))` in `Program.cs`. The rule engine refuses only an app class with an open kernel argument (`AppClass.KernelsOf`).
 
 ## What Compose does
 
@@ -221,7 +222,7 @@ A module defines its requests, commands, events, handlers and presenters one tim
 |---|---|---|---|---|---|
 | Definition | Messages, in-process senders | Yes | Yes | Yes | Yes |
 | Definition | Presenters, `PresenterScope`, `LiveScopes` | Yes | Yes | Yes | Yes |
-| Transport | Method call: `app.Send(request)` | No | Yes | No | No |
+| Transport | Method call: `host.Send(request)` | No | Yes | No | No |
 | Transport | Command line: one request | No | No | Yes | No |
 | Transport | HTTP API: one route for each request | No | No | No | Yes |
 | Transport | Views (`ViewsRoot`): Razor components | No | No | No | Yes |
@@ -230,7 +231,7 @@ A module defines its requests, commands, events, handlers and presenters one tim
 Presenter → IRequestSender.SendAsync(request) → RequestHandler<,>             every host
 API client → HTTP /api/{group}/{name} → Operation → RequestConverter → hub → RequestHandler<,>          web host
 Command line → {group} {name} --arg value → Operation → RequestHandler<,>      console host
-Caller → app.Send(request) → Operation → RequestHandler<,>                     local host
+Caller → host.Send(request) → Operation → RequestHandler<,>                     local host
 ```
 
 A request is the message that comes from outside the app. A command is the message between features, so a host does not expose commands. The VSA kernel registers one `RequestConverter`: it maps the name of each operation to a request type, and it binds the values with a binder that it builds one time at start. The hosts read only `Operation` and the converter, so they know no VSA type.
@@ -472,7 +473,7 @@ If the app has one `ViewsRoot`, `WebHost` adds `AddRazorComponents().AddInteract
 
 ```
 framework/Kernel/                      Umpire.Kernels
-  App/                                 App, App<TKernel, THost>, IAppEntry<TKernel>, IApp, AppStop
+  App/                                 App, App<TKernel>, AppInstance, IAppEntry<TKernel>, IApp, AppStop
   Definition/                          Umpire.Kernels.Definition: Architecture<TKernel>, PackArchitecture, the records Core, Module, Pack
   Kernels/                             Kernel, the core step (AutoRegistration), OpenDescriptors
   Operations/                          Operation, IOperationConverter, OperationSends
@@ -595,10 +596,10 @@ Modes = { easy = 1, hard = 5 }
 
 `Umpire.Kernels`, `Umpire.Vsa.Composition`, `Umpire.Architecture`, `Umpire.Kernels.Definition`, `Umpire.Vsa` and all definition layers are portable layers (`UmpirePortableLayer`): they build for `netstandard2.0` only (one build, #301). The transports (Umpire.Hosts.Web, Umpire.Vsa.Views) need ASP.NET Core, and they build for `net9.0` only: Umpire.Hosts.Web calls `MapStaticAssets` (ASP.NET Core 9), and Umpire.Vsa.Views is in the same bundle, `Umpire.Web`. Each package targets the lowest framework that its code needs: see "Runtime targets" in `docs/requirements.md`. The limits of the `netstandard2.0` hosts (for example Unity) and their tests are in `docs/unity.md`.
 
-A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add an `ILoggerFactory` of its platform. Its launcher calls `app.Start(args)` and `app.Stop()`. `Start` keeps the thread of its caller as the app thread, so `AppStop.Request` from any thread stops the app on that thread:
+A host package (for example vsa-unity) gives its own host, which derives `AppHost` and overrides `Configure`, for example to add an `ILoggerFactory` of its platform. Its launcher calls `app.Run(new GameHost(args))` and keeps the `AppInstance`, then calls `instance.Stop()`. `Run` keeps the `SynchronizationContext` of its caller (the Unity main thread), so `AppStop.Request` from any thread stops the app on that thread:
 
 ```csharp
-public sealed class GameHost : AppHost {
+public sealed class GameHost(string[] args) : AppHost(args) {
     protected override void Configure(IServiceCollection services, AppTypes types) {
         services.AddSingleton<ILoggerFactory>(new GameLoggerFactory());
     }
@@ -608,11 +609,11 @@ public sealed class GameHost : AppHost {
 An app that owns its container calls `Compose` and builds the container itself:
 
 ```csharp
-var host = new GameHost();
+var host = new GameHost([]);
 host.Compose(collection, HostArguments.Read(args), new VsaKernel(), new AppTypes(appAssembly: typeof(GameApp).Assembly));
 ```
 
-A bridge to another container (fallback or side by side) gets the provider in the host: `Start(services, stop)` of a custom host. The app class can also read its `protected internal` property `Services`. Other code uses a transport, for example `app.Send(request)` of `LocalHost`.
+A bridge to another container (fallback or side by side) gets the provider in the host: `Start(services, stop)` of a custom host. The app class can also read its `protected internal` property `Services`. Other code uses a transport, for example `host.Send(request)` of `LocalHost`.
 
 ## Non-goals
 

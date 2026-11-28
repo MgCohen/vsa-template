@@ -4,4 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 public interface ITestHost {
     List<Action<IServiceCollection>> Actions { get; }
+
+    string[] Line { get; set; }
 }

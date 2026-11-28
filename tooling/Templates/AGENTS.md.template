@@ -7,7 +7,7 @@ Instructions for AI coding agents (and humans) working in SampleApp. SampleApp u
 | Path             | Purpose                                                              |
 |------------------|----------------------------------------------------------------------|
 | `SampleApp.csproj` | The one root project. It compiles `App/` and `Views/` |
-| `App/`       | The runtime code. `App/Program.cs` calls `new SampleAppApp().Run(args)`. The app class `SampleAppApp : App<VsaKernel, WebHost>` names the kernel and the host. It starts the app, and it finds the modules and the views |
+| `App/`       | The runtime code. `App/Program.cs` calls `await new SampleAppApp().Run(new WebHost(args))`: it gives the host and its arguments. The app class `SampleAppApp : App<VsaKernel>` names the kernel. It starts the app, and it finds the modules and the views |
 | `Views/`     | The Blazor views. Each module has its page in `Views/Pages/`     |
 | `App/Features/<Name>/`| One feature module: its module class, `Domain/`, `Infrastructure/`, `Presenters/` and `Slices/<Slice>/` |
 | `App/Plugins/<Name>/`| One plugin module: a base of the same layers in each module. It has one folder for each layer, and no `Slices/` |

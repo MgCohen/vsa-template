@@ -153,8 +153,8 @@ All Umpire analyzer rules are rules of the code check operation of the engine. T
 ```
 compiler (Roslyn 4.10 or later)
  └─ EngineAnalyzer: compilation start, each file, each named type, compilation end
-     └─ CompileApp: EngineApp<CompileHost>, composed one time for each compiler process (static Lazy)
-         └─ app.Send(CompileJobRequest): the compile job
+     └─ CompileApp: EngineApp on a CompileHost, composed one time for each compiler process (static Lazy)
+         └─ host.SendAsync(CompileJobRequest): the compile job
              ├─ CheckCode: the code rules (CodeRule) on the facts of one file or one type
              └─ CheckTypes: the type checks of the check model (only with a state folder)
 ```
@@ -318,7 +318,7 @@ A validator (`Validator<T>`) in a slice is the optional part `Slice.Validators`,
 
 ## Unit: `VsaUnitTest`
 
-The test starts the app on a `LocalHost`, with no HTTP and no database. `Handle` sends a request with `app.Send(request)`, so the request goes through the operation of the app, its pipeline and its validators. A host does not expose a command, so `Send` runs the command handler with the services of the started app.
+The test starts the app on a `LocalHost`, with no HTTP and no database. `Handle` sends a request with `host.SendAsync(request)`, so the request goes through the operation of the app, its pipeline and its validators. A host does not expose a command, so `Send` runs the command handler with the services of the started app.
 
 ```mermaid
 flowchart LR
@@ -329,7 +329,7 @@ flowchart LR
     C --> S[Services of the app]
 ```
 
-The app of a test is `UnitTestApp<VsaKernel>`, an `App<VsaKernel, UnitTestHost>`, and `UnitTestHost` is a `LocalHost`. The class has an open kernel, so the rule engine does not count it as a check entry of `Umpire.Testing`. Before each test, the base makes new test services with the default fakes and calls `Configure`. At the first `Handle`, `Send`, `Provider`, `Events` or `Repository` call, the base starts the app. The composition installs the core, the kernel and the modules, then the test services. A test service replaces each service of the app with the same service type. An open generic test service, for example `IRepository<,>`, also replaces each closed form of it. After each test, the base stops the app. `LocalHost` makes one scope for each request, so a test reads a singleton from `Provider`, not a scoped service of the request.
+The app of a test is `UnitTestApp<VsaKernel>`, an `App<VsaKernel>` that runs on a `UnitTestHost`, and `UnitTestHost` is a `LocalHost`. The class has an open kernel, so the rule engine does not count it as a check entry of `Umpire.Testing`. Before each test, the base makes new test services with the default fakes and calls `Configure`. At the first `Handle`, `Send`, `Provider`, `Events` or `Repository` call, the base starts the app. The composition installs the core, the kernel and the modules, then the test services. A test service replaces each service of the app with the same service type. An open generic test service, for example `IRepository<,>`, also replaces each closed form of it. After each test, the base stops the app. `LocalHost` makes one scope for each request, so a test reads a singleton from `Provider`, not a scoped service of the request.
 
 `Modules` gives the modules of the app. The default is `ScannedModules`: the modules in the DLLs of the test output, with no test assembly. A test class that must use other modules overrides it, for example `new FixedModules(new GoodModule())`.
 

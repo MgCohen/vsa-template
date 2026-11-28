@@ -6,5 +6,5 @@ using Umpire.Vsa.Composition;
 public sealed class GameLauncher(string name) : Launcher<VsaKernel> {
     public string Name => name;
 
-    sealed class InnerApp : App<VsaKernel, AppHost>;
+    sealed class InnerApp : App<VsaKernel>;
 }

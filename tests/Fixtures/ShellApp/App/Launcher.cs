@@ -7,5 +7,5 @@ public abstract class Launcher<TKernel> : IAppEntry<TKernel> where TKernel : Ker
 
     public IApp App => app;
 
-    sealed class LauncherApp : App<TKernel, AppHost>;
+    sealed class LauncherApp : App<TKernel>;
 }

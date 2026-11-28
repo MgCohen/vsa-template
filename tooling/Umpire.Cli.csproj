@@ -22,7 +22,7 @@
     <AssemblyMetadata Include="UmpireNUnitVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit')->'%(Version)')" />
     <AssemblyMetadata Include="UmpireNUnitAdapterVersion" Value="@(PackageVersion->WithMetadataValue('Identity', 'NUnit3TestAdapter')->'%(Version)')" />
   </ItemGroup>
-  <!-- The tool is a VSA app: UmpireTool<ToolHost> is App<VsaKernel, ToolHost>, and ToolHost is a ConsoleHost. Each command is a
+  <!-- The tool is a VSA app: UmpireTool is App<VsaKernel>, Program.cs runs it on a ToolHost, and ToolHost is a ConsoleHost. Each command is a
        request of a feature module, and the host converts the command line of the tool into that request. The build checks
        this folder as a block (UmpireBlock in Directory.Build.props). -->
   <ItemGroup>

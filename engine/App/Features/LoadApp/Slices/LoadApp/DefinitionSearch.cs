@@ -141,7 +141,7 @@ static class DefinitionSearch {
     static Error? CountError(IReadOnlyList<AppClass> classes) =>
         classes.Count switch {
             0 => new Error(LoadAppCodes.NoAppClass, "The app has no app class. "
-                + "Add one class that inherits App<TKernel, THost>, for example App<VsaKernel, WebHost>, "
+                + "Add one class that inherits App<TKernel>, for example App<VsaKernel>, "
                 + "or a class that implements IAppEntry<TKernel>."),
             > 1 => new Error(LoadAppCodes.ManyAppClasses,
                 $"The app has more than one app class: {Names(classes)}. Keep one, or make one inherit the other."),

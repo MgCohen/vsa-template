@@ -16,7 +16,7 @@ A pack variant is a pack that inherits the architecture of another pack and adds
 ```
 PackVariant/                             app block: app class PackVariantApp, definition EcsArchitecture
 └─ App/                                  the App root
-   ├─ PackVariantApp.cs                  public class PackVariantApp : App<EcsKernel, AppHost>;
+   ├─ PackVariantApp.cs                  public class PackVariantApp : App<EcsKernel>;
    ├─ Features/Inventory/                a feature module
    ├─ EcsFeatures/Combat/                an EcsFeature module
    │  └─ CombatModule.cs, Components/, Systems/

@@ -130,8 +130,8 @@ public sealed class ScaffoldingTests {
         Assert.That(paths, Does.Contain("Views/Pages/Home.razor"));
         Assert.That(paths, Has.None.Contains("Sample"));
         Assert.That(files.Select(f => f.Content), Has.None.Contains("Sample"));
-        Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("return new HelloApp().Run(args);"));
-        Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<VsaKernel, WebHost>;"));
+        Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("return await new HelloApp().Run(new WebHost(args));"));
+        Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("public class HelloApp : App<VsaKernel>;"));
         Assert.That(files.Single(f => f.Path == "App/HelloApp.cs").Content, Does.Contain("namespace Hello.Host;"));
         Assert.That(files.Single(f => f.Path == "App/Program.cs").Content, Does.Contain("using Hello.Host;"));
     }

@@ -13,7 +13,14 @@ public class WebHost : AppHost {
     PosixSignalRegistration? terminate;
     CancellationTokenRegistration stopping;
 
-    public override IServiceProvider Build(string[] args, App app) {
+    public WebHost() {
+    }
+
+    public WebHost(string[] args) : base(args) {
+    }
+
+    public override IServiceProvider Build(App app) {
+        var args = Args;
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddSingleton<IHostLifetime, AppLifetime>();
         var types = TypesOf(app);

@@ -5,14 +5,31 @@ using Umpire.Config;
 
 public class AppHost : IDisposable {
     ServiceProvider? provider;
+    int claimed;
+
+    public AppHost() : this([]) {
+    }
+
+    public AppHost(string[] args) {
+        Args = args ?? throw new ArgumentNullException(nameof(args));
+    }
 
     public IModuleProvider ModuleProvider { get; init; } = new ScannedModules();
 
-    public virtual IServiceProvider Build(string[] args, App app) {
+    protected string[] Args { get; set; }
+
+    public virtual IServiceProvider Build(App app) {
         var services = new ServiceCollection();
-        Compose(services, Arguments(args), app);
+        Compose(services, Arguments(Args), app);
         provider = services.BuildServiceProvider();
         return provider;
+    }
+
+    internal void Claim() {
+        if (Interlocked.Exchange(ref claimed, 1) == 1) {
+            throw new InvalidOperationException(
+                $"{GetType().Name} is for one run only. Give a new host to each App.Run.");
+        }
     }
 
     public virtual void Start(IServiceProvider services, AppStop stop) {

@@ -1,1 +1,1 @@
-return new Shop.Host.ShopApp().Run(args);
+return await new Shop.Host.ShopApp().Run(new Umpire.Kernels.AppHost(args));

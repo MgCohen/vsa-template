@@ -18,6 +18,8 @@ using Umpire.Vsa.Infrastructure;
 public abstract class VsaUnitTest {
     ServiceCollection? services;
     UnitTestApp<VsaKernel>? app;
+    UnitTestHost? host;
+    AppInstance? running;
 
     protected IServiceCollection Services => services ?? throw new InvalidOperationException("The services exist only in a test.");
 
@@ -39,8 +41,10 @@ public abstract class VsaUnitTest {
 
     [TearDown]
     public void DisposeServices() {
-        var stopping = app;
+        var stopping = running;
         app = null;
+        host = null;
+        running = null;
         stopping?.Stop();
     }
 
@@ -59,7 +63,8 @@ public abstract class VsaUnitTest {
     protected Task<Result<TResponse>> Handle<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
         where TResponse : IResponse {
         ArgumentNullException.ThrowIfNull(request);
-        return Started().SendAsync(request, ct);
+        Started();
+        return host!.SendAsync(request, ct);
     }
 
     protected async Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) {
@@ -78,8 +83,10 @@ public abstract class VsaUnitTest {
         }
         var all = services ?? throw new InvalidOperationException("The services exist only in a test.");
         all.MakeReadOnly();
-        var started = new UnitTestApp<VsaKernel>(all, Modules);
-        started.Start([]);
+        var started = new UnitTestApp<VsaKernel>();
+        var testHost = new UnitTestHost { TestServices = all, ModuleProvider = Modules };
+        running = started.Run(testHost);
+        host = testHost;
         return app = started;
     }
 

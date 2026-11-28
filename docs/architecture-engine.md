@@ -661,7 +661,7 @@ The app class names its kernel and its host, and the definition names its kernel
 | 2 | The architecture that a check entry of the block folder names | `umpire.architecture = "..."` |
 | 3 | The definition of the kernel: the base-most `Architecture<TKernel>` class for the kernel of the app | `VsaArchitecture` for `VsaKernel` |
 
-- The app class is the one most derived closed class that implements `IAppEntry<TKernel>` (`App<TKernel, THost>` does). A launcher, for example a Unity shell with a private app class, is an app class too.
+- The app class is the one most derived closed class that implements `IAppEntry<TKernel>` (`App<TKernel>` does). A launcher, for example a Unity shell with a private app class, is an app class too.
 - If no definition names the kernel of the app, the engine searches the base classes of that kernel, the nearest first.
 - The definition of steps 1 and 2 must name the kernel of the app, or the kernel that step 3 finds. Else the engine gives `UMP030507`.
 - A definition is in its own check-time DLL. The package `Umpire` builds each nested project `Definition/*.csproj` before the project around it, with no reference to its assembly. In package mode, it restores that project first (`_UmpireRestoreAddedReferences`), because the first restore of the project around it does not import the package files. It copies the DLL, the PDB and each DLL that only the definition uses (not the `System.*`, `Microsoft.Extensions.*` and `Microsoft.AspNetCore.*` DLLs) to the folder `umpire-definitions/` of the output. The engine reads that folder as a part of the bin, and `dotnet publish` does not copy it.
@@ -719,7 +719,7 @@ A block is a folder tree of code with one check entry. The check entry names the
 
 | Form | Example | Block folder |
 |---|---|---|
-| App class | `NotesApp : App<VsaKernel, WebHost>` | The project folder of its assembly |
+| App class | `NotesApp : App<VsaKernel>` | The project folder of its assembly |
 | Definition of a kernel | `VsaArchitecture` in `packs/Vsa/Definition/` | The folder around `Definition/` |
 | Typed base | `public class ToolsBlock : Block<ToolsArchitecture>` | The folder of the source file of each concrete subclass |
 | `AssemblyMetadata` | `<AssemblyMetadata Include="Umpire.Architecture" Value="Umpire.Vsa.Definition.VsaArchitecture, Umpire.Vsa.Definition" />` | The project folder of the assembly. `<AssemblyMetadata Include="Umpire.Root" Value=".." />` moves it, relative to the project folder |
@@ -760,13 +760,13 @@ After it finds the block, the operation `FindBlocks` reads the `.csproj` files o
 
 ## The compile job
 
-The analyzer entry (`engine/Entries/Analyzer/`) runs the compile job in the compiler. It composes `EngineApp<CompileHost>` one time for each compiler process, and it sends one request for each stage of a compilation.
+The analyzer entry (`engine/Entries/Analyzer/`) runs the compile job in the compiler. It runs `EngineApp` on a `CompileHost` one time for each compiler process, and it sends one request for each stage of a compilation.
 
 ```csharp
-static readonly Lazy<EngineApp<CompileHost>> Running = new(Start, LazyThreadSafetyMode.ExecutionAndPublication);
+static readonly Lazy<CompileHost> Running = new(Start, LazyThreadSafetyMode.ExecutionAndPublication);
 
-public static CompileJobReport Send(CompileJobRequest request) {
-    var result = Running.Value.Send(request);
+public static CompileJobReport Send(CompileJobRequest request, CancellationToken cancellation) {
+    var result = Running.Value.SendAsync(request, cancellation).GetAwaiter().GetResult();
     return result.IsSuccess ? result.Value : throw new InvalidOperationException(...);
 }
 ```
@@ -823,7 +823,7 @@ The console report (`ConsoleReport`) sorts the findings: the findings with no fi
 
 ## Tests of a definition
 
-A consumer tests its own definition with the base `ArchitectureTest<TArchitecture>` (`packs/Vsa/Tests/Unit/`, in `Umpire.Testing`). It asks the queries of the engine core, so its project and the package `Umpire.Testing` compile a copy of the query files, and the definition package does not depend on the engine. The base does not send a job to `EngineApp<LocalHost>`. Reason: a job needs a built block, a bin and the loader of the definition, and the loader is an `AssemblyLoadContext` in the console entry only. A test of a definition has only a type and a folder. The queries are the code of the engine, so the test base has no copy of the rules. A test names a type and a folder of the block. The base binds the type to a part, and it gives the decision of a use. A VSA app uses `VsaArchitectureTest` (`Umpire.Vsa.Testing.Unit`), with the folder helpers `Feature`, `Slice` and `Plugin`.
+A consumer tests its own definition with the base `ArchitectureTest<TArchitecture>` (`packs/Vsa/Tests/Unit/`, in `Umpire.Testing`). It asks the queries of the engine core, so its project and the package `Umpire.Testing` compile a copy of the query files, and the definition package does not depend on the engine. The base does not send a job to an `EngineApp` on a `LocalHost`. Reason: a job needs a built block, a bin and the loader of the definition, and the loader is an `AssemblyLoadContext` in the console entry only. A test of a definition has only a type and a folder. The queries are the code of the engine, so the test base has no copy of the rules. A test names a type and a folder of the block. The base binds the type to a part, and it gives the decision of a use. A VSA app uses `VsaArchitectureTest` (`Umpire.Vsa.Testing.Unit`), with the folder helpers `Feature`, `Slice` and `Plugin`.
 
 ```csharp
 public sealed class NotesArchitectureTests : VsaArchitectureTest {

@@ -26,7 +26,7 @@ public sealed class ConsoleHostTests {
 
     [Test]
     public void A_response_with_no_exit_code_gives_exit_code_zero() =>
-        Assert.That(new TestApp<TestConsoleHost>(new QuietModule()).Run(["quiet", "--code", "7"]), Is.Zero);
+        Assert.That(new TestApp<TestConsoleHost>(new QuietModule()).RunToEnd("quiet", "--code", "7"), Is.Zero);
 
     [Test]
     public void A_missing_parameter_gives_exit_code_one() =>
@@ -75,15 +75,15 @@ public sealed class ConsoleHostTests {
 
     [Test]
     public void The_name_on_the_command_line_selects_the_request() =>
-        Assert.That(TwoRequests().Run(["quiet", "--code", "7"]), Is.Zero);
+        Assert.That(TwoRequests().RunToEnd("quiet", "--code", "7"), Is.Zero);
 
     [Test]
     public void The_group_and_the_name_on_the_command_line_select_the_request() =>
-        Assert.That(TwoRequests().Run(["greet", "greet", "--name", "Ann", "--code", "4"]), Is.EqualTo(4));
+        Assert.That(TwoRequests().RunToEnd("greet", "greet", "--name", "Ann", "--code", "4"), Is.EqualTo(4));
 
     static TestApp<TestConsoleHost> TwoRequests() => new(new GreetModule(), new QuietModule());
 
-    static int Run(params string[] args) => new TestApp<TestConsoleHost>(new GreetModule()).Run(args);
+    static int Run(params string[] args) => new TestApp<TestConsoleHost>(new GreetModule()).RunToEnd(args);
 
     public sealed class QuietModule : Module;
 

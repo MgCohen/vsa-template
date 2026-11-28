@@ -1,3 +1,4 @@
+using Umpire.Hosts.Web;
 using Notes.Host;
 
-return new NotesApp().Run(args);
+return await new NotesApp().Run(new WebHost(args));

@@ -1,3 +1,3 @@
 using UmpireEngine;
 
-return new EngineApp<EngineConsoleHost>().Run(args);
+return await new EngineApp().Run(new EngineConsoleHost(args));

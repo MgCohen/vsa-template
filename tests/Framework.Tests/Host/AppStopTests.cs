@@ -12,7 +12,7 @@ public sealed class AppStopTests {
     [Test]
     public void A_stop_request_stops_a_started_app() {
         var app = new StopApp();
-        app.Start([]);
+        app.Start();
 
         app.Services!.GetRequiredService<AppStop>().Request(4);
 
@@ -24,14 +24,14 @@ public sealed class AppStopTests {
     public void A_stop_request_in_OnStart_ends_Run_with_its_exit_code() {
         var app = new StopApp { RequestOnStart = 6 };
 
-        Assert.That(app.Run([]), Is.EqualTo(6));
+        Assert.That(app.RunToEnd(), Is.EqualTo(6));
         Assert.That(app.State, Is.EqualTo(AppState.Stopped));
     }
 
     [Test]
     public void Only_the_first_stop_request_gives_the_exit_code() {
         var app = new StopApp();
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         WaitUntilRunning(app, run);
         var stop = app.Services!.GetRequiredService<AppStop>();
 
@@ -47,7 +47,7 @@ public sealed class AppStopTests {
         var context = new QueueContext();
         using var appThread = context.Enter();
         var app = new StopApp();
-        app.Start([]);
+        app.Start();
 
         Task.Run(() => app.Services!.GetRequiredService<AppStop>().Request()).Wait(limit);
         var beforeThePost = app.State;
@@ -63,7 +63,7 @@ public sealed class AppStopTests {
         var context = new QueueContext();
         using var appThread = context.Enter();
         var app = new StopApp();
-        app.Start([]);
+        app.Start();
 
         app.Stop();
 
@@ -76,7 +76,7 @@ public sealed class AppStopTests {
         var context = new QueueContext();
         using var appThread = context.Enter();
         var app = new StopApp();
-        app.Start([]);
+        app.Start();
 
         var stop = Task.Run(app.Stop);
         var deadline = DateTime.UtcNow + limit;
@@ -96,7 +96,7 @@ public sealed class AppStopTests {
         using var appThread = context.Enter();
         var app = new StopApp { RequestOnStart = 0 };
 
-        app.Start([]);
+        app.Start();
         var afterStart = app.State;
         context.RunPending();
 
@@ -107,10 +107,10 @@ public sealed class AppStopTests {
     [Test]
     public void A_stop_request_of_an_earlier_start_does_not_stop_the_app() {
         var app = new StopApp();
-        app.Start([]);
+        app.Start();
         var earlier = app.Services!.GetRequiredService<AppStop>();
         app.Stop();
-        app.Start([]);
+        app.Start();
 
         earlier.Request();
 
@@ -121,7 +121,7 @@ public sealed class AppStopTests {
     [Test]
     public void An_app_with_the_base_host_does_not_listen_for_Ctrl_C() {
         var app = new StopApp();
-        app.Start([]);
+        app.Start();
 
         AppSignals.InterruptAllListeners();
 
@@ -132,7 +132,7 @@ public sealed class AppStopTests {
     [Test]
     public void Ctrl_C_stops_a_started_web_app() {
         var app = WebApps.OnTestServer();
-        app.Start([]);
+        app.RunOnTestServer();
 
         AppSignals.InterruptAllListeners();
 
@@ -142,7 +142,7 @@ public sealed class AppStopTests {
     [Test]
     public void Ctrl_C_ends_the_run_of_a_web_app() {
         var app = WebApps.OnTestServer();
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         WaitUntilRunning(app, run);
 
         AppSignals.InterruptAllListeners();
@@ -154,7 +154,7 @@ public sealed class AppStopTests {
     [Test]
     public void StopApplication_stops_a_started_web_app() {
         var app = WebApps.OnTestServer();
-        app.Start([]);
+        app.RunOnTestServer();
 
         app.Services!.GetRequiredService<IHostApplicationLifetime>().StopApplication();
 
@@ -164,7 +164,7 @@ public sealed class AppStopTests {
     [Test]
     public void StopApplication_ends_the_run_of_a_web_app() {
         var app = WebApps.OnTestServer();
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         WaitUntilRunning(app, run);
 
         app.Services!.GetRequiredService<IHostApplicationLifetime>().StopApplication();
@@ -176,7 +176,7 @@ public sealed class AppStopTests {
     [Test]
     public void A_stop_request_ends_the_run_of_a_web_app_with_its_exit_code() {
         var app = WebApps.OnTestServer();
-        var run = Task.Run(() => app.Run([]));
+        var run = Task.Run(() => app.RunToEnd());
         WaitUntilRunning(app, run);
 
         app.Services!.GetRequiredService<AppStop>().Request(9);
@@ -189,7 +189,7 @@ public sealed class AppStopTests {
     public void An_OnStop_error_in_a_stop_on_the_thread_pool_goes_to_the_log() {
         using var logs = new CapturedLogs();
         var app = new StopApp(() => new LogHost(logs) { ModuleProvider = new FixedModules() }) { ThrowOnStop = true };
-        Task.Run(() => app.Start([])).Wait(limit);
+        Task.Run(() => app.Start()).Wait(limit);
 
         app.Services!.GetRequiredService<AppStop>().Request();
 
@@ -200,7 +200,7 @@ public sealed class AppStopTests {
     [Test]
     public void An_OnStop_error_goes_to_the_caller_of_Stop() {
         var app = new StopApp { ThrowOnStop = true };
-        app.Start([]);
+        app.Start();
 
         var error = Assert.Throws<InvalidOperationException>(app.Stop);
 

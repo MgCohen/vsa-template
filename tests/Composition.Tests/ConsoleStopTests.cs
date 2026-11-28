@@ -14,7 +14,7 @@ public sealed class ConsoleStopTests {
     public void The_end_of_the_operation_stops_a_started_console_app() {
         var app = new TestApp<TestConsoleHost>(new GreetModule());
 
-        app.Start(["--name", "Ann", "--code", "3"]);
+        app.Start("--name", "Ann", "--code", "3");
 
         Assert.That(StopsInTime(app), Is.True);
     }
@@ -22,7 +22,7 @@ public sealed class ConsoleStopTests {
     [Test]
     public void Ctrl_C_stops_a_started_console_app_and_cancels_the_operation() {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
-        app.Start(["wait"]);
+        app.Start("wait");
 
         AppSignals.InterruptAllListeners();
 
@@ -32,7 +32,7 @@ public sealed class ConsoleStopTests {
     [Test]
     public void Ctrl_C_ends_the_run_of_a_console_app_with_exit_code_zero() {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
-        var run = Task.Run(() => app.Run(["wait"]));
+        var run = Task.Run(() => app.RunToEnd("wait"));
         var deadline = DateTime.UtcNow + limit;
         while (app.State != AppState.Running && !run.IsCompleted && DateTime.UtcNow < deadline) {
             Thread.Sleep(5);
@@ -47,7 +47,7 @@ public sealed class ConsoleStopTests {
     [Test]
     public void A_host_that_cancels_on_a_signal_ends_the_run_with_the_exit_code_of_the_operation() {
         var app = new TestApp<SignalConsoleHost>(new WaitModule());
-        var run = Task.Run(() => app.Run(["child"]));
+        var run = Task.Run(() => app.RunToEnd("child"));
         var deadline = DateTime.UtcNow + limit;
         while (!ChildHandler.Waiting && !run.IsCompleted && DateTime.UtcNow < deadline) {
             Thread.Sleep(5);
@@ -62,7 +62,7 @@ public sealed class ConsoleStopTests {
     [Test]
     public void A_host_that_cancels_on_a_signal_ends_with_exit_code_zero_if_the_operation_throws_the_cancel() {
         var app = new TestApp<SignalConsoleHost>(new WaitModule());
-        var run = Task.Run(() => app.Run(["wait"]));
+        var run = Task.Run(() => app.RunToEnd("wait"));
         var deadline = DateTime.UtcNow + limit;
         while (app.State != AppState.Running && !run.IsCompleted && DateTime.UtcNow < deadline) {
             Thread.Sleep(5);
@@ -77,7 +77,7 @@ public sealed class ConsoleStopTests {
     [Test]
     public void Stop_of_a_started_console_app_cancels_the_operation() {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
-        app.Start(["wait"]);
+        app.Start("wait");
 
         Assert.That(Task.Run(app.Stop).Wait(limit), Is.True);
         Assert.That(app.State, Is.EqualTo(AppState.Stopped));
@@ -88,7 +88,7 @@ public sealed class ConsoleStopTests {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
         HaltHandler.App = app;
 
-        var run = Task.Run(() => app.Run(["halt"]));
+        var run = Task.Run(() => app.RunToEnd("halt"));
 
         Assert.That(run.Wait(limit), Is.True);
         Assert.That(run.Result, Is.Zero);
@@ -100,7 +100,7 @@ public sealed class ConsoleStopTests {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
         HaltHandler.App = app;
 
-        app.Start(["halt"]);
+        app.Start("halt");
 
         Assert.That(StopsInTime(app), Is.True);
     }
@@ -109,7 +109,7 @@ public sealed class ConsoleStopTests {
     public void A_cancellation_of_the_operation_itself_ends_the_run_with_exit_code_one() {
         var app = new TestApp<TestConsoleHost>(new WaitModule());
 
-        var run = Task.Run(() => app.Run(["abort"]));
+        var run = Task.Run(() => app.RunToEnd("abort"));
 
         Assert.That(run.Wait(limit), Is.True);
         Assert.That(run.Result, Is.EqualTo(1));
@@ -160,12 +160,15 @@ public sealed class ConsoleStopTests {
     public sealed record HaltRequest : IRequest<WaitResponse>;
 
     public sealed class HaltHandler : RequestHandler<HaltRequest, WaitResponse> {
-        public static IApp? App { get; set; }
+        public static TestApp<TestConsoleHost>? App { get; set; }
 
         public static bool StopReturned { get; private set; }
 
         public override Task<Result<WaitResponse>> HandleAsync(IEnvelope<HaltRequest> envelope) {
             StopReturned = false;
+            if (!SpinWait.SpinUntil(() => App!.Running is not null, TimeSpan.FromSeconds(10))) {
+                throw new TimeoutException("The run did not return its instance.");
+            }
             App!.Stop();
             StopReturned = true;
             return Task.FromResult<Result<WaitResponse>>(new WaitResponse());
