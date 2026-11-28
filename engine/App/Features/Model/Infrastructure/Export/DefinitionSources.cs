@@ -1,5 +1,6 @@
 namespace Umpire.CheckModel.Export;
 
+using Facts.Infrastructure;
 using Api = Umpire.Architecture;
 
 public static class DefinitionSources {
@@ -14,7 +15,7 @@ public static class DefinitionSources {
         var files = sources.Values.Select(Path.GetFullPath).Where(file => folders.Any(f => BlockPath.IsUnder(f, file)) && File.Exists(file));
         return [.. types.Select(type => Mark(type, block, sources))
             .Concat(files.Select(file => Mark(file, (packed ?? resolved.Architecture.GetType()).Assembly.Location, block)))
-            .Concat(folders.Distinct().Select(folder => FileMark.Of(block, folder)))
+            .Concat(folders.Distinct().Select(folder => DiskFiles.Mark(block, folder)))
             .GroupBy(mark => mark.Path)
             .Select(group => group.FirstOrDefault(mark => mark.Hash == FileMark.Unknown) ?? group.First())
             .OrderBy(mark => mark.Path, StringComparer.Ordinal)];
@@ -23,13 +24,13 @@ public static class DefinitionSources {
     static FileMark Mark(Type type, string block, IReadOnlyDictionary<string, string> sources) {
         var dll = type.Assembly.Location;
         if (SourceOf(type, sources) is not { } file) {
-            return FileMark.Of(block, dll);
+            return DiskFiles.Mark(block, dll);
         }
         return Mark(file, dll, block);
     }
 
     static FileMark Mark(string file, string dll, string block) {
-        var mark = FileMark.Of(block, file);
+        var mark = DiskFiles.Mark(block, file);
         return File.GetLastWriteTimeUtc(file) > File.GetLastWriteTimeUtc(dll) ? mark with { Hash = FileMark.Unknown, Modified = 0 } : mark;
     }
 

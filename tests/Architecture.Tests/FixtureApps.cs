@@ -47,7 +47,7 @@ static class FixtureApps {
             state.Save(snapshot);
         }
         var libraries = source.Read(new DllQuery([.. named.Select(d => d.Path)], resolve, options?.SourceRoot))
-            .Select(dll => LibraryExport.Of(DllSnapshots.Of([dll], blockFolder)[0], FileMark.Of(blockFolder, dll.Path))).ToList();
+            .Select(dll => LibraryExport.Of(DllSnapshots.Of([dll], blockFolder)[0], DiskFiles.Mark(blockFolder, dll.Path))).ToList();
         foreach (var library in libraries) {
             state.SaveLibrary(library);
         }

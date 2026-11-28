@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class MethodLengthRule : LimitRule {
+sealed class MethodLengthRule : LimitRule {
     public override int Number => 2;
 
     public override string Title => "A method has at most the maximum number of lines";

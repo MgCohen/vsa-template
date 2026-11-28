@@ -1,5 +1,6 @@
 namespace EngineCore.Tests;
 
+using Facts.Infrastructure;
 using Umpire.Architecture;
 
 public record Tool : Concept {
@@ -116,21 +117,21 @@ public sealed class BlockPlaceTests {
     [Test]
     public void A_place_with_no_block_is_a_problem() {
         Directory.CreateDirectory(Path.Combine(block, "Tools"));
-        var empty = Resolved().EmptyPlaces(block, []);
+        var empty = Empty(Resolved(), []);
 
         Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Tools") }));
     }
 
     [Test]
     public void A_place_with_no_folder_and_no_body_is_a_problem() {
-        var empty = Resolved().EmptyPlaces(block, []);
+        var empty = Empty(Resolved(), []);
 
         Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Tools") }));
     }
 
     [Test]
     public void A_place_of_a_block_with_a_body_and_no_folder_is_the_DLL_form_and_no_problem() {
-        Assert.That(new ResolvedArchitecture(new BodyPlaceArchitecture()).EmptyPlaces(block, []), Is.Empty);
+        Assert.That(Empty(new ResolvedArchitecture(new BodyPlaceArchitecture()), []), Is.Empty);
     }
 
     [Test]
@@ -139,7 +140,7 @@ public sealed class BlockPlaceTests {
             Directory.CreateDirectory(Path.Combine(block, "Packs", folder));
         }
 
-        var empty = Resolved().EmptyPlaces(block, Inner("Tools", "Packs/Alpha"));
+        var empty = Empty(Resolved(), Inner("Tools", "Packs/Alpha"));
 
         Assert.That(empty.Select(e => e.Folder), Is.EqualTo(new[] { Path.Combine(block, "Packs", "Beta") }));
     }
@@ -157,6 +158,9 @@ public sealed class BlockPlaceTests {
 
     TypeFacts Fact(string folder, string name) =>
         new($"App.{name}", name, "App", new Source(Path.Combine(block, folder, name + ".cs"), 1), [], [], [], []);
+
+    IReadOnlyList<BlockPlace> Empty(ResolvedArchitecture resolved, IReadOnlyList<string> inner) =>
+        resolved.EmptyPlaces(block, inner, new BlockFolderSource().Read(new BlockFolderQuery(block, resolved.BlockPlaceFolders())));
 
     IReadOnlyList<string> Inner(params string[] folders) => [.. folders.Select(f => Path.Combine(block, f))];
 

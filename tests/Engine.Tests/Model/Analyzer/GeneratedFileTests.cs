@@ -19,7 +19,7 @@ public sealed class GeneratedFileTests {
         var facts = new ProjectFacts(compilation, build.Block, build.Block);
         build.State.Save(facts.Full());
 
-        var type = AppModel.Load(build.State).Types.Single();
+        var type = AppModels.Load(build.State).Types.Single();
 
         Assert.That(type.Files, Has.Count.EqualTo(2));
         Assert.That(BlockPath.Of(build.Block, type.File), Is.EqualTo("Data/Store.cs"));

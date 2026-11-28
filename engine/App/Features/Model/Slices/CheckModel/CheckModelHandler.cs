@@ -1,23 +1,25 @@
 namespace Model.Slices.CheckModel;
 
+using Facts.Infrastructure;
 using Operations.Domain.Shared;
 using Umpire.CheckModel;
 using Umpire.Config;
 using Umpire.Messages.Contracts;
 using Umpire.Vsa.Handlers.Commands;
+using BlockFolders = Umpire.Architecture.BlockFolders;
 using ModelFinding = Umpire.CheckModel.Finding;
 
-sealed class CheckModelHandler : CommandHandler<CheckModelCommand, CheckModelResult> {
+sealed class CheckModelHandler(IFactSource<BlockFolderQuery, BlockFolders> folders) : CommandHandler<CheckModelCommand, CheckModelResult> {
     public override Task<Result<CheckModelResult>> HandleAsync(IEnvelope<CheckModelCommand> envelope) =>
         Task.FromResult<Result<CheckModelResult>>(Check(envelope.Message));
 
-    static CheckModelResult Check(CheckModelCommand command) {
+    CheckModelResult Check(CheckModelCommand command) {
         CheckMode? given = command.Mode is { } mode ? mode == ReportMode.Error ? CheckMode.Error : CheckMode.Warn : null;
         StateFolder? state = null;
         Report report;
         try {
             state = StateOf(command);
-            report = ModelCheck.Run(state, given);
+            report = StateCheck.Run(state, folders, given);
         } catch (Exception e) when (e is not OperationCanceledException) {
             report = new Report();
             report.Fail($"{e.GetType().Name}: {e.Message}");

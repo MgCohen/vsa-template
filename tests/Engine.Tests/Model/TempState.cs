@@ -14,7 +14,7 @@ sealed class TempState : IDisposable {
     public AppModel Load(Definition definition, params FileFacts[] files) {
         State.Save(Samples.Settings("Sample"));
         State.Save(Snapshot.Of("Sample", files));
-        return AppModel.Load(definition, State);
+        return AppModels.Load(definition, State);
     }
 
     public void Dispose() => Directory.Delete(Block, recursive: true);

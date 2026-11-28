@@ -9,11 +9,4 @@ public sealed class LoadedTypesTests {
 
         Assert.That(LoadedTypes.Of(assembly), Is.EquivalentTo(assembly.GetTypes()));
     }
-
-    [TestCase("<>c", true)]
-    [TestCase("<Main>$", true)]
-    [TestCase("Invoice", false)]
-    public void A_type_name_that_starts_with_an_angle_bracket_is_compiler_generated(string name, bool generated) {
-        Assert.That(LoadedTypes.IsCompilerGenerated(name), Is.EqualTo(generated));
-    }
 }

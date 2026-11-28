@@ -19,7 +19,7 @@ sealed class ProjectTrust {
         old = new(FindOld);
     }
 
-    public bool AreAllSure => missing.Count == 0 && old.Value.Count == 0 && !SourceFiles.HasNew(app);
+    public bool AreAllSure => missing.Count == 0 && old.Value.Count == 0 && !app.Files.HasNewSources(app);
 
     public bool IsSure(string assembly) => !missing.Contains(assembly)
         && (known.Contains(assembly) ? assembly == snapshots.Current?.Project || !old.Value.Contains(assembly) : !hasUnknownState);
@@ -30,13 +30,13 @@ sealed class ProjectTrust {
     static HashSet<string> Names(IEnumerable<string> names) => new(names, StringComparer.OrdinalIgnoreCase);
 
     HashSet<string> FindOld() {
-        var found = Names(snapshots.Libraries.Where(l => l.Snapshot.Source?.IsCurrent(app.Block) != true).Select(l => l.Snapshot.Project));
+        var found = Names(snapshots.Libraries.Where(l => !Freshness.IsCurrent(l.Snapshot.Source, app.Block, app.Files)).Select(l => l.Snapshot.Project));
         var saved = snapshots.Saved;
         var surfaces = snapshots.Own.Concat(saved).Distinct().ToDictionary(
             s => s.Snapshot.Project, s => new Lazy<string>(() => Surface.Of(s.Snapshot)), StringComparer.OrdinalIgnoreCase);
-        var hasNew = saved.Count > 0 && SourceFiles.HasNew(app);
+        var hasNew = saved.Count > 0 && app.Files.HasNewSources(app);
         foreach (var project in saved) {
-            if (hasNew || Freshness.OldFiles(project).Any() || project.Snapshot.References.Any(r =>
+            if (hasNew || Freshness.OldFiles(project, app.Files).Any() || project.Snapshot.References.Any(r =>
                 missing.Contains(r.Name) || surfaces.TryGetValue(r.Name, out var surface) && surface.Value != r.Surface)) {
                 found.Add(project.Snapshot.Project);
             }

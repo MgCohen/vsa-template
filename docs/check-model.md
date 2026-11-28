@@ -18,8 +18,10 @@ flowchart LR
 
 | Part | Folder | Contains |
 |---|---|---|
-| Model domain | `engine/App/Features/Model/Domain/` | Data, app model, state files, report, model rules (`Rules/`, run by `ModelCheck`). Namespace `Umpire.CheckModel` |
-| Export | `engine/App/Features/Model/Domain/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export` |
+| Snapshot facts | `engine/App/Plugins/Facts/Domain/Shared/Snapshot/` | The records of a snapshot, `TypeName`, `FileMark`, `BlockPath`, `Surface` and the JSON writer: the published domain of the Facts plugin, because the analyzer entry makes them. Namespace `Umpire.CheckModel` |
+| Model domain | `engine/App/Features/Model/Domain/` | The definition data, the block settings, the app model, the report, the JSON reader (`SnapshotText.Read`) and the model rules (`Rules/`, run by `ModelCheck`). No file I/O: the app model asks `IFileState` if a file is current or if the block has new source files. Namespace `Umpire.CheckModel` |
+| State files | `engine/App/Features/Model/Infrastructure/Files/` | The file I/O of the check model: `StateFolder`, `StateFile`, `StatePointer`, `SnapshotCache`, `SnapshotList`, `SnapshotFiles`, `SourceFiles`, the loader of the app model (`AppModels.Load`, `SnapshotLoad`), `DiskState` (the `IFileState` of the disk) and `StateCheck` (it loads the state and runs `ModelCheck` for each target). `DiskFiles` (Facts `Infrastructure/`) makes the marks and the hashes of the files. Namespace `Umpire.CheckModel` |
+| Export | `engine/App/Features/Model/Domain/Export/` and `engine/App/Features/Model/Infrastructure/Export/` | The definition, block and library files. Namespace `Umpire.CheckModel.Export`. The code that reads the definition API (`DefinitionExport`, `DefinitionSources`, `TraitExport`) and the code that writes the block file (`BlockExport`, `BlockInput`) is in `Infrastructure/` |
 | ExportModel operation | `engine/App/Features/Model/Slices/ExportModel/` | Writes the state files in the build job and the check job |
 | CheckModel operation | `engine/App/Features/Model/Slices/CheckModel/` | Checks all types from the state, after ExportModel or with `jobs check --model true` |
 | CheckTypes operation | `engine/App/Features/Model/Slices/CheckTypes/` | The checks of each type in a compile (the compile job) |
@@ -61,14 +63,14 @@ The facts of a type are complete: no check reads the code again. A partial type 
 
 ## App model and model rules
 
-`AppModel.Load(state)` joins the definition and the snapshots, and nothing saves the result. A type gets its part from its file. A type with no part of its own in a shared folder gets the part of the type that uses it.
+`AppModels.Load(state)` joins the definition and the snapshots, and nothing saves the result. A type gets its part from its file. A type with no part of its own in a shared folder gets the part of the type that uses it.
 
 | Model rule | Findings |
 |---|---|
 | `LocationCheck` | `UMP020201`, `UMP020202` |
 | `ContentCheck` | `UMP020204`, `UMP020303` |
 | `ReferenceCheck` | `UMP020101`, `UMP020102`, `UMP020301`, `UMP020302`, `UMP020304` |
-| `BlockPlaceCheck` | `UMP020401`, `UMP020402`, all types only |
+| `BlockPlaceCheck` | `UMP020401`, `UMP020402`, all types only. It gets the folders of each block place and of each inner block from the fact source `BlockFolderSource` (`BlockFolders`), so it reads no folder |
 | `DataCheck` | `UMP030802`, `UMP030803`, all saved data |
 
 A model rule gets the app model, the types and the report. A report that did not run to its end has `Succeeded` false and a reason. A report with findings can succeed.

@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Operations.Domain.Shared;
 
-public static class RuleSeverity {
+static class RuleSeverity {
     public const string Key = "severity";
 
     public static string? Text(CodeConfig config, string ruleId) => config.Value($"umpire.{ruleId}.{Key}");

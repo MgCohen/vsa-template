@@ -1,4 +1,4 @@
-namespace Model.Infrastructure;
+namespace Facts.Infrastructure;
 
 using Umpire.CheckModel;
 
