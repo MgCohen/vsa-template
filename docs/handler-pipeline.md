@@ -95,7 +95,7 @@ services.AddHubStep<MaintenanceStep>();
 
 | Rule | Detail |
 |---|---|
-| Who adds one | Only the kernel and plugin modules. A feature module adds steps to its own pipeline. No rule checks this yet |
+| Who adds one | Only the kernel and plugin modules. A feature module adds steps to its own pipeline. A `HubStep` type in a feature module gives `UMP020301` (`Feature` has at most 0 types of `HubStep`) |
 | Order | `AddHubStep<T>(priority)`: the lowest priority first, then the order of registration. Each step is added one time |
 | Before | It returns `null` to go on, or an `Error`: then the message does not run, the sender gets the error, and the later hub steps do not run |
 | After | It runs for each hub step whose before part ran, in reverse order, also after a reject or a throw. The result is `null` after a throw. A throw in one after part does not stop the others: the first exception goes to the sender |
@@ -313,10 +313,10 @@ IIntegrationEventPublisher.PublishAsync(event)
 | Project | Types |
 |---|---|
 | Umpire.Messages.Contracts | `IMessage`, `IBroadcastMessage`, `IHandler<T>`, `IEnvelope`, `IEnvelope<T>`, `Envelope`, `EnvelopeState`, `EnvelopeStage`, `Result<T>`, `Error`, `Unit`, `IMessageResult` |
-| Umpire.Messages.Handlers | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `HandlerCall<THandler, TMessage>`, `IRunner`, `InlineRunner`, `Validator<T>`, `IValidation`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
+| Umpire.Kernels (`framework/Kernel/Messages/`, namespace Umpire.Messages.Handlers) | `PipelineBuilder<T>`, `Pipeline`, `Pipelines`, `HandlerCall<THandler, TMessage>`, `IRunner`, `InlineRunner`, `Validator<T>`, `IValidation`, `BeforeStep`, `AfterStep` and their typed forms, `IBeforeCall`, `IAfterCall`, `AddPipeline` |
 | Umpire.Vsa.Handlers.Commands, .Events, .Requests | The handler bases, the handler calls and their short forms, the hook bases, the senders, and the default pipeline of each kind |
 
-The folders of Umpire.Messages.Handlers are `Pipeline/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`.
+The bus is in the kernel, in `framework/Kernel/Messages/`, with the folders `Pipeline/`, `Hub/`, `Runners/`, `Stages/` and `Envelopes/`. The namespace of each file is `Umpire.Messages.Handlers`, so app code does not change. In a definition, the bus is the part `KernelParts.Messages` of the record `Core`.
 
 `AddPipeline` registers the pipeline and `Pipelines`, the one service that selects a pipeline for each send. Each pipeline reads `AppTypes` from the services: it finds its handlers, the validators of its validator bases and the hooks of its hook bases. A pipeline built from services with no `AppTypes` takes only listed handlers, and `HandlersOf` fails. All these projects target `netstandard2.0`, for Unity and for the compiler.
 

@@ -27,6 +27,7 @@ public sealed class VsaAppTests {
         Shop + "Domain/Shared/Price.cs(5): error UMP020303",
         Shop + "Domain/Shared/Price.cs(16): error UMP020303",
         Shop + "Domain/Shared/Slot.cs(3): error UMP020303",
+        Shop + "Infrastructure/AuditHubStep.cs(8): error UMP020301",
         Shop + "Presenters/LazyPresenter.cs(8): error UMP020101",
         Shop + "Presenters/PipelinePresenter.cs(7): error UMP020101",
         Shop + "Presenters/PublishPresenter.cs(9): error UMP020101",
@@ -73,7 +74,8 @@ public sealed class VsaAppTests {
     [TestCase(Shop + "Slices/LogSale/ResellHandler.cs", "UMP020101", "uses SellRequest in Contracts.Requests")]
     [TestCase(Shop + "Presenters/PublishPresenter.cs", "UMP020101", "the rule \"Presenters denies Contracts.Events.Publishing Under<Kernel>\" denies it")]
     [TestCase(Shop + "Presenters/LazyPresenter.cs", "UMP020101", "uses IIntegrationEventPublisher in Contracts.Events.Publishing")]
-    [TestCase(Shop + "Presenters/PipelinePresenter.cs", "UMP020101", "uses Pipelines in MessagesParts.Handlers")]
+    [TestCase(Shop + "Presenters/PipelinePresenter.cs", "UMP020101", "uses Pipelines in KernelParts.Messages")]
+    [TestCase(Shop + "Infrastructure/AuditHubStep.cs", "UMP020301", "HubStep")]
     [TestCase(Shop + "Slices/Sell/SellRequest.cs", "UMP020303", "it is not record or abstract")]
     [TestCase(Shop + "Slices/Sell/SellResponse.cs", "UMP020303", "it is not record or abstract")]
     [TestCase(Shop + "Domain/Shared/Price.cs", "UMP020303", "Price is in Domain.Shared (App/Features/Shop/Domain/Shared), but it is not immutable (Count, Changed, Amount can change)")]
@@ -88,6 +90,7 @@ public sealed class VsaAppTests {
     [TestCase(Notebook + "Slices/ReadNote/")]
     [TestCase("VsaApp/App/Plugins/Tools/Infrastructure/ToolClock.cs")]
     [TestCase("VsaApp/App/Plugins/Clock/")]
+    [TestCase("VsaApp/App/Plugins/Clock/Infrastructure/ClockHubStep.cs")]
     [TestCase(Shop + "Domain/Shared/Amount.cs")]
     [TestCase(Shop + "Domain/Shared/Discount.cs")]
     [TestCase(Shop + "Presenters/ShopPresenter.cs")]

@@ -69,7 +69,7 @@ The .NET SDK reads these two properties only before its own props: from `Directo
 |---|---|---|
 | Domain | `Umpire.Vsa.Domain` | Yes |
 | Contracts (`IMessage`, `Envelope`, `Result`) | `Umpire.Messages.Contracts` | Yes |
-| Handler pipeline | `Umpire.Messages.Handlers` | Yes |
+| Handler pipeline | `Umpire.Kernels` (namespace `Umpire.Messages.Handlers`) | Yes |
 | Contracts, commands and events | `Umpire.Vsa.Contracts.Commands`, `Umpire.Vsa.Contracts.Events` | Yes |
 | Handlers, commands and events | `Umpire.Vsa.Handlers.Commands`, `Umpire.Vsa.Handlers.Events` | Yes |
 | Infrastructure | `Umpire.Vsa.Infrastructure` | Yes |

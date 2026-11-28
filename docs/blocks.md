@@ -76,7 +76,7 @@ The check entry has five forms. The kinds above give the default form. Each form
 - A typed base counts only for a type that is not abstract. **Checked** (`FindBlocks`).
 - The framework definitions (`KernelArchitecture`, `MessagesArchitecture`, `ApiArchitecture`, `ComponentArchitecture`, in `framework/Kernel/Definition/`) have the folders of the block as parts, no rules and `DefaultPermission = Allow`. `KernelArchitecture` and `MessagesArchitecture` place the records `Core` and `MessagesComponent` with `InParentFolder()`, so each body is written one time. The same pipeline checks them as each other definition. A run of an app finds them as used blocks.
 
-A component installs with a public extension that the kernel calls by name. `VsaKernel.Configure` calls each handler kind, and each kind calls `AddPipeline` of the Messages component:
+A component installs with a public extension that the kernel calls by name. `VsaKernel.Configure` calls each handler kind, and each kind calls `AddPipeline` of the bus of the kernel:
 
 ```csharp
 protected override void Configure(IServiceCollection services, AppTypes types) {
@@ -138,6 +138,7 @@ In a DLL that an `External` names, the engine reads the source path of each type
 /_/packs/Vsa/Kernel/Domain/Entity.cs        -> Kernel/Domain
 /_/framework/Kernel/Hosts/Web/WebHost.cs    -> Core/Hosts
 /_/framework/Components/Messages/Contracts/Envelope.cs -> MessagesComponent/MessagesParts.Contracts
+/_/framework/Kernel/Messages/Pipeline/Pipelines.cs -> Core/KernelParts.Messages
 ```
 
 If two placed blocks match one path, the engine gives an error that names both. Give one record a longer `Folder`, for example `"Vsa/Kernel"`. The bundle packages embed their PDB with the source paths under `/_/` (`tools/bundle/Directory.Build.props`).

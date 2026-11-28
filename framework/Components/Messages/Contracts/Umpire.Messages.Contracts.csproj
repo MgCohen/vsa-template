@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <InternalsVisibleTo Include="Umpire.Messages.Handlers" />
+    <InternalsVisibleTo Include="Umpire.Kernels" />
   </ItemGroup>
   <!-- The check entry of this block: the engine checks it with this definition when a checked block uses it. -->
   <ItemGroup>

@@ -52,7 +52,7 @@ internal static class CountCheck {
                 + (group is null ? $"Add one, or remove {at.Type.Name}." : "Add one, or move the other types to another part."));
         }
         if (statement.Max is { } max && found.Count > max) {
-            yield return new CountResult(statement.Rule, CountProblem.TooMany, subject, found, at,
+            yield return new CountResult(statement.Rule, CountProblem.TooMany, subject, found, max == 0 ? First(found) : at,
                 $"{subject} has {found.Count} {counted}{names}: the rule \"{statement.Rule}\" needs {need}. "
                 + (group is null ? $"Keep {max}, and remove the others." : $"Move the others to another {group}."));
         }

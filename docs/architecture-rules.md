@@ -59,7 +59,7 @@ Retired analyzer IDs: `UMP010202`, `UMP010203`, `UMP010204`, `UMP010205`, `UMP01
 | A `Domain.Shared` type is immutable | `For<Domain.Shared>().Are<Immutable>()` | `UMP020303` |
 | A presenter implements `IIntegrationEventHandler<TEvent>` of the kernel | `For<Presenters>().Uses<Handlers.Events>().Under<Kernel>()` | `UMP020101` |
 
-A presenter also does not use `Pipelines`: no rule lets `Presenters` use `MessagesParts.Handlers`. The marker `IHandler<T>` is in `MessagesParts.Contracts`, so a presenter can implement an event handler interface. The base types of `Domain.Shared` types and the types of a contract folder are uses and bindings, so `UMP020101` and `UMP020202` check them.
+A presenter also does not use `Pipelines`: no rule lets `Presenters` use `KernelParts.Messages` (the bus of the kernel). The marker `IHandler<T>` is in `MessagesParts.Contracts`, so a presenter can implement an event handler interface. The base types of `Domain.Shared` types and the types of a contract folder are uses and bindings, so `UMP020101` and `UMP020202` check them.
 
 `UMP010201` also runs, because the record line does not read these cases:
 
@@ -116,6 +116,7 @@ A plugin module has the layers of a module and the folder layout of the framewor
 | `Infrastructure` uses the `Handlers` and `Contracts` parts (the pipeline step bases), not their child parts | `UMP020101` |
 | The module class of a plugin inherits `Plugin` (`For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().Exactly(1)`) | `UMP020101` and `UMP020301`, and the host at startup |
 | The module class of a feature module does not inherit `Plugin` (`For<Feature>(Depth.Self).Denies<Composition>()`) | `UMP020101`, and the host at startup |
+| A feature module has a `HubStep` type (`For<Feature>().HasTypes<Umpire.Messages.Handlers.HubStep>().AtMost(0)`). Move the step to a plugin module | `UMP020301` |
 | A module has exactly one module class (`For<Module>(Depth.Self).HasTypes<Umpire.Kernels.Module>().Exactly(1)`) | `UMP020301`, and the host at startup |
 | A plugin layer uses the same layer of another plugin module (the plugin group is open) | Permitted |
 | A plugin module has no `Slices/` folder | `UMP020202` |
@@ -307,6 +308,7 @@ The VSA definition has these count and match lines. S1 to S3 are in `Slice.Rules
 | S3c, S3d | The same two lines for the commands | `Handlers.Commands`, `Contracts.Commands` | `UMP020302`, `UMP020301` |
 | M1 | Each module has exactly one module class | `For<Module>(Depth.Self).HasTypes<Umpire.Kernels.Module>().Exactly(1)`, in the record `Module` | `UMP020301` |
 | M2 | A plugin module has exactly one `Plugin` class | `For<Plugin>(Depth.Self).HasTypes<Umpire.Vsa.Composition.Plugin>().Exactly(1)`, in the record `Plugin` | `UMP020301` |
+| M3 | A feature module has no hub step: only the kernel and the plugin modules add hub steps | `For<Feature>().HasTypes<Umpire.Messages.Handlers.HubStep>().AtMost(0)`, in the record `Feature`. The finding is on the first hub step | `UMP020301` |
 
 An event has zero or more handlers, so it has no line. A hook takes its command, so S3d counts `Handlers.Commands` with `Depth.Self`: the nested `Handlers.Commands.Hooks` part does not count. A command result follows its command, so it does not count. S3a-d are slice rules (implicit `Under<Slice>()`), so they do not check a plugin module: a plugin has no slice, and its base commands have no handler. So a plugin request with two handlers, or a plugin command with no handler, gives no finding.
 

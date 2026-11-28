@@ -7,6 +7,7 @@ using Umpire.Kernels.Blocks;
 using Core = Umpire.Kernels.Blocks.Core;
 using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
 using MessagesComponent = Umpire.Kernels.MessagesComponent;
+using KernelParts = Umpire.Kernels.KernelParts;
 using MessagesParts = Umpire.Kernels.MessagesParts;
 using VsaKernel = Umpire.Vsa.Composition.VsaKernel;
 
@@ -38,9 +39,9 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
         rules.For<Domain>().Uses<Domain.Shared>();
         rules.For<Infrastructure>().Uses<Domain>();
         rules.For<Infrastructure>().Uses<Handlers>(Depth.Self).And<Contracts>(Depth.Self)
-            .And<MessagesParts.Handlers>().And<MessagesParts.Contracts>();
+            .And<KernelParts.Messages>().And<MessagesParts.Contracts>();
         rules.For<Contracts>().Uses<MessagesParts.Contracts>();
-        rules.For<Handlers>().Uses<MessagesParts.Handlers>();
+        rules.For<Handlers>().Uses<KernelParts.Messages>();
         rules.For<Presenters>().Uses<Contracts>().And<MessagesParts.Contracts>()
             .And<Contracts.Requests>(Access.Internal).And<Contracts.Events>(Access.Internal).And<Domain.Shared>(Access.Internal)
             .And<Slice.Shared>(Access.Internal);
@@ -51,7 +52,7 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
         UsesContractParts(rules.For<Slice.Shared>()).Under<Kernel>();
         UsesContractParts(rules.For<Slice.Shared>()).Under<Plugin>();
         ForHandlerParts(rules)
-            .Uses<Handlers>().And<Contracts>().And<MessagesParts.Handlers>().And<MessagesParts.Contracts>()
+            .Uses<Handlers>().And<Contracts>().And<KernelParts.Messages>().And<MessagesParts.Contracts>()
             .And<Contracts.Commands>().And<Contracts.Events>().And<Slice.Shared>()
             .And<Domain>(Access.Internal).And<Infrastructure>(Access.Internal);
         rules.For<Handlers.Requests>().Uses<Contracts.Requests>();
@@ -66,7 +67,7 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
         ForHandlerParts(rules).Under<Feature>()
             .Uses<Contracts.Commands>(Boundary.Open).And<Contracts.Events>(Boundary.Open);
 
-        rules.For<Module>(Depth.Self).Uses<Kernel>().And<MessagesComponent>().And<UmpireLibraries>().And<Plugin>(Access.Internal);
+        rules.For<Module>(Depth.Self).Uses<Kernel>().And<MessagesComponent>().And<KernelParts.Messages>().And<UmpireLibraries>().And<Plugin>(Access.Internal);
         rules.For<Module>(Depth.Self).Denies<Plugin>(Depth.Self);
         rules.For<Feature>(Depth.Self).Uses<Feature>(Access.Internal);
         rules.For<Feature>(Depth.Self).Denies<Composition>();
@@ -82,6 +83,7 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
         rules.For<Feature>().And<Plugin>().Uses<Pack>();
 
         KernelRules(rules);
+        BusRules(rules);
 
         rules.For<Handlers.Events>().Denies<Contracts.Requests>();
         rules.For<Presenters>().Denies<Contracts.Events.Publishing>().Under<Kernel>();
@@ -104,6 +106,16 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
         rules.For<Views>().And<Composition>().Under<Kernel>().Uses<Presenters>().Under<Kernel>();
         rules.For<Composition>().Under<Kernel>()
             .Uses<Contracts.Commands>().And<Handlers.Requests>().And<Handlers.Commands>().Under<Kernel>();
+    }
+
+    static void BusRules(RuleBook rules) {
+        rules.For<App>(Depth.Self).And<Host>().And<DefinitionRoot>().And<Kernel>(Depth.Self).Denies<KernelParts.Messages>();
+        rules.For<Domain>().And<Presenters>().And<Views>().And<Composition>().And<Contracts>(Depth.WithChildren).Under<Kernel>()
+            .Denies<KernelParts.Messages>();
+        rules.For<KernelParts.Messages>().Denies<Kernel>(Depth.Self);
+        rules.For<KernelParts.Messages>()
+            .Denies<Domain>().And<Infrastructure>().And<Presenters>().And<Views>().And<Composition>()
+            .And<Contracts>(Depth.WithChildren).And<Handlers>(Depth.WithChildren).Under<Kernel>();
     }
 
     protected static From ForContractParts(RuleBook rules) =>

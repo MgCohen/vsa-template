@@ -9,6 +9,8 @@ public static class KernelParts {
 
     public sealed record Operations : Concept;
 
+    public sealed record Messages : Concept;
+
     public sealed record Modules : Concept;
 
     public sealed record Scan : Concept;

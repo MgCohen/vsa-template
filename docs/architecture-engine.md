@@ -158,7 +158,7 @@ public sealed class UnityTestArchitecture : VsaArchitecture {
 }
 ```
 
-The kernel is three blocks: the root `Core`, `MessagesComponent` and the kernel root. `Architecture<TKernel>` adds `Core`, and `VsaArchitecture` places `MessagesComponent` and writes the layers into `kernel`. Two checks use the kernel:
+The kernel is three blocks: the root `Core`, `MessagesComponent` and the kernel root. `Architecture<TKernel>` adds `Core`, and `VsaArchitecture` places `MessagesComponent` and writes the layers into `kernel`. `MessagesComponent` holds only the message contracts. The message bus is the part `KernelParts.Messages` of `Core` (`framework/Kernel/Messages/`). Two checks use the kernel:
 
 | Check | Kernel form | Binding | Rules |
 |---|---|---|---|

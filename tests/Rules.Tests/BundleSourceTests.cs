@@ -8,7 +8,6 @@ public sealed class BundleSourceTests {
         "architecture/Markers/Umpire.Markers.csproj",
         "framework/Components/Config/Umpire.Config.csproj",
         "framework/Components/Messages/Contracts/Umpire.Messages.Contracts.csproj",
-        "framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj",
         "framework/Kernel/Umpire.Kernels.csproj",
     ];
 
