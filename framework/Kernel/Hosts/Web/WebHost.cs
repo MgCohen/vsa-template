@@ -3,6 +3,7 @@ namespace Umpire.Hosts.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 using Umpire.Kernels;
 
@@ -22,11 +23,14 @@ public class WebHost : AppHost {
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
         }
         web = builder.Build();
+        if (OperationSends.NoConverterWarning(web.Services) is { } warning) {
+            web.Logger.LogWarning("{Warning}", warning);
+        }
         web.Use(async (http, next) => {
             HostWork.MarkCurrentFlow();
             await next(http);
         });
-        HttpApi.Map(web, Route);
+        HttpApi.Map(web, RoutePattern);
         if (root is not null) {
             Views.Map(web, root);
         }
@@ -57,5 +61,5 @@ public class WebHost : AppHost {
         base.Dispose();
     }
 
-    protected virtual string Route(Operation operation) => $"/api/{operation.Group}/{operation.Name}";
+    protected virtual string RoutePattern => "/api/{**" + HttpApi.NameKey + "}";
 }

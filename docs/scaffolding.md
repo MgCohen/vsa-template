@@ -45,20 +45,20 @@ The tool is a VSA app with a console host, in `tooling/`. `App/Program.cs` is on
 |---|---|---|
 | App class | `UmpireTool<THost> : App<VsaKernel, THost>` | The lifecycle. The tests close it with a `LocalHost` |
 | Host | `ToolHost : ConsoleHost` | Converts the command line into the request of one command |
-| Commands | `ToolCommands` (`App/Host/`) | The forms of the requests, the selection and the conversion |
+| Commands | `ToolCommands`, `ToolConverter` (`App/Host/`) | The forms of the requests, the selection, and the operation converter of the tool |
 | Plugin | `App/Plugins/Commands/` | `IToolRequest<TSelf>`, `IChildProcessRequest`, `ToolResponse`, `ToolHandler<,>`, `CommandForm`, `CommandOption`, `CommandInput`, `UmpireException`, `Dotnet`, `ChildProcess` |
 | Modules | `App/Features/` | `Tool` (help, version), `Scaffold` (new app, init, add), `Checks` (test, check), `Versions` (doctor, update) |
 
 ```mermaid
 flowchart LR
     A[Command line] --> H[ToolHost]
-    H -->|form| C[ConsoleHost selects the operation]
-    C --> O[Operation of the request]
-    O -->|IToolRequest.From| R[Request]
-    R --> X[Handler]
+    H -->|form| O[Operation: the name of the form, the command line as values]
+    O --> T[ToolConverter]
+    T -->|IToolRequest.From| R[Request]
+    R --> X[Hub and handler]
 ```
 
-Each request declares its `CommandForm` (the words, the summary, the place in the usage, the name and the options) and a static `From(ToolCall)`. The host wraps the operation of each request: the operation gets the group and the name of the form, and it makes the request from the command line when it runs. A form selects the command line that starts with its words. The form of `version` selects only `--version`. A command line that no form selects goes to `help`, and `help` gives the error with the usage. The base handler `ToolHandler<,>` changes an `UmpireException` into the error `umpire: <message>` with exit code 1. Another exception gives `umpire: ` and the full exception text, with exit code 1. An error of the command line (for example no name) gives the same form. The tool uses no module settings (no settings provider).
+Each request declares its `CommandForm` (the words, the summary, the place in the usage, the name and the options) and a static `From(ToolCall)`. The host replaces the VSA operation converter with `ToolConverter`. The host makes the operation from the command line: its name is the group and the name of the selected form, and its values are the words of the line in order. The converter makes the request from those words with the form of the request, and an `UmpireException` there gives an error result. A form selects the command line that starts with its words. The form of `version` selects only `--version`. A command line that no form selects goes to `help`, and `help` gives the error with the usage. The base handler `ToolHandler<,>` changes an `UmpireException` into the error `umpire: <message>` with exit code 1. Another exception gives `umpire: ` and the full exception text, with exit code 1. An error of the command line (for example no name) gives the same form. The tool uses no module settings (no settings provider).
 
 After Ctrl+C or SIGTERM, `umpire test` and `umpire check` give the exit code of their child process (`IChildProcessRequest`, `ConsoleHost.CancelsOnSignal`). The signal cancels the operation. The tool sends SIGTERM to the child (not on Windows, where Ctrl+C reaches the child directly), waits for it up to 10 seconds (`Dotnet.StopTime`), then kills the child and its process tree. After a signal, the tool starts no new child. If `umpire test` stops before its last test project, it gives the exit code of the last child, or 130 if that code is 0. Each other console app keeps exit code 0 after a signal.
 

@@ -2,6 +2,7 @@ namespace Umpire.Messages.Handlers;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Umpire.Messages.Contracts;
 
 public static class PipelineServiceCollectionExtensions {
     public static IServiceCollection AddPipeline<TMessage>(

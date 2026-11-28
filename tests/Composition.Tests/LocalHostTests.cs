@@ -20,12 +20,11 @@ public sealed class LocalHostTests {
     public void StopApp() => app.Stop();
 
     [Test]
-    public void Send_gives_the_operation_result_with_the_response() {
+    public void Send_gives_the_message_result_with_the_response() {
         var result = app.Send((object)new PingRequest("Ann"));
 
         Assert.That(result.Value, Is.EqualTo(new PingResponse("Hello Ann")));
         Assert.That(result.Error, Is.Null);
-        Assert.That(result.ExitCode, Is.Zero);
     }
 
     [Test]
@@ -49,7 +48,6 @@ public sealed class LocalHostTests {
 
         Assert.That(typed.IsSuccess, Is.False);
         Assert.That(untyped.Error, Is.Not.Null);
-        Assert.That(untyped.ExitCode, Is.EqualTo(1));
     }
 
     [Test]
@@ -57,7 +55,7 @@ public sealed class LocalHostTests {
         var error = Assert.Throws<InvalidOperationException>(() => app.Send(new NotARequest()));
 
         Assert.That(error!.Message, Does.StartWith(
-            $"TestLocalHost has no operation for {typeof(NotARequest).FullName}. A host exposes only requests"));
+            $"TestLocalHost does not expose {typeof(NotARequest).FullName}. A host exposes only requests"));
     }
 
     [Test]
@@ -112,7 +110,7 @@ public sealed class LocalHostTests {
             .Select(method => method.GetGenericArguments()[1].GetGenericParameterConstraints().Single())
             .ToList();
 
-        Assert.That(hosts, Has.Count.EqualTo(4).And.All.EqualTo(typeof(LocalHost)));
+        Assert.That(hosts, Has.Count.EqualTo(5).And.All.EqualTo(typeof(LocalHost)));
     }
 
     public sealed class PingModule : Module;

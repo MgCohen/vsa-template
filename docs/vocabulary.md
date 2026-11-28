@@ -24,7 +24,7 @@ A code name with the mark "(D6)" comes with the sender rename of the D6 work pac
 | App | A block that runs. Its app class is the check entry and the lifecycle: `Start`, `Run`, `Stop` | `App`, `App<TKernel, THost>`, `IApp`, `NotesApp`, `EngineApp<THost>`; the root record `App` |
 | Host | The platform of an app. The host class builds the services and disposes them. It does not run or wait | `AppHost`, `WebHost`, `ConsoleHost`; the layer record `Host` |
 | Kernel | The install point of an architecture. `Core` installs the core services, then the kernel of the pack installs the layers | `Kernel`, `Core`, `VsaKernel` |
-| Operation | A request that a host exposes, with its group, name and effect | `Operation`, `Effect` |
+| Operation | The message of a host: a name and string values. The kernel converts it to its own message | `Operation`, `IOperationConverter` |
 | Stop request | A call from app code that stops the app with an exit code | `AppStop.Request` |
 | Registration | One entry in the `IServiceCollection` of an app | `AddScoped`, `AutoRegistration`, `AddPipeline`, the `Add<Name>(services, types)` extensions |
 | Service implementation | A pair of a service type and its implementation type that `AppTypes` finds. It is not registered yet | `ServiceImplementation`, `AppTypes.Implementations` |

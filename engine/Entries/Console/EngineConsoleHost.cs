@@ -4,8 +4,11 @@ using Facts.Infrastructure;
 using Operations.Contracts.Requests;
 using Operations.Domain.Shared;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Umpire.Hosts.Console;
 using Umpire.Kernels;
+using Umpire.Messages.Contracts;
+using Umpire.Vsa.Composition;
 
 public sealed class EngineConsoleHost : ConsoleHost {
     static readonly string[] JobWords = ["jobs", "build"];
@@ -31,21 +34,10 @@ public sealed class EngineConsoleHost : ConsoleHost {
     protected override void Configure(IServiceCollection services, AppTypes types) {
         base.Configure(services, types);
         services.AddSingleton<IFactSource<DefinitionQuery, IDefinitionLoader>, DefinitionSource>();
-        var operations = services
-            .Where(d => d.ServiceType == typeof(Operation) && d.ImplementationInstance is Operation)
-            .ToList();
-        foreach (var descriptor in operations) {
-            services.Remove(descriptor);
-            if (descriptor.ImplementationInstance is Operation { Input: var input } operation && typeof(JobRequest).IsAssignableFrom(input)) {
-                services.AddSingleton(WithReport(operation));
-            }
-        }
+        services.Replace(ServiceDescriptor.Singleton<IOperationConverter>(
+            RequestConverter.Of(types, request => typeof(JobRequest).IsAssignableFrom(request))));
     }
 
-    static Operation WithReport(Operation operation) => operation with {
-        Invoke = async (services, input, ct) => {
-            var result = await operation.Invoke(services, input, ct).ConfigureAwait(false);
-            return result.Value is JobReport report ? result with { ExitCode = ConsoleReport.Write(report) } : result;
-        },
-    };
+    protected override int ExitCodeOf(IMessageResult result) =>
+        result.Value is JobReport report ? ConsoleReport.Write(report) : base.ExitCodeOf(result);
 }
