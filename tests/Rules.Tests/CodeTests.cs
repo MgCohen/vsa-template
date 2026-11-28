@@ -8,7 +8,7 @@ namespace Rules.Tests;
 public sealed partial class CodeTests {
     static readonly string[] CodeFiles = ["*.cs", "*.md", "*.globalconfig", "*.targets", "*.props", "*.template"];
     static readonly string[] SkippedFolders = ["artifacts~", "bin", "obj", ".git", ".claude", "proposals"];
-    static readonly string[] BaseIds = [.. CodeRule.Notices.Select(notice => notice.Id)];
+    static readonly string[] BaseIds = [.. CodeRule.Notices.Select(notice => notice.Id), Descriptors.LoadCode];
     static readonly string[] RetiredIds = ["UMP010202", "UMP010203", "UMP010204", "UMP010205", "UMP010206", "UMP010207"];
 
     [Test]

@@ -1,6 +1,8 @@
 namespace UmpireEngine;
 
+using Facts.Domain.Shared.Compile;
 using Jobs.Slices.CompileJob;
+using Operations.Domain.Shared;
 using Umpire.Vsa.Composition;
 
 static class CompileApp {
@@ -10,6 +12,9 @@ static class CompileApp {
         var result = Running.Value.SendAsync(request, cancellation).GetAwaiter().GetResult();
         return result.IsSuccess ? result.Value : throw new InvalidOperationException($"{result.Error!.Code}: {result.Error.Message}");
     }
+
+    public static IReadOnlyList<FindingCode> Codes() =>
+        Send(new CompileJobRequest(CompileProject.None, CompileStage.Load), CancellationToken.None).Codes;
 
     public static bool IsLoadFailure(Exception e) => e switch {
         FileNotFoundException or FileLoadException or BadImageFormatException or TypeLoadException or MissingMemberException => true,

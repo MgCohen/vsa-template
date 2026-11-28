@@ -130,7 +130,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The engine state files did not move to the intermediate output path yet (phase 3).
   - `init` does nothing if `Directory.Build.props` exists. The fixtures `Built/NoPack` and `Built/PackGraph` seem unused.
 - The tool as a VSA app (`tooling/`, options B and C):
-  - The check binds each in-block type of an assembly `Umpire.*` to the External `UmpireLibraries` (`Places.Place`), so it does not check these types. The tool assembly is now `umpire-cli` for this reason. The engine core `Umpire.Engine` has the same gap: the engine block check reads only the types of `umpire-engine` and `Engine.Definition`. The engine is not changed here.
+  - Fixed later (the in-block types): the check bound each in-block type of an assembly `Umpire.*` to the External `UmpireLibraries` (`Places.Place`), so it did not check these types. The tool assembly was `umpire-cli` for this reason. It is `Umpire.Cli` again.
   - `UmpireTool<THost>` has an open host, so the tests run the tool in the test process on a `LocalHost`.
   - `ToolHost` wraps the operation of each request: the input type of the operation is `ToolInput`, and the request comes from `IToolRequest<TSelf>.From` when the operation runs. `ConsoleHost` got two extension points: `Select` and `CancelsOnSignal`.
   - The command line types (`CommandForm`, `CommandOption`, `CommandInput`, `ToolCall`) are in `Domain/Shared/` of the plugin, because `Contracts.Requests` holds only requests and responses. The host uses them by a rule of `ToolArchitecture`.
@@ -167,6 +167,14 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
   - The archive test compiles a `netstandard2.1` app against the `netstandard2.0` DLLs, as a model of Unity.
   - Not tested: the .NET Framework compiler of Visual Studio, and the archive tests that need a .NET 8 SDK.
 
+- The analyzer entry and the domain I/O (option B of the analyzer entry, and "the engine domain does no file I/O"):
+  - The entry gets its codes from the compile job at the new stage `Load`, with the project `CompileProject.None`. The descriptors are now made when the compiler first reads `SupportedDiagnostics`, so the first composition of the app moves to that time. `UMP010003` and its text moved from `CodeRule` to the entry, because the entry reports it when the engine does not load.
+  - Four new `Entries` rules, the same as a host: the module classes (`Depth.Self`), the requests of each module (`Contracts.Requests`, before only of a plugin), `Composition` (`LocalRequests`) and `MessagesParts.Contracts` (`Result`, `Error`). The VSA `Host` has no rule for `MessagesParts.Contracts`, so a custom host that calls `Send` can get `UMP020101`. Not tested.
+  - The snapshot records, `TypeName`, `FileMark`, `BlockPath`, `FileHash.OfText`, `Surface` and the JSON writer moved to `Facts/Domain/Shared/Snapshot/` and keep the namespace `Umpire.CheckModel`. The JSON reader stays in the model domain, so `Snapshot.Read` is now `SnapshotText.Read`. `JsonWriter` passes the depth as an argument, because a published domain type must be immutable. The engine has two `TypeName` records (`Facts.Domain.Shared` and `Umpire.CheckModel`), as before.
+  - The file I/O of `Model/Domain` moved to `Model/Infrastructure/Files/` (`StateFile`, `StateFolder`, `StatePointer`, `SnapshotCache`, `SnapshotList`, `SnapshotFiles`, `SourceFiles`), `Model/Infrastructure/Export/` (`BlockExport`, `BlockInput`) and `Facts/Infrastructure/DiskFiles` (`FileMark.Of` and `IsCurrent`, `FileHash.Of`, `Freshness.IsCurrent`). The app model asks the domain port `IFileState` (`DiskState` on the disk) if a file is current, so the checks stay lazy. `AppModel.Load` is `AppModels.Load`, and `ModelCheck.Run(state)` is `StateCheck.Run(state)`; `ModelCheck.Run(app, folders, report)` runs the rules on a loaded model. `BlockPlaceCheck` gets `BlockFolders` from `BlockFolderSource`, with the inner block folders as patterns too.
+  - Not moved: `Path.GetFullPath` in `BlockPath`, `BinDll`, `PartOf` and `BlockPlaces`. It reads no file, but it uses the current folder of the process for a relative path.
+  - `Umpire.Testing`: the test base does not expose `EmptyPlaces`, so it has no folder reader. `ResolvedArchitecture.EmptyPlaces` is still public in the DLL, and a consumer must build `BlockFolders` to call it.
+
 ## Test speed
 
 - Done: `CS8032` fixed, the shared compiler is on again, the categories `Package` and `Parity`, and the two test sets in `AGENTS.md` (PR #395). A full run passes 1963 tests, with no `CS8032`.
@@ -175,6 +183,8 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 
 ## Later
 
+- Use one `TypeName` record in the engine (`Facts.Domain.Shared` and `Umpire.CheckModel` have one each).
+- Make `ResolvedArchitecture.EmptyPlaces` internal in `Umpire.Testing`, or give the test base a folder reader, if a consumer needs it.
 - K5 (#344), with P11 (the scope of a rule).
 - The typed channel of `LocalHost`.
 - Own checks of an app (option C, maybe B).
@@ -182,6 +192,7 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 - A check at start that each handler has a call, and a call that names its own handler base (#382 review).
 - The Visual Studio test of the spike (needs the computer of the user).
 - A full cleanup and review of the tests, at the end of this phase. It includes the older path bugs that the #386 review found (a file on another drive counts as in the block, case in `InInnerBlock` and `RelativePath`, a folder name that starts with `..`, `OpenGenerics.NameOf` for a type nested in a generic type).
+- Done: the analyzer entry passes the check (option B of PR #417). The snapshot data is in the published domain of the Facts plugin, not in `Model/Domain/Shared`, and the codes come from the compile job at the stage `Load`, not from a new request. See "The analyzer entry and the domain I/O" in "End review".
 - vsa-unity, before a Unity release: the pipeline closes each handler call at run time with `MakeGenericType` and `Activator.CreateInstance` (#382). A call with a struct type argument, for example `CommandHandlerCall<X, int>`, can fail on an IL2CPP player if no code for that type exists at build time. Test a player with an `ICommand<int>` command.
 - vsa-unity, at the next consumer update: `Get<T>` of `UmpireConfig` binds module settings with reflection (#388). Under IL2CPP stripping, a removed setter is skipped with no error. A Unity host keeps the setters (`link.xml`, `[Preserve]`) or adds its own `ISettingsProvider`.
 
@@ -189,3 +200,9 @@ Uncertain points of this work. The user reviews them at the end of the plan, not
 
 - Do not change the VSA rule lines before K5.
 - Measure only, do not change: the size of a snapshot (about 7 KB for each type).
+- The in-block types of an assembly `Umpire.*` (`Places.Place`, `PartOf`):
+  - An `External` binds only a type with its source outside the block folder, or in no folder alias. A type with its source in the block binds by its folder. This applies to each `External`, not only to `UmpireLibraries`: a consumer `External` for an assembly with its source in the block no longer binds these types. The External `UmpireLibraries` binds the Umpire DLLs of a consumer (package DLLs and the library files). The kernel bodies of `Umpire.dll` and `Umpire.Vsa.dll` still bind by their PDB path.
+  - The placement does not count a folder whose name starts with `.` or ends with `~` (for example `engine/Polyfills~/`), as the source folder scan already does.
+  - The engine core is now checked. The fixes: the rule types of the code check (`CodeRule`, `CodeRun` and the other helpers of `Slices/CheckCode/`) are internal, so they do not expose a published domain type in public; `CodeRuns` moved into that slice; `DefinitionExport`, `DefinitionSources` and `TraitExport` moved to `Model/Infrastructure/Export/`; `LoadAppHandler` calls `DefinitionFolder.IsSkippedSource`; `SharedAssemblies` names `Umpire.Kernels` by `LoadedTypes`.
+  - Decided by the user: the pure helpers `RelativePath`, `BuildOutput` and `CompilerNames` (before `LoadedTypes.IsCompilerGenerated`) are in a new part `KernelParts.Paths` (`framework/Kernel/Paths/`). The engine definition lets `Domain` use only `Paths`, and `Infrastructure` uses `Paths` and `Utility`. The folder walk of the block places is in the fact source `BlockFolderSource` (Facts `Infrastructure/`): `ResolvedArchitecture.EmptyPlaces` takes its `BlockFolders` data (each folder of each place pattern, with `Exists`), and `BlockPlaceFolders()` gives the patterns for the query. No engine operation calls `EmptyPlaces`. The check model `BlockPlaceCheck` now gets its folders from the same source (registered in `FactsPlugin`). API breaks of the shipped DLLs: `LoadedTypes.IsCompilerGenerated` is now `CompilerNames.IsGenerated`, and `EmptyPlaces` of `Umpire.Testing` needs a `BlockFolders` argument, which a consumer test must build itself.
+  - Done (the analyzer entry check): the analyzer entry passes the VSA rules. `BlockStampTests` reads the analyzer DLL again. See the item "The analyzer entry and the domain I/O" below.

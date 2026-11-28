@@ -54,7 +54,7 @@ sealed class SampleBuild : IDisposable {
         return [.. diagnostics.Where(d => !d.Id.StartsWith(CodeFindings, StringComparison.Ordinal))];
     }
 
-    public Snapshot Saved(string project = "Sample") => Snapshot.Read(File.ReadAllText(State.SnapshotFile(project)));
+    public Snapshot Saved(string project = "Sample") => SnapshotText.Read(File.ReadAllText(State.SnapshotFile(project)));
 
     public void Dispose() => temp.Dispose();
 

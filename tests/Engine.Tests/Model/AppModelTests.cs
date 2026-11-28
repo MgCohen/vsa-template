@@ -17,7 +17,7 @@ public sealed class AppModelTests {
         temp.State.Save(Samples.Settings("Sample", "Missing"));
         temp.State.Save(Snapshot.Of("Sample", []));
 
-        var app = AppModel.Load(Samples.Layers, temp.State);
+        var app = AppModels.Load(Samples.Layers, temp.State);
 
         Assert.That(app.Problems.Single().Project, Is.EqualTo("Missing"));
     }
@@ -30,7 +30,7 @@ public sealed class AppModelTests {
         temp.State.Save(Snapshot.Of("Sample", []));
         File.WriteAllText(temp.State.SnapshotFile("Sample"), text);
 
-        Assert.That(AppModel.Load(Samples.Layers, temp.State).Problems, Has.Count.EqualTo(1));
+        Assert.That(AppModels.Load(Samples.Layers, temp.State).Problems, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -39,7 +39,7 @@ public sealed class AppModelTests {
         temp.Load(Samples.Layers, Samples.File("Ui/Old.cs", Samples.Type("Old")));
         var current = Snapshot.Of("Sample", [Samples.File("Ui/New.cs", Samples.Type("New"))]);
 
-        var app = AppModel.Load(Samples.Layers, temp.State, new CurrentProject(current, _ => []));
+        var app = AppModels.Load(Samples.Layers, temp.State, new CurrentProject(current, _ => []));
 
         Assert.That(app.Types.Select(t => t.Name.Name), Is.EqualTo(new[] { "New" }));
     }

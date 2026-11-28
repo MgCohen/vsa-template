@@ -333,13 +333,13 @@ public sealed class RunEngineTests {
     internal static async Task<ConsoleOutput> Run(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
         bool build = false, bool keepStamp = false, bool? projectChecks = null,
-        ReportMode? mode = ReportMode.Error, string ignoredFolders = "") =>
-        ConsoleReport.Of(await Report(block, bin, failFast, project, build, keepStamp, projectChecks, mode, ignoredFolders));
+        ReportMode? mode = ReportMode.Error, string ignoredFolders = "", string skip = "") =>
+        ConsoleReport.Of(await Report(block, bin, failFast, project, build, keepStamp, projectChecks, mode, ignoredFolders, skip));
 
     internal static async Task<JobReport> Report(
         string? block = null, string? bin = null, bool failFast = false, string? project = null,
         bool build = false, bool keepStamp = false, bool? projectChecks = null,
-        ReportMode? mode = ReportMode.Error, string ignoredFolders = "") {
+        ReportMode? mode = ReportMode.Error, string ignoredFolders = "", string skip = "") {
         using var host = new EngineTestApp(EngineModules()).Build();
         await using var scope = host.Services.CreateAsyncScope();
         var declared = project is null ? block ?? Notes : "";
@@ -350,12 +350,12 @@ public sealed class RunEngineTests {
         var requests = scope.ServiceProvider.GetRequiredService<IRequestSender>();
         if (build) {
             var check = new CheckJobRequest(
-                project ?? declared, output, declared, mode, FailFast: failFast, IgnoredFolders: ignoredFolders,
+                project ?? declared, output, declared, mode, FailFast: failFast, Skip: skip, IgnoredFolders: ignoredFolders,
                 ProjectChecks: projectChecks);
             return (await requests.SendAsync(check, default)).Value;
         }
         var request = new BuildJobRequest(
-            project ?? declared, output, declared, mode, FailFast: failFast, IgnoredFolders: ignoredFolders,
+            project ?? declared, output, declared, mode, FailFast: failFast, Skip: skip, IgnoredFolders: ignoredFolders,
             ProjectChecks: projectChecks);
         return (await requests.SendAsync(request, default)).Value;
     }

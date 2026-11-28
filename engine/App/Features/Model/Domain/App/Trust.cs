@@ -17,7 +17,7 @@ public sealed class Trust {
         this.helpers = helpers;
         this.isDefinitionOfBlock = isDefinitionOfBlock;
         projects = new ProjectTrust(app, snapshots);
-        OldLibraries = [.. snapshots.Libraries.Where(l => l.Snapshot.Source?.IsCurrent(app.Block) != true)];
+        OldLibraries = [.. snapshots.Libraries.Where(l => !Freshness.IsCurrent(l.Snapshot.Source, app.Block, app.Files))];
         hasMissingProject = app.Problems.Any(p => !p.IsLibrary);
         isBlockCurrent = new(() => isDefinitionOfBlock && app.Settings.DefinitionSources.Count > 0 && OldInputs.Count == 0);
         isAllSure = new(() => projects.AreAllSure);
@@ -25,7 +25,7 @@ public sealed class Trust {
 
     public IReadOnlyList<LoadedSnapshot> OldLibraries { get; }
     public IReadOnlyList<FileMark> OldInputs =>
-        [.. app.Settings.DefinitionSources.Concat(app.Settings.Inputs).Where(mark => !mark.IsCurrent(app.Block))];
+        [.. app.Settings.DefinitionSources.Concat(app.Settings.Inputs).Where(mark => !app.Files.IsCurrent(mark, app.Block))];
     public bool IsBlockCurrent => isBlockCurrent.Value;
     public bool IsAllSure => isAllSure.Value;
 

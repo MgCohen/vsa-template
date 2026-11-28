@@ -30,7 +30,7 @@ public sealed class StateFileTests {
         File.SetLastWriteTimeUtc(writer.SafeFileHandle, DateTime.UtcNow.AddSeconds(1));
         _ = Task.Delay(200).ContinueWith(_ => writer.Dispose(), TaskScheduler.Default);
 
-        var app = AppModel.Load(temp.State);
+        var app = AppModels.Load(temp.State);
 
         Assert.That(app.Problems, Is.Empty);
     }

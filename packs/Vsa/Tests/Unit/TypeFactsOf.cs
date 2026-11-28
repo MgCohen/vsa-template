@@ -34,7 +34,7 @@ static class TypeFactsOf {
     public static TypeFacts Plain(string name, Source source) => new(name, name, "", source, [name], [], [], []);
 
     static IEnumerable<string> MutableMembers(Type type) => type.IsEnum ? [] : type.GetFields(Declared)
-        .Where(f => !f.IsInitOnly && !f.IsLiteral && !LoadedTypes.IsCompilerGenerated(f.Name))
+        .Where(f => !f.IsInitOnly && !f.IsLiteral && !CompilerNames.IsGenerated(f.Name))
         .Select(f => f.Name)
         .Concat(type.GetProperties(Declared).Where(IsSettable).Select(p => p.Name));
 

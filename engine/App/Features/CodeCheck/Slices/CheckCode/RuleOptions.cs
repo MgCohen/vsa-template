@@ -1,6 +1,6 @@
 namespace CodeCheck.Slices.CheckCode;
 
-public sealed class RuleOptions(string ruleId, CodeConfig config, IReadOnlyList<RuleOption> declared) {
+sealed class RuleOptions(string ruleId, CodeConfig config, IReadOnlyList<RuleOption> declared) {
     public string? Configured(string key) =>
         config.Value($"umpire.{ruleId}.{key}") ?? config.Value($"umpire.{key}");
 

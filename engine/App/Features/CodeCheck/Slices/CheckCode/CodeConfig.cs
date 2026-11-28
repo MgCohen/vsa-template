@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Umpire.Config;
 
-public sealed class CodeConfig {
+sealed class CodeConfig {
     readonly Dictionary<string, string> values;
 
     CodeConfig(IEnumerable<KeyValuePair<string, string>> pairs) {

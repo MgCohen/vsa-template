@@ -7,6 +7,7 @@ using DefinitionRoot = Umpire.Architecture.Blocks.Definition;
 using Core = Umpire.Kernels.Blocks.Core;
 using KernelParts = Umpire.Kernels.KernelParts;
 using MessagesParts = Umpire.Kernels.MessagesParts;
+using Module = Umpire.Kernels.Blocks.Module;
 
 public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Configure(ArchitectureConfig config) => config.Roots.Add<Entries>();
@@ -14,13 +15,14 @@ public sealed class EngineArchitecture : VsaArchitecture {
     protected override void Rules(RuleBook rules) {
         rules.For<Contracts.Commands>().And<Handlers.Commands>().And<Infrastructure>().And<Domain.Shared>()
             .Uses<EngineLibraries>().And<VersionLibraries>().And<ConfigLibraries>();
-        rules.For<Infrastructure>().Uses<KernelParts.Utility>();
+        rules.For<Infrastructure>().Uses<KernelParts.Utility>().And<KernelParts.Paths>();
+        rules.For<Domain>().Uses<KernelParts.Paths>();
         rules.For<Host>().And<App>(Depth.Self).Uses<EngineLibraries>().And<VersionLibraries>();
         rules.For<Host>().Uses<Contracts.Requests>().And<Domain.Shared>().And<Infrastructure>().Under<Plugin>();
         rules.For<DefinitionRoot>().Uses<EngineLibraries>();
         rules.For<Entries>().Uses<App>(Depth.Self).And<Core>().And<UmpireLibraries>()
             .And<EngineLibraries>().And<VersionLibraries>();
-        rules.For<Entries>().Uses<Contracts.Requests>().And<Domain.Shared>().And<Infrastructure>().Under<Plugin>();
-        rules.For<Entries>().Uses<Composition>().And<MessagesParts.Contracts>();
+        rules.For<Entries>().Uses<Domain.Shared>().And<Infrastructure>().Under<Plugin>();
+        rules.For<Entries>().Uses<Module>(Depth.Self).And<Contracts.Requests>().And<Composition>().And<MessagesParts.Contracts>();
     }
 }

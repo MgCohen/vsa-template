@@ -37,5 +37,7 @@
     <InternalsVisibleTo Include="umpire-engine" />
     <InternalsVisibleTo Include="Architecture.Tests" />
     <InternalsVisibleTo Include="Engine.Tests" />
+    <InternalsVisibleTo Include="Rules.Tests" />
+    <InternalsVisibleTo Include="Umpire.Engine.Analyzer" />
   </ItemGroup>
 </Project>

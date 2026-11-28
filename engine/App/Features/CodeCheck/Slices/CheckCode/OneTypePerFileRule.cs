@@ -2,7 +2,7 @@ namespace CodeCheck.Slices.CheckCode;
 
 using Facts.Domain.Shared.Compile;
 
-public sealed class OneTypePerFileRule : KernelRule {
+sealed class OneTypePerFileRule : KernelRule {
     public const string AllowSameNameKey = "allow_same_name";
 
     public override int Number => 4;

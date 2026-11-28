@@ -5,7 +5,7 @@ using System.Reflection;
 using Facts.Domain.Shared.Compile;
 using Operations.Domain.Shared;
 
-public abstract class CodeRule {
+abstract class CodeRule {
     const string Area = "01";
 
     static readonly IReadOnlyList<CodeRule> Rules = [.. TypesOf(typeof(CodeRule).Assembly)
@@ -26,13 +26,12 @@ public abstract class CodeRule {
         "The .umpireconfig file is not valid TOML",
         "The .umpireconfig file is not valid TOML: {0} Correct the file. The Umpire rules do not run until the file is valid.");
 
-    public static CodeNotice LoadNotice { get; } = new(
-        "UMP010003",
-        "The Umpire analyzers cannot load a library",
-        "The Umpire analyzers cannot load a library: {0} The analyzer DLL embeds Umpire.Config. Use a "
-            + "compiler on .NET 8 or later. The Umpire rules do not run until the library loads.");
+    public static IReadOnlyList<CodeNotice> Notices { get; } = [OptionNotice, ConfigNotice];
 
-    public static IReadOnlyList<CodeNotice> Notices { get; } = [OptionNotice, ConfigNotice, LoadNotice];
+    public static IReadOnlyList<FindingCode> Codes => [
+        .. All.Select(rule => new FindingCode(rule.Id, rule.Title, AtEnd: false, IsCodeRule: true)),
+        .. Notices.Select(notice => new FindingCode(notice.Id, notice.Title, AtEnd: true)),
+    ];
 
     public abstract int Group { get; }
 

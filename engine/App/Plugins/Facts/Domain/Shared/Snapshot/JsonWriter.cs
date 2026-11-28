@@ -9,15 +9,14 @@ sealed class JsonWriter {
     const string Step = "  ";
 
     readonly StringBuilder text = new();
-    int depth;
 
     public static string Write(object value) {
         var writer = new JsonWriter();
-        writer.Value(value);
+        writer.Value(value, 0);
         return writer.text.Append('\n').ToString();
     }
 
-    void Value(object value) {
+    void Value(object value, int depth) {
         switch (value) {
             case string s:
                 JsonText.Write(text, s);
@@ -32,43 +31,42 @@ sealed class JsonWriter {
                 JsonText.Write(text, value.ToString()!);
                 break;
             case IReadOnlyDictionary<string, string> pairs:
-                Items('{', '}', pairs.OrderBy(p => p.Key, StringComparer.Ordinal), pair => Field(pair.Key, pair.Value));
+                Items('{', '}', pairs.OrderBy(p => p.Key, StringComparer.Ordinal), depth, pair => Field(pair.Key, pair.Value, depth + 1));
                 break;
             case IEnumerable list:
-                Items('[', ']', list.Cast<object>(), Value);
+                Items('[', ']', list.Cast<object>(), depth, item => Value(item, depth + 1));
                 break;
             default:
-                Items('{', '}', RecordShape.Of(value.GetType()).Written(value), field => Field(field.Key, field.Property.GetValue(value)!));
+                Items('{', '}', RecordShape.Of(value.GetType()).Written(value), depth,
+                    field => Field(field.Key, field.Property.GetValue(value)!, depth + 1));
                 break;
         }
     }
 
-    void Field(string key, object value) {
+    void Field(string key, object value, int depth) {
         JsonText.Write(text, key);
         text.Append(':');
-        Value(value);
+        Value(value, depth);
     }
 
-    void Items<T>(char open, char close, IEnumerable<T> items, Action<T> write) {
+    void Items<T>(char open, char close, IEnumerable<T> items, int depth, Action<T> write) {
         text.Append(open);
         var start = text.Length;
         var lines = depth < LineDepth;
-        depth++;
         foreach (var item in items) {
             if (text.Length > start) {
                 text.Append(',');
             }
             if (lines) {
-                Line();
+                Line(depth + 1);
             }
             write(item);
         }
-        depth--;
         if (lines && text.Length > start) {
-            Line();
+            Line(depth);
         }
         text.Append(close);
     }
 
-    void Line() => text.Append('\n').Insert(text.Length, Step, depth);
+    void Line(int depth) => text.Append('\n').Insert(text.Length, Step, depth);
 }

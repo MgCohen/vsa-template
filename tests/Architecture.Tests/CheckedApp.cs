@@ -11,8 +11,8 @@ sealed class CheckedApp {
     public CheckedApp(StateFolder state, IReadOnlyList<DllFacts> facts, IReadOnlyList<Finding> setup) {
         State = state;
         Facts = facts;
-        Model = AppModel.Load(state);
-        findings = new(() => [.. ModelCheck.Run(state).Findings.Select(CheckModelHandler.Converted), .. setup]);
+        Model = AppModels.Load(state);
+        findings = new(() => [.. StateCheck.Run(state).Findings.Select(CheckModelHandler.Converted), .. setup]);
     }
 
     public StateFolder State { get; }

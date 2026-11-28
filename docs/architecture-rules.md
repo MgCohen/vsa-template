@@ -230,7 +230,7 @@ The Umpire packages ship no native style: no .NET rule severity, no `TreatWarnin
 
 The analyzer of this repository is the analyzer build of the entry (`UmpireAnalyzerBuild=true`). The entry and the engine core build on the bundles, in the output folder `<config>-analyzer`, with no analyzer. The bundles get no analyzer (`UmpireNoAnalyzer`), because the analyzer builds on them, and the runtime projects check the same files. Thus each runtime project, the engine and the entry get the analyzer, and no project is a dependency of its own analyzer.
 
-The base makes the ID (`UMP01` + group + number). The entry makes the descriptors from `CodeRule.All` and `CodeRule.Notices`, with the message format `{0}`. `CodeTests` checks that the rules table of this file lists each rule ID. Tests find a rule by its type, for example `new LineLengthRule().Id`.
+The base makes the ID (`UMP01` + group + number). The entry makes the descriptors from the codes that the compile job gives at the stage `Load` (`CodeRule.All`, `CodeRule.Notices` and the codes of the check model), with the message format `{0}`. The entry owns `UMP010003`, because it reports this code when the engine does not load. `CodeTests` checks that the rules table of this file lists each rule ID. Tests find a rule by its type, for example `new LineLengthRule().Id`.
 
 A rule lists its options in `Options`, each with its default on the class. The lookup is: `umpire.<rule ID>.<key>`, then `umpire.<key>`, then the default. At the start of a compilation, the code check checks each option. If a value is not valid, or an option has no default and no value, it reports `UMP010001`, and that rule does not run. A consumer changes a value in the `.umpireconfig` file of its block.
 
