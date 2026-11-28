@@ -54,7 +54,8 @@ internal static class CountCheck {
         if (statement.Max is { } max && found.Count > max) {
             yield return new CountResult(statement.Rule, CountProblem.TooMany, subject, found, max == 0 ? First(found) : at,
                 $"{subject} has {found.Count} {counted}{names}: the rule \"{statement.Rule}\" needs {need}. "
-                + (group is null ? $"Keep {max}, and remove the others." : $"Move the others to another {group}."));
+                + (max == 0 ? $"Remove {string.Join(", ", found.Select(f => f.Type.Name))}, or move each one to a part where the rule does not apply."
+                    : group is null ? $"Keep {max}, and remove the others." : $"Move the others to another {group}."));
         }
         var kinds = found.Select(b => b.Part.Name).Distinct().ToList();
         if (statement.OneKind && kinds.Count > 1) {

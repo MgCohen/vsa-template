@@ -73,8 +73,7 @@ sealed class CountRun {
                 + (group is null ? $"Add one, or remove {at.Name.Name}." : "Add one, or move the other types to another part."));
         }
         if (rule.Max is { } max && found.Count > max) {
-            yield return new CountFailure(max == 0 ? First(found) : at, needs
-                + (group is null ? $"Keep {max}, and remove the others." : $"Move the others to another {group}."));
+            yield return new CountFailure(max == 0 ? First(found) : at, needs + TooManyFix(max, group, found));
         }
         var kinds = found.Select(f => f.Placement.Part.Name).Distinct().Count();
         if (rule.OneKind && kinds > 1) {
@@ -84,4 +83,8 @@ sealed class CountRun {
                 + (group is null ? "Keep one kind." : $"Move each kind to its own {group}."));
         }
     }
+
+    static string TooManyFix(int max, string? group, List<PlacedType> found) => max == 0
+        ? $"Remove {string.Join(", ", found.Select(f => f.Type.Name.Name))}, or move each one to a part where the rule does not apply."
+        : group is null ? $"Keep {max}, and remove the others." : $"Move the others to another {group}.";
 }

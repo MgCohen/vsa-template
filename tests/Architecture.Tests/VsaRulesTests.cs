@@ -176,6 +176,7 @@ public sealed class VsaRulesTests {
     [TestCase("C:/repo/packs/Vsa/Kernel/Domain/Entity.cs", "Domain", "Kernel")]
     [TestCase("/_/framework/Kernel/Hosts/Web/WebHost.cs", "Hosts", "Core")]
     [TestCase("/_/framework/Kernel/App/App.cs", "KernelParts.App", "Core")]
+    [TestCase("/_/framework/Kernel/Messages/Pipeline/Pipelines.cs", "KernelParts.Messages", "Core")]
     public void A_type_of_a_DLL_binds_to_the_body_part_of_its_source_path(string file, string part, string block) {
         var type = new TypeFacts("Umpire.Some.Type", "Type", "Umpire", new Source(file, 1), [], [], [], []);
 

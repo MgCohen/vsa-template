@@ -110,7 +110,7 @@ public class VsaArchitecture<TKernel> : Umpire.Kernels.Architecture<TKernel> whe
 
     static void BusRules(RuleBook rules) {
         rules.For<App>(Depth.Self).And<Host>().And<DefinitionRoot>().And<Kernel>(Depth.Self).Denies<KernelParts.Messages>();
-        rules.For<Domain>().And<Presenters>().And<Views>().And<Composition>().And<Contracts>(Depth.WithChildren).Under<Kernel>()
+        rules.For<Domain>().And<Views>().And<Composition>().And<Contracts>(Depth.WithChildren).Under<Kernel>()
             .Denies<KernelParts.Messages>();
         rules.For<KernelParts.Messages>().Denies<Kernel>(Depth.Self);
         rules.For<KernelParts.Messages>()

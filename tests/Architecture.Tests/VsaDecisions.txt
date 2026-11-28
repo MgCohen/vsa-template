@@ -3722,7 +3722,7 @@ Kernel/Presenters -> Core/KernelParts.App [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Presenters -> Core/Hosts [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Operations [any] Allow Public
-Kernel/Presenters -> Core/KernelParts.Messages [any] Deny
+Kernel/Presenters -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Factories [any] Allow Public
