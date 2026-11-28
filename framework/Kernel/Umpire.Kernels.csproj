@@ -17,6 +17,9 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Umpire.Vsa.Composition" />
+    <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Commands" />
+    <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Events" />
+    <InternalsVisibleTo Include="Umpire.Vsa.Handlers.Requests" />
     <InternalsVisibleTo Include="Umpire.Hosts.Web" />
     <InternalsVisibleTo Include="Umpire.Hosts.Console" />
     <InternalsVisibleTo Include="Framework.Tests" />

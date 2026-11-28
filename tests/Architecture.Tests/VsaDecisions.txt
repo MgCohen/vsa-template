@@ -1,6 +1,5 @@
 App -> App/MessagesComponent [any] Deny
 App -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App -> App/Host [any] Allow Public
 App -> App/Pack [any] Allow Public
 App -> App/Plugin [any] Deny
@@ -40,6 +39,7 @@ App -> Core/KernelParts.App [any] Allow Public
 App -> Core/KernelParts.Kernels [any] Allow Public
 App -> Core/Hosts [any] Allow Public
 App -> Core/KernelParts.Operations [any] Allow Public
+App -> Core/KernelParts.Messages [any] Deny
 App -> Core/KernelParts.Modules [any] Allow Public
 App -> Core/KernelParts.Scan [any] Allow Public
 App -> Core/KernelParts.Factories [any] Allow Public
@@ -66,7 +66,6 @@ App -> Kernel/Composition [any] Allow Public
 App -> UmpireLibraries [any] Allow Public
 App/MessagesComponent -> App [any] Deny
 App/MessagesComponent -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/MessagesComponent -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/MessagesComponent -> App/Host [any] Deny
 App/MessagesComponent -> App/Pack [any] Deny
 App/MessagesComponent -> App/Plugin [any] Deny
@@ -106,6 +105,7 @@ App/MessagesComponent -> Core/KernelParts.App [any] Deny
 App/MessagesComponent -> Core/KernelParts.Kernels [any] Deny
 App/MessagesComponent -> Core/Hosts [any] Deny
 App/MessagesComponent -> Core/KernelParts.Operations [any] Deny
+App/MessagesComponent -> Core/KernelParts.Messages [any] Deny
 App/MessagesComponent -> Core/KernelParts.Modules [any] Deny
 App/MessagesComponent -> Core/KernelParts.Scan [any] Deny
 App/MessagesComponent -> Core/KernelParts.Factories [any] Deny
@@ -132,7 +132,6 @@ App/MessagesComponent -> Kernel/Composition [any] Deny
 App/MessagesComponent -> UmpireLibraries [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> App [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> App/MessagesComponent [any] Deny
-App/MessagesComponent/MessagesParts.Contracts -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> App/Host [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> App/Pack [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> App/Plugin [any] Deny
@@ -172,6 +171,7 @@ App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.App [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Kernels [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/Hosts [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Operations [any] Deny
+App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Messages [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Modules [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Scan [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Core/KernelParts.Factories [any] Deny
@@ -196,76 +196,9 @@ App/MessagesComponent/MessagesParts.Contracts -> Kernel/Handlers/Handlers.Comman
 App/MessagesComponent/MessagesParts.Contracts -> Kernel/Views [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> Kernel/Composition [any] Deny
 App/MessagesComponent/MessagesParts.Contracts -> UmpireLibraries [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/MessagesComponent [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Host [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Pack [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Domain [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Domain/Domain.Shared [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Infrastructure [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Presenters [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Contracts [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Contracts/Contracts.Requests [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Contracts/Contracts.Events [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Contracts/Contracts.Commands [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Handlers [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Handlers/Handlers.Requests [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Handlers/Handlers.Events [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Handlers/Handlers.Commands [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Domain [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Domain/Domain.Shared [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Infrastructure [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Presenters [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice.Shared [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Contracts.Requests [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Contracts.Events [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Contracts.Commands [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Handlers.Requests [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Handlers.Events [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Handlers.Commands [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Handlers.Events.Hooks [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Handlers.Commands.Hooks [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> App/Feature/Slice/Slice.Validators [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Definition [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.App [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Kernels [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/Hosts [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Operations [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Modules [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Scan [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Factories [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Services [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Utility [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Paths [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Core/KernelParts.Analyzers [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Views [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Domain [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Infrastructure [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Presenters [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Contracts [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Contracts/Contracts.Requests [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Contracts/Contracts.Events [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Contracts/Contracts.Commands [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Handlers [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Handlers/Handlers.Requests [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Handlers/Handlers.Events [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Handlers/Handlers.Commands [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Views [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> Kernel/Composition [any] Deny
-App/MessagesComponent/MessagesParts.Handlers -> UmpireLibraries [any] Deny
 App/Host -> App [any] Deny
 App/Host -> App/MessagesComponent [any] Deny
 App/Host -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Host -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Host -> App/Pack [any] Allow Public
 App/Host -> App/Plugin [any] Allow Public
 App/Host -> App/Plugin/Domain [any] Deny
@@ -304,6 +237,7 @@ App/Host -> Core/KernelParts.App [any] Allow Public
 App/Host -> Core/KernelParts.Kernels [any] Allow Public
 App/Host -> Core/Hosts [any] Allow Public
 App/Host -> Core/KernelParts.Operations [any] Allow Public
+App/Host -> Core/KernelParts.Messages [any] Deny
 App/Host -> Core/KernelParts.Modules [any] Allow Public
 App/Host -> Core/KernelParts.Scan [any] Allow Public
 App/Host -> Core/KernelParts.Factories [any] Allow Public
@@ -331,7 +265,6 @@ App/Host -> UmpireLibraries [any] Allow Public
 App/Pack -> App [any] Deny
 App/Pack -> App/MessagesComponent [any] Deny
 App/Pack -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Pack -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Pack -> App/Host [any] Deny
 App/Pack -> App/Pack [any] Deny
 App/Pack -> App/Plugin [any] Deny
@@ -371,6 +304,7 @@ App/Pack -> Core/KernelParts.App [any] Deny
 App/Pack -> Core/KernelParts.Kernels [any] Deny
 App/Pack -> Core/Hosts [any] Deny
 App/Pack -> Core/KernelParts.Operations [any] Deny
+App/Pack -> Core/KernelParts.Messages [any] Deny
 App/Pack -> Core/KernelParts.Modules [any] Deny
 App/Pack -> Core/KernelParts.Scan [any] Deny
 App/Pack -> Core/KernelParts.Factories [any] Deny
@@ -398,7 +332,6 @@ App/Pack -> UmpireLibraries [any] Deny
 App/Plugin -> App [any] Deny
 App/Plugin -> App/MessagesComponent [any] Allow Public
 App/Plugin -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin -> App/Host [any] Deny
 App/Plugin -> App/Pack [any] Allow Public
 App/Plugin -> App/Plugin [any] Deny
@@ -438,6 +371,7 @@ App/Plugin -> Core/KernelParts.App [any] Allow Public
 App/Plugin -> Core/KernelParts.Kernels [any] Allow Public
 App/Plugin -> Core/Hosts [any] Allow Public
 App/Plugin -> Core/KernelParts.Operations [any] Allow Public
+App/Plugin -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin -> Core/KernelParts.Modules [any] Allow Public
 App/Plugin -> Core/KernelParts.Scan [any] Allow Public
 App/Plugin -> Core/KernelParts.Factories [any] Allow Public
@@ -465,7 +399,6 @@ App/Plugin -> UmpireLibraries [any] Allow Public
 App/Plugin/Domain -> App [any] Deny
 App/Plugin/Domain -> App/MessagesComponent [any] Deny
 App/Plugin/Domain -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Plugin/Domain -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Domain -> App/Host [any] Deny
 App/Plugin/Domain -> App/Pack [any] Allow Public
 App/Plugin/Domain -> App/Plugin [any] Deny
@@ -505,6 +438,7 @@ App/Plugin/Domain -> Core/KernelParts.App [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Domain -> Core/Hosts [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Domain -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Domain -> Core/KernelParts.Factories [any] Deny
@@ -532,7 +466,6 @@ App/Plugin/Domain -> UmpireLibraries [any] Deny
 App/Plugin/Domain/Domain.Shared -> App [any] Deny
 App/Plugin/Domain/Domain.Shared -> App/MessagesComponent [any] Deny
 App/Plugin/Domain/Domain.Shared -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Plugin/Domain/Domain.Shared -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Domain/Domain.Shared -> App/Host [any] Deny
 App/Plugin/Domain/Domain.Shared -> App/Pack [any] Allow Public
 App/Plugin/Domain/Domain.Shared -> App/Plugin [any] Deny
@@ -572,6 +505,7 @@ App/Plugin/Domain/Domain.Shared -> Core/KernelParts.App [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/Hosts [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Domain/Domain.Shared -> Core/KernelParts.Factories [any] Deny
@@ -599,7 +533,6 @@ App/Plugin/Domain/Domain.Shared -> UmpireLibraries [any] Deny
 App/Plugin/Infrastructure -> App [any] Deny
 App/Plugin/Infrastructure -> App/MessagesComponent [any] Deny
 App/Plugin/Infrastructure -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Infrastructure -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Infrastructure -> App/Host [any] Deny
 App/Plugin/Infrastructure -> App/Pack [any] Allow Public
 App/Plugin/Infrastructure -> App/Plugin [any] Deny
@@ -639,6 +572,7 @@ App/Plugin/Infrastructure -> Core/KernelParts.App [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Infrastructure -> Core/Hosts [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Infrastructure -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Infrastructure -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Infrastructure -> Core/KernelParts.Factories [any] Deny
@@ -666,7 +600,6 @@ App/Plugin/Infrastructure -> UmpireLibraries [any] Deny
 App/Plugin/Presenters -> App [any] Deny
 App/Plugin/Presenters -> App/MessagesComponent [any] Deny
 App/Plugin/Presenters -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Presenters -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Presenters -> App/Host [any] Deny
 App/Plugin/Presenters -> App/Pack [any] Allow Public
 App/Plugin/Presenters -> App/Plugin [any] Deny
@@ -706,6 +639,7 @@ App/Plugin/Presenters -> Core/KernelParts.App [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Presenters -> Core/Hosts [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Presenters -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Presenters -> Core/KernelParts.Factories [any] Deny
@@ -733,7 +667,6 @@ App/Plugin/Presenters -> UmpireLibraries [any] Deny
 App/Plugin/Contracts -> App [any] Deny
 App/Plugin/Contracts -> App/MessagesComponent [any] Deny
 App/Plugin/Contracts -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Contracts -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Contracts -> App/Host [any] Deny
 App/Plugin/Contracts -> App/Pack [any] Allow Public
 App/Plugin/Contracts -> App/Plugin [any] Deny
@@ -773,6 +706,7 @@ App/Plugin/Contracts -> Core/KernelParts.App [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Contracts -> Core/Hosts [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Contracts -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts -> Core/KernelParts.Factories [any] Deny
@@ -800,7 +734,6 @@ App/Plugin/Contracts -> UmpireLibraries [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> App [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> App/MessagesComponent [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Contracts/Contracts.Requests -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> App/Host [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> App/Pack [any] Allow Public
 App/Plugin/Contracts/Contracts.Requests -> App/Plugin [any] Deny
@@ -840,6 +773,7 @@ App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.App [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/Hosts [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts/Contracts.Requests -> Core/KernelParts.Factories [any] Deny
@@ -867,7 +801,6 @@ App/Plugin/Contracts/Contracts.Requests -> UmpireLibraries [any] Deny
 App/Plugin/Contracts/Contracts.Events -> App [any] Deny
 App/Plugin/Contracts/Contracts.Events -> App/MessagesComponent [any] Deny
 App/Plugin/Contracts/Contracts.Events -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Contracts/Contracts.Events -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Contracts/Contracts.Events -> App/Host [any] Deny
 App/Plugin/Contracts/Contracts.Events -> App/Pack [any] Allow Public
 App/Plugin/Contracts/Contracts.Events -> App/Plugin [any] Deny
@@ -907,6 +840,7 @@ App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.App [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/Hosts [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts/Contracts.Events -> Core/KernelParts.Factories [any] Deny
@@ -934,7 +868,6 @@ App/Plugin/Contracts/Contracts.Events -> UmpireLibraries [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> App [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> App/MessagesComponent [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Contracts/Contracts.Commands -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> App/Host [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> App/Pack [any] Allow Public
 App/Plugin/Contracts/Contracts.Commands -> App/Plugin [any] Deny
@@ -974,6 +907,7 @@ App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.App [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/Hosts [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Messages [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Contracts/Contracts.Commands -> Core/KernelParts.Factories [any] Deny
@@ -1001,7 +935,6 @@ App/Plugin/Contracts/Contracts.Commands -> UmpireLibraries [any] Deny
 App/Plugin/Handlers -> App [any] Deny
 App/Plugin/Handlers -> App/MessagesComponent [any] Deny
 App/Plugin/Handlers -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Plugin/Handlers -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Handlers -> App/Host [any] Deny
 App/Plugin/Handlers -> App/Pack [any] Allow Public
 App/Plugin/Handlers -> App/Plugin [any] Deny
@@ -1041,6 +974,7 @@ App/Plugin/Handlers -> Core/KernelParts.App [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Handlers -> Core/Hosts [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Handlers -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Handlers -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers -> Core/KernelParts.Factories [any] Deny
@@ -1068,7 +1002,6 @@ App/Plugin/Handlers -> UmpireLibraries [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> App [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> App/MessagesComponent [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Handlers/Handlers.Requests -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Handlers/Handlers.Requests -> App/Host [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> App/Pack [any] Allow Public
 App/Plugin/Handlers/Handlers.Requests -> App/Plugin [any] Deny
@@ -1108,6 +1041,7 @@ App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.App [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/Hosts [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Requests -> Core/KernelParts.Factories [any] Deny
@@ -1135,7 +1069,6 @@ App/Plugin/Handlers/Handlers.Requests -> UmpireLibraries [any] Deny
 App/Plugin/Handlers/Handlers.Events -> App [any] Deny
 App/Plugin/Handlers/Handlers.Events -> App/MessagesComponent [any] Deny
 App/Plugin/Handlers/Handlers.Events -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Handlers/Handlers.Events -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Handlers/Handlers.Events -> App/Host [any] Deny
 App/Plugin/Handlers/Handlers.Events -> App/Pack [any] Allow Public
 App/Plugin/Handlers/Handlers.Events -> App/Plugin [any] Deny
@@ -1175,6 +1108,7 @@ App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.App [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/Hosts [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Events -> Core/KernelParts.Factories [any] Deny
@@ -1202,7 +1136,6 @@ App/Plugin/Handlers/Handlers.Events -> UmpireLibraries [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/MessagesComponent [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Host [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Pack [any] Allow Public
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> App/Plugin [any] Deny
@@ -1242,6 +1175,7 @@ App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Ap
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/Hosts [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> Core/KernelParts.Factories [any] Deny
@@ -1269,7 +1203,6 @@ App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks -> UmpireLibraries [an
 App/Plugin/Handlers/Handlers.Commands -> App [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> App/MessagesComponent [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Handlers/Handlers.Commands -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Handlers/Handlers.Commands -> App/Host [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> App/Pack [any] Allow Public
 App/Plugin/Handlers/Handlers.Commands -> App/Plugin [any] Deny
@@ -1309,6 +1242,7 @@ App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.App [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/Hosts [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Commands -> Core/KernelParts.Factories [any] Deny
@@ -1336,7 +1270,6 @@ App/Plugin/Handlers/Handlers.Commands -> UmpireLibraries [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/MessagesComponent [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Host [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Pack [any] Allow Public
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> App/Plugin [any] Deny
@@ -1376,6 +1309,7 @@ App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelPart
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Kernels [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/Hosts [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Operations [any] Deny
+App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Messages [any] Allow Public
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Modules [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Scan [any] Deny
 App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> Core/KernelParts.Factories [any] Deny
@@ -1403,7 +1337,6 @@ App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks -> UmpireLibraries
 App/Feature -> App [any] Deny
 App/Feature -> App/MessagesComponent [any] Allow Public
 App/Feature -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature -> App/Host [any] Deny
 App/Feature -> App/Pack [any] Allow Public
 App/Feature -> App/Plugin [any] Deny
@@ -1477,6 +1410,7 @@ App/Feature -> Core/KernelParts.App [any] Allow Public
 App/Feature -> Core/KernelParts.Kernels [any] Allow Public
 App/Feature -> Core/Hosts [any] Allow Public
 App/Feature -> Core/KernelParts.Operations [any] Allow Public
+App/Feature -> Core/KernelParts.Messages [any] Allow Public
 App/Feature -> Core/KernelParts.Modules [any] Allow Public
 App/Feature -> Core/KernelParts.Scan [any] Allow Public
 App/Feature -> Core/KernelParts.Factories [any] Allow Public
@@ -1504,7 +1438,6 @@ App/Feature -> UmpireLibraries [any] Allow Public
 App/Feature/Domain -> App [any] Deny
 App/Feature/Domain -> App/MessagesComponent [any] Deny
 App/Feature/Domain -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Feature/Domain -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Domain -> App/Host [any] Deny
 App/Feature/Domain -> App/Pack [any] Allow Public
 App/Feature/Domain -> App/Plugin [any] Deny
@@ -1544,6 +1477,7 @@ App/Feature/Domain -> Core/KernelParts.App [any] Deny
 App/Feature/Domain -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Domain -> Core/Hosts [any] Deny
 App/Feature/Domain -> Core/KernelParts.Operations [any] Deny
+App/Feature/Domain -> Core/KernelParts.Messages [any] Deny
 App/Feature/Domain -> Core/KernelParts.Modules [any] Deny
 App/Feature/Domain -> Core/KernelParts.Scan [any] Deny
 App/Feature/Domain -> Core/KernelParts.Factories [any] Deny
@@ -1571,7 +1505,6 @@ App/Feature/Domain -> UmpireLibraries [any] Deny
 App/Feature/Domain/Domain.Shared -> App [any] Deny
 App/Feature/Domain/Domain.Shared -> App/MessagesComponent [any] Deny
 App/Feature/Domain/Domain.Shared -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Feature/Domain/Domain.Shared -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Domain/Domain.Shared -> App/Host [any] Deny
 App/Feature/Domain/Domain.Shared -> App/Pack [any] Allow Public
 App/Feature/Domain/Domain.Shared -> App/Plugin [any] Deny
@@ -1611,6 +1544,7 @@ App/Feature/Domain/Domain.Shared -> Core/KernelParts.App [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/Hosts [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Operations [any] Deny
+App/Feature/Domain/Domain.Shared -> Core/KernelParts.Messages [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Modules [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Scan [any] Deny
 App/Feature/Domain/Domain.Shared -> Core/KernelParts.Factories [any] Deny
@@ -1638,7 +1572,6 @@ App/Feature/Domain/Domain.Shared -> UmpireLibraries [any] Deny
 App/Feature/Infrastructure -> App [any] Deny
 App/Feature/Infrastructure -> App/MessagesComponent [any] Deny
 App/Feature/Infrastructure -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Infrastructure -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Infrastructure -> App/Host [any] Deny
 App/Feature/Infrastructure -> App/Pack [any] Allow Public
 App/Feature/Infrastructure -> App/Plugin [any] Deny
@@ -1679,6 +1612,7 @@ App/Feature/Infrastructure -> Core/KernelParts.App [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Infrastructure -> Core/Hosts [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Operations [any] Deny
+App/Feature/Infrastructure -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Infrastructure -> Core/KernelParts.Modules [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Scan [any] Deny
 App/Feature/Infrastructure -> Core/KernelParts.Factories [any] Deny
@@ -1706,7 +1640,6 @@ App/Feature/Infrastructure -> UmpireLibraries [any] Deny
 App/Feature/Presenters -> App [any] Deny
 App/Feature/Presenters -> App/MessagesComponent [any] Deny
 App/Feature/Presenters -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Presenters -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Presenters -> App/Host [any] Deny
 App/Feature/Presenters -> App/Pack [any] Allow Public
 App/Feature/Presenters -> App/Plugin [any] Deny
@@ -1753,6 +1686,7 @@ App/Feature/Presenters -> Core/KernelParts.App [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Presenters -> Core/Hosts [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Operations [any] Deny
+App/Feature/Presenters -> Core/KernelParts.Messages [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Modules [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Scan [any] Deny
 App/Feature/Presenters -> Core/KernelParts.Factories [any] Deny
@@ -1780,7 +1714,6 @@ App/Feature/Presenters -> UmpireLibraries [any] Deny
 App/Feature/Slice.Shared -> App [any] Deny
 App/Feature/Slice.Shared -> App/MessagesComponent [any] Deny
 App/Feature/Slice.Shared -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice.Shared -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Slice.Shared -> App/Host [any] Deny
 App/Feature/Slice.Shared -> App/Pack [any] Allow Public
 App/Feature/Slice.Shared -> App/Plugin [any] Deny
@@ -1820,6 +1753,7 @@ App/Feature/Slice.Shared -> Core/KernelParts.App [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice.Shared -> Core/Hosts [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice.Shared -> Core/KernelParts.Messages [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice.Shared -> Core/KernelParts.Factories [any] Deny
@@ -1847,7 +1781,6 @@ App/Feature/Slice.Shared -> UmpireLibraries [any] Deny
 App/Feature/Slice -> App [any] Deny
 App/Feature/Slice -> App/MessagesComponent [any] Deny
 App/Feature/Slice -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-App/Feature/Slice -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Slice -> App/Host [any] Deny
 App/Feature/Slice -> App/Pack [any] Allow Public
 App/Feature/Slice -> App/Plugin [any] Deny
@@ -1888,6 +1821,7 @@ App/Feature/Slice -> Core/KernelParts.App [any] Deny
 App/Feature/Slice -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice -> Core/Hosts [any] Deny
 App/Feature/Slice -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice -> Core/KernelParts.Messages [any] Deny
 App/Feature/Slice -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice -> Core/KernelParts.Factories [any] Deny
@@ -1915,7 +1849,6 @@ App/Feature/Slice -> UmpireLibraries [any] Deny
 App/Feature/Slice/Contracts.Requests -> App [any] Deny
 App/Feature/Slice/Contracts.Requests -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Contracts.Requests -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Contracts.Requests -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Slice/Contracts.Requests -> App/Host [any] Deny
 App/Feature/Slice/Contracts.Requests -> App/Pack [any] Allow Public
 App/Feature/Slice/Contracts.Requests -> App/Plugin [any] Deny
@@ -1956,6 +1889,7 @@ App/Feature/Slice/Contracts.Requests -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/Hosts [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Messages [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Contracts.Requests -> Core/KernelParts.Factories [any] Deny
@@ -1983,7 +1917,6 @@ App/Feature/Slice/Contracts.Requests -> UmpireLibraries [any] Deny
 App/Feature/Slice/Contracts.Events -> App [any] Deny
 App/Feature/Slice/Contracts.Events -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Contracts.Events -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Contracts.Events -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Slice/Contracts.Events -> App/Host [any] Deny
 App/Feature/Slice/Contracts.Events -> App/Pack [any] Allow Public
 App/Feature/Slice/Contracts.Events -> App/Plugin [any] Deny
@@ -2024,6 +1957,7 @@ App/Feature/Slice/Contracts.Events -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/Hosts [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Contracts.Events -> Core/KernelParts.Messages [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Contracts.Events -> Core/KernelParts.Factories [any] Deny
@@ -2051,7 +1985,6 @@ App/Feature/Slice/Contracts.Events -> UmpireLibraries [any] Deny
 App/Feature/Slice/Contracts.Commands -> App [any] Deny
 App/Feature/Slice/Contracts.Commands -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Contracts.Commands -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Contracts.Commands -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 App/Feature/Slice/Contracts.Commands -> App/Host [any] Deny
 App/Feature/Slice/Contracts.Commands -> App/Pack [any] Allow Public
 App/Feature/Slice/Contracts.Commands -> App/Plugin [any] Deny
@@ -2092,6 +2025,7 @@ App/Feature/Slice/Contracts.Commands -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/Hosts [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Messages [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Contracts.Commands -> Core/KernelParts.Factories [any] Deny
@@ -2119,7 +2053,6 @@ App/Feature/Slice/Contracts.Commands -> UmpireLibraries [any] Deny
 App/Feature/Slice/Handlers.Requests -> App [any] Deny
 App/Feature/Slice/Handlers.Requests -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Handlers.Requests -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Handlers.Requests -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Slice/Handlers.Requests -> App/Host [any] Deny
 App/Feature/Slice/Handlers.Requests -> App/Pack [any] Allow Public
 App/Feature/Slice/Handlers.Requests -> App/Plugin [any] Deny
@@ -2166,6 +2099,7 @@ App/Feature/Slice/Handlers.Requests -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/Hosts [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Requests -> Core/KernelParts.Factories [any] Deny
@@ -2193,7 +2127,6 @@ App/Feature/Slice/Handlers.Requests -> UmpireLibraries [any] Deny
 App/Feature/Slice/Handlers.Events -> App [any] Deny
 App/Feature/Slice/Handlers.Events -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Handlers.Events -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Handlers.Events -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Slice/Handlers.Events -> App/Host [any] Deny
 App/Feature/Slice/Handlers.Events -> App/Pack [any] Allow Public
 App/Feature/Slice/Handlers.Events -> App/Plugin [any] Deny
@@ -2237,6 +2170,7 @@ App/Feature/Slice/Handlers.Events -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/Hosts [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Handlers.Events -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Events -> Core/KernelParts.Factories [any] Deny
@@ -2264,7 +2198,6 @@ App/Feature/Slice/Handlers.Events -> UmpireLibraries [any] Deny
 App/Feature/Slice/Handlers.Commands -> App [any] Deny
 App/Feature/Slice/Handlers.Commands -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Handlers.Commands -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Handlers.Commands -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Slice/Handlers.Commands -> App/Host [any] Deny
 App/Feature/Slice/Handlers.Commands -> App/Pack [any] Allow Public
 App/Feature/Slice/Handlers.Commands -> App/Plugin [any] Deny
@@ -2308,6 +2241,7 @@ App/Feature/Slice/Handlers.Commands -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/Hosts [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Commands -> Core/KernelParts.Factories [any] Deny
@@ -2335,7 +2269,6 @@ App/Feature/Slice/Handlers.Commands -> UmpireLibraries [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> App [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Handlers.Events.Hooks -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Slice/Handlers.Events.Hooks -> App/Host [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> App/Pack [any] Allow Public
 App/Feature/Slice/Handlers.Events.Hooks -> App/Plugin [any] Deny
@@ -2382,6 +2315,7 @@ App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/Hosts [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Events.Hooks -> Core/KernelParts.Factories [any] Deny
@@ -2409,7 +2343,6 @@ App/Feature/Slice/Handlers.Events.Hooks -> UmpireLibraries [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> App [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Handlers.Commands.Hooks -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Slice/Handlers.Commands.Hooks -> App/Host [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> App/Pack [any] Allow Public
 App/Feature/Slice/Handlers.Commands.Hooks -> App/Plugin [any] Deny
@@ -2456,6 +2389,7 @@ App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/Hosts [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Handlers.Commands.Hooks -> Core/KernelParts.Factories [any] Deny
@@ -2483,7 +2417,6 @@ App/Feature/Slice/Handlers.Commands.Hooks -> UmpireLibraries [any] Deny
 App/Feature/Slice/Slice.Validators -> App [any] Deny
 App/Feature/Slice/Slice.Validators -> App/MessagesComponent [any] Deny
 App/Feature/Slice/Slice.Validators -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-App/Feature/Slice/Slice.Validators -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 App/Feature/Slice/Slice.Validators -> App/Host [any] Deny
 App/Feature/Slice/Slice.Validators -> App/Pack [any] Allow Public
 App/Feature/Slice/Slice.Validators -> App/Plugin [any] Deny
@@ -2534,6 +2467,7 @@ App/Feature/Slice/Slice.Validators -> Core/KernelParts.App [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Kernels [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/Hosts [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Operations [any] Deny
+App/Feature/Slice/Slice.Validators -> Core/KernelParts.Messages [any] Allow Public
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Modules [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Scan [any] Deny
 App/Feature/Slice/Slice.Validators -> Core/KernelParts.Factories [any] Deny
@@ -2561,7 +2495,6 @@ App/Feature/Slice/Slice.Validators -> UmpireLibraries [any] Deny
 Definition -> App [any] Deny
 Definition -> App/MessagesComponent [any] Deny
 Definition -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Definition -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Definition -> App/Host [any] Deny
 Definition -> App/Pack [any] Deny
 Definition -> App/Plugin [any] Deny
@@ -2600,6 +2533,7 @@ Definition -> Core/KernelParts.App [any] Allow Public
 Definition -> Core/KernelParts.Kernels [any] Allow Public
 Definition -> Core/Hosts [any] Allow Public
 Definition -> Core/KernelParts.Operations [any] Allow Public
+Definition -> Core/KernelParts.Messages [any] Deny
 Definition -> Core/KernelParts.Modules [any] Allow Public
 Definition -> Core/KernelParts.Scan [any] Allow Public
 Definition -> Core/KernelParts.Factories [any] Allow Public
@@ -2627,7 +2561,6 @@ Definition -> UmpireLibraries [any] Allow Public
 Core -> App [any] Deny
 Core -> App/MessagesComponent [any] Deny
 Core -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core -> App/Host [any] Deny
 Core -> App/Pack [any] Deny
 Core -> App/Plugin [any] Deny
@@ -2666,6 +2599,7 @@ Core -> Core/KernelParts.App [any] Allow Public
 Core -> Core/KernelParts.Kernels [any] Allow Public
 Core -> Core/Hosts [any] Allow Public
 Core -> Core/KernelParts.Operations [any] Allow Public
+Core -> Core/KernelParts.Messages [any] Deny
 Core -> Core/KernelParts.Modules [any] Allow Public
 Core -> Core/KernelParts.Scan [any] Allow Public
 Core -> Core/KernelParts.Factories [any] Allow Public
@@ -2693,7 +2627,6 @@ Core -> UmpireLibraries [any] Deny
 Core/KernelParts.App -> App [any] Deny
 Core/KernelParts.App -> App/MessagesComponent [any] Deny
 Core/KernelParts.App -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.App -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.App -> App/Host [any] Deny
 Core/KernelParts.App -> App/Pack [any] Deny
 Core/KernelParts.App -> App/Plugin [any] Deny
@@ -2732,6 +2665,7 @@ Core/KernelParts.App -> Core [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.App -> Core/Hosts [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.App -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.App -> Core/KernelParts.Factories [any] Allow Public
@@ -2759,7 +2693,6 @@ Core/KernelParts.App -> UmpireLibraries [any] Deny
 Core/KernelParts.Kernels -> App [any] Deny
 Core/KernelParts.Kernels -> App/MessagesComponent [any] Deny
 Core/KernelParts.Kernels -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Kernels -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Kernels -> App/Host [any] Deny
 Core/KernelParts.Kernels -> App/Pack [any] Deny
 Core/KernelParts.Kernels -> App/Plugin [any] Deny
@@ -2798,6 +2731,7 @@ Core/KernelParts.Kernels -> Core [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Kernels -> Core/Hosts [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Kernels -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Kernels -> Core/KernelParts.Factories [any] Allow Public
@@ -2825,7 +2759,6 @@ Core/KernelParts.Kernels -> UmpireLibraries [any] Deny
 Core/Hosts -> App [any] Deny
 Core/Hosts -> App/MessagesComponent [any] Deny
 Core/Hosts -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/Hosts -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/Hosts -> App/Host [any] Deny
 Core/Hosts -> App/Pack [any] Deny
 Core/Hosts -> App/Plugin [any] Deny
@@ -2864,6 +2797,7 @@ Core/Hosts -> Core [any] Allow Public
 Core/Hosts -> Core/KernelParts.App [any] Allow Public
 Core/Hosts -> Core/KernelParts.Kernels [any] Allow Public
 Core/Hosts -> Core/KernelParts.Operations [any] Allow Public
+Core/Hosts -> Core/KernelParts.Messages [any] Allow Public
 Core/Hosts -> Core/KernelParts.Modules [any] Allow Public
 Core/Hosts -> Core/KernelParts.Scan [any] Allow Public
 Core/Hosts -> Core/KernelParts.Factories [any] Allow Public
@@ -2891,7 +2825,6 @@ Core/Hosts -> UmpireLibraries [any] Deny
 Core/KernelParts.Operations -> App [any] Deny
 Core/KernelParts.Operations -> App/MessagesComponent [any] Deny
 Core/KernelParts.Operations -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Operations -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Operations -> App/Host [any] Deny
 Core/KernelParts.Operations -> App/Pack [any] Deny
 Core/KernelParts.Operations -> App/Plugin [any] Deny
@@ -2930,6 +2863,7 @@ Core/KernelParts.Operations -> Core [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Operations -> Core/Hosts [any] Allow Public
+Core/KernelParts.Operations -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Operations -> Core/KernelParts.Factories [any] Allow Public
@@ -2954,10 +2888,75 @@ Core/KernelParts.Operations -> Kernel/Handlers/Handlers.Commands [any] Allow Pub
 Core/KernelParts.Operations -> Kernel/Views [any] Allow Public
 Core/KernelParts.Operations -> Kernel/Composition [any] Allow Public
 Core/KernelParts.Operations -> UmpireLibraries [any] Deny
+Core/KernelParts.Messages -> App [any] Deny
+Core/KernelParts.Messages -> App/MessagesComponent [any] Deny
+Core/KernelParts.Messages -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
+Core/KernelParts.Messages -> App/Host [any] Deny
+Core/KernelParts.Messages -> App/Pack [any] Deny
+Core/KernelParts.Messages -> App/Plugin [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Domain [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Domain/Domain.Shared [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Infrastructure [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Presenters [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Contracts [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Contracts/Contracts.Requests [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Contracts/Contracts.Events [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Contracts/Contracts.Commands [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Handlers [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Handlers/Handlers.Requests [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Handlers/Handlers.Events [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Handlers/Handlers.Events/Handlers.Events.Hooks [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Handlers/Handlers.Commands [any] Deny
+Core/KernelParts.Messages -> App/Plugin/Handlers/Handlers.Commands/Handlers.Commands.Hooks [any] Deny
+Core/KernelParts.Messages -> App/Feature [any] Deny
+Core/KernelParts.Messages -> App/Feature/Domain [any] Deny
+Core/KernelParts.Messages -> App/Feature/Domain/Domain.Shared [any] Deny
+Core/KernelParts.Messages -> App/Feature/Infrastructure [any] Deny
+Core/KernelParts.Messages -> App/Feature/Presenters [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice.Shared [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Contracts.Requests [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Contracts.Events [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Contracts.Commands [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Handlers.Requests [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Handlers.Events [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Handlers.Commands [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Handlers.Events.Hooks [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Handlers.Commands.Hooks [any] Deny
+Core/KernelParts.Messages -> App/Feature/Slice/Slice.Validators [any] Deny
+Core/KernelParts.Messages -> Definition [any] Deny
+Core/KernelParts.Messages -> Core [any] Deny
+Core/KernelParts.Messages -> Core/KernelParts.App [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Kernels [any] Allow Public
+Core/KernelParts.Messages -> Core/Hosts [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Modules [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Scan [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Factories [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Services [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Utility [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Paths [any] Allow Public
+Core/KernelParts.Messages -> Core/KernelParts.Analyzers [any] Allow Public
+Core/KernelParts.Messages -> Views [any] Deny
+Core/KernelParts.Messages -> Kernel [any] Deny
+Core/KernelParts.Messages -> Kernel/Domain [any] Deny
+Core/KernelParts.Messages -> Kernel/Infrastructure [any] Deny
+Core/KernelParts.Messages -> Kernel/Presenters [any] Deny
+Core/KernelParts.Messages -> Kernel/Contracts [any] Deny
+Core/KernelParts.Messages -> Kernel/Contracts/Contracts.Requests [any] Deny
+Core/KernelParts.Messages -> Kernel/Contracts/Contracts.Events [any] Deny
+Core/KernelParts.Messages -> Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing [any] Deny
+Core/KernelParts.Messages -> Kernel/Contracts/Contracts.Commands [any] Deny
+Core/KernelParts.Messages -> Kernel/Handlers [any] Deny
+Core/KernelParts.Messages -> Kernel/Handlers/Handlers.Requests [any] Deny
+Core/KernelParts.Messages -> Kernel/Handlers/Handlers.Events [any] Deny
+Core/KernelParts.Messages -> Kernel/Handlers/Handlers.Commands [any] Deny
+Core/KernelParts.Messages -> Kernel/Views [any] Deny
+Core/KernelParts.Messages -> Kernel/Composition [any] Deny
+Core/KernelParts.Messages -> UmpireLibraries [any] Deny
 Core/KernelParts.Modules -> App [any] Deny
 Core/KernelParts.Modules -> App/MessagesComponent [any] Deny
 Core/KernelParts.Modules -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Modules -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Modules -> App/Host [any] Deny
 Core/KernelParts.Modules -> App/Pack [any] Deny
 Core/KernelParts.Modules -> App/Plugin [any] Deny
@@ -2997,6 +2996,7 @@ Core/KernelParts.Modules -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Modules -> Core/Hosts [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Modules -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Modules -> Core/KernelParts.Services [any] Allow Public
@@ -3023,7 +3023,6 @@ Core/KernelParts.Modules -> UmpireLibraries [any] Deny
 Core/KernelParts.Scan -> App [any] Deny
 Core/KernelParts.Scan -> App/MessagesComponent [any] Deny
 Core/KernelParts.Scan -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Scan -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Scan -> App/Host [any] Deny
 Core/KernelParts.Scan -> App/Pack [any] Deny
 Core/KernelParts.Scan -> App/Plugin [any] Deny
@@ -3063,6 +3062,7 @@ Core/KernelParts.Scan -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Scan -> Core/Hosts [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Scan -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Factories [any] Allow Public
 Core/KernelParts.Scan -> Core/KernelParts.Services [any] Allow Public
@@ -3089,7 +3089,6 @@ Core/KernelParts.Scan -> UmpireLibraries [any] Deny
 Core/KernelParts.Factories -> App [any] Deny
 Core/KernelParts.Factories -> App/MessagesComponent [any] Deny
 Core/KernelParts.Factories -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Factories -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Factories -> App/Host [any] Deny
 Core/KernelParts.Factories -> App/Pack [any] Deny
 Core/KernelParts.Factories -> App/Plugin [any] Deny
@@ -3129,6 +3128,7 @@ Core/KernelParts.Factories -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Factories -> Core/Hosts [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Factories -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Factories -> Core/KernelParts.Services [any] Allow Public
@@ -3155,7 +3155,6 @@ Core/KernelParts.Factories -> UmpireLibraries [any] Deny
 Core/KernelParts.Services -> App [any] Deny
 Core/KernelParts.Services -> App/MessagesComponent [any] Deny
 Core/KernelParts.Services -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Services -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Services -> App/Host [any] Deny
 Core/KernelParts.Services -> App/Pack [any] Deny
 Core/KernelParts.Services -> App/Plugin [any] Deny
@@ -3195,6 +3194,7 @@ Core/KernelParts.Services -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Services -> Core/Hosts [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Services -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Services -> Core/KernelParts.Factories [any] Allow Public
@@ -3221,7 +3221,6 @@ Core/KernelParts.Services -> UmpireLibraries [any] Deny
 Core/KernelParts.Utility -> App [any] Deny
 Core/KernelParts.Utility -> App/MessagesComponent [any] Deny
 Core/KernelParts.Utility -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Utility -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Utility -> App/Host [any] Deny
 Core/KernelParts.Utility -> App/Pack [any] Deny
 Core/KernelParts.Utility -> App/Plugin [any] Deny
@@ -3261,6 +3260,7 @@ Core/KernelParts.Utility -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Utility -> Core/Hosts [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Utility -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Utility -> Core/KernelParts.Factories [any] Allow Public
@@ -3287,7 +3287,6 @@ Core/KernelParts.Utility -> UmpireLibraries [any] Deny
 Core/KernelParts.Paths -> App [any] Deny
 Core/KernelParts.Paths -> App/MessagesComponent [any] Deny
 Core/KernelParts.Paths -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Paths -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Paths -> App/Host [any] Deny
 Core/KernelParts.Paths -> App/Pack [any] Deny
 Core/KernelParts.Paths -> App/Plugin [any] Deny
@@ -3327,6 +3326,7 @@ Core/KernelParts.Paths -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Paths -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Paths -> Core/Hosts [any] Allow Public
 Core/KernelParts.Paths -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Paths -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Paths -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Paths -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Paths -> Core/KernelParts.Factories [any] Allow Public
@@ -3353,7 +3353,6 @@ Core/KernelParts.Paths -> UmpireLibraries [any] Deny
 Core/KernelParts.Analyzers -> App [any] Deny
 Core/KernelParts.Analyzers -> App/MessagesComponent [any] Deny
 Core/KernelParts.Analyzers -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Core/KernelParts.Analyzers -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Core/KernelParts.Analyzers -> App/Host [any] Deny
 Core/KernelParts.Analyzers -> App/Pack [any] Deny
 Core/KernelParts.Analyzers -> App/Plugin [any] Deny
@@ -3393,6 +3392,7 @@ Core/KernelParts.Analyzers -> Core/KernelParts.App [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Kernels [any] Allow Public
 Core/KernelParts.Analyzers -> Core/Hosts [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Operations [any] Allow Public
+Core/KernelParts.Analyzers -> Core/KernelParts.Messages [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Modules [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Scan [any] Allow Public
 Core/KernelParts.Analyzers -> Core/KernelParts.Factories [any] Allow Public
@@ -3419,7 +3419,6 @@ Core/KernelParts.Analyzers -> UmpireLibraries [any] Deny
 Views -> App [any] Deny
 Views -> App/MessagesComponent [any] Deny
 Views -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Views -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Views -> App/Host [any] Deny
 Views -> App/Pack [any] Deny
 Views -> App/Plugin [any] Deny
@@ -3459,6 +3458,7 @@ Views -> Core/KernelParts.App [any] Deny
 Views -> Core/KernelParts.Kernels [any] Deny
 Views -> Core/Hosts [any] Allow Public
 Views -> Core/KernelParts.Operations [any] Deny
+Views -> Core/KernelParts.Messages [any] Deny
 Views -> Core/KernelParts.Modules [any] Deny
 Views -> Core/KernelParts.Scan [any] Deny
 Views -> Core/KernelParts.Factories [any] Deny
@@ -3485,7 +3485,6 @@ Views -> UmpireLibraries [any] Deny
 Kernel -> App [any] Deny
 Kernel -> App/MessagesComponent [any] Deny
 Kernel -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Kernel -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel -> App/Host [any] Deny
 Kernel -> App/Pack [any] Deny
 Kernel -> App/Plugin [any] Deny
@@ -3525,6 +3524,7 @@ Kernel -> Core/KernelParts.App [any] Allow Public
 Kernel -> Core/KernelParts.Kernels [any] Allow Public
 Kernel -> Core/Hosts [any] Allow Public
 Kernel -> Core/KernelParts.Operations [any] Allow Public
+Kernel -> Core/KernelParts.Messages [any] Deny
 Kernel -> Core/KernelParts.Modules [any] Allow Public
 Kernel -> Core/KernelParts.Scan [any] Allow Public
 Kernel -> Core/KernelParts.Factories [any] Allow Public
@@ -3551,7 +3551,6 @@ Kernel -> UmpireLibraries [any] Deny
 Kernel/Domain -> App [any] Deny
 Kernel/Domain -> App/MessagesComponent [any] Deny
 Kernel/Domain -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Kernel/Domain -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Domain -> App/Host [any] Deny
 Kernel/Domain -> App/Pack [any] Deny
 Kernel/Domain -> App/Plugin [any] Deny
@@ -3591,6 +3590,7 @@ Kernel/Domain -> Core/KernelParts.App [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Domain -> Core/Hosts [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Domain -> Core/KernelParts.Messages [any] Deny
 Kernel/Domain -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Domain -> Core/KernelParts.Factories [any] Allow Public
@@ -3617,7 +3617,6 @@ Kernel/Domain -> UmpireLibraries [any] Deny
 Kernel/Infrastructure -> App [any] Deny
 Kernel/Infrastructure -> App/MessagesComponent [any] Deny
 Kernel/Infrastructure -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Infrastructure -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 Kernel/Infrastructure -> App/Host [any] Deny
 Kernel/Infrastructure -> App/Pack [any] Deny
 Kernel/Infrastructure -> App/Plugin [any] Deny
@@ -3657,6 +3656,7 @@ Kernel/Infrastructure -> Core/KernelParts.App [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Infrastructure -> Core/Hosts [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Infrastructure -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Infrastructure -> Core/KernelParts.Factories [any] Allow Public
@@ -3683,7 +3683,6 @@ Kernel/Infrastructure -> UmpireLibraries [any] Deny
 Kernel/Presenters -> App [any] Deny
 Kernel/Presenters -> App/MessagesComponent [any] Deny
 Kernel/Presenters -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Presenters -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Presenters -> App/Host [any] Deny
 Kernel/Presenters -> App/Pack [any] Deny
 Kernel/Presenters -> App/Plugin [any] Deny
@@ -3723,6 +3722,7 @@ Kernel/Presenters -> Core/KernelParts.App [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Presenters -> Core/Hosts [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Presenters -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Presenters -> Core/KernelParts.Factories [any] Allow Public
@@ -3749,7 +3749,6 @@ Kernel/Presenters -> UmpireLibraries [any] Deny
 Kernel/Contracts -> App [any] Deny
 Kernel/Contracts -> App/MessagesComponent [any] Deny
 Kernel/Contracts -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Contracts -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Contracts -> App/Host [any] Deny
 Kernel/Contracts -> App/Pack [any] Deny
 Kernel/Contracts -> App/Plugin [any] Deny
@@ -3789,6 +3788,7 @@ Kernel/Contracts -> Core/KernelParts.App [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Contracts -> Core/Hosts [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Contracts -> Core/KernelParts.Messages [any] Deny
 Kernel/Contracts -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts -> Core/KernelParts.Factories [any] Allow Public
@@ -3815,7 +3815,6 @@ Kernel/Contracts -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Requests -> App [any] Deny
 Kernel/Contracts/Contracts.Requests -> App/MessagesComponent [any] Deny
 Kernel/Contracts/Contracts.Requests -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Requests -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Contracts/Contracts.Requests -> App/Host [any] Deny
 Kernel/Contracts/Contracts.Requests -> App/Pack [any] Deny
 Kernel/Contracts/Contracts.Requests -> App/Plugin [any] Deny
@@ -3855,6 +3854,7 @@ Kernel/Contracts/Contracts.Requests -> Core/KernelParts.App [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/Hosts [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Messages [any] Deny
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Requests -> Core/KernelParts.Factories [any] Allow Public
@@ -3881,7 +3881,6 @@ Kernel/Contracts/Contracts.Requests -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Events -> App [any] Deny
 Kernel/Contracts/Contracts.Events -> App/MessagesComponent [any] Deny
 Kernel/Contracts/Contracts.Events -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Events -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Contracts/Contracts.Events -> App/Host [any] Deny
 Kernel/Contracts/Contracts.Events -> App/Pack [any] Deny
 Kernel/Contracts/Contracts.Events -> App/Plugin [any] Deny
@@ -3921,6 +3920,7 @@ Kernel/Contracts/Contracts.Events -> Core/KernelParts.App [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/Hosts [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Contracts/Contracts.Events -> Core/KernelParts.Messages [any] Deny
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Events -> Core/KernelParts.Factories [any] Allow Public
@@ -3947,7 +3947,6 @@ Kernel/Contracts/Contracts.Events -> UmpireLibraries [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/MessagesComponent [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/Host [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/Pack [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> App/Plugin [any] Deny
@@ -3987,6 +3986,7 @@ Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelPart
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/Hosts [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Messages [any] Deny
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> Core/KernelParts.Factories [any] Allow Public
@@ -4013,7 +4013,6 @@ Kernel/Contracts/Contracts.Events/Contracts.Events.Publishing -> UmpireLibraries
 Kernel/Contracts/Contracts.Commands -> App [any] Deny
 Kernel/Contracts/Contracts.Commands -> App/MessagesComponent [any] Deny
 Kernel/Contracts/Contracts.Commands -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Contracts/Contracts.Commands -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Contracts/Contracts.Commands -> App/Host [any] Deny
 Kernel/Contracts/Contracts.Commands -> App/Pack [any] Deny
 Kernel/Contracts/Contracts.Commands -> App/Plugin [any] Deny
@@ -4053,6 +4052,7 @@ Kernel/Contracts/Contracts.Commands -> Core/KernelParts.App [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/Hosts [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Messages [any] Deny
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Contracts/Contracts.Commands -> Core/KernelParts.Factories [any] Allow Public
@@ -4079,7 +4079,6 @@ Kernel/Contracts/Contracts.Commands -> UmpireLibraries [any] Deny
 Kernel/Handlers -> App [any] Deny
 Kernel/Handlers -> App/MessagesComponent [any] Deny
 Kernel/Handlers -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Kernel/Handlers -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 Kernel/Handlers -> App/Host [any] Deny
 Kernel/Handlers -> App/Pack [any] Deny
 Kernel/Handlers -> App/Plugin [any] Deny
@@ -4119,6 +4118,7 @@ Kernel/Handlers -> Core/KernelParts.App [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Handlers -> Core/Hosts [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Handlers -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers -> Core/KernelParts.Factories [any] Allow Public
@@ -4145,7 +4145,6 @@ Kernel/Handlers -> UmpireLibraries [any] Deny
 Kernel/Handlers/Handlers.Requests -> App [any] Deny
 Kernel/Handlers/Handlers.Requests -> App/MessagesComponent [any] Deny
 Kernel/Handlers/Handlers.Requests -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Handlers/Handlers.Requests -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> App/Host [any] Deny
 Kernel/Handlers/Handlers.Requests -> App/Pack [any] Deny
 Kernel/Handlers/Handlers.Requests -> App/Plugin [any] Deny
@@ -4185,6 +4184,7 @@ Kernel/Handlers/Handlers.Requests -> Core/KernelParts.App [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/Hosts [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers/Handlers.Requests -> Core/KernelParts.Factories [any] Allow Public
@@ -4211,7 +4211,6 @@ Kernel/Handlers/Handlers.Requests -> UmpireLibraries [any] Deny
 Kernel/Handlers/Handlers.Events -> App [any] Deny
 Kernel/Handlers/Handlers.Events -> App/MessagesComponent [any] Deny
 Kernel/Handlers/Handlers.Events -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Handlers/Handlers.Events -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 Kernel/Handlers/Handlers.Events -> App/Host [any] Deny
 Kernel/Handlers/Handlers.Events -> App/Pack [any] Deny
 Kernel/Handlers/Handlers.Events -> App/Plugin [any] Deny
@@ -4251,6 +4250,7 @@ Kernel/Handlers/Handlers.Events -> Core/KernelParts.App [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/Hosts [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Handlers/Handlers.Events -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers/Handlers.Events -> Core/KernelParts.Factories [any] Allow Public
@@ -4277,7 +4277,6 @@ Kernel/Handlers/Handlers.Events -> UmpireLibraries [any] Deny
 Kernel/Handlers/Handlers.Commands -> App [any] Deny
 Kernel/Handlers/Handlers.Commands -> App/MessagesComponent [any] Deny
 Kernel/Handlers/Handlers.Commands -> App/MessagesComponent/MessagesParts.Contracts [any] Allow Public
-Kernel/Handlers/Handlers.Commands -> App/MessagesComponent/MessagesParts.Handlers [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> App/Host [any] Deny
 Kernel/Handlers/Handlers.Commands -> App/Pack [any] Deny
 Kernel/Handlers/Handlers.Commands -> App/Plugin [any] Deny
@@ -4317,6 +4316,7 @@ Kernel/Handlers/Handlers.Commands -> Core/KernelParts.App [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/Hosts [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Messages [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Handlers/Handlers.Commands -> Core/KernelParts.Factories [any] Allow Public
@@ -4343,7 +4343,6 @@ Kernel/Handlers/Handlers.Commands -> UmpireLibraries [any] Deny
 Kernel/Views -> App [any] Deny
 Kernel/Views -> App/MessagesComponent [any] Deny
 Kernel/Views -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Kernel/Views -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Views -> App/Host [any] Deny
 Kernel/Views -> App/Pack [any] Deny
 Kernel/Views -> App/Plugin [any] Deny
@@ -4383,6 +4382,7 @@ Kernel/Views -> Core/KernelParts.App [any] Allow Public
 Kernel/Views -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Views -> Core/Hosts [any] Allow Public
 Kernel/Views -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Views -> Core/KernelParts.Messages [any] Deny
 Kernel/Views -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Views -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Views -> Core/KernelParts.Factories [any] Allow Public
@@ -4409,7 +4409,6 @@ Kernel/Views -> UmpireLibraries [any] Deny
 Kernel/Composition -> App [any] Deny
 Kernel/Composition -> App/MessagesComponent [any] Deny
 Kernel/Composition -> App/MessagesComponent/MessagesParts.Contracts [any] Deny
-Kernel/Composition -> App/MessagesComponent/MessagesParts.Handlers [any] Deny
 Kernel/Composition -> App/Host [any] Deny
 Kernel/Composition -> App/Pack [any] Deny
 Kernel/Composition -> App/Plugin [any] Deny
@@ -4449,6 +4448,7 @@ Kernel/Composition -> Core/KernelParts.App [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Kernels [any] Allow Public
 Kernel/Composition -> Core/Hosts [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Operations [any] Allow Public
+Kernel/Composition -> Core/KernelParts.Messages [any] Deny
 Kernel/Composition -> Core/KernelParts.Modules [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Scan [any] Allow Public
 Kernel/Composition -> Core/KernelParts.Factories [any] Allow Public

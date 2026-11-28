@@ -7,7 +7,7 @@ public sealed record Core : KernelBlock {
     public override string Folder => "framework/Kernel";
 
     protected override void Define(Part part) {
-        part.Add<KernelParts.App>().And<KernelParts.Kernels>().And<Hosts>().And<KernelParts.Operations>()
+        part.Add<KernelParts.App>().And<KernelParts.Kernels>().And<Hosts>().And<KernelParts.Operations>().And<KernelParts.Messages>()
             .And<KernelParts.Modules>().And<KernelParts.Scan>().And<KernelParts.Factories>().And<KernelParts.Services>()
             .And<KernelParts.Utility>().And<KernelParts.Paths>().And<KernelParts.Analyzers>();
     }

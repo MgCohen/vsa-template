@@ -486,10 +486,10 @@ framework/Kernel/                      Umpire.Kernels
   Factories/                           IFactory<T>, AddFactory
   Utility/                             Umpire.Utility: LoadedTypes, ClosedBase
   Paths/                               Umpire.Utility: RelativePath, BuildOutput, CompilerNames
+  Messages/                            Umpire.Messages.Handlers: PipelineBuilder, Pipeline, Pipelines, MessageHub, HubStep, InlineRunner, Validator, Before, After, AddPipeline
 architecture/                          Umpire.Architecture: Architecture
 framework/Components/Messages/
   Contracts/                           IMessage, Envelope, Result, Error, Effect
-  Handlers/                            PipelineBuilder, Pipeline, Pipelines, InlineRunner, Validator, Before, After, AddPipeline
 packs/Vsa/
   Definition/                          Umpire.Vsa.Definition: VsaArchitecture, the VSA layers, Feature and Plugin
   Kernel/

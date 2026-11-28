@@ -3,14 +3,13 @@
     <ProjectReference Include="../../../../../architecture/Markers/Umpire.Markers.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../../../framework/Components/Messages/Handlers/Umpire.Messages.Handlers.csproj" />
     <ProjectReference Include="../../Contracts/Events/Umpire.Vsa.Contracts.Events.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
-  <!-- The registration of the layer uses AppTypes (Umpire.Kernels). Private, so the module projects of this layer do not see Umpire.Kernels. -->
+  <!-- The kernel holds the message bus (Messages/), and the registration of the layer uses AppTypes. Not private: a module project of this layer uses the bus types, for example Validator<T>. -->
   <ItemGroup>
-    <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernels.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../../../../../framework/Kernel/Umpire.Kernels.csproj" />
   </ItemGroup>
 </Project>

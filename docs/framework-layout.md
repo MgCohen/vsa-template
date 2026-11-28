@@ -18,7 +18,7 @@ To make a first app and fix a first rule error, see [getting-started.md](getting
 ```mermaid
 flowchart BT
     Architecture["architecture/"]
-    Messages["framework/Components/Messages"] -. private .-> Kernel
+    Kernel --> Messages["framework/Components/Messages"]
     Kernel --> Config["framework/Components/Config"]
     Versions --> Kernel
     Vsa["packs/Vsa"] --> Kernel["framework/Kernel"]
@@ -39,7 +39,7 @@ The projects of the groups are for development: their references enforce the lay
 
 | Package | DLL | Source projects | Depends on |
 |---|---|---|---|
-| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Config, Kernels (with `Utility/` and `Paths/`), Messages (contracts and handlers): the core | `Umpire.Engine` (for its analyzer) |
+| `Umpire` | `Umpire.dll` (`netstandard2.0`) | Markers, Config, Kernels (with `Utility/`, `Paths/` and the bus in `Messages/`), the message contracts: the core | `Umpire.Engine` (for its analyzer) |
 | `Umpire.Vsa` | `Umpire.Vsa.dll` (`netstandard2.0`) | Each VSA layer base, `VsaKernel`, `Plugin` and the composition (`packs/Vsa/Kernel/`, with no views): the VSA kernel | `Umpire` |
 | `Umpire.Definition` | `Umpire.Definition.dll` (`netstandard2.0`) | Architecture (with no markers), Kernels.Definition | `Umpire` |
 | `Umpire.Vsa.Definition` | `Umpire.Vsa.Definition.dll` (`netstandard2.0`) | Umpire.Vsa (`packs/Vsa/Definition/`) | `Umpire.Definition`, `Umpire.Vsa` |
@@ -49,7 +49,7 @@ The projects of the groups are for development: their references enforce the lay
 
 The core `Umpire` holds no pack and no definition code. The VSA kernel is in `Umpire.Vsa`, so an app with another pack and no web host gets no VSA code and no VSA rule. The definition code is check-time code, so it is in the two definition packages. The views and the VSA test bases stay in `Umpire.Web` and `Umpire.Testing`, so these two packages depend on `Umpire.Vsa`.
 
-The VSA kernel uses internal members of the kernel and of the messages, as the runtime projects do (`InternalsVisibleTo` of `Umpire.Kernels` to `Umpire.Vsa.Composition`, and of `Umpire.Messages.Handlers` to the VSA handler projects). Thus `Umpire.dll` gives its internals to `Umpire.Vsa`. The source project of the VSA definition has the name `Umpire.Vsa`, and a solution cannot hold two projects with one name. Thus the bundle project of `Umpire.Vsa` is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, and it sets `AssemblyName` and `PackageId` to `Umpire.Vsa`. The `Bundle` metadata of an item in `tools/bundle/SourceMode/Umpire.SourceMode.targets` is the path of its bundle project.
+The VSA kernel uses internal members of the kernel and of the messages, as the runtime projects do (`InternalsVisibleTo` of `Umpire.Kernels` to `Umpire.Vsa.Composition`, and to the VSA handler projects, for the bus in `framework/Kernel/Messages/`). Thus `Umpire.dll` gives its internals to `Umpire.Vsa`. The source project of the VSA definition has the name `Umpire.Vsa`, and a solution cannot hold two projects with one name. Thus the bundle project of `Umpire.Vsa` is `tools/bundle/Vsa/Umpire.Vsa.Kernel.csproj`, and it sets `AssemblyName` and `PackageId` to `Umpire.Vsa`. The `Bundle` metadata of an item in `tools/bundle/SourceMode/Umpire.SourceMode.targets` is the path of its bundle project.
 
 The package `Umpire` depends on `Umpire.Engine`, which holds the analyzer entry of the engine and each DLL that it loads in `analyzers/dotnet/cs/`. The entry is the only Umpire analyzer. The VSA rules select their pack by namespace (`VsaRule.PackNamespace`, `PackSelection` in the analyzer entry): with no code entry, a reference to the assembly `Umpire.Vsa` selects VSA.
 
